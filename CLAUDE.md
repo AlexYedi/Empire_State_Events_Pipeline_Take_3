@@ -45,7 +45,8 @@ If explanations are needed during development, I will invoke the explainer skill
 - Key tools in stack: Claude, n8n, Supabase, Linear, PostHog, Vercel, Railway, 
   Cursor, GitHub, Replit, Bolt, Lovable, Framer, Notion, Gamma, Canva, Magic 
   Patterns, Miro, Granola, ChatPRD, Perplexity, ElevenLabs, NotebookLM, 
-  Google Workspace, Wispr Flow, Warp, Devin, Factory, Mobbin, HubSpot, Apollo
+  Google Workspace (incl. Gemini/Imagen 3, Google Vids, Google Slides), 
+  Wispr Flow, Warp, Devin, Factory, Mobbin, HubSpot, Apollo
 </standing_context>
 
 <project_architecture>
@@ -91,32 +92,47 @@ Alex pastes calendar invite description + adds natural language context:
 
 #### Output Destinations
 
-**Notion** (Content + Research Hub) — 5 interconnected databases:
-- Events: Event Name, Date, Location, Calendar Description, Calendar Source, Event Status, 
+**Notion** (Content + Research Hub) — 5 interconnected databases (verified via MCP, 2026-04-09):
+- Events (8 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
+  Event Status (select: intake/researched/content_drafted/attended/post_complete), 
   relations to People/Companies/Topics/Content Drafts
-- People: Name, Title, Email, Phone, LinkedIn URL, Known POV/Bio, Role Context (multi-select: 
-  speaker/host/organizer/attendee/contact), Last Researched, relations to Events/Company/Content Drafts
-- Companies: Company Name, Description, Website, Industry/Space (multi-select: AI/ML, Enterprise 
-  Software, Developer Tools, VC/Investment, Data Infrastructure), Funding Stage, Recent Developments, 
-  Last Researched, relations to Events/People
-- Topics: Topic name, Current Context, Top Questions, Last Updated, relations to Events/People/Content Drafts
-- Content Drafts: Title, Content Type (research_brief/linkedin_dm_speaker/linkedin_dm_host/
-  linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase (pre_event/during_event/
-  post_event), Content Status (needs_review/approved/scheduled/published), Platform (linkedin/slack/
-  notion_only), Published URL, relations to Event/People/Topics
+  Note: Event Description stores the raw pasted invite text. No Calendar Source property — 
+  the pipeline generates value for events Alex attends AND events he doesn't (content + outreach 
+  aren't gated by physical attendance).
+- People (11 props): Name (title), Current Title (text), Email (email), Phone Number (phone), 
+  LinkedIn URL (url), Known POV / Bio (text), Notes (text), Role Context (multi-select: 
+  speaker/host/organizer/attendee/contact), Last Researched (date), 
+  relations to Events/Company/Content Drafts
+- Companies (9 props): Company Name (title), Description (text), Website (url), Industry / Space 
+  (multi-select: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure), 
+  Funding Stage (select: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public), 
+  Recent Funding ($) (number), Recent Developments (text), Last Researched (date), 
+  relations to Events/People
+- Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
+  Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date), 
+  relations to Events/People/Linkedin Post Drafts (→ Content Drafts, intentional naming — 
+  pulls Content Drafts filtered by linkedin post content types)
+- Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
+  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase 
+  (select: pre_event/during_event/post_event), Content Status (select: needs_review/approved/
+  scheduled/published), Platform (select: linkedin/slack/notion_only), Published URL (url), 
+  relations to Event/People/Topics
 
 **HubSpot** (CRM — Contacts & Companies):
 - Standard contact fields: firstname, lastname, email, phone, company, jobtitle
-- Static Lists for event association (one list per event, contacts added to list)
 - Company records with standard fields
-- Notes attached to contacts with event context and talking points
-- Fresh account (created April 5, 2026), full read/write access confirmed
+- Notes attached to contacts with just the event title as body text (primary event-tracking mechanism)
+- Event association via Notes: each Note body = event name, searchable for "all contacts from Event X"
+- Do NOT set industry on company records — generic categories are unhelpful
+- Static Lists NOT available via MCP (OBJECT_LIST write = NOT_AVAILABLE) — Notes approach is the MVP workaround
+- Fresh account (created April 5, 2026), full read/write on Contacts, Companies, Notes, Deals
+- HubSpot owner ID: 90413044
 
-**Apollo** (Enrichment Layer — Optional):
-- 900 free credits/year
-- Email enrichment (1 credit) + AI insights (1 credit) = 2 credits per contact
-- ~450 contacts/year budget — reserved for speakers, hosts, key contacts
-- Skill asks before spending credits
+**Apollo** (Not integrated — separate evaluation):
+- Not part of the event research pipeline. Alex evaluates Apollo independently via web UI
+  on high-value contacts to determine if paid plan (900 credits) justifies integration.
+- API blocked on free plan (`API_INACCESSIBLE` on people endpoints). If upgraded, integration
+  becomes a separate decision.
 
 ### Notion Database IDs
 - Content Drafts: collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775
@@ -128,16 +144,28 @@ Alex pastes calendar invite description + adds natural language context:
 
 ### Phased Roadmap
 
-**Phase 1: Event Research Skill (Current)**
-- Build event-research skill with paste-the-invite input
-- Direct MCP writes to Notion (all 5 databases) and HubSpot (contacts, companies, lists, notes)
-- Optional Apollo enrichment per contact
-- Test on one real event end-to-end
+**Phase 1: Event Research Skill (Current — CTO review complete 2026-04-09)**
+- Build event-research skill (.claude/skills/event-research.md) with paste-the-invite input
+- Skill runs inside Claude Code conversation — human-in-the-loop by design
+- Research sources: Claude training data + WebSearch
+- Direct MCP writes to Notion (all 5 databases, ordered by relation dependencies)
+- Direct MCP writes to HubSpot (companies, contacts with associations, Notes for event tracking)
+- Dedup check: search Notion + HubSpot for existing records before creating
+- Test on one real upcoming event end-to-end
 
-**Phase 2: Content Generation Skill**
-- Separate skill for pre-event content (LinkedIn posts, DMs, outreach, prepared questions)
-- Takes completed brief from Notion as input
+**Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
+- Two separate skills: pre-event-content.md and post-event-content.md (not monolithic)
+- Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
+  speaker/host DMs (2-3 per person per topic), prepared questions (derived from unused DMs)
+- Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
+- Takes completed research brief from Notion as input
 - Writes content drafts to Notion Content Drafts database
+- Supporting reference files: content-style-guide.md, content-anti-patterns.md, outreach-templates.md
+- Voice & style is a living system — update-voice-and-style.md skill propagates learnings to all files
+- Cold outreach only for V1. Warm outreach variant and custom messaging skill deferred.
+- 2 inline option variants per content piece. No scheduling/timing logic.
+- Audience: hiring managers at AI-native companies, enterprise GTM peers, event speakers/hosts
+- Full stack GTM positioning is implicit (demonstrated, not stated)
 
 **Phase 3: Form + Light Automation (when volume demands it)**
 - Vercel/Lovable submission form for event intake
@@ -164,13 +192,41 @@ Alex pastes calendar invite description + adds natural language context:
   Notion API integration failures. Architecture replaced by skill-first approach.
 - Reference value: Claude prompts for research synthesis, field mappings, content templates
 
-### Key Patterns & Rules (learned from predecessor)
+### Notion Write Orchestration (verified via MCP, 2026-04-09)
+Relations are bidirectional — setting one side auto-populates the other. Write order matters 
+because relation fields require page URLs from previously created pages.
+
+```
+Step 1: Create Companies (no dependencies) → capture page URLs
+Step 2: Create Topics (no dependencies) → capture page URLs
+   Steps 1 & 2 can run in parallel
+Step 3: Create People (set Company relation using Step 1 URLs) → capture page URLs
+Step 4: Create Event (set People/Companies/Topics relations using all URLs)
+Step 5: Create Content Draft (set Event/People/Topics relations)
+   Event.Content Drafts auto-populates via bidirectional link
+```
+
+notion-create-pages returns page URLs. Those URLs ARE the IDs for relation fields (JSON arrays).
+
+### HubSpot Write Orchestration
+```
+Step 1: Create Company records (standard fields)
+Step 2: Create Contact records + associate with Companies (HubSpot association API)
+Step 3: Create Note on each Contact (event name + role + talking points in body)
+```
+Notes approach replaces Static Lists for event association (list write not available via MCP).
+
+### Key Patterns & Rules (learned from predecessor + CTO review 2026-04-09)
 1. Never propose fixes without inspecting actual data at the failure point first
 2. When configuring any platform (n8n, Notion, HubSpot), specify every field explicitly
 3. State confidence levels honestly — a stated 40% is more useful than an inflated 80%
 4. Separate research quality from distribution mechanics — research is the value, distribution is plumbing
-5. Human-in-the-loop improves research output — don't automate away the step where human judgment adds value
+5. Human-in-the-loop improves research output — don't automate away the review step, move it later in the pipeline over time
 6. Create new records rather than updating existing ones when possible — avoids append/update API complexity
 7. Use /calmate when progress stalls after 2+ failed attempts at the same problem
+8. Always validate live system state via MCP before building — pricing pages and docs can lag behind API reality
+9. Notion page body for long-form text, properties for structured/filterable data
+10. Search Notion databases for existing records before creating to prevent duplicates (Notion has no native dedup)
+11. Search HubSpot by name+company before creating contacts to prevent duplicates (email is primary dedup key)
 </project_architecture>
 </CLAUDE.md>
