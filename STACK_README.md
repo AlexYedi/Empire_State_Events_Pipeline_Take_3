@@ -27,13 +27,13 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        INPUTS & CAPTURE                         │
 │  Wispr Flow (voice) · Granola (meetings) · Perplexity (research)│
-│  NotebookLM (doc analysis) · Google Workspace (docs/sheets)     │
+│  NotebookLM (doc analysis + audio) · Google Workspace           │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
 │                      AI BRAIN LAYER                             │
 │  Claude (primary) · Gemini / Google AI Studio (secondary)       │
-│  ElevenLabs (voice/audio output)                                │
+│  ElevenLabs (voice/audio)                                       │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
@@ -57,8 +57,10 @@
 └─────────────┘    └───────────────────┘    └──────────────────── ┘
        │                     |                        |
 ┌──────▼──────────────────────────────────────────────────────────┐
-│                    DESIGN & CONTENT                             │
-│  Canva · Magic Patterns · Gamma · Mobbin · Miro                 │
+│                  DESIGN, CONTENT & MEDIA                        │
+│  Canva · Gamma · Magic Patterns · Mobbin · Miro                 │
+│  Gemini/Imagen 3 (image gen) · Google Vids (video)              │
+│  NotebookLM Audio Overviews · ElevenLabs (narration)            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
