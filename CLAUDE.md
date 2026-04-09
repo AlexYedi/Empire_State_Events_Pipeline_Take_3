@@ -92,7 +92,7 @@ Alex pastes calendar invite description + adds natural language context:
 
 #### Output Destinations
 
-**Notion** (Content + Research Hub) — 5 interconnected databases (verified via MCP, 2026-04-09):
+**Notion** (Content + Research Hub) — 6 interconnected databases (verified via MCP, 2026-04-09):
 - Events (8 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
   Event Status (select: intake/researched/content_drafted/attended/post_complete), 
   relations to People/Companies/Topics/Content Drafts
@@ -116,7 +116,15 @@ Alex pastes calendar invite description + adds natural language context:
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase 
   (select: pre_event/during_event/post_event), Content Status (select: needs_review/approved/
   scheduled/published), Platform (select: linkedin/slack/notion_only), Published URL (url), 
-  relations to Event/People/Topics
+  relations to Event/People/Topics/Project Ideas
+- Project Ideas (17 props): Project Name (title), Status (select: needs_review/active/shipped/
+  archived/deleted), Proposal Type (select: feasible/stretch), Complexity Band (select: 
+  prototype/small_tool/MVP/full_project), Stack Coverage % (number), Relevance (number 1-10),
+  Creativity & Uniqueness (number 1-10), Tool Coverage (number 1-10), Conversation Starter 
+  (number 1-10), Demonstrability (number 1-10), Content Moments (number 1-10), 
+  Composite Score (number), Architecture Summary (text), Created (created_time), 
+  Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
+  Active project cap: max 2 active at a time (gate enforced by project-ideation skill)
 
 **HubSpot** (CRM — Contacts & Companies):
 - Standard contact fields: firstname, lastname, email, phone, company, jobtitle
@@ -140,6 +148,7 @@ Alex pastes calendar invite description + adds natural language context:
 - People: collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86
 - Topics: collection://d61ce9df-94b3-4637-aa09-d77e09ab3a74
 - Companies: collection://d5910dc3-8327-4b49-9294-fc9499709a98
+- Project Ideas: collection://0956e6ed-8555-4d8f-8856-388966dedaab
 - Parent page (NYC AI Event Content Hub): 338d3699c2db808781d5d4675dcc5e33
 
 ### Phased Roadmap
@@ -166,6 +175,20 @@ Alex pastes calendar invite description + adds natural language context:
 - 2 inline option variants per content piece. No scheduling/timing logic.
 - Audience: hiring managers at AI-native companies, enterprise GTM peers, event speakers/hosts
 - Full stack GTM positioning is implicit (demonstrated, not stated)
+
+**Phase 2b: Project Ideation Skill (In Progress — 2026-04-09)**
+- Skill: project-ideation.md — generates 3 project proposals (2 feasible + 1 stretch) from event topics
+- Triggered after event research is complete (all topics populated)
+- Intersection quality gate: maps topic pairs, scores strength, prefers strong intersections
+- When no strong intersections: selects topics that complement learning trajectory or fill portfolio gaps
+- Tool coverage sweet spot: 60-80% current stack = optimal (normalized penalty scales outside range)
+- Timeline bands: < 3 days (prototype), 3-7 days (small_tool), 1-2 weeks (MVP), 2+ weeks (full_project)
+- Architecture confidence gate: >= 90% or proposal isn't generated
+- Active project cap: max 2 active, gate blocks new generation until shipped/archived/deleted
+- Scoring: 6 dimensions (1-10 each, equal weights V1) + 2 pass/fail gates
+- Projects built BEFORE the event — demo, discuss, reference during networking
+- Reference file: portfolio-tracker.md (stack tiers, shipped projects, skills inventory)
+- Companion skill (deferred): project-complete.md — triggered when projects ship, updates portfolio tracker
 
 **Phase 3: Form + Light Automation (when volume demands it)**
 - Vercel/Lovable submission form for event intake
