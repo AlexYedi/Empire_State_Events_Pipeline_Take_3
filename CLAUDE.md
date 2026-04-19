@@ -114,10 +114,12 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/People/Linkedin Post Drafts (→ Content Drafts, intentional naming — 
   pulls Content Drafts filtered by linkedin post content types)
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
-  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase 
-  (select: pre_event/during_event/post_event), Content Status (select: needs_review/approved/
-  scheduled/published/archived), Platform (select: linkedin/slack/notion_only), Published URL (url), 
-  relations to Event/People/Topics/Project Ideas
+  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis), 
+  Event Phase (select: pre_event/during_event/post_event), Content Status (select: needs_review/
+  approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only), 
+  Published URL (url), relations to Event/People/Topics/Project Ideas
+  Note: linkedin_post_synthesis (added 2026-04-19) is used by the pattern-synthesis skill for 
+  two-thesis posts that relate to 2+ Events. Multi-Event relations are the tell for this type.
   Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
   Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —
   terminal state, preserves relation graph for future knowledge base synthesis.
@@ -170,18 +172,28 @@ Alex pastes calendar invite description + adds natural language context:
 - Test on one real upcoming event end-to-end
 
 **Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
-- Two separate skills: pre-event-content.md and post-event-content.md (not monolithic)
+- Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
   speaker/host DMs (2-3 per person per topic), prepared questions (derived from unused DMs)
 - Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
+- Pattern-synthesis skill (added 2026-04-19): two-thesis LinkedIn post from 2 event briefs.
+  Canonical shape for Alex's documentarian angle. Triggered when 2 briefs in a rolling 7-day window
+  pose opposing theses. Writes to Notion with Content Type = linkedin_post_synthesis and
+  multi-Event relations. Pattern definition lives in .claude/skills/content-patterns/two-thesis-synthesis.md
+  (shared reference file — pre-event and post-event skills can also import it).
 - Takes completed research brief from Notion as input
 - Writes content drafts to Notion Content Drafts database
 - Supporting reference files: content-style-guide.md, content-anti-patterns.md, outreach-templates.md
+- Shared patterns directory: .claude/skills/content-patterns/ holds reusable content-shape definitions
+  (no SKILL.md — not a skill itself). Any content skill can import from here. First entry:
+  two-thesis-synthesis.md.
 - Voice & style is a living system — update-voice-and-style.md skill propagates learnings to all files
+  including content-patterns/*.md
 - Cold outreach only for V1. Warm outreach variant and custom messaging skill deferred.
 - 2 inline option variants per content piece. No scheduling/timing logic.
 - Audience: hiring managers at AI-native companies, enterprise GTM peers, event speakers/hosts
 - Full stack GTM positioning is implicit (demonstrated, not stated)
+- Cadence rule for pattern-synthesis: max 1 synthesis post per week (format fatigues fast)
 
 **Phase 2b: Project Ideation Skill (In Progress — 2026-04-09)**
 - Skill: project-ideation.md — generates 3 project proposals (2 feasible + 1 stretch) from event topics
