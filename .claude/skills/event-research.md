@@ -187,7 +187,7 @@ For each company, create a page with these properties:
 "Description": "[1-2 sentence description]"         — text
 "Website": "[url]"                                  — url
 "Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON array)
-"Funding Stage": "[stage]"                          — select (one of: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public)
+"Funding Stage": "[stage]"                          — select (one of: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public)
 "Recent Funding ($)": [amount as number, or null]   — number
 "Recent Developments": "[recent news summary]"      — text
 "date:Last Researched:start": "2026-04-09"          — date (use today's date)
