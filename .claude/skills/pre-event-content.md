@@ -123,44 +123,124 @@ CTA — "If you're deep into [topic], what are you most looking forward to learn
 ## Step 3b: Generate Visual Content Briefs
 
 For each LinkedIn post (Upcoming Week and/or Pre-Event), generate visual content briefs
-that Alex uses to create supporting visuals in Canva, Gamma, or Gemini (Imagen 3).
+Alex uses to create supporting visuals in Canva, Gamma, or Gemini (Imagen 3).
 
-**Output: 3 visual briefs per post:**
+**Read the Visual Content section of `content-style-guide.md` before generating briefs.**
+It contains the full specs for format, sizing, 2-second thumb test, color strategy,
+accessibility, and format-by-content-type. Those specs are non-negotiable quality gates
+embedded in each brief below.
+
+### Step 3b.1: Pick the Format
+
+Before writing briefs, consult the **Format Selection by Content Type** table in the
+style guide. Match the strongest angle of the post to a format:
+
+- One killer stat → single 4:5 image (Visual 1 path)
+- Process / framework / multi-step → carousel (upgrade Visual 2 to carousel)
+- Hot take / contrarian insight → bold typography card (Visual 3 may lead)
+- Weekly preview post covering multiple events → carousel with 1 slide per event
+- Comparison → single image with split layout
+- Conceptual / abstract → AI-generated custom image via Gemini (Visual 3 path)
+
+If the format deviates from the default single 4:5 image, flag it in the brief header.
+
+### Step 3b.2: Universal Brief Requirements
+
+**Output: 3 visual briefs per post.** Every brief MUST include:
+
+- **Dimensions** — default 1080x1350 (4:5). Export at 2x (create at 2160x2700).
+- **Headline** — max 8 words, 48px min at 1080px wide. Caps font at ~4.5% of image width.
+- **Palette** — dark background + white text + ONE accent color. Pick accent by topic:
+  tech/AI → blue, data/infra → green, business/GTM → amber, contrarian → red.
+- **Alt text** — describes what the visual *shows*, not how it *looks*. One sentence.
+- **Thumb test pass** — can a scrolling phone user get the point in 2 seconds? If not, revise.
 
 ### Visual 1: Directly Supportive (Data/Stat Visual)
+
 A clean, designed visual that reinforces the post's key data point(s).
+
 ```
-Tool suggestion: Canva or Gemini
-Format: Single image, LinkedIn-optimized (1200x1200 or 1080x1350)
-Prompt/brief:
-- What to visualize: [the specific stat or comparison from the post]
-- Style: Clean, minimal, high contrast. Data should be immediately readable.
-- Text on image: [the stat or headline — short enough to read in 2 seconds]
-- Color: [suggest palette based on topic — tech blues, data greens, etc.]
+Tool: Canva (default) or Gemini (if custom style needed)
+Format: Single image, 1080x1350 (4:5 portrait)
+  — Upgrade to carousel if >1 stat warrants its own frame
+
+What to visualize: [the specific stat or comparison from the post]
+
+Hero treatment: [the number or % at 72px bold — e.g., "23% improvement"]
+Supporting headline: [max 8 words — e.g., "Enterprise AI ROI, Q1 2026"]
+Context line (smaller, below): [one-line explanation of what the number means]
+
+Style principles (from style guide):
+- Extract the insight, don't recreate the chart
+- No gridlines, no 3D, no legends requiring cross-reference
+- One accent color for the data you want seen; gray for everything else
+- Source attribution: small text, bottom corner — "Source: [name], 2026"
+
+Palette: dark bg + white text + [accent by topic]
+Alt text: "[one-sentence description of the stat and what it represents]"
+
+Thumb test: Is the hero number readable at 375px wide (iPhone SE viewport)?
+  If not, shrink the headline until the number dominates.
 ```
 
 ### Visual 2: Directly Supportive (Conceptual/Framework Visual)
-A visual that explains or maps the concept the post is about.
+
+A visual that explains or maps the concept the post is about. If the concept has
+>3 steps or phases, upgrade to a carousel.
+
 ```
-Tool suggestion: Canva or Gamma (if multi-slide)
-Format: Single image or 3-5 slide carousel (LinkedIn PDF)
-Prompt/brief:
-- What to visualize: [the framework, process, comparison, or concept]
-- Style: Clean, diagrammatic. Labels and flow should tell the story without the post.
-- Structure: [e.g., "3-column comparison", "flow diagram", "before/after"]
+Tool: Canva (single image) OR Gamma (carousel, 5-8 slides)
+Format: Single 1080x1350 image OR carousel (PDF, 5-8 slides, all 4:5 consistent)
+
+For SINGLE image:
+  Structure: [3-column comparison / flow diagram / before-after / matrix]
+  Headline: [max 8 words]
+  Body: labels and flow tell the story without the caption
+
+For CAROUSEL (if upgraded):
+  Slide 1 (Hook): Bold headline + visual hook — treat as thumbnail / book cover
+  Slides 2-N (Content): One idea per slide, consistent layout, progressive narrative
+  Final slide (CTA): "Follow for more" or a specific comment-driving question
+  Page numbers: small, bottom corner — signals more-to-swipe
+  Sweet spot: 5-8 slides total. Under 5 feels thin; over 10 loses people.
+
+What to visualize: [the framework, process, comparison, or concept]
+Style: Clean, diagrammatic. Explains without the caption.
+Palette: dark bg + white text + [accent by topic]
+Alt text: "[one-sentence description of the framework or process shown]"
+
+Thumb test: Can the concept be grasped on slide 1 (or the single image) in 2 seconds?
 ```
 
 ### Visual 3: Wild Card 🌶️
-Something professional but spicier — a different aesthetic, an unexpected format,
-a provocative visual that makes someone pause. Still appropriate, just has edge.
+
+Professional but spicier. Different aesthetic, unexpected format, provocative edge.
+Appropriate — still the documentarian voice — just with an angle.
+
 ```
-Tool suggestion: Gemini (Imagen 3) for something custom, Canva for designed editorial
-Format: Flexible — image, illustrated concept, stylized quote card, bold typography
-Prompt/brief:
-- Concept: [the provocative or unexpected angle]
-- Tone: [e.g., "editorial magazine cover feel", "bold typography on dark background",
-  "illustrated metaphor for X"]
-- Why this is the wild card: [what makes it different from Visuals 1-2]
+Tool: Gemini (Imagen 3) for custom AI-generated, OR Canva for bold editorial
+Format: 1080x1350 (4:5) single image, OR bold typography card for a hot take
+
+Concept: [the provocative or unexpected angle of the post's insight]
+
+IF using Gemini / Imagen 3, write the prompt ARCHITECTURALLY (not aspirationally):
+- Composition: "centered, symmetrical, negative space on [left/right/top] for text overlay"
+- Style: SPECIFIC — "flat vector illustration" / "editorial magazine photography" /
+  "technical diagram style" / "minimalist line art" — NEVER "professional looking"
+- Mood: "authoritative and clean" / "bold and provocative" / "minimal and sophisticated"
+- Negatives: "no text, no watermarks, no people, no generic tech imagery, no stock photo energy"
+- Iterate 3 rounds: prompt → evaluate → refine prompt → evaluate → final. First output is a draft.
+
+IF using bold typography card (for hot takes):
+  One sentence. Big font (72px+). Dark bg. White text. One accent color max.
+  The text IS the visual.
+
+Headline (if any): [max 8 words, 48px min]
+Palette: [may break the per-topic accent to create edge — if so, justify why]
+Alt text: "[one-sentence description — especially important for AI-generated imagery]"
+
+Thumb test: Does it stop the scroll? If someone scrolls past without pausing, it's not wild enough.
+Why this is the wild card: [what makes it different from Visuals 1-2]
 ```
 
 **Important:** These are briefs/prompts for Alex to bring into the tools directly.

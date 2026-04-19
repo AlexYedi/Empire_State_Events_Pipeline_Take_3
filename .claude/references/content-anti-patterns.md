@@ -44,7 +44,41 @@
 | Copy-paste feeling | If the DM could be sent to anyone by swapping the name, it's not personalized enough |
 | Multi-paragraph walls | 4-6 sentences max. Respect their time. |
 
+## Visual Anti-Patterns
+
+| Pattern | Why It Fails |
+|---|---|
+| Stock photo energy | Generic, interchangeable. Handshakes, laptops on desks, abstract geometric patterns. Signals "I didn't make anything specific to this content." |
+| Canva template tell | A template where only the text changed. If the layout looks familiar to a scroller, the template did the work — not you. |
+| Paragraph text on images | That's what the post body is for. Images get max 8 words in the headline. |
+| Font under 48px at 1080px wide | Fails the 2-second thumb test. If you squint at 375px wide (iPhone SE viewport), the scroller won't read it either. |
+| Medium-on-medium contrast | Gray text on gray, pastel on pastel, light blue on beige. Light-on-dark or dark-on-light only. |
+| Chart junk | Gridlines, 3D effects, legends requiring cross-reference. Extract the insight, don't recreate the chart. |
+| More than 3 colors in a visual | Background + text + accent = 3. More = noise, not design. |
+| Red-green color pairings | Colorblind-hostile. 8% of men can't reliably distinguish. Use labels or patterns alongside color. |
+| Pure white backgrounds on mobile | Glare on phones. Dark backgrounds read better in LinkedIn's mobile feed. |
+| Neon on neon | Unreadable. Also tacky. |
+| 16:9 landscape default | Loses ~65% of vertical screen space vs 4:5. Default is 1080x1350 (4:5 portrait). |
+| Carousel under 5 slides | Feels thin, like you ran out of material. 5-8 is the sweet spot. |
+| Carousel over 10 slides | Swipe fatigue. You lose the reader before the payoff. |
+| Missing page numbers on carousel | No signal that there's more to swipe. Put them small, bottom corner. |
+| Missing alt text | Accessibility miss and LinkedIn notices. Every image, every time. |
+| Relying on color alone to convey meaning | Use labels, patterns, or icons alongside color — not instead of them. |
+| Tiny or missing source attribution on data visuals | If the number is worth showing, the source is worth citing. Small text, bottom corner. |
+| Visual tries to show multiple ideas | One visual = one idea. If you need three, make three visuals (or a carousel). |
+
+## AI Image Prompting Anti-Patterns
+
+| Pattern | Why It Fails |
+|---|---|
+| Aspirational adjectives ("professional looking") | Meaningless to the model. Specify style concretely: "flat vector illustration" / "editorial magazine photography" / "technical diagram style". |
+| No negative prompts | The model fills gaps with defaults. Specify what NOT to include: "no text, no watermarks, no people, no generic tech imagery, no stock photo energy". |
+| Single-shot acceptance | First output is a draft, never the deliverable. Iterate in 3 rounds minimum: prompt → evaluate → refine → evaluate → final. |
+| No composition spec | The model centers everything by default. Specify: "symmetrical, negative space on left for text overlay" / "wide landscape" / "centered subject with asymmetric framing". |
+| No mood specification | Output drifts generic. Specify: "authoritative and clean" / "bold and provocative" / "minimal and sophisticated". |
+| Treating the prompt as a wish, not a brief | Prompt quality = output quality. Write architecturally: composition + style + mood + negatives. |
+
 ---
 
-*Last updated: 2026-04-09*
-*Version: 0.2 — Added faux casual fillers, observer framing, citing studies in DMs (from Snowflake DM test)*
+*Last updated: 2026-04-18*
+*Version: 0.3 — Added Visual Anti-Patterns and AI Image Prompting Anti-Patterns sections from 10 best practices doc*
