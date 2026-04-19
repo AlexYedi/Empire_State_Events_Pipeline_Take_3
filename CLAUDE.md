@@ -105,7 +105,8 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/Company/Content Drafts
 - Companies (9 props): Company Name (title), Description (text), Website (url), Industry / Space 
   (multi-select: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure), 
-  Funding Stage (select: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public), 
+  Funding Stage (select: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, 
+  Series H, Series I, Public — NO "Pre-IPO" option; use latest Series letter for late-stage private cos), 
   Recent Funding ($) (number), Recent Developments (text), Last Researched (date), 
   relations to Events/People
 - Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
@@ -257,5 +258,26 @@ Notes approach replaces Static Lists for event association (list write not avail
 9. Notion page body for long-form text, properties for structured/filterable data
 10. Search Notion databases for existing records before creating to prevent duplicates (Notion has no native dedup)
 11. Search HubSpot by name+company before creating contacts to prevent duplicates (email is primary dedup key)
+
+### Notion create-pages gotchas (2026-04-18 — learned live on FDE event writes)
+These are non-obvious property format rules that bit us during the first real event run. 
+Follow them mechanically; the API error messages are the source of truth if anything drifts.
+
+a. **Multi-select properties take a JSON-array-STRING, not a comma-separated string and not a native array.**
+   - Correct: `"Industry / Space": "[\"AI/ML\",\"Enterprise Software\"]"`
+   - Rejected: `"Industry / Space": "AI/ML,Enterprise Software"`
+   - Rejected: `"Industry / Space": ["AI/ML","Enterprise Software"]`  (native array)
+   - Same format for People.Role Context.
+b. **Select properties must exactly match a defined DB option.** When validation fails, the API error text 
+   lists the valid options — trust the error, not the doc/CLAUDE.md. The authoritative schema lives in Notion.
+c. **Relations take a JSON-array-string of full page URLs (not bare page IDs).** Use the `url` field returned by 
+   notion-create-pages verbatim. Example: `"Company": "[\"https://www.notion.so/347d3699...\"]"`.
+d. **Date properties must use expanded format.** `"date:<Prop>:start"` + `"date:<Prop>:is_datetime"` (0 or 1). 
+   For datetimes with end times, add `"date:<Prop>:end"` alongside.
+e. **Before any batch create against an unfamiliar DB, verify live schema with notion-fetch on the data_source URL.** 
+   Property names, option sets, and types can drift between docs and the live DB.
+f. **Write order for bidirectional relations:** Companies + Topics (no deps, parallel-safe) → People (needs Company URLs) 
+   → Event (needs People + Companies + Topics URLs) → Content Draft (needs Event URL). Skipping this order silently 
+   produces empty relation fields.
 </project_architecture>
 </CLAUDE.md>
