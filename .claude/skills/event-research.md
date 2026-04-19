@@ -100,7 +100,8 @@ For each company:
 - What they do (1-2 sentences — assume Alex may not know)
 - Recent news: funding rounds (amount if available), product launches, partnerships, leadership changes
 - Industry/Space classification: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure
-- Estimated funding stage: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public
+- Estimated funding stage: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public
+  (NOTE: there is no "Pre-IPO" option — for late-stage private companies, use the most recent publicly-reported Series letter)
 - Recent funding amount if discoverable (for "Recent Funding ($)" field)
 - Why this company matters in the context of this event and Alex's goals
 - Headwinds or challenges (shows Alex is informed, not just cheerleading)
@@ -186,13 +187,35 @@ For each company, create a page with these properties:
 "Company Name": "[company name]"                    — title
 "Description": "[1-2 sentence description]"         — text
 "Website": "[url]"                                  — url
-"Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON array)
-"Funding Stage": "[stage]"                          — select (one of: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public)
+"Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON-array-string, see Gotchas below)
+"Funding Stage": "[stage]"                          — select (one of: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public)
 "Recent Funding ($)": [amount as number, or null]   — number
 "Recent Developments": "[recent news summary]"      — text
 "date:Last Researched:start": "2026-04-09"          — date (use today's date)
 "date:Last Researched:is_datetime": 0               — integer
 ```
+
+**Notion create-pages gotchas (learned the hard way — do not rediscover these):**
+
+1. **Multi-select properties take a JSON-array-*string*, not a comma-separated string and not a native array.**
+   - ✅ Correct: `"Industry / Space": "[\"AI/ML\",\"Enterprise Software\"]"`
+   - ❌ Wrong (rejected): `"Industry / Space": "AI/ML,Enterprise Software"`
+   - ❌ Wrong (rejected): `"Industry / Space": ["AI/ML","Enterprise Software"]` (native array)
+   - Same pattern applies to People.Role Context multi_select.
+
+2. **Select properties must exactly match a defined option.** If the API returns `Invalid select value for property "Funding Stage": "Pre-IPO"`, the error message lists the valid options — trust the error, not the doc. The Companies DB has NO `Pre-IPO` option; use `Series F`/`Series G`/etc. for late-stage private companies.
+
+3. **Relations take a JSON-array-string of full page URLs** (not bare page IDs). Use the `url` field returned by create-pages exactly as-is.
+   - ✅ `"Company": "[\"https://www.notion.so/347d3699c2db818aa325c06cc5777252\"]"`
+
+4. **Date properties must use expanded format:**
+   - `"date:Last Researched:start": "2026-04-18"` (date-only)
+   - `"date:Last Researched:is_datetime": 0` (0 = date only, 1 = includes time)
+   - For events with specific times: `"date:Event Date:start": "2026-04-20T18:00:00-04:00"` + `"date:Event Date:end": "2026-04-20T20:00:00-04:00"` + `"date:Event Date:is_datetime": 1`
+
+5. **Before any batch create, verify live schema via `notion-fetch` on the data source URL.** The schema is authoritative; skill docs and CLAUDE.md can drift. If a validation error fires, the API error text lists the exact valid option set — use that.
+
+6. **Write order matters (bidirectional relations).** Create Companies + Topics first (no dependencies), then People (needs Company URLs), then Event (needs People + Companies + Topics URLs), then Content Draft (needs Event URL). Skipping the order causes relation fields to come back empty.
 
 Page body content: expanded company research (full analysis from Step 2c).
 
