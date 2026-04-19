@@ -115,8 +115,14 @@ Alex pastes calendar invite description + adds natural language context:
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase 
   (select: pre_event/during_event/post_event), Content Status (select: needs_review/approved/
-  scheduled/published), Platform (select: linkedin/slack/notion_only), Published URL (url), 
+  scheduled/published/archived), Platform (select: linkedin/slack/notion_only), Published URL (url), 
   relations to Event/People/Topics/Project Ideas
+  Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
+  Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —
+  terminal state, preserves relation graph for future knowledge base synthesis.
+  Status flow: needs_review → approved → scheduled → published. archived is reachable from
+  any state and is terminal. Archived content stays in the same DB (relations intact) —
+  deliberately not a separate archive table, to keep the graph whole for Phase 3-6 knowledge base mining.
 - Project Ideas (17 props): Project Name (title), Status (select: needs_review/active/shipped/
   archived/deleted), Proposal Type (select: feasible/stretch), Complexity Band (select: 
   prototype/small_tool/MVP/full_project), Stack Coverage % (number), Relevance (number 1-10),
