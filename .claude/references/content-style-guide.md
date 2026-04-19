@@ -122,20 +122,136 @@ If the answer is no, rework the insight before presenting.
 
 ## Visual Content
 
-Every LinkedIn post should have a supporting visual. Text-only posts signal a lack of
-modern content skill and will be filtered out by the audience Alex is targeting.
+Every LinkedIn post ships with a supporting visual. Text-only posts signal a lack of
+modern content skill and get filtered out by the audience Alex targets.
 
 ### Visual Output Per Post: 3 Briefs
 1. **Directly Supportive (Data/Stat)** — Clean visual reinforcing the post's key data point
 2. **Directly Supportive (Conceptual/Framework)** — Diagram, map, or framework visual
 3. **Wild Card 🌶️** — Professional but spicier. Different aesthetic, unexpected format, edge.
 
-### Visual Style Baseline
-- **Clean and crisp** — no clutter, high contrast, immediately readable
-- **Data should be scannable in 2 seconds** — if someone can't get the point while scrolling, it fails
-- **No stock photo energy** — designed, intentional, specific to the content
+### Format & Sizing (LinkedIn-Optimized)
+
+LinkedIn's mobile feed crops to fit. **4:5 portrait is the default** — it takes
+~20% more vertical screen space than 1:1 and ~65% more than 16:9, which directly
+increases dwell time.
+
+| Format | Dimensions | When to Use |
+|---|---|---|
+| Single image (default) | 1080x1350 (4:5) | Most pre-event and post-event visuals |
+| Single image (acceptable) | 1200x1200 (1:1) | Only when 4:5 crops the content badly |
+| Carousel / PDF slides | 1080x1350 (4:5) — consistent across all slides | Multi-step narratives |
+| Retina export | Create at 2160x2700, export at 1080x1350 | Always — no exceptions |
+
+- File format: **PNG** for graphics with text, **JPG** for photos, **PDF** for carousels
+- Max file size: 10MB per image, 100MB per PDF carousel
+
+### The 2-Second Thumb Test (Non-Negotiable Quality Gate)
+
+If the core message isn't readable in 2 seconds while scrolling on a phone, the visual fails.
+This is the visual equivalent of the post's hook.
+
+- **Max 8 words** in the primary headline on any image
+- **Min font size: 48px at 1080px wide** (~4.5% of image width)
+- **Contrast: light-on-dark OR dark-on-light. Never medium-on-medium.**
+- **No paragraph text on images.** That's what the post body is for.
+- Test at 375px wide (iPhone SE viewport) before shipping — if you squint, it's too small
+
+### One Visual = One Idea
+
+Each image communicates exactly one concept. If the post caption has to explain
+the image, the image isn't working. If the image tries to show three things, none land.
+
+- Data visual → one stat or one comparison
+- Framework visual → one diagram or one process
+- Quote card → one quote, attributed
+- Carousels tell multi-step stories, but each slide still gets one idea
+
+### Data Visual Principles
+
+When visualizing a stat, **extract the insight** — don't recreate the full chart.
+The audience is scrolling, not analyzing.
+
+- Lead with the number: "23% improvement" at 72px bold, context smaller beneath
+- Comparison format: before/after, side-by-side, or progress bar — not raw charts
+- Kill chart junk: no gridlines, no 3D, no legends requiring cross-reference
+- **One accent color** for the data point you want seen. Gray for everything else.
+- Source attribution: small text, bottom corner — "Source: [name], 2026"
+
+### Carousel Architecture
+
+Carousels (uploaded as LinkedIn PDFs) get ~1.5-2x the engagement of single images
+because each swipe counts as interaction. They need structure to pay off.
+
+- **Slide 1 (Hook):** Bold headline + visual hook. This is the thumbnail — treat like a book cover.
+- **Slides 2-N (Content):** One idea per slide, consistent layout, progressive narrative.
+- **Final slide (CTA):** "Follow for more" or a specific question that drives comments.
+- **Sweet spot:** 5-8 slides. Under 5 feels thin. Over 10 loses people.
+- **Page numbers:** Bottom corner, small — signals "there's more to swipe."
+
+### Color Strategy
+
+Until a locked brand kit exists (Minimal V1 still applies), use a **constrained
+palette per content type**, not per post. Visual recognition compounds over time.
+
+- Safest high-impact formula: **Dark background + white text + one accent color**
+- Accent by topic area:
+  - Tech / AI → blue
+  - Data / infrastructure → green
+  - Business / GTM → amber
+  - Contrarian / hot take → red
+- **Never more than 3 colors** in a single visual (background + text + accent)
+- Avoid: red-green pairings (colorblind-hostile), pure white backgrounds (mobile glare), neon-on-neon
+
+### No Stock Photo Energy — Ever
+
+"Stock photo energy" means generic, interchangeable, could-be-any-company. The
+visual must be specific to *this* content.
+
+- ✓ Good: A designed stat card with the actual number from the research brief
+- ✓ Good: A diagram mapping the actual framework the post discusses
+- ✓ Good: An AI-generated image prompted from a specific concept in the post
+- ✗ Bad: Stock photo of people shaking hands, laptops on desks, abstract geometric patterns
+- ✗ Bad: A Canva template where only the text changed — if the layout looks familiar, it's a template
+
+### AI Image Generation: Be Architectural, Not Aspirational
+
+When prompting Gemini (Imagen 3) for custom visuals, treat the prompt like a
+creative brief, not a wish. Prompt quality directly determines output quality.
+
+- **Specify composition:** "centered, symmetrical, negative space on left for text overlay"
+- **Specify style explicitly:** "flat vector illustration" / "editorial magazine photography" / "technical diagram style" — **never** "professional looking"
+- **Specify negatives:** "no text, no watermarks, no people, no generic tech imagery"
+- **Specify mood:** "authoritative and clean" vs. "bold and provocative" vs. "minimal and sophisticated"
+- **Iterate in 3 rounds:** prompt → evaluate → refine → evaluate → final. First output is a draft, not the deliverable.
+
+### Accessibility (Non-Negotiable)
+
+8% of men are colorblind. 15% of the global population has a disability. Alex's
+audience is hiring managers, executives, and peers — these aren't stretch goals.
+
+- **Alt text on every image** — LinkedIn supports it. Describe what the visual *shows*, not what it *looks like*.
+- **Never rely on color alone** to convey meaning — pair color with labels, patterns, or icons.
+- **Contrast ratio 4.5:1 minimum** for text on background (verify with WebAIM contrast checker)
+- **No flashing or rapid animation** in GIFs
+- **If it's a data visual, include the data in the post text too** — the image complements, never replaces
+
+### Format Selection by Content Type
+
+Match format to content, not vice versa. Don't make a carousel when a single image is sharper.
+
+| Content Moment | Best Format | Why |
+|---|---|---|
+| One killer stat | Single image, 4:5 portrait | Hero number + context. Clean, shareable. |
+| Process or framework | Carousel (5-8 slides) | Each step gets a slide. Swipe = narrative momentum. |
+| Hot take / contrarian insight | Bold typography card | Text IS the visual. Big font, dark bg, one sentence. |
+| Event recap with multiple moments | Carousel with photos | Documentarian angle. Each slide = one moment. |
+| Comparison (before/after, X vs Y) | Single image, split layout | Side-by-side at a glance. |
+| Conceptual or abstract idea | AI-generated custom image | Gemini/Imagen for what doesn't exist as a photo. |
+| Multi-event weekly preview | Carousel (1 slide per event) | Each event gets its own visual treatment. |
 
 ### Tool Selection for Visuals
+
 | Need | Tool |
 |---|---|
 | Social-optimized infographic, designed graphic | Canva |
@@ -144,7 +260,7 @@ modern content skill and will be filtered out by the audience Alex is targeting.
 | Presentation-style video | Google Vids |
 
 ### Visual Identity (Minimal V1)
-- To be developed through iteration — no locked brand kit yet
+- No locked brand kit yet — identity develops through iteration
 - Default toward clean, professional, high contrast
 - Wild card visuals are where color, illustration, and editorial boldness live
 
@@ -155,5 +271,5 @@ modern content skill and will be filtered out by the audience Alex is targeting.
 
 ---
 
-*Last updated: 2026-04-09*
-*Version: 0.2 — Added visual content approach, anti-pattern captures from Snowflake DM test*
+*Last updated: 2026-04-18*
+*Version: 0.3 — Added 10 visual content best practices (format specs, 2-second thumb test, one-visual-one-idea, data principles, carousel architecture, color strategy, AI prompting rules, accessibility, format-by-content-type)*
