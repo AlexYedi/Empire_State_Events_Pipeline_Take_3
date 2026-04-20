@@ -1,0 +1,19 @@
+diff --git a/dist/db/lib/build.mjs b/dist/db/lib/build.mjs
+index 768477014333c3947fb4a15e2fb82329204948bc..b131a88c2fcc225f28c4e081016a80c0285a0f4a 100644
+--- a/dist/db/lib/build.mjs
++++ b/dist/db/lib/build.mjs
+@@ -72,11 +72,12 @@ export async function buildDatabaseSchema(buildDir, { relativeDir, alias } = {})
+     }),
+     alias: {
+       ...alias,
+-      "hub:db:schema": entry
++      "hub:db:schema": entry,
++      "@nuxthub/db/schema": entry
+     },
+     platform: "neutral",
+     format: "esm",
+-    skipNodeModulesBundle: true,
++    skipNodeModulesBundle: false,
+     tsconfig: false,
+     dts: {
+       build: false,
