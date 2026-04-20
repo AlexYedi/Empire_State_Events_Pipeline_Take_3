@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/discord/gateway",
+      "schedule": "*/9 * * * *"
+    },
+    {
+      "path": "/api/_cron/evlog-cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

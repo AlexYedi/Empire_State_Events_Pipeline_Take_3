@@ -1,0 +1,34 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: 📦 Install dependencies
+        run: bun install
+
+      - name: 💅 Lint code
+        run: bun run lint
+
+      - name: 🧪 Run tests
+        run: bun run test
+
+      - name: 📦 Build packages
+        run: bun run prepare
+
+      - name: Publish preview
+        run: bunx pkg-pr-new publish --compact --no-template './packages/sdk'
