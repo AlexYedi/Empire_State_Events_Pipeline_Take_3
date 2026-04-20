@@ -28,7 +28,60 @@ This is V1.1. Two parts that stand alone (per your instructions) and are meant t
 
 ## PART 0 — Role Archetype Synthesis
 
-Before the coursework, a quick grounding on what the five JDs actually collapse into. This is the target you're optimizing for.
+Before the coursework, a quick grounding on what the five JDs + the Clay blog actually collapse into. This is the target you're optimizing for.
+
+### The thesis, stated plainly: you are Clay's archetypal hire
+
+Clay's GTM engineering post says the quiet part loudly: "Just as Harvey uses lawyers to sell legal software and Prompt Health uses therapists to sell and support their product, Clay uses GTMEs to sell Clay. These sellers have deep empathy for our customers and speak their language."
+
+Read against your background — 12+ years enterprise AE closing the exact workflow Clay automates, now building agentic systems in the same thesis space — you are not an AE learning to code. **You are the consultative seller who's lived the workflow AND can now build against it.** That is Clay's explicit hiring mental model for the Forward Deployed GTME role, and it is the single sharpest frame for your positioning. Part 2 Stage 2 operationalizes this; flag it now because it should color how you read the rest of this document.
+
+### The operating sequence: data foundation → modeling → activation
+
+Clay's blog makes one taxonomic claim that is non-negotiable:
+
+> "GTM Engineers offer a portable toolkit that only works when the stack beneath it is solid. Their work progresses through three rungs, each building upon the last."
+
+1. **Data foundation** — clean, deduped, trustworthy CRM + warehouse records. Automated enrichment jobs, schema audits, merge-and-purge routines, ownership rules.
+2. **Data modeling** — unique data points that *predict* purchase, expansion, or churn. Propensity scores, ICP attributes, AI-data points.
+3. **Data activation** — unique data points deployed in revenue-generating workflows. Automated outreach, meeting notes, churn-risk nudges, sales enablement.
+
+"Most companies stumble on the first rung." That is both the market truth and the interview punchline. The nine coursework domains in Part 1 each serve one or more of these rungs — I flag which one(s) as we go. When you're building your portfolio (Domain 3) and answering assessment questions (Part 2 Stage 6), default to: *what rung is this serving, and have we earned the right to be on it?*
+
+### "GTM alpha": the concept you are selling yourself as a vector for
+
+Clay's framing: GTM tactics have commoditized ("prospects get hundreds of generic cold emails"), and the edge now lives in **unique data + differentiated plays**. They call this *GTM alpha*. The example in the post — "you should spend resources targeting NYC cafes with $10-20 entrees who just joined DoorDash—and help you reach them tomorrow, not next quarter" — is narrow, signal-rich, and executed in hours, not quarters.
+
+This is the concept to anchor your narrative on. Your interview answers, your LinkedIn posts, your portfolio writeups should demonstrate that you think in terms of GTM alpha — signal density, segmentation narrow enough to be defensible, execution speed measured in hours. The opposite (the thing you are *against*) is the "hire 10 more reps for every 10% pipeline lift" worldview.
+
+### Where the function actually lives: two org-model archetypes
+
+Clay documents the two dominant patterns. Both are real, and they determine what the role you're applying for *actually does*:
+
+**Model 1 — GTME inside RevOps (the dominant pattern).** GTMEs report into RevOps or GTM ops. Often splits into prototypers and implementers: generalists close to sales hack proofs-of-concept, engineers harden winners for millions of CRM rows. Named setups in the blog:
+
+- **Intercom** — Alexander DeMoulin's GTM Ops pilots plays (e.g., TAM enrichment); GTM Systems, embedded in R&D, scales to production.
+- **Canva** — Robert Jones's GTM AI team automates workflows (e.g., transcript summarization); separate enrichment team pipes novel data in.
+- **Notion** — three teams: Evan Peters owns RevOps + Strategy with a GTM innovation pod (→ CRO); Jalal Iftikhar and Shelley Lee own BizTech + automation engineering (→ CFO); Theo Bleier is an embedded AI engineer (→ CTO).
+- **Anthropic** — GTM Infrastructure & Incentives pod under Adam Wall; a "Productivity Engineering" sub-squad wields Claude + Clay.
+
+Why it works: "RevOps already owns data pipelines and quality, so lodging GTMEs here draws a straight line from 'we spotted a friction point' to 'we shipped the fix.'"
+
+**Model 2 — GTME inside Growth.** Technical talent beside demand gen, unlocks programmatic landing pages, real-time intent harvesting, SDR automation. Named setups:
+
+- **Ramp** — Growth Platform squad under PMs like Keyan Sarrafzadeh, partnered with Growth Engineering; two-week sprints; separate Business Systems group for Salesforce plumbing.
+- **Verkada** — GTMEs under Davide Grieco in the Growth team reporting to CMO; 80-100 meetings per rep per month via SDR workflow automation.
+- **Rippling** — GTM engineering inside Noah Adelstein's international growth team + US growth team; frequent growth experiments, automated outbound + direct mail.
+
+Why it works: "embedding technical talent beside demand gen unlocks ideas — programmatic landing pages, real-time intent harvesting — that traditional marketers might never attempt."
+
+**Cross-model lessons you should internalize before any interview:**
+
+1. "Start in ops, federate later." Most companies incubate GTME under RevOps then push talent outward once foundations are solid.
+2. Balance rapid prototyping with stable implementation. Data engineering skills matter when experiments scale.
+3. Data hygiene is non-negotiable. Every win traces back to clean, enriched, well-modeled data.
+
+These three lines should appear in your interview answers. They're table-stakes fluency now.
 
 ### What the five JDs have in common (the archetype)
 
@@ -56,15 +109,17 @@ Reading across the JDs, seven traits show up in every one of them — these are 
 
 ### What this means for you specifically (Alex)
 
-You already have the commercial backbone — 12+ years enterprise AE, land-and-expand motion, multi-stakeholder deals. That is the hardest piece to teach. What's missing for the full-stack archetype is:
+You already have the commercial backbone — 12+ years enterprise AE, land-and-expand motion, multi-stakeholder deals — **and you're already mid-build on an agentic system (Empire State Events) that exemplifies the rung-2 + rung-3 work Clay is hiring for.** That combination is exactly the consultative-seller-who-built-it archetype from the opening thesis. The commercial chops are the hardest part to teach; the build chops are what most candidates are missing. You have both, in-flight.
+
+What's still to close for the full-stack archetype:
 
 - **Technical credibility** — not to become an engineer, but to be the person in the room who says "give me the API docs, I'll wire it up" without bluffing.
-- **Data fluency** — SQL to a working level, dbt to a vocabulary level, semantic layer to a decision level.
+- **Data fluency** — SQL to a working level, dbt to a vocabulary level, semantic layer to a decision level. This is what lets you operate on rung 1 (foundation) credibly, which is where Clay says most companies fail.
 - **AI/agent engineering** — prompting, agents, evals, MCP, context engineering. You're 70% there via the Empire State pipeline; needs reps.
 - **PMM craft** — positioning as a discipline, not a vibe. Message architecture. Competitive intel as a system.
-- **GTM systems thinking** — operating rhythm, funnel architecture, capacity modeling, inspection cadences. This is the language of the Head of GTM Architecture role.
+- **GTM systems thinking** — operating rhythm, funnel architecture, capacity modeling, inspection cadences. This is the language of the Head of GTM Architecture role and the language the Clay-blog-named operators (DeMoulin, Wall, Sarrafzadeh, Grieco) use in public.
 
-The coursework below is sequenced to close those gaps without losing what you already have.
+The coursework below is sequenced to close those gaps without losing what you already have, and each domain notes which rung of the Clay maturity model it serves.
 
 ---
 
@@ -149,9 +204,12 @@ A junior operator asks "are we hitting plan?" A senior operator asks "do we have
 ## Domain 3 — GTM Engineering Craft
 
 **Depth target: OWN** (the "GTM engineer" in "Full-Stack GTM Pro" is load-bearing)
+**Rung mapping: all three rungs — this is where the maturity model becomes executable.** You are moving clean foundations (rung 1) into predictive models (rung 2) into revenue-generating workflows (rung 3). Every build you ship should name the rung it serves.
 
 ### Why it matters
-This is the Forward Deployed GTM Engineer JD near-verbatim. "Design end-to-end Clay workflows and architectures that plug into existing GTM stacks." "Deeply hands-on with GTM tools." The Clay thesis is that the future GTM org has a **GTM engineering function** sitting between RevOps, marketing, and sales, owning the automation, enrichment, and routing layers. If you can do this work, you can walk into any AI-native company and immediately be useful — which is why this is also the fastest proof surface for the job hunt.
+This is the Forward Deployed GTM Engineer JD near-verbatim, and it is also the backbone of Clay's entire blog thesis. "Design end-to-end Clay workflows and architectures that plug into existing GTM stacks." "Deeply hands-on with GTM tools." The Clay framing: GTMEs are "an internal product team that serves the GTM organization — they identify problems, write specs, ship prototypes, and scale what works, measuring success by metrics like meetings booked and hours saved." If you can do this work, you can walk into any AI-native company and immediately be useful — which is why this is also the fastest proof surface for the job hunt.
+
+**Measurement frame you should adopt now and use forever:** every build, every portfolio artifact, every LinkedIn post about a workflow you shipped should lead with two numbers — **meetings booked** and **hours saved**. That is how Clay's own GTMEs self-report. It is the measurement vocabulary the hiring managers at your Tier 1 targets speak. Replace generic outcome language ("automated a workflow," "improved efficiency") with these two numbers or a hypothesis of them. If you can't quantify either, the build isn't shipped yet.
 
 ### Core concepts
 - **Workflow orchestration**: event-driven automation, webhooks, triggers, conditional branches, retries, error handling, idempotency.
@@ -169,10 +227,28 @@ This is the Forward Deployed GTM Engineer JD near-verbatim. "Design end-to-end C
 - **Segment / RudderStack** — event collection basics. You don't need to instrument an app, but you need to read a tracking plan.
 - **Postman / HTTPie / `curl`** — API sandboxing. Every GTM engineer lives here.
 
+### Portfolio play patterns to target (drawn from real Clay builds)
+
+The Clay blog lists specific GTME builds from their internal team. These are the *shapes* your portfolio should imitate — not one-to-one copies, but same category. Pick 3-4 to build end-to-end across the 12-week sprint. Each should ship with a meetings-booked or hours-saved number (even if hypothetical and defensible).
+
+| Pattern | What it does | Rung | Clay example |
+|---|---|---|---|
+| **Inbound scoring + auto-routing** | Scores new signups for fit, auto-assigns to best-fit rep, drafts follow-up referencing similar-customer use cases | 2 → 3 | Manny & Osman: $25k+ potential scoring + routing |
+| **Transcript → CRM backfill** | LLM listens to call recording, extracts firmographics + fields, writes to Salesforce, so reps never live in the CRM | 1 → 3 | Blake: Salesforce field auto-population |
+| **Signal digest in Slack** | Pipes account-awareness signal digest to individual sellers for call prep | 2 → 3 | Osman: signal digests to sellers |
+| **VIP event-invite cross-reference** | Matches event attendee list to CRM + geolocation, surfaces ideal invitees, auto-sends on seller's behalf | 2 → 3 | Spencer: VIP event invite play |
+| **One-click call rescheduling** | Auto-fires a "suggest a new time" link when prospect misses a meeting | 1 → 3 | Clay internal |
+| **Programmatic partner sourcing** | Scrapes social + website profiles, scores fit, powers influencer/partnership outbound | 1 → 2 → 3 | Tommy: influencer marketing program |
+| **Reverse-IP dynamic outreach** | Watches reverse-IP data, triggers personalized email while interest is hot | 2 → 3 | Pranav: dynamic visitor campaigns |
+| **Ticket-spike → docs drafting** | Flags surges in support tickets, drafts help-center articles to deflect next wave | 3 (CX) | Bruno: ticket-spike alarm |
+| **Expansion radar** | Scans support threads for enterprise-feature requests, feeds signals to AM before renewal | 2 → 3 (CX) | Osman: expansion signals |
+
+Your Empire State Events pipeline *already* maps to 2-3 of these patterns (notably the signal digest shape, the documentarian content-generation shape, and — after Phase 3 — the reverse-intake shape). Make that mapping explicit in your writeups.
+
 ### Hands-on benchmarks
-- **Capstone 1: Clay-equivalent in your own stack.** Build a workflow in n8n + HubSpot + Apollo/Clay free tier that (a) ingests a new HubSpot contact, (b) enriches with 2 providers in a waterfall, (c) classifies fit via LLM, (d) routes to the right sequence, (e) logs the decision to a Notion audit table. Document it in `workspace/strategies/` in your `gtm-agents` folder.
-- **Capstone 2: Event-driven outbound engine.** Ingest a signal source (Clay job-postings, BuiltWith, LinkedIn employment changes, funding), filter by ICP rules, generate a personalized first-touch via LLM, write to CRM, trigger sequence. End-to-end in ≤ 48 hours of build.
-- **Capstone 3: Forward-deployed consulting simulation.** Pick a public AI-native company. Write a 5-page implementation proposal as if you were pitching a Forward Deployed GTME engagement: current-state diagnosis, proposed architecture diagram, 6-week build plan, success metrics. Share on LinkedIn.
+- **Capstone 1: Clay-equivalent in your own stack.** Build a workflow in n8n + HubSpot + Apollo/Clay free tier that (a) ingests a new HubSpot contact, (b) enriches with 2 providers in a waterfall, (c) classifies fit via LLM, (d) routes to the right sequence, (e) logs the decision to a Notion audit table. Document it in `workspace/strategies/` in your `gtm-agents` folder. Report: hours saved vs. manual baseline; if inbound, meetings booked uplift hypothesis.
+- **Capstone 2: Event-driven outbound engine.** Ingest a signal source (Clay job-postings, BuiltWith, LinkedIn employment changes, funding), filter by ICP rules, generate a personalized first-touch via LLM, write to CRM, trigger sequence. End-to-end in ≤ 48 hours of build. Report: meetings booked per 100 contacts; hours saved vs. manual research.
+- **Capstone 3: Forward-deployed consulting simulation.** Pick a public AI-native company (ideally a Tier 1 target from Part 2 Stage 1). Write a 5-page implementation proposal as if you were pitching a Forward Deployed GTME engagement: current-state diagnosis, proposed architecture diagram, 6-week build plan, success metrics (meetings booked + hours saved). Share on LinkedIn. This is both a portfolio artifact and a job-search asset — it can walk in the door to a specific hiring manager.
 
 ### Frameworks & canonical sources
 - **Clay Academy** (free) — their own curriculum for learning Clay; table stakes if you want a Clay interview.
@@ -189,11 +265,12 @@ An enrichment waterfall is a cost-aware sequence of data providers that tries pr
 ## Domain 4 — Data & Analytics Fluency
 
 **Depth target: DO** (you don't need to be the Analytics Engineer; you need to be credible talking to one)
+**Rung mapping: rung 1 (data foundation) + rung 2 (data modeling).** This domain is specifically how you earn the right to be on rungs 2 and 3. "Most companies stumble on the first rung" — a fluent GTM engineer is the one who recognizes that and fixes it before attempting fancy activation.
 
 ### Why it matters
-The Analytics Engineer JD tells us what the modern AI-native data stack looks like: Fivetran, Segment, Snowflake, **dbt**, Dagster, Streamlit, Hex, Sigma, Eppo, Census, Cube.dev. You will not master all of these. You need to understand what each one does, speak SQL to a working level, and be able to look at a dbt model and understand what it's doing.
+Clay's blog is explicit: data hygiene is non-negotiable, and every win traces back to clean, enriched, well-modeled data. The Analytics Engineer JD tells us what the modern AI-native data stack looks like: Fivetran, Segment, Snowflake, **dbt**, Dagster, Streamlit, Hex, Sigma, Eppo, Census, Cube.dev. You will not master all of these. You need to understand what each one does, speak SQL to a working level, and be able to look at a dbt model and understand what it's doing.
 
-Why? Because the modern GTM org is governed by the **semantic layer** (dbt + metrics definitions), and if you can't read it, you will always be downstream of whoever can. The Head of GTM Architecture JD specifically calls out "exceptional quantitative modeling skills" — they mean you need to be able to open a spreadsheet or a notebook and build the model yourself.
+Why? Because the modern GTM org is governed by the **semantic layer** (dbt + metrics definitions), and if you can't read it, you will always be downstream of whoever can. The Head of GTM Architecture JD specifically calls out "exceptional quantitative modeling skills" — they mean you need to be able to open a spreadsheet or a notebook and build the model yourself. And in the assessment rubric Clay publishes (Part 2 Stage 6), a candidate who ignores data-quality or deliverability is flagged as a red flag. This domain is where you avoid that flag.
 
 ### Core concepts
 - **SQL at working depth**: joins (inner/left/right/full), window functions, CTEs, subqueries, aggregations, date math, NULL handling, grouping sets.
@@ -479,13 +556,27 @@ A ranked, tiered list of ~60 target companies that match "AI-native + full-stack
    - GTM leader is a practitioner, not a career COO (check LinkedIn backgrounds)
    - Signal the company values GTM engineering / AI-native GTM in their public surface
 2. **Source the list.** Use:
-   - Clay's own customer roster (public: Intercom, Verkada, Anthropic, OpenAI, Rippling, Notion, Ramp, Mercury — use these as anchors)
+   - Clay's own customer roster (public: Intercom, Verkada, Anthropic, OpenAI, Rippling, Notion, Ramp, Mercury, Canva — use these as anchors)
    - YC W24/S24/W25/S25 AI-native batches
    - Work at a Startup (YC), Interviewing.io's AI-native board
    - GTMFund, Craft Ventures, Accel AI portfolios
    - ICONIQ, Bessemer, a16z, Greylock, Sequoia AI-portfolio pages
    - Contrary Capital, South Park Commons, Founders Fund
    - Apollo saved search: AI-native + your fit criteria
+
+**Named tier-1 targets from the Clay blog (your starting anchor list).** These are the companies Clay explicitly calls out as running named GTM-engineering functions, with human operators named. Every one is a plausible home for you. Research each human by name, follow them, engage with their content, and map warm paths:
+
+| Company | Org model | Named operators |
+|---|---|---|
+| **Intercom** | GTME inside RevOps (GTM Ops + embedded GTM Systems in R&D) | Alexander DeMoulin (GTM Ops) |
+| **Canva** | GTME inside RevOps (GTM AI team + separate enrichment team) | Robert Jones (GTM AI) |
+| **Notion** | Tri-pod structure (RevOps → CRO, BizTech → CFO, embedded AI eng → CTO) | Evan Peters, Jalal Iftikhar, Shelley Lee, Theo Bleier |
+| **Anthropic** | GTM Infrastructure & Incentives pod; Productivity Engineering sub-squad | Adam Wall |
+| **Ramp** | GTME inside Growth (Growth Platform + Growth Engineering, 2-week sprints) | Keyan Sarrafzadeh (PM) |
+| **Verkada** | GTME inside Growth under CMO | Davide Grieco |
+| **Rippling** | GTME inside international + US growth teams | Noah Adelstein |
+
+These are your market map anchors. Also: Keith Jones and Rachel Hepworth are named as Clay insiders who shaped the blog — worth following for movement-level signal.
 3. **Tier the list** — use your `abm-orchestration/skills/account-tiering/SKILL.md` template literally:
    - **Tier 1 (10-12 companies):** dream fits. Deserve full customized research, personalized outreach, original work artifacts.
    - **Tier 2 (~25 companies):** strong fits. Lightly personalized approach; leverage content + network.
@@ -517,10 +608,12 @@ A crisp, defensible positioning statement about you, supported by 3-5 public pro
 ### Actions
 1. **Write your positioning one-pager** using April Dunford's template from Domain 6. Five components:
    - Competitive alternatives (what hiring managers would consider instead of you: a traditional AE + an RevOps analyst; a GTM generalist from a consulting background; an internal promotion)
-   - Unique attributes (12+ years enterprise, NYC AI-event documentarian, ships agentic systems weekly, builds in public)
-   - Value (compressed hiring: 1 senior hire covers AE + ops + AI-tooling + content)
+   - Unique attributes (12+ years enterprise, NYC AI-event documentarian, ships agentic systems weekly, builds in public, **has lived the workflow Clay and Clay-customers are automating**)
+   - Value (compressed hiring: 1 senior hire covers AE + ops + AI-tooling + content; you are the consultative-seller-who-built-it archetype Clay explicitly describes — "Harvey uses lawyers, Clay uses GTMEs")
    - Best-fit customers (Series A-C AI-native, 50-150 employees, GTM leader wants a generalist senior)
-   - Market category (this is the hardest and most valuable question — pick one: "Full-stack GTM hire," "Founding GTM engineer + AE," "Enterprise AE with operator instincts")
+   - Market category (this is the hardest and most valuable question — pick one: "Full-stack GTM hire," "Founding GTM engineer + AE," "Enterprise AE with operator instincts," "Consultative seller for AI-native GTM products")
+
+**The narrative hook to steal from Clay's blog.** Your positioning doc's opening paragraph should echo (not copy) the Harvey/Clay pattern: *"The best sellers of this product are people who have lived the problem — lawyers selling Harvey, therapists selling Prompt Health, GTM engineers selling Clay. I'm the enterprise AE who's lived twelve years of the workflow these tools are automating, and now I'm building on the other side of it."* That is a one-paragraph frame that aligns you with Clay's stated hiring thesis without you having to claim the title.
 2. **Audit and overhaul your LinkedIn.**
    - Headline: role-language that matches your positioning, not job-title-language.
    - About: SCQA structure. Setup (what's changing in GTM), complication (most people are on one side of the AI fence), question (what does full-stack GTM actually look like), answer (here's how I practice it).
@@ -570,9 +663,12 @@ A public body of work that does three jobs at once: (a) proves the skill domains
 - Impressions + engagement rate trend (arcs over 8-12 weeks, not week-to-week)
 - Warm inbound per week (DMs from new targets)
 - Content → meeting conversion (how many posts led to a real conversation with a target-company person)
+- **For any build-writeup post: meetings booked + hours saved** (adopt Clay's measurement vocabulary — this is the language hiring managers at your Tier 1 targets use natively)
 
 ### What the top 1% does
 Publishes a recurring, ownable format. One example: someone publishes a monthly "State of GTM Engineering" essay. Two things happen: (a) hiring managers read it because they want the information, and (b) you become the person they think of when they think about the topic. This is PMM positioning applied to yourself. Your documentarian angle from the Empire State pipeline already *is* an ownable format — productize it.
+
+**The build-writeup template that signals rigor.** Every shipped-project post should follow this skeleton: (1) the problem in one sentence, (2) the rung of the Clay maturity model this build serves, (3) the signal/data source, (4) the workflow shape in 3-5 bullets, (5) the measurement — meetings booked (actual or hypothesized) + hours saved vs. manual baseline, (6) what you'd build next. Six sections, 250-400 words, 1 diagram. This is exactly the shape of the build snippets in the Clay blog (Manny/Osman, Blake, Spencer, Tommy, Pranav, Bruno). Imitating the shape signals fluency.
 
 ---
 
@@ -651,24 +747,64 @@ Sends a Loom before the interview offering a teardown of the company's current s
 ## Stage 6 — Evaluation (interviews + take-home + on-site)
 
 ### Objective
-Run every process to a "best-in-class" version of itself so that regardless of fit, your reputation with that company compounds for future moves.
+Run every process to a "best-in-class" version of itself so that regardless of fit, your reputation with that company compounds for future moves. And — critically — teach to Clay's **published assessment rubric**, because it is the rubric the Intercom / Notion / Ramp / Verkada / Anthropic hiring managers all run implicitly too.
+
+### The three-part assessment Clay publishes (teach to this test)
+
+Clay's blog lays out exactly how they evaluate GTM engineering candidates. The shape is:
+
+**Part A — Business problem investigation.** They hand you a fuzzy problem (e.g., "Our trial-to-paid rate won't budge"). They are evaluating whether you ask the right *first* questions before building anything. Strong candidates ask:
+
+- Who is our ICP?
+- What are we missing in their journey?
+- Which signals tell us someone is ready to buy or churn?
+- What do our most successful customer conversations look like? (work backwards from there)
+
+Answers should explore **both market levers (new intent data) and internal levers (slow SDR-to-AE routing)**. Candidates who only explore one side get screened out. Specificity is the tell — not "I'd look at the funnel" but "I'd pull the last 30 trial cohorts, cut by ICP fit score, and compare their 7/14/30-day activation patterns against converted trials; my hypothesis is the gap is in D3-D7."
+
+**Part B — Systems sketch.** They ask you to turn the insight into a working flow. They are evaluating whether you can:
+
+- Pick good, unique data points to track (rung 2)
+- Keep the data clean (rung 1 — don't skip this; this is the stumble point)
+- Plug data into a Clay-or-equivalent workflow (rung 3)
+- Test, measure results, iterate
+
+The visible signal they want is a mindset of *hypothesis → instrument → measure → iterate*, not *build → launch → hope*.
+
+**Part C — Mini build challenge (take-home).** Actual build, any tool is fair. Example: design and validate a specific set of data points that predict churn. What separates good from weak submissions:
+
+- Explains **assumptions and fallback logic** (e.g., "if the primary enrichment source returns null, I fall back to X because...")
+- Addresses **suppression and multi-channel sequencing** (no blast-all emails; no list-bombing)
+- Shows how they'll **measure success and iterate** (success criterion stated in advance, not in hindsight)
+- Ships a **Loom walkthrough** of the artifact (disproportionately effective — see Stage 5)
+
+**Clay's published red flags (memorize — avoid):**
+
+1. **Tunnel vision** — one solution, no alternatives considered.
+2. **Single-channel thinking** — only email, or only ads, or only outbound; no recognition that modern GTM is multi-channel.
+3. **Deliverability blindness** — designing outbound without addressing domain warming, suppression, targeting fatigue.
+4. **No measurement plan** — proposing a build without stating how success will be verified.
+
+If your take-home contains any of these, you've self-disqualified.
 
 ### Actions
 1. **Use your own call-prep stack.** For every interview, run `sales:call-prep` and write a 1-page prep doc: interviewer research, expected topics, expected objections, your three highest-leverage questions, your three best examples, the close you'll deploy if asked "do you have any questions."
 2. **Interview stages to expect at AI-native companies (approximate):**
-   - Recruiter screen → Hiring manager → Skip / peer panel → Technical / case → Founder / exec → References + offer.
-3. **Take-home / case strategy.** You will almost certainly get one. Treat it as a mini-consulting engagement:
-   - Scope ruthlessly. Ask clarifying questions in writing.
-   - Deliver the answer *and* your reasoning. Show 2-3 alternatives you rejected and why.
+   - Recruiter screen → Hiring manager → Skip / peer panel → **Technical / case (structured as A → B → C above at GTME-hiring companies)** → Founder / exec → References + offer.
+3. **Take-home strategy, reframed against Clay's rubric:**
+   - Scope ruthlessly; ask clarifying questions in writing *before* building. (This is also the behavior they're grading for — candidates who don't ask clarifying questions fail Part A implicitly.)
+   - Structure your deliverable around the three parts: *diagnosis → systems sketch → build + measurement plan*. Explicitly.
    - Beat the time-box by *delivering less scope better* rather than *more scope sloppily*.
-   - Include a 90-second Loom walkthrough of your artifact.
+   - Include a 90-second Loom walkthrough of your artifact. Open the Loom with: "Here's what I was asked, here's how I interpreted the problem, here's what I built and why, here's how I'd measure success and iterate." That is the three-part rubric, in order, on camera.
 4. **Assume every company has a "will they raise the bar" question.** For a senior GTM role at an AI-native company, that question is "would this person teach me something about GTM I don't already know?" Every answer should include specific, contrarian, but defensible opinions. "I don't know yet, but here's how I'd find out" is a valid answer; vague motherhood statements are not.
-5. **Post-interview debrief with yourself.** Same-day, 10 min: what worked, what didn't, what you'd change. Update your prep doc.
+5. **Bring the three Clay cross-model lessons into conversations unprompted:** (a) start in ops, federate later; (b) balance prototypers with implementers; (c) data hygiene is non-negotiable. These are now table-stakes fluency signals for anyone hiring into this function.
+6. **Post-interview debrief with yourself.** Same-day, 10 min: what worked, what didn't, what you'd change. Update your prep doc.
 
 ### Tools & artifacts
 - Cowork `sales:call-prep` and `sales:call-summary` skills
 - Granola (you use it) — transcription + notes
 - Your event-research pipeline's muscles — you already know how to ingest context quickly
+- Your portfolio's three Capstones from Domain 3 — at least one should be tailorable into a take-home answer
 
 ### Metrics to track
 - Pass-through rate per stage (if < 50% at any one stage, something is systemically off — diagnose)
@@ -676,7 +812,7 @@ Run every process to a "best-in-class" version of itself so that regardless of f
 - Number of concurrent processes (target: ≥ 3 in late stages when you hit offer — this drives leverage)
 
 ### What the top 1% does
-Brings a 90-day plan to the on-site that is specific enough that the hiring manager's question shifts from "should we hire you?" to "would you accept if we offered?" This is textbook Challenger: you have taught them something about their own business during the interview process.
+Brings a 90-day plan to the on-site that is specific enough that the hiring manager's question shifts from "should we hire you?" to "would you accept if we offered?" This is textbook Challenger: you have taught them something about their own business during the interview process. A strong move at GTME-hiring companies specifically: bring a 30/60/90 that explicitly identifies which maturity rung their current stack is on, what you'd shore up on rung 1 first, and the first three rung-3 plays you'd ship once the foundation is solid. That answer is almost certainly not what other candidates bring.
 
 ---
 
@@ -750,21 +886,19 @@ Treats the first 90 days as a public body of work and a team's onboarding templa
 
 # Part 3 — What's next
 
-Per your instructions, we stop here for now so you can react to Parts 1 and 2 independently.
+With the Clay blog integrated, the remaining iteration passes are:
 
-When you're ready for the next iteration, the logical next passes are:
-
-1. **Fidelity pass on Part 1** — pressure-test domain priorities, depth targets, and the 12-week track design against your actual calendar and constraints. Drop or downshift what doesn't fit.
-2. **Fidelity pass on Part 2** — red-team the stage definitions, metrics, and differentiators. I'm certain at least 2 stages have missing contingencies (Stage 5 outreach cadence; Stage 7 multi-process timing). Let's stress-test them.
-3. **Synthesize onto the Empire State Events Pipeline build plan** — map each track's weekly work against what you're already building (event-research skill, content skills, pattern-synthesis, project-ideation). This is where the "real world training program" framing earns its keep: every capstone from Part 1 is built on top of Empire State, not next to it.
-4. **Integrate the Clay GTM Engineering blog post** — I couldn't ingest the full article this session; once we have the key passages, we can sharpen the archetype definition in Part 0 and recalibrate Domains 2, 3, and 6 against Clay's stated thesis rather than just their JD implementations of it.
+1. **Fidelity pass on Part 1** — pressure-test domain priorities, depth targets, and the 12-week track design against your actual calendar and constraints. Drop or downshift what doesn't fit. Key open lever: weekly hour budget (see confidence section).
+2. **Fidelity pass on Part 2** — red-team the stage definitions, metrics, and differentiators. I'm still certain at least 2 stages have missing contingencies (Stage 5 outreach cadence; Stage 7 multi-process timing). Let's stress-test them.
+3. **Cross-map coursework onto the Empire State Events Pipeline build plan** — map each track's weekly work against what you're already building (event-research skill, content skills, pattern-synthesis, project-ideation). The Domain 3 play-pattern table is the connective tissue for this: several Empire State components already map to real Clay-published patterns. This is where the "real world training program" framing earns its keep — every capstone from Part 1 is built on top of Empire State, not next to it.
+4. **Second-order build targets from the blog** — the blog names specific GTME team members at Clay itself (Manny, Osman, Spencer, Tommy, Blake, Bruno, Pranav). Their published plays are the highest-resolution public record of what "good" looks like. A later pass: pick 2-3 of those plays, build your own version, publish with a walkthrough. Becomes both portfolio and a conversation-opener into Clay itself.
 
 ---
 
-## Confidence on this V1
+## Confidence on V1.1
 
-- **Role archetype synthesis (Part 0):** 80% — five JDs is a strong sample, but one document (the blog) is missing and would tighten category language.
-- **Coursework structure (Part 1):** 75% — domains are right; depth targets and sequencing are subjective and will move once you react.
-- **Job-hunt funnel (Part 2):** 70% — the structure is sound, but the differentiators will improve significantly after one iteration with your specific network, risk tolerance, and time budget in hand.
+- **Role archetype synthesis (Part 0):** 88% (up from 80% in V1). The Clay blog is now integrated; the consultative-seller thesis, three-rung model, and org taxonomy are load-bearing additions. The remaining 12% is that I'm synthesizing across 5 JDs + 1 blog — field-testing with 2-3 actual practitioner conversations would tighten it further.
+- **Coursework structure (Part 1):** 78% (up from 75%). Rung mappings and the Domain 3 play-pattern table meaningfully sharpen "what good looks like." Depth targets and 12-week sequencing are still subjective and move once you react.
+- **Job-hunt funnel (Part 2):** 78% (up from 70%). Stage 1 named targets and the Stage 6 Clay rubric are the biggest confidence lifts — those are now grounded in Clay's own published material, not inferred. Stages 5 and 7 are still the weakest (contingencies and timing, as called out above).
 
-The biggest open question I'd want answered before v2 is: **what's your actual weekly hour budget for this, realistically?** The 12-week sprint plan assumes ~16-20 hours/week of directed learning + building, which is aggressive while also holding down your current role. If that number is 8 instead of 18, the whole sequence compresses into a 24-week plan and the emphasis shifts.
+**The single biggest open variable that would change a lot of this is still your actual weekly hour budget.** The 12-week sprint plan assumes ~16-20 hours/week of directed learning + building, which is aggressive while also holding down your current role. If that number is 8 instead of 18, the whole sequence compresses into a 24-week plan and the emphasis shifts toward Track A (Build) at the expense of Track B (Study).
