@@ -1,22 +1,28 @@
-# The Full-Stack GTM Roadmap — V1
+# The Full-Stack GTM Roadmap — V1.1
 
-**Author:** Claude (with Alex) · **Date:** 2026-04-20 · **Status:** V1 for iteration
+**Author:** Claude (with Alex) · **Date:** 2026-04-20 · **Status:** V1.1 — Clay GTM engineering blog integrated
 
 ---
 
 ## How to read this document
 
-This is a V1. It has two parts that stand alone (per your instructions) and are meant to be argued with, not accepted:
+This is V1.1. Two parts that stand alone (per your instructions) and are meant to be argued with, not accepted:
 
-- **Part 1 — Coursework.** The skill domains and sequencing required to become the "Full-Stack GTM Pro" archetype implied by the five Clay JDs and the broader GTM-engineering movement. Organized by capability domain, with depth targets, resources, and benchmarks.
+- **Part 1 — Coursework.** The skill domains and sequencing required to become the "Full-Stack GTM Pro" archetype implied by the five Clay JDs, the Clay GTM-engineering thesis, and the broader movement. Organized by capability domain, with depth targets, resources, and benchmarks.
 - **Part 2 — Job-hunt funnel.** The search run as an AI-native full-funnel GTM motion, from market mapping through offer close and ramp. Each stage has objective, actions, tools, artifacts, metrics, and a "what the top 1% does" differentiator.
 
-Two intentional omissions, both flagged:
+**What changed from V1 → V1.1 (Clay GTM engineering blog integration):**
 
-1. I could not ingest the full Clay GTM-engineering blog post in this session — the fetched page was too large for the tooling path available here. The JDs (which are downstream of that thesis) gave me a rich enough picture to build V1; we should revisit specific passages from the blog in the iteration pass to sharpen language.
-2. I have not yet mapped the coursework onto the Empire State Events Pipeline build plan — per your instructions, that comes after we align on 1 and 2.
+1. Part 0 opens with the consultative-seller thesis — this is Clay's explicit hiring mental model ("Harvey uses lawyers, Clay uses GTMEs"), and it is your positioning bullseye.
+2. Part 0 adds the three-rung maturity model (Data foundation → Data modeling → Data activation) as the operating sequence the nine domains serve.
+3. Part 0 adds the "GTM alpha" concept and a concrete org-model taxonomy (GTME inside RevOps vs. GTME inside Growth), with named companies + humans.
+4. Domain 3 (GTM Engineering Craft) gets six concrete portfolio play patterns drawn from real Clay builds, plus the "meetings booked / hours saved" measurement frame.
+5. Part 2 Stage 1 (Market Mapping) gets a named-human tier-1 target list at Intercom, Canva, Notion, Anthropic, Ramp, Verkada, Rippling.
+6. Part 2 Stage 6 (Evaluation) is rewritten to teach to Clay's actual published three-part assessment rubric (business problem investigation → systems sketch → mini build challenge), including their stated red flags.
 
-**Source material used:** Five Clay JDs (Forward Deployed GTM Engineer, Head of GTM Architecture, Product Marketing, Analytics Engineer, Enterprise Growth Strategist-CS); the `gtm-agents` marketplace (243 skills across 67 plugins); your CLAUDE.md project architecture for the Empire State Events pipeline.
+**Still outstanding:** the coursework has not yet been cross-mapped to the Empire State Events Pipeline build plan — per your instructions, that's the next pass.
+
+**Source material used:** Five Clay JDs (Forward Deployed GTM Engineer, Head of GTM Architecture, Product Marketing, Analytics Engineer, Enterprise Growth Strategist-CS); the Clay GTM engineering blog post (clay.com/blog/gtm-engineering, integrated in V1.1); the `gtm-agents` marketplace (243 skills across 67 plugins); your CLAUDE.md project architecture for the Empire State Events pipeline.
 
 ---
 
