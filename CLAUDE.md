@@ -133,7 +133,7 @@ Alex pastes calendar invite description + adds natural language context:
   (number 1-10), Demonstrability (number 1-10), Content Moments (number 1-10), 
   Composite Score (number), Architecture Summary (text), Created (created_time), 
   Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
-  Active project cap: max 2 active at a time (gate enforced by project-ideation skill)
+  Active projects tracked via Status select. No hard cap — Alex manages bandwidth manually (cap removed 2026-04-20).
 
 **HubSpot** (CRM — Contacts & Companies):
 - Standard contact fields: firstname, lastname, email, phone, company, jobtitle
@@ -203,8 +203,8 @@ Alex pastes calendar invite description + adds natural language context:
 - Tool coverage sweet spot: 60-80% current stack = optimal (normalized penalty scales outside range)
 - Timeline bands: < 3 days (prototype), 3-7 days (small_tool), 1-2 weeks (MVP), 2+ weeks (full_project)
 - Architecture confidence gate: >= 90% or proposal isn't generated
-- Active project cap: max 2 active, gate blocks new generation until shipped/archived/deleted
-- Scoring: 6 dimensions (1-10 each, equal weights V1) + 2 pass/fail gates
+- Active project awareness (not a gate): skill surfaces current active count before generating, but does not block
+- Scoring: 6 dimensions (1-10 each, equal weights V1) + 1 pass/fail gate (architecture confidence >= 90%)
 - Projects built BEFORE the event — demo, discuss, reference during networking
 - Reference file: portfolio-tracker.md (stack tiers, shipped projects, skills inventory)
 - Companion skill (deferred): project-complete.md — triggered when projects ship, updates portfolio tracker
