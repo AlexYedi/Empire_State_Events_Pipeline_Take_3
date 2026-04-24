@@ -40,6 +40,8 @@ Before any workflow, do these three steps in order:
 | 8 | Risk & Post-launch | `risk-playbooks` | Risk register + rollback criteria |
 | 9 | Evolution Log *(n+1 only)* | (orchestrator-native) | Delta + reasoning vs. prior turn |
 
+**Note on specialist count:** the library has **10 product specialists**, but `systems-thinking` is hard-invoked twice — once in Workflow 1 (Discovery, stakeholder map) and once in Workflow 4 (Prioritization, Three-Horizon lens). The two invocations apply different lenses from the same skill; treat them as distinct passes.
+
 ## Hard-invocation protocol
 
 For each workflow, do **not** paraphrase, shortcut, or merge specialists. Invoke as follows:
