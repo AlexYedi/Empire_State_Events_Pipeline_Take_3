@@ -67,5 +67,5 @@ For all 143 insights from 101 guests, see `references/guest-insights.md`
 
 - Writing North Star Metrics
 - Prioritizing Roadmap
-- Setting OKRs & Goals
-- Competitive Analysis
+- Systems Thinking
+- AI Product Strategy
