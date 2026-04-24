@@ -110,9 +110,9 @@ For every feature/build decision, ask: which horizon am I solving for right now?
 
 Use this table to make polish decisions explicit, not implicit. "Skipping CI at H1 is fine — it becomes mandatory at H2 trigger."
 
-### Future-State Register
+### Deferred Items table (part of the Future-State Register)
 
-Every build that ships at H1 or H2 gets a **Future-State Register** written to the Notion Project Ideas page body (managed by `head-of-product-engineering`). Three columns:
+Every build that ships at H1 or H2 gets a **Deferred Items** table written to the Notion Project Ideas DB row's page body as part of that project's Future-State Register (see `head-of-product-engineering/SKILL.md` for the full Register schema). Three columns:
 
 | Deferred Item | Trigger to Address | Effort Estimate |
 |---------------|--------------------|-----------------|
@@ -120,7 +120,7 @@ Every build that ships at H1 or H2 gets a **Future-State Register** written to t
 | Rate limiting | >10 concurrent users | 4 hours |
 | Audit log | SOC2 evidence gathering | 1 week |
 
-This makes deferrals explicit and revisitable. At each horizon transition, the register becomes the work backlog for that horizon. Reviewed at every `head-of-product-engineering` invocation for the same product.
+This makes deferrals explicit and revisitable. At each horizon transition, the table becomes the work backlog for that horizon. Reviewed at every `head-of-product-engineering` invocation for the same product.
 
 ### How this threads into other skills
 
