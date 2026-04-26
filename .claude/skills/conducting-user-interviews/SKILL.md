@@ -86,7 +86,7 @@ For all 64 insights from 43 guests, see `references/guest-insights.md`
 
 ## Related Skills
 
-- Analyzing User Feedback
 - Defining Product Vision
-- Measuring Product-Market Fit
-- Designing Surveys
+- Writing PRDs
+- Writing North Star Metrics
+- Prioritizing Roadmap

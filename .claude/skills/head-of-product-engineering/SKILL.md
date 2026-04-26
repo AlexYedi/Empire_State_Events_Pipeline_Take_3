@@ -21,9 +21,9 @@ Do **not** invoke for narrow single-specialist asks (e.g., "write me a PRD" → 
 Before any workflow, do these three steps in order:
 
 1. **Project name detection.** Extract or confirm the project name from the user's request. If ambiguous, ask once.
-2. **Future-State Register lookup.** Read `.claude/artifacts/future-state-register.md` (create if missing). Search for an entry matching the project name.
-   - **Found** → this is an **n+1 turn**. Load the prior future-state into working context. Workflow 9 (Evolution Log) will run at the end.
-   - **Not found** → this is a **first turn**. Initialize a new Register entry at the end. Skip Workflow 9.
+2. **Future-State Register lookup.** First try the Notion Project Ideas DB — search for a row matching the project name and load its page body. If Notion MCP is unavailable, fall back to the local mirror at `.claude/artifacts/future-state-register.md` (create if missing).
+   - **Found** (either source) → this is an **n+1 turn**. Load the prior future-state into working context. Workflow 9 (Evolution Log) will run at the end.
+   - **Not found** in both → this is a **first turn**. Initialize a new Register entry at the end (DB row + local mirror). Skip Workflow 9.
 3. **Scope confirmation.** Show the user the 8 (or 9) workflows in order. Ask: *"Any workflows you want to skip for this pass?"* Default to all hard-invoked if they say nothing.
 
 ## Workflow catalog
@@ -39,6 +39,8 @@ Before any workflow, do these three steps in order:
 | 7 | Launch Planning | `launch-tiering` | Launch tier + GTM plan |
 | 8 | Risk & Post-launch | `risk-playbooks` | Risk register + rollback criteria |
 | 9 | Evolution Log *(n+1 only)* | (orchestrator-native) | Delta + reasoning vs. prior turn |
+
+**Note on specialist count:** the library has **10 product specialists**, but `systems-thinking` is hard-invoked twice — once in Workflow 1 (Discovery, stakeholder map) and once in Workflow 4 (Prioritization, Three-Horizon lens). The two invocations apply different lenses from the same skill; treat them as distinct passes.
 
 ## Hard-invocation protocol
 
@@ -90,11 +92,13 @@ Key outputs: {links or inline}
 - Evolution Log entry (n+1 only): {link or N/A}
 ```
 
-### 2. Future-State Register — single living file
+### 2. Future-State Register — per-project, in Notion Project Ideas DB row
 
-**Path:** `.claude/artifacts/future-state-register.md`
+**Primary location:** The Project Ideas Notion DB row for this project, written in the row's page body.
 
-**Schema (one entry per project, appended on first turn, updated in place on n+1):**
+**Local mirror:** `.claude/artifacts/future-state-register.md` — single file, one entry per project. Used as offline fallback for n+1 detection and as the source of truth during the orchestrator run.
+
+**Schema (same in both locations):**
 ```
 ## {Project Name}
 - Slug: {project-slug}
@@ -104,9 +108,16 @@ Key outputs: {links or inline}
 - North-star metric: {metric + target}
 - Horizon: {MVP | Scaling | Enterprise-Prod}
 - Prior cycles: {cycle 1 → cycle 2 → ...} (links to Evolution Log entries)
+
+### Deferred items
+| Item | Trigger to address | Effort estimate |
+|------|--------------------|-----------------|
+| {e.g., SSO auth} | {first enterprise inbound} | {2-3 days} |
 ```
 
-**Update rule:** on every run, overwrite `Future-state`, `Current cycle`, `Last updated`, `North-star metric`, `Horizon`. **Never** delete the `Prior cycles` trail — append only.
+The **Deferred items** table is the Three-Horizon artifact from `systems-thinking/SKILL.md` — folded into the Register so a single per-project document carries both the future-state metadata and the deferred-polish backlog.
+
+**Update rule:** on every run, overwrite `Future-state`, `Current cycle`, `Last updated`, `North-star metric`, `Horizon`. **Never** delete the `Prior cycles` trail — append only. Deferred items: add new items and mark resolved items as `~~resolved~~ {date}`; do not delete.
 
 ### 3. Evolution Log — n+1 runs only
 
@@ -154,9 +165,8 @@ A dependency can be satisfied by a skip-citation, but the downstream workflow mu
 
 If Notion and Linear MCPs are available in the current session:
 
-1. **Notion:** write PRD, Orchestration Log, and (if n+1) Evolution Log entry as child blocks under the "Project Ideas" page, grouped by project name.
-2. **Notion:** update the single Future-State Register page with the latest entry.
-3. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`.
+1. **Notion — Project Ideas DB:** create or update the row for this project. Use the project name as the row title. Populate the structured properties (per Project Ideas schema in CLAUDE.md). In the row's page body, write: PRD, Orchestration Log summary, (if n+1) Evolution Log entry, and the updated Future-State Register block (metadata + Deferred items). Existing body content is replaced; prior cycle content moves into the Evolution Log reference.
+2. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`.
 
 ### Fallback path: text output (always emit)
 
