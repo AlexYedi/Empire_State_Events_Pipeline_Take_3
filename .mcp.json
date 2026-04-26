@@ -3,11 +3,7 @@
     "notion": {
       "type": "http",
       "url": "https://mcp.notion.com/mcp"
-    }
-  }
-}
-{
-  "mcpServers": {
+    },
     "linear": {
       "type": "sse",
       "url": "https://mcp.linear.app/sse"
