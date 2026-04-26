@@ -165,8 +165,26 @@ A dependency can be satisfied by a skip-citation, but the downstream workflow mu
 
 If Notion and Linear MCPs are available in the current session:
 
-1. **Notion — Project Ideas DB:** create or update the row for this project. Use the project name as the row title. Populate the structured properties (per Project Ideas schema in CLAUDE.md). In the row's page body, write: PRD, Orchestration Log summary, (if n+1) Evolution Log entry, and the updated Future-State Register block (metadata + Deferred items). Existing body content is replaced; prior cycle content moves into the Evolution Log reference.
-2. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`.
+1. **Notion — Project Ideas DB:** create or update the row for this project. Use the project name as the row title. Populate the structured properties (per Project Ideas schema in CLAUDE.md). In the row's page body, write the following blocks **in this order**:
+
+    1. **Page-index callout** (always first). Format: blockquote with 📑 emoji, bold "Page index", bullet list of the H1 sections on the page (PRD, Orchestration Log summary, Future-State Register, Evolution Log if n+1, plus any toggled archives), each with a one-line description. End the callout with the italic tip: *"Place cursor below this callout and type `/toc` to add Notion's interactive auto-updating table of contents — one-time per page."* (Markdown TOC syntax is not supported by the Notion MCP — see "Notion delivery gotchas" below — so the page-index callout is the static fallback and `/toc` is a one-time manual step.)
+    2. **Context callouts** (optional, contextual). E.g., redesign banners on n+1 turns where the architecture has materially changed.
+    3. **`# PRD — {project name}`** — full PRD body.
+    4. **`---`** divider, then **`# Orchestration Log summary (cycle {n})`** — W1–W9 walkthrough (one paragraph per workflow). On n+1 runs include the Workflow 9 Evolution Log entry inline.
+    5. **`---`** divider, then **`# Future-State Register (cycle {n})`** — metadata header + Deferred items table + H2 escalation trigger + Rollback. (This is the same content that lives in the local mirror at `.claude/artifacts/future-state-register.md`.)
+    6. **Deprecated/superseded prior content** (n+1 only when prior cycle's design was replaced wholesale): wrap in `<details><summary>{title} (deprecated {YYYY-MM-DD}, cycle {n})</summary>...</details>`. Notion parses this as a native collapsible toggle. **Do not delete prior cycles' content** — toggle preserves history on the same page, avoiding sub-page sprawl.
+
+    Update strategy: use `replace_content` only on first turn or when the page body is scaffolding-only. On n+1, prefer `update_content` with anchored swaps so existing content is preserved unless explicitly superseded. Per-property updates (e.g., Architecture Summary) use `update_properties`.
+
+2. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`. Wire `blockedBy` from the PRD's "Depends on" lines so the dependency graph is queryable in Linear's view layer. Create labels as workspace-scoped if they don't already exist.
+
+### Notion delivery gotchas (verified 2026-04-26)
+
+- **Markdown TOC syntax does NOT work via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. Only workaround is the static page-index callout above plus the `/toc` slash command in the Notion UI (one-time per page, then auto-updates).
+- **Toggle/collapsible sections use `<details><summary>...</summary>...</details>` HTML.** Notion-specific `+++ title ... +++` syntax does NOT work. The `<details>` tag is the only allowlisted HTML form for toggles.
+- **Multi-select properties take a JSON-array-string, not a comma-string or native array.** See CLAUDE.md "Notion create-pages gotchas" for full list.
+- **Tables**: write as standard markdown `|`-table; Notion auto-converts to native `<table header-row="true">` block on write. Rendered tables sort/filter/resize natively in Notion.
+- **Auto-escaping of `<`**: `<5min` becomes `\<5min` in the stored markdown but renders correctly. Cosmetic only.
 
 ### Fallback path: text output (always emit)
 
