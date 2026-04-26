@@ -1,3 +1,8 @@
+---
+name: pre-event-content
+description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host DMs with personalization, and prepared questions. Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
+---
+
 # Skill: Pre-Event Content Generation
 
 Generate pre-event content for NYC AI/tech events based on completed research briefs.
