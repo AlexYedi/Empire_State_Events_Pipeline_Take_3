@@ -1,6 +1,6 @@
 # Session Bootstrap Prompt — Signal Pipeline
 
-**Purpose:** Paste this into a fresh Claude session (Claude.ai desktop, or anywhere with the right MCP connections) to bootstrap full project context without rehashing prior conversation.
+**Purpose:** Paste this into a fresh Claude session (Claude Code CLI in this repo OR Claude.ai desktop) to bootstrap full project context without rehashing prior conversation.
 
 **Update protocol:** Update the "Current task" section at the bottom whenever the active work changes. Update the "Locked decisions" table when something new is decided. Update the "Latest commit" line so the new session pulls a known-good revision.
 
@@ -8,11 +8,14 @@
 
 ## How to use this file
 
-1. Open a fresh Claude session (Claude.ai desktop preferred — Notion + HubSpot MCPs need to be live).
-2. Confirm the session has these MCPs connected: Notion, HubSpot, GitHub, Linear, PostHog. Check Claude's connector / MCP UI before pasting.
-3. Copy the entire fenced "Bootstrap prompt" block below (everything between the triple-tildes).
-4. Paste it as your first message in the new session. Send.
-5. Claude will read the docs on demand and confirm before acting.
+**Recommended: Claude Code CLI in this repo.** Once `Signal_Pipeline/MCP_SETUP.md` has been completed (one-time, ~15 min), Notion + HubSpot MCPs are wired into the repo via `.mcp.json` and available to every CLI session in this directory. No paste-and-sync round trip needed.
+
+1. Confirm `.mcp.json` exists at repo root and `.env` has `HUBSPOT_PRIVATE_APP_TOKEN` set. If not, run through `Signal_Pipeline/MCP_SETUP.md` first.
+2. Open Claude Code in the repo directory.
+3. Run `/mcp` to verify Notion + HubSpot are connected (complete OAuth on first run for Notion).
+4. Paste the "Bootstrap prompt" block below as your first message.
+
+**Alternative: Claude.ai desktop.** Use only if CLI MCP setup hasn't been done yet. Notion + HubSpot must be connected as Claude.ai chat connectors. Paste the block below as your first message; Claude reads docs on demand.
 
 ---
 
@@ -40,19 +43,19 @@ This bootstrap is scoped to Project A.
 
 - Repo: `AlexYedi/Empire_State_Events_Pipeline_Take_3`
 - Active branch: `claude/resume-strategy-planning-06kMr`
-- Latest commit on branch: 2de205e (Signal_Pipeline/PROJECT_BRIEF.md added)
+- Latest commit on branch: see git log; should include `.mcp.json` and `Signal_Pipeline/MCP_SETUP.md`
 
-If you have GitHub MCP, read directly from the repo at that branch. If not, I will paste any file contents you need.
+If you're in Claude Code CLI in this repo, read files directly. If you're in Claude.ai desktop with GitHub MCP, read from the repo at that branch. Otherwise I'll paste file contents.
 
 # Required MCP connections
 
 This session expects these MCPs to be live:
-- **Notion** (read/write, OAuth via Claude.ai)
-- **HubSpot** (read/write, OAuth via Claude.ai)
-- **GitHub** (for reading the repo)
+- **Notion** (read/write — hosted at `https://mcp.notion.com/mcp` via the repo's `.mcp.json`, OR Claude.ai chat connector)
+- **HubSpot** (read/write — `@hubspot/mcp-server` via the repo's `.mcp.json` with `HUBSPOT_PRIVATE_APP_TOKEN` in `.env`, OR Claude.ai chat connector)
+- **GitHub** (for reading the repo if not in CLI)
 - **Linear, PostHog** (nice-to-have, not blocking)
 
-If Notion or HubSpot is not connected, STOP and tell me. The current task requires both.
+If Notion or HubSpot is not connected, STOP and tell me. The current task requires both. Setup instructions are in `Signal_Pipeline/MCP_SETUP.md`.
 
 # Docs to read on demand (priority order, do not load eagerly)
 
