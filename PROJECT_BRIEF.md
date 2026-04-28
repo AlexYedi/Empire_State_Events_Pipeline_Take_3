@@ -1,8 +1,10 @@
 # Empire State Events Pipeline — Project Brief
 
-**Last updated:** 2026-04-20
+**Last updated:** 2026-04-21
 **Phase:** Active build — `gtm-os` (V1 extension + H1 HockeyStack mirror) on Vercel Workflow DevKit. Learning-mode protocol engaged: explain primitives, decisions, and tradeoffs as we build.
 **Status:** Three projects active (gtm-os, eval-harness, scaffold-skill). Project cap removed. Scaffolding kickoff: Monday.
+
+> **Sibling project (2026-04-21):** The Signal Pipeline — a long-running, parallel project tied to Alex's Clay-tier job-hunt positioning — is scaffolded in `Signal_Pipeline/`. The events pipeline is the first completed module of that larger effort; it is NOT being restarted or subsumed. See `Signal_Pipeline/PROJECT_BRIEF.md` for its current state (Phase 0 exploration in progress).
 
 ---
 
