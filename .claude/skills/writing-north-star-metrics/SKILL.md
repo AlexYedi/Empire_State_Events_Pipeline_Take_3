@@ -71,7 +71,7 @@ For all 35 insights from 27 guests, see `references/guest-insights.md`
 
 ## Related Skills
 
-- Setting OKRs & Goals
 - Defining Product Vision
 - Prioritizing Roadmap
-- Designing Growth Loops
+- AI Product Strategy
+- Writing PRDs

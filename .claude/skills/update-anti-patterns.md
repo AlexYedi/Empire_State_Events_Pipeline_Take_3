@@ -1,3 +1,8 @@
+---
+name: update-anti-patterns
+description: Quick-access skill for managing the content anti-patterns list at .claude/references/content-anti-patterns.md. Add, remove, append, or amend off-limits words, phrases, structural patterns, or DM patterns. Use when Alex says "add X to the anti-patterns", "remove Y from off-limits", "never do Z in posts", or shares a batch of items that bugged him in recent drafts.
+---
+
 # Skill: Update Anti-Patterns
 
 Quick-access skill for managing the content anti-patterns list. Add, remove, append,

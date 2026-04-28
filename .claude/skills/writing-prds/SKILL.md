@@ -68,7 +68,7 @@ For all 14 insights from 11 guests, see `references/guest-insights.md`
 
 ## Related Skills
 
-- Writing Specs & Designs
-- Working Backwards
-- Stakeholder Alignment
+- Conducting User Interviews
+- Writing North Star Metrics
+- Prioritizing Roadmap
 - Shipping Products
