@@ -81,7 +81,7 @@ earlier = more time for project ideation and building.
 | Step | Type | What You Do | What Happens | Timing |
 |------|------|-------------|--------------|--------|
 | 2b.1 | **Manual** | Invoke project-ideation skill for the event | — | After research is complete |
-| 2b.2 | **Auto** | Skill checks active project gate (max 2) | Blocks if 2 active projects exist | ~30 sec |
+| 2b.2 | **Auto** | Skill surfaces current active project count (awareness, not gate) | Shows current load, Alex decides whether to proceed | ~30 sec |
 | 2b.3 | **Auto** | Skill loads research brief + portfolio tracker + topic pages | Context assembled | ~1 min |
 | 2b.4 | **Manual** | Confirm context summary, approve intersection analysis | — | ~1 min |
 | 2b.5 | **Auto** | Skill maps topic pairs, scores intersection strength | Intersection analysis table | ~2 min |
@@ -92,7 +92,7 @@ earlier = more time for project ideation and building.
 
 **Trigger:** You say "invoke project ideation skill for [event name]"
 **Depends on:** Phase 1 complete (topics populated in Notion)
-**Gate:** Max 2 active projects — ship, archive, or delete one first
+**Awareness:** Current active project count surfaced for manual bandwidth management (no hard cap — removed 2026-04-20)
 **Output:** Project proposals in Notion with architecture, roadmap, and scoring
 **Total time:** ~20-25 min
 
@@ -217,7 +217,7 @@ is the second priority.
 |-------|---------|---------------|
 | Event Research | "invoke event research skill" + paste invite | Calendar invite text |
 | Pre-Event Content | "invoke pre-event content skill for [event]" | Research brief in Notion |
-| Project Ideation | "invoke project ideation skill for [event]" | Research brief in Notion, < 2 active projects |
+| Project Ideation | "invoke project ideation skill for [event]" | Research brief in Notion |
 | Update Voice & Style | "invoke update voice and style" + feedback | Observed content issues |
 | Update Anti-Patterns | "invoke update anti-patterns" + items | Observed pattern issues |
 | Post-Event Content | *Not yet built* | Event attended, raw materials |

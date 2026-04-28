@@ -105,7 +105,8 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/Company/Content Drafts
 - Companies (9 props): Company Name (title), Description (text), Website (url), Industry / Space 
   (multi-select: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure), 
-  Funding Stage (select: Seed, A, B, C, D, E, F, G, H, I, Pre-IPO, Public), 
+  Funding Stage (select: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, 
+  Series H, Series I, Public — NO "Pre-IPO" option; use latest Series letter for late-stage private cos), 
   Recent Funding ($) (number), Recent Developments (text), Last Researched (date), 
   relations to Events/People
 - Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
@@ -113,10 +114,12 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/People/Linkedin Post Drafts (→ Content Drafts, intentional naming — 
   pulls Content Drafts filtered by linkedin post content types)
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
-  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions), Event Phase 
-  (select: pre_event/during_event/post_event), Content Status (select: needs_review/approved/
-  scheduled/published/archived), Platform (select: linkedin/slack/notion_only), Published URL (url), 
-  relations to Event/People/Topics/Project Ideas
+  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis), 
+  Event Phase (select: pre_event/during_event/post_event), Content Status (select: needs_review/
+  approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only), 
+  Published URL (url), relations to Event/People/Topics/Project Ideas
+  Note: linkedin_post_synthesis (added 2026-04-19) is used by the pattern-synthesis skill for 
+  two-thesis posts that relate to 2+ Events. Multi-Event relations are the tell for this type.
   Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
   Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —
   terminal state, preserves relation graph for future knowledge base synthesis.
@@ -130,7 +133,7 @@ Alex pastes calendar invite description + adds natural language context:
   (number 1-10), Demonstrability (number 1-10), Content Moments (number 1-10), 
   Composite Score (number), Architecture Summary (text), Created (created_time), 
   Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
-  Active project cap: max 2 active at a time (gate enforced by project-ideation skill)
+  Active projects tracked via Status select. No hard cap — Alex manages bandwidth manually (cap removed 2026-04-20).
 
 **HubSpot** (CRM — Contacts & Companies):
 - Standard contact fields: firstname, lastname, email, phone, company, jobtitle
@@ -169,18 +172,28 @@ Alex pastes calendar invite description + adds natural language context:
 - Test on one real upcoming event end-to-end
 
 **Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
-- Two separate skills: pre-event-content.md and post-event-content.md (not monolithic)
+- Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
   speaker/host DMs (2-3 per person per topic), prepared questions (derived from unused DMs)
 - Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
+- Pattern-synthesis skill (added 2026-04-19): two-thesis LinkedIn post from 2 event briefs.
+  Canonical shape for Alex's documentarian angle. Triggered when 2 briefs in a rolling 7-day window
+  pose opposing theses. Writes to Notion with Content Type = linkedin_post_synthesis and
+  multi-Event relations. Pattern definition lives in .claude/skills/content-patterns/two-thesis-synthesis.md
+  (shared reference file — pre-event and post-event skills can also import it).
 - Takes completed research brief from Notion as input
 - Writes content drafts to Notion Content Drafts database
 - Supporting reference files: content-style-guide.md, content-anti-patterns.md, outreach-templates.md
+- Shared patterns directory: .claude/skills/content-patterns/ holds reusable content-shape definitions
+  (no SKILL.md — not a skill itself). Any content skill can import from here. First entry:
+  two-thesis-synthesis.md.
 - Voice & style is a living system — update-voice-and-style.md skill propagates learnings to all files
+  including content-patterns/*.md
 - Cold outreach only for V1. Warm outreach variant and custom messaging skill deferred.
 - 2 inline option variants per content piece. No scheduling/timing logic.
 - Audience: hiring managers at AI-native companies, enterprise GTM peers, event speakers/hosts
 - Full stack GTM positioning is implicit (demonstrated, not stated)
+- Cadence rule for pattern-synthesis: max 1 synthesis post per week (format fatigues fast)
 
 **Phase 2b: Project Ideation Skill (In Progress — 2026-04-09)**
 - Skill: project-ideation.md — generates 3 project proposals (2 feasible + 1 stretch) from event topics
@@ -190,8 +203,8 @@ Alex pastes calendar invite description + adds natural language context:
 - Tool coverage sweet spot: 60-80% current stack = optimal (normalized penalty scales outside range)
 - Timeline bands: < 3 days (prototype), 3-7 days (small_tool), 1-2 weeks (MVP), 2+ weeks (full_project)
 - Architecture confidence gate: >= 90% or proposal isn't generated
-- Active project cap: max 2 active, gate blocks new generation until shipped/archived/deleted
-- Scoring: 6 dimensions (1-10 each, equal weights V1) + 2 pass/fail gates
+- Active project awareness (not a gate): skill surfaces current active count before generating, but does not block
+- Scoring: 6 dimensions (1-10 each, equal weights V1) + 1 pass/fail gate (architecture confidence >= 90%)
 - Projects built BEFORE the event — demo, discuss, reference during networking
 - Reference file: portfolio-tracker.md (stack tiers, shipped projects, skills inventory)
 - Companion skill (deferred): project-complete.md — triggered when projects ship, updates portfolio tracker
@@ -257,5 +270,49 @@ Notes approach replaces Static Lists for event association (list write not avail
 9. Notion page body for long-form text, properties for structured/filterable data
 10. Search Notion databases for existing records before creating to prevent duplicates (Notion has no native dedup)
 11. Search HubSpot by name+company before creating contacts to prevent duplicates (email is primary dedup key)
+
+### Notion create-pages gotchas (2026-04-18 — learned live on FDE event writes)
+These are non-obvious property format rules that bit us during the first real event run. 
+Follow them mechanically; the API error messages are the source of truth if anything drifts.
+
+a. **Multi-select properties take a JSON-array-STRING, not a comma-separated string and not a native array.**
+   - Correct: `"Industry / Space": "[\"AI/ML\",\"Enterprise Software\"]"`
+   - Rejected: `"Industry / Space": "AI/ML,Enterprise Software"`
+   - Rejected: `"Industry / Space": ["AI/ML","Enterprise Software"]`  (native array)
+   - Same format for People.Role Context.
+b. **Select properties must exactly match a defined DB option.** When validation fails, the API error text 
+   lists the valid options — trust the error, not the doc/CLAUDE.md. The authoritative schema lives in Notion.
+c. **Relations take a JSON-array-string of full page URLs (not bare page IDs).** Use the `url` field returned by 
+   notion-create-pages verbatim. Example: `"Company": "[\"https://www.notion.so/347d3699...\"]"`.
+d. **Date properties must use expanded format.** `"date:<Prop>:start"` + `"date:<Prop>:is_datetime"` (0 or 1). 
+   For datetimes with end times, add `"date:<Prop>:end"` alongside.
+e. **Before any batch create against an unfamiliar DB, verify live schema with notion-fetch on the data_source URL.** 
+   Property names, option sets, and types can drift between docs and the live DB.
+f. **Write order for bidirectional relations:** Companies + Topics (no deps, parallel-safe) → People (needs Company URLs) 
+   → Event (needs People + Companies + Topics URLs) → Content Draft (needs Event URL). Skipping this order silently 
+   produces empty relation fields.
+
+### Notion update-page gotchas (2026-04-26 — learned during eval-harness cycle 1 delivery)
+These are markdown-flavor rules for `notion-update-page` (and `create-pages` body content) that bit us during 
+the orchestrator delivery. Each rejected syntax was tested live and observed to land as escaped literal text.
+
+g. **Toggle/collapsible sections use `<details><summary>...</summary>...</details>` HTML — and ONLY this form.** 
+   Notion-flavored markdown's `+++ title ... +++` syntax does NOT work; lands as literal `+++` text. The `<details>` 
+   tag is the only allowlisted HTML form for toggles in this MCP. Inner content is auto-tab-indented in fetch output 
+   to indicate nesting — that's the visible signal it parsed as a real toggle block. Use this for preserving 
+   deprecated/superseded prior content on the same page (avoids sub-page sprawl).
+h. **There is NO markdown TOC syntax that works via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, 
+   `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. The only path to a real auto-updating 
+   TOC block is the `/toc` slash command in the Notion UI (one-time per page; native block then auto-updates as 
+   headings change). Workaround for write-time: insert a static "Page index" callout at top (see convention `i`).
+i. **Page-index callout convention** (orchestrator deliveries + any multi-section page worth scanning at a glance): 
+   blockquote with 📑 emoji, bold "Page index", bullet list of H1 sections each with a one-line description, 
+   ending with the italic tip *"Place cursor below this callout and type `/toc` to add Notion's interactive 
+   auto-updating table of contents — one-time per page."* Static fallback that gives glanceable structure; the 
+   `/toc` step is opt-in and lives in the UI.
+j. **`<` in body text is auto-escaped to `\<`** in stored markdown but renders correctly in the Notion UI 
+   (`\<5min` → `<5min`). Cosmetic only — don't try to "fix" it by removing the escape.
+k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` blocks** on write. Rendered as 
+   real Notion tables (sortable, filterable, resizable columns) — preferred over leaving them as raw markdown.
 </project_architecture>
 </CLAUDE.md>

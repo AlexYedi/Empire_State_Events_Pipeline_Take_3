@@ -393,7 +393,7 @@ Create a page with these properties:
 "Company Name": "[company name]"                    — title
 "Description": "[1-2 sentence description]"         — text
 "Website": "[url]"                                  — url
-"Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON array)
+"Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON-array-string, see Gotchas below)
 "Funding Stage": "[stage]"                          — select (one of: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public)
 "Recent Funding ($)": [amount as number, or null]   — number
 "Recent Developments": "[recent news summary]"      — text
