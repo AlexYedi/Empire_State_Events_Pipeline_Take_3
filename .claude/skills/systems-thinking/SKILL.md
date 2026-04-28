@@ -153,7 +153,9 @@ For all 6 insights from 6 guests, see `references/guest-insights.md`
 
 ## Related Skills
 
-- Setting OKRs & Goals
 - Defining Product Vision
-- Platform Strategy
-- Organizational Design
+- Prioritizing Roadmap
+- Shipping Products
+- Launch Tiering
+- Risk Playbooks
+- AI Product Strategy

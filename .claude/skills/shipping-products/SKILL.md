@@ -72,6 +72,6 @@ For all 55 insights from 47 guests, see `references/guest-insights.md`
 ## Related Skills
 
 - Writing PRDs
-- Stakeholder Alignment
-- Setting OKRs & Goals
-- Usability Testing
+- Launch Tiering
+- Risk Playbooks
+- Prioritizing Roadmap

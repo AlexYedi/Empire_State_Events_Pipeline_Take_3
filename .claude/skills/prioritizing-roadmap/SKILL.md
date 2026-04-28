@@ -65,7 +65,7 @@ For all 91 insights from 75 guests, see `references/guest-insights.md`
 
 ## Related Skills
 
-- planning-under-uncertainty
-- scoping-cutting
-- running-decision-processes
-- problem-definition
+- Writing PRDs
+- Defining Product Vision
+- Writing North Star Metrics
+- Systems Thinking
