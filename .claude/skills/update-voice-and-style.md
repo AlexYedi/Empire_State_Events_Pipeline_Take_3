@@ -1,3 +1,8 @@
+---
+name: update-voice-and-style
+description: Capture voice/style learnings from Alex's content feedback and propagate them to reference files (content-style-guide.md, content-anti-patterns.md, outreach-templates.md) and dependent content skills. Use when Alex gives feedback on generated content ("this felt too formal", "the hook on option B was better"), observes a tone preference, flags an anti-pattern, or shares an example to extract patterns from. Also invoked proactively when patterns emerge across multiple content sessions.
+---
+
 # Skill: Update Voice & Style
 
 Capture learnings about Alex's content voice and style preferences, then propagate
