@@ -291,5 +291,28 @@ e. **Before any batch create against an unfamiliar DB, verify live schema with n
 f. **Write order for bidirectional relations:** Companies + Topics (no deps, parallel-safe) → People (needs Company URLs) 
    → Event (needs People + Companies + Topics URLs) → Content Draft (needs Event URL). Skipping this order silently 
    produces empty relation fields.
+
+### Notion update-page gotchas (2026-04-26 — learned during eval-harness cycle 1 delivery)
+These are markdown-flavor rules for `notion-update-page` (and `create-pages` body content) that bit us during 
+the orchestrator delivery. Each rejected syntax was tested live and observed to land as escaped literal text.
+
+g. **Toggle/collapsible sections use `<details><summary>...</summary>...</details>` HTML — and ONLY this form.** 
+   Notion-flavored markdown's `+++ title ... +++` syntax does NOT work; lands as literal `+++` text. The `<details>` 
+   tag is the only allowlisted HTML form for toggles in this MCP. Inner content is auto-tab-indented in fetch output 
+   to indicate nesting — that's the visible signal it parsed as a real toggle block. Use this for preserving 
+   deprecated/superseded prior content on the same page (avoids sub-page sprawl).
+h. **There is NO markdown TOC syntax that works via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, 
+   `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. The only path to a real auto-updating 
+   TOC block is the `/toc` slash command in the Notion UI (one-time per page; native block then auto-updates as 
+   headings change). Workaround for write-time: insert a static "Page index" callout at top (see convention `i`).
+i. **Page-index callout convention** (orchestrator deliveries + any multi-section page worth scanning at a glance): 
+   blockquote with 📑 emoji, bold "Page index", bullet list of H1 sections each with a one-line description, 
+   ending with the italic tip *"Place cursor below this callout and type `/toc` to add Notion's interactive 
+   auto-updating table of contents — one-time per page."* Static fallback that gives glanceable structure; the 
+   `/toc` step is opt-in and lives in the UI.
+j. **`<` in body text is auto-escaped to `\<`** in stored markdown but renders correctly in the Notion UI 
+   (`\<5min` → `<5min`). Cosmetic only — don't try to "fix" it by removing the escape.
+k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` blocks** on write. Rendered as 
+   real Notion tables (sortable, filterable, resizable columns) — preferred over leaving them as raw markdown.
 </project_architecture>
 </CLAUDE.md>
