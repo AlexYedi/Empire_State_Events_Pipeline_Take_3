@@ -1,8 +1,69 @@
 # Empire State Events Pipeline — Project Brief
 
-**Last updated:** 2026-04-18
-**Phase:** Content workflow hardening (Kanban + archive) complete. Next: Phase 3-6 Knowledge Base build after Alex ships next week's pre-event content.
-**Status:** Content Drafts DB restructured with Kanban + archive views. Pending: Insights DB + post-content synthesis skill.
+**Last updated:** 2026-04-20
+**Phase:** Active build — `gtm-os` (V1 extension + H1 HockeyStack mirror) on Vercel Workflow DevKit. Learning-mode protocol engaged: explain primitives, decisions, and tradeoffs as we build.
+**Status:** Three projects active (gtm-os, eval-harness, scaffold-skill). Project cap removed. Scaffolding kickoff: Monday.
+
+---
+
+## 2026-04-20 Update — Active Build Plan + Project Cap Removal
+
+### Decision log — project cap removed (2026-04-20)
+The `max 2 active projects` hard gate (originally enforced by the `project-ideation` skill's Step 0) has been **removed**. Rationale: cramming logically distinct projects into an arbitrary slot limit was producing awkward bundling rather than the intended bandwidth discipline. Active projects are now tracked by the `Status` select on Project Ideas only. Bandwidth is managed manually by Alex.
+
+Files updated:
+- `CLAUDE.md` line 136 — active project tracking reworded
+- `CLAUDE.md` lines 206-207 — ideation skill gate language flipped to "awareness, not a gate"
+- `.claude/skills/project-ideation.md` — Step 0 rewritten as awareness surface, blocking error case removed
+- `.claude/references/pipeline-operations-guide.md` lines 84, 95, 220 — gate language removed
+
+### Three active projects (written to Notion Project Ideas, 2026-04-20)
+
+| Project | Type | Complexity | Composite | Notion page |
+| --- | --- | --- | --- | --- |
+| `gtm-os` — Event Pipeline Agent Extension + HockeyStack Revenue Agent | feasible | MVP | **9.50** | [348d3699-c2db-81f4-8b79-c0a03d6bef33](https://www.notion.so/348d3699c2db81f48b79c0a03d6bef33) |
+| `eval-harness` — LLM-as-Judge Quality Harness for Event Pipeline Skills | feasible | small_tool | 8.50 | [348d3699-c2db-81b6-bf38-d4e360419c82](https://www.notion.so/348d3699c2db81b6bf38d4e360419c82) |
+| `scaffold-skill` — Ideation-to-Execution Automation | stretch | small_tool | 7.33 | [348d3699-c2db-81c0-a185-d29080996a01](https://www.notion.so/348d3699c2db81c0a185d29080996a01) |
+
+### Priority sequence
+1. **`gtm-os`** is the primary build this week. It's directly tied to the Vercel Workflows event and the HockeyStack Rebuilding GTM event — both in the same window. Monday scaffolding starts with `vercel-labs/knowledge-agent-template` seed (Option B: Seed Then Extend, same repo).
+2. **`eval-harness`** picks up next after `gtm-os` V1 ships — pairs naturally because we'll have real skill runs to evaluate.
+3. **`scaffold-skill`** is stretch, incubates in the background, not on the critical path for either event.
+
+### V1 expansion (recorded 2026-04-19/20)
+Original V1 (contact research only) expanded to fill two gaps:
+- **Gap 1:** No agent-driven company data refresh — companies go stale after initial enrichment.
+- **Gap 2:** `generateDMDraft` runs without deep per-contact company context.
+
+Expanded V1 = parallel fan-out across companies AND contacts, gated by ≤5 concurrent (rate-limit safety), with DM generation consuming the enriched company context.
+
+### Learning-mode protocol (engaged)
+> *"the point of this is becoming fluent in Workflow, Vercel, and being able to speak to this granular knowledge at the event and going forward is a core purpose of this effort"* — Alex, 2026-04-19
+
+As we build `gtm-os`, I will:
+- Explain each WDK primitive (`'use workflow'`, `'use step'`, `defineHook`, `createWebhook`) at the moment we first use it — what it is, what it replaces, why it matters.
+- Flag the non-obvious gotchas live (e.g. `globalThis.fetch = fetch` override, same-file step discovery, single-use webhook URLs).
+- Pause before each architectural decision and lay out tradeoffs. No silent choices.
+- Reference the canonical source of truth: `gtm-os/Vercel_Workflow_SDK_Best_Practices.md`.
+
+### Primitives cheat sheet (for the live explanation)
+
+| Primitive | What it is | When we'll use it first |
+| --- | --- | --- |
+| `'use workflow'` | Marks a function as a durable, resumable workflow entry point | Top of `eventEnrichmentWorkflow` |
+| `'use step'` | Marks a function as an atomic, retriable unit with auto-persisted return values | Every API call, LLM call, DB write inside the workflow |
+| `defineHook<T>()` + `for await` | Long-lived event-driven actor that processes events sequentially per token | Outbound / Deal / Customer agents (H1) |
+| `createWebhook()` | Returns a URL + pausing promise — workflow suspends until the URL is hit | Human-in-the-loop approval gates |
+| `generateObject({ schema })` | AI SDK structured output with Zod-enforced shape | Company enrichment, DM drafts |
+| `FatalError` / `RetryableError` | Control retry behavior — fatal stops the workflow, retryable takes custom delay | Auth failures (fatal), 429 rate limits (retryable) |
+| `getWritable()` / `run.readable` | Stream intermediate results to the frontend in real time | Live demo UI during events |
+| Postgres + Drizzle | Production state store; in-memory Map for local dev | State that must outlive a single run |
+
+### Monday scaffolding — Step 1 preview
+1. Clone `vercel-labs/knowledge-agent-template` locally into `gtm-os/`.
+2. Walk the directory structure together — identify which files map to which primitive.
+3. First durable workflow run end-to-end, observe replay behavior on step return values.
+4. Commit the seed. From there, every change is attributable to our build on top of the template.
 
 ---
 

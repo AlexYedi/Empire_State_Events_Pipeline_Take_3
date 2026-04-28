@@ -1,3 +1,8 @@
+---
+name: pre-event-content
+description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host DMs with personalization, and prepared questions. Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
+---
+
 # Skill: Pre-Event Content Generation
 
 Generate pre-event content for NYC AI/tech events based on completed research briefs.
@@ -11,6 +16,14 @@ by the event-research skill). The skill reads from the brief — it does not do 
 - `.claude/references/content-style-guide.md` — voice, tone, post architecture, audience, formatting
 - `.claude/references/content-anti-patterns.md` — words, phrases, and patterns to avoid
 - `.claude/references/outreach-templates.md` — DM structural patterns and personalization rubric
+
+**Skills imported as craft references (read the SKILL.md when entering the relevant step):**
+- `.claude/skills/brand-storytelling/SKILL.md` — narrative arcs, "5-second moment," movement framing → used in Step 2 + Step 3
+- `.claude/skills/copywriting/message-architecture/SKILL.md` — Promise → Proof → Hook → CTA, hook formulas → used in Step 3
+- `.claude/skills/copywriting/cold-email-personalization/SKILL.md` (+ assets) — custom-signal openers, scoring rubric, QA checklist → used in Step 4
+- `.claude/skills/marketing-autoresearch/SKILL.md` — variant/judge optimization loop → invoked at Step 5
+
+The imported skills *augment* but do **not override** the existing reference files. When guidance conflicts (e.g., voice rules), `content-style-guide.md` and `content-anti-patterns.md` win. Imported skills supply structure and rigor; the references supply Alex's voice.
 
 ---
 
@@ -46,6 +59,11 @@ Alex provides one of:
 **When:** Sunday post covering all events for the coming week.
 **Input:** Multiple event research briefs (one per event that week).
 **Length:** Long-form.
+
+**Before drafting, read `.claude/skills/brand-storytelling/SKILL.md`.** Apply specifically:
+- **"Lead a movement, don't just solve a problem"** (Andy Raskin) — frame the week as a shift, a tension, or a question the NYC AI scene is collectively wrestling with. Not a list of events, a thesis about the week.
+- **"Find the five-second moment"** (Matthew Dicks) — the entire roundup should orbit one moment of realization or transformation in the week's events. The synopses provide context to make that moment clear.
+- **"Hook, message, celebration"** (Christina Wodtke) — the structure below maps to this: HOOK = mystery/surprise, FOR EACH EVENT = the message, CTA = the celebration/invitation.
 
 ### Structure
 
@@ -89,6 +107,10 @@ CTA:
 **When:** Per-event post, typically a few days before the event.
 **Length:** Mid-form (8-15 lines).
 
+**Before drafting, read both:**
+- `.claude/skills/brand-storytelling/SKILL.md` — for the post's narrative arc. Apply **"Start in the middle of the action"** (Merci Grace) — open inside the tension, not with setup. Apply **"Problems beat successes"** (Jason Feifer) — the post's insight should orbit a real problem in the topic, not a celebration of progress.
+- `.claude/skills/copywriting/message-architecture/SKILL.md` — for hook bank structure. Use the framework's **hook formulas** (question / contrarian / stat / story) to generate variants below. The Hook-Context-Insight-CTA architecture below maps to message-architecture's Audience → Promise → Proof → CTA.
+
 ### Structure
 
 Follow the Hook-Context-Insight-CTA architecture from the style guide:
@@ -108,7 +130,12 @@ CTA — "If you're deep into [topic], what are you most looking forward to learn
       or hearing about?"
 ```
 
-**Generate 2 variants** with different hooks/insight angles. Present as inline options.
+**Generate 3 variants** with different hook formulas (per message-architecture):
+- **Variant A:** Question hook — opens with a sharp question only an insider would ask
+- **Variant B:** Contrarian hook — opens with a take that pushes against the consensus on the topic
+- **Variant C:** Stat hook OR story hook — opens with a specific data point from the brief, OR a specific moment/anecdote
+
+Present as inline options. Step 5 (autoresearch) will pick the strongest hook and refine.
 
 ### Quality Checks
 - Exactly 2-3 data points from the research brief, with sources available if Alex wants to reference
@@ -253,6 +280,17 @@ hands-on time with prompting and iteration.
 
 **For each person** identified in the research brief (speakers, hosts, organizers):
 
+**Before drafting, read `.claude/skills/copywriting/cold-email-personalization/SKILL.md` and these assets:**
+- `assets/research-playbook.md` — what counts as a Tier 1 vs Tier 2 signal (recent talks, posts, hires, launches)
+- `assets/scoring-rubric.md` — 0-100 scoring; **gate at ≥80 before presenting to Alex**
+- `assets/qa-checklist.md` — pre-send checklist
+- `assets/email-structure.md` — adapt the 60-120 word structure to LinkedIn DM (4-6 sentences)
+
+**Mapping cold-email patterns → LinkedIn DMs:**
+- "Custom Signal" path → use a specific moment from their talk abstract, recent post, podcast, or open-source work as the opener
+- "Whole Offer" path is **NOT applicable** — Alex is not selling a product in DMs; he's opening a conversation. Skip.
+- The **no-CTA rule** from `content-correspondent` still applies for first-touch with high-signal contacts: no "want to grab coffee" in DM 1.
+
 Generate **2-3 DMs per person per topic** they're associated with. Each DM should:
 
 1. Follow one of the structural patterns from `outreach-templates.md`
@@ -260,6 +298,7 @@ Generate **2-3 DMs per person per topic** they're associated with. Each DM shoul
 3. Be **4-6 sentences**
 4. Always reference the specific event topic or their specific talk topic
 5. Include **1 question** good enough to use as a prepared question at the event
+6. **Score ≥80 on the cold-email-personalization rubric** before presenting. If below 80, regenerate or flag the gap to Alex.
 
 ### DM Angle Differentiation
 
@@ -294,13 +333,59 @@ Alex selects the strongest for outreach. Unused questions feed Step 5.
 - No anti-pattern phrases ("love your work", "pick your brain", etc.)
 - Light close, no hard ask
 - 4-6 sentences, no walls of text
+- Cold-email-personalization rubric score ≥80 (recorded inline next to each DM option)
 
 ---
 
-## Step 5: Compile Prepared Questions
+## Step 5: Optimize the LinkedIn Post(s) via Autoresearch
 
-After Alex selects which DMs to send (Step 4), the remaining DM questions become
-the **Prepared Questions** list for the event.
+**When:** After Alex selects the strongest variant from Step 2 and/or Step 3 — and ONLY for the LinkedIn posts. Do not run on DMs or prepared questions (see cadence rule below).
+
+**Skill:** `.claude/skills/marketing-autoresearch/SKILL.md` — read it before invoking.
+
+### What gets optimized
+
+Run autoresearch on each piece, one at a time:
+- **The selected per-event LinkedIn post** (Step 3 winner) — always
+- **The selected Upcoming Week post** (Step 2 winner) — always, if generated
+- DMs and prepared questions — **never**. Over-optimization breaks the personalization signal in DMs and adds zero value to private prep notes.
+
+### Setup
+
+- Persona #5 in the expert panel = **Alex's documentarian voice** (the autoresearch SKILL.md has this configured by default for Empire State runs)
+- Score threshold: **80**, max **3 rounds**
+- Elements to optimize per LinkedIn post: **Hook (lines 1-2)**, **Insight line**, **CTA**
+
+### Procedure
+
+1. Hand the selected variant from Step 2 or Step 3 to autoresearch
+2. Let it run the full round structure (Round 1 → Round 2 → optional Round 3 → cross-breeding)
+3. Receive back: optimized post + 2 runner-ups + score report
+4. Present to Alex: winner vs. original side-by-side, with the score deltas per dimension
+5. Alex picks final version (winner OR original OR a runner-up). Use that for Step 7 Notion writes.
+
+### Outputs
+
+Autoresearch writes to `content-drafts/<event>/autoresearch/`:
+- `{event}-linkedin-post-optimized.md`
+- `data/{event}-linkedin-post-experiments.json`
+- `data/{event}-linkedin-post-optimization-report.md`
+
+The Notion Content Drafts page body uses the **final post Alex picks** in step 4 above. The autoresearch artifacts stay in the repo as the audit trail.
+
+### When to skip Step 5
+
+Skip if:
+- The event is < 12 hours away and time pressure is real (defer optimization to post-event learning)
+- The brief itself is weak (autoresearch can't fix a missing insight — go back to event-research)
+- Score on first pass already ≥85 with no flagged dimensions (rare; ship as-is)
+
+---
+
+## Step 6: Compile Prepared Questions
+
+After Alex selects which DMs to send (Step 4) and the LinkedIn post is finalized (Step 5),
+the remaining DM questions become the **Prepared Questions** list for the event.
 
 Format:
 
@@ -319,7 +404,7 @@ Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if th
 
 ---
 
-## Step 6: Write to Notion
+## Step 7: Write to Notion
 
 Write all approved content to the **Content Drafts** database.
 
@@ -380,20 +465,24 @@ Page body: the compiled question list from Step 5
 
 ---
 
-## Step 7: Summary
+## Step 8: Summary
 
 ```
 ## Pre-Event Content Complete: [Event Name]
 
 ### Generated
 - The Upcoming Week: [Yes/No] ([X] events covered)
-- Pre-Event Post: [variant selected]
-- Speaker/Host DMs: [count] people, [count] DMs total
+- Pre-Event Post: [variant selected] (autoresearch score: [X]/100)
+- Speaker/Host DMs: [count] people, [count] DMs total (avg cold-email-personalization score: [X]/100)
 - Prepared Questions: [count] questions compiled
 
 ### Written to Notion
 - Content Drafts: [count] pages created
 - All relations linked to Event, People, Topics
+
+### Autoresearch artifacts
+- Path: content-drafts/<event>/autoresearch/
+- Report: [filename] — biggest score lift on [element]
 
 ### Content Status
 All drafts set to "needs_review" — Alex reviews and moves to "approved" when ready to post.
@@ -408,3 +497,15 @@ All drafts set to "needs_review" — Alex reviews and moves to "approved" when r
 - **MCP write fails:** Report exactly what failed. Offer to retry or present content in conversation for manual copy.
 - **Anti-pattern detected in own output:** Flag it, explain why, and regenerate that section.
 - **Personalization below Level 3:** Flag the DM as weak and explain what's missing. Offer to regenerate with more context or skip.
+- **Autoresearch below threshold (Step 5):** If 3 rounds and final score is still <80, the issue is upstream — usually a weak insight in the source variant or a thin research brief. Don't ship a hyper-optimized variant of a bad post. Flag the dimension that scored worst, explain the likely root cause, and offer to either (a) regenerate Step 3 with a different angle from the brief, or (b) ship the original Step 3 winner unoptimized with a note that the brief needs a stronger insight before the next event.
+
+---
+
+## Cadence rules (do not violate)
+
+- **Autoresearch on DMs:** never. Personalization is the value; optimization erodes it.
+- **Autoresearch on prepared questions:** never. Private notes — no audience to score against.
+- **Autoresearch on the per-event LinkedIn post:** every event.
+- **Autoresearch on the Upcoming Week post:** every Sunday post.
+- **Autoresearch on the synthesis post (`pattern-synthesis`):** optional. Run if the score on first pass is ≥75 and Alex wants the lift; skip if Alex wants the raw voice preserved.
+- **Max one full pre-event run per event.** Don't re-run autoresearch on the same post unless the brief changes materially.

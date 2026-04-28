@@ -17,26 +17,25 @@ networking.
 
 ---
 
-## Step 0: Active Project Gate
+## Step 0: Active Project Awareness
 
-Before generating proposals, check the Notion Project Ideas database for projects with
-Status = "active".
+Before generating proposals, surface the current active project load so Alex can
+manage bandwidth consciously. This is an **awareness step, not a gate** — Alex
+decides whether to proceed.
 
 **Database:** `collection://0956e6ed-8555-4d8f-8856-388966dedaab`
 
 Search for pages where Status = "active".
 
-**If 2 or more active projects exist:**
-> You have [N] active projects:
+**Report current state:**
+> **Active projects ([N]):**
 > 1. [Project Name] — started [date]
 > 2. [Project Name] — started [date]
 >
-> Ship, archive, or delete one before generating new ideas.
-> To update a project's status, let me know which one and what status to set.
+> Proceed to generate new proposals? (yes / defer / review active projects first)
 
-Stop here. Do not generate proposals until the gate clears.
-
-**If 0-1 active projects:** Proceed to Step 1.
+If Alex says proceed, continue to Step 1. If he wants to defer or review active
+projects first, pause here.
 
 ---
 
@@ -61,7 +60,7 @@ Stop here. Do not generate proposals until the gate clears.
 > - Topics: [list]
 > - People: [list with roles]
 > - Companies: [list]
-> - Active projects: [count] / 2 max
+> - Active projects: [count]
 > - Portfolio: [count] shipped projects
 > - Timeline band: [band from table below]
 >
@@ -246,7 +245,7 @@ Present all 3 proposals with the format above. Then:
 > **Which proposal(s) would you like to discuss further, write to Notion, or discard?**
 
 Alex may:
-- Select one to activate (status → active, if gate allows)
+- Select one to activate (status → active)
 - Archive one for later
 - Delete one (with optional learning note)
 - Ask to modify or combine proposals
@@ -328,7 +327,7 @@ For each proposal Alex wants to save:
 | 3 | [name] | [type] | [score] | [saved/active/discarded] |
 
 ### Active Project Count
-[N] / 2 max
+[N] currently active
 
 ### Next Steps
 - For active projects: start building! The build roadmap is in the Notion page body.
@@ -342,8 +341,6 @@ For each proposal Alex wants to save:
 ## Error Handling
 
 - **Research brief not found:** Ask Alex to run event-research skill first.
-- **Active project gate blocks generation:** List active projects, ask Alex which to
-  ship/archive/delete. Do NOT bypass the gate.
 - **< 90% architecture confidence on all 3 proposals:** Tell Alex honestly. Offer to
   scope down, pick different topics, or skip ideation for this event.
 - **All topic pairs have no/weak intersections:** This is fine. Default to single-topic
