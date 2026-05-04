@@ -69,9 +69,29 @@ Sean Ellis: "I think monthly purchases is great because it maps to value people 
 
 For all 35 insights from 27 guests, see `references/guest-insights.md`
 
+## Goodhart-resistant metric design (systems-thinking lens)
+
+Two Meadows archetypes apply directly to metric selection (`.claude/skills/systems-thinking/references/system-archetypes.md`):
+
+**Seeking the Wrong Goal:** the system is exquisitely sensitive to the goal of its feedback loops. If the goal is defined inaccurately, the system will obediently produce the wrong outcome. The system isn't broken — it's optimizing perfectly toward the wrong target.
+
+**Rule Beating:** rules to govern a system invite perverse behavior; actors give the appearance of obeying the rules while distorting the system. (Goodhart's Law: "when a measure becomes a target, it ceases to be a good measure.")
+
+**Pre-mortem question for any candidate NSM:** *if we hit this metric perfectly while the underlying outcome got worse, would we notice? If not, the metric is the goal in disguise.*
+
+Goodhart-resistant moves:
+- **Triangulate.** No single metric is the goal. 1 NSM + 1-2 counter-metrics + 1 quality counter-metric.
+- **Watch the underlying outcome.** When the metric improves while the something it proxies for doesn't, the metric is corrupted.
+- **Rotate periodically.** Don't let a single number become inviolable. The metric should evolve as the system understanding evolves.
+- **Define explicitly.** Active user, retention, engagement — every term has 5+ ways to count. Codify exactly what counts.
+
+This is leverage point #6 (information flows) crossed with leverage point #3 (goals) — the two highest-leverage parts of the system Meadows identifies.
+
 ## Related Skills
 
 - Defining Product Vision
 - Prioritizing Roadmap
 - AI Product Strategy
 - Writing PRDs
+- Systems Thinking — Goodhart resistance above; deeper coverage in `systems-thinking/references/system-archetypes.md` and `applications-to-software-and-product.md`
+- `product-management:metrics-review` — operational cadence for catching drift

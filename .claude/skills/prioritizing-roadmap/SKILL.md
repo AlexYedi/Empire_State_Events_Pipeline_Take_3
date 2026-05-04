@@ -63,9 +63,23 @@ Gibson Biddle: "These two percenters, I would kill them. If I launched something
 
 For all 91 insights from 75 guests, see `references/guest-insights.md`
 
+## Leverage-point distribution check
+
+Before finalizing a roadmap, score each candidate on which leverage point it acts on (catalog at `.claude/skills/systems-thinking/references/leverage-points.md`):
+
+- **#12 Numbers / #11 Buffers / #10 Stocks-and-Flows / #9 Delays** — physical-layer interventions. Necessary but rarely strategic.
+- **#8 Balancing loops / #7 Reinforcing loops / #6 Information flows** — system-control layer. Often high-leverage, often missed.
+- **#5 Rules / #4 Self-organization / #3 Goals / #2 Paradigms / #1 Transcending paradigms** — strategic layer. Rare, expensive, transformative.
+
+A roadmap loaded with #12-level work feels productive and produces no strategic shift. Aim for *deliberate* distribution: most items can be #12-#9 (table stakes), but **at least one quarter should target #6 or higher** if you want the system to actually move.
+
+When two items have similar ICE/RICE scores, prefer the one acting on the higher leverage point — counterintuitively, smaller-looking interventions at #5 or #6 often outperform larger ones at #12.
+
 ## Related Skills
 
 - Writing PRDs
 - Defining Product Vision
 - Writing North Star Metrics
-- Systems Thinking
+- Systems Thinking — see leverage-point distribution check above; also `systems-thinking/references/applications-to-software-and-product.md` for product-roadmap examples
+- `head-of-product-engineering` — invokes this skill in Workflow 4 with the Three-Horizon and leverage-point lenses applied
+- `product-management:roadmap-update` — operational roadmap update workflow

@@ -77,10 +77,22 @@ For extended sourcing (Asana's public launch-tiering talks, Reforge's launch-ops
 
 Note: unlike other product specialists in this library, launch-tiering is synthesized from published practitioner frameworks rather than a single interview series. Treat the Core Principles section as the authoritative summary; the Deep Dive is extended sourcing.
 
+## Second-order effects per tier
+
+The tier-up scale is also a *systems-thinking dose-up scale*. Higher tier = more interconnected stakeholders = more second-order effects to anticipate. Use this lens to size pre-mortem work.
+
+| Tier | Second-order analysis required |
+|---|---|
+| **0** | Quick informal check. "If this fails, what's the blast radius?" Usually contained to one team/feature. |
+| **1** | Run phases 1-4 of the systems-thinking eight-phase analysis (`.claude/skills/systems-thinking/references/diagnostic-questions.md`): bound system, stocks/flows, loops, archetype check. |
+| **2+** | Full eight-phase analysis. Explicitly enumerate second-order effects on adjacent teams/products/customers. Screen against all 8 system archetypes (`system-archetypes.md`). |
+
+Pattern: Tier 2+ launches that succeed on the launch metric while breaking a higher-leverage system property (resilience, self-organization, hierarchy — see `system-properties.md`) are the most damaging failures because they don't show up as failures in the launch retro.
+
 ## Related Skills
 
 - `shipping-products` — shipping velocity within a tier; launch-tiering sizes the wrapper around what you ship.
-- `systems-thinking` — product horizon (H1/H2/H3) drives which tiers are even available.
+- `systems-thinking` — product horizon (H1/H2/H3) drives which tiers are even available; second-order analysis depth scales with tier (see above)
 - `risk-playbooks` — tier determines the depth of risk planning. Tier 0 gets a line; Tier 2+ gets a register.
 - `writing-north-star-metrics` — the launch metric is a downstream view of the NSM; tier defines how much instrumentation is warranted.
 - `prioritizing-roadmap` — tier is one of the comparison dimensions when sequencing launches.

@@ -63,9 +63,26 @@ Chandra Janakiraman: "Product strategy sits between the mission and vision and t
 
 For all 143 insights from 101 guests, see `references/guest-insights.md`
 
+## Vision as a paradigm-level intervention
+
+In Meadows' leverage-point hierarchy (`.claude/skills/systems-thinking/references/leverage-points.md`), product vision operates at **leverage point #2 — Paradigms**, the second-highest place to intervene in any system. A vision isn't a roadmap; it's an attempt to shift the underlying mental model in which roadmap decisions get made.
+
+This is also why most vision work fails: societies (and orgs) resist paradigm shifts harder than any other change. The discipline (per Kuhn, whom Meadows cites):
+
+- Keep pointing at anomalies and failures of the old paradigm
+- Speak and act loudly and with assurance from the new one
+- Insert new-paradigm people in places of public visibility and power
+- Don't waste time with reactionaries — work with active change agents and the open-minded middle
+
+A vision that doesn't enumerate the *broken* assumptions of the current paradigm is a vision that won't shift it. When drafting, name explicitly: *what does the world believe today that we are betting will be wrong?*
+
+The related leverage point at #3 (Goals) is the operational layer below — what the system optimizes for. Vision sets paradigm; goals operationalize it; roadmap is the consequence. Keep the layers distinct.
+
 ## Related Skills
 
 - Writing North Star Metrics
 - Prioritizing Roadmap
-- Systems Thinking
+- Systems Thinking — see vision-as-paradigm-intervention above; deeper coverage in `systems-thinking/references/applications-to-software-and-product.md`
 - AI Product Strategy
+- `brand-storytelling` — the narrative wrapper around the paradigm shift
+- `head-of-product-engineering` — invokes this skill in Workflow 2 (Vision & Strategy)

@@ -76,9 +76,24 @@ Aishwarya Naresh Reganti: "Leaders have to get hands-on—not implementing, but 
 
 For all 179 insights from 94 guests, see `references/guest-insights.md`
 
+## Systems-thinking lens for AI products
+
+Three Meadows concepts apply directly to AI product design (full coverage in `.claude/skills/systems-thinking/references/applications-to-software-and-product.md`):
+
+**1. Bounded rationality (LLM context windows).** The model makes "rational" decisions inside its bounded view (context + training distribution). Most "AI hallucination" is actually a leverage-point #6 problem (information flows): the model can only respond to what it sees. Designing for AI products is largely designing what reaches the model and what reaches users about the model's outputs.
+
+**2. Feedback loops on outputs.** Whether each generation was "good," whether it was used, whether it produced a complaint — these are the system's self-correction. Without them, the model can't learn from production. Eval harnesses are the long-loop balancing mechanism; in-product thumbs-up/down are the short-loop one.
+
+**3. The model's goal (leverage point #3).** Encoded in system prompts, fine-tuning data, RLHF reward. A model with the wrong goal will achieve it perfectly and produce the wrong outcome — Meadows' "Seeking the Wrong Goal" archetype in pure form. Reward hacking, sycophancy, and benchmark-gaming are all this trap. Every AI product should pre-mortem: "if our model achieves the stated reward perfectly, what bad outcome could that produce?"
+
+The "build for the slope, not the snapshot" principle = leverage point #4 (self-organization). Don't lock into one model's quirks; the durable artifact is the eval harness that survives model swaps.
+
 ## Related Skills
 
 - Writing PRDs
-- Systems Thinking
+- Systems Thinking — bounded rationality + feedback loops above; deeper coverage in `systems-thinking/references/applications-to-software-and-product.md`
 - Writing North Star Metrics
 - Shipping Products
+- `claude-api` — implementation patterns (caching, thinking, tool use)
+- `vercel-plugin:ai-sdk`, `vercel-plugin:ai-gateway` — Vercel AI infrastructure
+- `risk-playbooks` — non-determinism and behavior-drift risk classes specific to AI products
