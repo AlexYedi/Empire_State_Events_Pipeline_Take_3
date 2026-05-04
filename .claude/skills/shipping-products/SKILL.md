@@ -69,9 +69,25 @@ Keith Yandell: "If you continuously push up what you ship by a week, you'll end 
 
 For all 55 insights from 47 guests, see `references/guest-insights.md`
 
+## Systems-thinking lens for shipping
+
+Two Meadows guidelines apply directly to shipping practice (full coverage in `.claude/skills/systems-thinking/references/dancing-with-systems.md`):
+
+**Honor, respect, and distribute information (leverage point #6).** Most shipping problems are information problems. Decision makers can't respond to information they don't have, or that's late, or that's biased. Practical implications:
+- Build dashboards engineers can see at-a-glance, not just leadership.
+- Surface customer NPS / support tickets / cost-per-request to the team that built the feature, not just to management.
+- Default to transparency in ship rituals. The toxic-release-inventory effect (40% drop in emissions just from publishing data, no fines) shows up in product orgs too.
+
+**Make feedback policies for feedback systems.** Don't write static rules to govern dynamic systems. Sprint capacity from trailing 4-sprint velocity, not annual estimate. Pricing tiers that flex on cohort behavior. Hiring plans that adjust on attrition. Static policy on dynamic system → oscillation, overshoot, and miss.
+
+The "drift to low performance" archetype is the silent killer of shipping cadence — see `system-archetypes.md`. Anchor quality bars to *best historical performance*, not to "average of recent sprints," or you'll quietly recalibrate downward and never notice.
+
 ## Related Skills
 
 - Writing PRDs
 - Launch Tiering
 - Risk Playbooks
 - Prioritizing Roadmap
+- Systems Thinking — info flows + feedback policies above; deeper coverage in `systems-thinking/references/dancing-with-systems.md` and `applications-to-software-and-product.md`
+- `engineering:deploy-checklist` — pre-deployment verification
+- `engineering:incident-response` — postmortem feeds back into next launch's playbook

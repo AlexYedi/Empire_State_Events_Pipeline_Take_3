@@ -42,6 +42,19 @@ Before any workflow, do these three steps in order:
 
 **Note on specialist count:** the library has **10 product specialists**, but `systems-thinking` is hard-invoked twice — once in Workflow 1 (Discovery, stakeholder map) and once in Workflow 4 (Prioritization, Three-Horizon lens). The two invocations apply different lenses from the same skill; treat them as distinct passes.
 
+### Systems-thinking lenses per invocation
+
+The systems-thinking skill has eight reference files, each addressing a different facet (see `.claude/skills/systems-thinking/references/`). Use the right one at each invocation:
+
+- **Workflow 1 (Discovery, stakeholder map):** load `feedback-loops-stocks-flows.md`, `system-archetypes.md`, and `diagnostic-questions.md`. The Discovery pass should produce a CLD sketch (stocks, flows, dominant R/B loops) and a check against the 8 archetypes for the problem space. Apply the eight-phase analysis from `diagnostic-questions.md` — at minimum phases 1-4. Output: stakeholder map + named loops + suspected archetype + bounded-rationality view of each player's incentives.
+- **Workflow 4 (Prioritization, Three-Horizon lens):** load `leverage-points.md` and the Three-Horizon section of `systems-thinking/SKILL.md`. Score each candidate item on:
+  - Which leverage point it acts on (#12 parameters → #1 transcending paradigms)
+  - Which horizon it serves (H1 / H2 / H3)
+  - Whether it strengthens or weakens system properties (resilience, self-organization, hierarchy — see `system-properties.md`)
+  A roadmap that's all #12-level work will feel productive and produce no strategic shift; flag this in the prioritization output.
+
+For ad-hoc systems analysis during any workflow (e.g., a stakeholder asks "what could go wrong post-launch?"), pull `dancing-with-systems.md` and `applications-to-software-and-product.md` for posture and worked examples.
+
 ## Hard-invocation protocol
 
 For each workflow, do **not** paraphrase, shortcut, or merge specialists. Invoke as follows:

@@ -94,9 +94,29 @@ For extended sourcing (Google SRE book chapters on incident response and release
 
 Note: unlike other product specialists in this library, risk-playbooks is synthesized from published operations and incident-management practice rather than a single interview series. Treat the Core Principles section as the authoritative summary; the Deep Dive is extended sourcing.
 
+## System-traps-as-risk-taxonomy
+
+The 8 system archetypes from Meadows (catalog at `.claude/skills/systems-thinking/references/system-archetypes.md`) are a parallel risk taxonomy to the SRE/launch categories above. Use them to surface risks the standard categories miss. Each archetype names a chronic structural failure mode with a known shape:
+
+| Archetype | What goes wrong post-launch |
+|---|---|
+| **Policy Resistance** | Stakeholders pull the system back to status quo; new policy produces no behavior change |
+| **Tragedy of the Commons** | Shared resource (DB, infra, on-call) gets overused as users feel no individual cost |
+| **Drift to Low Performance** | Quality bar quietly relaxes post-launch as standards reset to actual performance |
+| **Escalation** | Competitor / user-feature war that compounds without bounded outcome |
+| **Success to the Successful** | Heaviest users get more product attention, deepening dependency on a small cohort |
+| **Shifting the Burden** | Quick-fix mitigation atrophies the team's ability to fix the underlying issue |
+| **Rule Beating** | Users / teams game launch metrics; numbers look good, outcome doesn't move |
+| **Seeking the Wrong Goal** | Launch metric improves while desired outcome degrades — Goodhart strikes |
+
+Add a row to the risk register for any plausible archetype hit. Especially worth screening for at Tier 2+ launches with persistent (not point-in-time) post-launch dynamics.
+
+For deeper diagnostic on second-order effects pre-launch, run the eight-phase analysis in `.claude/skills/systems-thinking/references/diagnostic-questions.md` (phase 7 specifically targets second-order failure modes).
+
 ## Related Skills
 
 - `launch-tiering` — tier determines how much risk planning is warranted. Tier 0 gets a one-liner; Tier 2+ gets a full register + rehearsed rollback.
 - `shipping-products` — shipping velocity is constrained by rollback readiness. Pre-rollback discipline unlocks faster shipping, not the reverse.
-- `systems-thinking` — risk categories intensify per horizon. A Product & Reliability risk at H1 is "works on my laptop"; at H3 it's "five nines with documented failover."
+- `systems-thinking` — risk categories intensify per horizon. A Product & Reliability risk at H1 is "works on my laptop"; at H3 it's "five nines with documented failover." See also the 8-archetype taxonomy above.
 - `ai-product-strategy` — AI products add non-determinism risk. Eval regressions and behavior drift are risk categories that don't exist for deterministic products.
+- `engineering:incident-response` — postmortems should retroactively classify the failure mode against the 8 archetypes; recurring archetype hits are signals about structural issues, not just the latest incident.
