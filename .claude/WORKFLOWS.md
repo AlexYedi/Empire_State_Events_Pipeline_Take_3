@@ -32,7 +32,9 @@ The brief produced was real and high-quality (see [orchestrator validation Conte
 
 **Workaround for now:** Continue running Workflow A through the inline path (event-research SKILL.md Steps 1–7 executed in main conversation) until fan-out is fixed. This is what produced the May 5–7 NYC event briefs successfully. The orchestrator path can be invoked but provides no architectural advantage today — single-model execution either way.
 
-**Path 2 follow-up:** see `.claude/artifacts/orchestrator-fanout-diagnosis.md` (created during the same session as this update) for the read of agent definitions and the proposed fix.
+**Path 2 follow-up:** see `.claude/artifacts/orchestrator-fanout-diagnosis.md` for the read of agent definitions and the proposed fix.
+
+**Fix 1 applied 2026-05-05 — and reverted same day after verification:** `tools: Task, Read` was added to the orchestrator frontmatter. The verification re-run revealed that the whitelist had the opposite of the intended effect: `Task` was REMOVED from the orchestrator's tool surface entirely (likely because it's a Claude Code SDK primitive, not an MCP tool, and frontmatter `tools:` whitelists filter against the MCP tool namespace) while `WebSearch`/`WebFetch` survived as deferred tools. The frontmatter line was removed; orchestrator restored to pre-Fix-1 state. See [orchestrator-fanout-diagnosis.md](artifacts/orchestrator-fanout-diagnosis.md) Decision Log for the full record. **Next attempt:** Fix 2 (prompt-level instruction language) is now the primary recommended fix; Fix 4 (figure out the right tool-restriction syntax) is the open architectural question.
 
 ---
 
@@ -378,4 +380,4 @@ Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until comma
 
 ---
 
-*Last updated: 2026-05-05 — orchestrator validation run completed; agent registration gap resolved; new no-fan-out gap logged.*
+*Last updated: 2026-05-05 — orchestrator validation run completed; agent registration gap resolved; no-fan-out gap diagnosed; Fix 1 applied + reverted after verification revealed it disabled Task while preserving WebSearch; Fix 2 (instruction language) promoted to primary recommendation; Fix 4 (correct tool-restriction syntax) is open architectural question.*
