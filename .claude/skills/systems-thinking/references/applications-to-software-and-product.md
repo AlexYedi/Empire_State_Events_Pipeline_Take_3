@@ -98,7 +98,7 @@ Each re-run should produce a fresh artifact at `.claude/artifacts/systems-analys
 
 ## See also
 
-- The systems-analyst agent at `.claude/agents/systems-analyst.md` — invoke for delegated runs of this analysis
+- The systems-analyst agent at `.claude/agents/ops/systems-analyst.md` — invoke for delegated runs of this analysis (note: agent registration may require a fresh conversation per `.claude/WORKFLOWS.md`)
 - Test artifact at `.claude/artifacts/systems-analyst-test-2026-05-04.md` — first eight-phase run with full output
 - Workflow card at `.claude/references/systems-thinking-workflow.md` — three-mode (Analyzing/Planning/Building) framing
 - Global applications file at `~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/references/applications-to-product-and-engineering.md` — for general-purpose product/engineering/GTM applications
