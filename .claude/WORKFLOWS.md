@@ -10,7 +10,7 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 
 | Workflow | Status | Command | Purpose |
 |---|---|---|---|
-| A — Event Deep Research | 🟠 Built, validation blocked | `/event-deep-research` | Pre-event: parse invite → multi-agent research → Notion + HubSpot |
+| A — Event Deep Research | 🟠 Orchestrator agent dispatches but does not fan out (validated 2026-05-05) | `/event-deep-research` | Pre-event: parse invite → multi-agent research → Notion + HubSpot |
 | A (inline path) | ✅ Wired (proven 2026-05-04) | event-research SKILL.md inline | Same as A but without multi-agent fan-out — main conversation does research itself |
 | B — Post-Event Synthesis | 🟡 Scaffolded | `/post-event-synthesis` | Post-event: transcripts/notes → DMs + posts + retro |
 | C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
@@ -18,21 +18,21 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 
 ---
 
-## ⚠️ Known gap (discovered 2026-05-04)
+## ⚠️ Known gap (updated 2026-05-05 after validation run)
 
-**Custom agents in `.claude/agents/` are NOT discoverable by the Task tool mid-conversation.** Validation of the orchestrator on the Wednesday Agentics event failed at step 1 with: `Agent type 'event-research-orchestrator' not found. Available agents: claude-code-guide, Explore, general-purpose, Plan, statusline-setup, vercel-plugin:*`.
+**Validation result:** the registration mechanism is fine — opening a fresh conversation in this repo did make `event-research-orchestrator` and the four specialists discoverable to the Task tool. The original hypothesis (agents not registered at conversation start) is **resolved**.
 
-**Hypothesis:** Task tool's available `subagent_type` enumeration is set at conversation start. Custom `.claude/agents/*.md` files created mid-conversation are not picked up until a fresh conversation starts.
+**New gap surfaced by the validation run:** the orchestrator agent executed the research itself with WebSearch instead of dispatching the four specialists in parallel. The orchestrator's own validation note read:
 
-**Workaround for now:** Run Workflow A through the inline path (event-research SKILL.md Steps 1–7 executed in main conversation). This is what was used to produce the May 5–7 NYC event briefs successfully.
+> *"In this single-model execution (no actual parallel subagents were spawned — the orchestrator ran the research directly using WebSearch), there is no subagent boundary drift to report."*
 
-**Validation queued:** Open a fresh Claude Code conversation in this repo, then run the orchestrator via Task tool with `subagent_type: event-research-orchestrator` against the Wednesday Agentics event. If it resolves, the agents are picked up at conversation start as expected. See `.claude/artifacts/orchestrator-validation-handoff.md` for the ready-to-paste prompt.
+The brief produced was real and high-quality (see [orchestrator validation Content Draft](https://www.notion.so/357d3699c2db816792eef9f93adf1caa) and [side-by-side comparison artifact](artifacts/orchestrator-validation-comparison.md)) — but the multi-agent architecture is not being exercised. The orchestrator collapses to single-model execution.
 
-**If a fresh conversation also fails to register the agents,** the architecture needs a different registration mechanism — likely either:
-- Plugin namespace (`.claude-plugin/plugin.json` + agents under a plugin directory), or
-- A different `agents/` location/format Claude Code's loader actually scans
+**Hypothesis (path 2 investigation):** likely a combination of (a) prompt-level instructions in `event-research-orchestrator.md` not strongly mandating Task dispatch, and/or (b) Task tool not in the orchestrator's allowed tool set, and/or (c) the orchestrator inferring it can answer faster inline and choosing efficiency over architecture. To be diagnosed by reading `.claude/agents/research/event-research-orchestrator.md` and the four specialist agent files.
 
-That investigation is its own task.
+**Workaround for now:** Continue running Workflow A through the inline path (event-research SKILL.md Steps 1–7 executed in main conversation) until fan-out is fixed. This is what produced the May 5–7 NYC event briefs successfully. The orchestrator path can be invoked but provides no architectural advantage today — single-model execution either way.
+
+**Path 2 follow-up:** see `.claude/artifacts/orchestrator-fanout-diagnosis.md` (created during the same session as this update) for the read of agent definitions and the proposed fix.
 
 ---
 
@@ -378,4 +378,4 @@ Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until comma
 
 ---
 
-*Last updated: 2026-05-04 — initial workflow scaffold.*
+*Last updated: 2026-05-05 — orchestrator validation run completed; agent registration gap resolved; new no-fan-out gap logged.*
