@@ -1,4 +1,5 @@
 ---
+name: event-research
 description: "Research an upcoming event from a pasted calendar invite. Produces a structured brief, writes to Notion (5 databases) and HubSpot (contacts, companies, notes), and optionally enriches speakers via Apollo."
 ---
 
