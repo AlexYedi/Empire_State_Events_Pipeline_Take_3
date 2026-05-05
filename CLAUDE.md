@@ -52,6 +52,13 @@ If explanations are needed during development, I will invoke the explainer skill
 <project_architecture>
 ## Empire State Events Pipeline — Take 3
 
+### 🟠 Open priorities at session start (added 2026-05-05)
+Three Linear issues queued from the systems-thinking diagnostic run:
+
+1. **[YED-23 — High]** Pipeline goal flip + decay dashboard + Notion DB hygiene. Real-data analysis confirmed Shifting-the-Burden + Seeking-the-Wrong-Goal archetypes. Time-sensitive items inside: ship-or-archive May 5-7 roundup, decide on Hackathon Apr 30 post, verify MS Fabric scheduled post. Mechanism fixes (decay view, status-field discipline, Published URL validation) and goal flip (publish-rate metric + quality counter-metric) follow. Full diagnostic at `.claude/artifacts/systems-analyst-real-data-2026-05-04.md`. **Do NOT build a "publishing automation skill" before the goal flip lands** — it would deepen the trap.
+2. **[YED-24 — Medium]** Wire systems-analyst into commands/agents architecture. Verify `subagent_type: "systems-analyst"` works from a fresh conversation, build `/systems-analyze` slash command, optionally add as opt-in phase in event-deep-research workflow. WORKFLOWS.md needs updating once verified.
+3. **[YED-25 — Low]** Document systems-thinking bootstrap pattern in the global library (`alex-agents-skills/Product/systems-thinking/SKILL.md`). Park until next project actually needs it.
+
 ### Where to start
 **For workflow orchestration (commands, agent fan-out, how the four workflows chain): read `.claude/WORKFLOWS.md` first.** That document is the rerun manual.
 
