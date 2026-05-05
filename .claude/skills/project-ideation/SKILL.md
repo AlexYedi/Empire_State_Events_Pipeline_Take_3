@@ -1,4 +1,5 @@
 ---
+name: project-ideation
 description: "Generate project proposals from event topic intersections. Produces 3 scored ideas (2 feasible + 1 stretch) with architecture, timeline, and content moment analysis. Writes to Notion Project Ideas database."
 ---
 
