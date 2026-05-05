@@ -166,4 +166,4 @@ This is the cycle: analyze → plan → build → re-analyze. The skills compose
 - `.claude/skills/systems-thinking/SKILL.md` — the systems-thinking skill itself
 - `.claude/skills/systems-thinking/references/` — the eight reference files this workflow draws on
 - `.claude/skills/head-of-product-engineering/SKILL.md` — the orchestrator that hard-invokes systems-thinking twice
-- `.claude/agents/systems-analyst.md` — the delegated systems-analysis agent (when you want a sub-agent to run a full eight-phase analysis without consuming main-context tokens)
+- `.claude/agents/ops/systems-analyst.md` — the delegated systems-analysis agent (when you want a sub-agent to run a full eight-phase analysis without consuming main-context tokens). Note: per `.claude/WORKFLOWS.md` "Known gap" section, custom agents may not be discoverable mid-conversation; invoke from a fresh session for now.
