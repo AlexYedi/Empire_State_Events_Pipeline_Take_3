@@ -134,3 +134,29 @@ If verification fails (e.g., specialists themselves can't research because they'
 ## Open question for Alex
 
 Apply Fix 1 immediately, or batch with the broader agent-config audit? My recommendation: apply Fix 1 now. It's a one-line change to the frontmatter, low-risk, and the architectural payoff is high. The other two fixes can wait until the next pass over the agents directory.
+
+---
+
+## Decision log
+
+- **2026-05-05** — Fix 1 applied. `tools: Task, Read` added to [event-research-orchestrator.md](../agents/research/event-research-orchestrator.md) frontmatter. Verification queued.
+
+- **2026-05-05 (later same day)** — Fix 1 verification run completed. **Fix 1 backfired and was reverted.** Verification re-run dispatched the orchestrator (background); the orchestrator reported its tool surface and correctly refused to do inline research. The observed result:
+  - `Task` was REMOVED from the orchestrator's tool surface entirely (absent from both directly-callable and deferred-via-ToolSearch lists). Fan-out became architecturally impossible.
+  - `WebSearch` and `WebFetch` were NOT removed — they remained in the deferred tool list.
+  - Net effect: the whitelist had the opposite of the intended effect on both axes. Subagent dispatch was disabled while inline-research tools were retained.
+
+  **Hypothesis (from orchestrator's self-report):** the `Task` tool is a Claude Code SDK primitive, not an MCP tool. Frontmatter `tools:` whitelists appear to filter against the MCP tool namespace and may actively prevent SDK primitives like `Task` from being inherited when they are listed in a restrictive allowlist. WebSearch/WebFetch are deferred-loaded via ToolSearch, which is itself an MCP-style mechanism, so they survive the whitelist filter.
+
+  **Action taken:** the `tools:` line was removed from the orchestrator frontmatter, restoring it to the pre-Fix-1 state (inherits all tools, including Task, WebSearch, WebFetch). This puts the orchestrator back in the original state — fan-out is again *possible* via Task, but the agent will *choose* inline research when WebSearch is in its surface (the original observed failure mode).
+
+  **Updated fix recommendation:** Fix 1 (frontmatter tool whitelist) is **not the right mechanism** for this problem. Promote Fix 2 (strengthen instruction language) to primary. Add Fix 4 below.
+
+### Fix 4 — Investigate the right syntax (or wrong premise) for tool restriction
+
+Before applying any further frontmatter changes, confirm:
+1. Is `Task` whitelistable via frontmatter at all? Test by checking another known-fan-out agent in this repo or in the global library and seeing what its `tools:` field looks like.
+2. Is the right syntax something other than a comma-separated list? Some Claude Code agent definitions use array syntax or a different field name.
+3. Is the right approach to *not* whitelist Task explicitly but to whitelist *only* what should be excluded (e.g., set tools to a list that omits WebSearch/WebFetch but doesn't include Task either, relying on Task being a primitive that's always inherited)?
+
+Until Fix 4 is resolved, **rely on Fix 2 (prompt-level instruction language)** as the primary mechanism. The orchestrator with default tool surface + a strongly-worded "you may not research inline" instruction is the next thing to test.
