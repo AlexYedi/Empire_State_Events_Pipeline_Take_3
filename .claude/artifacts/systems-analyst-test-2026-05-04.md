@@ -4,6 +4,7 @@
 **Scenario:** Empire State Events Pipeline — content publishing plateau hypothesis
 **Agent:** `.claude/agents/ops/systems-analyst.md` (first invocation; via general-purpose proxy due to mid-conversation registration limitation per WORKFLOWS.md)
 **Status:** Test passed; agent works as designed.
+**Follow-up:** real-data validation run on the same day at [systems-analyst-real-data-2026-05-04.md](systems-analyst-real-data-2026-05-04.md) — the hypothetical findings here held up empirically against the actual Notion Content Drafts data, with confidence levels nudged upward.
 
 ---
 
