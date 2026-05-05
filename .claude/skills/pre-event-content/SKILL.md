@@ -410,6 +410,8 @@ Write all approved content to the **Content Drafts** database.
 
 **Database:** `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 
+> **Visual briefs persistence rule (added 2026-05-05):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b visual briefs in the same page body, appended below the post copy under a `## Visual Briefs` H2. The visual briefs are not a separate Content Draft page — they live with the post they support, so Alex has both the copy and the prompts for visual generation in one place when he opens the page in Canva/Gamma/Gemini. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
+
 ### Content pages to create:
 
 **The Upcoming Week post (if generated):**
@@ -422,7 +424,7 @@ Write all approved content to the **Content Drafts** database.
 "Event": [relation to all events mentioned in the post]
 "Topics": [relation to all topics across events]
 ```
-Page body: the approved post variant
+Page body: the approved post variant + **all 3 visual briefs from Step 3b appended under a `## Visual Briefs` H2** (Visual 1 — Data/Stat, Visual 2 — Conceptual/Framework, Visual 3 — Wild Card 🌶️). Note: for weekly preview posts the Step 3b.1 format selection table calls for a carousel as the primary format — Visual 2 should be the carousel brief, Visuals 1 and 3 are supplementary single-image briefs.
 
 **Pre-Event LinkedIn post:**
 ```
@@ -435,7 +437,7 @@ Page body: the approved post variant
 "People": [relation to people mentioned]
 "Topics": [relation to topics covered]
 ```
-Page body: the approved post variant
+Page body: the approved post variant + **all 3 visual briefs from Step 3b appended under a `## Visual Briefs` H2** (Visual 1 — Data/Stat, Visual 2 — Conceptual/Framework, Visual 3 — Wild Card 🌶️). Format selection per Step 3b.1 — match the post's strongest angle to the right format (single image / carousel / typography card / Gemini prompt).
 
 **Speaker/Host DMs (one page per person):**
 ```
