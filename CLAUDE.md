@@ -314,5 +314,22 @@ j. **`<` in body text is auto-escaped to `\<`** in stored markdown but renders c
    (`\<5min` → `<5min`). Cosmetic only — don't try to "fix" it by removing the escape.
 k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` blocks** on write. Rendered as 
    real Notion tables (sortable, filterable, resizable columns) — preferred over leaving them as raw markdown.
+
+### Systems-thinking harness (added 2026-05-04)
+
+Backed by 8 reference files in `.claude/skills/systems-thinking/references/` derived from Donella Meadows' 
+*Thinking in Systems: A Primer*. Canonical content (the 7 source-grounded files plus the generalized 
+applications file) is mirrored in the global library at 
+`~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/`. The project-level harness keeps the 
+H1/H2/H3 horizon framework (project-specific) and an Empire-State-specific applications file with the 
+pipeline's stocks/flows/loops sketched.
+
+- **Eight-phase analysis** lives in `.claude/skills/systems-thinking/SKILL.md` and the `references/diagnostic-questions.md` question bank. Use phases 1-4 for quick reframes; full 1-8 for chronic problems.
+- **Workflow card** at `.claude/references/systems-thinking-workflow.md` ties Analyzing/Planning/Building modes across the broader skill set.
+- **Delegated agent** at `.claude/agents/systems-analyst.md` performs the eight-phase analysis as a sub-agent without consuming main-context tokens. First test run on 2026-05-04 (content-publishing-plateau hypothesis) is logged at `.claude/artifacts/systems-analyst-test-2026-05-04.md` and surfaced 3 reference-file gaps that are now applied.
+- **Adjacent skills updated** with systems-thinking integration sections: `head-of-product-engineering`, `risk-playbooks`, `prioritizing-roadmap`, `defining-product-vision`, `ai-product-strategy`, `shipping-products`, `launch-tiering`, `writing-north-star-metrics`. Each references the canonical leverage-points / archetypes / dancing-with-systems content.
+- **Rule-out discipline:** when matching a system archetype, also state which archetypes were considered and rejected (with evidence). Two archetypes can produce identical surface symptoms but their escapes diverge sharply (e.g., Tragedy of the Commons vs. Shifting the Burden — see test artifact for the worked example).
+- **Watch for perverse balancing loops:** a stock can be drained by waste/decay/abandonment as well as by delivery. Always split the outflow metric. A flat queue can mean equilibrium *or* loss — they look identical.
+- **Single-actor multi-role bounded rationality:** treat Alex-as-researcher / Alex-as-reviewer / Alex-as-publisher as separate rows in the actor table. The leverage point is often the seam between two roles within the same person.
 </project_architecture>
 </CLAUDE.md>
