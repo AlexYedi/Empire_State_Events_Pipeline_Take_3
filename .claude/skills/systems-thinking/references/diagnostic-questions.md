@@ -71,7 +71,9 @@ Match the situation against the eight named patterns. (See `system-archetypes.md
 - **Rule Beating:** Are actors gaming the rules in ways that defeat the purpose?
 - **Seeking the Wrong Goal:** Is the metric perfect but the underlying outcome worse?
 
-If you can name the archetype, half the diagnosis is done.
+**Required rule-out discipline:** for any archetype you tentatively match, also explicitly answer: **"What other archetypes did I consider and rule out, and on what evidence?"** This is not optional. Two archetypes can produce similar surface symptoms (e.g., Tragedy of the Commons and Shifting the Burden both look like "shared resource is overrun"), but their *escapes are different*. Stating the rejected matches in writing forces the rigor that distinguishes a useful diagnosis from a polite one. Surfaced as a gap in the 2026-05-04 systems-analyst test run — see `.claude/artifacts/systems-analyst-test-2026-05-04.md`.
+
+If you can name the archetype — and explain which others you ruled out — half the diagnosis is done.
 
 ---
 

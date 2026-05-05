@@ -200,6 +200,44 @@ The discipline isn't to model every loop; it's to identify the *few that matter 
 
 ---
 
+## 5b. Perverse balancing loops — when the outflow is waste, not delivery
+
+> If the sum of outflows equals the sum of inflows, the stock level will not change. — Meadows, Appendix
+
+This logic produces a subtle trap: **a stock can be drained by waste as well as by delivery, and the two look identical at the stock level.** A balancing loop that empties the stock via *decay, expiration, or abandonment* will produce a flat or stable stock level that *appears* to be working — but the system is failing.
+
+**Examples:**
+- A content drafts queue stabilizes because pre-event drafts age out (the event passes; the post becomes worthless) before they get published. Looks like equilibrium; actually loss.
+- An on-call alert queue stabilizes because alerts auto-close after X hours unacknowledged. Looks like resolution; actually negligence.
+- A sales pipeline holds steady because deals quietly get marked "lost — no decision" rather than worked. Looks like throughput; actually attrition.
+- A research backlog holds steady because old experiments get archived as "deprioritized." Looks like cleanup; actually abandonment.
+
+**How to detect:** measure both outflows separately. *Drained-via-delivery* and *drained-via-decay* are not interchangeable. Split the metric. The decay metric should be the loud one — if it's the dominant outflow, the system is losing, not equilibrating.
+
+**Why it's not in the canonical 8 archetypes:** Meadows treats this as a structural property of stock-flow systems rather than naming it as its own archetype. But it's distinct enough from Drift to Low Performance (which is about goals slipping) to deserve a separate diagnostic. When you sketch a system and find a balancing loop closing the stock, ask: *is the outflow producing the desired outcome, or just emptying the stock?*
+
+Surfaced in the 2026-05-04 systems-analyst test on the Empire State Events Pipeline (the "decay-as-relief" loop on the Content Drafts queue).
+
+---
+
+## 5c. Single-actor systems with multiple sub-roles
+
+A subtle bounded-rationality pattern Meadows doesn't address directly: **one person inhabiting several functional roles within a system.** Alex-as-researcher, Alex-as-drafter, Alex-as-reviewer, Alex-as-publisher are all the same person — but each role has its own bounded view, its own incentives, its own moment-to-moment goals.
+
+When you sketch the players and their incentives (`diagnostic-questions.md` Phase 5), **don't collapse multi-role single actors into one row.** Each role gets its own line. The bounded-rationality finding is often that *each role is making locally rational choices* and the aggregate produces an outcome no role intended.
+
+**Common in:**
+- Solo founders / solopreneurs
+- Personal-brand operators (creator + editor + publisher + community manager)
+- Indie engineers (architect + implementer + on-call + support)
+- Anyone running a pipeline with many sub-functions before delegating any of them
+
+**Why this matters:** the temptation is to write "Alex" as one row in the actor table. But the leverage point is often *the seam between two roles within the same person* — the friction at the handoff from researcher-Alex to publisher-Alex. Naming the roles separately surfaces seams the single-actor framing hides.
+
+Surfaced in the 2026-05-04 systems-analyst test — the Shifting-the-Burden diagnosis only became visible once researcher-Alex and reviewer-Alex were treated as separate actors.
+
+---
+
 ## 6. Dynamic equilibrium
 
 > If the sum of inflows equals the sum of outflows, the stock level will not change — it will be held in dynamic equilibrium. — Meadows, Appendix
