@@ -52,6 +52,14 @@ If explanations are needed during development, I will invoke the explainer skill
 <project_architecture>
 ## Empire State Events Pipeline — Take 3
 
+### Where to start
+**For workflow orchestration (commands, agent fan-out, how the four workflows chain): read `.claude/WORKFLOWS.md` first.** That document is the rerun manual.
+
+The `.claude/` directory now uses the agents + commands + skills triangle:
+- `.claude/agents/` — subagent role definitions (called via the Task tool with `subagent_type`). Organized into `research/`, `content/`, `sales-methodology/`, `ops/`.
+- `.claude/commands/` — slash-command workflow files. The four pipeline workflows live here: `event-deep-research.md` (✅ wired), `post-event-synthesis.md` (🟡 scaffolded), `weekly-recap.md` (🟡 scaffolded), `voice-pass.md` (🟡 scaffolded).
+- `.claude/skills/` — methodology packages with SKILL.md + references/. New parent folders: `research-methodology/`, `company-deep-research/`, `content-quality/`, `transcript-intelligence/`, `icp-research/`, `cold-email/`.
+
 ### Purpose
 An AI-native pipeline that turns Alex's Google Calendar event attendance into pre-event research, 
 networking preparation, content creation, and CRM management — powered by Claude skills with 
@@ -162,14 +170,16 @@ Alex pastes calendar invite description + adds natural language context:
 
 ### Phased Roadmap
 
-**Phase 1: Event Research Skill (Current — CTO review complete 2026-04-09)**
-- Build event-research skill (.claude/skills/event-research.md) with paste-the-invite input
-- Skill runs inside Claude Code conversation — human-in-the-loop by design
+**Phase 1: Event Research Skill (Multi-agent rebuild complete 2026-05-04)**
+- Original: monolithic `event-research` skill (.claude/skills/event-research/SKILL.md — migrated to folder format)
+- Rebuilt as `/event-deep-research` command (Workflow A) with multi-agent fan-out
+- Orchestration: `event-research-orchestrator` (sonnet) fans out 4 specialists in parallel — `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner` — then `notion-writer` handles dependency-ordered MCP writes
+- Skill methodology (Steps 1–7) is unchanged and authoritative: `.claude/skills/event-research/SKILL.md`. The command file is the orchestration shape; the skill is the methodology
 - Research sources: Claude training data + WebSearch
-- Direct MCP writes to Notion (all 5 databases, ordered by relation dependencies)
-- Direct MCP writes to HubSpot (companies, contacts with associations, Notes for event tracking)
-- Dedup check: search Notion + HubSpot for existing records before creating
-- Test on one real upcoming event end-to-end
+- Direct MCP writes to Notion (all 5 databases, ordered by relation dependencies) via notion-writer agent
+- Direct MCP writes to HubSpot (companies, contacts with associations, Notes for event tracking) — handled in main conversation (HubSpot MCP needs inline confirmation tables)
+- Dedup check (Step 1.5 triage): search Notion + HubSpot for existing records before creating; classify NEW/REFRESH/SKIP
+- See `.claude/WORKFLOWS.md` for the full Workflow A rerun manual
 
 **Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
 - Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
