@@ -4,15 +4,35 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 
 **Status legend:**
 - ✅ **Wired** — fully built, tested, ready to run
+- 🟠 **Built, validation blocked** — files exist, but runtime invocation has a known gap (see "Known gap" below)
 - 🟡 **Scaffolded** — command file exists with documented triggers/inputs/flow, agent wiring not yet executed end-to-end
 - ⚪ **Future** — referenced but not yet started
 
 | Workflow | Status | Command | Purpose |
 |---|---|---|---|
-| A — Event Deep Research | ✅ Wired | `/event-deep-research` | Pre-event: parse invite → multi-agent research → Notion + HubSpot |
+| A — Event Deep Research | 🟠 Built, validation blocked | `/event-deep-research` | Pre-event: parse invite → multi-agent research → Notion + HubSpot |
+| A (inline path) | ✅ Wired (proven 2026-05-04) | event-research SKILL.md inline | Same as A but without multi-agent fan-out — main conversation does research itself |
 | B — Post-Event Synthesis | 🟡 Scaffolded | `/post-event-synthesis` | Post-event: transcripts/notes → DMs + posts + retro |
 | C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
 | D — Voice Pass | 🟡 Scaffolded | `/voice-pass` | Polish: voice-editor over `needs_review` Content Drafts |
+
+---
+
+## ⚠️ Known gap (discovered 2026-05-04)
+
+**Custom agents in `.claude/agents/` are NOT discoverable by the Task tool mid-conversation.** Validation of the orchestrator on the Wednesday Agentics event failed at step 1 with: `Agent type 'event-research-orchestrator' not found. Available agents: claude-code-guide, Explore, general-purpose, Plan, statusline-setup, vercel-plugin:*`.
+
+**Hypothesis:** Task tool's available `subagent_type` enumeration is set at conversation start. Custom `.claude/agents/*.md` files created mid-conversation are not picked up until a fresh conversation starts.
+
+**Workaround for now:** Run Workflow A through the inline path (event-research SKILL.md Steps 1–7 executed in main conversation). This is what was used to produce the May 5–7 NYC event briefs successfully.
+
+**Validation queued:** Open a fresh Claude Code conversation in this repo, then run the orchestrator via Task tool with `subagent_type: event-research-orchestrator` against the Wednesday Agentics event. If it resolves, the agents are picked up at conversation start as expected. See `.claude/artifacts/orchestrator-validation-handoff.md` for the ready-to-paste prompt.
+
+**If a fresh conversation also fails to register the agents,** the architecture needs a different registration mechanism — likely either:
+- Plugin namespace (`.claude-plugin/plugin.json` + agents under a plugin directory), or
+- A different `agents/` location/format Claude Code's loader actually scans
+
+That investigation is its own task.
 
 ---
 
