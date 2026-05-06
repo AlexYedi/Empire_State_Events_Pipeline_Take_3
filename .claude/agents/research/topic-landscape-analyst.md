@@ -1,6 +1,7 @@
 ---
 name: topic-landscape-analyst
-description: Researches each topic surfaced from an event invite across 5 dimensions — Current Events, Opportunities, Challenges, Use Cases & Practical Applications, Top Questions. Designed for depth that lets Alex hold a 5-minute conversation with an expert and ask follow-ups demonstrating genuine engagement. Use when invoked by event-research-orchestrator with a list of Topic entities and their triage paths. Returns one topic block per entity in the schema defined by event-research SKILL.md Step 2a.
+description: Researches each topic surfaced from an event invite across 5 dimensions — Current Events, Opportunities, Challenges, Use Cases & Practical Applications, Top Questions. Designed for depth that lets Alex hold a 5-minute conversation with an expert and ask follow-ups demonstrating genuine engagement. Use when invoked from /event-deep-research (parent thread) with a list of Topic entities and their triage paths. Returns one topic block per entity in the schema defined by event-research SKILL.md Step 2a.
+tools: WebSearch, WebFetch, Read
 model: sonnet
 ---
 

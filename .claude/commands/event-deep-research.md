@@ -1,11 +1,11 @@
 ---
-description: "Workflow A — full event research pipeline. Parses a pasted calendar invite, runs entity triage, fans out 4 parallel research subagents, synthesizes the brief, and writes to Notion + HubSpot. Replaces the monolithic event-research skill flow with a multi-agent orchestrated version."
+description: "Workflow A — full event research pipeline. Parses a pasted calendar invite, runs entity triage, fans out 4 parallel research subagents from this conversation, dispatches synthesizer for the brief, and writes to Notion + HubSpot. Replaces the monolithic event-research skill flow with a multi-agent architecture."
 argument-hint: "[paste calendar invite text after the command]"
 ---
 
 # /event-deep-research — Workflow A
 
-Run the full event research pipeline using multi-agent fan-out.
+Run the full event research pipeline using multi-agent fan-out **from the parent thread** (the slash command's main conversation). Subagents cannot dispatch sub-agents per Anthropic SDK design, so the parent owns the fan-out and a downstream synthesizer assembles the final brief.
 
 **Input:** pasted calendar invite text (or invite + Alex's natural-language context like "Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI").
 
@@ -38,36 +38,47 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 5. Present triage plan to Alex for approval
 6. Apply Alex's overrides (if any)
 
-**Do NOT delegate this step.** The orchestrator and subagents trust the triage plan; building the plan requires conversation with Alex.
+**Do NOT delegate this step.** Building the triage plan requires conversation with Alex.
 
-## Step 2 — Multi-agent research fan-out
+## Step 2 — Multi-agent research fan-out (this conversation)
 
-Once triage is approved, invoke the orchestrator via the Task tool:
+Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This must run in the parent thread because subagents cannot spawn other subagents (Anthropic SDK runtime constraint — see [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md): *"Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation."*).
+
+The four parallel dispatches:
+
+1. **company-researcher** — every Company entity that needs research (NEW or REFRESH). Pass the entity list scoped to this specialist + their triage paths + Alex's stated focus.
+2. **person-researcher** — every Person entity that needs research (NEW or REFRESH). Skip the dispatch entirely if no people are named or all are SKIP.
+3. **topic-landscape-analyst** — every Topic entity (NEW, REFRESH, or APPEND-CURRENT-EVENTS-ONLY). Topics never get full SKIP.
+4. **competitive-signal-scanner** — runs across ALL companies (including SKIP) to surface market signals in last 60 days.
+
+For each specialist, pass: the entity list scoped to that specialist, the triage path per entity, the event name + date, and Alex's stated focus.
+
+Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
+
+## Step 2.5 — Synthesis (delegated to event-research-synthesizer)
+
+Invoke the synthesizer subagent with all four specialist returns plus the triage plan and raw invite:
 
 ```
-subagent_type: event-research-orchestrator
-prompt: [event invite + triage plan + Alex's stated focus]
+subagent_type: event-research-synthesizer
+prompt: [event invite + triage plan + Alex's stated focus + all 4 specialist returns]
 ```
 
-The orchestrator will:
-1. Fan out 4 specialists in parallel (single Task message with 4 invocations):
-   - `company-researcher` — every NEW + REFRESH company
-   - `person-researcher` — every NEW + REFRESH person
-   - `topic-landscape-analyst` — every Topic (NEW / REFRESH / APPEND-CURRENT-EVENTS-ONLY)
-   - `competitive-signal-scanner` — runs across ALL companies including SKIPs, last 60 days
-2. Reconcile cross-references (signal-scanner findings vs. company-researcher findings)
-3. Write Quick Take, Success Signals, Documentarian Angle
-4. Format the final brief in the schema from event-research SKILL.md Step 3
+The synthesizer:
+1. Reconciles cross-references (signal-scanner findings vs. company-researcher findings)
+2. Surfaces verification flags from specialists (mismatched domains, ambiguous identities)
+3. Writes Quick Take, Success Signals, Documentarian Angle
+4. Formats final brief in the schema from event-research SKILL.md Step 3
 
-The orchestrator returns the assembled brief as text. **No Notion / HubSpot writes happen yet.**
+The synthesizer returns the assembled brief as text. **No Notion / HubSpot writes happen yet.**
 
 ## Step 3 — Present brief for Alex review
 
-Display the brief from the orchestrator. Wait for Alex's approval.
+Display the brief from the synthesizer. Wait for Alex's approval.
 
 Alex may request:
 - Add or remove people / companies → restart from Step 1 with adjusted entity list
-- Adjust research depth on specific entities → re-invoke specific subagent (just that one) with deeper scope
+- Adjust research depth on specific entities → re-invoke that specific specialist (just that one) with deeper scope from this thread, then re-dispatch synthesizer with the updated returns
 - Correct factual errors → patch the brief in conversation
 - Add context that web search didn't surface → patch the brief in conversation
 
@@ -124,16 +135,23 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 
 ## Failure modes (specific to multi-agent runs)
 
-- **Subagent returns thin output** — re-invoke that one subagent with deeper scope or more specific direction. Don't rerun the whole orchestration.
-- **Orchestrator times out** — split: run company-researcher + person-researcher in one orchestration call, topic-landscape-analyst + competitive-signal-scanner in another, then merge.
-- **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant subagent with the corrected path; don't restart the whole flow.
+- **Specialist returns thin output** — re-invoke that one specialist from this thread with deeper scope or more specific direction. Re-dispatch synthesizer with updated returns. Don't restart the whole orchestration.
+- **Parent times out during fan-out** — split: dispatch company-researcher + person-researcher in one batch, topic-landscape-analyst + competitive-signal-scanner in another, then dispatch synthesizer with all four returns merged.
+- **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
 - **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per CLAUDE.md gotcha (e), verify with notion-fetch on the data_source URL if it persists.
+- **notion-writer fails with "Prompt is too long"** — its `tools:` whitelist may have drifted to inherit too much. Verify `.claude/agents/ops/notion-writer.md` frontmatter still scopes `tools:` to Notion MCP + Read only.
+
+## Why fan-out runs in the parent thread (architectural note)
+
+Per Anthropic SDK design, subagents dispatched via `Agent` (formerly `Task`) cannot themselves dispatch further subagents — `Agent`/`Task` is not exposed to subagent contexts and cannot be granted via frontmatter. This is a deliberate constraint to prevent runaway nesting. The documented workaround pattern is "chain subagents from the main conversation": orchestrate from the slash command's parent thread, where `Agent` is available.
+
+A previous version of this pipeline used an `event-research-orchestrator` subagent intended to fan out the four specialists from inside its own context. Empirical testing on 2026-05-07 (across 5 different subagents + the orchestrator) confirmed the SDK constraint and validated the pivot to parent-driven fan-out + synthesizer-only downstream agent. See WORKFLOWS.md "✅ Resolved 2026-05-07" section for the full diagnostic record.
 
 ## Ground truth references
 
 The orchestration shape is defined here. The actual research / write methodology is in:
 - `.claude/skills/event-research/SKILL.md` — full 7-step methodology (parse → triage → research → present → Notion writes → HubSpot writes → retro)
-- `.claude/agents/research/event-research-orchestrator.md` — orchestrator contract
+- `.claude/agents/research/event-research-synthesizer.md` — synthesizer contract (text-in, brief-out)
 - `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts
 - `.claude/agents/ops/notion-writer.md` — Notion write contract
-- `CLAUDE.md` § Project Architecture — Notion/HubSpot schemas, write order, gotchas
+- `CLAUDE.md` § Project Architecture — Notion/HubSpot schemas, write order, gotchas, SDK constraints

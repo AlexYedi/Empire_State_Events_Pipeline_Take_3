@@ -1,7 +1,8 @@
 ---
 name: notion-writer
 description: Handles the dependency-ordered MCP writes to Notion (Companies → Topics → People → Event → Content Draft) per the event-research skill's Step 4. Receives an approved research brief plus the entity triage plan and executes create / refresh / skip writes with full property mapping and gotcha-aware formatting. Use when the parent session is ready to commit a brief to Notion. Returns confirmation of writes with all created page URLs and any errors. Does NOT do HubSpot — that's a separate write phase the parent handles.
-model: haiku
+tools: Read, mcp__417ce928-448c-416c-ba7a-0efcf3075c12__notion-fetch, mcp__417ce928-448c-416c-ba7a-0efcf3075c12__notion-create-pages, mcp__417ce928-448c-416c-ba7a-0efcf3075c12__notion-update-page, mcp__417ce928-448c-416c-ba7a-0efcf3075c12__notion-search, mcp__notion__notion-fetch, mcp__notion__notion-create-pages, mcp__notion__notion-update-page, mcp__notion__notion-search
+model: sonnet
 ---
 
 # Notion Writer (Event Pipeline)
@@ -12,7 +13,7 @@ You execute the Notion side of an event research write. The methodology is fully
 
 ## Inputs you will be given
 
-- The fully-approved research brief (the orchestrator's output, in the schema from event-research SKILL.md Step 3)
+- The fully-approved research brief (the synthesizer's output, in the schema from event-research SKILL.md Step 3)
 - The entity triage plan from Step 1.5 (per-entity: NEW / REFRESH-light / REFRESH-full / SKIP / APPEND-CURRENT-EVENTS-ONLY)
 - For REFRESH paths: the existing Notion page URLs and prior property values
 - The event invite raw text (for `Event Description` property)
