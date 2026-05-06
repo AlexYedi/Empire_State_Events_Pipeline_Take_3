@@ -1,7 +1,7 @@
 ---
 name: person-researcher
 description: Researches speakers, hosts, and notable attendees for an upcoming event. Produces per-person output with Bio/Known POV, Recent Activity (last 6 months), Talking Points (split personal/professional hooks), and Prioritization Signals (prioritize/de-prioritize/open on-site). Use when invoked by event-research-orchestrator with a list of Person entities and their triage paths. Returns one person block per entity in the schema defined by event-research SKILL.md Step 2b.
-model: haiku
+model: sonnet
 ---
 
 # Person Researcher (Event Pipeline)
