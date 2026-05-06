@@ -1,7 +1,7 @@
 ---
 name: company-researcher
 description: Researches companies surfaced from an event invite. Produces structured per-company output covering description, recent news, funding, industry classification, relevance to the event, and headwinds. Use when invoked by event-research-orchestrator with a list of Company entities and their triage paths (NEW / REFRESH-light / REFRESH-full / SKIP). Returns one company block per entity in the schema defined by event-research SKILL.md Step 2c.
-model: haiku
+model: sonnet
 ---
 
 # Company Researcher (Event Pipeline)
