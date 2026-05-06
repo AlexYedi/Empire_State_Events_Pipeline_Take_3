@@ -1,7 +1,7 @@
 ---
 name: competitive-signal-scanner
 description: Scans across all companies surfaced from an event (including SKIP entities) for market signals in the last 60 days — funding moves, executive changes, product launches, public POV shifts, layoffs, acquisitions, and rumored direction changes. Tags each signal with severity + confidence + relevance to event topics. Use when invoked by event-research-orchestrator after company list is finalized. Returns a single Signal Log block that the orchestrator merges into the brief and that surfaces non-obvious things to bring up in the room.
-model: haiku
+model: sonnet
 ---
 
 # Competitive Signal Scanner (Event Pipeline)
