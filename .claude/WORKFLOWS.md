@@ -10,31 +10,38 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 
 | Workflow | Status | Command | Purpose |
 |---|---|---|---|
-| A — Event Deep Research | 🟠 Orchestrator agent dispatches but does not fan out (validated 2026-05-05) | `/event-deep-research` | Pre-event: parse invite → multi-agent research → Notion + HubSpot |
-| A (inline path) | ✅ Wired (proven 2026-05-04) | event-research SKILL.md inline | Same as A but without multi-agent fan-out — main conversation does research itself |
+| A — Event Deep Research | ✅ Wired (synthesizer pivot landed 2026-05-07 — fan-out runs in parent thread) | `/event-deep-research` | Pre-event: parse invite → 4-specialist parallel fan-out → synthesizer → Notion + HubSpot |
 | B — Post-Event Synthesis | 🟡 Scaffolded | `/post-event-synthesis` | Post-event: transcripts/notes → DMs + posts + retro |
 | C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
 | D — Voice Pass | 🟡 Scaffolded | `/voice-pass` | Polish: voice-editor over `needs_review` Content Drafts |
 
 ---
 
-## ⚠️ Known gap (updated 2026-05-05 after validation run)
+## ✅ Resolved 2026-05-07 — orchestrator → synthesizer pivot
 
-**Validation result:** the registration mechanism is fine — opening a fresh conversation in this repo did make `event-research-orchestrator` and the four specialists discoverable to the Task tool. The original hypothesis (agents not registered at conversation start) is **resolved**.
+**Root cause confirmed:** subagents cannot spawn other subagents. This is an Anthropic SDK runtime constraint, not a config gap or a prompt-level instruction problem.
 
-**New gap surfaced by the validation run:** the orchestrator agent executed the research itself with WebSearch instead of dispatching the four specialists in parallel. The orchestrator's own validation note read:
+> "Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation." — [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md)
 
-> *"In this single-model execution (no actual parallel subagents were spawned — the orchestrator ran the research directly using WebSearch), there is no subagent boundary drift to report."*
+**How we got here:**
 
-The brief produced was real and high-quality (see [orchestrator validation Content Draft](https://www.notion.so/357d3699c2db816792eef9f93adf1caa) and [side-by-side comparison artifact](artifacts/orchestrator-validation-comparison.md)) — but the multi-agent architecture is not being exercised. The orchestrator collapses to single-model execution.
+- 2026-05-05: original `event-research-orchestrator` validation run produced a high-quality brief but the orchestrator did inline `WebSearch` instead of fanning out — diagnosed at the time as either a prompt-language issue or a tool-whitelist issue.
+- 2026-05-05: Fix 1 (`tools: Task, Read` whitelist on orchestrator) applied + reverted same day — `Task` was removed entirely while `WebSearch` survived; tool whitelist filters against MCP namespace, not SDK primitives.
+- 2026-05-06: parent-level fan-out test confirmed parent dispatch works cleanly.
+- 2026-05-07 (Fix 3 verification run): orchestrator was re-invoked from a fresh conversation. Orchestrator's own audit reported `Task invocations: 0` and admitted the violation honestly: `"Task tool: absent from tool surface (not deferred, not loaded)... ToolSearch for 'select:Task' returned 'No matching deferred tools found'... specialist fan-out via Task dispatch was architecturally impossible in this invocation."`
+- 2026-05-07 (layer-by-layer diagnostic): tool surfaces of all 6 relevant agents reported in parallel. `Task`/`Agent` was absent from EVERY subagent's surface — orchestrator AND all four specialists AND notion-writer. Confirmed via `ToolSearch select:Task,Agent` → "No matching deferred tools found" in 5/5 attempts.
+- 2026-05-07 (claude-code-guide research): official Anthropic docs confirmed the constraint is by design ("prevents infinite nesting") and not configurable. `Task` was renamed to `Agent` in v2.1.63; both names are aliases.
 
-**Hypothesis (path 2 investigation):** likely a combination of (a) prompt-level instructions in `event-research-orchestrator.md` not strongly mandating Task dispatch, and/or (b) Task tool not in the orchestrator's allowed tool set, and/or (c) the orchestrator inferring it can answer faster inline and choosing efficiency over architecture. To be diagnosed by reading `.claude/agents/research/event-research-orchestrator.md` and the four specialist agent files.
+**Pivot landed (2026-05-07):**
 
-**Workaround for now:** Continue running Workflow A through the inline path (event-research SKILL.md Steps 1–7 executed in main conversation) until fan-out is fixed. This is what produced the May 5–7 NYC event briefs successfully. The orchestrator path can be invoked but provides no architectural advantage today — single-model execution either way.
+- `event-research-orchestrator` deleted; replaced by `event-research-synthesizer` (text-in, brief-out, no `Task`/`WebSearch` contract).
+- Slash command (`/event-deep-research` Step 2) now fans out the four specialists in parallel **from the parent thread** — where `Agent` IS available. Step 2.5 dispatches the synthesizer.
+- `notion-writer` had a separate "Prompt is too long" failure (Haiku model + inherited 250-tool deferred list). Fixed by scoping `tools:` frontmatter to Notion MCP + Read only.
+- All four specialists got `tools: WebSearch, WebFetch, Read` for hygiene.
 
-**Path 2 follow-up:** see `.claude/artifacts/orchestrator-fanout-diagnosis.md` for the read of agent definitions and the proposed fix.
+**Architectural rule (now codified in CLAUDE.md):** any "orchestrator" pattern that needs to fan out specialists must run from the parent / slash command thread, not from inside another subagent. Synthesis-only agents (text in, text out) are fine as subagents — they don't need dispatch capability.
 
-**Fix 1 applied 2026-05-05 — and reverted same day after verification:** `tools: Task, Read` was added to the orchestrator frontmatter. The verification re-run revealed that the whitelist had the opposite of the intended effect: `Task` was REMOVED from the orchestrator's tool surface entirely (likely because it's a Claude Code SDK primitive, not an MCP tool, and frontmatter `tools:` whitelists filter against the MCP tool namespace) while `WebSearch`/`WebFetch` survived as deferred tools. The frontmatter line was removed; orchestrator restored to pre-Fix-1 state. See [orchestrator-fanout-diagnosis.md](artifacts/orchestrator-fanout-diagnosis.md) Decision Log for the full record. **Next attempt:** Fix 2 (prompt-level instruction language) is now the primary recommended fix; Fix 4 (figure out the right tool-restriction syntax) is the open architectural question.
+**Artifacts of record:** `.claude/artifacts/orchestrator-fanout-diagnosis.md` (original diagnosis), `.claude/artifacts/orchestrator-validation-comparison.md` (side-by-side from 2026-05-05 run).
 
 ---
 
@@ -101,19 +108,20 @@ The full pre-event research pipeline. Replaces the monolithic `event-research` s
 |---|---|---|---|
 | 1 | Main conversation | Parse invite into entities (Event/People/Companies/Topics); confirm with Alex | Confirmed entity list |
 | 1.5 | Main conversation | Dedup search Notion (5 DBs) + canonicalize names + classify NEW/REFRESH/SKIP per entity, present plan, get approval | Triage plan |
-| 2 | `event-research-orchestrator` agent (sonnet) | Fans out 4 specialists in parallel: `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`; reconciles cross-references; writes Quick Take, Success Signals, Documentarian Angle | Assembled brief |
+| 2 | Main conversation (parallel fan-out) | Dispatch 4 specialists in parallel from the parent thread (subagents cannot dispatch sub-agents per Anthropic SDK design): `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner` | 4 specialist returns |
+| 2.5 | `event-research-synthesizer` agent (sonnet) | Reconciles cross-references; surfaces verification flags; writes Quick Take, Success Signals, Documentarian Angle; formats brief in Step 3 schema | Assembled brief |
 | 3 | Main conversation | Present brief, iterate with Alex | Approved brief |
 | 4 | `notion-writer` agent (haiku) | Dependency-ordered writes: Companies → Topics → People → Event → Content Draft per Step 4 of event-research SKILL.md | Notion confirmation block + page URLs |
 | 5 | Main conversation | HubSpot recurrence check + Companies + Contacts (with associations) + Notes (event name body) | HubSpot confirmation block |
 | 6 | Main conversation | Final summary | Summary report |
 
 ### Agents involved
-- `event-research-orchestrator` (sonnet) — top-level orchestrator
-- `company-researcher` (haiku) — per-company depth
-- `person-researcher` (haiku) — per-person depth + talking points + prioritization signals
-- `topic-landscape-analyst` (sonnet) — 5-dimension topic research
-- `competitive-signal-scanner` (haiku) — cross-company recency, last 60 days
-- `notion-writer` (haiku) — dependency-ordered MCP writes
+- `event-research-synthesizer` (sonnet) — assembles brief from 4 specialist returns; text-in, brief-out; no dispatch capability by design
+- `company-researcher` (sonnet) — per-company depth; `tools: WebSearch, WebFetch, Read`
+- `person-researcher` (sonnet) — per-person depth + talking points + prioritization signals; `tools: WebSearch, WebFetch, Read`
+- `topic-landscape-analyst` (sonnet) — 5-dimension topic research; `tools: WebSearch, WebFetch, Read`
+- `competitive-signal-scanner` (sonnet) — cross-company recency, last 60 days; `tools: WebSearch, WebFetch, Read`
+- `notion-writer` (haiku) — dependency-ordered MCP writes; `tools:` scoped to Notion MCP + Read only (prevents Haiku context overflow from inheriting full deferred-tool list)
 
 All under `.claude/agents/research/` and `.claude/agents/ops/`.
 
@@ -330,7 +338,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 
 **Research** (`.claude/agents/research/`):
 - *Imported:* `insights-research-director`, `qualitative-field-lead`, `quant-insights-architect`, `market-insights-director`, `win-loss-analyst`, `battlecard-program-manager`
-- *Custom (built for Workflow A):* `event-research-orchestrator`, `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`
+- *Custom (built for Workflow A):* `event-research-synthesizer`, `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`
 
 **Content** (`.claude/agents/content/`):
 - `voice-editor`, `copy-strategist`, `conversion-copywriter`, `cold-email-specialist`
@@ -380,4 +388,4 @@ Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until comma
 
 ---
 
-*Last updated: 2026-05-05 — orchestrator validation run completed; agent registration gap resolved; no-fan-out gap diagnosed; Fix 1 applied + reverted after verification revealed it disabled Task while preserving WebSearch; Fix 2 (instruction language) promoted to primary recommendation; Fix 4 (correct tool-restriction syntax) is open architectural question.*
+*Last updated: 2026-05-07 — orchestrator → synthesizer pivot landed ON DISK. Anthropic SDK constraint (subagents cannot spawn subagents) confirmed via official docs + 6-agent layer-by-layer test. Fan-out moved to parent thread; synthesizer is text-in/brief-out. `notion-writer` updated to `model: sonnet` + scoped `tools:` frontmatter. All 4 specialists got `tools: WebSearch, WebFetch, Read` for hygiene. **VALIDATION PENDING:** all changes were made mid-session, but the harness loads the agent registry at session start and freezes it — meaning none of these changes are visible in the current conversation's registry (confirmed when `notion-writer-v2` test failed with "Agent type not found" while the deleted `event-research-orchestrator` was still listed as available). End-to-end validation requires a FRESH conversation. Workflow A status: 🟠 → ✅ on disk; pending fresh-conversation validation.*
