@@ -52,12 +52,18 @@ If explanations are needed during development, I will invoke the explainer skill
 <project_architecture>
 ## Empire State Events Pipeline — Take 3
 
-### 🟠 Open priorities at session start (added 2026-05-05)
+### 🟠 Open priorities at session start (last updated 2026-05-12)
+
+**🆕 Pipeline v2 / Stage 2 Proposal — awaiting decision at session start.** Read `.claude/proposals/content-pipeline-v2-stage2.md` before any pipeline work. Three options on the table: build all (1-2 weeks priority), build subset (B1 validation gates / B2 eval harness / B3 Brief schema only — 2-5 days each), or kick the can (default recommendation; revisit when 2-of-3 triggers fire weekly). Current trigger state: 1-of-3 firing intermittently. Tied to YED-23 — do NOT build Component 4 (status transitions) until the goal flip lands.
+
 Three Linear issues queued from the systems-thinking diagnostic run:
 
 1. **[YED-23 — High]** Pipeline goal flip + decay dashboard + Notion DB hygiene. Real-data analysis confirmed Shifting-the-Burden + Seeking-the-Wrong-Goal archetypes. Time-sensitive items inside: ship-or-archive May 5-7 roundup, decide on Hackathon Apr 30 post, verify MS Fabric scheduled post. Mechanism fixes (decay view, status-field discipline, Published URL validation) and goal flip (publish-rate metric + quality counter-metric) follow. Full diagnostic at `.claude/artifacts/systems-analyst-real-data-2026-05-04.md`. **Do NOT build a "publishing automation skill" before the goal flip lands** — it would deepen the trap.
 2. **[YED-24 — Medium]** Wire systems-analyst into commands/agents architecture. Verify `subagent_type: "systems-analyst"` works from a fresh conversation, build `/systems-analyze` slash command, optionally add as opt-in phase in event-deep-research workflow. WORKFLOWS.md needs updating once verified.
 3. **[YED-25 — Low]** Document systems-thinking bootstrap pattern in the global library (`alex-agents-skills/Product/systems-thinking/SKILL.md`). Park until next project actually needs it.
+
+### Visual brief pattern (added 2026-05-12)
+Every LinkedIn post produced by `pre-event-content`, `pattern-synthesis`, and `content-correspondent` now ships with an accompanying **3-5 slide visual carousel brief** that tells the post's thesis through different perspectives (not the same image redrawn). Canonical spec at `.claude/skills/content-patterns/visual-briefs.md`. Four narrative arcs available — pick by post type. The three content skills import from there as a shared reference; edits to the visual voice go in that file once and propagate. **Validation:** spec changes need a fresh conversation to test the agents end-to-end (agent registry is session-frozen).
 
 ### Where to start
 **For workflow orchestration (commands, agent fan-out, how the four workflows chain): read `.claude/WORKFLOWS.md` first.** That document is the rerun manual.
