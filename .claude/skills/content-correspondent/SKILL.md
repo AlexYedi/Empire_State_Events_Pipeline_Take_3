@@ -165,6 +165,15 @@ When Alex gives you event input, produce:
 2. **Outreach drafts (touch 1)** — ready to copy-paste, one per relevant contact
 3. **Tier 1 comment draft** — 2–3 sentences, additive not validating
 4. **Tier 2 post draft** — 150–300 words, field dispatch format
+5. **Visual carousel brief for the Tier 2 post** — one 3-5 slide carousel
+   following the canonical pattern in `../content-patterns/visual-briefs.md`.
+   Read that file in full before drafting; pick the arc that matches the post's
+   argument structure (single-thesis field dispatch → Arc 1; change-over-time
+   observation → Arc 3; multi-perspective room dispatch → Arc 4). Append the
+   brief under the post draft with a `## Visual Brief — N-slide carousel` H2.
+   The carousel and the post ship together — they are one Content Draft, not
+   two. Run the quality gates from `visual-briefs.md` before handing the brief
+   to Alex.
 
 **On request (or when Day 7 / Day 21 timing comes up in the conversation):**
 

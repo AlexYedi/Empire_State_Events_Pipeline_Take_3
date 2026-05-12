@@ -34,10 +34,16 @@ with. Do NOT guess. The pair determines the whole post.
 
 ## Workflow
 
-### Step 1 — Load the pattern reference
-Read `../content-patterns/two-thesis-synthesis.md` in full. The 6-part shape,
-voice rules, and gating conditions come from there. Everything below assumes
-that file has been loaded.
+### Step 1 — Load the pattern references
+Read `../content-patterns/two-thesis-synthesis.md` in full. The 6-part text
+shape, voice rules, and gating conditions come from there.
+
+Also read `../content-patterns/visual-briefs.md` in full. The carousel-as-narrative
+spec, the four arcs, the universal slide requirements, and the quality gates
+come from there. The required arc for pattern-synthesis output is **Arc 2 —
+Thesis A → Thesis B → Tension → Take → Invitation**.
+
+Everything below assumes both files have been loaded.
 
 ### Step 2 — Resolve the two events
 For each input (URL or name):
@@ -113,6 +119,48 @@ wording:
 Both variants must pass the voice rules: name names, no throat-clearing, first
 person singular, specific over clever, no consultant-ese.
 
+### Step 6b — Draft the visual carousel brief
+
+Every synthesis post ships with a visual carousel brief. This step is **not
+optional**. Read `../content-patterns/visual-briefs.md` in full before drafting.
+
+The default arc for pattern-synthesis output is **Arc 2 — Thesis A → Thesis B →
+Tension → Take → Invitation** because the post structure already maps onto this
+arc one-to-one. The carousel makes the parallel structure visible:
+
+- Slide 1: Thesis A (quote/diagram crediting Event A's speaker + the side's
+  position)
+- Slide 2: Thesis B (mirrored visual frame to Slide 1 — same layout, type
+  hierarchy, palette assignments; only the content differs)
+- Slide 3: Tension (the strategic question the two theses force against each
+  other — diagram with two arrows converging on a single question)
+- Slide 4: Take (Alex's lean OR the criterion he's using to decide — bold
+  typography card with the take in 1-2 sentences)
+- Slide 5 (optional): Invitation (the open question to the reader — bold
+  typography card)
+
+Slide count: 4 if the Invitation is integrated into Slide 4. 5 if the
+Invitation earns its own slide. Never fewer than 4 — a two-thesis post requires
+both theses + the tension + Alex's framing at minimum.
+
+**Frame parallelism is the load-bearing constraint.** Slides 1 and 2 must share
+visual frame exactly — same layout, same color logic, same type hierarchy. The
+parallel structure IS the editorial choice. If the two sides look visually
+different, the reader concludes one is more important than the other before they
+read either.
+
+Produce the carousel brief in the output schema defined at the bottom of
+`visual-briefs.md`. Run the quality gates listed there:
+
+- Arc fit (Arc 2 — required for pattern-synthesis output)
+- Job differentiation (each slide does what no other slide does)
+- Frame parallelism (Slides 1 and 2 share frame — flagged red if not)
+- Thumb test per slide
+- Source citations on any slide with a stat or named quote
+- Final slide earns the swipe (no "Follow for more")
+
+If any gate fails, redraft before moving to Step 7.
+
 ### Step 7 — Draft speaker/host DMs (sub-outputs)
 For each speaker or host whose thesis anchors the post (typically 2-4 people total
 across both events), draft a short DM that:
@@ -141,7 +189,10 @@ Create a Content Draft via `notion-create-pages` targeting data source
 - **Topics relation:** JSON-array-string of the union of related topics from both
   briefs.
 - **Body:** Both variants, clearly labeled "Variant 1" and "Variant 2," followed
-  by the per-person DM drafts under a "Speaker/Host DMs" header.
+  by the **Step 6b carousel brief under a `## Visual Brief — N-slide carousel`
+  H2** (Arc 2 — required for synthesis posts; see `../content-patterns/visual-briefs.md`
+  for the canonical output schema), followed by the per-person DM drafts under
+  a "Speaker/Host DMs" header.
 
 Follow the Notion gotchas from CLAUDE.md exactly:
 - Multi-select: JSON-array-STRING (`"[\"x\",\"y\"]"`), not native array.
@@ -185,6 +236,9 @@ Return to Alex:
 
 ## Reference
 
-- `../content-patterns/two-thesis-synthesis.md` — pattern definition (required
-  reading every invocation).
+- `../content-patterns/two-thesis-synthesis.md` — text pattern definition
+  (required reading every invocation).
+- `../content-patterns/visual-briefs.md` — carousel-as-narrative visual pattern
+  (required reading every invocation; Arc 2 is the required arc for synthesis
+  posts).
 - Project CLAUDE.md — Notion schema, write orchestration, property format gotchas.
