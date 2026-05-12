@@ -20,6 +20,7 @@ by the event-research skill). The skill reads from the brief — it does not do 
 **Skills imported as craft references (read the SKILL.md when entering the relevant step):**
 - `.claude/skills/brand-storytelling/SKILL.md` — narrative arcs, "5-second moment," movement framing → used in Step 2 + Step 3
 - `.claude/skills/copywriting/message-architecture/SKILL.md` — Promise → Proof → Hook → CTA, hook formulas → used in Step 3
+- `.claude/skills/content-patterns/visual-briefs.md` — carousel-as-narrative pattern, four arcs, per-slide schema, quality gates → used in Step 3b
 - `.claude/skills/copywriting/cold-email-personalization/SKILL.md` (+ assets) — custom-signal openers, scoring rubric, QA checklist → used in Step 4
 - `.claude/skills/marketing-autoresearch/SKILL.md` — variant/judge optimization loop → invoked at Step 5
 
@@ -147,132 +148,98 @@ Present as inline options. Step 5 (autoresearch) will pick the strongest hook an
 
 ---
 
-## Step 3b: Generate Visual Content Briefs
+## Step 3b: Generate Visual Carousel Brief
 
-For each LinkedIn post (Upcoming Week and/or Pre-Event), generate visual content briefs
-Alex uses to create supporting visuals in Canva, Gamma, or Gemini (Imagen 3).
+For each LinkedIn post (Upcoming Week and/or Pre-Event), generate a single
+**3-5 slide carousel brief** that tells the post's thesis through different
+perspectives.
 
-**Read the Visual Content section of `content-style-guide.md` before generating briefs.**
-It contains the full specs for format, sizing, 2-second thumb test, color strategy,
-accessibility, and format-by-content-type. Those specs are non-negotiable quality gates
-embedded in each brief below.
+This step is **not optional**. Every LinkedIn post deliverable ships with its
+carousel brief embedded in the same Notion page body. DMs and prepared questions
+do not get carousels — they are private artifacts.
 
-### Step 3b.1: Pick the Format
+### Step 3b.1: Read the canonical pattern
 
-Before writing briefs, consult the **Format Selection by Content Type** table in the
-style guide. Match the strongest angle of the post to a format:
+Read `.claude/skills/content-patterns/visual-briefs.md` in full. That file is
+the authoritative definition of:
 
-- One killer stat → single 4:5 image (Visual 1 path)
-- Process / framework / multi-step → carousel (upgrade Visual 2 to carousel)
-- Hot take / contrarian insight → bold typography card (Visual 3 may lead)
-- Weekly preview post covering multiple events → carousel with 1 slide per event
-- Comparison → single image with split layout
-- Conceptual / abstract → AI-generated custom image via Gemini (Visual 3 path)
+- The four narrative arcs (Hook → Evidence → Mechanism → CTA; Thesis A → B →
+  Tension → Take → Invitation; Before → After → What Changed → So What; One
+  Question, Five Perspectives)
+- Universal slide requirements (slide N of N, job, visual mode, headline, body,
+  palette, source attribution, alt text, tool routing)
+- Quality gates (arc fit, job differentiation, frame parallelism, thumb test,
+  source citations, final slide earns the swipe)
+- Anti-patterns (recap-of-the-post slides, generic AI hero shots, stat-without-
+  context slides, "Follow for more" final slides, color-by-vibe)
+- Output schema for the Notion page body
 
-If the format deviates from the default single 4:5 image, flag it in the brief header.
+Everything below assumes that file has been loaded. Do NOT re-derive the shape
+in this skill; if the spec has drifted, update `visual-briefs.md` directly so
+all skills inherit the change.
 
-### Step 3b.2: Universal Brief Requirements
+### Step 3b.2: Pick the narrative arc
 
-**Output: 3 visual briefs per post.** Every brief MUST include:
+Match the post's argument structure to one of the four arcs from
+`visual-briefs.md`:
 
-- **Dimensions** — default 1080x1350 (4:5). Export at 2x (create at 2160x2700).
-- **Headline** — max 8 words, 48px min at 1080px wide. Caps font at ~4.5% of image width.
-- **Palette** — dark background + white text + ONE accent color. Pick accent by topic:
-  tech/AI → blue, data/infra → green, business/GTM → amber, contrarian → red.
-- **Alt text** — describes what the visual *shows*, not how it *looks*. One sentence.
-- **Thumb test pass** — can a scrolling phone user get the point in 2 seconds? If not, revise.
+| Post type | Default arc | Default slide count |
+|---|---|---|
+| Per-event pre-event post grounded in a data point | Arc 1 — Hook → Evidence → Mechanism → CTA | 3-4 |
+| Per-event pre-event post about a panel with multiple speakers | Arc 4 — One Question, Five Perspectives | 4-5 |
+| Per-event pre-event post about a change/shift the event surfaces | Arc 3 — Before → After → What Changed → So What | 3-4 |
+| The Upcoming Week roundup post | Arc 4 — One Question, Five Perspectives (one slide per event) | 4-5 |
+| Two-thesis synthesis (handled by pattern-synthesis skill, not here) | Arc 2 | 4-5 |
 
-### Visual 1: Directly Supportive (Data/Stat Visual)
+If the post doesn't fit cleanly into one arc, the post itself is probably trying
+to do too much — go back to Step 3 and tighten the thesis before generating the
+brief.
 
-A clean, designed visual that reinforces the post's key data point(s).
+### Step 3b.3: Draft the carousel brief
 
-```
-Tool: Canva (default) or Gemini (if custom style needed)
-Format: Single image, 1080x1350 (4:5 portrait)
-  — Upgrade to carousel if >1 stat warrants its own frame
+Produce exactly one carousel brief per LinkedIn post, in the output schema
+defined at the bottom of `visual-briefs.md`. The brief must include:
 
-What to visualize: [the specific stat or comparison from the post]
+- The arc name (one of the four)
+- One-sentence carousel thesis (what the reader walks away with after swiping)
+- Slide count (3-5, determined by complexity not default)
+- Tool routing summary (which slides → which generation tool)
+- Per-slide blocks with: slide N of N, job, visual mode, headline (max 8 words),
+  exact body/content text, palette with accent hex, source attribution if any
+  data point or quote appears, alt text, tool
+- Quality gate self-check at the bottom (arc fit, job differentiation, frame
+  parallelism if Arc 2 or 3, thumb test per slide, source citations, final
+  slide earns the swipe)
 
-Hero treatment: [the number or % at 72px bold — e.g., "23% improvement"]
-Supporting headline: [max 8 words — e.g., "Enterprise AI ROI, Q1 2026"]
-Context line (smaller, below): [one-line explanation of what the number means]
+Every slide must be load-bearing. If you can drop a slide and lose nothing, the
+carousel is padded — cut it before shipping.
 
-Style principles (from style guide):
-- Extract the insight, don't recreate the chart
-- No gridlines, no 3D, no legends requiring cross-reference
-- One accent color for the data you want seen; gray for everything else
-- Source attribution: small text, bottom corner — "Source: [name], 2026"
+### Step 3b.4: Quality gate enforcement
 
-Palette: dark bg + white text + [accent by topic]
-Alt text: "[one-sentence description of the stat and what it represents]"
+Before moving to Step 4, run every quality gate from `visual-briefs.md` against
+the carousel brief. If any gate fails:
 
-Thumb test: Is the hero number readable at 375px wide (iPhone SE viewport)?
-  If not, shrink the headline until the number dominates.
-```
+- **Arc fit fails** → return to Step 3b.2 and pick a different arc
+- **Job differentiation fails** → cut the redundant slide
+- **Frame parallelism fails** (Arc 2 or 3 only) → redraft the paired slides
+- **Thumb test fails on any slide** → shorten the headline or cut a sub-headline
+- **Source citation missing on a stat or quote slide** → add the source line
+- **Final slide is "Follow for more" or recap** → replace with the question,
+  take, or synthesis
 
-### Visual 2: Directly Supportive (Conceptual/Framework Visual)
+Do NOT ship a brief with a flagged gate. The gate exists because that failure
+mode is repeating across runs.
 
-A visual that explains or maps the concept the post is about. If the concept has
->3 steps or phases, upgrade to a carousel.
+### Step 3b.5: Important notes
 
-```
-Tool: Canva (single image) OR Gamma (carousel, 5-8 slides)
-Format: Single 1080x1350 image OR carousel (PDF, 5-8 slides, all 4:5 consistent)
-
-For SINGLE image:
-  Structure: [3-column comparison / flow diagram / before-after / matrix]
-  Headline: [max 8 words]
-  Body: labels and flow tell the story without the caption
-
-For CAROUSEL (if upgraded):
-  Slide 1 (Hook): Bold headline + visual hook — treat as thumbnail / book cover
-  Slides 2-N (Content): One idea per slide, consistent layout, progressive narrative
-  Final slide (CTA): "Follow for more" or a specific comment-driving question
-  Page numbers: small, bottom corner — signals more-to-swipe
-  Sweet spot: 5-8 slides total. Under 5 feels thin; over 10 loses people.
-
-What to visualize: [the framework, process, comparison, or concept]
-Style: Clean, diagrammatic. Explains without the caption.
-Palette: dark bg + white text + [accent by topic]
-Alt text: "[one-sentence description of the framework or process shown]"
-
-Thumb test: Can the concept be grasped on slide 1 (or the single image) in 2 seconds?
-```
-
-### Visual 3: Wild Card 🌶️
-
-Professional but spicier. Different aesthetic, unexpected format, provocative edge.
-Appropriate — still the documentarian voice — just with an angle.
-
-```
-Tool: Gemini (Imagen 3) for custom AI-generated, OR Canva for bold editorial
-Format: 1080x1350 (4:5) single image, OR bold typography card for a hot take
-
-Concept: [the provocative or unexpected angle of the post's insight]
-
-IF using Gemini / Imagen 3, write the prompt ARCHITECTURALLY (not aspirationally):
-- Composition: "centered, symmetrical, negative space on [left/right/top] for text overlay"
-- Style: SPECIFIC — "flat vector illustration" / "editorial magazine photography" /
-  "technical diagram style" / "minimalist line art" — NEVER "professional looking"
-- Mood: "authoritative and clean" / "bold and provocative" / "minimal and sophisticated"
-- Negatives: "no text, no watermarks, no people, no generic tech imagery, no stock photo energy"
-- Iterate 3 rounds: prompt → evaluate → refine prompt → evaluate → final. First output is a draft.
-
-IF using bold typography card (for hot takes):
-  One sentence. Big font (72px+). Dark bg. White text. One accent color max.
-  The text IS the visual.
-
-Headline (if any): [max 8 words, 48px min]
-Palette: [may break the per-topic accent to create edge — if so, justify why]
-Alt text: "[one-sentence description — especially important for AI-generated imagery]"
-
-Thumb test: Does it stop the scroll? If someone scrolls past without pausing, it's not wild enough.
-Why this is the wild card: [what makes it different from Visuals 1-2]
-```
-
-**Important:** These are briefs/prompts for Alex to bring into the tools directly.
-Do NOT generate images via MCP. Alex is building intuition with these tools and needs
-hands-on time with prompting and iteration.
+- **Briefs only, not images.** Do NOT generate images via MCP or any image API.
+  Alex is building hands-on intuition with the generation tools (GPT-Image-1,
+  Imagen 4, Magic Patterns, Canva); the briefs are what he pastes in.
+- **The brief is the artifact.** When the post is reviewed, the brief is
+  reviewed alongside it. They are one Content Draft, not two.
+- **Voice propagation.** If `update-voice-and-style.md` runs and updates the
+  written voice, the visual voice in `visual-briefs.md` must be reviewed in the
+  same pass. They are paired.
 
 ---
 
@@ -410,7 +377,7 @@ Write all approved content to the **Content Drafts** database.
 
 **Database:** `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 
-> **Visual briefs persistence rule (added 2026-05-05):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b visual briefs in the same page body, appended below the post copy under a `## Visual Briefs` H2. The visual briefs are not a separate Content Draft page — they live with the post they support, so Alex has both the copy and the prompts for visual generation in one place when he opens the page in Canva/Gamma/Gemini. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
+> **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place when he opens the page in GPT-Image-1 / Imagen 4 / Magic Patterns / Canva. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
 
 ### Content pages to create:
 
@@ -424,7 +391,7 @@ Write all approved content to the **Content Drafts** database.
 "Event": [relation to all events mentioned in the post]
 "Topics": [relation to all topics across events]
 ```
-Page body: the approved post variant + **all 3 visual briefs from Step 3b appended under a `## Visual Briefs` H2** (Visual 1 — Data/Stat, Visual 2 — Conceptual/Framework, Visual 3 — Wild Card 🌶️). Note: for weekly preview posts the Step 3b.1 format selection table calls for a carousel as the primary format — Visual 2 should be the carousel brief, Visuals 1 and 3 are supplementary single-image briefs.
+Page body: the approved post variant + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). For The Upcoming Week roundup, the default arc is Arc 4 — One Question, Five Perspectives, with one slide per event.
 
 **Pre-Event LinkedIn post:**
 ```
@@ -437,7 +404,7 @@ Page body: the approved post variant + **all 3 visual briefs from Step 3b append
 "People": [relation to people mentioned]
 "Topics": [relation to topics covered]
 ```
-Page body: the approved post variant + **all 3 visual briefs from Step 3b appended under a `## Visual Briefs` H2** (Visual 1 — Data/Stat, Visual 2 — Conceptual/Framework, Visual 3 — Wild Card 🌶️). Format selection per Step 3b.1 — match the post's strongest angle to the right format (single image / carousel / typography card / Gemini prompt).
+Page body: the approved post variant + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
 
 **Speaker/Host DMs (one page per person):**
 ```
@@ -473,8 +440,8 @@ Page body: the compiled question list from Step 5
 ## Pre-Event Content Complete: [Event Name]
 
 ### Generated
-- The Upcoming Week: [Yes/No] ([X] events covered)
-- Pre-Event Post: [variant selected] (autoresearch score: [X]/100)
+- The Upcoming Week: [Yes/No] ([X] events covered) + carousel brief ([N] slides, Arc [name])
+- Pre-Event Post: [variant selected] (autoresearch score: [X]/100) + carousel brief ([N] slides, Arc [name])
 - Speaker/Host DMs: [count] people, [count] DMs total (avg cold-email-personalization score: [X]/100)
 - Prepared Questions: [count] questions compiled
 
