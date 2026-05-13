@@ -52,15 +52,20 @@ If explanations are needed during development, I will invoke the explainer skill
 <project_architecture>
 ## Empire State Events Pipeline — Take 3
 
-### 🟠 Open priorities at session start (last updated 2026-05-12)
+### 🟠 Open priorities at session start (last updated 2026-05-13 — Linear triage session)
 
-**🆕 Pipeline v2 / Stage 2 Proposal — awaiting decision at session start.** Read `.claude/proposals/content-pipeline-v2-stage2.md` before any pipeline work. Three options on the table: build all (1-2 weeks priority), build subset (B1 validation gates / B2 eval harness / B3 Brief schema only — 2-5 days each), or kick the can (default recommendation; revisit when 2-of-3 triggers fire weekly). Current trigger state: 1-of-3 firing intermittently. Tied to YED-23 — do NOT build Component 4 (status transitions) until the goal flip lands.
+**Codification rule (live as of 2026-05-13):** Linear is the single source of truth for "what's open." This block is a transitional duplicate until YED-26 ships and replaces it with a live SessionStart hook pull. Edits here are doc maintenance, not new state.
 
-Three Linear issues queued from the systems-thinking diagnostic run:
+**Triage 2026-05-13 outcome:** Cancelled YED-1, YED-4, YED-15→YED-22 (Linear seed tutorials + superseded eval-harness cycle-1). Closed YED-23 as Done (goal-flip work shipped independently, mechanism fixes folded into v2 proposal). Eval-harness cycle-1 framing replaced by `.claude/proposals/content-pipeline-v2-stage2.md` — re-issue under v2 Component framing only when 2-of-3 v2 triggers fire weekly. Current state: 1-of-3 firing intermittently.
 
-1. **[YED-23 — High]** Pipeline goal flip + decay dashboard + Notion DB hygiene. Real-data analysis confirmed Shifting-the-Burden + Seeking-the-Wrong-Goal archetypes. Time-sensitive items inside: ship-or-archive May 5-7 roundup, decide on Hackathon Apr 30 post, verify MS Fabric scheduled post. Mechanism fixes (decay view, status-field discipline, Published URL validation) and goal flip (publish-rate metric + quality counter-metric) follow. Full diagnostic at `.claude/artifacts/systems-analyst-real-data-2026-05-04.md`. **Do NOT build a "publishing automation skill" before the goal flip lands** — it would deepen the trap.
-2. **[YED-24 — Medium]** Wire systems-analyst into commands/agents architecture. Verify `subagent_type: "systems-analyst"` works from a fresh conversation, build `/systems-analyze` slash command, optionally add as opt-in phase in event-deep-research workflow. WORKFLOWS.md needs updating once verified.
-3. **[YED-25 — Low]** Document systems-thinking bootstrap pattern in the global library (`alex-agents-skills/Product/systems-thinking/SKILL.md`). Park until next project actually needs it.
+**🆕 Pipeline v2 / Stage 2 Proposal — awaiting decision at session start.** Read `.claude/proposals/content-pipeline-v2-stage2.md` before any pipeline work. Three options: build all (1-2 weeks priority), build subset (Component 1 Brief schema / Component 2 validation gates / Component 3 eval harness — 2-5 days each), or kick the can (default recommendation; revisit when 2-of-3 triggers fire weekly). Goal flip (YED-23) shipped 2026-05-13; do NOT build a "publishing automation skill" before re-measuring — would deepen Shifting-the-Burden trap.
+
+Live Linear issues post-triage:
+
+1. **[YED-24 — Medium, In Progress]** Wire systems-analyst into commands/agents architecture. ✅ `/systems-analyze` slash command shipped 2026-05-13 at `.claude/commands/systems-analyze.md` (Workflow E). Remaining: verify `subagent_type: "systems-analyst"` AND `/systems-analyze` both work from a fresh conversation, then update WORKFLOWS.md to add Workflow E row. Optional: add as opt-in phase in event-deep-research workflow.
+2. **[YED-25 — Low]** Document systems-thinking bootstrap pattern in `~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/SKILL.md`. Global library mirroring is done; remaining is one "Bootstrap pattern" H2 section + drift-policy decision. Park until next project actually needs it.
+3. **[YED-26 — High]** Layer 1 codification: replace this CLAUDE.md priorities block with a SessionStart hook that pulls live Linear state. Foundation fix — Linear becomes the only source of truth, CLAUDE.md points instead of duplicating. ~30 min effort.
+4. **[YED-27 — Medium]** Layer 2 codification: event-triggered Linear nudges (repo-touch hook on `.claude/` edits + v2-trigger logging hook on content-skill sessions). Depends on YED-26. ~1-2 hours effort.
 
 ### Visual brief pattern (added 2026-05-12)
 Every LinkedIn post produced by `pre-event-content`, `pattern-synthesis`, and `content-correspondent` now ships with an accompanying **3-5 slide visual carousel brief** that tells the post's thesis through different perspectives (not the same image redrawn). Canonical spec at `.claude/skills/content-patterns/visual-briefs.md`. Four narrative arcs available — pick by post type. The three content skills import from there as a shared reference; edits to the visual voice go in that file once and propagate. **Validation:** spec changes need a fresh conversation to test the agents end-to-end (agent registry is session-frozen).
