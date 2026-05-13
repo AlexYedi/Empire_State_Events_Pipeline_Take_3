@@ -63,9 +63,25 @@ If explanations are needed during development, I will invoke the explainer skill
 Live Linear issues post-triage:
 
 1. **[YED-24 — Medium, In Progress]** Wire systems-analyst into commands/agents architecture. ✅ `/systems-analyze` slash command shipped 2026-05-13 at `.claude/commands/systems-analyze.md` (Workflow E). Remaining: verify `subagent_type: "systems-analyst"` AND `/systems-analyze` both work from a fresh conversation, then update WORKFLOWS.md to add Workflow E row. Optional: add as opt-in phase in event-deep-research workflow.
-2. **[YED-25 — Low]** Document systems-thinking bootstrap pattern in `~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/SKILL.md`. Global library mirroring is done; remaining is one "Bootstrap pattern" H2 section + drift-policy decision. Park until next project actually needs it.
-3. **[YED-26 — High]** Layer 1 codification: replace this CLAUDE.md priorities block with a SessionStart hook that pulls live Linear state. Foundation fix — Linear becomes the only source of truth, CLAUDE.md points instead of duplicating. ~30 min effort.
-4. **[YED-27 — Medium]** Layer 2 codification: event-triggered Linear nudges (repo-touch hook on `.claude/` edits + v2-trigger logging hook on content-skill sessions). Depends on YED-26. ~1-2 hours effort.
+2. **[YED-25 — Medium]** Mirror systems-thinking agent + command to alex-agents-skills global library + write bootstrap pattern doc. **Expanded 2026-05-13:** now covers 3 sub-deliverables (mirror agent, mirror command, write bootstrap doc). First concrete instance of "Layer A — Distribution" in the three-layer architecture arc.
+3. **[YED-26 — High]** Layer B foundation: SessionStart Linear hook + CLAUDE.md source-of-truth swap. Project-scope first. Foundation fix — Linear becomes the only source of truth, CLAUDE.md points instead of duplicating. ~30 min effort.
+4. **[YED-27 — Medium]** Layer B continuation: event-triggered Linear nudges (repo-touch hook on `.claude/` edits + v2-trigger logging hook on content-skill sessions). Depends on YED-26. ~1-2 hours effort.
+
+#### 🏛 Three-layer architecture program (2026-05-13)
+
+Larger arc that the codification work is part of. Goal: make "build-better-not-faster" the default for *every* project Alex opens, not a discipline he has to remember to apply.
+
+| Layer | What it does | Linear issue |
+|---|---|---|
+| **A. Distribution** | Skills/agents/commands ship to all projects | YED-25 (first instance: systems-thinking) → YED-28 (architectural: plugin-ify alex-agents-skills) |
+| **B. Discipline** | Cross-project invariants (Linear source of truth, event-triggered habits) | YED-26 + YED-27 (project-scope first) → YED-29 (promote to user-scope, universal) |
+| **C. Workspace** | Project-specific overlays inherit canonical defaults | YED-30 (canonical CLAUDE.md fragment + new-project starter kit) |
+
+5. **[YED-28 — High]** Layer A architectural: make alex-agents-skills a Claude Code plugin. Confirmed today: it is NOT a plugin currently. Skills/agents/commands aren't live-available across projects. gtm-os and job-hunt-system can't benefit from the library without per-project setup. Half-day to full-day effort. Blocks YED-29 + YED-30.
+6. **[YED-29 — Medium]** Layer B universality: promote YED-26/27 hooks from project-scope to user-scope (`~/.claude/`). Every project Alex opens auto-inherits Linear-source-of-truth + repo-touch nudge. Blocked by YED-26, YED-27, YED-28. ~2 hours.
+7. **[YED-30 — Medium]** Layer C inheritance: canonical CLAUDE.md fragment + new-project starter kit in alex-agents-skills. Validated by applying to gtm-os AND job-hunt-system. Blocked by YED-28, YED-29. 3-4 hours.
+
+**Total program effort:** 1-2 weeks priority mode, or 4-6 weeks background mode. The whole plan is a single architectural arc that ends with: starting any new project = inheriting all of Alex's accumulated discipline + skill conventions automatically.
 
 ### Visual brief pattern (added 2026-05-12)
 Every LinkedIn post produced by `pre-event-content`, `pattern-synthesis`, and `content-correspondent` now ships with an accompanying **3-5 slide visual carousel brief** that tells the post's thesis through different perspectives (not the same image redrawn). Canonical spec at `.claude/skills/content-patterns/visual-briefs.md`. Four narrative arcs available — pick by post type. The three content skills import from there as a shared reference; edits to the visual voice go in that file once and propagate. **Validation:** spec changes need a fresh conversation to test the agents end-to-end (agent registry is session-frozen).
