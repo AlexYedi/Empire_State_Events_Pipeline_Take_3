@@ -60,26 +60,17 @@ If explanations are needed during development, I will invoke the explainer skill
 
 **🆕 Pipeline v2 / Stage 2 Proposal — awaiting decision at session start.** Read `.claude/proposals/content-pipeline-v2-stage2.md` before any pipeline work. Three options: build all (1-2 weeks priority), build subset (Component 1 Brief schema / Component 2 validation gates / Component 3 eval harness — 2-5 days each), or kick the can (default recommendation; revisit when 2-of-3 triggers fire weekly). Goal flip (YED-23) shipped 2026-05-13; do NOT build a "publishing automation skill" before re-measuring — would deepen Shifting-the-Burden trap.
 
-Live Linear issues post-triage:
+**Live Linear issues** — pulled at session start via `.claude/hooks/linear-priorities.sh` (YED-26 shipped 2026-05-13). Look for the "🟠 Linear priorities" block at the top of session context. If `LINEAR_API_KEY` is not set in env, hook runs in graceful-fallback mode — create a personal API key at https://linear.app/yedibalian/settings/api and export it to activate live pulls.
 
-1. **[YED-24 — Medium, In Progress]** Wire systems-analyst into commands/agents architecture. ✅ `/systems-analyze` slash command shipped 2026-05-13 at `.claude/commands/systems-analyze.md` (Workflow E). Remaining: verify `subagent_type: "systems-analyst"` AND `/systems-analyze` both work from a fresh conversation, then update WORKFLOWS.md to add Workflow E row. Optional: add as opt-in phase in event-deep-research workflow.
-2. **[YED-25 — Medium]** Mirror systems-thinking agent + command to alex-agents-skills global library + write bootstrap pattern doc. **Expanded 2026-05-13:** now covers 3 sub-deliverables (mirror agent, mirror command, write bootstrap doc). First concrete instance of "Layer A — Distribution" in the three-layer architecture arc.
-3. **[YED-26 — High]** Layer B foundation: SessionStart Linear hook + CLAUDE.md source-of-truth swap. Project-scope first. Foundation fix — Linear becomes the only source of truth, CLAUDE.md points instead of duplicating. ~30 min effort.
-4. **[YED-27 — Medium]** Layer B continuation: event-triggered Linear nudges (repo-touch hook on `.claude/` edits + v2-trigger logging hook on content-skill sessions). Depends on YED-26. ~1-2 hours effort.
+#### 🏛 Three-layer architecture program (2026-05-13) — durable framing
 
-#### 🏛 Three-layer architecture program (2026-05-13)
+Larger arc the codification work is part of. Goal: make "build-better-not-faster" the default for *every* project Alex opens, not a discipline he has to remember to apply. Per-issue state lives in Linear; this table is the architectural plan.
 
-Larger arc that the codification work is part of. Goal: make "build-better-not-faster" the default for *every* project Alex opens, not a discipline he has to remember to apply.
-
-| Layer | What it does | Linear issue |
+| Layer | What it does | Linear issues |
 |---|---|---|
 | **A. Distribution** | Skills/agents/commands ship to all projects | YED-25 (first instance: systems-thinking) → YED-28 (architectural: plugin-ify alex-agents-skills) |
 | **B. Discipline** | Cross-project invariants (Linear source of truth, event-triggered habits) | YED-26 + YED-27 (project-scope first) → YED-29 (promote to user-scope, universal) |
 | **C. Workspace** | Project-specific overlays inherit canonical defaults | YED-30 (canonical CLAUDE.md fragment + new-project starter kit) |
-
-5. **[YED-28 — High]** Layer A architectural: make alex-agents-skills a Claude Code plugin. Confirmed today: it is NOT a plugin currently. Skills/agents/commands aren't live-available across projects. gtm-os and job-hunt-system can't benefit from the library without per-project setup. Half-day to full-day effort. Blocks YED-29 + YED-30.
-6. **[YED-29 — Medium]** Layer B universality: promote YED-26/27 hooks from project-scope to user-scope (`~/.claude/`). Every project Alex opens auto-inherits Linear-source-of-truth + repo-touch nudge. Blocked by YED-26, YED-27, YED-28. ~2 hours.
-7. **[YED-30 — Medium]** Layer C inheritance: canonical CLAUDE.md fragment + new-project starter kit in alex-agents-skills. Validated by applying to gtm-os AND job-hunt-system. Blocked by YED-28, YED-29. 3-4 hours.
 
 **Total program effort:** 1-2 weeks priority mode, or 4-6 weeks background mode. The whole plan is a single architectural arc that ends with: starting any new project = inheriting all of Alex's accumulated discipline + skill conventions automatically.
 
