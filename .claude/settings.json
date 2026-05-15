@@ -1,26 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: v2-trigger detection/logging for Empire State's pipeline-specific skills.",
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/linear-priorities.sh"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/repo-touch-tally.sh"
-          }
-        ]
-      },
       {
         "matcher": "Skill",
         "hooks": [
@@ -34,10 +16,6 @@
     "Stop": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/repo-touch-remind.sh"
-          },
           {
             "type": "command",
             "command": ".claude/hooks/v2-trigger-log.sh"
