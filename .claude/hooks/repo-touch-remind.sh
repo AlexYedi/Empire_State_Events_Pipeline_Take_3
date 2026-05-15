@@ -39,13 +39,19 @@ if [ "$COUNT" -gt 0 ]; then
   fi
 
   REPO_NAME=$(basename "$(pwd)")
+  NOUN="files"; [ "$COUNT" = "1" ] && NOUN="file"
+
+  FILES_BLOCK=""
+  [ -n "$FILES" ] && FILES_BLOCK=$(printf 'Files touched:\n%s' "$FILES")
 
   REMINDER=$(cat <<EOF
 ## 🟠 Repo-touch nudge (YED-27 Hook A)
 
-This session touched **$COUNT files** under \`.claude/\` in **$REPO_NAME**.
+This session touched **$COUNT $NOUN** under \`.claude/\` in **$REPO_NAME**.
 
-$( [ -n "$FILES" ] && printf "Files touched:\n%s\n\n" "$FILES" )Reconcile with Linear:
+$FILES_BLOCK
+
+Reconcile with Linear:
 - **Open an issue** for new work not yet tracked
 - **Comment on an existing issue** for in-progress work
 - **OR** explicitly acknowledge this is doc-only maintenance and no Linear update is needed
