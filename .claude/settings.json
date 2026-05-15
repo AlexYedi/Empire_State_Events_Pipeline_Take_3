@@ -10,6 +10,40 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/repo-touch-tally.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/v2-trigger-detect.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/repo-touch-remind.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/v2-trigger-log.sh"
+          }
+        ]
+      }
     ]
   }
 }
