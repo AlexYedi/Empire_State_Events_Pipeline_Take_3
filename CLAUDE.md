@@ -68,7 +68,7 @@ Larger arc the codification work is part of. Goal: make "build-better-not-faster
 
 | Layer | What it does | Linear issues |
 |---|---|---|
-| **A. Distribution** | Skills/agents/commands ship to all projects | YED-25 (first instance: systems-thinking) → YED-28 (architectural: plugin-ify alex-agents-skills) |
+| **A. Distribution** | Skills/agents/commands ship to all projects | YED-25 (first instance: systems-thinking) → YED-28 ✅ MVP shipped 2026-05-15 — `alex` plugin, 15 skills migrated, user-scope installed |
 | **B. Discipline** | Cross-project invariants (Linear source of truth, event-triggered habits) | YED-26 + YED-27 (project-scope first) → YED-29 (promote to user-scope, universal) |
 | **C. Workspace** | Project-specific overlays inherit canonical defaults | YED-30 (canonical CLAUDE.md fragment + new-project starter kit) |
 
@@ -375,10 +375,11 @@ k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` bloc
 
 Backed by 8 reference files in `.claude/skills/systems-thinking/references/` derived from Donella Meadows' 
 *Thinking in Systems: A Primer*. Canonical content (the 7 source-grounded files plus the generalized 
-applications file) is mirrored in the global library at 
-`~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/`. The project-level harness keeps the 
-H1/H2/H3 horizon framework (project-specific) and an Empire-State-specific applications file with the 
-pipeline's stocks/flows/loops sketched.
+applications file) lives in the `alex` plugin at `~/Documents/GitHub/alex-agents-skills/skills/systems-thinking/` 
+and is invocable as `alex:systems-thinking` in any project (YED-28 MVP, 2026-05-15). The project-level 
+harness here keeps the H1/H2/H3 horizon framework (project-specific) and an Empire-State-specific 
+applications file with the pipeline's stocks/flows/loops sketched — invoked as plain `systems-thinking` 
+and takes precedence over the plugin version inside this project.
 
 - **Eight-phase analysis** lives in `.claude/skills/systems-thinking/SKILL.md` and the `references/diagnostic-questions.md` question bank. Use phases 1-4 for quick reframes; full 1-8 for chronic problems.
 - **Workflow card** at `.claude/references/systems-thinking-workflow.md` ties Analyzing/Planning/Building modes across the broader skill set.
