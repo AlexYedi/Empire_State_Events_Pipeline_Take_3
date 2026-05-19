@@ -2,11 +2,13 @@
 
 **Purpose:** Lets Alex visually verify the SessionStart hook is firing correctly once `LINEAR_API_KEY` is exported. Pre-rendered from live Linear MCP query 2026-05-13.
 
+**Path note (updated 2026-05-19):** Original YED-26 delivery installed the hook at project-scope `.claude/hooks/linear-priorities.sh`. YED-29 promoted it to user-scope `~/.claude/hooks/linear-priorities.sh`. Paths below reflect current (post-YED-29) state.
+
 ---
 
 ## What you should see at session start (once activated)
 
-After exporting `LINEAR_API_KEY` and opening a fresh Claude Code session, look for this block injected at the top of session context (rendered from `.claude/hooks/linear-priorities.sh`):
+After exporting `LINEAR_API_KEY` and opening a fresh Claude Code session, look for this block injected at the top of session context (rendered from `~/.claude/hooks/linear-priorities.sh`):
 
 ```
 ## 🟠 Linear priorities (live pull, ≤5 items, Medium+ priority)
@@ -17,7 +19,7 @@ After exporting `LINEAR_API_KEY` and opening a fresh Claude Code session, look f
 - **[YED-29 — Medium, Backlog]** Layer B — promote YED-26/27 hooks from project-scope to user-scope (universal discipline)
 - **[YED-27 — Medium, Backlog]** Event-triggered Linear nudges: repo-touch hook + v2-trigger logging hook
 
-_Source: Linear MCP via SessionStart hook (`.claude/hooks/linear-priorities.sh`). Replaces the static priorities block in CLAUDE.md — see YED-26._
+_Source: Linear MCP via SessionStart hook (`~/.claude/hooks/linear-priorities.sh`, user-scope via YED-29). Replaces the static priorities block in CLAUDE.md — see YED-26._
 ```
 
 Note that **YED-24 and YED-25 are below the cap of 5**. They're both Medium priority but were updated earlier than YED-27. To see all 7 active issues, increase `MAX_ISSUES` in the hook script (default 5).
@@ -47,12 +49,12 @@ This is what should appear at session start until activation.
 ## Verification steps after API key export
 
 1. `echo $LINEAR_API_KEY` — confirms the env var is set in your shell.
-2. From this repo root, run `.claude/hooks/linear-priorities.sh | jq -r '.hookSpecificOutput.additionalContext'` — should output the live priorities block above (not the fallback message, not an error).
+2. Run `~/.claude/hooks/linear-priorities.sh | jq -r '.hookSpecificOutput.additionalContext'` from any directory — should output the live priorities block above (not the fallback message, not an error).
 3. Open a fresh Claude Code session in this repo. The live priorities block should appear automatically at session start.
 
 If step 2 outputs an API error (e.g., "Authentication required"), the API key is malformed or revoked — regenerate at https://linear.app/yedibalian/settings/api.
 
-If step 3 doesn't show the block, Claude Code didn't pick up the hook — verify `.claude/settings.json` has the SessionStart hook entry and try restarting Claude Code entirely (not just opening a new session in the same instance).
+If step 3 doesn't show the block, Claude Code didn't pick up the hook — verify `~/.claude/settings.json` has the SessionStart hook entry (post-YED-29 location) and try restarting Claude Code entirely (not just opening a new session in the same instance).
 
 ---
 
