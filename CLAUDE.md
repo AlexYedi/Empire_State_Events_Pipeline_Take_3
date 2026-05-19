@@ -60,7 +60,7 @@ If explanations are needed during development, I will invoke the explainer skill
 
 **🆕 Pipeline v2 / Stage 2 Proposal — awaiting decision at session start.** Read `.claude/proposals/content-pipeline-v2-stage2.md` before any pipeline work. Three options: build all (1-2 weeks priority), build subset (Component 1 Brief schema / Component 2 validation gates / Component 3 eval harness — 2-5 days each), or kick the can (default recommendation; revisit when 2-of-3 triggers fire weekly). Goal flip (YED-23) shipped 2026-05-13; do NOT build a "publishing automation skill" before re-measuring — would deepen Shifting-the-Burden trap.
 
-**Live Linear issues** — pulled at session start via `.claude/hooks/linear-priorities.sh` (YED-26 shipped 2026-05-13). Look for the "🟠 Linear priorities" block at the top of session context. If `LINEAR_API_KEY` is not set in env, hook runs in graceful-fallback mode — create a personal API key at https://linear.app/yedibalian/settings/api and export it to activate live pulls.
+**Live Linear issues** — pulled at session start via `~/.claude/hooks/linear-priorities.sh` (YED-26 shipped 2026-05-13; promoted to user-scope via YED-29 so every project inherits it). Look for the "🟠 Linear priorities" block at the top of session context. If `LINEAR_API_KEY` is not set in env, hook runs in graceful-fallback mode — create a personal API key at https://linear.app/yedibalian/settings/api and export it to activate live pulls. Note: Dock-launched Claude Code does NOT inherit `~/.zshrc` env — launch from terminal for live pulls.
 
 #### 🏛 Three-layer architecture program (2026-05-13) — durable framing
 
