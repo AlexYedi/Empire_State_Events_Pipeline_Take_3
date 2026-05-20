@@ -195,9 +195,10 @@ Alex pastes calendar invite description + adds natural language context:
 
 ### Phased Roadmap
 
-**Phase 1: Event Research Skill (Multi-agent rebuild complete 2026-05-04)**
+**Phase 1: Event Research Skill (Multi-agent rebuild complete 2026-05-04; `/check-new-events` thin-wrapper added 2026-05-20)**
 - Original: monolithic `event-research` skill (.claude/skills/event-research/SKILL.md — migrated to folder format)
 - Rebuilt as `/event-deep-research` command (Workflow A) with multi-agent fan-out
+- **NEW (2026-05-20): `/check-new-events` thin-wrapper command** — calendar-invite-as-structured-intake pattern. Alex pastes a PIPELINE block (template at `.claude/references/pipeline-block-template.md`) into the GCal description at event-acceptance time via text expander `;pipeline`. The command queries the "Going to Events" calendar (`mcp__claude_ai_Google_Calendar__list_events` on calendar ID `4c84184ac3e761c3f94be43193656a785ece4752ed6b553facfcb52e668a333b@group.calendar.google.com`), detects events with the PIPELINE block, dedups against Notion Events DB, then runs `/event-deep-research` + `pre-event-content` interactively per event with continue-or-quit control between events. Validated end-to-end 2026-05-20 on Ray Dev Day. Discipline-break decision record + falsification protocol in `.claude/notes/execution-week-frictions.md`. See also `.claude/commands/check-new-events.md` for orchestration shape, `.claude/references/pipeline-block-template.md` for template spec.
 - Orchestration (updated 2026-05-07 — synthesizer pivot): `/event-deep-research` Step 2 fans out 4 specialists in parallel **from the parent thread** (subagents cannot dispatch sub-agents per Anthropic SDK design) — `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`. Step 2.5 dispatches `event-research-synthesizer` (sonnet) to assemble the brief. Step 4 dispatches `notion-writer` for dependency-ordered MCP writes. See "SDK runtime constraints" subsection below for the full rationale.
 - Skill methodology (Steps 1–7) is unchanged and authoritative: `.claude/skills/event-research/SKILL.md`. The command file is the orchestration shape; the skill is the methodology
 - Research sources: Claude training data + WebSearch
