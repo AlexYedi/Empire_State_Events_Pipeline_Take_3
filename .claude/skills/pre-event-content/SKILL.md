@@ -1,6 +1,6 @@
 ---
 name: pre-event-content
-description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host DMs with personalization, and prepared questions. Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
+description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host connection request notes (200-char free-tier cap), and prepared questions. Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "connection notes for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
 ---
 
 # Skill: Pre-Event Content Generation
@@ -15,7 +15,7 @@ by the event-research skill). The skill reads from the brief — it does not do 
 **Reference files (read before generating any content):**
 - `.claude/references/content-style-guide.md` — voice, tone, post architecture, audience, formatting
 - `.claude/references/content-anti-patterns.md` — words, phrases, and patterns to avoid
-- `.claude/references/outreach-templates.md` — DM structural patterns and personalization rubric
+- `.claude/references/outreach-templates.md` — **200-char connection request note patterns** (Patterns 1-3), anti-patterns, personalization rubric, character-count discipline
 
 **Skills imported as craft references (read the SKILL.md when entering the relevant step):**
 - `.claude/skills/brand-storytelling/SKILL.md` — narrative arcs, "5-second moment," movement framing → used in Step 2 + Step 3
@@ -243,7 +243,11 @@ mode is repeating across runs.
 
 ---
 
-## Step 4: Generate Speaker & Host DMs
+## Step 4: Generate Speaker & Host Connection Request Notes
+
+**Operational reality (rule added 2026-05-20):** LinkedIn free tier limits direct messages to 1st-degree connections; Premium/Sales Navigator plans burn scarce InMail credits when sending to non-connections. The right primitive for first-touch outreach to speakers/hosts Alex doesn't already know is a **connection request note** — which carries a **200-character hard cap on the free plan** (300 char on Premium). Alex is on the free plan, so target 200 chars.
+
+The goal of this note is **connection request acceptance**, not engagement after acceptance. Optimize accordingly — punch over polish, question over praise, signal over greeting.
 
 **For each person** identified in the research brief (speakers, hosts, organizers):
 
@@ -251,56 +255,68 @@ mode is repeating across runs.
 - `assets/research-playbook.md` — what counts as a Tier 1 vs Tier 2 signal (recent talks, posts, hires, launches)
 - `assets/scoring-rubric.md` — 0-100 scoring; **gate at ≥80 before presenting to Alex**
 - `assets/qa-checklist.md` — pre-send checklist
-- `assets/email-structure.md` — adapt the 60-120 word structure to LinkedIn DM (4-6 sentences)
 
-**Mapping cold-email patterns → LinkedIn DMs:**
-- "Custom Signal" path → use a specific moment from their talk abstract, recent post, podcast, or open-source work as the opener
-- "Whole Offer" path is **NOT applicable** — Alex is not selling a product in DMs; he's opening a conversation. Skip.
-- The **no-CTA rule** from `content-correspondent` still applies for first-touch with high-signal contacts: no "want to grab coffee" in DM 1.
+**Also read `.claude/references/outreach-templates.md`** — that file is the canonical spec for 200-char connection-request-note patterns and anti-patterns.
 
-Generate **2-3 DMs per person per topic** they're associated with. Each DM should:
+**Mapping cold-email patterns → 200-char connection request notes:**
+- "Custom Signal" path → use a specific moment from their talk abstract, recent post, podcast, or open-source work as the anchor
+- "Whole Offer" path is **NOT applicable** — this is a connection request, not a pitch
+- The **no-CTA rule** is non-negotiable — connection notes do NOT include "let's chat", "would love to connect", "coffee?" — the connection request itself IS the CTA
 
-1. Follow one of the structural patterns from `outreach-templates.md`
-2. Meet **Level 3 personalization** (connect their specific work to a specific research insight)
-3. Be **4-6 sentences**
-4. Always reference the specific event topic or their specific talk topic
-5. Include **1 question** good enough to use as a prepared question at the event
-6. **Score ≥80 on the cold-email-personalization rubric** before presenting. If below 80, regenerate or flag the gap to Alex.
+Generate **1 best note per person** (no A/B/C variants — at 200 char there is one best question, not three different angles). Each note must:
 
-### DM Angle Differentiation
+1. Follow a structural pattern from `outreach-templates.md` adapted to the 200-char form (Pattern 1: Sharp Question Talk-Anchored / Pattern 2: Signal from Recent Work / Pattern 3: Host-Curation Angle)
+2. Meet **Level 3 personalization** (connect their specific work to a specific research insight or event topic)
+3. **Hard cap: 200 characters including spaces and punctuation.** Generate, then count, then trim. No exceptions.
+4. Lead with the question/insight — drop greetings ("Hi Jane,"), drop self-intros ("I'm Alex..."), drop sign-offs ("Looking forward!")
+5. **Score ≥80 on the cold-email-personalization rubric** before presenting. If below 80, regenerate.
 
-When generating 2-3 DMs for the same person, vary the angle:
-- **DM 1:** Focus on their talk's core thesis — engage with their argument
-- **DM 2:** Focus on a tangent or implication of their work — go somewhere adjacent
-- **DM 3 (if applicable):** Focus on the intersection of their company/role and the topic — commercial angle
+### What gets cut at 200 chars
+
+To fit, drop everything that isn't load-bearing:
+- Greetings ("Hi Jane,") — drop (LinkedIn shows your name + headline; greeting adds zero info)
+- Self-introductions ("I'm Alex, I work in...") — drop (your profile carries this)
+- Soft framing ("I noticed...", "I've been thinking...") — drop, get to the point
+- Sign-offs ("Looking forward...", "Cheers") — drop
+- Multiple sentences setting up the question — drop, lead with the question
+
+What stays: the **one sharp question or insight** that uses event context + a person-specific signal.
+
+### Fallback: when there's no Tier 1 signal
+
+If person-research surfaces no Tier 1 signal (no recent talk, no recent post, no concrete moment to anchor on), flag the person as **"needs more research"** and do NOT generate a filler note. A weak Level 2 note burns the connection request impression — and you only get one shot per person. Better to surface "Alex, do you have a specific signal for [Person] you can share?" than to ship a generic note that gets rejected or ignored.
 
 ### Presentation Format
 
-Present DMs grouped by person:
+Present notes grouped by person:
 
 ```
 ### [Person Name] — [Role] at [Company]
 Talk/Topic: [their specific talk or the event topic]
+Signal anchored: [the specific person-signal used — e.g., "recent post on X", "talk abstract claim Y", "open-source commit Z"]
 
-**DM Option A** (angle: [thesis engagement])
-> [full DM text]
+**Connection Request Note** ([N] chars / 200 cap)
+> [full note text]
 
-**DM Option B** (angle: [adjacent implication])
-> [full DM text]
+Rubric score: [X]/100 (breakdown if any dimension scored low)
+```
 
-**DM Option C** (angle: [company/role intersection])
-> [full DM text]
+If no Tier 1 signal is available, present as:
 
-Alex selects the strongest for outreach. Unused questions feed Step 5.
+```
+### [Person Name] — [Role] at [Company]
+⚠️ NEEDS MORE RESEARCH — no Tier 1 signal found in brief
+Suggestion: [what kind of signal would unlock this — e.g., "their next talk topic", "a recent LinkedIn post", "their last podcast appearance"]
 ```
 
 ### Quality Checks
-- Each DM passes Level 3 personalization (not Level 1 or 2)
-- No DM could be sent to a different person by swapping the name
-- No anti-pattern phrases ("love your work", "pick your brain", etc.)
-- Light close, no hard ask
-- 4-6 sentences, no walls of text
-- Cold-email-personalization rubric score ≥80 (recorded inline next to each DM option)
+- Passes Level 3 personalization (not Level 1 or 2)
+- Could NOT be sent to a different person by swapping the name
+- No anti-pattern phrases (see `outreach-templates.md` anti-pattern table)
+- No CTA ("let's chat", "coffee", "would love to connect", "20 min call")
+- **Character count ≤ 200** (counted including spaces and punctuation, before submission to Alex)
+- Cold-email-personalization rubric score ≥80
+- Specific person-signal is cited (not just "your work at [Company]")
 
 ---
 
@@ -351,8 +367,19 @@ Skip if:
 
 ## Step 6: Compile Prepared Questions
 
-After Alex selects which DMs to send (Step 4) and the LinkedIn post is finalized (Step 5),
-the remaining DM questions become the **Prepared Questions** list for the event.
+**Reframed 2026-05-20:** Prepared Questions are now generated **independently** from the same per-person research insights, not as a byproduct of unused DM variants (since Step 4 now produces 1 best 200-char connection note per person rather than 2-3 variants).
+
+For each person identified in the brief, generate 1-3 prepared questions that:
+- Reference a specific moment from their talk abstract, recent post, podcast, or work
+- Connect that moment to a topic insight from the brief
+- Could be asked live during Q&A or in conversation at the event
+- Go one layer deeper than the source material did
+
+The Step 4 connection note and the Step 6 prepared questions can share research foundation but serve different moments:
+- **Step 4 note:** punchy, optimized for connection request acceptance, ≤200 chars, ONE sharpest question
+- **Step 6 questions:** textured, optimized for in-person depth, multi-sentence OK, multiple angles per person
+
+If the connection request is accepted (Step 4 lands), the prepared questions become natural follow-up material in subsequent DM or in-person conversation.
 
 Format:
 
@@ -360,11 +387,11 @@ Format:
 ## Prepared Questions: [Event Name]
 
 ### For [Person Name] — [Talk Topic]
-1. [Question from unused DM] — (angle: [description])
-2. [Question from unused DM] — (angle: [description])
+1. [Question] — (angle: [description])
+2. [Question] — (angle: [description])
 
 ### For [Person Name] — [Talk Topic]
-1. [Question from unused DM] — (angle: [description])
+1. [Question] — (angle: [description])
 ```
 
 Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if they mention [Y]"
@@ -406,10 +433,10 @@ Page body: the approved post variant + **the Step 3b carousel brief appended und
 ```
 Page body: the approved post variant + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
 
-**Speaker/Host DMs (one page per person):**
+**Speaker/Host Connection Request Notes (one page per person):**
 ```
-"Title": "DM — [Person Name] re: [Event Name]"
-"Content Type": "linkedin_dm_speaker" or "linkedin_dm_host"
+"Title": "Connection Note — [Person Name] re: [Event Name]"
+"Content Type": "linkedin_dm_speaker" or "linkedin_dm_host"  # name preserved for backward compatibility; spec is now 200-char connection note per outreach-templates.md
 "Event Phase": "pre_event"
 "Content Status": "needs_review"
 "Platform": "linkedin"
@@ -417,7 +444,15 @@ Page body: the approved post variant + **the Step 3b carousel brief appended und
 "People": [relation to person]
 "Topics": [relation to relevant topics]
 ```
-Page body: the selected DM + all alternate DMs preserved for reference
+Page body: the 200-char connection request note + character count + signal anchored + rubric score. Format:
+```
+**Connection Request Note** (N chars / 200 cap)
+> [note text]
+
+Signal anchored: [specific signal used]
+Rubric score: [X]/100
+Pattern: [Pattern 1/2/3 from outreach-templates.md]
+```
 
 **Prepared Questions:**
 ```
@@ -442,7 +477,7 @@ Page body: the compiled question list from Step 5
 ### Generated
 - The Upcoming Week: [Yes/No] ([X] events covered) + carousel brief ([N] slides, Arc [name])
 - Pre-Event Post: [variant selected] (autoresearch score: [X]/100) + carousel brief ([N] slides, Arc [name])
-- Speaker/Host DMs: [count] people, [count] DMs total (avg cold-email-personalization score: [X]/100)
+- Speaker/Host Connection Notes: [count] people, [count] notes generated, [count] flagged "needs more research" (avg rubric score: [X]/100; avg char count: [N]/200)
 - Prepared Questions: [count] questions compiled
 
 ### Written to Notion
@@ -472,7 +507,7 @@ All drafts set to "needs_review" — Alex reviews and moves to "approved" when r
 
 ## Cadence rules (do not violate)
 
-- **Autoresearch on DMs:** never. Personalization is the value; optimization erodes it.
+- **Autoresearch on connection request notes:** never. Personalization is the value; optimization erodes it. The 200-char hard cap also leaves no room for variant exploration.
 - **Autoresearch on prepared questions:** never. Private notes — no audience to score against.
 - **Autoresearch on the per-event LinkedIn post:** every event.
 - **Autoresearch on the Upcoming Week post:** every Sunday post.
