@@ -10,7 +10,10 @@
 #
 #   After 4 entries, prepend a summary line: "Trigger status: X-of-3 firing, last updated YYYY-MM-DD".
 #
-# Output contract: JSON on stdout with hookSpecificOutput.additionalContext.
+# Output contract: JSON on stdout with top-level `systemMessage` field
+# (Stop hooks do NOT support hookSpecificOutput.additionalContext — that's
+# valid only for UserPromptSubmit / PostToolUse / PostToolBatch. Discovered
+# 2026-05-20 — the schema validator rejects additionalContext on Stop.)
 
 set -uo pipefail
 
@@ -103,7 +106,7 @@ EOF
 )
 
 ESCAPED=$(printf '%s' "$PROMPT" | jq -Rsa .)
-printf '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":%s}}\n' "$ESCAPED"
+printf '{"systemMessage":%s}\n' "$ESCAPED"
 
 # Cleanup session state
 rm -f "$SKILLS_FILE" 2>/dev/null
