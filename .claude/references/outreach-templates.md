@@ -96,6 +96,21 @@ Target Level 3 every time. If you can't reach Level 3 within 200 chars, **flag a
 
 ---
 
+## Variant generation rule (added 2026-05-20)
+
+The `pre-event-content` skill generates **2 variants per person — Variant A and Variant B — anchored to materially different signals**:
+
+- **Variant A** uses Pattern 1 (talk-anchored) — references the speaker's session/abstract for the upcoming event
+- **Variant B** uses Pattern 2 (adjacent-work-anchored) — references recent posts, podcasts, OSS commits, or other work outside the talk
+
+The two variants must NOT be reworded versions of the same idea. They must be anchored to genuinely different research signals, so the picker decision is "which signal lands harder for this person" rather than "which phrasing reads better."
+
+**Fallback:** if only one Tier 1 signal exists (e.g., a talk abstract but no recent adjacent work), generate only that variant and explicitly note "Variant B (or A) skipped — no [X] signal found." Never ship a Level 2 filler variant just to have two.
+
+**For hosts/organizers** (rather than speakers): Variant A uses Pattern 1 if they're also presenting, or Pattern 3 (host-curation angle) if they're purely organizing. Variant B uses Pattern 2 (their adjacent work).
+
+---
+
 ## Note-to-Question Relationship
 
 Connection request notes and Prepared Questions are now generated **independently** from the same research insights (changed 2026-05-20 — previously, prepared questions came from unused DM variants):
