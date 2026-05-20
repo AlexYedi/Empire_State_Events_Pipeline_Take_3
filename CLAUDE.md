@@ -206,10 +206,18 @@ Alex pastes calendar invite description + adds natural language context:
 - Dedup check (Step 1.5 triage): search Notion + HubSpot for existing records before creating; classify NEW/REFRESH/SKIP
 - See `.claude/WORKFLOWS.md` for the full Workflow A rerun manual
 
-**Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
+**Phase 2: Content Generation Skills (In Progress — 2026-04-09; DM spec patched 2026-05-20)**
 - Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
-  speaker/host DMs (2-3 per person per topic), prepared questions (derived from unused DMs)
+  speaker/host **connection request notes** (1 best per person, 200-char hard cap — see DM rule below),
+  prepared questions (now generated independently from research, not as DM byproducts)
+- **Speaker/host outreach is connection-request-note format, NOT LinkedIn DM (rule added 2026-05-20):**
+  LinkedIn free-tier limits direct messages to 1st-degree connections; Premium burns InMail credits
+  sending to non-connections. The pre-event-content skill produces **200-char connection request notes**
+  (free-tier limit; Premium is 300). Notion Content Type names `linkedin_dm_speaker` and `linkedin_dm_host`
+  are preserved for backward compatibility, but the content shape is connection notes per
+  `.claude/references/outreach-templates.md`. Goal: connection request acceptance, not post-acceptance
+  engagement. One best note per person, no variants (at 200 char there's one best question).
 - Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
 - Pattern-synthesis skill (added 2026-04-19): two-thesis LinkedIn post from 2 event briefs.
   Canonical shape for Alex's documentarian angle. Triggered when 2 briefs in a rolling 7-day window

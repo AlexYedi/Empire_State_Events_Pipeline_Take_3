@@ -1,97 +1,131 @@
-# Outreach Templates — Structural Patterns
+# Outreach Templates — LinkedIn Connection Request Notes (200-char hard cap)
 
-> These are NOT fill-in-the-blank templates. They are structural patterns with annotation
-> on why each element works. The skill uses these patterns to generate personalized outreach
-> that feels written by a human who did the work.
+> These are NOT fill-in-the-blank templates. They are structural patterns for crafting
+> LinkedIn connection request notes within the 200-character free-tier limit. The goal
+> is acceptance of the connection request, not engagement after acceptance.
+>
+> **Operational reality:** LinkedIn free tier — non-1st-degree connections can only be
+> reached via connection request notes (**200 char on free, 300 on Premium**). Direct
+> messages to non-connections require InMail credits which are scarce and burn on
+> first-touch with strangers. The connection request note IS the channel for first-touch
+> outreach to speakers, hosts, and organizers Alex doesn't already know.
 > Updated via the `update-voice-and-style` skill.
 
 ---
 
-## DM Pattern 1: Speaker Before Their Talk
+## Pattern 1: Sharp Question, Talk-Anchored
 
-**Use when:** Reaching out to a speaker before the event about their specific talk topic.
+**Use when:** You have a specific claim, framing, or example from their talk abstract or session description.
 
 ```
-[Specific reference to their upcoming talk + what about it caught your attention]
-[Bridge: connect a specific insight from your research to their talk's thesis]
-[Question: at the intersection of their expertise and the topic — good enough to ask live if they don't reply]
-[Light close: looking forward to the talk / happy to connect]
+[Lead with the question, anchored to a specific moment in their talk]
 ```
 
 **Why this works:**
-- Opens with proof you read the abstract, not just the event title
-- The bridge shows you brought your own thinking to the table
-- The question is a gift — it signals you'd be an interesting person to talk to
-- No ask. No pitch. Just intellectual common ground.
+- No greeting wastes 8-15 chars on nothing the recipient doesn't already see (LinkedIn shows your name+headline)
+- Anchoring to a specific abstract moment proves you read the material, not just the event listing
+- The question is the value — let it land first
 
 **Example structure (not a template):**
-> "Your talk on [specific topic] at [event] caught my attention — [specific detail from abstract
-> or their published POV that resonated]. I've been thinking about [related insight from research
-> that connects to their thesis]. One thing I'm curious about: [question that goes deeper than
-> the abstract promises to cover]. Looking forward to the talk."
+> "On [specific claim] in your [event] talk — is [tension/implication] something you've seen play out, or is the bottleneck somewhere else?" (171 chars)
 
 ---
 
-## DM Pattern 2: Host / Organizer
+## Pattern 2: Signal from Recent Work
 
-**Use when:** Reaching out to the person who organized or is hosting the event.
+**Use when:** You have a specific moment from their recent post, podcast, open-source commit, or shipped product.
 
 ```
-[Reference to the event + what the curation signals about their POV on the space]
-[Bridge: connect the event's theme to a broader trend or development you've researched]
-[Question: about their perspective on the topic given their role curating these conversations]
-[Light close]
+[Reference the specific work + a sharp question that goes one layer deeper than the source did]
 ```
 
 **Why this works:**
-- Hosts rarely get thoughtful outreach — most DMs are "can I speak at your event?"
-- Commenting on their curation (why they chose this topic, these speakers) shows you see the event as intentional, not random
-- The question positions them as someone whose perspective matters beyond logistics
+- Shows you tracked their recent output, not just their bio
+- "Goes one layer deeper" signals you'd be worth talking to — the question is a gift, not extraction
+
+**Example structure:**
+> "Your point on [specific claim] in [post/podcast] — does that hold when [adjacent constraint]? Catching you at [event] this week." (135 chars)
 
 ---
 
-## DM Pattern 3: Topic-Specific Deep Dive
+## Pattern 3: Topic Intersection, Host-Curation Angle
 
-**Use when:** The event has multiple talks and you want to engage someone on a specific subtopic.
+**Use when:** Writing to the event host/organizer (who rarely gets thoughtful outreach — most messages they receive are "can I speak at your event?" pitches).
 
 ```
-[Reference to the specific subtopic within the broader event]
-[Connect it to a current development, data point, or shift that makes it particularly relevant right now]
-[Question: specific to this subtopic, informed by your research — ideally something the talk might not cover]
-[Light close]
+[Reference the deliberate curation + a question about WHY they framed the event the way they did]
 ```
 
 **Why this works:**
-- Going narrow signals expertise. Anyone can comment on the broad theme; going specific shows depth.
-- Referencing a current development proves you're tracking the space actively
-- Asking something the talk might not cover creates a reason for ongoing conversation
+- Hosts almost always get pitches, not engagement on their curatorial POV
+- Asking about a deliberate framing positions them as the intentional curator they are
+- Acceptance rate is high because the message is in the top 1% of what they typically receive
+
+**Example structure:**
+> "The [specific framing in event title] framing — deliberate, or did the agenda land there? Asking because [your hypothesis]." (124 chars)
 
 ---
 
-## Personalization Rubric
+## Anti-Patterns at 200 char
 
-The skill should target Level 3 for every DM. If it can't reach Level 3, flag it.
+These eat your character budget for zero value. Cut all of them:
+
+| Anti-pattern | Why it's wrong |
+|---|---|
+| "Hi [Name]," | LinkedIn already shows your message in their inbox with names attached. 8-15 wasted chars. |
+| "I'm Alex, I work in [field]" | Your profile carries this. 30+ wasted chars. |
+| "I noticed your..." / "I've been thinking..." | Filler — get to the point. |
+| "Would love to connect" / "Let's connect" | The connection request IS the CTA. Saying it is redundant. |
+| "Coffee?" / "Quick call?" / "20 min chat?" | Connection notes don't book meetings. Save that for AFTER acceptance. |
+| Multiple sentences before the question | Question first; context if there's room. |
+| "Looking forward to your talk!" | Fluff. Burns chars on nothing. |
+| "Hope this finds you well" | Don't. |
+| Compliments without specifics ("Love your work", "Big fan") | Generic praise reads as filler at any length, and burns chars you can't afford. |
+
+---
+
+## Personalization Rubric (unchanged bar — tighter form)
+
+Target Level 3 every time. If you can't reach Level 3 within 200 chars, **flag as "needs more research" rather than shipping a Level 2 note.** A weak note is worse than no note — it burns the impression.
 
 | Level | What It Looks Like | Quality |
 |---|---|---|
-| Level 1 | "I see you work at [Company]" | Generic. Don't send. |
-| Level 2 | "Your recent talk on [Topic] at [Event]..." | Better. Shows you did some research. |
-| Level 3 | "Your point about [specific claim from their work] connects to [specific insight from your research brief] — I'm curious about [question that synthesizes both]" | This is the bar. Two-way intellectual exchange. |
+| Level 1 | "Saw your work at [Company], would love to connect" | Generic. No signal. Don't send. |
+| Level 2 | "Your talk on [Topic] at [Event] sounds interesting" | Better, but no specific anchor. Below the bar. |
+| Level 3 | "On [specific claim/moment from their actual work] — [sharp question]" | The bar. Specific anchor + a question worth answering. |
 
 ---
 
-## DM-to-Question Conversion
+## Note-to-Question Relationship
 
-DMs are generated in sets of 2-3 per person per topic. The process:
+Connection request notes and Prepared Questions are now generated **independently** from the same research insights (changed 2026-05-20 — previously, prepared questions came from unused DM variants):
 
-1. Generate 2-3 DMs with different questions at different angles
-2. Alex selects the strongest for outreach
-3. Unused DM questions become the **Prepared Questions** list for the event
-4. Questions maintain their context (who they were originally for, what angle they take)
+1. **Per-person research** surfaces N candidate questions/signals from talk abstracts, recent posts, work
+2. **Step 4** picks the SHARPEST one and trims it to ≤200 chars for the connection note
+3. **Step 6** keeps the longer-form versions of these (plus others not used for the note) as Prepared Questions for live engagement at the event
 
-This means every DM is also a potential live question — never waste a good question on a DM that doesn't get a reply.
+The note and the prepared questions can share research foundation but serve different moments:
+- **Note:** punchy, optimized for connection request acceptance, ≤200 chars
+- **Prepared questions:** textured, optimized for in-person depth, multi-sentence OK
+
+If the connection request is accepted, the prepared questions become the natural follow-up
+material — but they live in your Notion artifact, not in the connection note itself.
 
 ---
 
-*Last updated: 2026-04-09*
-*Version: 0.1 — Structural patterns. Will evolve as Alex's outreach voice develops.*
+## Counting characters
+
+Character count includes spaces and punctuation. Generate, then count, then trim — never trust
+that "this looks short enough." Quick mental ruler:
+- 200 chars ≈ 30-40 words
+- Typical tweet is ~70 chars / ~280 chars upper bound
+- 200 chars is roughly 2-3 short sentences max, often just 1 dense sentence + 1 question
+
+When in doubt, count.
+
+---
+
+*Last updated: 2026-05-20*
+*Version: 0.2 — Reframed from multi-sentence DMs to 200-char connection request notes.
+LinkedIn free-tier operational reality made the prior 4-6-sentence DM spec wrong; replacement
+spec optimizes for connection request acceptance on the free plan.*
