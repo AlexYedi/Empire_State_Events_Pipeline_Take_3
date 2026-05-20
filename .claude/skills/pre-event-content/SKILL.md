@@ -263,13 +263,26 @@ The goal of this note is **connection request acceptance**, not engagement after
 - "Whole Offer" path is **NOT applicable** — this is a connection request, not a pitch
 - The **no-CTA rule** is non-negotiable — connection notes do NOT include "let's chat", "would love to connect", "coffee?" — the connection request itself IS the CTA
 
-Generate **1 best note per person** (no A/B/C variants — at 200 char there is one best question, not three different angles). Each note must:
+Generate **2 variants per person — Variant A and Variant B — anchored to DIFFERENT signals** (not just reworded versions of the same idea). Each variant must:
 
-1. Follow a structural pattern from `outreach-templates.md` adapted to the 200-char form (Pattern 1: Sharp Question Talk-Anchored / Pattern 2: Signal from Recent Work / Pattern 3: Host-Curation Angle)
+1. Follow a structural pattern from `outreach-templates.md` adapted to the 200-char form
 2. Meet **Level 3 personalization** (connect their specific work to a specific research insight or event topic)
 3. **Hard cap: 200 characters including spaces and punctuation.** Generate, then count, then trim. No exceptions.
 4. Lead with the question/insight — drop greetings ("Hi Jane,"), drop self-intros ("I'm Alex..."), drop sign-offs ("Looking forward!")
 5. **Score ≥80 on the cold-email-personalization rubric** before presenting. If below 80, regenerate.
+
+### Variant differentiation (mandatory — A ≠ B)
+
+The two variants must be anchored to materially different signals so Alex picks based on which signal lands harder, not which phrasing is prettier:
+
+- **Variant A — Talk-anchored** (Pattern 1 from `outreach-templates.md`): references something specific from their session/talk/abstract for THIS event. Best when the talk abstract or session description has substance to engage with.
+- **Variant B — Adjacent-work-anchored** (Pattern 2 from `outreach-templates.md`): references something specific from their recent post, podcast appearance, open-source commit, shipped product, or other work OUTSIDE the talk. Best when they have visible recent output to anchor on.
+
+**For hosts/organizers (rather than speakers):** Variant A uses Pattern 1 if they're also presenting, or Pattern 3 (Host-Curation angle) if they're purely organizing. Variant B uses Pattern 2 (their recent work outside this event).
+
+### Fallback: when only ONE signal exists
+
+If person-research surfaces only one Tier 1 signal (e.g., they have a talk abstract but no recent visible work outside it — or vice versa), generate **only the variant that has a real anchor** and explicitly note "Variant B (or A) skipped — no [talk / adjacent work] signal found in research." DO NOT ship a Level 2 filler variant just to have two — a weak variant burns the impression on a one-shot channel.
 
 ### What gets cut at 200 chars
 
@@ -288,25 +301,43 @@ If person-research surfaces no Tier 1 signal (no recent talk, no recent post, no
 
 ### Presentation Format
 
-Present notes grouped by person:
+Present variants grouped by person:
 
 ```
 ### [Person Name] — [Role] at [Company]
 Talk/Topic: [their specific talk or the event topic]
-Signal anchored: [the specific person-signal used — e.g., "recent post on X", "talk abstract claim Y", "open-source commit Z"]
 
-**Connection Request Note** ([N] chars / 200 cap)
+**Variant A — Talk-anchored** ([N] chars / 200 cap)
+Signal anchored: [specific moment from their talk/abstract]
 > [full note text]
+Rubric score: [X]/100
 
-Rubric score: [X]/100 (breakdown if any dimension scored low)
+**Variant B — Adjacent-work-anchored** ([N] chars / 200 cap)
+Signal anchored: [specific recent post / podcast / work outside the talk]
+> [full note text]
+Rubric score: [X]/100
 ```
 
-If no Tier 1 signal is available, present as:
+If only one signal exists (talk OR adjacent work but not both), present only the variant that has a real anchor and explicitly note the skip:
+
+```
+### [Person Name] — [Role] at [Company]
+Talk/Topic: [their specific talk or the event topic]
+
+**Variant A — Talk-anchored** ([N] chars / 200 cap)
+Signal anchored: [specific moment from their talk/abstract]
+> [full note text]
+Rubric score: [X]/100
+
+**Variant B — skipped:** no recent adjacent work surfaced in research. To unlock: [what kind of signal would help — e.g., "their last LinkedIn post", "a recent podcast appearance"]
+```
+
+If NO Tier 1 signal is available at all (no talk content, no adjacent work), present as:
 
 ```
 ### [Person Name] — [Role] at [Company]
 ⚠️ NEEDS MORE RESEARCH — no Tier 1 signal found in brief
-Suggestion: [what kind of signal would unlock this — e.g., "their next talk topic", "a recent LinkedIn post", "their last podcast appearance"]
+Suggestion: [what kind of signal would unlock this]
 ```
 
 ### Quality Checks
@@ -444,15 +475,21 @@ Page body: the approved post variant + **the Step 3b carousel brief appended und
 "People": [relation to person]
 "Topics": [relation to relevant topics]
 ```
-Page body: the 200-char connection request note + character count + signal anchored + rubric score. Format:
+Page body: BOTH variants (A and B), each with character count, signal anchored, rubric score, and pattern. Format:
 ```
-**Connection Request Note** (N chars / 200 cap)
+**Variant A — Talk-anchored** (N chars / 200 cap)
 > [note text]
+Signal anchored: [specific signal used]
+Rubric score: [X]/100
+Pattern: [Pattern 1/2/3 from outreach-templates.md]
 
+**Variant B — Adjacent-work-anchored** (N chars / 200 cap)
+> [note text]
 Signal anchored: [specific signal used]
 Rubric score: [X]/100
 Pattern: [Pattern 1/2/3 from outreach-templates.md]
 ```
+If only one variant produced (per fallback rule), the page body includes that variant plus the "Variant B skipped — needs [X signal]" note. Alex picks the variant to send when he engages with the page in needs_review.
 
 **Prepared Questions:**
 ```
@@ -477,7 +514,7 @@ Page body: the compiled question list from Step 5
 ### Generated
 - The Upcoming Week: [Yes/No] ([X] events covered) + carousel brief ([N] slides, Arc [name])
 - Pre-Event Post: [variant selected] (autoresearch score: [X]/100) + carousel brief ([N] slides, Arc [name])
-- Speaker/Host Connection Notes: [count] people, [count] notes generated, [count] flagged "needs more research" (avg rubric score: [X]/100; avg char count: [N]/200)
+- Speaker/Host Connection Notes: [count] people, [count] A-variants, [count] B-variants, [count] B-variants skipped (no adjacent-work signal), [count] flagged "needs more research" (avg rubric score: [X]/100; avg char count: [N]/200)
 - Prepared Questions: [count] questions compiled
 
 ### Written to Notion

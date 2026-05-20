@@ -217,7 +217,9 @@ Alex pastes calendar invite description + adds natural language context:
   (free-tier limit; Premium is 300). Notion Content Type names `linkedin_dm_speaker` and `linkedin_dm_host`
   are preserved for backward compatibility, but the content shape is connection notes per
   `.claude/references/outreach-templates.md`. Goal: connection request acceptance, not post-acceptance
-  engagement. One best note per person, no variants (at 200 char there's one best question).
+  engagement. **Two variants per person (A = talk-anchored, B = adjacent-work-anchored)** anchored to
+  materially different signals so the picker decision is signal-based, not phrasing-based. Fallback:
+  ship only the variant with a real anchor if one signal type is missing — never ship Level 2 filler.
 - Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
 - Pattern-synthesis skill (added 2026-04-19): two-thesis LinkedIn post from 2 event briefs.
   Canonical shape for Alex's documentarian angle. Triggered when 2 briefs in a rolling 7-day window
