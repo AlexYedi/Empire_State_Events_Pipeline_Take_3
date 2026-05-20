@@ -144,8 +144,8 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/People
 - Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
   Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date), 
-  relations to Events/People/Linkedin Post Drafts (→ Content Drafts, intentional naming — 
-  pulls Content Drafts filtered by linkedin post content types)
+  relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
+  for cross-DB property-name consistency)
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis), 
   Event Phase (select: pre_event/during_event/post_event), Content Status (select: needs_review/
@@ -195,9 +195,10 @@ Alex pastes calendar invite description + adds natural language context:
 
 ### Phased Roadmap
 
-**Phase 1: Event Research Skill (Multi-agent rebuild complete 2026-05-04)**
+**Phase 1: Event Research Skill (Multi-agent rebuild complete 2026-05-04; `/check-new-events` thin-wrapper added 2026-05-20)**
 - Original: monolithic `event-research` skill (.claude/skills/event-research/SKILL.md — migrated to folder format)
 - Rebuilt as `/event-deep-research` command (Workflow A) with multi-agent fan-out
+- **NEW (2026-05-20): `/check-new-events` thin-wrapper command** — calendar-invite-as-structured-intake pattern. Alex pastes a PIPELINE block (template at `.claude/references/pipeline-block-template.md`) into the GCal description at event-acceptance time via text expander `;pipeline`. The command queries the "Going to Events" calendar (`mcp__claude_ai_Google_Calendar__list_events` on calendar ID `4c84184ac3e761c3f94be43193656a785ece4752ed6b553facfcb52e668a333b@group.calendar.google.com`), detects events with the PIPELINE block, dedups against Notion Events DB, then runs `/event-deep-research` + `pre-event-content` interactively per event with continue-or-quit control between events. Validated end-to-end 2026-05-20 on Ray Dev Day. Discipline-break decision record + falsification protocol in `.claude/notes/execution-week-frictions.md`. See also `.claude/commands/check-new-events.md` for orchestration shape, `.claude/references/pipeline-block-template.md` for template spec.
 - Orchestration (updated 2026-05-07 — synthesizer pivot): `/event-deep-research` Step 2 fans out 4 specialists in parallel **from the parent thread** (subagents cannot dispatch sub-agents per Anthropic SDK design) — `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`. Step 2.5 dispatches `event-research-synthesizer` (sonnet) to assemble the brief. Step 4 dispatches `notion-writer` for dependency-ordered MCP writes. See "SDK runtime constraints" subsection below for the full rationale.
 - Skill methodology (Steps 1–7) is unchanged and authoritative: `.claude/skills/event-research/SKILL.md`. The command file is the orchestration shape; the skill is the methodology
 - Research sources: Claude training data + WebSearch
@@ -206,10 +207,20 @@ Alex pastes calendar invite description + adds natural language context:
 - Dedup check (Step 1.5 triage): search Notion + HubSpot for existing records before creating; classify NEW/REFRESH/SKIP
 - See `.claude/WORKFLOWS.md` for the full Workflow A rerun manual
 
-**Phase 2: Content Generation Skills (In Progress — 2026-04-09)**
+**Phase 2: Content Generation Skills (In Progress — 2026-04-09; DM spec patched 2026-05-20)**
 - Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
-  speaker/host DMs (2-3 per person per topic), prepared questions (derived from unused DMs)
+  speaker/host **connection request notes** (1 best per person, 200-char hard cap — see DM rule below),
+  prepared questions (now generated independently from research, not as DM byproducts)
+- **Speaker/host outreach is connection-request-note format, NOT LinkedIn DM (rule added 2026-05-20):**
+  LinkedIn free-tier limits direct messages to 1st-degree connections; Premium burns InMail credits
+  sending to non-connections. The pre-event-content skill produces **200-char connection request notes**
+  (free-tier limit; Premium is 300). Notion Content Type names `linkedin_dm_speaker` and `linkedin_dm_host`
+  are preserved for backward compatibility, but the content shape is connection notes per
+  `.claude/references/outreach-templates.md`. Goal: connection request acceptance, not post-acceptance
+  engagement. **Two variants per person (A = talk-anchored, B = adjacent-work-anchored)** anchored to
+  materially different signals so the picker decision is signal-based, not phrasing-based. Fallback:
+  ship only the variant with a real anchor if one signal type is missing — never ship Level 2 filler.
 - Post-event skill: to be built (screen grabs, decks, recap, documentarian angle)
 - Pattern-synthesis skill (added 2026-04-19): two-thesis LinkedIn post from 2 event briefs.
   Canonical shape for Alex's documentarian angle. Triggered when 2 briefs in a rolling 7-day window
