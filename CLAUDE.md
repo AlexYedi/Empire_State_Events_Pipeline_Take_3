@@ -144,8 +144,8 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/People
 - Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
   Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date), 
-  relations to Events/People/Linkedin Post Drafts (→ Content Drafts, intentional naming — 
-  pulls Content Drafts filtered by linkedin post content types)
+  relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
+  for cross-DB property-name consistency)
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis), 
   Event Phase (select: pre_event/during_event/post_event), Content Status (select: needs_review/
