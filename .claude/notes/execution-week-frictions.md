@@ -102,12 +102,43 @@ Decision: build Option B (full chain) immediately, breaking the 21-day execution
 **Reasoning (preserved for end-of-window review):**
 - Behavioral argument advanced from "speculative friction" to "named pattern with clean architectural fit": user is *already* editing the GCal invite (moves to "going to events" calendar at registration), so PIPELINE block nests inside an existing action rather than inventing new discipline.
 - Mobile context-switch cost (GCal → Notion → back) makes the Tier 0 "create Notion row at acceptance" workaround non-viable; the friction it adds is the very friction we were engineering around.
-- All tooling exists inside Claude subscription: `/schedule` remote routines + connected GCal + Notion MCPs. No third-party integration to build.
+- All tooling exists inside Claude subscription: connected GCal + Notion MCPs. No third-party integration to build.
 
-**Cost accepted:** 3-5 hours during execution-focus window.
+**Cost accepted:** 3-5 hours during execution-focus window. **Actual cost:** ~6-7 hours (mid-build pivot from `/schedule` remote routine → manual `/check-new-events` slash command after Phase 0 revealed CronCreate is session-bound + remote routines wouldn't have access to project-level slash commands/skills anyway).
 
-**End-of-window review should answer:**
-- Did the PIPELINE block discipline sustain (i.e., did Alex actually add it to invites he accepted)?
-- Did the routine fire reliably and produce drafts without manual intervention?
-- Did the `needs_review` queue overflow (B's primary risk), or did the distributed-review-across-days promise hold?
+### 2026-05-20 build outcome
+
+**Shipped:**
+- `/check-new-events` slash command (`.claude/commands/check-new-events.md`) — session-driven, triggered manually when Alex opens Claude Code
+- PIPELINE block template + reference (`.claude/references/pipeline-block-template.md`) — 200-char-tolerant LLM-parsed structured block
+- Text expander `;pipeline` set up in macOS Text Replacements (syncs to iOS via iCloud)
+- DM spec patch: speaker/host outreach reframed from multi-sentence DMs to **2 variants × 200-char connection request notes** (A = talk-anchored, B = adjacent-work-anchored) — updates landed in `pre-event-content/SKILL.md`, `outreach-templates.md`, CLAUDE.md Phase 2
+
+**Validated end-to-end on Ray Dev Day (2026-05-21):**
+- `/check-new-events` detected 5 PIPELINE-block events, parsed all fields correctly, dedup against Notion clean
+- `/event-deep-research` ran the full chain (entity confirm → triage approval → 4-agent parallel fan-out → synthesizer brief → 5 Notion DB writes)
+- `pre-event-content` produced LinkedIn post + 4-slide visual carousel + 5 A/B connection notes (1 B-variant skipped per fallback rule for thin adjacent-work signal) + 11 prepared questions
+
+**Deferred to fresh session:**
+- HubSpot writes for Ray Dev Day (mechanical CRM creates, not validation-critical)
+- Notion writes for 7 pre-event-content drafts pages (content generated in-conversation, batch-write via notion-writer pending)
+- Full chain on AI Demo Night + 3 other 5/26-5/28 PIPELINE-block events Alex added today (Scaling Enterprise AI Agents, Evolution of Commerce, Building Agentic Marketing)
+
+### Falsification protocol updates (track during remaining execution-focus window)
+
+The 5 PIPELINE blocks Alex added today are themselves data — he tagged every content-worthy event on his calendar in one ~1-minute pass. That's a positive signal for the "PIPELINE-at-acceptance is sustainable" hypothesis. The harder test is the next 2 weeks: does he keep adding blocks at acceptance time for newly-booked events, or does the discipline atrophy when there's no fresh build excitement?
+
+**Tally log — events Alex accepts in remaining window (track here):**
+- (none yet — log future acceptances with: date accepted | event title | PIPELINE block added at acceptance? y/n | if n: why not)
+
+**Decision rules going forward:**
+- If PIPELINE-block-at-acceptance rate ≥ 80% over next 2 weeks → discipline is sustainable; ship the remaining Phase 7 mechanical writes + close build
+- If rate drops below 50% → investigate WHY (expander friction? GCal mobile UX? cognitive load at acceptance?) before adding more tooling
+- If `needs_review` queue overflows (briefs faster than Alex can process them) → that's a different failure mode requiring queue prioritization, not more ingestion automation
+
+**End-of-window review should ALSO answer:**
+- Did the PIPELINE block discipline sustain at acceptance time (not just retroactive backfill)?
+- Did `/check-new-events` get used more than once a week, or did it become "I'll run it when I remember"?
+- Did the distributed-review-across-days promise hold, or did briefs pile up?
 - Net effect on publishing rate: up, down, or flat?
+- New question raised by today's build: did the 200-char connection note spec produce notes Alex actually sent (vs. the previous multi-sentence DMs which may have been generated but never shipped)?

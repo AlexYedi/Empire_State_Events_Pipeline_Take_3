@@ -10,6 +10,7 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 
 | Workflow | Status | Command | Purpose |
 |---|---|---|---|
+| **A.0 — Calendar Auto-Ingest** | ✅ Wired (validated 2026-05-20) | `/check-new-events` | Thin wrapper on top of A — detects PIPELINE-block events in "Going to Events" GCal, dedups, then loops A + pre-event-content with continue-or-quit between events |
 | A — Event Deep Research | ✅ Wired (synthesizer pivot landed 2026-05-07 — fan-out runs in parent thread) | `/event-deep-research` | Pre-event: parse invite → 4-specialist parallel fan-out → synthesizer → Notion + HubSpot |
 | B — Post-Event Synthesis | 🟡 Scaffolded | `/post-event-synthesis` | Post-event: transcripts/notes → DMs + posts + retro |
 | C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
