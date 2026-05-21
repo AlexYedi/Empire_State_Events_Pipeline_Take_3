@@ -25,7 +25,8 @@ This command runs when:
 ## Required inputs
 
 1. **Event invite text** — pasted invite description, or natural-language description with speaker/host/topic cues
-2. **(Optional) Stated focus** — if Alex says "I'm going to find a hiring manager" or "I want to test my POV on agentic systems", pass that downstream so Success Signals are tailored
+2. **(Optional) Google Calendar Event ID** — if the input includes a `Google Calendar Event ID:` line (as `/check-new-events` always passes), capture it and forward to `notion-writer` for the Events DB row. This is the deterministic join key to Granola for `/post-event-content`.
+3. **(Optional) Stated focus** — if Alex says "I'm going to find a hiring manager" or "I want to test my POV on agentic systems", pass that downstream so Success Signals are tailored
 
 ## Step 1 — Parse and triage (this conversation, NOT a subagent)
 
@@ -90,7 +91,7 @@ Invoke notion-writer subagent:
 
 ```
 subagent_type: notion-writer
-prompt: [approved brief + triage plan + raw invite text + today's date]
+prompt: [approved brief + triage plan + raw invite text + today's date + Google Calendar Event ID (if captured in Step 1)]
 ```
 
 notion-writer executes Steps 4a–4g of `.claude/skills/event-research/SKILL.md`:

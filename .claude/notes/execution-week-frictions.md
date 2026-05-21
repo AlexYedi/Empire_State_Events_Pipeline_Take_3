@@ -142,3 +142,84 @@ The 5 PIPELINE blocks Alex added today are themselves data — he tagged every c
 - Did the distributed-review-across-days promise hold, or did briefs pile up?
 - Net effect on publishing rate: up, down, or flat?
 - New question raised by today's build: did the 200-char connection note spec produce notes Alex actually sent (vs. the previous multi-sentence DMs which may have been generated but never shipped)?
+
+---
+
+## 2026-05-21 — Granola → post-event content (transcript-paste friction kill)
+
+### The friction (NAMED, not speculative)
+Alex's own words: "I have had significant friction post-event and haven't been posting afterwards, I'm drained by the end of the day, and the trying to upload the full transcript plus audio file that doesn't play well was a pain." Publishing rate on post-event content has been near-zero across the execution-focus window — i.e., the failure mode the 2026-05-15 window was set up to address is firing specifically on the post-event leg.
+
+Forcing function: 2 attended events tomorrow (2026-05-22), post-event content needed after. Manual fallback would replicate the same friction that's been blocking publishing.
+
+### The decision — break the rule (second time in window, both times intentional)
+
+Decision: build Granola-anchored `/post-event-content` flow tonight (2026-05-21). This is the second execution-focus break (first was `/check-new-events` on 2026-05-20).
+
+**Systems-thinking framing (rule-out discipline):**
+
+| Archetype considered | Verdict | Why |
+|---|---|---|
+| Shifting the Burden | **Rejected.** | The 2026-05-15 rule was written to guard against this — automating before the manual habit was established. But the manual habit HAS been attempted (full transcript paste + audio upload) and is the documented failure point. Removing it isn't burden-shifting; it's removing a confirmed friction. |
+| Drift to Low Performance | **Rejected.** | Post-event publishing isn't gradually drifting — it's been flat-near-zero. Different shape. |
+| Balancing Loop with Drain | **Match.** | The post-event content stock is being drained by exhaustion + upload friction at a rate that swamps the inflow (room observations). Granola pre-synthesis removes the largest single drain. |
+
+The rule that was set 2026-05-15 was "resist architecture work that delays publishing." This is architecture work that **enables** publishing. Same intent, same direction — the rule bends here, doesn't break.
+
+### What was built tonight
+
+1. **New slash command** — `.claude/commands/post-event-content.md`
+   - Resolves event name → Notion Event row (by title search)
+   - Fetches Granola note via REST API (list + get with transcript)
+   - Dual-path resolution: deterministic `Google Calendar Event ID` match (preferred), title+date fuzzy fallback
+   - Passes structured Granola output (summary_markdown + diarized transcript + attendees) into `content-correspondent`
+   - Drafts committed to Notion Content Drafts via `notion-writer` with Event Phase = post_event
+
+2. **Notion Events DB property add** — `Google Calendar Event ID` (text, 9th property)
+   - Added manually by Alex in Notion UI (Notion MCP wasn't surfaced in the build session, so this was a manual step — 30 seconds)
+   - Populated going forward by `/check-new-events` → `/event-deep-research` → `notion-writer`
+   - Empty for events created before 2026-05-21; dual-path resolution handles them via title+date fallback (no backfill required)
+
+3. **Upstream chain updated** to write the new property at intake:
+   - `.claude/commands/check-new-events.md` — captures `event.id` from GCal MCP response, passes to `/event-deep-research`
+   - `.claude/commands/event-deep-research.md` — accepts `Google Calendar Event ID:` line in input, forwards to `notion-writer`
+   - `.claude/agents/ops/notion-writer.md` — writes the property on Event row creation, plain text, raw `event.id` verbatim
+
+4. **content-correspondent SKILL.md updated** — added Mode A (Granola-anchored structured input) and Mode B (manual paste, legacy) sections at the top. Skill now operationalizes the Granola integration the prose previously only mentioned.
+
+5. **API key storage** — `~/.zshrc` export of `GRANOLA_API_KEY`. Same env-var pattern as `LINEAR_API_KEY` (see env handoff memory: terminal-launched Claude Code only, Dock-launched doesn't inherit).
+
+### What was NOT built (deferred deliberately)
+
+- **Granola MCP server install** — would be cleaner than REST/curl but adds settings.json edit + restart cycle. REST works tonight; MCP is v2 polish.
+- **Backfill of GCal Event ID on existing Notion Event rows** — not required because of dual-path resolution. Tomorrow's 2 events will run on title+date fallback.
+- **Auto-detection of Granola notes without an Alex trigger** — the command is manually invoked. No webhook (Granola doesn't expose them) and no polling daemon. Manual kickoff is the right scope.
+
+### Cost accepted
+
+- ~2-3 hours of build time tonight
+- Alex's two manual steps:
+  1. Add `Google Calendar Event ID` (text) property to Notion Events DB via UI
+  2. Add `export GRANOLA_API_KEY="grn_..."` to `~/.zshrc` and `source` it (or restart terminal)
+
+### Falsification criteria — track during remaining execution-focus window
+
+**Primary metric:** number of post-event LinkedIn posts published in the remaining window (2026-05-21 → 2026-06-05). Baseline before this build: ~0.
+
+**Decision rules:**
+- **≥3 post-event posts published in remaining ~2 weeks** → friction WAS the gate; the build paid off; harden the path (move to Granola MCP, add the post-event-synthesis full chain).
+- **1-2 posts published** → friction was a factor but not the only gate; investigate what else is blocking (energy management, post fatigue, content-correspondent draft quality, voice authenticity in Granola summaries).
+- **0 posts published** → the gate was somewhere else entirely (mood, demand, the room not actually being post-worthy). Roll back enthusiasm for further automation; refocus on the actual gate.
+
+**Per-event tally (track here):**
+- (none yet — start with the 2 events on 2026-05-22)
+- Per event, log: event date | Granola match path (A/B) used | minutes from `/post-event-content` invocation → draft in Notion | minutes from draft → published post | what gated each step
+
+### Open questions for end-of-window review
+
+- Did Granola's AI summary produce content Alex's voice survived (vs. summary-flattened mush)?
+- Did the dual-path resolution actually catch a title-match edge case in practice, or was the GCal ID always present?
+- Did `notion-writer` need any schema gotcha fixes for the new property? (Should be plain text — easiest possible property type.)
+- Did Alex use `/post-event-content` more than once per event-attended, or was it run-once-and-move-on?
+- Was 36h the right date window, or did we need to widen to 48h on real-world data?
+- Did the structured input (summary + transcript) actually produce better drafts than Mode B (manual paste) would have? If summary alone or transcript alone is better, prune the unused half.
