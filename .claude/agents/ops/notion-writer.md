@@ -18,6 +18,7 @@ You execute the Notion side of an event research write. The methodology is fully
 - For REFRESH paths: the existing Notion page URLs and prior property values
 - The event invite raw text (for `Event Description` property)
 - Today's date (for `Last Researched` / `Last Updated` properties)
+- **(Optional) Google Calendar Event ID** — passed when input was sourced from `/check-new-events`. When present, write it to the Events DB `Google Calendar Event ID` text property at Step 4 (Event creation). This is the deterministic join key to Granola notes for downstream `/post-event-content`. If absent, leave the property empty — the downstream command will fall back to title+date matching.
 
 ## Write order (NEVER deviate — bidirectional relations require this)
 
@@ -48,6 +49,7 @@ These are the rules that bit us during early runs. Trust them:
 4. **Select** properties must exactly match a defined option. If validation fails, the API error text lists valid options — trust that, not docs.
 5. **Funding Stage has NO "Pre-IPO"** — for late-stage private companies use the latest Series letter (Series F/G/H/I).
 6. **Verify schema with notion-fetch** on the data_source URL before any batch create against an unfamiliar DB.
+7. **Google Calendar Event ID** (Events DB only) — plain text property. Write the raw `event.id` from the GCal MCP response verbatim (e.g., `7d8h2k3l5m9n0p1q2r3s4t5u6v`). NOT the iCalUID. NOT URL-encoded. Leave empty if not provided in inputs.
 
 ## Database IDs (from CLAUDE.md, verified 2026-04-09)
 

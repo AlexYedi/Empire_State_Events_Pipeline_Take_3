@@ -126,12 +126,18 @@ Alex pastes calendar invite description + adds natural language context:
 #### Output Destinations
 
 **Notion** (Content + Research Hub) — 6 interconnected databases (verified via MCP, 2026-04-09):
-- Events (8 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
-  Event Status (select: intake/researched/content_drafted/attended/post_complete), 
+- Events (9 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
+  Event Status (select: intake/researched/content_drafted/attended/post_complete),
+  Google Calendar Event ID (text — added 2026-05-21 for `/post-event-content` Granola join key),
   relations to People/Companies/Topics/Content Drafts
   Note: Event Description stores the raw pasted invite text. No Calendar Source property — 
   the pipeline generates value for events Alex attends AND events he doesn't (content + outreach 
   aren't gated by physical attendance).
+  Google Calendar Event ID is the raw `event.id` from the GCal MCP response (NOT iCalUID).
+  Equals Granola's `calendar_event.calendar_event_id` field — deterministic join for transcript pulls.
+  Populated automatically by `/check-new-events` → `/event-deep-research` → `notion-writer`.
+  Empty for events created before 2026-05-21 — `/post-event-content` falls back to title+date match
+  when the property is empty (dual-path resolution).
 - People (11 props): Name (title), Current Title (text), Email (email), Phone Number (phone), 
   LinkedIn URL (url), Known POV / Bio (text), Notes (text), Role Context (multi-select: 
   speaker/host/organizer/attendee/contact), Last Researched (date), 
@@ -207,11 +213,17 @@ Alex pastes calendar invite description + adds natural language context:
 - Dedup check (Step 1.5 triage): search Notion + HubSpot for existing records before creating; classify NEW/REFRESH/SKIP
 - See `.claude/WORKFLOWS.md` for the full Workflow A rerun manual
 
-**Phase 2: Content Generation Skills (In Progress — 2026-04-09; DM spec patched 2026-05-20)**
-- Three skills: pre-event-content.md, post-event-content.md, pattern-synthesis/SKILL.md (not monolithic)
+**Phase 2: Content Generation Skills (In Progress — 2026-04-09; DM spec patched 2026-05-20; Granola wired 2026-05-21)**
+- Three skills: pre-event-content.md, content-correspondent/SKILL.md (post-event), pattern-synthesis/SKILL.md (not monolithic)
+- **`/post-event-content` slash command (wired 2026-05-21)** — Granola-anchored thin orchestrator. Resolves event name → Notion Event row → Granola API pull (list + get with transcript) → invokes content-correspondent with structured input (summary_markdown + diarized transcript + attendees) → notion-writer commits drafts. Dual-path resolution: deterministic `Google Calendar Event ID` match (preferred), title+date fuzzy fallback. Removes the post-event transcript-paste friction that was blocking publishing. Requires Granola Business plan ($14/user/mo) + `GRANOLA_API_KEY` env var in `~/.zshrc` (terminal-launched Claude Code only — see env handoff memory). See `.claude/commands/post-event-content.md` for orchestration shape, `.claude/notes/execution-week-frictions.md` 2026-05-21 entry for the decision record.
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
   speaker/host **connection request notes** (1 best per person, 200-char hard cap — see DM rule below),
   prepared questions (now generated independently from research, not as DM byproducts)
+- Post-event flow (`content-correspondent` skill) now has **two input modes** documented in SKILL.md:
+  Mode A (preferred) = Granola-anchored structured input via `/post-event-content` command. Skill
+  consumes Granola's pre-synthesized `summary_markdown` for angle/thesis decisions and the diarized
+  `transcript` for verbatim speaker quotes. Mode B (legacy) = manual paste of raw material — still
+  supported for events not recorded in Granola or for ad-hoc walk-in events.
 - **Speaker/host outreach is connection-request-note format, NOT LinkedIn DM (rule added 2026-05-20):**
   LinkedIn free-tier limits direct messages to 1st-degree connections; Premium burns InMail credits
   sending to non-connections. The pre-event-content skill produces **200-char connection request notes**
