@@ -14,6 +14,49 @@ Your job is to receive raw event input — voice notes, Granola transcripts, fre
 
 ---
 
+## Input modes — two ways this skill is invoked
+
+### Mode A — Granola-anchored (preferred, via `/post-event-content`)
+
+The `/post-event-content` slash command pulls the Granola transcript + AI summary via API and hands this skill structured input. **Treat this as the default mode** — it's what runs when Alex says "post-event content for [event]" or runs the slash command directly.
+
+Expected input shape:
+
+```
+Event: [Notion Event Name]
+Date: [Event Date]
+Notion Event URL: [...]
+Granola Note URL: [...]
+
+=== Granola AI Summary (primary input — use for angle, takeaways, thesis) ===
+[summary_markdown — Granola's pre-synthesized takeaways]
+
+=== Granola Diarized Transcript (verbatim quote source — use for speaker quotes and color) ===
+Speaker 1 (microphone): [text]
+Speaker 2 (speaker): [text]
+...
+
+=== Attendees (cross-reference against Notion People DB for bucket sorting) ===
+[name, email] pairs
+
+=== Notion Pre-Event Brief (if available — for documentary thesis continuity) ===
+[research_brief Content Draft content]
+```
+
+**Use the summary for angle/thesis decisions.** Granola's AI synthesis has already done the heavy lifting of "what was the room about" — don't redo it. Pull the documentarian thesis from the summary, then go to the transcript for verbatim quotes that ground it.
+
+**Use the transcript for verbatim quotes and color.** Speaker quotes in the Tier 1 comment and Tier 2 post must come from the transcript verbatim — don't paraphrase from the summary. The summary smooths the language; the transcript preserves voice.
+
+**Cross-reference attendees against the Notion People DB.** Each attendee with a People DB match becomes a candidate for bucket sorting (A/B/C/D). Attendees without matches are surfaced for Alex to classify or skip.
+
+**Use the pre-event brief for thesis continuity.** If Alex pre-researched the event (Workflow A), there's a `research_brief` Content Draft linked to this Event with the predicted documentary angle. Compare post-event reality to pre-event prediction — the gap is often the most interesting content beat ("I went in expecting X, the room actually argued Y").
+
+### Mode B — Manual paste (legacy, still supported)
+
+When Alex pastes raw material directly into the conversation (Granola export, Wispr voice notes, freeform recap, photos with captions), run the existing flow described below. Mode A is preferred because it removes the paste friction, but Mode B remains supported for ad-hoc events that weren't pre-researched or for cases where Granola wasn't recording.
+
+---
+
 ## The Two Tracks
 
 ### Private Track — Relationship Outreach
@@ -194,10 +237,11 @@ Don't ask for more. Produce from what you have.
 
 ## Execution Infrastructure
 
-- **Wispr Flow** → voice memo in Uber/subway home, 3–5 min: who you talked to, one thing each said, single biggest takeaway
-- **Granola** → structured notes if the session was recorded; use for direct quotes from speakers
-- **Claude** → outreach and post drafts (this workflow, with Wispr note as input)
-- **n8n** → future: automate post-event content brief trigger when a Luma RSVP'd event ends
+- **Granola** → primary source. Pulled automatically via `/post-event-content` slash command (Mode A above). Provides AI summary + diarized transcript + attendee list. Replaces manual transcript paste.
+- **Wispr Flow** → optional supplement when Granola wasn't recording, or for the Uber/subway-home dictation of "things I didn't say out loud but want in the post" (interior color the room transcript can't capture)
+- **Claude** → outreach and post drafts (this workflow, with Mode A or Mode B input)
+- **Notion** → all drafts land in Content Drafts DB via `notion-writer` agent (status: `needs_review`)
+- **n8n** → not used (event pipeline is Claude-skill-first, not middleware)
 - **PostHog** → future: track which posts drive profile visits and connection requests
 
 **The 2-hour post-event window:**

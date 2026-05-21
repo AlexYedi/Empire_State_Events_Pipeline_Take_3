@@ -67,6 +67,8 @@ For each event with a PIPELINE block, extract the structured fields using natura
 
 Required fields: Speakers, Host, Topics. If any of these are missing or empty, log the event as a parse warning and exclude it from processing — surface it at the end of the run.
 
+**Also capture the Google Calendar event ID** from the GCal MCP response's `id` field (NOT the iCalUID — use the `id` field, which is what Granola's API returns as `calendar_event_id`). This is the stable join key to Granola's notes and downstream content. Pass it through to `/event-deep-research` as a field named `Google Calendar Event ID` so it lands on the Notion Event row.
+
 ## Step 4 — Dedup check against Notion
 
 For each parsed event, query the Notion Events DB to check whether a row already exists:
@@ -115,6 +117,7 @@ Execute the full `/event-deep-research` workflow as documented in `.claude/comma
 Event: [event title]
 Date: [event date]
 Location: [event location from GCal]
+Google Calendar Event ID: [event.id from GCal MCP response]
 
 [Original description from organizer — text BEFORE the PIPELINE block in the GCal description]
 
@@ -123,6 +126,8 @@ Host: [Host parsed from PIPELINE block]
 Topics: [Topics parsed from PIPELINE block]
 URL: [URL parsed from PIPELINE block]
 ```
+
+The Google Calendar Event ID line is the deterministic join key for downstream `/post-event-content` runs against Granola. `/event-deep-research` will pass it to `notion-writer`, which writes it to the Events DB `Google Calendar Event ID` text property.
 
 This is the format `/event-deep-research` already accepts (per its required-inputs spec: "natural-language description with cues like 'Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI'").
 
