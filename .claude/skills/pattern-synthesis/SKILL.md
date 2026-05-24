@@ -159,7 +159,39 @@ Produce the carousel brief in the output schema defined at the bottom of
 - Source citations on any slide with a stat or named quote
 - Final slide earns the swipe (no "Follow for more")
 
-If any gate fails, redraft before moving to Step 7.
+If any gate fails, redraft before moving to Step 6c.
+
+### Step 6c — Auto-render the carousel via Canva MCP (added 2026-05-24)
+
+After the brief passes Step 6b's quality gates AND Step 8 writes the Content
+Draft to Notion, fire `mcp__claude_ai_Canva__generate-design` once per slide
+using the per-slide MCP call shape and query template in
+`../content-patterns/visual-briefs.md` under `## MCP execution — Canva
+auto-render`. Per CLAUDE.md's MCP automation rule, Canva MCP is the default
+ship path — not a manual paste handoff.
+
+**Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1
+and 2 (Thesis A and Thesis B) MUST share visual frame exactly. When building
+the `query` payload for Slide 2, include the explicit instruction: "LAYOUT:
+Must use IDENTICAL layout to slide 1 of this same carousel — same quote
+placement, same attribution layout, same type hierarchy. Frame parallelism is
+the editorial choice — without it, the reader concludes one thesis is more
+important than the other." Without this, Canva auto-styles each independently
+and the parallel structure breaks.
+
+Sequence per slide:
+1. Build `query` payload from the slide spec.
+2. Call `mcp__claude_ai_Canva__generate-design` with `design_type: "instagram_post"`.
+3. Receive 4 candidates per slide.
+4. Surface all candidates (4-5 slides × 4 candidates = 16-20 total) in a single
+   markdown table covering all slides.
+5. On Alex's selection, fire `mcp__claude_ai_Canva__create-design-from-candidate`
+   per chosen design.
+6. If tweaks needed, iterate via `mcp__claude_ai_Canva__perform-editing-operations`
+   — do not re-fire `generate-design` for minor changes.
+
+The brief still lives in the Notion page body as a human-readable reference;
+auto-render runs alongside, not instead.
 
 ### Step 7 — Draft speaker/host DMs (sub-outputs)
 For each speaker or host whose thesis anchors the post (typically 2-4 people total

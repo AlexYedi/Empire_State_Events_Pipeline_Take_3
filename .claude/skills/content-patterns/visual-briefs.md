@@ -35,8 +35,21 @@ DMs and prepared questions do not get carousels — they are private artifacts.
 
 The carousel brief is embedded in the LinkedIn post's Notion page body under a
 `## Visual Brief — N-slide carousel` H2 heading, immediately after the post copy.
-The brief is what Alex pastes into ChatGPT (GPT-Image-1), Gemini Imagen 4,
-Magic Patterns, or Canva to generate the actual slides.
+
+**Default ship path (updated 2026-05-24): MCP auto-render via Canva.** After
+producing the brief, the calling skill (`content-correspondent`,
+`pre-event-content`, `pattern-synthesis`) fires
+`mcp__claude_ai_Canva__generate-design` once per slide and surfaces the design
+candidates back to Alex for selection. Manual handoff to Canva is no longer
+the default — the brief is a machine-readable payload, not a copy-paste spec.
+See `## MCP execution — Canva auto-render` below for the conversion pattern.
+
+The historical "Tool: Canva / GPT-Image-1 / Imagen 4 / Magic Patterns" routing
+field per slide is retained for human reference (it captures the visual mode
+intent) but is NOT the execution path — Canva MCP is the default for all
+4:5 LinkedIn-carousel slides. Other tools (Imagen, Magic Patterns) are only
+invoked if Canva MCP doesn't satisfy the brief's quality bar (e.g., dense
+org-chart diagrams where Canva's typography-first generation falls short).
 
 Slide count is determined by the post's thesis complexity, not by a default:
 
@@ -157,6 +170,123 @@ Every slide in every carousel must specify:
    - **Magic Patterns** — branded marks, dashboards, designed components
    - **Canva** — bold typography cards, quote cards, simple data viz
    - **Avoid** — Stable Diffusion variants for any slide with dense text labels
+
+---
+
+## MCP execution — Canva auto-render (added 2026-05-24)
+
+After the slide specs are finalized, the calling skill auto-renders the
+carousel by firing one `mcp__claude_ai_Canva__generate-design` call per slide.
+This replaces the historical "Alex pastes the brief into Canva manually"
+handoff. Per CLAUDE.md's MCP automation rule, manual is reserved for
+judgment-load steps; rendering is not one of them.
+
+### Per-slide MCP call shape
+
+For each slide in the brief, construct a `generate-design` call:
+
+```
+mcp__claude_ai_Canva__generate-design({
+  design_type: "instagram_post",   // 1080x1350, native 4:5 LinkedIn carousel ratio
+  query: "<prose payload built from the slide spec — see template below>",
+  user_intent: "Generate slide N of M for [post title] — [slide job]"
+})
+```
+
+`design_type: "instagram_post"` is the correct choice for LinkedIn carousel
+slides — it generates at 1080x1350px (portrait, 4:5 ratio), which is LinkedIn's
+native carousel slide dimension. Do NOT use `presentation` (16:9, wrong ratio
+for carousels) or `pinterest_pin` (wrong aspect).
+
+### Query payload template
+
+The `query` parameter is the prose payload Canva's generation model consumes.
+Build it from the slide spec using this template — every field from the slide
+spec maps to a labeled section in the query:
+
+```
+Generate a typography-led LinkedIn carousel slide (slide N of M).
+
+LAYOUT: [Visual mode from spec — Bold typography card / Quote card / Diagram / etc.]
+[For quote cards: emphasize frame parallelism with sibling slides.]
+
+[CONTENT BLOCKS — pull verbatim from spec]
+[Headline]: "[exact text]" — [type weight/size guidance]
+[Body / content]: [exact text or diagram description]
+[Attribution block]: [name / company / category if quote card]
+[Footer attribution]: [if any — source + date]
+
+VISUAL STYLE:
+- Background: [palette spec — hex code]
+- Primary text: [palette spec — hex code]
+- Accent: [palette spec — hex code, with usage notes]
+- Typography-led. NO imagery, NO stock-AI illustrations, NO gradients, NO decorative iconography[, NO speaker photos].
+- High contrast, premium editorial feel.
+
+ASPECT RATIO: 4:5 portrait (1080x1350px).
+
+CONTEXT: [One paragraph — what the carousel is arguing, what role this slide
+plays in the arc, who the author is. Pulled from the carousel thesis + slide job.]
+
+CONSTRAINTS — anti-patterns to avoid:
+- No glowing brain illustrations
+- No robot imagery
+- No portraits or photos of speakers
+- No pink/purple gradients
+- No decorative lightbulbs, gears, or arrows
+- No "Follow for more" footer language
+- [Add any slide-specific anti-patterns]
+```
+
+### Frame parallelism enforcement
+
+For Arc 2 (Thesis A vs B) and Arc 3 (Before vs After), structurally paired
+slides MUST share visual frame. To enforce in MCP calls, include this explicit
+instruction in the `query` for paired slides:
+
+> "LAYOUT: Quote card. Must use IDENTICAL layout to slide N of this same
+> carousel — same quote placement, same attribution layout, same font hierarchy.
+> Frame parallelism is critical."
+
+Same applies to Arc 4 (One Question, N Perspectives): slides 2 through N-1
+share frame; slide 1 (question) and slide N (synthesis) are distinct typography
+slides matching each other.
+
+### Candidate selection flow
+
+`generate-design` returns 4 candidates per slide. The calling skill surfaces
+all candidates as a markdown table (slide number, candidate letter, preview
+URL, thumbnail URL) and waits for Alex's selection. Once selected, fire
+`mcp__claude_ai_Canva__create-design-from-candidate` to land the winners in
+Alex's Canva account.
+
+If Alex flags any candidate as "close but needs X," use
+`mcp__claude_ai_Canva__perform-editing-operations` to iterate without
+leaving the conversation. Do not re-fire `generate-design` for tweaks — that
+discards visual DNA from the chosen direction.
+
+### Failure modes
+
+- **All 4 candidates fail the brief.** Re-prompt with sharper anti-pattern
+  language or pull in a brand kit via `mcp__claude_ai_Canva__list-brand-kits`
+  → `brand_kit_id` parameter. If still failing, fall back to manual Canva
+  work for that specific slide and log the failure mode in
+  `.claude/notes/execution-week-frictions.md` so the pattern can be diagnosed.
+- **Frame parallelism broken between slides.** Re-fire the off-pattern slides
+  with a stronger "IDENTICAL layout to slide N" instruction. Do not ship a
+  carousel where slides 2-N-1 visually drift from each other.
+- **MCP returns "Common queries will not be generated" error.** The query
+  was too generic. Add slide-specific detail — exact quote text, named
+  speaker, specific palette hex codes, the full carousel thesis context.
+
+### Tokens / cost
+
+Per CLAUDE.md MCP automation rule #1: Canva MCP calls are billed by Canva
+(under Alex's existing subscription), not by Anthropic. The Claude-side
+token cost is the small JSON request/response per call. A 5-slide carousel
+= 5 `generate-design` calls + 1-5 `create-design-from-candidate` calls + 0-N
+`perform-editing-operations` calls. All effectively free at the Anthropic
+billing layer.
 
 ---
 

@@ -230,16 +230,55 @@ the carousel brief. If any gate fails:
 Do NOT ship a brief with a flagged gate. The gate exists because that failure
 mode is repeating across runs.
 
-### Step 3b.5: Important notes
+### Step 3b.5: Auto-render the carousel via Canva MCP (added 2026-05-24)
 
-- **Briefs only, not images.** Do NOT generate images via MCP or any image API.
-  Alex is building hands-on intuition with the generation tools (GPT-Image-1,
-  Imagen 4, Magic Patterns, Canva); the briefs are what he pastes in.
+**Replaces the historical "briefs only, not images" rule** — that rule was a
+misread of cost discipline as a blanket "Alex prefers manual." Per CLAUDE.md's
+MCP automation rule, MCP calls to existing-subscription vendors (like Canva)
+are the default; manual is reserved for judgment-load steps.
+
+After Step 4 writes the Content Draft (post + embedded brief) to Notion, fire
+`mcp__claude_ai_Canva__generate-design` once per slide using the per-slide MCP
+call shape and query template defined in
+`../content-patterns/visual-briefs.md` under `## MCP execution — Canva
+auto-render`.
+
+Sequence per slide:
+1. Build the prose `query` payload from the slide spec (headline, body, palette,
+   anti-patterns, context — all already in the brief).
+2. Call `mcp__claude_ai_Canva__generate-design` with
+   `design_type: "instagram_post"` (the 1080x1350 / 4:5 ratio matches LinkedIn
+   carousel native dimension).
+3. Receive 4 design candidates per slide.
+4. Surface all candidates to Alex in a single markdown table covering all
+   slides (slide #, candidate letter, preview URL, thumbnail URL).
+5. On Alex's selection, fire `mcp__claude_ai_Canva__create-design-from-candidate`
+   per chosen design to land them in Alex's Canva account.
+6. If Alex flags "close but tweak X," iterate via
+   `mcp__claude_ai_Canva__perform-editing-operations` — do NOT re-fire
+   `generate-design` for minor tweaks (that discards visual DNA).
+
+Frame parallelism enforcement: for Arc 2 / Arc 3 paired slides and for the
+slides 2..N-1 quote-card sequence in Arc 4, include an explicit "IDENTICAL
+layout to slide N" instruction in the `query` payload per the visual-briefs.md
+template. Without this, Canva auto-styles each slide independently and the
+parallel structure breaks.
+
+### Step 3b.6: Other rules
+
 - **The brief is the artifact.** When the post is reviewed, the brief is
-  reviewed alongside it. They are one Content Draft, not two.
+  reviewed alongside it. They are one Content Draft, not two. The brief stays
+  in the Notion page body as the human-readable reference even after MCP
+  auto-render runs — both because Alex may want to iterate later, and because
+  other tools (Imagen 4, Magic Patterns) remain valid fallbacks for shapes
+  Canva can't handle well (dense org charts, etc.).
 - **Voice propagation.** If `update-voice-and-style.md` runs and updates the
   written voice, the visual voice in `visual-briefs.md` must be reviewed in the
   same pass. They are paired.
+- **Tool routing field is metadata, not execution.** The "Tool: Canva / GPT-Image-1 /
+  Imagen 4 / Magic Patterns" line per slide describes visual mode intent for
+  human reference. Execution is Canva MCP unless the slide explicitly requires
+  a tool Canva doesn't handle well (rare — dense diagrams primarily).
 
 ---
 
