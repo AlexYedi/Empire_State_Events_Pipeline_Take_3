@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: v2-trigger detection/logging for Empire State's pipeline-specific skills.",
+  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: v2-trigger detection/logging for Empire State's pipeline-specific skills. Two detectors feed one shared state file (.claude/.state/<session>.relevant_skills) which the Stop hook logs: PostToolUse:Skill catches natural-language SKILL invocations (v2-trigger-detect.sh); UserPromptExpansion catches SLASH COMMAND invocations (v2-cmd-detect.sh, added 2026-05-24 to fix the slash-command blind spot — slash commands never emit PostToolUse:Skill).",
   "hooks": {
     "PostToolUse": [
       {
@@ -9,6 +9,17 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-trigger-detect.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-cmd-detect.sh"
           }
         ]
       }
