@@ -17,6 +17,11 @@
 
 set -uo pipefail
 
+# Anchor CWD to project root so internal relative paths resolve regardless of how
+# Claude Code launched the hook. Fixes "No such file or directory" under Dock-launched
+# or --resume contexts. See settings.json $CLAUDE_PROJECT_DIR fix.
+cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
+
 INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 [ -z "$SESSION_ID" ] && exit 0
