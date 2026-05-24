@@ -25,9 +25,12 @@
 #
 # Emits no output (silent detector). The Stop hook reads and prompts.
 #
-# DEBUG (temporary, remove after first-run verification 2026-05-24): also dumps the
-# raw stdin payload to .claude/.state/upe-debug.json so the exact field shape can be
-# confirmed on the first real fire. Strip the DEBUG block once validated.
+# Payload shape CONFIRMED live 2026-05-24 (session af967f07): top-level fields
+#   { session_id, transcript_path, cwd, permission_mode, hook_event_name,
+#     expansion_type: "slash_command", command_name, command_args,
+#     command_source, prompt }
+# So `.command_name` is the authoritative field; the multi-field + raw-prompt
+# fallbacks below are kept as defensive hygiene against future shape drift.
 
 set -uo pipefail
 
@@ -36,11 +39,6 @@ set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
 
 INPUT=$(cat)
-
-# --- DEBUG (temporary) -------------------------------------------------------
-mkdir -p ".claude/.state" 2>/dev/null
-printf '%s' "$INPUT" > ".claude/.state/upe-debug.json" 2>/dev/null
-# -----------------------------------------------------------------------------
 
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 [ -z "$SESSION_ID" ] && exit 0
