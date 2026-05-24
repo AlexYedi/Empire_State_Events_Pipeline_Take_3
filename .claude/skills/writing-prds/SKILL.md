@@ -54,6 +54,54 @@ Justify the timing of this investment against other opportunities. If you can't 
 - "Could you build a quick prototype instead of writing more documentation?"
 - "What are the key decisions that still need to be made?"
 
+## Output Handling — auto-persist via ChatPRD MCP (added 2026-05-24)
+
+Per CLAUDE.md MCP automation rule #1, when this skill produces an actual PRD
+(not just guidance or questions), auto-persist the document via
+`mcp__claude_ai_ChatPRD__create_document`. ChatPRD is the system of record for
+PRDs; the conversation output is the draft moment.
+
+**When to fire the MCP call:**
+
+Run this when the skill output is a complete PRD draft — i.e., it includes
+problem statement + user/customer + success metric + scope (in/out) + the
+"why now." Skip the auto-write for:
+
+- Partial drafts (one or two sections being workshopped) — Alex iterates in
+  conversation first, then signals "draft is done"
+- Pure guidance requests ("how should I structure the success metric for X?")
+  — no PRD artifact exists yet
+- Critique sessions ("review this existing PRD") — the source PRD is already
+  somewhere Alex tracks it
+
+**MCP call shape:**
+
+```
+mcp__claude_ai_ChatPRD__create_document({
+  title: "<derived from problem statement — 8 words max>",
+  contentMarkdown: "<full PRD draft in markdown>",
+  summary: "<one-sentence what + why-now>",
+  projectId: "<if Alex specifies a project context>"
+})
+```
+
+Before firing, call `mcp__claude_ai_ChatPRD__list_projects` if Alex referenced a
+project by name — match by fuzzy title and pass the projectId so the PRD lands
+in the right project rather than as an orphan document.
+
+**Surface the URL after the write.** The user gets a link to the persisted PRD
+in ChatPRD where they can share, comment, and iterate. The conversation
+output remains the draft moment; ChatPRD is durable storage.
+
+**Failure modes:**
+
+- ChatPRD MCP returns auth error → tell Alex to reconnect via `/mcp`. Do NOT
+  silently fall back to "Alex copies the PRD manually."
+- Title collision (a doc with the same title already exists) → use
+  `mcp__claude_ai_ChatPRD__search_documents` to find the existing doc and
+  ask Alex whether to update via `update_document` or create as new with a
+  date suffix.
+
 ## Common Mistakes to Flag
 
 - **Starting with the solution** - The document should lead with the problem and context
