@@ -202,7 +202,47 @@ Summarize results to user:
 - Biggest score jump (which element improved most)
 - Top 2 runner-up alternatives (in case winner doesn't feel right)
 - Path to all 3 output files
-- Clear next step (in Empire State pipeline: paste winner into Notion Content Drafts page body, set Status to `needs_review`)
+
+### Step 7: Auto-write winner to Notion (added 2026-05-24)
+
+Per CLAUDE.md MCP automation rule #1, after Step 6 reports back, auto-write the
+winning variant to Notion rather than asking Alex to paste it manually.
+
+**If the autoresearch was run against an existing Content Draft** (e.g.,
+optimizing a pre-event LinkedIn post already in `needs_review` status), fire
+`mcp__notion__notion-update-page` against that Content Draft page. Replace the
+existing post copy with the winning variant. Add a footer block under the post
+copy documenting the autoresearch metadata:
+
+```
+## Autoresearch Metadata (added by marketing-autoresearch <run date>)
+- Winning variant score: <holistic_score>
+- Variants tested: <total across all rounds>
+- Biggest element improvement: <element name> (<delta score>)
+- Top 2 runner-up scores: <a>, <b>
+- Output artifacts: <paths>
+```
+
+Leave Content Status unchanged (preserves Alex's existing review state — the
+optimizer doesn't promote-to-approved unilaterally; that remains judgment-load
+per rule 2).
+
+**If the autoresearch was run against a fresh prompt** (no existing Notion
+draft), fire `mcp__notion__notion-create-pages` against data source
+`collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775` (Content Drafts) with:
+- Title: as supplied by user, or derived from the winning hook
+- Content Status: `needs_review`
+- Content Type: best inference from context (`linkedin_post_pre` / `linkedin_post_post` / `linkedin_post_synthesis` etc.)
+- Event Phase: as supplied
+- Body: winning variant + the autoresearch metadata block above
+
+**If the input source is non-Notion** (e.g., landing page copy, ad copy, email
+subject lines that don't map to Content Drafts DB), skip the auto-write and
+fall back to the original "report back, Alex handles persistence" pattern.
+Don't force a write where the schema doesn't fit.
+
+The original "paste winner into Notion" manual step is preserved only as the
+fallback when auto-write fails or the schema doesn't match.
 
 ---
 
