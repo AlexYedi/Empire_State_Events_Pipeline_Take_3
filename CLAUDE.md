@@ -36,6 +36,11 @@ If explanations are needed during development, I will invoke the explainer skill
 - When proposing solutions, state confidence levels honestly (percentage + plain language qualifier)
 - When debugging: inspect actual data before proposing fixes. Never propose theoretical fixes without observing the failure point first.
 - Use /calmate skill when progress stalls after multiple attempts
+- **MCP automation defaults (added 2026-05-24 — corrects the misread of cost discipline as a blanket "prefer manual" rule).** Three distinct cases, applied in order:
+  1. **MCP-to-existing-subscription-vendor (DEFAULT: automate).** Any connected MCP whose underlying work is billed by an existing subscription Alex already pays for (Canva, Gamma, Notion, HubSpot, Granola Business, Linear, etc.) should be wired into the skill's workflow, not handed off manually. The Anthropic-side token cost of an MCP call is negligible (small JSON request/response). Manual handoff in these cases is friction without quality lift.
+  2. **Manual step justified by judgment load (KEEP manual).** When the step requires Alex's judgment (review before a contact lands in CRM, approve copy before publishing to a channel, sign off on a strategic decision), keep it manual. The rule is *automate where automation preserves quality*, not *automate everything that's MCP-eligible.*
+  3. **Anthropic-side inference cost discipline (the original rule, still applies).** Don't burn Claude tokens on redundant inference, oversized contexts, repeated re-runs of expensive operations, or architecture that compounds API spend. This rule is about Anthropic billing, NOT about whether to use vendor MCPs.
+- **Pattern to watch for:** "Tool: X" in a skill spec usually meant *Alex copies output into tool X manually* — that's a manual handoff pattern from before MCPs were broadly available. When you see this pattern, audit whether the tool has a connected MCP; if yes, default to automation per rule 1 above unless judgment load (rule 2) gates it.
 </behavioral_rules>
 
 <standing_context>
