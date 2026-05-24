@@ -189,7 +189,44 @@ If Notion and Linear MCPs are available in the current session:
 
     Update strategy: use `replace_content` only on first turn or when the page body is scaffolding-only. On n+1, prefer `update_content` with anchored swaps so existing content is preserved unless explicitly superseded. Per-property updates (e.g., Architecture Summary) use `update_properties`.
 
-2. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`. Wire `blockedBy` from the PRD's "Depends on" lines so the dependency graph is queryable in Linear's view layer. Create labels as workspace-scoped if they don't already exist.
+2. **Linear:** emit one issue per PRD user story via `mcp__claude_ai_Linear__save_issue`.
+
+    **Operational call shape (added 2026-05-24 — replaces prior intent-only spec):**
+
+    Step 2a — Resolve the project:
+
+    - Call `mcp__claude_ai_Linear__list_projects` with `query: "{project name}"` to fuzzy-match against existing Linear projects.
+    - If a clear match exists (substring or known alias — e.g., "Capstone 2" → "Full-Stack GTM Roadmap (24-week half)"), pass `project: "<exact name>"` to every `save_issue` call below.
+    - If no match exists, leave `project` unset rather than auto-creating one. The orchestrator should NOT create Linear projects unilaterally; that decision belongs to Alex. Surface this in the final delivery so he can move issues into the right project after the fact.
+
+    Step 2b — Per user story, fire one save_issue call:
+
+    ```
+    mcp__claude_ai_Linear__save_issue({
+      team: "Yedibalian",               // only team; hardcode unless multi-team future
+      project: "<resolved name from Step 2a, or omit>",
+      title: "<user story headline — derived from PRD's user-story title>",
+      description: "<full user story body in markdown — acceptance criteria, technical notes, context>",
+      labels: ["cycle-{n}", "project-{slug}"],   // create workspace-scoped if missing — Linear MCP auto-creates labels by name
+      priority: 3,                       // default Medium; derive from PRD-stated priority if explicit
+      blockedBy: ["{LIN-id-from-prior-call}", ...]   // wire from PRD's "Depends on" lines (see Step 2c)
+    })
+    ```
+
+    Step 2c — Wire blockedBy chain:
+
+    User stories in a PRD usually have explicit "Depends on" or "Requires" lines pointing at earlier user stories in the same PRD. To wire these as Linear `blockedBy`:
+    1. Process user stories in dependency order (no story is filed before its blockers).
+    2. For each filed issue, capture the returned issue ID (e.g., `YED-123`) into an in-memory map keyed by user story title.
+    3. When filing a story that depends on another, look up the blocker's title in the map → pass its issue ID in `blockedBy`.
+    4. If a dependency points outside this PRD (e.g., a pre-existing issue Alex named), use that issue's ID as supplied. If the issue isn't yet filed and isn't in the current PRD, log the dependency gap and surface it in delivery — don't silently drop the dependency relationship.
+
+    Step 2d — Failure modes:
+
+    - **Auth error on save_issue:** report immediately, do NOT fall back to text-only output silently. Alex needs to reconnect Linear via `/mcp`.
+    - **Label doesn't exist:** Linear MCP auto-creates labels by name when passed in the `labels` array — no separate label-creation call needed.
+    - **Project resolution returns multiple matches:** present the top 3 candidates to Alex and ask which project these issues should land in. Don't guess.
+    - **blockedBy issue ID not yet known (the blocker was filed in this same run but the API hasn't returned):** wait for the save_issue response containing the blocker's ID before firing the dependent issue. Don't pre-fire dependents and hope the chain resolves later.
 
 3. **ChatPRD (added 2026-05-24):** persist the PRD as a standalone document via `mcp__claude_ai_ChatPRD__create_document`. Notion is the home for the full project artifact graph (PRD + Orchestration Log + Future-State Register + Evolution Log); ChatPRD is the discoverable, shareable, comment-able PRD copy. Both writes are complementary, not redundant — different consumers, different surfaces.
 
