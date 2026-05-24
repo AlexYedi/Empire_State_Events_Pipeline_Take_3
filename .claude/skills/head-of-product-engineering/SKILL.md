@@ -191,6 +191,23 @@ If Notion and Linear MCPs are available in the current session:
 
 2. **Linear:** emit one issue per PRD user story, labeled `cycle-{n}` and `project-{slug}`. Wire `blockedBy` from the PRD's "Depends on" lines so the dependency graph is queryable in Linear's view layer. Create labels as workspace-scoped if they don't already exist.
 
+3. **ChatPRD (added 2026-05-24):** persist the PRD as a standalone document via `mcp__claude_ai_ChatPRD__create_document`. Notion is the home for the full project artifact graph (PRD + Orchestration Log + Future-State Register + Evolution Log); ChatPRD is the discoverable, shareable, comment-able PRD copy. Both writes are complementary, not redundant — different consumers, different surfaces.
+
+    Call shape:
+
+    ```
+    mcp__claude_ai_ChatPRD__create_document({
+      title: "{project name} — PRD (cycle {n})",
+      contentMarkdown: "<the PRD section content only — not the full page body>",
+      summary: "<one-sentence what + why-now from the PRD>",
+      projectId: "<from list_projects fuzzy-match if Alex referenced a ChatPRD project>"
+    })
+    ```
+
+    Pass ONLY the PRD section (not the Orchestration Log, Register, or Evolution Log) — those are Notion-native artifacts that don't translate well to ChatPRD's document model. Surface the resulting ChatPRD URL alongside the Notion page URL in the final response.
+
+    On n+1 cycles: search via `mcp__claude_ai_ChatPRD__search_documents` for the existing PRD (title prefix match on project name). If found, call `update_document` instead of `create_document` to keep the PRD's comment thread + version history intact.
+
 ### Notion delivery gotchas (verified 2026-04-26)
 
 - **Markdown TOC syntax does NOT work via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. Only workaround is the static page-index callout above plus the `/toc` slash command in the Notion UI (one-time per page, then auto-updates).
