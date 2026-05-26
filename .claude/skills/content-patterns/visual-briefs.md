@@ -208,16 +208,36 @@ For each slide in the brief, construct a `generate-design` call:
 
 ```
 mcp__claude_ai_Canva__generate-design({
-  design_type: "instagram_post",   // 1080x1350, native 4:5 LinkedIn carousel ratio
+  design_type: "instagram_post",   // STEP 1 ONLY: Canva's single 4:5 (1080×1350) social canvas — NOT a LinkedIn asset yet; resize in Step 2
   query: "<prose payload built from the slide spec — see template below>",
   user_intent: "Generate slide N of M for [post title] — [slide job]"
 })
 ```
 
-`design_type: "instagram_post"` is the correct choice for LinkedIn carousel
-slides — it generates at 1080x1350px (portrait, 4:5 ratio), which is LinkedIn's
-native carousel slide dimension. Do NOT use `presentation` (16:9, wrong ratio
-for carousels) or `pinterest_pin` (wrong aspect).
+⚠️ **Canva `generate-design` has NO `linkedin_post` type** — the enum only offers
+`instagram_post`, `facebook_post`, `twitter_post`, `your_story`, `presentation`,
+etc. We use `instagram_post` ONLY because it is Canva's single 4:5 portrait social
+canvas (1080×1350), which equals LinkedIn's optimal portrait ratio. But it is NOT a
+LinkedIn asset on generation: it lands titled "Instagram Post" and can inherit
+Instagram design conventions. So generation is a **two-step pattern** — generate the
+4:5 canvas (above), then resize to LinkedIn spec (below). Do NOT use `presentation`
+(16:9) or `pinterest_pin` (2:3) — wrong ratios. (Recurring defect — visuals shipping
+as Instagram posts — fixed 2026-05-26.)
+
+**Step 2 — resize the chosen candidate to LinkedIn spec (MANDATORY; this also re-types it off "Instagram Post"):**
+
+```
+mcp__claude_ai_Canva__resize-design({
+  design_id: "<created design id>",
+  design_type: { type: "custom", width: 1080, height: 1350 },   // LinkedIn 4:5; use 2160×2700 for retina
+  user_intent: "Resize to LinkedIn-optimized 4:5 portrait — not an Instagram post"
+})
+```
+
+**LinkedIn output spec (the target — not Instagram):**
+- **Single image (feed):** 1080×1350 (4:5) — the tallest LinkedIn renders in-feed before cropping. Retina: 2160×2700.
+- **Carousel:** a LinkedIn carousel is ONE multi-page **PDF** ("document" post) — NOT N separate images (that's the Instagram pattern). After the slide winners are chosen and resized, `merge-designs` them into one multi-page design, then `export-design` as PDF for the LinkedIn document upload.
+- Never ship a deliverable as a bare `instagram_post`-typed design.
 
 ### Query payload template
 
@@ -279,7 +299,10 @@ slides matching each other.
 all candidates as a markdown table (slide number, candidate letter, preview
 URL, thumbnail URL) and waits for Alex's selection. Once selected, fire
 `mcp__claude_ai_Canva__create-design-from-candidate` to land the winners in
-Alex's Canva account.
+Alex's Canva account. Then immediately `resize-design` each winner to LinkedIn
+spec (Step 2 above) — do not leave them as Instagram-typed designs. For
+multi-slide carousels, `merge-designs` the resized winners into one multi-page
+design and `export-design` as PDF for the LinkedIn document post.
 
 If Alex flags any candidate as "close but needs X," use
 `mcp__claude_ai_Canva__perform-editing-operations` to iterate without
