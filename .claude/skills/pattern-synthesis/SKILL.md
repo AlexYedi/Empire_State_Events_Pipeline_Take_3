@@ -161,14 +161,16 @@ Produce the carousel brief in the output schema defined at the bottom of
 
 If any gate fails, redraft before moving to Step 6c.
 
-### Step 6c — Auto-render the carousel via Canva MCP (added 2026-05-24)
+### Step 6c — Auto-render the carousel via Gamma MCP (default; updated 2026-05-26)
 
 After the brief passes Step 6b's quality gates AND Step 8 writes the Content
-Draft to Notion, fire `mcp__claude_ai_Canva__generate-design` once per slide
-using the per-slide MCP call shape and query template in
-`../content-patterns/visual-briefs.md` under `## MCP execution — Canva
-auto-render`. Per CLAUDE.md's MCP automation rule, Canva MCP is the default
-ship path — not a manual paste handoff.
+Draft to Notion, generate the carousel with `mcp__claude_ai_Gamma__generate`
+(`format: "social"`, `cardOptions.dimensions: "4x5"`, `numCards` = slide count,
+Stratos theme, `imageOptions.source: "noImages"`, stats-as-visuals in
+`additionalInstructions`) per `../content-patterns/visual-briefs.md` →
+`## MCP execution — Gamma (default); Canva (fallback only)`. Gamma is the default
+ship path; Canva is a fallback only (demoted 2026-05-26 for garbling dense
+labels). The Canva sequence below is retained as that fallback.
 
 **Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1
 and 2 (Thesis A and Thesis B) MUST share visual frame exactly. When building
