@@ -36,20 +36,22 @@ DMs and prepared questions do not get carousels — they are private artifacts.
 The carousel brief is embedded in the LinkedIn post's Notion page body under a
 `## Visual Brief — N-slide carousel` H2 heading, immediately after the post copy.
 
-**Default ship path (updated 2026-05-24): MCP auto-render via Canva.** After
+**Default ship path (updated 2026-05-26): MCP auto-render via Gamma.** Gamma is
+the **default generator for ALL visual content** — singles and carousels. After
 producing the brief, the calling skill (`content-correspondent`,
-`pre-event-content`, `pattern-synthesis`) fires
-`mcp__claude_ai_Canva__generate-design` once per slide and surfaces the design
-candidates back to Alex for selection. Manual handoff to Canva is no longer
-the default — the brief is a machine-readable payload, not a copy-paste spec.
-See `## MCP execution — Canva auto-render` below for the conversion pattern.
+`pre-event-content`, `pattern-synthesis`) fires `mcp__claude_ai_Gamma__generate`
+and surfaces the resulting `gamma.app/docs/...` URL(s) to Alex. Gamma builds
+data-forward layouts (infographics, matrices, stat callouts, charts) from the
+brief content — exactly what these visuals need. See `## MCP execution — Gamma
+(default); Canva (fallback only)` below.
 
-The historical "Tool: Canva / GPT-Image-1 / Imagen 4 / Magic Patterns" routing
-field per slide is retained for human reference (it captures the visual mode
-intent) but is NOT the execution path — Canva MCP is the default for all
-4:5 LinkedIn-carousel slides. Other tools (Imagen, Magic Patterns) are only
-invoked if Canva MCP doesn't satisfy the brief's quality bar (e.g., dense
-org-chart diagrams where Canva's typography-first generation falls short).
+**Why the swap from Canva (2026-05-26):** Canva's `generate-design` repeatedly
+garbled dense text labels (color-name hallucinations, placeholder "Q"s, gibberish
+body copy) and produced Instagram-typed assets. Gamma renders accurate labels +
+real infographics and supports true 4:5 via `format: "social"`. **Canva is now a
+fallback only** (a clean single typography card where Gamma over-designs); Imagen
+for textless conceptual imagery. The per-slide "Tool:" routing field is retained
+as human-readable visual-mode intent, NOT the execution path.
 
 Slide count is determined by the post's thesis complexity, not by a default:
 
@@ -77,10 +79,10 @@ When proposing a post's visual, offer **four distinct format options**, not four
 
 **Emphasis: real visual information** — infographics, architecture / flow diagrams, statistics, charts/graphs, matrices, before/after, "where the value moves." Typography-only cards are a fallback, not the goal; never stock or decorative AI imagery. Every statistic in the post is a candidate for a chart or a stat-callout.
 
-**Tooling (updated 2026-05-26): Gamma is now preferred for carousels and data-forward layouts** — it builds charts, matrices, and stat callouts from content, where Canva's `generate-design` garbled dense labels (see Tool routing below).
+**Tooling (updated 2026-05-26): Gamma is the DEFAULT generator for ALL visual content** — every single image and every carousel — because it builds charts, matrices, and stat callouts from content, where Canva's `generate-design` garbled dense labels.
 - `mcp__claude_ai_Gamma__generate`: pick a dark/editorial theme via `get_themes` (e.g. **Stratos** — deep navy, high-contrast, tech). Set `imageOptions.source: "noImages"` so infographics/diagrams lead instead of stock photos. Put the real stats in `inputText`; `additionalInstructions` should say "turn every statistic into a visual."
-- ⚠️ **Aspect gotcha:** Gamma `format: "presentation"` allows only `16x9 / 4x3 / fluid` — NOT 4:5. For LinkedIn 4:5 portrait, use `format: "social"` (`4x5 / 1x1 / 9x16`). Export carousels as PDF for the LinkedIn document post.
-- Canva remains for clean typography cards; Imagen for textless conceptual imagery only.
+- ⚠️ **Aspect gotcha:** Gamma `format: "presentation"` allows only `16x9 / 4x3 / fluid` — NOT 4:5. For LinkedIn 4:5 portrait (singles AND carousels), use `format: "social"` (`4x5 / 1x1 / 9x16`). Export carousels as PDF for the LinkedIn document post.
+- **Fallbacks only:** Canva for a clean single typography card where Gamma over-designs; Imagen for textless conceptual imagery.
 
 ## The four narrative arcs
 
@@ -210,7 +212,22 @@ Every slide in every carousel must specify:
 
 ---
 
-## MCP execution — Canva auto-render (added 2026-05-24)
+## MCP execution — Gamma (default); Canva (fallback only)
+
+**Default = Gamma.** Use the Gamma pattern from the Option framework above:
+`mcp__claude_ai_Gamma__generate` with `format: "social"` + `cardOptions.dimensions: "4x5"`
+for LinkedIn portrait (singles and carousels), a dark theme (Stratos via `get_themes`),
+`imageOptions.source: "noImages"`, the real stats in `inputText`, and
+`additionalInstructions` telling Gamma to turn every statistic into a visual. Surface
+the `gamma.app/docs/...` URL(s); export carousels as **PDF** for the LinkedIn document
+post. Gamma can't be MCP-edited — Alex refines theme/text in the Gamma editor. For a
+multi-card carousel, generate once with `numCards` set; don't fire per-slide.
+
+The Canva pattern below is a **fallback only** (demoted 2026-05-26 — `generate-design`
+garbled dense labels and produced Instagram-typed assets). Use it only when Gamma can't
+satisfy a brief, e.g. a precise single typography card.
+
+### Canva fallback — auto-render (added 2026-05-24, demoted to fallback 2026-05-26)
 
 After the slide specs are finalized, the calling skill auto-renders the
 carousel by firing one `mcp__claude_ai_Canva__generate-design` call per slide.
