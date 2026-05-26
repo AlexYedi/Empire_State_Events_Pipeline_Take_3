@@ -15,6 +15,8 @@ Five tone pillars — use all five together. They reinforce each other:
 4. **Opinionated but open to being wrong** — Take a position. Invite correction.
 5. **Documentarian, not influencer** — Capture what happened, what it means, and why it matters. Never make it about you.
 
+**Predictions vs. stances (added 2026-05-26):** Soften *predictions about event content* — frame what you expect an event to be about as curiosity or hypothesis ("I was curious going in," "I expected," "the question I brought in"), never a cocky "I predicted." But never soften *stances on subjects, topics, or analysis* — take the bold, contrarian, or definitive position on the substance. The hedge is only for guesses about what an event will contain, used as a narrative starting point.
+
 ## Post Architecture
 
 Default structure for LinkedIn posts (adapted from Hook-Context-Insight-CTA):
@@ -124,6 +126,8 @@ If the answer is no, rework the insight before presenting.
 
 Every LinkedIn post ships with a supporting visual. Text-only posts signal a lack of
 modern content skill and get filtered out by the audience Alex targets.
+
+**Visuals must add, never repeat (added 2026-05-26):** A visual earns its place only by adding information the post text doesn't carry — a structure, comparison, progression, architecture, or "where-the-value-moves" view. Re-printing quotes or lines already in the post (e.g., a quote-card carousel of lines you already wrote) is text-forward repetition, not visual content. Canonical carousel rules: `.claude/skills/content-patterns/visual-briefs.md`.
 
 ### Visual Output Per Post: 3 Briefs
 1. **Directly Supportive (Data/Stat)** — Clean visual reinforcing the post's key data point
@@ -271,5 +275,6 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 
 ---
 
-*Last updated: 2026-04-18*
+*Last updated: 2026-05-26*
+*Version: 0.4 — Added (1) predictions-vs-stances voice rule and (2) visuals-must-add rule, from the AI Demo Night post review. See memory `feedback-comment-workflow-2026-05-26`.*
 *Version: 0.3 — Added 10 visual content best practices (format specs, 2-second thumb test, one-visual-one-idea, data principles, carousel architecture, color strategy, AI prompting rules, accessibility, format-by-content-type)*
