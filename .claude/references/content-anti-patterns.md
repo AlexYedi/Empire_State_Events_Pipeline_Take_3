@@ -33,6 +33,7 @@
 | Ending with "Thoughts?" | Lazy CTA. If you want engagement, ask something specific enough to answer. |
 | Wall of hashtags | More than 5 hashtags looks desperate. 2-5, relevant, specific. |
 | Tagging everyone mentioned | Looks like engagement farming. Alex formats cross-platform manually. |
+| Cocky **predictions about event content** ("I predicted X would be about Y") | Reads arrogant. Frame predictions about what an event *will be / contain* as curiosity or hypothesis ("I was curious going in", "I expected", "the question I brought in"). ⚠️ Applies ONLY to event-content predictions — do NOT temper definitive or contrarian **stances on subjects/topics/analysis**; keep those bold. (Added 2026-05-26, AI Demo Night post review.) |
 
 ## DM Anti-Patterns
 
@@ -66,6 +67,7 @@
 | Relying on color alone to convey meaning | Use labels, patterns, or icons alongside color — not instead of them. |
 | Tiny or missing source attribution on data visuals | If the number is worth showing, the source is worth citing. Small text, bottom corner. |
 | Visual tries to show multiple ideas | One visual = one idea. If you need three, make three visuals (or a carousel). |
+| **Quote-card carousel that re-prints the post** | Visuals must ADD information, not repeat the copy. Ensconcing quotes/lines already in the post body into slides is text-forward repetition, not visual content. Use visuals for architectures, user journeys, graphs, before/after states, frameworks, or "where the value moves" diagrams — anything clearer or more compelling *in visual form*. If a slide adds no new / simpler / more-compelling information beyond the text, cut it. (Added 2026-05-26, AI Demo Night post review — supersedes the default Arc-4 quote-card carousel pattern; propagate to `content-patterns/visual-briefs.md`.) |
 
 ## AI Image Prompting Anti-Patterns
 
@@ -80,5 +82,6 @@
 
 ---
 
-*Last updated: 2026-04-18*
+*Last updated: 2026-05-26*
+*Version: 0.4 — Added two anti-patterns from the AI Demo Night post review: (1) cocky predictions about event content (soften predictions, NOT subject-matter stances); (2) quote-card carousels that re-print the post (visuals must ADD, not repeat). See memory `feedback-comment-workflow-2026-05-26`.*
 *Version: 0.3 — Added Visual Anti-Patterns and AI Image Prompting Anti-Patterns sections from 10 best practices doc*
