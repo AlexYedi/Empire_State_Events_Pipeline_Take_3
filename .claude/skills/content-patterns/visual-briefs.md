@@ -173,10 +173,24 @@ Every slide in every carousel must specify:
    *looks*. This is the accessibility artifact and the LLM-readable version of
    the slide for posts that get scraped by agents.
 9. **Tool routing** — which tool the slide is best generated in:
-   - **GPT-Image-1 or Gemini Imagen 4** — clean diagrams with accurate text labels
+   - **Labeled concept diagrams** (boxes + arrows, before/after, "where the value
+     moves," stack/layer diagrams, anything whose meaning depends on text labels) —
+     build as a **Canva typography + shape layout**: real editable text + simple
+     rectangles/arrows. **NEVER a single generated image.** Generated-image tools
+     (Imagen / GPT-Image / Stable Diffusion) bake labels into pixels, where they
+     come out garbled, duplicated, or misspelled — observed live on the AI Demo
+     Night "moat moves" visual (2026-05-26). If Canva's typography generation can't
+     hold the layout, fall back to **Gemini Imagen 4** *only* with an explicit
+     "accurate, non-duplicated, correctly-spelled text labels" instruction — and
+     reject any raster whose labels are garbled. The label must be real text, not
+     generated pixels.
+   - **GPT-Image-1 or Gemini Imagen 4** — photographic, illustrative, or *textless*
+     conceptual imagery only (no embedded labels to misspell)
    - **Magic Patterns** — branded marks, dashboards, designed components
-   - **Canva** — bold typography cards, quote cards, simple data viz
-   - **Avoid** — Stable Diffusion variants for any slide with dense text labels
+   - **Canva** — bold typography cards, quote cards, simple data viz, AND labeled
+     concept diagrams (per the first bullet above)
+   - **Avoid** — any single generated/raster image for a slide whose meaning
+     depends on text labels (Stable Diffusion variants especially)
 
 ---
 
