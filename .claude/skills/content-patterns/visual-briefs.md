@@ -133,6 +133,13 @@ format), **weekly roundup posts** covering multiple events.
 Slides 2-N must all follow the same template (name + role + their angle) so
 the reader can compare. Vary the *content*, not the *frame*.
 
+> **Arc 4 guard (added 2026-05-26):** quote/stat cards are valid ONLY if each
+> perspective slide ADDS context the post body doesn't already state — e.g., what
+> the speaker actually built/demoed, or a distinct data point. If the post text
+> already lists the quotes, a quote-card-per-speaker carousel is pure repetition.
+> Pick a different arc instead (often Arc 1 or Arc 3) that visualizes the
+> *implication* of the convergence rather than re-printing the quotes.
+
 ---
 
 ## Universal slide requirements
@@ -309,6 +316,10 @@ Run these against every carousel brief before shipping it into Notion:
   source line. Carousels without sources read as opinion, not reporting.
 - **Slide count integrity** — is each slide load-bearing? If you could ship the
   carousel without slide 3 and lose nothing, slide 3 is decoration. Cut it.
+- **Adds information (not repetition)** — does each slide carry something the
+  post text doesn't already say? A slide that re-prints a quote or line from the
+  post fails. Visuals add structure, comparison, progression, or a diagram —
+  never a re-typeset of the copy. (Added 2026-05-26.)
 - **Final slide earns the swipe** — the final slide is what the reader is left
   with. A weak final slide ("Follow for more") tells the reader the carousel
   was filler. The final slide should be the question, the take, or the
@@ -325,6 +336,12 @@ toward them:
   Each slide must take a different perspective on the same thesis.
 - **Recap-of-the-post slides.** "Here's what we covered." The carousel IS the
   coverage. Recap slides signal the carousel doesn't trust the rest of itself.
+- **Quote-card carousels that re-print the post body.** If the slides just
+  typeset quotes or lines already written in the post, the carousel adds nothing
+  — it's text-forward repetition, not visual content. A visual earns its place
+  only by adding a structure, comparison, progression, architecture, or
+  "where-the-value-moves" view the copy doesn't carry. (Added 2026-05-26, AI Demo
+  Night post review.)
 - **Generic AI hero shots.** A glowing brain, a robot at a desk, a city skyline
   with overlay text. Stock-AI imagery is the visual equivalent of consultant-ese.
 - **Photographic people on individual slides.** Generated faces or photographic
