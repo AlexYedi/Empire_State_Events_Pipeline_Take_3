@@ -66,6 +66,22 @@ copy.
 
 ---
 
+## Option framework (added 2026-05-26 — Alex review)
+
+When proposing a post's visual, offer **four distinct format options**, not four near-identical candidates of one design:
+
+1. **Single image A** — one infographic / diagram concept.
+2. **Single image B** — a *different* single concept (a different cut: matrix vs. graph vs. comparison).
+3. **3-slide carousel** — condensed arc.
+4. **5-slide carousel** — full arc.
+
+**Emphasis: real visual information** — infographics, architecture / flow diagrams, statistics, charts/graphs, matrices, before/after, "where the value moves." Typography-only cards are a fallback, not the goal; never stock or decorative AI imagery. Every statistic in the post is a candidate for a chart or a stat-callout.
+
+**Tooling (updated 2026-05-26): Gamma is now preferred for carousels and data-forward layouts** — it builds charts, matrices, and stat callouts from content, where Canva's `generate-design` garbled dense labels (see Tool routing below).
+- `mcp__claude_ai_Gamma__generate`: pick a dark/editorial theme via `get_themes` (e.g. **Stratos** — deep navy, high-contrast, tech). Set `imageOptions.source: "noImages"` so infographics/diagrams lead instead of stock photos. Put the real stats in `inputText`; `additionalInstructions` should say "turn every statistic into a visual."
+- ⚠️ **Aspect gotcha:** Gamma `format: "presentation"` allows only `16x9 / 4x3 / fluid` — NOT 4:5. For LinkedIn 4:5 portrait, use `format: "social"` (`4x5 / 1x1 / 9x16`). Export carousels as PDF for the LinkedIn document post.
+- Canva remains for clean typography cards; Imagen for textless conceptual imagery only.
+
 ## The four narrative arcs
 
 Every carousel uses one of these four arcs. Each arc is a different way to render
