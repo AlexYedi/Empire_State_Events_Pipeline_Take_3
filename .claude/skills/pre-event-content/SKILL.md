@@ -145,6 +145,7 @@ Present as inline options. Step 5 (autoresearch) will pick the strongest hook an
 - 2-5 relevant hashtags
 - Emoji sparingly
 - Documentarian framing: specific detail (reporter), synthesis (student), interpretation (analyst) — hit at least one
+- **Source-check (added 2026-05-26):** any firm/person thesis or positioning claim is source-backed in the brief; if it's an unsourced brief assertion, verify or cut before this goes public
 
 ---
 
@@ -375,6 +376,7 @@ Suggestion: [what kind of signal would unlock this]
 - **Character count ≤ 200** (counted including spaces and punctuation, before submission to Alex)
 - Cold-email-personalization rubric score ≥80
 - Specific person-signal is cited (not just "your work at [Company]")
+- **Source-check (added 2026-05-26):** any claim about the person's or their firm's thesis/positioning is source-backed — don't assert an unverified brief claim in a note the person may read
 
 ---
 

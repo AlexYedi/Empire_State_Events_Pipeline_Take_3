@@ -53,6 +53,8 @@ If you cannot source a real personal hook OR a real professional hook, write **"
 
 If a person isn't findable via web search, say so explicitly: "[Name] not findable via web search — Alex may know context that's not online." Don't fabricate a bio.
 
+**Thesis / POV sourcing (added 2026-05-26):** any *positioning or belief* claim about the person or their org ("their thesis is X", "they bet on Y over Z") must cite a primary source. If you can't source it, list it under the brief's Verification Flags as "unverified thesis claim — source-check before public use" — never state it as fact. These claims flow into public posts and connection notes.
+
 ## Prioritization Signals are NOT sales qualification
 
 This is an attention-allocation filter for the 20–40 minutes Alex will actually get in the room — not a "is this a qualified prospect" exercise. Frame accordingly.
