@@ -230,6 +230,8 @@ Alex knows before walking in where to spend the 20–40 minutes he'll actually g
 **Important:** Search for "[Name] [Company]" AND "[Name] [Topic]" to find relevant content.
 If someone is not findable via web search, note that honestly — don't fabricate a bio.
 
+**Thesis / POV sourcing (added 2026-05-26):** any *positioning or belief* claim about a person or their org ("their thesis is X", "they bet on Y over Z", "they believe W") must cite a primary source inline. If you can't source it, put it under Verification Flags as "unverified thesis claim — source-check before public use" — never state it as fact. These claims flow into public posts and connection notes the person may read; an unsourced one is a credibility risk.
+
 ### 2c: Companies
 
 **Sources:** WebSearch (funding, product news, press) → Claude training data (industry positioning)
@@ -243,6 +245,8 @@ For each company:
 - Recent funding amount if discoverable (for "Recent Funding ($)" field)
 - Why this company matters in the context of this event and Alex's goals
 - Headwinds or challenges (shows Alex is informed, not just cheerleading)
+
+**Thesis / positioning sourcing (added 2026-05-26):** any claim about a company's *thesis, strategy, or positioning* ("their fund bets on X over Y", "they're pivoting to Z") must cite a primary source. If unsourced, flag it under Verification Flags as "unverified — source-check before public use," not as fact. These claims reach public content.
 
 ### 2d: Documentarian Angle
 

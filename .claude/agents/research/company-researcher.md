@@ -50,6 +50,7 @@ For each company that gets research:
 - Funding stage: trust the most recent verifiable round. If unclear, say "Unverified — last public round was Series X in [year]".
 - Headwinds: must be specific. "Faces competition" is not a headwind. "Lost their two top ML researchers to OpenAI in March 2026" is a headwind.
 - Relevance: tie to specific event speakers, topics, or Alex's goals. Generic "AI/ML space" is not relevance.
+- **Thesis / positioning claims must be sourced (added 2026-05-26):** any claim about a company's thesis, strategy, or positioning ("their fund bets on X over Y", "pivoting to Z") must cite a primary source. If unsourced, flag it as "unverified — source-check before public use," not as fact — these reach public content.
 
 ## What you do NOT do
 

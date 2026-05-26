@@ -59,6 +59,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 - Quick Take is mobile-readable in 30 seconds.
 - Success Signals include at least one anti-signal.
 - Verification flags from specialists (mismatched domains, ambiguous identities, etc.) must be surfaced prominently in the brief, not silently resolved.
+- **Unsourced thesis/positioning claims (added 2026-05-26):** any firm- or person-level thesis / positioning / belief claim from a specialist that lacks a primary-source citation must appear under Verification Flags as "unverified thesis claim — source-check before public use." Do not promote it to a stated fact in the brief body — these claims flow into public posts.
 
 ## Reference
 

@@ -333,6 +333,8 @@ Notes approach replaces Static Lists for event association (list write not avail
 9. Notion page body for long-form text, properties for structured/filterable data
 10. Search Notion databases for existing records before creating to prevent duplicates (Notion has no native dedup)
 11. Search HubSpot by name+company before creating contacts to prevent duplicates (email is primary dedup key)
+12. **Source-check firm/person thesis claims before public use (added 2026-05-26).** Any firm- or person-level *thesis / positioning / belief* claim ("X's fund bets on Y over Z", "X believes W") must carry a primary-source citation before it lands in public-facing content (LinkedIn post, connection note, DM). If a research brief asserts such a claim without a cited source, treat it as unverified — verify via web search, or flag it and soften/cut. Prompted by an Alumni Ventures thesis claim that flowed unsourced from brief → public post; it verified clean, but the gap was real.
+13. **Gamma is the default visual generator (added 2026-05-26).** Gamma builds accurate infographics/charts/matrices from content and supports true 4:5 via `format: "social"`. Canva `generate-design` garbled dense labels and produced Instagram-typed assets — now a fallback only (clean single typography cards); Imagen for textless conceptual imagery. Canonical spec: `.claude/skills/content-patterns/visual-briefs.md`.
 
 ### SDK runtime constraints (added 2026-05-07 — orchestrator → synthesizer pivot)
 
