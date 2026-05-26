@@ -258,9 +258,10 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 
 | Need | Tool |
 |---|---|
-| Social-optimized infographic, designed graphic | Canva |
-| Multi-slide carousel (LinkedIn PDF) | Gamma or Canva |
-| Custom conceptual image, photorealistic, or editorial | Gemini (Imagen 3) |
+| Social-optimized infographic / data graphic / designed slide | **Gamma** (default — builds charts, matrices, stat callouts) |
+| Multi-slide carousel (LinkedIn PDF) | **Gamma** (`format: social`, 4:5; export PDF) |
+| Custom conceptual image, photorealistic, or editorial | Gemini (Imagen) |
+| Clean single typography card (fallback) | Canva |
 | Presentation-style video | Google Vids |
 
 ### Visual Identity (Minimal V1)
