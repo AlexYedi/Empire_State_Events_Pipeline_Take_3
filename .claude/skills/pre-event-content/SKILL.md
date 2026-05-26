@@ -230,39 +230,28 @@ the carousel brief. If any gate fails:
 Do NOT ship a brief with a flagged gate. The gate exists because that failure
 mode is repeating across runs.
 
-### Step 3b.5: Auto-render the carousel via Canva MCP (added 2026-05-24)
+### Step 3b.5: Auto-render the visual via Gamma MCP (default; updated 2026-05-26)
 
-**Replaces the historical "briefs only, not images" rule** — that rule was a
-misread of cost discipline as a blanket "Alex prefers manual." Per CLAUDE.md's
-MCP automation rule, MCP calls to existing-subscription vendors (like Canva)
-are the default; manual is reserved for judgment-load steps.
+Gamma is the **default generator for all visual content** (singles and carousels)
+— see `../content-patterns/visual-briefs.md` → `## MCP execution — Gamma
+(default); Canva (fallback only)`. Canva was demoted to fallback 2026-05-26 (it
+garbled dense labels and produced Instagram-typed assets).
 
-After Step 4 writes the Content Draft (post + embedded brief) to Notion, fire
-`mcp__claude_ai_Canva__generate-design` once per slide using the per-slide MCP
-call shape and query template defined in
-`../content-patterns/visual-briefs.md` under `## MCP execution — Canva
-auto-render`.
-
-Sequence per slide:
-1. Build the prose `query` payload from the slide spec (headline, body, palette,
-   anti-patterns, context — all already in the brief).
-2. Call `mcp__claude_ai_Canva__generate-design` with
-   `design_type: "instagram_post"` (the 1080x1350 / 4:5 ratio matches LinkedIn
-   carousel native dimension).
-3. Receive 4 design candidates per slide.
-4. Surface all candidates to Alex in a single markdown table covering all
-   slides (slide #, candidate letter, preview URL, thumbnail URL).
-5. On Alex's selection, fire `mcp__claude_ai_Canva__create-design-from-candidate`
-   per chosen design to land them in Alex's Canva account.
-6. If Alex flags "close but tweak X," iterate via
-   `mcp__claude_ai_Canva__perform-editing-operations` — do NOT re-fire
-   `generate-design` for minor tweaks (that discards visual DNA).
-
-Frame parallelism enforcement: for Arc 2 / Arc 3 paired slides and for the
-slides 2..N-1 quote-card sequence in Arc 4, include an explicit "IDENTICAL
-layout to slide N" instruction in the `query` payload per the visual-briefs.md
-template. Without this, Canva auto-styles each slide independently and the
-parallel structure breaks.
+After Step 4 writes the Content Draft (post + embedded brief) to Notion:
+1. Offer the **four format options** from visual-briefs.md (2 singles + 3-slide +
+   5-slide carousel); let Alex pick, or generate the recommended option.
+2. Fire `mcp__claude_ai_Gamma__generate` with `format: "social"` +
+   `cardOptions.dimensions: "4x5"` for LinkedIn portrait (NOT `presentation`,
+   which forces 16:9/fluid), a dark theme via `get_themes` (e.g. Stratos),
+   `imageOptions.source: "noImages"`, the real stats in `inputText`, and
+   `additionalInstructions` telling Gamma to turn every statistic into a visual.
+   For a carousel set `numCards` and generate once (not per-slide).
+3. Surface the `gamma.app/docs/...` URL(s). Gamma can't be MCP-edited — Alex
+   refines theme/text in the Gamma editor. Export carousels as PDF for the
+   LinkedIn document post.
+4. **Fallback:** if Gamma can't satisfy a specific brief (e.g. a precise single
+   typography card), fall back to Canva per the Canva-fallback pattern in
+   visual-briefs.md.
 
 ### Step 3b.6: Other rules
 
@@ -275,10 +264,9 @@ parallel structure breaks.
 - **Voice propagation.** If `update-voice-and-style.md` runs and updates the
   written voice, the visual voice in `visual-briefs.md` must be reviewed in the
   same pass. They are paired.
-- **Tool routing field is metadata, not execution.** The "Tool: Canva / GPT-Image-1 /
-  Imagen 4 / Magic Patterns" line per slide describes visual mode intent for
-  human reference. Execution is Canva MCP unless the slide explicitly requires
-  a tool Canva doesn't handle well (rare — dense diagrams primarily).
+- **Tool routing field is metadata, not execution.** The "Tool:" line per slide
+  describes visual-mode intent for human reference. **Execution defaults to Gamma**
+  (see visual-briefs.md); Canva and Imagen are fallbacks only.
 
 ---
 
