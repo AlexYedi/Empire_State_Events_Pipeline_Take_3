@@ -178,7 +178,7 @@ Quick reference of everything that requires your action:
 | **Discovery** | Find + register for events | Ongoing |
 | **Research trigger** | Paste invite, invoke skill, review brief | Per event |
 | **Content trigger** | Invoke skill, select variants, feedback on voice/tone | Per event |
-| **Visual creation** | Use Canva/Gemini/Gamma with generated briefs | Per event |
+| **Visual creation** | Use **Gamma** (default; per visual-briefs.md); Canva/Imagen fallback | Per event |
 | **Content publishing** | Post to LinkedIn, send DMs | Per event |
 | **Ideation trigger** | Invoke skill, review proposals, select projects | Per event |
 | **Building** | Execute roadmap, deploy, document | Per active project |

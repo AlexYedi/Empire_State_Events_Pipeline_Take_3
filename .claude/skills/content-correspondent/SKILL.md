@@ -218,21 +218,17 @@ When Alex gives you event input, produce:
    two. Run the quality gates from `visual-briefs.md` before handing the brief
    to Alex.
 
-6. **Auto-render the carousel via Canva MCP** (added 2026-05-24) — after the
-   brief is finalized AND the Content Draft is written to Notion via
-   `notion-writer`, fire `mcp__claude_ai_Canva__generate-design` once per
-   slide using the per-slide MCP call shape and query template defined in
-   `../content-patterns/visual-briefs.md` under `## MCP execution — Canva
-   auto-render`. Each call returns 4 design candidates. Surface all candidates
-   to Alex in a markdown table (slide #, candidate letter, preview URL,
-   thumbnail URL) and wait for selection. On selection, fire
-   `mcp__claude_ai_Canva__create-design-from-candidate` per chosen design to
-   land them in Alex's Canva account. If Alex flags "close but tweak,"
-   iterate via `mcp__claude_ai_Canva__perform-editing-operations` — do not
-   re-fire generate-design for tweaks. This step replaces the historical
-   "Alex pastes the brief into Canva manually" handoff per CLAUDE.md's MCP
-   automation rule. The brief still ships in the Notion page body as a human
-   reference, but the rendering happens automatically.
+6. **Auto-render the visual via Gamma MCP** (default; updated 2026-05-26) — after
+   the brief is finalized AND the Content Draft is written to Notion via
+   `notion-writer`, generate with `mcp__claude_ai_Gamma__generate` per
+   `../content-patterns/visual-briefs.md` → `## MCP execution — Gamma (default);
+   Canva (fallback only)`: `format: "social"`, `cardOptions.dimensions: "4x5"`,
+   `numCards` = slide count, Stratos theme, `imageOptions.source: "noImages"`,
+   stats-as-visuals in `additionalInstructions`. Surface the `gamma.app/docs/...`
+   URL(s); Gamma can't be MCP-edited (Alex refines in the Gamma editor); export
+   carousels as PDF. Gamma is the default — Canva is a fallback only (demoted
+   2026-05-26 for garbling dense labels). The brief still ships in the Notion
+   page body as the human reference.
 
 **On request (or when Day 7 / Day 21 timing comes up in the conversation):**
 
