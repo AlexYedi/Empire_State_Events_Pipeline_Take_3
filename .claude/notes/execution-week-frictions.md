@@ -223,3 +223,29 @@ The rule that was set 2026-05-15 was "resist architecture work that delays publi
 - Did Alex use `/post-event-content` more than once per event-attended, or was it run-once-and-move-on?
 - Was 36h the right date window, or did we need to widen to 48h on real-world data?
 - Did the structured input (summary + transcript) actually produce better drafts than Mode B (manual paste) would have? If summary alone or transcript alone is better, prune the unused half.
+
+---
+
+## 2026-05-27 — First live full-pipeline run (manual transcript → dual-angle content) + new gotchas
+
+### Context
+Ran the post-event pipeline end-to-end, live, as a deliberate full-system test on the **Scaling Enterprise AI Agents** transcript (5-speaker panel, manually pasted `.docx` — Granola didn't record). Produced TWO parallel content packages (Alex wanted optionality to review same-night): Path A *"Engineering now runs security,"* Path B *"Measurement is the gate."* Every stage fired: inline transcript conditioning → content-correspondent (Mode B) → 2 visual briefs → 2 live Gamma carousels → notion-writer (6 Content Drafts) → notion-update link-back. Zero property rejections on the Notion writes; People name→URL mapping resolved by the agent itself.
+
+### Findings (the point of the test)
+
+1. **Mode A is unusable for walk-up / pasted-transcript events.** `/post-event-content` is hard-wired to Granola; with a pasted transcript the only path was invoking content-correspondent directly in Mode B. **TODO:** thin `/post-event-content-manual` wrapper, or a `--paste` branch on the existing command, so Mode B has a front door instead of riding the skill bare.
+
+2. **Transcript conditioning is real work that wasn't a formal stage.** Speaker resolution + entity normalization + a confidence-scored quote bank materially de-risked the quotes (raw ASR mangled Vercel→"Purcell", Salehi→"vahan", MCP→"FCP", agentic→"genetic"; diarized "Speaker N" labels smeared identity). Codified as a v1 skill stub: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md`. NOT yet wired as an automatic upstream step. Distinct from `transcript-analysis` (that's N≥10 sales-call mining; this is single-event content conditioning).
+
+3. **New Notion gotcha (now logged as CLAUDE.md update-page gotcha "l").** `notion-update-page` `update_content` `old_str` must match the STORED markdown — Notion normalizes `_italics_` → `*italics*` on write, so a match against the authored underscore form failed with "No matches found." Fetch-then-match, or author the match with asterisks. (Hit live wiring the Gamma carousel URLs into the two post drafts.)
+
+4. **Gamma:** `numCards` is silently ignored when `cardSplit: "inputTextBreaks"` — card count = number of `---` delimiters. Control count with delimiters, not `numCards`. Minor note worth adding to `visual-briefs.md`.
+
+5. **Source-flag (Rule 12) carried correctly.** Speaker lines treated as primary (transcript); the "847 deployments / 76% failed / 94% named owner" stat on the carousels came from the brief's cited sources — flagged to Alex to spot-check that citation before either post goes public. No firm/person *thesis* claim asserted unsourced.
+
+6. **Positive signal:** notion-writer generalized cleanly from its event-research design to standalone Content-Draft creation + relation resolution, despite its SKILL reference being event-research-centric. The agent set is more reusable than its docs imply.
+
+### Decisions deferred to Alex
+- Pick a post to ship (or stagger A and B across the week — they don't compete; A is contrarian, B is data-backed).
+- Refine carousels in the Gamma editor (no MCP edit), export PDF for the LinkedIn document post.
+- Wire-ups (TODO 1 + finding-2 upstream wiring + finding-4 visual-briefs note) batched here, not actioned, pending green-light. Note: skill/command/agent changes are session-frozen — any wire-up needs a FRESH conversation to validate.
