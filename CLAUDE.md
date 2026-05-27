@@ -400,6 +400,12 @@ j. **`<` in body text is auto-escaped to `\<`** in stored markdown but renders c
    (`\<5min` → `<5min`). Cosmetic only — don't try to "fix" it by removing the escape.
 k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` blocks** on write. Rendered as 
    real Notion tables (sortable, filterable, resizable columns) — preferred over leaving them as raw markdown.
+l. **`update_content` `old_str` must match the STORED markdown, not the markdown you authored (2026-05-27).** 
+   Notion normalizes emphasis on write: `_italics_` is stored as `*italics*` (single asterisks). An `old_str` 
+   written with underscores fails with `"No matches found"` even though the rendered text looks identical. 
+   Fetch the page first and copy the exact stored snippet, or author the match with `*`. Em-dashes and other 
+   characters are preserved as-is — emphasis markers are the trap. (Learned wiring Gamma carousel URLs into 
+   post drafts: the `**Carousel (Gamma):** _placeholder_` line matched only after switching `_..._` → `*...*`.)
 
 ### Systems-thinking harness (added 2026-05-04)
 
