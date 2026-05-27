@@ -156,7 +156,9 @@ All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 
 ---
 
-## API key storage
+## API key storage — DORMANT (Granola off; no key needed)
+
+**While Granola is disabled (see top banner), this section does not apply — the command requires no `GRANOLA_API_KEY`.** Retained for re-enable whenever Granola becomes operational on Alex's device.
 
 Default storage: `~/.zshrc` export.
 
@@ -182,6 +184,8 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 ---
 
 ## Failure modes
+
+**Note:** the Granola-API failure modes below are **N/A while Granola is disabled** (top banner). The active failure modes now are: no transcript provided → draft from Alex's recap + pre-event brief (lower fidelity, no verbatim quotes); Notion event not found → top-3 title candidates; notion-writer fails → return drafts in chat so the work isn't lost.
 
 - **GRANOLA_API_KEY not set** — fail clean with setup instruction (above).
 - **Granola API 401** — key invalid or expired. Tell Alex to regenerate in Granola Settings → API.
