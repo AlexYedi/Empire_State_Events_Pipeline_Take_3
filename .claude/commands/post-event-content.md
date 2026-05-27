@@ -1,19 +1,20 @@
 ---
-description: "Workflow B-lite — pull a Granola transcript + AI summary for an attended event, then run content-correspondent over it to produce LinkedIn drafts and outreach in Notion Content Drafts. Granola-anchored, no manual transcript paste required."
+description: "Workflow B-lite — take a manually-uploaded post-event transcript, condition it against the event roster, then run content-correspondent to produce LinkedIn drafts + outreach in Notion Content Drafts. Manual-upload anchored (Granola auto-fetch DISABLED 2026-05-27 — app nonoperational on Alex's device; do not fire the Granola API or MCP)."
 argument-hint: "[event name as it appears in Notion / Google Calendar / Granola]"
 ---
 
-# /post-event-content — Granola-anchored post-event flow
+# /post-event-content — manual-upload post-event flow
 
-Eliminates the post-event upload friction (no transcript paste, no audio file). Resolves an event to its Granola note via deterministic Google Calendar Event ID match (preferred) or title+date fallback, fetches the summary + diarized transcript, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes `content-correspondent` with the conditioned quote bank.
+> ## ⚠️ GRANOLA IS OFF (status 2026-05-27)
+> Granola is **nonoperational on Alex's device** — the mobile app is a waitlist-only placeholder, so there are no recordings to fetch. **Do NOT fire the Granola REST API or the Granola MCP** for post-event recordings, here or anywhere. **Post-event transcripts are MANUAL UPLOAD only** until Granola ships a working app. The Granola auto-fetch path is retained below but **DISABLED** — re-enable it (and remove this banner) only once Granola actually records on Alex's device.
 
-**Input:** event name (one argument).
+Takes a transcript Alex uploads/pastes from his own recording of an attended event, resolves the event to its Notion row, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes `content-correspondent` with the conditioned quote bank.
+
+**Input:** event name (one argument) + the transcript (manual upload/paste).
 
 **Output:**
 - One Notion Content Drafts row per content piece (Tier 1 comment, Tier 2 post + visual brief, bucket-sorted outreach DMs)
 - All drafts in `needs_review` status, Event Phase = `post_event`, linked to the Notion Event row
-
-**Plan dependency:** Granola Business or Enterprise plan ($14+/user/mo). Free / Basic plans do not include transcript access via API.
 
 ---
 
@@ -23,12 +24,12 @@ This command runs when:
 - Alex types `/post-event-content [event name]`
 - Alex says "post-event content for [event]" / "draft the post for last night's [event]" / "write up [event] from Granola"
 
-If the user invokes `content-correspondent` directly with raw pasted material, defer to that skill's existing path — this command is the Granola-anchored variant.
+If the user invokes `content-correspondent` directly with raw pasted material, defer to that skill's existing path — this command adds Notion event-resolution + roster-grounded conditioning around a manual transcript upload.
 
 ## Required inputs
 
 1. **Event name** — fuzzy-match-friendly. The command resolves it against the Notion Events DB by title similarity, then anchors downstream lookups.
-2. **`GRANOLA_API_KEY` env var** — must be set (see "API key storage" below). If missing, fail clean with a single-line setup instruction.
+2. **Transcript (manual upload/paste)** — Alex's own recording transcript for the event (Otter/Zoom/phone export or pasted text). This is the post-event input now that Granola is off. **No `GRANOLA_API_KEY` needed** — the Granola path is disabled.
 
 ## Step 1 — Resolve the Notion Event row
 
@@ -43,61 +44,45 @@ Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title 
 
 **If multiple matches (same title, different dates):** present the candidates with dates and ask Alex to pick.
 
-## Step 2 — Fetch the Granola note
+## Step 2 — Ingest the manual transcript
 
-Build a date window: `created_after = event_date 00:00 UTC`, `created_before = event_date + 36h UTC` (36h tolerance for events that span midnight or sync delays).
+Granola auto-fetch is **disabled** (see banner) — get the transcript from Alex directly:
 
-Call Granola list endpoint:
+1. Ask Alex to paste/upload the transcript from his own recording of the event (or confirm he already has one ready).
+2. **Persist it immediately** to `event-transcripts/YYYY-MM-DD_<Event>.md` (date = the event's `Event Date`). Save FIRST, then proceed — a pasted-but-unsaved transcript is lost across sessions (see memory `feedback-comment-workflow-2026-05-26`).
+3. Capture what you have: the **raw transcript** (verbatim quote source, after Step 3.5 conditioning), any **summary / notes** Alex adds (angle/thesis input), and the **attendee names** he recalls (cross-reference against Notion People DB for bucket sorting).
 
-```bash
-curl -s -H "Authorization: Bearer $GRANOLA_API_KEY" \
-  "https://public-api.granola.ai/v1/notes?created_after=<event_date>T00:00:00Z&created_before=<event_date_plus_36h>T00:00:00Z"
-```
+If Alex has no transcript (didn't record), still draft from his freeform recap + the pre-event brief — note the lower fidelity and skip verbatim quotes.
 
-Parse the response and apply dual-path matching:
+<details>
+<summary>🚫 Granola auto-fetch — DISABLED (do not run; retained for re-enable when Granola is operational)</summary>
 
-**Path A — Deterministic (preferred):**
-If the Notion row has `Google Calendar Event ID` populated, find the note where `calendar_event.calendar_event_id` equals it exactly. This is the zero-fuzz join.
-
-**Path B — Fuzzy fallback:**
-If no GCal Event ID on the Notion row OR no note matched Path A, fuzzy-match on `calendar_event.event_title` against the Notion event name (case-insensitive, ignore punctuation drift). Highest-similarity match wins if confidence is clearly above the runner-up.
-
-**Match resolution:**
-- 1 match → proceed silently
-- 0 matches → list the 5 most recent Granola notes (title + date) and ask Alex to pick by number, or to skip if no Granola recording exists
-- Multiple matches with comparable confidence → present candidates with title + start_time, ask Alex to pick
-
-Once a note is selected, fetch full detail:
+The Granola REST/MCP path is **not active** — the app is a waitlist placeholder on Alex's device, so there are no notes to fetch. Do NOT fire it. Re-enable only when Granola records for real, then restore the manual path as a fallback.
 
 ```bash
-curl -s -H "Authorization: Bearer $GRANOLA_API_KEY" \
-  "https://public-api.granola.ai/v1/notes/<note_id>?include=transcript"
+# DISABLED — do not run while Granola is nonoperational (2026-05-27)
+# List:   GET https://public-api.granola.ai/v1/notes?created_after=<event_date>T00:00:00Z&created_before=<+36h>   (Bearer $GRANOLA_API_KEY)
+# Detail: GET https://public-api.granola.ai/v1/notes/<note_id>?include=transcript
+# Match:  Google Calendar Event ID (deterministic, preferred) → title+date fuzzy fallback
+# Capture: summary_markdown · diarized transcript · attendees · web_url
 ```
+</details>
 
-Capture:
-- `summary_markdown` — Granola's AI synthesis (primary input)
-- `transcript` — diarized turns with `speaker`, `text`, `start_time`, `end_time` (verbatim quote source)
-- `calendar_event.invitees` + `attendees` — attendee list (cross-reference against Notion People DB for bucket sorting)
-- `title` and `web_url` — for the Content Draft body footer (provenance)
+## Step 3 — Confirm the event anchor (silent if unambiguous)
 
-## Step 3 — Confirm match with Alex (silent if unambiguous)
-
-Present a one-line confirmation only if there was any disambiguation in Step 1 or 2:
+Only prompt if Step 1 had disambiguation (multiple or no Notion matches). Otherwise proceed silently to conditioning.
 
 ```
-📝 Granola note matched: "[Granola note title]" — [start_time]
-   Match path: [Path A: GCal ID deterministic | Path B: title fuzzy match]
-   Notion event: [Event Name] — [date]
-   Proceeding with content-correspondent. [y / change / cancel]
+📝 Event: [Notion Event Name] — [date]
+   Transcript: event-transcripts/[…].md  (~N turns / M words)
+   Proceeding to condition + draft. [y / change / cancel]
 ```
-
-If both paths were silent (deterministic match, single Notion row), skip this step and go straight to Step 4.
 
 ## Step 3.5 — Condition the transcript (`transcript-conditioning`)
 
 Before drafting, condition the transcript so speaker labels and proper nouns can be trusted in public copy. Diarization splits on pauses, not identity, and ASR mangles proper nouns (Vercel → "Purcell", Mahan → "vahan", MCP → "FCP") — quoting that raw misattributes lines and prints garbled names. Invoke the `transcript-conditioning` skill with:
 
-- **Raw transcript** — the Granola diarized `transcript` from Step 2 (or, on the manual-paste fallback, the pasted transcript).
+- **Raw transcript** — the manually-uploaded transcript from Step 2 (persisted to `event-transcripts/`).
 - **Roster + known entities (ground truth)** — pulled from this event's Notion record: related **People** (speaker/host roster), **Companies** (canonical org/product names), and the linked pre-event **research_brief** Content Draft. Conditioning anchors speaker resolution + entity normalization to these.
 
 **When to run:**
