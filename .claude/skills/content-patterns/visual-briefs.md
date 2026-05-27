@@ -30,8 +30,8 @@ a job the previous slide couldn't do.
 
 ## Default output
 
-**Every LinkedIn post ships with one accompanying carousel brief of 3-5 slides.**
-DMs and prepared questions do not get carousels — they are private artifacts.
+**Most LinkedIn posts ship with an accompanying visual (a single image or a 3-5 slide carousel) — but not all** (softened 2026-05-27).
+A text-only post is a valid, intentional variety choice for a simple informative summary; visuals are the default on most posts, not a hard requirement on every one. DMs and prepared questions never get visuals — they are private artifacts.
 
 The carousel brief is embedded in the LinkedIn post's Notion page body under a
 `## Visual Brief — N-slide carousel` H2 heading, immediately after the post copy.

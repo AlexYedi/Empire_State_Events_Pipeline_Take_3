@@ -124,8 +124,10 @@ If the answer is no, rework the insight before presenting.
 
 ## Visual Content
 
-Every LinkedIn post ships with a supporting visual. Text-only posts signal a lack of
-modern content skill and get filtered out by the audience Alex targets.
+Most LinkedIn posts ship with a supporting visual — but not all (rule softened 2026-05-27).
+A text-only post is a valid, intentional variety choice for a simple informative summary;
+the default is a visual on most posts, not a hard requirement on every one. When a visual is
+dropped, it's a deliberate call — note it, don't treat it as an oversight.
 
 **Visuals must add, never repeat (added 2026-05-26):** A visual earns its place only by adding information the post text doesn't carry — a structure, comparison, progression, architecture, or "where-the-value-moves" view. Re-printing quotes or lines already in the post (e.g., a quote-card carousel of lines you already wrote) is text-forward repetition, not visual content. Canonical carousel rules: `.claude/skills/content-patterns/visual-briefs.md`.
 

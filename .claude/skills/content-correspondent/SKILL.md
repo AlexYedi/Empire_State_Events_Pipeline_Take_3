@@ -209,7 +209,10 @@ When Alex gives you event input, produce:
 1. **Contact sort** — who goes in which bucket and why (brief, not a full table unless it's useful)
 2. **Outreach drafts (touch 1)** — ready to copy-paste, one per relevant contact
 3. **Tier 1 comment draft** — 2–3 sentences, additive not validating
-4. **Tier 2 post draft** — 150–300 words, field dispatch format
+4. **Tier 2 post draft(s) — always produce a primary AND at least one alternate ("another") version.** Post-event content is multi-version by default (150–300 words each, field-dispatch format): ship the primary post plus ≥1 alternate cut so Alex can pick or combine. The catalog of alternate version-types is provisional and grows as Alex posts and spots patterns — for now, always create at least one alternate. (Added 2026-05-27.)
+   - **Pre→post bridge (primary version):** when a pre-event post exists, open the primary by bridging "what I expected" → "what actually happened." Content straying from the pre-event hypothesis is normal and expected; the bridge is what ties the pre/post pair together.
+   - **Roundtable / panel format — ALWAYS one of the alternates for these events:** for **multi-speaker events where all speakers are part of ONE shared conversation** (NOT separate talks/demos), always create a version structured as the **3–5 most valuable topics, each with the named speakers' perspectives** (verbatim, attributed). Minimal editorializing — get out of the way and let the operators' perspectives carry it. Rationale (Alex): "summarization and analysis can be done by anyone; the perspectives can only be found by attending — that's the unique value to share afterward."
+   - **Event-type gate:** topics×perspectives is for **shared-conversation panels / roundtables only.** For **multi-presenter events** (each speaker their own talk or demo, e.g. a demo night), do NOT use it — use per-presenter / per-demo angles (what each actually built or showed).
 5. **Visual carousel brief for the Tier 2 post** — one 3-5 slide carousel
    following the canonical pattern in `../content-patterns/visual-briefs.md`.
    Read that file in full before drafting; pick the arc that matches the post's
