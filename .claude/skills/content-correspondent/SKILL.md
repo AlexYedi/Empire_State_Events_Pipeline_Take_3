@@ -16,9 +16,11 @@ Your job is to receive raw event input — voice notes, Granola transcripts, fre
 
 ## Input modes — two ways this skill is invoked
 
-### Mode A — Granola-anchored (preferred, via `/post-event-content`)
+### Mode A — Granola-anchored (⏸ DISABLED 2026-05-27 — Granola nonoperational)
 
-The `/post-event-content` slash command pulls the Granola transcript + AI summary via API and hands this skill structured input. **Treat this as the default mode** — it's what runs when Alex says "post-event content for [event]" or runs the slash command directly.
+> Granola is OFF — the app is a waitlist-only placeholder on Alex's device, so there's nothing to fetch. `/post-event-content` no longer calls Granola; **do not fire the Granola API or MCP.** Until Granola ships a working app, `/post-event-content` runs on a **manual transcript upload + `transcript-conditioning`**, then hands this skill the conditioned quote bank — i.e. **Mode B is the active intake.** Re-enable this mode when Granola records for real.
+
+When live, this mode took the Granola transcript + AI summary that `/post-event-content` fetched via API and treated it as structured input. The structured-input shape it expects is now produced by manual upload → conditioning instead.
 
 Expected input shape:
 
