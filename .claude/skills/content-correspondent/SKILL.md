@@ -55,6 +55,8 @@ Speaker 2 (speaker): [text]
 
 When Alex pastes raw material directly into the conversation (Granola export, Wispr voice notes, freeform recap, photos with captions), run the existing flow described below. Mode A is preferred because it removes the paste friction, but Mode B remains supported for ad-hoc events that weren't pre-researched or for cases where Granola wasn't recording.
 
+**Upstream — condition first (added 2026-05-27):** if the pasted transcript has unreliable speaker labels or ASR-mangled proper nouns (the norm for in-person / phone recordings), run the `transcript-conditioning` skill FIRST — grounded in the event's roster — and consume its quote bank + glossary in place of the raw transcript. `/post-event-content` **Step 3.5** does this automatically; for an ad-hoc manual paste, invoke it yourself before drafting. Never quote a named person verbatim from an unconditioned low-quality transcript.
+
 ---
 
 ## The Two Tracks

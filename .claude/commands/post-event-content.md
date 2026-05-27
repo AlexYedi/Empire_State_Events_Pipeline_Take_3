@@ -5,7 +5,7 @@ argument-hint: "[event name as it appears in Notion / Google Calendar / Granola]
 
 # /post-event-content — Granola-anchored post-event flow
 
-Eliminates the post-event upload friction (no transcript paste, no audio file). Resolves an event to its Granola note via deterministic Google Calendar Event ID match (preferred) or title+date fallback, fetches the summary + diarized transcript, and invokes `content-correspondent` with structured input.
+Eliminates the post-event upload friction (no transcript paste, no audio file). Resolves an event to its Granola note via deterministic Google Calendar Event ID match (preferred) or title+date fallback, fetches the summary + diarized transcript, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes `content-correspondent` with the conditioned quote bank.
 
 **Input:** event name (one argument).
 
@@ -93,6 +93,25 @@ Present a one-line confirmation only if there was any disambiguation in Step 1 o
 
 If both paths were silent (deterministic match, single Notion row), skip this step and go straight to Step 4.
 
+## Step 3.5 — Condition the transcript (`transcript-conditioning`)
+
+Before drafting, condition the transcript so speaker labels and proper nouns can be trusted in public copy. Diarization splits on pauses, not identity, and ASR mangles proper nouns (Vercel → "Purcell", Mahan → "vahan", MCP → "FCP") — quoting that raw misattributes lines and prints garbled names. Invoke the `transcript-conditioning` skill with:
+
+- **Raw transcript** — the Granola diarized `transcript` from Step 2 (or, on the manual-paste fallback, the pasted transcript).
+- **Roster + known entities (ground truth)** — pulled from this event's Notion record: related **People** (speaker/host roster), **Companies** (canonical org/product names), and the linked pre-event **research_brief** Content Draft. Conditioning anchors speaker resolution + entity normalization to these.
+
+**When to run:**
+- **Run by default** for multi-speaker panels, in-person / manual-paste transcripts, or any note where a named person will be quoted publicly.
+- **Skip** only when Granola's diarization is clean AND the roster is ≤2 obvious speakers (per the skill's "When to use"). State the skip decision in one line.
+
+**Output (passed to Step 4 in place of the raw transcript):**
+1. Speaker resolution table (resolved person + tell + confidence)
+2. Entity normalization glossary (+ ⚠️ excluded-garble list — never quoted)
+3. Confidence-scored **quote bank** (HIGH = verbatim-safe; MED = paraphrase only)
+4. Conditioning confidence score + down-weighted sections
+
+**Discipline (Rule 12):** the transcript is a primary source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use (CLAUDE.md Rule 12).
+
 ## Step 4 — Invoke content-correspondent with structured Granola input
 
 Pass content-correspondent skill the following structured input (NOT raw transcript paste — leverage Granola's pre-synthesis):
@@ -106,8 +125,8 @@ Granola Note URL: [web_url from Granola]
 === Granola AI Summary (primary input — use for angle, takeaways, thesis) ===
 [summary_markdown verbatim]
 
-=== Granola Diarized Transcript (verbatim quote source — use for speaker quotes and color) ===
-[transcript array, formatted as: "Speaker N (source): text" per turn]
+=== Conditioned Quote Bank + Glossary (from Step 3.5 — verbatim quote source) ===
+[transcript-conditioning output: confidence-scored quote bank attributed to resolved speakers, the entity glossary (proper-noun spelling for public copy), the speaker-resolution table, and the conditioning confidence score. Quote HIGH-confidence lines verbatim; paraphrase MED; never print excluded-garble entities. If Step 3.5 was skipped, pass the raw diarized transcript here instead and note the skip.]
 
 === Attendees (cross-reference against Notion People DB) ===
 [attendees + calendar_event.invitees, deduped]
@@ -182,7 +201,7 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 - **GRANOLA_API_KEY not set** — fail clean with setup instruction (above).
 - **Granola API 401** — key invalid or expired. Tell Alex to regenerate in Granola Settings → API.
 - **Granola API 429** — rate limit (5/sec sustained, 25 in 5sec burst). Sleep 2s and retry once.
-- **Granola API returns empty list for the date window** — widen window to event_date ±48h once. If still empty, no recording exists; offer to fall back to content-correspondent with manual paste, or skip.
+- **Granola API returns empty list for the date window** — widen window to event_date ±48h once. If still empty, no recording exists (common for **in-person events** — Granola has no Android app). Offer the **manual-paste path**: Alex pastes his own recording's transcript, **persist it to `event-transcripts/YYYY-MM-DD_Event.md`** so it survives across sessions (see memory `feedback-comment-workflow-2026-05-26`), then run **Step 3.5 conditioning** on it (mandatory for manual paste) → Step 4. Or skip.
 - **Multiple Granola notes match with comparable confidence** — present list with title + start_time + duration, ask Alex to pick.
 - **Notion Event row not found** — present top 3 title-similarity candidates from Events DB. If none, allow "create draft without Notion anchor" path.
 - **Notion People DB doesn't match Granola attendees** — pass attendee names through unmatched; content-correspondent will still draft outreach but Content Draft `People` relation will be sparse. Acceptable — Alex can backfill in Notion if needed.
@@ -207,6 +226,7 @@ The `summary_markdown` + diarized `transcript` together is intentional: summary 
 
 - **Granola API docs**: https://docs.granola.ai/introduction (auth, endpoints, rate limits)
 - **Granola Get Note schema**: https://docs.granola.ai/api-reference/get-note.md (calendar_event, transcript, attendees fields)
+- **Conditioning skill (Step 3.5)**: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md` — speaker resolution, entity glossary, confidence-scored quote bank
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder
 - **Downstream agent**: `.claude/agents/ops/notion-writer.md` — Content Drafts row creation, property mapping
 - **Notion Events DB ID**: `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`
