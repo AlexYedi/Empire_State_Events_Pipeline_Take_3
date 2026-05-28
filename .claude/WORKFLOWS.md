@@ -162,7 +162,14 @@ After A completes, the natural next moves:
 
 ---
 
-## Workflow B — `/post-event-synthesis` 🟡 SCAFFOLDED
+## Workflow B — Post-Event
+
+Two paths exist:
+
+- **B-active — `/post-event-content`** ✅ WIRED (manual-upload anchored since 2026-05-27; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Manual transcript paste → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Gamma carousel render → `notion-writer` commits all rows. The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
+- **B-scaffolded — `/post-event-synthesis`** 🟡 (below). The larger systemization with transcript-analysis → objection-mining → commercial-insight-generator → content-correspondent → pattern-synthesis chained automatically. Not yet wired end-to-end.
+
+### `/post-event-synthesis` 🟡 SCAFFOLDED
 
 Turns post-event raw material into structured intel + content drafts.
 

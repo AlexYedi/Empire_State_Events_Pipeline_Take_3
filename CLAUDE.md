@@ -158,12 +158,21 @@ Alex pastes calendar invite description + adds natural language context:
   relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
   for cross-DB property-name consistency)
 - Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
-  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis), 
-  Event Phase (select: pre_event/during_event/post_event), Content Status (select: needs_review/
-  approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only), 
+  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis/
+  post_event_brief), Event Phase (select: pre_event/during_event/post_event), Content Status (select:
+  needs_review/approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only),
   Published URL (url), relations to Event/People/Topics/Project Ideas
   Note: linkedin_post_synthesis (added 2026-04-19) is used by the pattern-synthesis skill for 
   two-thesis posts that relate to 2+ Events. Multi-Event relations are the tell for this type.
+  Note: post_event_brief (added 2026-05-28, color: brown) is the post-event mirror of research_brief —
+  produced by `/post-event-content` as the FIRST-CLASS artifact before content-correspondent drafts.
+  Comprehensive Notion page = data store + short-term memory of the event (Quick Take, the Thesis,
+  Pre→Post Gap, ranked Insights, Gotchas & Practitioner Playbook, Tools Mentioned, conditioned Quote
+  Bank with confidence tags, Stat Bank with caveats, Slides Catalog, People & Outreach State, Content
+  Assets Produced, Documentarian Angles, Conditioning Notes, Verification Flags, Open Loops). All
+  downstream post-event content (Tier 1 comment, Tier 2 posts, outreach DMs) references it as their
+  canonical source. Event Phase = post_event, Platform = notion_only (internal data store, not
+  published). First synthesized 2026-05-28 from "Agents and MCP for Postgres" (NYC Postgres @ Google).
   Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
   Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —
   terminal state, preserves relation graph for future knowledge base synthesis.
@@ -220,7 +229,7 @@ Alex pastes calendar invite description + adds natural language context:
 
 **Phase 2: Content Generation Skills (In Progress — 2026-04-09; DM spec patched 2026-05-20; Granola wired 2026-05-21)**
 - Three skills: pre-event-content.md, content-correspondent/SKILL.md (post-event), pattern-synthesis/SKILL.md (not monolithic)
-- **`/post-event-content` slash command (wired 2026-05-21)** — Granola-anchored thin orchestrator. Resolves event name → Notion Event row → Granola API pull (list + get with transcript) → invokes content-correspondent with structured input (summary_markdown + diarized transcript + attendees) → notion-writer commits drafts. Dual-path resolution: deterministic `Google Calendar Event ID` match (preferred), title+date fuzzy fallback. Removes the post-event transcript-paste friction that was blocking publishing. Requires Granola Business plan ($14/user/mo) + `GRANOLA_API_KEY` env var in `~/.zshrc` (terminal-launched Claude Code only — see env handoff memory). See `.claude/commands/post-event-content.md` for orchestration shape, `.claude/notes/execution-week-frictions.md` 2026-05-21 entry for the decision record.
+- **`/post-event-content` slash command (wired 2026-05-21; Granola disabled 2026-05-27; post_event_brief added 2026-05-28)** — Manual-upload-anchored orchestrator. Resolves event name → Notion Event row → manual transcript paste → **transcript-conditioning** (Step 3.5) → **`post_event_brief` synthesis** (Step 3.7, the canonical data store / short-term memory) → invokes content-correspondent with the conditioned quote bank + brief reference → notion-writer commits drafts. Dual-path event resolution: deterministic `Google Calendar Event ID` match (preferred), title+date fuzzy fallback. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device). The post_event_brief is the post-event mirror of the pre-event research_brief — comprehensive, browsable, and referenced by every downstream draft. See `.claude/commands/post-event-content.md` for orchestration shape, `.claude/notes/execution-week-frictions.md` 2026-05-21 entry for the Granola decision record.
 - Pre-event skill produces: The Upcoming Week (Sunday LinkedIn post), per-event LinkedIn post,
   speaker/host **connection request notes** (1 best per person, 200-char hard cap — see DM rule below),
   prepared questions (now generated independently from research, not as DM byproducts)

@@ -13,7 +13,8 @@ Takes a transcript Alex uploads/pastes from his own recording of an attended eve
 **Input:** event name (one argument) + the transcript (manual upload/paste).
 
 **Output:**
-- One Notion Content Drafts row per content piece (Tier 1 comment, Tier 2 post + visual brief, bucket-sorted outreach DMs)
+- **`post_event_brief` Content Draft** (the data store / short-term memory — the post-event mirror of the pre-event `research_brief`). Synthesized in Step 3.7 from the conditioned transcript + roster + pre-event brief; every downstream draft references it.
+- One Notion Content Drafts row per content piece (Tier 1 comment, Tier 2 post primary + visual brief, Tier 2 post alternate, bucket-sorted outreach DMs)
 - All drafts in `needs_review` status, Event Phase = `post_event`, linked to the Notion Event row
 
 ---
@@ -96,6 +97,50 @@ Before drafting, condition the transcript so speaker labels and proper nouns can
 4. Conditioning confidence score + down-weighted sections
 
 **Discipline (Rule 12):** the transcript is a primary source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use (CLAUDE.md Rule 12).
+
+## Step 3.7 — Synthesize the `post_event_brief` (the data store / short-term memory)
+
+Before content-correspondent drafts a single post, synthesize the **`post_event_brief`** as a Notion Content Draft. This is the post-event mirror of the pre-event `research_brief` — one comprehensive, browsable page that captures *everything the event produced* so it can be referenced by every downstream draft AND mined later as part of the knowledge graph.
+
+**Inputs:**
+- Conditioned quote bank + speaker resolution table + entity glossary (from Step 3.5)
+- The pre-event `research_brief` linked to this Event (for pre→post comparison)
+- Notion roster (People + Companies + Topics relations from the Event row)
+- Slides/photos uploaded by Alex (catalog them, don't re-OCR)
+- Alex's own freeform recap / observations if provided
+
+**Required sections (mirror this scaffold; expand each as the material warrants):**
+1. **Page-index callout** at top + `/toc` hint (per CLAUDE.md gotcha `i`)
+2. **Quick Take** — three sentences: what the room actually was, the headline, the event-type tag for content routing (single-presenter talk / multi-presenter showcase / shared-conversation panel)
+3. **The Thesis** — the single sharpest takeaway from the room, as a quotable line if possible
+4. **Pre → Post Gap** — a table contrasting what the pre-event brief predicted vs. what actually happened (this is the highest-value beat for the post)
+5. **Insights** — ranked by durability / content value (numbered list)
+6. **Gotchas & Practitioner Playbook** — build-it-right rules a practitioner can act on
+7. **Tools Mentioned** — table: tool/product · what it is · context in the talk
+8. **Conditioned Quote Bank** — attributed, confidence-tagged (HIGH = verbatim-safe; MED = paraphrase only), with intended use per quote
+9. **Stat Bank** — numbers + value + confidence/caveat (never invent precision the speaker didn't claim)
+10. **Slides Catalog** — numbered list, one line per slide describing what it shows
+11. **People & Outreach State** — table: person · role · bucket (A/B/C/D) · spoke? · next action
+12. **Content Assets Produced** — bullet list of links to the comment / posts / DMs / Gamma carousel (fill after creation in Step 5)
+13. **Documentarian Angles** — the cuts available for future content (primary + alternates + synthesis candidates)
+14. **Conditioning Notes** — speaker resolution table, entity glossary (+ ⚠️ excluded-garble list), conditioning confidence score
+15. **Verification Flags** — what cannot be asserted publicly without independent source (Rule 12 items)
+16. **Open Loops** — follow-ups to close (touch-1 sends, comment opportunities, synthesis windows, questions to ask in the touch-2 thread)
+
+**Notion properties:**
+- `Title`: `Post-Event Brief — [Event Name] ([Event Date short])`
+- `Content Type`: `post_event_brief`
+- `Event Phase`: `post_event`
+- `Content Status`: `needs_review`
+- `Platform`: `notion_only` (it's an internal data store, not a publishable artifact)
+- `Event`: relation to the resolved Notion Event row
+- `People`: relations to every named person on the roster
+- `Topics`: relations to every linked Topic
+- `icon`: 🗃️ (data store)
+
+**Why this step exists:** without the brief, the post-event content is one-shot — written once, then orphaned. With it, the data store survives the publishing of any single draft and feeds future synthesis posts, weekly recaps, knowledge-base mining, and re-engagement DMs. The pre-event flow has this (research_brief); the post-event flow now mirrors it.
+
+After writing the brief, capture its URL and pass it to Step 4 (content-correspondent uses it as `=== Post-Event Brief ===` input alongside the conditioned quote bank).
 
 ## Step 4 — Invoke content-correspondent with structured Granola input
 
