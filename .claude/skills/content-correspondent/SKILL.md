@@ -208,6 +208,7 @@ Always produce the outreach DM and the post in the same session — the post giv
 
 When Alex gives you event input, produce:
 
+0. **`post_event_brief` (FIRST — the data store).** When invoked via `/post-event-content`, this is synthesized in **Step 3.7** of the command BEFORE drafting any post or DM (see `.claude/commands/post-event-content.md`). It is the post-event mirror of the pre-event `research_brief` — one comprehensive Notion Content Draft (`Content Type: post_event_brief`, `Event Phase: post_event`, `Platform: notion_only`) that captures the conditioned quote bank, ranked insights, gotchas, tools mentioned, stat bank, slides catalog, pre→post gap, people & outreach state, documentarian angles, conditioning notes, verification flags, and open loops. Every artifact below (#1–6) draws from this brief AND links back to it in its page body (`*Source data store:* [Post-Event Brief — ...](url)`). The brief is the short-term memory that lets future synthesis posts, weekly recaps, and re-engagement DMs reference what actually happened without re-reading the transcript. When this skill is invoked directly (not via `/post-event-content`), produce the brief as the first artifact in the same Notion shape.
 1. **Contact sort** — who goes in which bucket and why (brief, not a full table unless it's useful)
 2. **Outreach drafts (touch 1)** — ready to copy-paste, one per relevant contact
 3. **Tier 1 comment draft** — 2–3 sentences, additive not validating
