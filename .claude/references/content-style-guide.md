@@ -17,6 +17,23 @@ Five tone pillars — use all five together. They reinforce each other:
 
 **Predictions vs. stances (added 2026-05-26):** Soften *predictions about event content* — frame what you expect an event to be about as curiosity or hypothesis ("I was curious going in," "I expected," "the question I brought in"), never a cocky "I predicted." But never soften *stances on subjects, topics, or analysis* — take the bold, contrarian, or definitive position on the substance. The hedge is only for guesses about what an event will contain, used as a narrative starting point.
 
+**Stance-license: a viewpoint must be earned with space, presence, and expertise (added 2026-05-30 — refines the rule above; the most important voice rule we have).** The "take the bold stance on substance" rule above still holds — but ONLY where the format gives you room to EARN the stance with context and analysis. **A viewpoint without the space to provide the context and analysis that justifies it is not a stance — it's a hot take, and a hot take in a synopsis (no context, no analysis, no viewpoint earned) adds zero value.** It reads as either social-media slop or unearned posturing. Three factors set how much stance-license a piece has:
+
+- **Space / format** — long-form (post-event recap, deep per-event post) has room for context + analysis → high license. A roundup synopsis (the tightest character budget of any format) has none → **set the table, don't take a side.**
+- **Presence** — pre-event (haven't seen it yet) → low license; surface the field's open questions. Post-event (you were in the room) → high license; deliver your earned read.
+- **Expertise** — calibrate to where Alex actually is: an informed, curious documentarian, *not yet a topic expert*. Definitive verdicts from that position read as unearned. Stance-license **grows over time** as Alex builds, reads, and attends more — and the `steering-interview` skill is how that growing perspective gets captured per event.
+
+**Default stance-license by format:**
+| Format | License | What to do |
+|---|---|---|
+| The Upcoming Week roundup | Lowest | Set the table. State each topic's current state + the genuine tension that *already exists in the field*, attributed to the field — never Alex's verdict. No sides. |
+| Per-event pre-event post | Low–medium | One genuine question or observation, lightly held. Open the tension; don't resolve it. |
+| Post-event recap / synthesis | Highest | Earned POV — you were there, you have the room. Take the position, with the context and analysis to back it. |
+
+**The test before shipping any viewpoint:** *can this same piece also carry the context and analysis that earns it?* If the format has no room for that, cut the viewpoint and surface the tension neutrally instead.
+
+**Decenter the self — curator, not protagonist (added 2026-05-30).** The subject of a post is the events, topics, and tensions — **not Alex.** First-person "I/me" that centers Alex ("seven rooms on *my* calendar," "here's what *I'm* walking into") reads as a thinly-veiled personal brag and undercuts the documentarian frame (pillar 5). Lead with the field and the abundance; position Alex as the curator pointing at what's worth watching. The "I" that survives is the curator's, not the brand-builder's. Model: *"Hundreds of events for NYC Tech Week — the seven worth watching are…"* (subject = the events; the "I" is incidental). When you catch an "I/me" that centers Alex rather than the content, cut or recast it.
+
 ## Post Architecture
 
 Default structure for LinkedIn posts (adapted from Hook-Context-Insight-CTA):
@@ -278,6 +295,7 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 
 ---
 
-*Last updated: 2026-05-26*
+*Last updated: 2026-05-30*
+*Version: 0.5 — Added (1) the stance-license rule (a viewpoint must be earned with space/presence/expertise; hot takes in synopses add zero value) and (2) the decenter-self / curator-not-protagonist rule, from the Upcoming Week post review (NYC Tech Week roundup). These refine — not replace — the bold-stance rule: stance is deferred to formats with room for context + analysis (post-event, deep posts), and grows with Alex's expertise. See memory `feedback-upcoming-week-stance-and-self-2026-05-30`.*
 *Version: 0.4 — Added (1) predictions-vs-stances voice rule and (2) visuals-must-add rule, from the AI Demo Night post review. See memory `feedback-comment-workflow-2026-05-26`.*
 *Version: 0.3 — Added 10 visual content best practices (format specs, 2-second thumb test, one-visual-one-idea, data principles, carousel architecture, color strategy, AI prompting rules, accessibility, format-by-content-type)*
