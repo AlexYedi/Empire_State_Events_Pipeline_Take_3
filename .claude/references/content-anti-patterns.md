@@ -33,7 +33,10 @@
 | Ending with "Thoughts?" | Lazy CTA. If you want engagement, ask something specific enough to answer. |
 | Wall of hashtags | More than 5 hashtags looks desperate. 2-5, relevant, specific. |
 | Tagging everyone mentioned | Looks like engagement farming. Alex formats cross-platform manually. |
-| Cocky **predictions about event content** ("I predicted X would be about Y") | Reads arrogant. Frame predictions about what an event *will be / contain* as curiosity or hypothesis ("I was curious going in", "I expected", "the question I brought in"). ⚠️ Applies ONLY to event-content predictions — do NOT temper definitive or contrarian **stances on subjects/topics/analysis**; keep those bold. (Added 2026-05-26, AI Demo Night post review.) |
+| Cocky **predictions about event content** ("I predicted X would be about Y") | Reads arrogant. Frame predictions about what an event *will be / contain* as curiosity or hypothesis ("I was curious going in", "I expected", "the question I brought in"). ⚠️ Applies ONLY to event-content predictions — stances on subjects/topics/analysis stay bold **where the format has room to earn them** (see the editorial-kicker + take-sides rows below, and the stance-license rule in `content-style-guide.md`). (Added 2026-05-26, AI Demo Night post review.) |
+| **The editorial kicker** — appending a clever take/question to an otherwise-informative synopsis ("The number worth interrogating: X", "The unanswered question: …", "The quiet tension: …") | The informative substance + the field's genuine tension IS the value; the verdict-tag *subtracts* it and reads as posturing. If the synopsis already states what's happening and the real tension, **stop there** — don't add Alex's clever interrogation. (Added 2026-05-30, Upcoming Week post review — the cleanest signal: the factual 2x AI synopsis was rated "great, informative, valuable"; the "2X against what baseline?" kicker right after it was "back to bad hot takes.") |
+| **Taking sides in a table-setting / synopsis format** ("the debate quietly resolved", "the barrier is org design", "X won") | A roundup synopsis has the tightest character budget of any format — no room for the context + analysis that would *earn* a position. A viewpoint without space to justify it is a hot take, not a stance, and **adds zero value**. Set the table: state the topic's current state and surface the tension **neutrally, attributed to the field**, not as Alex's verdict. Bold stances are deferred to formats with room (post-event, deep posts). See stance-license rule in `content-style-guide.md`. (Added 2026-05-30, Upcoming Week post review.) |
+| **Self as protagonist** ("seven rooms on *my* calendar", "here's what *I'm* walking into") | Centers Alex over the content; reads as a thinly-veiled brag and undercuts the documentarian frame. Decenter: lead with the field/abundance, make the events the subject, keep Alex the curator. Model: "Hundreds of events for NYC Tech Week — the seven worth watching are…" (Added 2026-05-30, Upcoming Week post review.) |
 
 ## DM Anti-Patterns
 
@@ -82,6 +85,7 @@
 
 ---
 
-*Last updated: 2026-05-26*
+*Last updated: 2026-05-30*
+*Version: 0.5 — Added three structural anti-patterns from the Upcoming Week post review: (1) the editorial kicker (clever take/question appended to an informative synopsis — subtracts value); (2) taking sides in a table-setting/synopsis format (hot take without room to earn it = zero value); (3) self as protagonist (decenter — field is the subject, Alex is the curator). All three pair with the new stance-license rule in `content-style-guide.md`. See memory `feedback-upcoming-week-stance-and-self-2026-05-30`.*
 *Version: 0.4 — Added two anti-patterns from the AI Demo Night post review: (1) cocky predictions about event content (soften predictions, NOT subject-matter stances); (2) quote-card carousels that re-print the post (visuals must ADD, not repeat). See memory `feedback-comment-workflow-2026-05-26`.*
 *Version: 0.3 — Added Visual Anti-Patterns and AI Image Prompting Anti-Patterns sections from 10 best practices doc*

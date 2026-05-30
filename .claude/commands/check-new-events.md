@@ -109,6 +109,18 @@ Wait for Alex's confirmation before proceeding.
 
 For each NEW event, in chronological order (soonest first):
 
+### 6a.0 Steering interview (run FIRST, before research)
+
+Run the `steering-interview` skill for this event **before** `/event-deep-research`. It is a short, skippable, 4-question intake (content / structure-format / additional research / anything-else) that captures Alex's event-specific context up front — so it steers the research and content instead of being corrected afterward via Notion comments.
+
+- Run it in the main conversation (it is an interactive interview, never a subagent).
+- **Answer #3 (additional research) must be passed into the `/event-deep-research` input** (Step 6a) so it scopes the fan-out — this is why the interview runs before research, not after the brief.
+- Carry answers #1 (content), #2 (structure/format), and #4 (anything else) to the `pre-event-content` invocation (Step 6b).
+- The skill persists the answers as an `## Author Steer — [date]` block on the Event page and they later feed `update-voice-and-style`.
+- If Alex says "skip" / "nothing for this one", proceed with zero friction.
+
+See `.claude/skills/steering-interview/SKILL.md` for the protocol, routing table, and persistence.
+
 ### 6a. Run /event-deep-research
 
 Execute the full `/event-deep-research` workflow as documented in `.claude/commands/event-deep-research.md`. Pass the structured PIPELINE fields as the input in this natural-language format:
