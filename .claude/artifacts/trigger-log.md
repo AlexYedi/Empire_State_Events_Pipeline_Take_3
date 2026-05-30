@@ -14,3 +14,5 @@ Triggers:
 - 2026-05-22T01:50:18Z | session: `3b2707ba` | skills: content-correspondent | trigger: **?**
 - 2026-05-24T18:51:46Z | session: `af967f07` | skills: check-new-events | trigger: **?**
 - 2026-05-25T16:11:19Z | session: `af967f07` | skills: pre-event-content | trigger: **?**
+- 2026-05-30T04:47:37Z | session: `823b431a` | skills: check-new-events | trigger: **?**
+- 2026-05-30T14:48:24Z | session: `823b431a` | skills: pre-event-content | trigger: **?**
