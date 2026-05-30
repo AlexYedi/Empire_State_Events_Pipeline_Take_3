@@ -52,40 +52,44 @@ Alex provides one of:
    - Pre-Event LinkedIn post
    - Speaker/Host DMs
    - All of the above
+5. **Check for an `## Author Steer — [date]` block** on the Event page (from the `steering-interview` skill). If present, honor it: answer #1 steers the content/angle/what-to-avoid, #2 steers structure/format, #4 is context to keep top of mind. If no steer block exists and Alex is present, offer to run `steering-interview` first ("anything you want to steer before I draft? or skip").
 
 ---
 
 ## Step 2: Generate The Upcoming Week Post (if requested)
 
-**When:** Sunday post covering all events for the coming week.
+**When:** Sunday (or week-open) post covering events for **the coming week only**.
 **Input:** Multiple event research briefs (one per event that week).
-**Length:** Long-form.
+**Length:** Long-form, but the per-event units are tight (this format has the smallest character budget per idea of anything we write).
 
-**Before drafting, read `.claude/skills/brand-storytelling/SKILL.md`.** Apply specifically:
-- **"Lead a movement, don't just solve a problem"** (Andy Raskin) — frame the week as a shift, a tension, or a question the NYC AI scene is collectively wrestling with. Not a list of events, a thesis about the week.
-- **"Find the five-second moment"** (Matthew Dicks) — the entire roundup should orbit one moment of realization or transformation in the week's events. The synopses provide context to make that moment clear.
-- **"Hook, message, celebration"** (Christina Wodtke) — the structure below maps to this: HOOK = mystery/surprise, FOR EACH EVENT = the message, CTA = the celebration/invitation.
+> **The roundup's job is to SET THE TABLE — not to take a side (rule added 2026-05-30, Upcoming Week post review).** This is the single most important thing about this format. The roundup calls out the topics, gives a brief state-of-the-union, and surfaces the genuine tensions in the field — **without taking a position on them.** Per the stance-license rule in `content-style-guide.md`: a viewpoint needs room for context + analysis to be worth anything, and a synopsis has none. **A hot take in a synopsis = zero value** (social-media slop / unearned posturing). Bold POV is deferred to the per-event and post-event posts, where there's space to earn it. Do NOT editorialize, do NOT declare winners, do NOT append a clever interrogation ("the number worth interrogating: X") to a synopsis — see `content-anti-patterns.md` (editorial kicker, taking-sides, self-as-protagonist).
+
+**Before drafting, read `.claude/skills/brand-storytelling/SKILL.md`** — but apply it for *framing the week's through-line*, NOT for manufacturing a thesis you then argue. The "movement/five-second-moment" lenses set the frame; they do not license a side.
 
 ### Structure
 
 ```
-HOOK — Set the frame for the week. What's the through-line across the events?
-       A trend, a tension, a question the week's events collectively address.
+HOOK — Lead with the REAL, NAMED, CURRENT frame (e.g., "It's NYC Tech Week") and the
+       ABUNDANCE, then narrow. Decenter the self — the events are the subject, Alex is
+       the curator, NOT the protagonist. Surface the through-line / shared question the
+       week's events collectively raise, posed as a QUESTION or a tension, not a verdict.
+       Model: "Hundreds of events for NYC Tech Week — the seven worth watching are…"
+       (NOT "Seven rooms on my calendar…" — that centers Alex and reads as a brag.)
 
-FOR EACH EVENT:
+FOR EACH EVENT (set the table — tight):
   - Event name + date + format (in-person / virtual)
-  - 2-3 sentence synopsis: Why this event is relevant and consequential RIGHT NOW.
-    Draw from one of these angles (pick the strongest for each event):
-    * Trendiness — what's dominating the conversation in this space
-    * Recent technological development — product launch, framework release, breakthrough
-    * Product/industry segment shift — competitive dynamics, market moves
-    * Macro/geopolitical impact — regulation, trade, investment patterns
-    * Timeless criticality — if none of the above apply, why this topic is foundational
+  - 2-3 sentence synopsis = TOPIC + brief STATE OF THE UNION + the genuine TENSION
+    that already exists in the field:
+    * What's happening / who's on stage / the concrete facts (the informative core).
+    * The state of the union: what's dominating the conversation in this space right now.
+    * The tension/open question that exists in the FIELD — attributed to the field, not
+      to Alex, and left OPEN. ("The field is split — X has shown A; Y just bet on B.")
+    * Then STOP. No verdict, no "here's what I'd ask," no editorial kicker.
   - 1-2 sources/citations for the research behind the synopsis (so Alex can share deeper links)
 
 EVENTS PENDING (if any):
   - Brief mention of events Alex has applied to / hoping to attend
-  - Same synopsis treatment but lighter touch
+  - Same table-setting treatment, lighter touch
 
 CTA:
   "If you can't make it or aren't in the NYC area but have a question you wish you could
@@ -93,11 +97,18 @@ CTA:
   don't hesitate to say and I'll see you there."
 ```
 
-**Generate 2 variants** with different hooks/framing angles. Present as inline options.
+**Scope discipline (added 2026-05-30):**
+- **This week only.** Events outside the coming week (e.g., the following week) do NOT belong in this roundup — drop them or hold for the next one.
+- **Only events Alex is actually attending.** Attendance changes; if Alex has dropped an event, it comes out. (This is exactly what the `steering-interview` Q3/Q4 captures before generation.)
+
+**Generate 2 variants** with different hooks/framing angles (different through-line framings — NOT different takes). Present as inline options.
 
 ### Quality Checks
 - At least 2, no more than 3 data points per event synopsis
-- Each synopsis passes the "So What?" test
+- **Each synopsis SETS THE TABLE — states the topic + state-of-union + a field tension, takes no side, and ends without an editorial kicker** (the highest-priority check for this format)
+- **Decentered self — the events/field are the subject, not Alex; no "I/me" that reads as a brag** (scan every first-person word and cut the ones that center Alex)
+- **Scope correct — only this week, only events Alex is attending**
+- Each synopsis passes the "So What?" test *without* needing a hot take to get there
 - 2-5 relevant hashtags at the end
 - Emoji used sparingly as structural markers
 
