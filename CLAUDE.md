@@ -129,80 +129,13 @@ Alex pastes calendar invite description + adds natural language context:
    ephemeral NYC AI/tech experiences that aren't otherwise shared effectively.
 
 #### Output Destinations
-
-**Notion** (Content + Research Hub) — 6 interconnected databases (verified via MCP, 2026-04-09):
-- Events (9 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
-  Event Status (select: intake/researched/content_drafted/attended/post_complete),
-  Google Calendar Event ID (text — added 2026-05-21 for `/post-event-content` Granola join key),
-  relations to People/Companies/Topics/Content Drafts
-  Note: Event Description stores the raw pasted invite text. No Calendar Source property — 
-  the pipeline generates value for events Alex attends AND events he doesn't (content + outreach 
-  aren't gated by physical attendance).
-  Google Calendar Event ID is the raw `event.id` from the GCal MCP response (NOT iCalUID).
-  Equals Granola's `calendar_event.calendar_event_id` field — deterministic join for transcript pulls.
-  Populated automatically by `/check-new-events` → `/event-deep-research` → `notion-writer`.
-  Empty for events created before 2026-05-21 — `/post-event-content` falls back to title+date match
-  when the property is empty (dual-path resolution).
-- People (11 props): Name (title), Current Title (text), Email (email), Phone Number (phone), 
-  LinkedIn URL (url), Known POV / Bio (text), Notes (text), Role Context (multi-select: 
-  speaker/host/organizer/attendee/contact), Last Researched (date), 
-  relations to Events/Company/Content Drafts
-- Companies (9 props): Company Name (title), Description (text), Website (url), Industry / Space 
-  (multi-select: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure), 
-  Funding Stage (select: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, 
-  Series H, Series I, Public — NO "Pre-IPO" option; use latest Series letter for late-stage private cos), 
-  Recent Funding ($) (number), Recent Developments (text), Last Researched (date), 
-  relations to Events/People
-- Topics (9 props): Topic (title), Current Events (text), Opportunities (text), Challenges (text),
-  Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date), 
-  relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
-  for cross-DB property-name consistency)
-- Content Drafts (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
-  linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis/
-  post_event_brief), Event Phase (select: pre_event/during_event/post_event), Content Status (select:
-  needs_review/approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only),
-  Published URL (url), relations to Event/People/Topics/Project Ideas
-  Note: linkedin_post_synthesis (added 2026-04-19) is used by the pattern-synthesis skill for 
-  two-thesis posts that relate to 2+ Events. Multi-Event relations are the tell for this type.
-  Note: post_event_brief (added 2026-05-28, color: brown) is the post-event mirror of research_brief —
-  produced by `/post-event-content` as the FIRST-CLASS artifact before content-correspondent drafts.
-  Comprehensive Notion page = data store + short-term memory of the event (Quick Take, the Thesis,
-  Pre→Post Gap, ranked Insights, Gotchas & Practitioner Playbook, Tools Mentioned, conditioned Quote
-  Bank with confidence tags, Stat Bank with caveats, Slides Catalog, People & Outreach State, Content
-  Assets Produced, Documentarian Angles, Conditioning Notes, Verification Flags, Open Loops). All
-  downstream post-event content (Tier 1 comment, Tier 2 posts, outreach DMs) references it as their
-  canonical source. Event Phase = post_event, Platform = notion_only (internal data store, not
-  published). First synthesized 2026-05-28 from "Agents and MCP for Postgres" (NYC Postgres @ Google).
-  Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
-  Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —
-  terminal state, preserves relation graph for future knowledge base synthesis.
-  Status flow: needs_review → approved → scheduled → published. archived is reachable from
-  any state and is terminal. Archived content stays in the same DB (relations intact) —
-  deliberately not a separate archive table, to keep the graph whole for Phase 3-6 knowledge base mining.
-- Project Ideas (17 props): Project Name (title), Status (select: needs_review/active/shipped/
-  archived/deleted), Proposal Type (select: feasible/stretch), Complexity Band (select: 
-  prototype/small_tool/MVP/full_project), Stack Coverage % (number), Relevance (number 1-10),
-  Creativity & Uniqueness (number 1-10), Tool Coverage (number 1-10), Conversation Starter 
-  (number 1-10), Demonstrability (number 1-10), Content Moments (number 1-10), 
-  Composite Score (number), Architecture Summary (text), Created (created_time), 
-  Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
-  Active projects tracked via Status select. No hard cap — Alex manages bandwidth manually (cap removed 2026-04-20).
-
-**HubSpot** (CRM — Contacts & Companies):
-- Standard contact fields: firstname, lastname, email, phone, company, jobtitle
-- Company records with standard fields
-- Notes attached to contacts with just the event title as body text (primary event-tracking mechanism)
-- Event association via Notes: each Note body = event name, searchable for "all contacts from Event X"
-- Do NOT set industry on company records — generic categories are unhelpful
-- Static Lists NOT available via MCP (OBJECT_LIST write = NOT_AVAILABLE) — Notes approach is the MVP workaround
-- Fresh account (created April 5, 2026), full read/write on Contacts, Companies, Notes, Deals
-- HubSpot owner ID: 90413044
-
-**Apollo** (Not integrated — separate evaluation):
-- Not part of the event research pipeline. Alex evaluates Apollo independently via web UI
-  on high-value contacts to determine if paid plan (900 credits) justifies integration.
-- API blocked on free plan (`API_INACCESSIBLE` on people endpoints). If upgraded, integration
-  becomes a separate decision.
+Canonical schema for all three write destinations (Notion's 6 databases with full property lists,
+HubSpot CRM fields + Notes convention, Apollo non-integration status) lives in
+**`.claude/references/notion-schema.md`**. Database IDs are in "Notion Database IDs" below.
+Summary: Notion is the Content + Research Hub (Events, People, Companies, Topics, Content Drafts,
+Project Ideas — all bidirectionally related); HubSpot holds Contacts/Companies with event-tracking
+Notes (Static Lists unavailable via MCP); Apollo is evaluated separately (API blocked on free plan).
+Live Notion schema is the source of truth — verify with `notion-fetch` before batch creates.
 
 ### Notion Database IDs
 - Content Drafts: collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775
@@ -347,75 +280,17 @@ Notes approach replaces Static Lists for event association (list write not avail
 14. **Stance is earned; the roundup sets the table (added 2026-05-30).** A viewpoint without space for context + analysis is a hot take, and a hot take in a synopsis adds ZERO value. Bold POV is deferred to formats with room (post-event recaps, deep per-event posts) and grows with Alex's expertise; the Upcoming Week roundup SETS THE TABLE (topic + state-of-union + field tension, no side). Also decenter the self (curator, not protagonist — the events are the subject, not Alex). Capture per-event steering context BEFORE generation via the `steering-interview` skill. Canonical: `content-style-guide.md` v0.5 + `content-anti-patterns.md` v0.5; the front→back quality loop is steer (`steering-interview`) → generate → comment (Notion) → mine (`update-voice-and-style`).
 
 ### SDK runtime constraints (added 2026-05-07 — orchestrator → synthesizer pivot)
+Full resolved-diagnostic record in **`.claude/references/sdk-runtime-constraints.md`**. Two durable
+constraints govern all agent/command design:
+1. **Subagents cannot spawn other subagents** (Anthropic SDK design — `Agent`/`Task` is absent from subagent contexts). Any fan-out must run from the parent thread (the slash command's main conversation); synthesis-only agents (text in, text out, no dispatch) are fine as subagents. Every subagent in `.claude/agents/` must declare an explicit minimal `tools:` frontmatter line (prevents context bloat + "Prompt is too long" failures).
+2. **The agent registry is session-frozen** — the harness reads `.claude/agents/**/*.md` ONCE at conversation start. Any add/edit/delete to an agent file requires a FRESH conversation to test; mid-session changes are saved to disk but not reflected in the live registry.
 
-**Subagents cannot spawn other subagents.** This is an Anthropic SDK runtime constraint, not configurable via frontmatter or settings. The `Agent` tool (formerly `Task` — renamed in v2.1.63, both names alias) is not exposed to subagent contexts. The constraint exists by design to prevent runaway nesting.
-
-**Implication for any "orchestrator" pattern:** any workflow that needs to fan out specialists must run that fan-out from the parent thread (the slash command's main conversation), not from inside another subagent. Synthesis-only agents (text in, text out, no dispatch) are fine as subagents.
-
-**Confirmation:**
-- Official docs: [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md) — *"Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation."*
-- Empirical: 6-agent layer-by-layer test (2026-05-07) confirmed `Task`/`Agent` is absent from every subagent's tool surface — directly callable AND deferred-via-ToolSearch — across the orchestrator + 4 specialists + notion-writer. `ToolSearch select:Task,Agent` returned "No matching deferred tools found" in 5/5 attempts.
-
-**Pivot landed 2026-05-07:** `event-research-orchestrator` agent deleted; replaced by `event-research-synthesizer` (text-in, brief-out, `tools: Read`). `/event-deep-research` Step 2 now dispatches the four specialists in parallel **from the parent thread**, then Step 2.5 dispatches the synthesizer. See WORKFLOWS.md "✅ Resolved 2026-05-07" for the full diagnostic record.
-
-**Related fix landed same day — frontmatter `tools:` discipline:**
-`notion-writer` was failing with `"Prompt is too long"` because its frontmatter had no `tools:` line, so it inherited the parent's full ~250-tool deferred list. With Haiku's smaller effective context window, the pre-flight harness check rejected invocations before the agent ran (`total_tokens: 0, tool_uses: 0`). Fixed by scoping `tools:` to Notion MCP + Read only. All 4 research specialists got `tools: WebSearch, WebFetch, Read` for hygiene.
-
-**Best-practice rule going forward:** every subagent in `.claude/agents/` should declare an explicit `tools:` frontmatter line scoped to the minimum tools it needs. This prevents context bloat AND makes the agent contract reviewable at a glance. The pattern is established by `systems-analyst.md` (`tools: Read, Bash, WebSearch, WebFetch, Grep, Glob`) and now applied to the entire event-pipeline agent set.
-
-**What this means for YED-24** (Wire systems-analyst into commands/agents architecture): systems-analyst CAN be dispatched from a slash command's parent thread (where `Agent` is available) — that path is unaffected. systems-analyst CANNOT be dispatched from inside another subagent's context (e.g., as a step inside event-research-synthesizer). Plan slash-command integration accordingly.
-
-**Second SDK constraint (discovered same day) — the agent registry is session-frozen.** The harness loads the list of available agents from `.claude/agents/**/*.md` ONCE at conversation start and uses that registry for the rest of the session. Edits, additions, and deletions to agent files mid-conversation are saved to disk but are NOT reflected in the live registry. Confirmed empirically 2026-05-07: after deleting `event-research-orchestrator.md` and creating `event-research-synthesizer.md` mid-conversation, the runtime still listed `event-research-orchestrator` as available and could not find `event-research-synthesizer` (or any other newly-named agent like `notion-writer-v2`). **Validation rule:** any change to a `.claude/agents/` file requires a FRESH conversation to test. Mid-session edits cannot be smoke-tested in the same session that made them. This is the same root cause as the long-standing "custom agent discoverability mid-conversation is unreliable" gotcha noted in WORKFLOWS.md, but applies more broadly than just newly-created agents — it applies to ALL agent definition changes (frontmatter, body, model, tools, name).
-
-### Notion create-pages gotchas (2026-04-18 — learned live on FDE event writes)
-These are non-obvious property format rules that bit us during the first real event run. 
-Follow them mechanically; the API error messages are the source of truth if anything drifts.
-
-a. **Multi-select properties take a JSON-array-STRING, not a comma-separated string and not a native array.**
-   - Correct: `"Industry / Space": "[\"AI/ML\",\"Enterprise Software\"]"`
-   - Rejected: `"Industry / Space": "AI/ML,Enterprise Software"`
-   - Rejected: `"Industry / Space": ["AI/ML","Enterprise Software"]`  (native array)
-   - Same format for People.Role Context.
-b. **Select properties must exactly match a defined DB option.** When validation fails, the API error text 
-   lists the valid options — trust the error, not the doc/CLAUDE.md. The authoritative schema lives in Notion.
-c. **Relations take a JSON-array-string of full page URLs (not bare page IDs).** Use the `url` field returned by 
-   notion-create-pages verbatim. Example: `"Company": "[\"https://www.notion.so/347d3699...\"]"`.
-d. **Date properties must use expanded format.** `"date:<Prop>:start"` + `"date:<Prop>:is_datetime"` (0 or 1). 
-   For datetimes with end times, add `"date:<Prop>:end"` alongside.
-e. **Before any batch create against an unfamiliar DB, verify live schema with notion-fetch on the data_source URL.** 
-   Property names, option sets, and types can drift between docs and the live DB.
-f. **Write order for bidirectional relations:** Companies + Topics (no deps, parallel-safe) → People (needs Company URLs) 
-   → Event (needs People + Companies + Topics URLs) → Content Draft (needs Event URL). Skipping this order silently 
-   produces empty relation fields.
-
-### Notion update-page gotchas (2026-04-26 — learned during eval-harness cycle 1 delivery)
-These are markdown-flavor rules for `notion-update-page` (and `create-pages` body content) that bit us during 
-the orchestrator delivery. Each rejected syntax was tested live and observed to land as escaped literal text.
-
-g. **Toggle/collapsible sections use `<details><summary>...</summary>...</details>` HTML — and ONLY this form.** 
-   Notion-flavored markdown's `+++ title ... +++` syntax does NOT work; lands as literal `+++` text. The `<details>` 
-   tag is the only allowlisted HTML form for toggles in this MCP. Inner content is auto-tab-indented in fetch output 
-   to indicate nesting — that's the visible signal it parsed as a real toggle block. Use this for preserving 
-   deprecated/superseded prior content on the same page (avoids sub-page sprawl).
-h. **There is NO markdown TOC syntax that works via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, 
-   `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. The only path to a real auto-updating 
-   TOC block is the `/toc` slash command in the Notion UI (one-time per page; native block then auto-updates as 
-   headings change). Workaround for write-time: insert a static "Page index" callout at top (see convention `i`).
-i. **Page-index callout convention** (orchestrator deliveries + any multi-section page worth scanning at a glance): 
-   blockquote with 📑 emoji, bold "Page index", bullet list of H1 sections each with a one-line description, 
-   ending with the italic tip *"Place cursor below this callout and type `/toc` to add Notion's interactive 
-   auto-updating table of contents — one-time per page."* Static fallback that gives glanceable structure; the 
-   `/toc` step is opt-in and lives in the UI.
-j. **`<` in body text is auto-escaped to `\<`** in stored markdown but renders correctly in the Notion UI 
-   (`\<5min` → `<5min`). Cosmetic only — don't try to "fix" it by removing the escape.
-k. **Markdown `|`-tables auto-convert to native `<table header-row="true">` blocks** on write. Rendered as 
-   real Notion tables (sortable, filterable, resizable columns) — preferred over leaving them as raw markdown.
-l. **`update_content` `old_str` must match the STORED markdown, not the markdown you authored (2026-05-27).** 
-   Notion normalizes emphasis on write: `_italics_` is stored as `*italics*` (single asterisks). An `old_str` 
-   written with underscores fails with `"No matches found"` even though the rendered text looks identical. 
-   Fetch the page first and copy the exact stored snippet, or author the match with `*`. Em-dashes and other 
-   characters are preserved as-is — emphasis markers are the trap. (Learned wiring Gamma carousel URLs into 
-   post drafts: the `**Carousel (Gamma):** _placeholder_` line matched only after switching `_..._` → `*...*`.)
+### Notion MCP write gotchas
+Property-format rules for `notion-create-pages` and markdown-flavor rules for `notion-update-page`
+(toggles, TOC, table conversion, emphasis-marker matching, the `\n`-mangling gotcha) live in
+**`.claude/references/notion-write-gotchas.md`** (conventions a–m). Follow them mechanically; the API
+error messages are the source of truth if anything drifts. Primary consumers: the `notion-writer`
+agent and the pipeline command files.
 
 ### Systems-thinking harness (added 2026-05-04)
 
