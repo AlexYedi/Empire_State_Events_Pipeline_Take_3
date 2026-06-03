@@ -105,7 +105,7 @@ This iteration uses Claude skills as the research and content engine, with MCP c
 directly to destination systems. Human-in-the-loop by design — Alex reviews research as it's 
 generated, which improves quality and eliminates the fragile automation chain.
 
-### Core Skill: Event Research (TO BE BUILT)
+### Core Skill: Event Research (BUILT — `/event-deep-research`, multi-agent rebuild 2026-05-04)
 Invoked manually when Alex adds an event to his calendar. Input: pasted calendar invite text with 
 natural language cues about speakers, hosts, topics. Output: structured research written directly 
 to Notion and HubSpot via MCP.
