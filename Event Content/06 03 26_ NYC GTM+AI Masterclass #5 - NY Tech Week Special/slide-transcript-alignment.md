@@ -28,8 +28,8 @@ A one-time, hand-built multimodal alignment of the **22 slide photos** against t
 | **Nimo Shkedy** | Founder, NYC GTM Community / Impact 11; ran the Swan/S1 cloud-harness demo | ✅ Yes (host) | "Nemo" |
 | **Sangram Vajre** | CEO, GTM Partners; ex-Terminus founder, ex-Pardot | ✅ Yes | "Sandra", "sangram", "Sangram Vaire" |
 | **Eric Nowoslawski** | Founder, Growth Engine X (cold-email agency; early Clay collaborator) | ✅ Yes | "Eric", possibly mis-intro'd as "Harry" |
-| **Nikita** | Optimizely — PM on **Opal** (AI agent harness for marketers); Insight portfolio | ❌ **Added after** | "Nikita" |
-| **Kenny** | Head of Marketing / "GTM engineer", **CoverForce** (Insight portfolio) | ❌ **Added after** | "Kenny", "coverforce" / "Hubbard Forest" |
+| **Nikita Bokil** | Optimizely — PM on **Opal** (AI agent harness for marketers); Insight portfolio | ❌ **Added after** | "Nikita" |
+| **Kenneth Tsai** (goes by Kenny) | Head of Marketing / "GTM engineer", **CoverForce** (Insight portfolio) | ❌ **Added after** | "Kenny", "coverforce" / "Hubbard Forest" |
 | **Jack** | Insight Partners — AI Lab / advisory (applied AI team); venue host | ❌ Not in brief (host intro) | "Jack" |
 
 > **🆕 Roster delta vs. pre-event research.** The pre-event brief (`NYC GTM+AI Masterclass #5 — Research Brief`, Notion) covered 4 people: Sangram, Nimo, Eric, Jennifer. **Two content presenters were added after** and appear only in the event material: **Nikita (Optimizely / Opal)** and **Kenny (CoverForce)** — both Insight Partners portfolio companies, slotted in by the venue host (Jennifer: *"we're gonna hear two of them today"*). Plus **Jack** (Insight AI Lab) did the venue intro. → These three have **no Notion People records yet**; create them when committing post-event content. Jack maps directly to the brief's "Insight Onsite" bonus job-search target (Success Signal #4).
@@ -104,7 +104,7 @@ The gaps are the event's seams: **+17m / +16m / +20m / +10m** gaps mark presente
 
 ---
 
-### SEGMENT 3 — Nikita (Optimizely): "Nine lessons from building Opal"
+### SEGMENT 3 — Nikita Bokil (Optimizely): "Nine lessons from building Opal"
 *~23:03–23:16 · enterprise AI agent harness for marketers · ~$400M ARR, two decades*
 
 | # | Time | Slide | Presenter | Transcript anchor | Conf |
@@ -138,7 +138,7 @@ The gaps are the event's seams: **+17m / +16m / +20m / +10m** gaps mark presente
 
 ---
 
-### SEGMENT 5 — Kenny (CoverForce): the ABM bot, end to end
+### SEGMENT 5 — Kenneth Tsai (Kenny, CoverForce): the ABM bot, end to end
 *~23:45–23:58 · "GTM engineer," Insight portfolio · footer reads "CoverForce · ABM bot · Kenny · May 2026"*
 
 | # | Time | Slide | Presenter | Transcript anchor | Conf |
