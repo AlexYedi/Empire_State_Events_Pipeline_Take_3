@@ -1,0 +1,104 @@
+[Speaker 1]
+I'm gonna I have a lot of charts to show the what we've done here, but I promise they will not be bored. Okay, so, but background enough first. Where are we? Where are we back? So if you go back to uh, 2022 was not a good time, uh. In the company, we were that intercom, um, you are the supposed covet, uh, decline.
+
+We are blue, the science over, oh, average is in black, and like we were doing much worse than the SAS average there. Everyone was suffering, we were suffering worse. Uh, then we basically had, uh, oh, and our CEO came back, and it was, was it? November 2022, when Chad GPT launched, it's like, hey, there's this, um, big future of, uh, what's now possible?
+
+Are we gonna go after this? Do we believe we'd go after this? And, um? We basically felt that we sold the customer service team's business was slowing, and we kind of felt like if we don't go after this, someone else is going to make our business die. You have to basically be willing to make our own business die, and so we decided pretty fast to go all in.
+
+We made increasingly big bets there through the way of like going all in, um, after this basically filling our company survival was on the line. And, uh, you can see it started to to turn there. It was roughly around the fin launch. I don't know that, quite uh, single-handedly turned that around at the out there or actually, it.
+
+But you can see here, like the trajectory, since then of really going all out. It's pretty dramatic. The last part of it is still where our targets are, but the solid line is real numbers, and it really dramatically changed the trajectory of our company and change where we are relative to the majority of SAS only.
+
+So overwhelming, majority of tasks. So, um, it's like, these are the numbers here. The and the the our fin revenue is going to be over half of our business by the end of the year, so it's a it's a dramatic change, a dramatic turnaround that we've executed through lots of pain, um, like.
+
+What do we have to do to do that, right? You can change everything, and like our strategy, our missions, our culture, what we build how we build it. That's what I'm going to talk about today. Uh, our momentum, our pricing and packaging we had to rip up and change.
+
+Our teams are rolled. We had new groups. We had to go all in on the Ford deployed engineer thing. We never had any of that before. Product differentiators how we sell, how we incentivize, how we sell. We changed our branding, uh, and we actually finally changed the name of our company.
+
+From intercom to Finn just a couple weeks ago. So, like all in, on change and everything and going after this. So, what I want to talk to you about today, is I want to lean on that, how we build part, and uh, what you have in front of you here, and this is last summer.
+
+So this is 2025. So some of that chart's already there sometimes direct, uh, cause for all of that, but this is very much in the thick of, like, what we've been willing to go after, and we kind of framed it our 2x, and this is Darren's letter internally of, like, hey, we've got them more thoroughly em!
+
+Talking to r d and I'm kind of frame to double the productivity, and I remember Tara talking about is like it feels like we should say 10x, but I don't know if we'll be able to and 2x is still ambitious, and we're going to measure this and let's actually do it.
+
+So 2x is like ambitious and simultaneously, not at the same time it what it felt like, but um, so that was last summer. And this was like his family here. This is not like an aspiration. Let's see if we can go make this and Nicole and therefore measure it.
+
+And so that was the framing of it and cutting to the end is it took us nine months to get there. And we did it, um? So, I'm not trying to tell you the story of how it actually played out, uh, because it was not straightforward, uh, so phase one of how we approached.
+
+This was kind of like, softly, softly encourage. Hey, we've got this ball. Let's go after it. Everyone on your own, uh, encourage and support people right. And so, what does that mean? Well, first of all, like, whatever tool you want use anything, we'll squirt anything. Just go after this, figure it out yourself, and um, basically, hoping for like this bottoms Up thing.
+
+Hey, there's no spending limits here, um, just go for it. That's right, we're all in then, and basically a flat line Flatline for like six months. We're nursing meaningful increases, except for a small number of Engineers who were the real Peaks in. So, there was, like, very slow, uh, here.
+
+So, uh, mediocre adoption, like, very little standardization, incremental gain, and no real, meaningful change in how we're working here. So, this started out very slow, so phase three was, like, uh uh, Dara single, was, like, okay, we gotta be way more deliberate about how we're going after this. So, so?
+
+Opinionated about the system and aggressively driving change. This became not just a top down here to call. Go after a team of like, no, no, no, we are going in and telling you what to do, how to do it, leading way more, uh, putting it into perfect reviews. I'll talk through a lot of stuff that we did here.
+
+So big change. Now, what I want to call out is, of course, January. This is Mario, one of our principal Engineers kind of, kind of saying. And hey, we're at this inflection point, right? If I started December, so this obviously overlap is a huge incre. Capability, so that's a big part of the story, but a huge part of it is is also the culture around it and the work around it to make that happen, but just want to acknowledge the model capabilities a huge part of the change as well.
+
+So the first thing was, like, the, uh, the best way to get Behavior change is to force it right. So, we started, but we started with something that actually worked well, so it started nicerizing with makeup fun. So this was, we did this hackathon, and there was a lot of effort into this.
+
+Based on the data Engineers. Build out test systems that everyone can go set up to try to basically build Fin yourself. And so, like, here's the mini rat system. It's just on the rack system here. It's basically Guild your own rack system for Finn and giving you the tools to do it in terms of like the infrastructure is set up.
+
+Here's the questions to evaluate again so you can see there's like a score here. They create a system where you can say, run it and score it. So, all the system? And try to eventually build their own rack system and what we did is it started with engineering. I was like, we got the PM team to go after this, and that actually says all of r d.
+
+You must do this. So, I made everyone do this, but actually what we saw happened. There were multiple things here one if you get gamification when you get to like, and then basically everyone was using thoughts. You gotta use pod, make a change to your system, and then run it against the scores, and then you see where you're going against the leaderboard.
+
+It's like the basic gamification works as a drug, so a is like the gamifying thing works, but B what it actually did, because almost no one. Some of these, like, like the people at the top. Okay, these were actually Engineers who knew what they were doing. Sobs designer James designer Manuel.
+
+I worked on like our I.T team like, uh, the list there, and it got with more folks even broader. Outside of that, these were a lot of people had no idea what they're actually doing and entirely Vibe coding through Claude and then leaning in and figuring out what they needed to do.
+
+What was this huge upshot of this one? It got everyone, like holy s***. I knew nothing about this, and I was actually getting to a reasonable place that mental unlock is what we brought with this with that gamification, and that some people, just just.
+
+Like, I said, you were spending way too much out of this damn leaderboard. You got to come back over here to run to the family, and it's just a bad leaderboard here, but so, hey, I got people hooked into what they could do, and also taught that my heart is because we build a really good rock system, but that was like secondary because it basically plugged them into that.
+
+This is like feeding the drugs and, like, do you taste the drug about clogged podium because it's unreal when they're unlocked. So, that was, like, the softly, softly, fun gamify. It make it fun, but the second part was really building the system for engineering this really engineering Centric there.
+
+By the way, just going back here. Oh, we had EAS going big. In this, we had the whole company it was. It was required for R and D. The whole company could go into it and you have people from random parts of the company going in and getting.
+
+Them more like fuzzy things of, like, why is something beautiful, right? That's something that's like, very hard to convey in, like print language, and so you can even map that to something like design, where the things that were easier to express of, like, hey, like, um. For example, if you're a front-end engineer, a very common task is to go to Google fonts like, find a font you can kind of print that and attack way, but it's not necessarily framed in, uh, like an artistic way or design way, if you will, and so I think that's we'll see.
+
+The models get very, very good, but sort of sort. Underhood. We're kind of breaking it down into almost like a mathematical or a scientific manner that's easy to verbalize or Express rigorously. And that last mile of like this human intuition judgment taste. I think that's. That's the part where folks are saying that, um, that'll kind of be like the last thing to go.
+
+I do think those models will get good at those layers, and there will be like some fuzziness as to like, which Camp we're actually sitting at, um, but at least for right now. That's kind of how I kind of see the world. Like, better than that. Like, where, where do you view the capability for creativity, uh, with the model particularly working on cloud design?
+
+Where? What's your sense of? Um, things.
+
+English, like, there's like a book, uh, I think it was called, but I just call it steal like an artist, and like a assertion of the book. Is that, like every good piece of art, is like a remix of some other piece of art? And so, like, if you think about the capability of like, give the model a reference and have it like remakes in some way, and I totally admit that's going to be something that is very favorable tonight, and so that's what I mean.
+
+We're like, it's like, you're almost like asking Sonic May approaching, like, what like real creativity can be. That being said, like the, the biological brand has just like, uh, just an amazing. Ability to like, do things that, like, this building's great, definitely can't. And so, where exactly that line sits, I think, is fuzzy, but at least for right now.
+
+I do think that there's like a lot of creativity, or like the way that humans come up with ideas, and you just can't necessarily replicate it. It's also one of those things that, like when we we ask questions of what AI can do without being reflective on quite how to teachers normally operate.
+
+You know, things like design Trends and like? Designers out there and them. Apps seem pretty damn similar when you look at him, like how much creativity is there so, or even like solving u problems of, like, well, mostly, I just want you to get the core ux right of the coordinate to get this right, which it almost feels like, well, you know.
+
+Sure, I don't know. Have you actually built? Into Cloud design, like, is that? Or is that organically, uh, learned? Yeah, for sure. Yeah, like a lot of them are trying. Capabilities comes from like foreign design skill, which is something that I wrote, uh, and so that's kind of like a set of instructions every year to like, make a model more creative.
+
+I, I was really pleased to see that some of the work, like, I guess, like, using a front engineer, and that's actually your designer, but it definitely saw the model get to a point where it was designed and started that were like, way better than what I was designing.
+
+I don't think I'm like. I think I'm good at this, but I'm more of, like, a good guy. I had a photo design guy, right? So, like, I'm sure there's like Grandmaster with the skill, but to your point, like a lot of stuff. At the end of the day is sort of, like, relatively on distribution, which is like, what goes over that, like?
+
+So, we've talked a little bit about a company that's unrecognizable from Ottawa's a couple years ago. Uh, Cadence, and everything that's unrecognizable, come on, was a couple of years ago. What do you guys think in the product worlds and before we get to some of the audio questions, what is the experience look like in like two years?
+
+This is kind of hard to see the future. But what does a product team shift in 2028 and big cash shift that? Where do you see this kind of extra play against? But, well, I think, um. Where I'm actually trying to write a blog post on this here. Like, what we all know is happening is, you know, the GUI is not dead.
+
+Let's move to the background and chat with on-demand GUI that's being built in. There is kind of replacing and everyone's figuring out. Wait, what's the dynamic here between what is the UI, I think, like cowork to me, is the model of like the spear, if it's just the future of where.
+
+Is this where the future of all apps go into? I think that's like a bigger question. How much does that become like a gravitational force where people want to do most of that work? I think this is, like, hard to. It's kind of need to play it out and use stuff like, we're actually with this leadership operator.
+
+That's a lot of people you actually want to do this at co-worker, but there's a lot that you can build in uniquely into your out there. I'm not, you know, no one wants. It's hard to make, um, predictions here, but, but fundamentally, like a lot of what's interesting, even like ux, a lot.
+
+A lot of you actually fade into the background. It's hard to build after good ux and and.
+
+You're doing so much where you're working with the LMS, like in a goal driven way, not a task driven way. I think that's the huge shift, right? It's like the tasks phase of the background. Do this changes formatting or do that where you're actually help shaping. What's the goal I want to accomplish here with this app?
+
+I'm trying to solve with this improvement here, and so I think it's, it's just let it just moves up the stack of values, and therefore. When you're moving up that stack, it's less detailed in the specifics of you. I have more conversations like more at the level of the language there, so it does feel like conversations will be increasingly dominant as the form of UI but not on their own and the rest of it doesn't go away.
+
+You still need reference artifacts around there, so I think this I think this is, um. Super interesting juncture. We're at navigating how this shift would clearly that is going to be way more dominant and primary than just like, hey, you've got this app, and you've got something on top that can help you do it.
+
+It will for a lot of places, maybe for most things be the primary, um? Of the primary way to interact with some supporting parts that we're still figuring out. That'll line with your thinking, Christy. What would you place your big fats on for the next Paradigm shift or where it'll end up at the end.
+
+Yeah, for sure, I think, like, we're already saying this now, but it's only gonna get. I think we're dramatic this time. That is on, which is like, when you start. It's almost like a place that you start from is obviously customer problem. Right on the non-technical side, but on the technical side, it's kind of like, what is the model capability that I'm trying to developer?
+
+Express like, uh, agent decoding, right? This wasn't even a thing, like three years ago, because we didn't have like capability to harness. And so, when you think about moving that product, it's like, I think a lot of the folks that have been very successful is saying, like, okay, we understand this market.
+
+We understand these pain points really well. The model is.
