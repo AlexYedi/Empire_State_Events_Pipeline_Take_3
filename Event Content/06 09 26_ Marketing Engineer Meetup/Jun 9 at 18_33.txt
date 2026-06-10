@@ -1,0 +1,680 @@
+[Speaker 1]
+If you're looking for a home figure event, please reach out. Um, and yeah, I work with our quotes. I'm really excited set up and requirement. So, with that, well, that's what I understand. Cool. All, right, hey everyone, uh, I'm Sam. I'm the co-founder and CEO of knock.
+
+[Speaker 2]
+Uh, thank you for coming out. This is our first ever marketing, engineering Meetup, and uh. When Michael Greenwich reached out a few months ago to say we're opening a New York office, you can host events there. Like, okay, maybe we'll take you up on that. And here we are, so thank you to our hosts at work OS for letting us host this event and use this space together.
+
+So, here's a quick lineup of what we're going to be doing tonight. I have a few notes on this what we're building at NOC. We have a great lineup of sessions and demos for you after that. Uh, we have a short panel where you'll get to ask questions of all the speakers tonight.
+
+And then, we've got an after party, so we need to be out of here by like 8, 30, 8, 45, so I'll have a few drinks here and then you're going to the after. After party, we will be going to Toad Hall. Uh, if you haven't been there, it's uh.
+
+It's worth worth joining for that, so we'll see you then, all right. Uh, so I wanted to say a few things on what we're building at knock and why we're hosting a marketing engineering media. If you don't know what we do at knock? Uh, let's try to explain it is.
+
+Let's say you are building a startup and what do you do? First, you build your product and you have a little rocket here. So, of course, we're going to launch our product, and we start getting users and. Those users start using this at scale and paying us, and so we start sending emails around billing and usage and the activity that's happening in our product.
+
+We call that transactional messaging, which basically keeps your users having a good time and making sure there are no surprises and helps you grow. Uh, then you start noticing that some of the people that sign up for the product. Don't ever start using the product they're activating the product, so you start sending onboarding emails or in-app nudges that help users discover all the great product that you're building more of an activate and become paid customers.
+
+You grow faster, and uh, that's life cycle messaging. And both of these work together to help your product grow the way that it. Good, and we power both of those things at knock. Uh, which is, as I said in a different way, we power product-led growth for clouds. Uh, we do that for some amazing products out there.
+
+If you've ever gotten an onboarding email from granola or a transactional message from verselle around a billing or deployments, or if you've logged into webflow and seen their in-app messaging about their new features. All of those experiences are powered by not. So?
+
+So, why are we hosting marketing engineering Meetup? Uh, when we started knock, it was really important. The transaction messaging use case, which meant that our primary customers or Engineers and they asked us for Version Control so they could roll back changes if they needed to. They asked us for environments and branching so they could isolate changes on longer running feature work.
+
+They asked us for a CLI command line interface so they could work with knock in their own code base and manage us as part of their deployment pipeline, so we built all those things, and then our customers started bringing us into more of their life cycle and growth messaging, and we started meeting more group marketers and life cycle marketers and marketing Ops teams.
+
+And around six months ago, probably we started noticing that those roles. And starting to use more. You know, branches, and knock and starting to use our CLI with tools like Cloud code and codecs. Uh, until now, you know, our CLI and our consumer, actually, the number one way that customers do things and knock?
+
+Which has been kind of amazing to see, and I think is a good just kind of. Uh, visualization of the way we've seen of both Engineers, but also more and more now. Marketers doing more with Ai and from climbing this AI adoption curve and getting more and more output out of AI.
+
+Um, and they're doing it by becoming more technical. They're doing it by becoming marketing Engineers, which is why we wanted to put on this, the vaccine. So, how does that kind of Journey happen? It starts with chat bot sessions, maybe doing chat GPT, the like, Gateway prompt of AI is like draft this announcement copy for me across these different channels.
+
+So you're doing something you were doing before you probably copy pasting out of chatgbt? Um, you're doing it faster, but it's not a huge step up in output. Then you start handling longer running projects. You probably graduate to a co-work or codex. You're working on a local project on many files.
+
+Maybe you start playing around with NCT connectors to bring those files where you do your work, but you're not in the code base yet that comes next. You start instrumenting product events that, in the past, an engineer would have to instrument for you, uh, maybe you start shipping landing pages completely on your own, uh.
+
+And then, finally, you start working within systems engineering. You start spending on agents that run when you sleep. They open PRS for you. They, you know, analyze your your website for costlink opportunities where you have to do that manually. In the past, we think that kind of AI adoption ladder does a good job of just mapping out the journey that we see, uh.
+
+Marketers. And you know other business roles taking and there's this sort of upward gravity lift where as you start getting deeper and deeper into what these tools can do? You can't really help with it, become more technical because it will enable you to do more and more than we've seen that with our own team internally.
+
+Uh, that's also how we think about AI within the not products and I wanted to share a few of the things that we built. The last few months that are going to accelerate enough and? And we think of like the agent that we build a knock should work, uh, in those kind of, like, chat bot, or like single session use cases.
+
+So, maybe your email marketer, and you're just prompting the agent to create a template from scratch, or you're updating a template and in the background, you know, the agent knows your design system, and it creates things that look on brand and look good, but you know, it still worked that you're doing faster of work that you were doing before.
+
+Then you have the agent working and again is like longer running projects. Maybe you need it to update all of your templates because you're rebranding the company, uh, which we have with customers, you know, that happens? Uh, we have an agent that will just spin up an isolated Branch so you can review the work that it's doing.
+
+It's not just yellowing at all in your production instance, and that is like again, the agent working in projects look working on these longer running threads of work and doing it in an isolated way. And we think that theme of kind of. Uh, marketers and marketing Engineers starting to work on more of these kind of constructs that in previously were reserved for like software engineering.
+
+And if you think of? Uh, you know, the story of software engineering and in the late 90s, starting with just like FT. King file streaming the production as output and velocity increases. You have more control as it need to be instrumented on top of it to keep it. Keep things safe as you ship more and more.
+
+See on Version Control and then environments. And as we look around at a lot of the marketing swing, uh, that we use or we've used to pass companies, you know, a lot of it's still in this kind of, like, single environment. You're just publishing it straight to production. And you know, our sense, is that as more and more, uh?
+
+Marketers become marketing and Engineers. We'll see more people learning Version Control and. Out, you know, thinking of things in terms of environments and these Concepts that have primarily have been engineering in the past? And then. Finally, it's a Holy Grail of like the top of the curve you're using.
+
+An agent inside of a system, so this is something that we're working with customers on today, and you know really what they're telling us is we want it to be able to activate, know our data. And built that context that an agent needs. You know, wherever the data lives?
+
+We want it to be able to work wherever the people that need to work with that agent are working. And then we want the agent to get smarter over time. Um, so agents start with the context that could be username and data. Uh, you know, in your Warehouse, your Warehouse models?
+
+Um, but what's cool about the swing that exists today is if you think about the life of a, you know, life cycle marketer that needs to go and build an onboarding well to help new users activate their product. You have to go to data engineering. You have to go talk to product engineering about whether the event has been instrumented, and if it hasn't now, it's you know, a ticket that needs to get done, whereas now, like, in a single prompt, you can just say, you know, go run an analysis on a warehouse, uh.
+
+However, your team is doing that with agents today. Uh, figure out what's the magic moment? What's the activation event that go check the code base that I've cloned locally to see if that event is instrumented and then go, connect it to the not workflow in the CLI and build that all for us.
+
+Uh, then you use, you know, the agent to build those Journeys. You're doing it from our dashboard Cloud code. You could even do it from slack, and then, as we start running those messages through our infrastructure, we're bringing all the exhaust data back into that content school to make the system smarter.
+
+So, you're running an agent autonomously, and what we think is really cool about. This is like, these are at the point where it can observe something like an onboard on. Inflow and understand the goal of that flow and. Basically start making recommendations for you that are ready in an isolated Branch.
+
+You decide whether to merge it or not, and uh yeah, we're just super excited about what we're seeing here, and where customers are taking us. So to recap, uh, we are building agents that are activating your contacts wherever it lives. They work where you do, and they get smarter over time.
+
+And we're doing that to. Health marketing Engineers shift faster. If that's you, we would love to get your feedback on what we're building. Uh, I'll be around after this. Come talk to me. I'm also at Sam at knock.app. So those are some slides, but we're also going to kick off some demos here.
+
+We've got Mike Carbone from our team. He's going to show you, uh. Using knock with cloth, so Mike overview.
+
+All right. So,
+
+[Speaker 3]
+To set the stage for this demo, let's say we're all working on a startup together. It's called prom pinch. Okay, so tokens are money. Save both what we do is we optimize the procs that you write. That.
+
+[Speaker 2]
+That we forgot to set up any of our activation events. Any of our growth systems, so people are coming into the product. And then they're not coming back. We don't have anything bringing them back in. So, what we need is an onboarding workflow, right? So? Traditionally. That's a difficult thing to do.
+
+It takes maybe a few weeks, you know, maybe some engineering buy-in, maybe some infrastructure set up, you know, designing these different Journeys and stuff. I'm going to show you how you could do that in five minutes using quad and the non-empty people.
+
+To start. We close this. I'm going to start up a quad here. Dangerously skip permissions.
+
+[Speaker 1]
+And I'm just going to get this started here because I don't have much time.
+
+[Speaker 2]
+But let me tell you about what we're doing here. So we don't have to work with Claude. By the way, this would work with any agent that uses mcps, you know, cursor codecs. So, what we just kicked off in Claude was this? I want to create a new user onboarding workflow knot that helps users activate, improved pinch, and eventually become paid customers.
+
+Look through the code base for events that we could use. We use work OS. There's some of that schema shapes over in our markdown file. We've already identified our two activation events as connecting an LLN provider that's going to be our main growth metric. That's what we want people to come back and stop and do.
+
+And then our second is going to be running your first prompt operation. So, this is something in our products that we want people to do, and this is going to be considered like a activated user, right? So, Claude building an onboarding workflow in dog triggered by the correct event that nudges users toward these two activation events in the first email show a button delay, then branch, and we have some instructions here.
+
+I was just kind of jammed. I was, like, man, what was this? Then we'll delay, you know? It's pretty much like vibe, coding your, uh, growth infrastructure, which is cool. Uh, and then, after the initial trigger event, let's also send an in-app lead welcome message and add a 45 second delay.
+
+Um, so there's two things to note about what's going on here. One. This is powered by the non-mCP, so for those that don't know, mCP is pretty much exposing like a superpower to the agent, uh. In this context, it's not, uh, it's teaching the agent how to write really good emails, uh, it's teaching you that it's teaching it about messaging infrastructure.
+
+Um, and it's able to use the non-ginner pace, which is really cool behind
+
+[Speaker 1]
+The scenes.
+
+[Speaker 2]
+The second thing is, this is just operating on our code base. It's discovering different events you can use to actually drive this system. So, let's check in. Oh, what's going on here? Okay, it looks like it's still freaking.
+
+All right, still cooking, still cooking. But it's pretty cool, because right now it's looking through the code base. It's seeing okay, what events are available to use? You know, the real goal here is it takes zero engineering implementation if we build it off of events, which is going to be really nice because we could drive this whole thing with zero code changes, which is the goal here.
+
+So? Let's see how we're doing okay, perfect. So, we have this user onboarding workflow. Uh, you can see it just added in the user event trigger. So, this is really cool because it pulled in the user.created work OSMN. And knows. Our system uses work OS, so it's able to use that event to trigger this workflow, which is awesome.
+
+I'm going to talk a little bit more about this in a sec, but let's kick off this other region here.
+
+So, in nag, this is a separate. This is our end product agent, so if you don't want to use? Cursor. If you want to use something directly in the product. This is our not region. I'll tell you about when I'm running here in a sec. So, it did a really good job building out this flow here, which is awesome.
+
+Implemented everything perfectly. Um, or as far as I can see, it's perfect. But what we just did was in iteration. It looked good, but we could improve it. Let's add an AV experiment step and an AI agent step before the first email. I want a 10 90 cohort distribution.
+
+Where 90 use some user property to create personalized messaging? The AI should generate first line subject in some body content. And in the email. We should use this. So, this is really cool because it's actually going to be in the product it's looking at our existing workflow, and it's going to be able to iterate and use that.
+
+Use that prompt the same way. The mCP agent just did, and it's going to edit this workflow for us. Um. So, let's see how it does here. If everything goes right, we should see, like, an experiment pop up here. And then we're gonna watch this AI agent hydration step.
+
+I see a different tool balls that's doing here.
+
+[Speaker 1]
+Yeah, let's figure it out. Sorry, live demo panes.
+
+Let's see, come on, buddy.
+
+[Speaker 3]
+So right
+
+[Speaker 2]
+Now, just to tell you a little bit about what it's doing is like, it's actually trying to solve correct. It's trying to run these operations, and if it fails to actually fall back on documentation, it looks around. It's like, all right, what's going on. We have a really good feedback loop for actually figuring things out.
+
+Um, in here, you can actually see. They figured it out, which is perfect, so we have
+
+[Speaker 3]
+Our 9010 cohort distribution.
+
+[Speaker 2]
+So, this is going to be an experiment now, where we send 10 to control 90 are going to go through this personalization step. So it's going to take some details about the user. It's going to say, let's create, uh, custom subject line and content for them. And then down to this one here.
+
+[Speaker 3]
+So we can actually see this in action. I actually built this out, so it's all hooked up. So, we'll go into the products here. This is off. Kit, thanks. Work with us.
+
+Oh my goodness. One of those demos.
+
+That's actually crazy. I did this a hundred times. It's never happened.
+
+[Speaker 2]
+Okay, cool. So, this is the personalization staff I was talking about. Um, and this is my test librarian. Okay, so let's say I'm a librarian trying to optimize my costs here. Um, what you can see is, you know, since I just did that sign up. The user created event went through workplus.
+
+Then, it went to naw and it triggered that workflow because we see that event for the first time. So, if you look up here, we actually have an in-app notification. And then in a few seconds after all those. Steps. It's actually running right now. We're going to get an email, which is really cool, because you can see we have this personalized.
+
+Email here help patrons buy more as a librarian blah blah blah. And of course, you could like tinker with this. And if you want to try it out for yourself? You could actually take your phone out here if you, um, want to see the onboarding flow. It's pretty cool, and you can mess with your customization and stuff.
+
+Um, so what used to take weeks? Maybe engineering? Maybe you know a lot of tinkering and stuff? In five minutes, we're able to get something. That's, like, really, really nice, and it goes through a multi-step flow, just like that. Um, so it's pretty cool. Let me know if you have any thoughts or your feedback, uh, thank you very much.
+
+All right.
+
+I'm also ensuring our demos and sessions. So, first up, we've got Nick from profound. There he is, give him the hand folks. He's coming up the aisle.
+
+[Speaker 3]
+It was not on purpose, it just, I just happened. I was perfect. You were like, right back there. All right, there you go.
+
+Okay. Hi, everyone. I'm Nick.
+
+All right. Take your time. Okay, cool. I feel like a good level. Uh, yeah, sure. Yeah, this is great. Cool! Hi, everyone! I'm Nick, I work and profound, um, quick show of hands. Do you know what profound is? Rick, I have done my job correctly. Uh, okay, next show of hands.
+
+Would you describe yourself as a marketer? Okay, cool. The rest of you Engineers? Yeah, product product people, sales people. Okay, both. Um, okay, I'm showing you my slack Channel. I should not do that. Okay. This is what I want to show you. Okay, cool. Well, if you don't know what profound is, we help companies understand control and scale how they show up in AI search.
+
+So if?
+
+[Speaker 4]
+A marketer or product person, and you're like, how do I send transactional SMS from my app? You ask jetgbt, and then hopefully mock shows up on rehab companies like that. Uh, all over the world. We have 700 Enterprise companies that work with us. Uh, I raised the series C round of funding or billion evaluation in February.
+
+No, no, no, only cares about that stuff. Um, so anyway, this is me. I ran a half marathon on through two ago. It was hard. I'm not a runner, and I did it anyway. It has nothing to do with my talk today.
+
+[Speaker 3]
+What's the point of doing hard things if you can't go talk about them when you're on stage?
+
+[Speaker 2]
+Uh, okay, I have like two slides, and then I'm going to show you, uh, some stuff I built.
+
+[Speaker 4]
+Um, okay, we're hearing people talking about marketing engineering. I'm sorry, I can't. I can't do this, um? Talking about marketing engineering? We, this is going to sound egotistical. We invented the term kind of. But companies are already hiring for marketing Engineers. Plus, these ramp who's hiring for one, they call it agentic operator for growth marketing, paying someone 200k a year, which is cool.
+
+Uh, this is a screenshot from our slack channel. This is one of our sales people. Matt, uh, saying his customers hiring for two marketing Engineers very cool! This is Marvin. Marvin is Google's AI General. He says marketing Engineers are the higher of
+
+[Speaker 3]
+2026 period.
+
+[Speaker 4]
+Uh, fun facts about Marvin. He started the same day as Sundar, which I at Google at 17 years ago, which is like the flex of all flexes, uh, and this is me talking on LinkedIn about how I don't want to be ahead of marketing, and I want to be a marketing engineer instead.
+
+Got like 200, 000 Impressions. That's pretty cool. Uh, and so what is a marketing engineer? Do this is a question. A lot of people ask us what you do, and I say, I don't really know honestly. Um, I'm code and plot code on half the time I speak half the time and then, um, I run that marathons apparently.
+
+Um, we think marketing Engineers say at the center of the marketing team and so between growth AEO, SEO, demandjab, contact and?
+
+[Speaker 3]
+We see this as kind of a separate function from marketing Ops like marketing Ops is the foundation and a marketing engineer sits with their team and builds AI tools, systems, and agents to help their teams do more work. Faster. They do things like automate overhead, like, uh, automate repetitive tasks routine, is doing over and over again.
+
+But the real slope comes from inventing new ways of doing marketing. So, at the end of my slides, if you want to take a course. On becoming a marketing engineer, you can. It's free. There's no sign up. I will not take your email. I don't want your email honestly.
+
+Um, in here I teach a lesson. I teach two lessons, but uh, one lesson I teach is called. Apis are easy, because that is true. Apis are very easy, um, you should. They're very cool. Okay. Um, I been to the time myself when I started talking, and I forgot.
+
+I'll start the stopwatch and just like just flag meeting where I can stop yapping. Whoever wants to tell me to stop talking? Um, okay, let me show you some cool stuff I've built, um. I am kind of like a show of hands person so. A quick show of hands.
+
+Has anyone used the new anthropic model today yet? Nice! Yes, I love you guys! Um, I spent like three hundred dollars, a profound money using it today to redesign my own personal website, which used to look like this. It was okay. Um, fun facts. I used to rank number one in Google for the keyword free mission templates before notion, having a good template Library.
+
+I was, like, all over their SEO. Uh, and made a lot of money doing it, but this was my website. It's okay, and I basically pulled up the new impropic model, and I was like, please, help me fully redesign. My entire website and. It opened five pull requests.
+
+[Speaker 1]
+All of these, this one's unrelated down here. Let me zoom in and we should go and see. Uh of a simple request. Again, we spent like 300 doing this, which is cool. And it built this instead, which I think is pretty sick. I did no work outside of, just like saying, hey.
+
+Please redesign this, and maybe like a two two sentence prompt, maybe? The coolest thing about my website that ties into profound?
+
+[Speaker 3]
+Is, uh, it's this attic web server. It builds a week and
+
+[Speaker 1]
+Using the profound API. It pulls a lists, an account of how many times my website was cited in AI search. It's been cited 40. Thousand times. Which is cool?
+
+[Speaker 3]
+All of these. This is, this is my most popular page. It's been cited 130, 000 times. Yeah, I search have all dashboard that shows. What model is cited? My website most often, and I built all this in in Cloud code mostly. So, that's one thing I.
+
+[Speaker 2]
+The other thing I built? Is that I was talking to someone.
+
+[Speaker 3]
+At the beginning, who's launching a startup? You're here, where are you on the back? What's your name? Arvin Armin. What's your? What's your app's name? Carol Carol, uh, Armin is, uh, has a is a priestee founder, uh, he got laid off last week, and he's going all in on his app.
+
+So, please, I give him a round of applause.
+
+[Speaker 1]
+He's here because he wants to learn marketing, um, feel free to DM me on LinkedIn afterwards and talk about it.
+
+[Speaker 4]
+Uh, we post on LinkedIn. We post a lot on LinkedIn, actually of repostation on on make 10, like seven times a day across my profile. Our Founders profiles. Uh, and make that and drives these for us. And I knew that you could see that in our CRM, but I wanted to tie social media data back to HubSpot sales links for more of a sales web company, not more like a PLG company.
+
+Uh, and so I built this, which basically takes impressions from social. And mirrors it to the leads. We track in HubSlap, which is our CRM. And it wants them. On a graph, and it lets me see how many leads I get on a week by week basis. Overlay with how many impressions are social media Calvin Scott?
+
+In the same week, it's hard to see, but I can annotate. Against on there. Please don't post this on social media. I see you with the phone please, um? And so I annotate, and so I was, like, hmm, I want to know I can go back one more than 90 days.
+
+Um, so we announced our series C in February, and as you would expect, Impressions went up and these went up. But I want to know what other events happen. So, on this week, April 20th, April 12th, you kind of can't see it as mold. Uh, we announced the marketing engineer, and we got its own impressions and leads kind of went up by, like 20, leads that week a bit more the week after.
+
+Um, and then last week we got Asian countries and a lot of Impressions too. So kind of how this works. As it pulls our social. Um, accounts Impressions by accounts and by Channel, and then it tags exactly who the person is. So, this is Dylan Dylan is our co-founder and CTO.
+
+He just posted 200 times in the last 90 days. So, if you want to generate feeds, if you're a mermaid and you want? More people to sign up for your app. Um, social media, honestly. Like, post your story, your founder story, be composed about how you got laid off and how you're going all in on your startup.
+
+Um, and then do that again tomorrow and Wednesday the next day, and that is well preparing. Does we get like 30 of our leads from LinkedIn? Uh, and we're worth a lot of money. So, um, I think it works. Uh, okay, cool, um? I think I have a bit more time.
+
+This is going crazy, right? Like, I should just stay up here the whole time. Okay, um, okay, next thing and last thing. I will show you is. Are paid as dashboard, um? My background is in paid ads. Google ads LinkedIn ads is my thing. Everyone had like 10 12 years.
+
+And I pay an agency right now. I pay them a lot of money to run Google ads for me, which kind of hurts my soul a little bit. As someone who used to do it and charge other people money for it. I think Google ads is like the one channel where you can fully automate your entire campaign ad copy keyword strategy, all with plot code, and I'm slowly working my way there.
+
+I'm just here is like how much we spend. I understand literally 130, 000 this month for projected to spend four hundred thousand dollars. Thank you Kleiner Perkins and Sequoia. Um, it's a lot, you know, um. And here is the cool thing. Here's all the agents I built to run my Google ads and things.
+
+Um, my perspective on building apps in tools like this is, you have to be a domain expert build something that's actually useful. Um, I think the best apps for running Google ads would be built by people who have domain expertise. Is your engineer you've never done marketing? I strongly believe you cannot build a good thing like this.
+
+I would love to be prove it wrong. So, I built a bunch of agents that do things like monitor all my campaigns. This one has never run. Which is, that's cool. Um, that's amazing. Actually. You know what the glands are? You're good on keywords, and then your keyword matches to whatever you type into Google and those the things you type into Google are called Search terms.
+
+Um, instead of this flag's Search terms where I've wasted money. This one says I've wasted 722 dollars bidding on one of my competitors and got zero conversions, so that's a pretty good one. Same with this one, and same with this one. And so these, I have pipings. Here I can go ahead and say, hey, I want to go exclude this, and it will go exclude this from my campaign.
+
+I have similar agents or other types of things like competitive Intel device bid strategy. Um, spending money in regions and click splitting conversions. And so, all of this. I've just kind of lab coated with with Cloud code honestly. Um, and all that stuff if you have the right domains.
+
+Uh, okay, I think I could go for 20 more minutes, but I will pop this QR code again. In case you missed it, I take our free course. I'm going to become a marketing engineer and DM me on Google and we can talk more. Thank you.
+
+[Speaker 3]
+As well. Don't worry. So, when do you think Empire? Hopefully next month. Honestly, yeah. Sorry for that. Okay, you're welcome. That was great, Nick. All right. Next up, we have Cindy from ramp. Given up.
+
+Okay, try it now. Hello, how's that sound? Yeah, I think it's good. Love it. Go ahead okay,
+
+[Speaker 1]
+Um, cool? So, I'm Cindy, I am a product manager at RAM and I work on AI for our earthquake team, um. So, with marketing engineering, let's start off with a definition. Essentially, I think a marketing engineer is anyone that builds the tools and the systems that the marketing team leverages very simple.
+
+Um, and I think this is, this is actually more of a re. A term, but at ramp, marketing Engineers are actually not new. We've
+
+[Speaker 5]
+Been building platforms for marketer, for for marketers for a while, and for example, uh, we built a pipeline that let marketers hit up a custom landing page for every single ad that we ran, whether that be our meta or in paid search, uh, because we saw that electric conversion, um, and the way that we developed.
+
+This was, like, very traditional product engineering. We had a few Engineers maintain it, the growth marketing. Used it, and at that time, that was what both marketing truly meant. But, you know, AI happened, and it became more accessible and it kind of became like the default way that we do work.
+
+And from that last example that I showed now. Shipping of custom landing page is actually something that anyone at Ram can do through a terminal, um, given that they have the right tools installed, so Kirby is actually our design system that we've put into an mcp that anyone can now use through terminal, and so what happened was we stopped maintaining that last platform?
+
+And this is just like one example. Of something that's changed in our org, but I do think yes, I like a bigger Trend that we're seeing, um, at ramp. So I think programming Engineers are actually not new, but the definition has essentially shifted, um, before what I meant was marketing.
+
+Tooling was a piece of software that a few Engineers maintained for everyone else. But now the tooling is Ai. And you know a builder isn't a separate banking? It's essentially every person in our growth form. And given this shift, what does it actually look like, uh, in practice? So before I get into, you know our strategy and sort of doing this.
+
+I'll talk a little bit about how we are operating in the growth team. Um, there's kind of two buckets here. Oh, I see lots of phones, uh, great slide. Um, so there's channels. So, these are people that are first, and I think we take a very similar philosophy to what Nick was saying earlier.
+
+The best skills are going to be built by the people that know the domain best, and then we also have like a core approach VI team that builds the shared emperor that these, like channel teams and experts use to build their skills apps, agents, Etc. And it's basically like a feedback loop.
+
+You know, these experts give us, uh, feedback. They tell us what they need. We build it for them, and this is kind of now. How? Um, and so the way that this is actually happening is that it's happening in three phases. And each one of these faces, kind of like.
+
+Let us get value from AI at a different scale, so the first phase is where you're using AI for personal leverage. So this is kind of where you're automating your individual workflow and you as an individual are becoming more productive. So you're building your skills? You're building your apps, um,
+
+[Speaker 3]
+And
+
+[Speaker 5]
+You're just making yourself productive. The second phase is at the workflow leverage, so this is where, like agents coordinate end-to-end work and workflows, and at this stage, teams become more productive, and then the last ph. Is around system leverage. So this is how we make proteins get smarter over time, and we'll dive more into each of these phases.
+
+Um, but this is kind of the approach that we are taking. So, to dive into the first one, this is personal leverage. This is where people automate the individual individual tasks that they already do, and I think that ramp we've seen kind of like two buckets of methods, um, the effective for this, and it's a lot of actually like enablement and change managed work.
+
+Change management works so. The first bucket are things that are like push methods, so these these things kind of like force people to start using Ai and seeing what's possible. So we had an internal leaderboard, which I'm sure a lot of you guys have, like, seen, and tried, and I'll emphasize that, like that leaderboard was never meant to communicate the value that we were getting from AI.
+
+It was more of a push for people to just like start using it. Um, we also had like top-down mandates, um, our career ladder down comes as AI, so these are pushes, and then we also have a lot of things that. Towards AI make it easier for people, so I think glass is a great example of this, uh, there's a screenshot of it on the right.
+
+Essentially, it's a UI wrapper on a quad code that makes it very easy for anyone to use terminal. And then we also had a lot of like enablement sessions just explaining, you know, what's a skill? What's an eval? I think a lot of these things are very obvious to people in this room, but maybe not for everybody else, um.
+
+And so this is kind of the first space that we were going through. And then afterwards. Once you have all of these, like local optimizations, you'll realize that, like coordination, like skill triggering approvals like these things, then become the bottleneck, and so these are building agents to coordinate across full workflows and how we tackle.
+
+This is first, uh, you find an existing workflow, and then you find the most painful step of that workflow, and you build an agent that tackles that one step, um. You can expand what it does, and you want to maybe start off with like one step or two steps to kind of build trust with the rest of the team, um, and then you can then explain it to.
+
+Maybe the steps that are before that in the workflow or after the workflow, um? And I think I ran like a lot of the examples that fall in this bucket. Um, are very like cross-functional press, like PMS requesting meta ads, or even like the sales team requesting event budget to host, like client dinners or technic games, um.
+
+And so, yeah, this is the second phase that we are going through and then the last phase that I'll talk about is kind of system leverage. So, the first two phases were more focused on getting teams to become more efficient, whether that's like yourself or team wide, um. But then, you want to start thinking about, like, okay, now we have all these agents from phase two.
+
+How do you make them like better and smarter and make better decisions over time? And I think a lot of this kind of looks like making sure you're giving agents like the right data and the right contents needs to take actions off of, so this might look like, you know, setting up the infra to store all of the experiments that you've run and growth.
+
+So, like the hypothesis for a metic campaign, the creative, and then the results, not just at the mental level, but like much more downfall funnel, outcast equal level two um, or taking gong calls and competitive research. And you know, formatting all that in a way that is very digestible for AI?
+
+Yeah, this is system leverage, and these phases don't need to be sequential. They can be in tandem, but it just is a good framework for us to think about it in. Cool. So those are the three stages that we are kind of thinking of. And I want to emphasize that at each stage, like both the channel teams, so the experts and the core AI team are marketing Engineers.
+
+We're just kind of building different things at each phase to support each other, and I think this kind of forces us to learn about each other's worlds, um.
+
+[Speaker 1]
+And I, I think this kind of goes into a great quote that our CEO said a few months ago when we were all kind of onboarding onto Ai and learning it for the first time. Um, he
+
+[Speaker 5]
+Said, the barrier wasn't technical skill. It was sitting down, feeling dumb for a couple hours and pushing through the people. Threw this along with AI weren't the most difficult. They were the most willing to start, and I think that's very true for marketing engineering as well. I think the people for this long and marketing engineering aren't necessarily like the the.
+
+[Speaker 1]
+Or they're not. You know, like the best Engineers, they're the marketers that sat down and took the time to like, learn about AI, or they're the engineers thought took time to learn about marketing. What are the channels? What are the levers? What are like the right mcps to build.
+
+Um, and yeah, yeah, that's how ramp is going through this change. If any of this sounds exciting to you, we are hiring a lot. So, um, please sign me after. But, yeah, excited to hear how everybody in this room is thinking about this problem. Thank you.
+
+[Speaker 3]
+Thank you, Cindy, I believe. Next, we have Jack from work OS.
+
+I have no idea what, where we were going in. So, this is.
+
+Okay, so I'm showing you guys like on purpose?
+
+[Speaker 2]
+Um, and so kind of falling off of today's talk. I kind of want to bring you guys through an example of like an actual school, like how we built in, like, what, like the the right, because the energy things conceptually
+
+[Speaker 3]
+Is, like, one thing, I guess. And so, when we were thinking about ways to apply AI work OS, we have seen.
+
+[Speaker 2]
+One of the key ways where I think of helping marketing is with content generations. So, how many of you guys have like, really struggled to come up with good ideas for like pieces of content for like SEO World. How many of you guys have struggled to get Engineers to write really cool things for SEO or a Blog because you know they could?
+
+Problem. I was in scarves before this, and that was, like, native, my existence, and so. We wanted to try to figure out how do we create like an AI basically editorial team that will both try to curate ideas on behalf, and then also help our really smart Engineers product people leaders build out pieces of content that we could then like put into the world and like how that whole process be as automated as humanly possible while keeping them in, like the
+
+[Speaker 4]
+Legal time and keeping it up to like our internal standards for what good content looks like, right? So, this is our Drophouse, which is where we interact with our thing called blogbot, which is our main like AI agent for working through these kinds of problems. And if you go up here, we have like our daily guide, just that it'll give us.
+
+So it'll actually go through our internal calls, and it'll like, check out like, hey, what's an interesting topic? Um, it needs internal calls, and we can maybe turn into a piece of content because our Engineers talk about cool technical problems all the time, and it'll give us a list of 10 of these and we can go through either.
+
+We can draft it. We can refine the Palms. We can like, look at the additional details of, like, where it came from, or we can skip it, so you get this every day, and it's a really great way to sort of start feeding ideas into our system, and like, get a general idea of, like, hey, what's kind of going on on?
+
+Like, where can we go from here? The drafting process. I'll get into a sec. And the second thing is that you can obviously shut it up and say, like, hey, there's a video! Can you make that thing off of it. We have a automated sequence to pull in from linear and then have it auto drop something.
+
+And that's me talking with it in the replies. I'll try getting to that set, or you can give it like a very specific article that you want, and it'll go into that and do it for you. So we have like a lot of activities, but it's by excess so and live down.
+
+Here, we're going to do this here, which is me, basically giving it a result, which is like the talk that I'm giving you right now effectively, and I'm asking me to turn. When you get a really good top, might as well turn into a lot flex, right? And so, it's already starting working on this.
+
+Um, thank goodness.
+
+[Speaker 5]
+And so, it's going through these steps, right? And it's, um, expression facts, which means nothing to you right. Now, that's okay. And I'm going to take this time while it's working through this. To talk to you about how this works because I think that's more interesting, and it's also making sense.
+
+Okay.
+
+Hello, of course!
+
+Some great passage for our Dynasty, I think.
+
+Okay, so. Initially on intake. So, all of these steps are basically discrete, um, AI steps. And they all exist within a cloudflare workflow that we're hosting. The reason we do in cloudflare is because, um, most of our AI tools start from an engineering one they talk about, just like a hosting platform where you can build these workloads, but you could do this in like an nhn.
+
+[Speaker 3]
+Or really any workflow bills are, I think, by and large.
+
+[Speaker 5]
+And so these are just the steps that we've built out within this workflow. To process this particular task in the way of making,
+
+[Speaker 3]
+This is like our engineering fund, how we approach the problem, so initially we need to classify what the input was, so you know, what did they tell? Do they give us, um, a basic like, serious overview? Do you think it was simple of this? Did they give us a YouTube video?
+
+Did they give us like a um? Past article to copy. There's a lot of different inputs accepts, so there's about like 30 possible labels like this, but we try to classify with the initial input was and resolve the author, which is like, Hey, based on who this was in slack.
+
+Can we find an in our database and then within our database. Can we find like what the preferences were because different uses over time will obviously have different preferences for how to like correct their content. For example, if, like our engineer comes in, it's going to be like, oh, this is an engineering out of the limited into that headspace, and then we resolved any of like the links and other things that are provided.
+
+And following that, we jump into like the research step, which is effectively fetching everything from the resources that was given to us right. And all these are different handlers for different resource types, so it's GitHub content. We pull the code and all the information there. If it's the URL, we have a bunch of different handlers that handle notion YouTube, um, any kind of resource type yoga.
+
+And then we fetch the thread history, so this can be the thread that you gave the blog on to be like. Hey, there's a really cool conversation that happened here. Can you like make this an article? Like, what is getting up to is that I can kind of get the general interest of what you guys were talking about in the forehead, and also if we have not enough content, um, beyond what was given, we can also create our own internal content for additional like padding effectively, um, reason we do this as opposed to going out into the world is.
+
+We want to have like these verified facts coming from us that we want to start with, um, and then expand outcome there. You don't want it to hold these things that lie to us. So, take the primary goals to establish, like, is universe of facts that were, like, pretty sure it's solid?
+
+Following up before building out our facts, which are like, are basically discreet pieces of information that, like, all these schools, um, agree on exists. Usually, these are like English numbers, heart assertions, um, like the thesis point, like the main things that either are coming from the author or the source that I want to incorporate in here, and we also want to make sure we cite right the primary reason for doing this will like crazy capturing is to basically have everything be treatable, so we know okay, this is searching key from here.
+
+And we, because we know that we don't mean? Necessarily double check it, but this assertion doesn't cause a second source. So that means it might have come from nowhere, and we can like use that to verify. Where the AI is doing versus, like what we provided and how I think we're picking up, right?
+
+It's just us being a bit like how neurotic about, like, how we make sure that everything's like correcting well formed, and it's basically to doubt the output of the school quite so much, then ought to be. Like, oh well, it's gonna give me some garbage. I took over the whole thing down to make sure everything's right.
+
+We're trying to avoid that step by doing a lot of this pre-checking on your app. Then, we're going to turn the draft, and then we have 76ers go like pattern recognition tools to find, like where they comment AIisms that are like in words that we don't want to include.
+
+So, we get rid of those, and then we validate our citations. So we look at every assertion we try to make sure we link it back to something. One of our original facts that we had. Um, and then we also have a competitor guard that basically just makes sure that the way we talk about competitors complies with our general pnm principles and icons to talking about that.
+
+One of the most inside, so long. 827. So for validation, we do a couple of things the main things that I think are interesting, are like, we will, um, further decline it. So, beyond the initial Locus call that creates a draft, and then after we pull out the initial things we were able to find at our like AI, Jason by powder, notching.
+
+We then run another pass over to, like, d-plus, and make it sound less likely if. We reviewed the accuracy, which is more like a Precision, so we try to make sure, like, hey, are we like making claims that we can back up. Does it sound like it was like asserted correctly?
+
+These are all like just good writing principles. You can think of all these steps as basically. Like, you have mission of good writers, and they're trying to critique you. And that's what all these agents are trying to get effectively, and then we will like, um, you know, make our links look nicer.
+
+Are you two things in mind, uh? This. So we don't have to be so careful about what we put out there. We can be pretty sure, like everything that's sensitive, it knows about, and it can screen for before we even get published. So, lots of people sort of run autonomously in that way.
+
+And like, remove the bottlenecks that we have here. We generate underlined images from, like, a sort of set of standard colors and research libraries. Using Gemini, we saved the entire thing to do T1 and then equipped it. And so, hopefully, if I switch back to slot, it'll be interested and the foundation, yeah, okay.
+
+As you can see, that's all the steps that I just went through. So, we did that. I can click here to edit my draft, which will pull up. And your windows. This is the drop that I just created. This is the image I just created. And then. A few.
+
+Um, there's one pledge, um, backtrack that I'm going to use. I'll have to show it, it'll say, like, hey, this is like an unsetted claim. This is, like, so AI, but I can. I can work with that later. Um. I'm going to be the drops. Here's the image he gave me, and I can also ask it to generate a like thumbnail image, which I think it'll take a second to do, usually doesn't do it right away.
+
+But from here, we can actually staging about flow and Briochi, like, know how to hook up the sock user to the regular person or the website user, so you can do the authorship correctly, so that means that you don't have to have anything to seize it. You can just auto stage it, double check it there.
+
+And then, you can publish it from your table, which I want, you can say. But, and then, here's like, the thumbnail that will come up, right, um? But, like, we're we're. Yeah, any questions on any of this? It's kind of a very passive review, uh, I'll sorry, yeah. Is there any reason why you use like a mix-up model, like at the opens, and then type you.
+
+And then, oh yeah, big question. So we use Haiku for things that are fairly like so basically, like haiku's, a cheaper model Opus is a more expensive model, so mine is obvious for the important thing, like drafting. I want to use haiku for, like, categorization, and things that are kind of dumb, right.
+
+Like, you don't need to like, know a lot to get that effectively. It's just like across dating thing, yeah. And then, how do you iterate on the blog post? Does it go back through the same thing, or is it like?
+
+I can just be like that, and then it'll start thinking, you know, it's like, maybe it'll like more reclining me like it'll kind of just keep going from there. How can you be more Surgical in your iteration, like in this particular paragraph or something like that. You can usually like, put it so you can be like, hey, it's fine, I don't like, or like the same thing, so you can probably paste it, but you can also go into, like the um, edit draft, and you can just like make the edits here as well.
+
+Okay, yeah. Um, so, did you know that set it up? It's kind of voted in yeast, and so it took him like, maybe two days. Um, but I think like I was building this. I think with all the statue, maybe take me like a week or so, and I have, like, a I'm a good marketing.
+
+Juniors have a good amount of experience setting up things like this, and we built a lot of stuff in general here at work OS. So, like, I have a local projects. So you depends on your familiarity with AI for sure, but it's just like if you're working in like anytime.
+
+For example, just start with like one step at a time, and then if you do the discrete step model that makes it a lot easier managed. Okay, cool. Thanks.
+
+And tell you how, uh, validating it was to see the stentions case check, uh, which I'm sure everyone had knocked laughed about, is on the sentence case. I also think I realize across two demos two off things off is more secure in the work OS office all right, uh, Ronnie, you're up.
+
+Next, we have Ronnie from cursor.
+
+I think I fell on the floor.
+
+Are you going to open source that sorry? Are you going to open source blogbot? Um, I'd actually don't think in the near future, but I don't know. Anything's possible, I think at something we might start open sources of our tools, but um, for now, we're keeping most of them.
+
+I think under wraps, I guess I see, um, are some of the blogs on the website generated by. Will I be able to see the quality? Um, yeah, I think I don't remember which ones are, but usually like they'll do, that. It'll go through a few editing passes, so like usually more, I just like, oh, obviously.
+
+But, like, we start a lot of them. One. I'm Randy so that you can post it from them. We're gonna be talking about how cursor builds cursor. The revenue market condition. Um, spoiler alert I, I am on the revenue marketing team. Um, we have lots of questions, like, what, what is Revenue marketing?
+
+Um, our team exists to help sales Drive bigger. Foster Enterprise deals through campaigns and experiences. Um, I joined cursor by way of an acquisition of graphite. Has anyone here heard of graphite? Oh, amazing! Okay, graphite is near and dear to my heart. Um, I let growth and demand. Jen, I graphite, um, and it was actually my first marketing role.
+
+I was super lucky. The founders kind of took a chance on me. I done a post of other random business functions and was an investor. Um, but I think the through line of my professional career has been getting technical. Um, I think it's open doors for me and allow for me to try new business functions and work at really interesting businesses.
+
+Um, so my goal in this talk is to impart some of that knowledge with all of you so that you can be marketing engineer Superstars. So, we're concretely, um, we're gonna walk through how to spin up an on-brand custom landing page with cursor. Uh, the demo has two parts.
+
+First, building a skill. And then, second, putting that skill into action. Um, this idea sorted. On Sunday night. Um. Lee Robinson, who is an amazing. He's our head of Deborah prolific. Several guy very big on Twitter. Um, has has great taste and Sensibility, so he actually spun up a custom landing page for our cash Patel and his podcast.
+
+It was super elegant and get captured the the right product messaging that we were going for and was currently people love it, um. So that kind of got me thinking. How do we turn this into something that the entire marketing team can use? So, uh, without leaving slack. I just tagged cursor and asked it to package the varquesh landing page into a reusable skill.
+
+Um, then I stepped away, probably grabbed ice cream and scrolled on Tick, Tock mindlessly, and then I let cursor do the work. Um, here you can see 10 minutes later. Cursor got back to me, um, and the cloud agent had done two things. Uh, it created a reusable skill.
+
+And open the pull request. So the rest of the team could use it, and now I could have just run this globally, but I wanted to do it with Cloud so that the rest of my teams would be advantage of this skill. And I think that's the real value of sales.
+
+Um, when I or someone else on the team see something that works, we want to operationalize it. And it's, it's worth it. I'm investing a few minutes up front to save hours later or myself and time for everyone else on the team, and I've noticed that, like the folks that I work with who have been most successful at cursor.
+
+Have you skills really well? So, this brings us to the second part of the demo. Putting that skill into action. Um, so whenever I create a skill and I'm sure all of you do this, you want to press yourself today. Um, I think it has to hit the mark of.
+
+Does it produce something that I'd be comfortable shipping? Of to the broader cursor team? Um, and most importantly, am I gonna piss off our grand design team? Um, so for this test, I wanted to see what a partner landing page for Lenny's podcast would look like. Um, Lenny is a close partner of ours, but I, I don't actually think we have any custom Landing wages for him.
+
+So, I gave it a brief. Um, you can see it here. This was very lazy. I, I didn't give it a ton, um. Not my finest word, but I just inputted Lenny the logo that he uses. I'm on Revenue marketing, so the CTA that I will always gravitate towards is contact scales.
+
+Uh, pipeline is the name of the game. So, I kind of just fed this to cursor and. And in just over 10 minutes, the cloud agent has researched the brief. It built the landing page. It opened a PR and GitHub, and what it also did was open a live preview for review.
+
+And so, all of this happened in slack. I didn't have to open my agents window. You wouldn't need to open your IDE. I didn't have to open GitHub or. Um. And this is kind of
+
+[Speaker 6]
+My. My favorite part of cursor are artifacts, um, their visual outputs, screenshots, and videos. And I think they're one of the most useful tools that a
+
+[Speaker 7]
+Marketer can have. Um, because
+
+[Speaker 6]
+Maybe they're really easy to evaluate the quality of the change before it shifts? Um, so you can review the actual user experience, provide feedback, and integrate without ever leaving your workflow.
+
+[Speaker 1]
+Um, so just to recap, we started in slack. The Republic Cloud agent.
+
+[Speaker 3]
+Uh,
+
+[Speaker 6]
+That agent turned a successful landing page into a reusable scale, and then we used oxtail to generate a custom landing page for Lenny's podcast. Um, and this was from idea to working v0 in about 30 minutes. I, I wish I could have done this live, but unfortunately, I did not have 30 minutes to present on this.
+
+Um, so what are cognants? Um, they are autonomous agents that work on long running tasks in their own remote environments. Um, put more simply. They run in the cloud and not on your laptop.
+
+To basically. Make this into reality. You can kick off multiple agents at once. You can insert your computer. You can come to an event like this. And you can come
+
+[Speaker 5]
+Back later to completed work. So if I were running events locally, I wouldn't be able to shut my computer. I
+
+[Speaker 4]
+Need to keep it slightly ajar, and that's kind of annoying.
+
+[Speaker 5]
+And this isn't just a customer workflow. This is how we work at cursor. Um, so this was a slide that I pulled. From probably a month ago. This was when 30 of internal birth PRS were created by a sync Cloud agents. Now, we're at about 70 of internal usage, so this is a feature that we have a started conviction in just because we've seen so much.
+
+Internal property.
+
+[Speaker 1]
+Um, and I think as marketers we spend, or at least I spend a lot of time worrying about execution, it's formatting pages, moving content around deciding feedback, wiring things into Salesforce, especially for the campaigns that I run. Um, and making sure everything works. And cloudy events are really powerful to let you offload that brain.
+
+So let this be my proposal to you. Um, were you worry? Make the age of three? So, this is, we kind of call this the cookbook, so I kind of pulled some use cases that I thought maybe this group could benefit from. Um, they got it this way. I always have to remind it how to create a landing page, build a skill.
+
+[Speaker 4]
+I
+
+[Speaker 5]
+Always have to summarize and serve opportunities for my sales team. Create an automation those can do you in slack. Um, I always have to bother our data scientists to pull
+
+[Speaker 1]
+Performance metrics ahead of our board meeting. Connect the databricks MCP,
+
+[Speaker 6]
+Um, so we've only covered one workflow today.
+
+[Speaker 1]
+Um, but I think there's a real opportunity to start identifying the work you'd rather not be doing yourself. Um, and letting hurt your take it from there. Um, so ideally, AI isn't automating our jobs. But what are you up to do the work? That's actually exciting to you. So, that's it.
+
+Um, if you have more questions, feel free to email me. You can always find me after this talk. And also happy to make sure that you're all set up. A good client is.
+
+[Speaker 3]
+All right, and last up we got Joe from Versail.
+
+[Speaker 2]
+All right, so, uh? Like, I said, I'm Joe. I work at Purcell. I get the marketing operations team. What I'm going to talk to you about today is our slack agent operator. It's a productivity agent, but the first thing I want to do is circle back to a point that Cindy made, which is, it's not the most technical people that are going to win at AI.
+
+It's the people that just f*** around to find out,
+
+[Speaker 3]
+Right? So
+
+[Speaker 2]
+I, I spent my early 20s eating cranes and shooting machine guns, so I especially love that point. I'm going to come around back to it at the end, but uh, we in the last, uh.
+
+[Speaker 5]
+Last eight weeks of q1, we saved about 200 hours. We're estimating with
+
+[Speaker 3]
+Our slack agent operator.
+
+[Speaker 2]
+So, what I'm going to do now is first pray that the devil, God's with us, and then I'm going to run through a very basic. Workflow here of very common use. Cases of our marketers have. We're going to create a Salesforce campaign. We need to create a Luma landing page for events.
+
+We run a fuckload of events that for sale, which is about 2.2 Imperial Buffalo. It's been around Cordova, Max, but uh.
+
+[Speaker 3]
+One
+
+[Speaker 2]
+Thing that we often have to do at the end of this is import a list. So, like automating that whole workflow, putting it in slack, making it easy to do is, uh, really key to how our marketing team can win the scale. Uh, and there's also three of us in marketing Ops, and we have a team of about 55 we learned today so.
+
+Need to land that as like, you guys need to be able to self-service so? Uh, what we have here is, uh, in our slack Channel, we have. We can have operated at any slack Channel, but, uh, here we have a basic prompt for creating a Salesforce campaign. I'm going to let it cook, and you can see here.
+
+The description is, uh, we're going to encourage people to use for cell AI Gateway so. Uh, and we're going to call this the marketing engineer after party. My brain is going to have a think, and it is going to throw one of his thinking message in here. Let you know, it's working.
+
+It is working, so I'm going to go ahead and click create campaign. And this is now going to create a campaign in Salesforce, and I can click on this link and actually see that it, in fact, does exist. It is that ID and go back to, uh, slack. And the next thing it's going to ask me for is Aluma landing page.
+
+To set up my little hand page. One thing you'll notice on the sit, the Salesforce campaign. We have a lot of fields on these. One thing that we do to link it together as we populate a Luma event ID. So, we need to do that. We need to create the Luma event.
+
+Uh, we all registered for a loom event here, uh, again, I'm I'm keeping the team with the marketing engineer after party. We don't show up the Purcell office. We are not hosting this. I don't know what you're actually doing an after party, but Prince Ed. So, we're going to let this thing let this have a have a have a cook.
+
+Uh, and it's gonna again the thinking messages are here as like a little light-hearted fun, uh, I mean, you guys are all definitely Dig. Dug is. But uh, it's going to say, like, there's two different ways to publish a landing page. Sometimes, you want to pre-approve people. Sometimes, you want to.
+
+Like making a more open registration. This all they're welcome, so we're going to say, create open registration. And it's going to publish the Lima landing page and also give me that option of link to a Salesforce campaign. So, if I go back to Salesforce and I'm going to grab my campaign ID real quick?
+
+And I'm going to link the Salesforce campaign. Remember that field was blank a second ago? If I go back to it now and hit refresh? What I'm going to see? Is my event ID? Is no here. So that simple workflow of, uh, the one thing I didn't show you as well was, uh, that the page exists and it created the page honestly.
+
+Like, you know, we put more content here. If this is a real thing and like, make it really compelling. I am not in marketing. I'm in marketing operations, so, um, forgive my poor copywriting. We also have content agents we can hook in the operator to write a better page, but that exists, and this would have been, uh, the cool thing about this is like, if you're, if you're a startup that is.
+
+Bring the aspirations of an IPO. Compliance is important, and it's a pitch and a half to set up. So, having the compliance fields here. Country land off correctly. This is also tied into our Salesforce via tray. So, we have workflows that just make sure everything lands correctly. All the data gets captured as it should.
+
+This is what have taken a marketer 30 minutes or so to set up manually and then all the opportunity for human error is set in. So, when you think about agents and productivity, this really makes it Bland, easy of like, you can't possibly mess this up. Uh, as long as the agent is working.
+
+Works really well. Uh, the last thing I want to do is grab that campaign ID, and I think I have a sheet open, so I have a couple sample records here, let's say. This is me Core Ethan here at this event tonight. But let me go ahead and save this, and then I can come back to.
+
+Uh, moderator and say, game operator import this list. And then what it's going to do is. Let me select the CSV. We have a list important agent, another app that we've shipped to our organization that it's going to run these leads through the agent. It does a number of checks, uh, some deterministic, some some, um.
+
+Like, qualitative, and uh. This is throwing an error because it is saying, what is it saying, uh, campaign stance that attended but can't be? I didn't say. Uh, so what I would normally do is, if I properly save the file, is it would actually sync the members of the Salesforce campaign, and we would go back in Salesforce camping and verify the one thing I really want to impress, no matter how cool we made this agent is always trust, but verify.
+
+Assume the agent is hallucinating or or performing, as well as your favorite engineer. Um, but yeah, back to these slides.
+
+That all used to be tickets that we hit one of the three of us here on the Senate row, and then we had to stop our day. Go do something super technical. That's not the kind of work you want to do. It's not impactful to the organization. It's necessary, but there's a lot of things that are necessary that no one wants to do, right?
+
+Uh, so this helps simplify that whole flow and what you saw happen was essentially how home operator works is you and slack. Give it a prompt. Uh, it's going to then. Is using various Cloud models. We had it implemented with AI Gateway, so as models change, we can just say, hey, don't call Haiku or whatever it's called.
+
+Or, I think it's Sonic right now. Call the latest Opus like 4.8 instead, or switch from Claude anthropic to an open AI model, like every six months. It's going to flip-flop, right? So? That's something that Purcella AI Gateway helps us do really well is, uh, not lock into any one model.
+
+But uh, what it's been doing is, it's then going through there's dozens of different systems we've integrated and hundreds of tools within those systems that it can call. So, what moderator is doing on the back end is is determining first from the context and your prompt, which tool, which which system is this going to, and which commands within that system?
+
+You're not going to use to do what the purpose is. Uh, and then you know how that looks more tactically is. We have the slack event. Uh, it hits a planner in this. This is kind of like how the architecture of the app works. It's a player. Checks if there's any permissions gate that it needs to use, like some things like database rights into our Salesforce.
+
+We don't want just anybody doing so, we'll get that behind mobs has to approve. Uh, there's some things though that, like, like creating a lumo landing page. Like, yeah, all day marketing, like, ship it. So, those things are not appropriated, so it does a little check there. We'll Loop through any any sort of iteration it needs to do.
+
+Check any Integrations it needs to use. Any apis that needs to call checking? Any routes that needs to buy your group and then just put this? As I stated at the top of this. In the last eight weeks of q1, and I say, eight weeks because we didn't start tracking this until March 5th.
+
+We saved an estimated 200 plus hours and be real, transparent view of how we came up with that map. We're taking how long our marketers told us something took them, and then we're saying there ain't no way it took that long. Here's how long you think it took. We came up with on the concern that 200 hours, so we think it's probably even well north of that, and this is going to compound.
+
+The more tools we added an operator, the more functionality we build. It helps save time, and that speaks to, and this is just across, like the most basic use cases of like list Imports, audiences, building reports, and Salesforce. Creating emails and creating campaigns is a weird book of like, how does it take you 15 minutes to clone campaign?
+
+Sure, we'll build it in the operator, uh, and then building those those event landing pages. Whether you want to do it in Luma or on our through our CMS, we use contentful. It can do either way. Uh, and the reason that we think this is so important. Uh, someone I think Jack had a very similar slide of, uh?
+
+The agent absorbs that that hot top end of like? I think every organization I've worked in from AWS to Purcell. We've never had, like, we hire marketers at a higher clip than we hire marketing operations, people, and. There's a lot of reasons for that, but mops is not something we typically solve for or scale for through hiring.
+
+So how do we us? The three-person team support a 55 person, org, and growing. We will get a head count eventually, but uh, the operator is like one big bet of like, how do we? How do we use an agent as a force multiplier and really, um? Make it.
+
+So there's all that necessary stuff that needs to happen. No one really needs to absorb that that workload. It's just we can, like, make the agents spread it out. They run into a very similar point. Um, and you know if you want to, uh, there's an open source version of this.
+
+I will caution you. It doesn't have as much TLC as the one that's built into our slack. But there's a QR code there. You can go for the repo, and uh yeah, have fun. Yeah.
+
+Uh, do you have any security considerations around it? Oh yes, um, does anyone know what happened at the end of April? Yeah, we know, uh, so security is is of Paramount concern, right? So, uh, the way that we did President operator was Salesforce. It's all, uh, IP restricted. So, like, we have IPS that are on the allow list, and then, uh.
+
+Of course being for sale. We deployment operator ontracell. It's behind a secured compute distance, so only those IPS can even access our CRM and everything else, like, you know, very super sensitive. Like all of our Keys by default are sensitive, so any environment of variables that we have within the Versail project like there as they're, uh?
+
+What's the word guys, um, not? Not encrypted at rest, but like? Generated at the time of deployment, right? So? Inherently more secure way of doing it. We will always iterate. Degrade is a big philosophy ever sell, and we will always like security is like, especially when you're like this.
+
+Close to IPO, like, we really want to make sure we land a security piece, right? And when we had our security incident there was, there was a there was a moment where I was like it was a mess, right? Like, it wasn't anything we shift, right? It wasn't. It wasn't, okay, great question.
+
+All right, uh, that is, all of the sessions and demos we've got. We're going to bring our speakers back up here, and we're running a little short on time, so we'll see. We'll just go straight to the audience for any questions you might have either on their talks or their demos.
+
+They're just about marketing engineering in general. Uh, so yeah, our speakers become on up. We've got these lovely plush chairs for you, and uh yeah. If you have a question, please raise your hand. We'll bring the mic around to you.
+
+And if we don't have any questions we were prepared for that, let me introduce Scott. He'll be running the panel, but it looks like we do a couple of questions. Um. Once you go and just shout it out, and then you will repeat it. Uh, is there any difference between marketing, engineering, and design engineering?
+
+Is there any difference between marketing and Engineering and design Scott? I'll get this to you, and you can sounds good. Uh, so, yeah, anyone didn't hear that? Uh, what's the difference between marketing and engineering and design engineering you want to take that one? Or anyway? That work.
+
+Uh, difference between marketing, engineering, and design engineering. Uh, it it profound, at least like marketing engineering. I guess which, you know, yes? Okay, okay, I'll just, yeah, that's okay. Um, the difference between marketing, engineering, and design engineering Market Engineers sits in the heart of a marketing team? Um, and I ever found all of our designers on the content, and so I don't get access to them.
+
+My product team, which reviews though, and that's 90. Um, I I ramp. There are also different things, and I think they're different, because like these roles, their aims are to drive different outcomes. So, like the marketing Engineers at ramp, like, their goals are to like drive more SQL pipeline, like, that's the outcome that they're going towards, whereas, like, for design engineering.
+
+Actually, I'm going to sign Engineers. I don't know what their outcome I think that's kind of, like, where the line kind of differentiates?
+
+Do you have any other questions? Yeah, okay, let me think of how to ask this, so you talked about spinning, uh, friendly pages really fast for ramps. Is that always sitting if an agent is overseeing that creation of the language when it comes to SEO consideration is that sitting in the name of me, first of all of the struggling, nice part one SEO consideration and then Sue?
+
+[Speaker 3]
+Where I'm just concerned about getting that overturned agent. Yeah, um, so I so to like, clarify a few things first.
+
+[Speaker 1]
+Before, like when we had that platform where people could create customizing pages that was like mostly human gun, and we don't have like an agent that does that right now. It's mostly just an FCP that you can use, but engagement is still a human is still reviewing everything. But first on the SEO piece.
+
+So we are actually just doing this right now. For like paid ad landing pages? So after you click through event ad or after you quickly to paste your chat. Those are the custom pages that we're creating so. Given, that's the battle. Like, we don't really consider SEO to be honest.
+
+So, like, I think you can speak up Landing pages for, like other things, like more General things for marketing website. Like, SEO definitely has to be part of, like, whatever skill you're making, or like, whatever the agent uses, um.
+
+[Speaker 3]
+Just controlling the branding, but back to that question. Is it on his subject if if SEO is not a concern, I get what you're saying, I just struggling with the yeah. So, is that a subdomain, then, that the agent is, um?
+
+[Speaker 1]
+So we don't have, like, an agent that's running it right now. But for all of our paid ads landing pages, it's all like ramp.com, business dashboard slash, and then the utn of the ad. So, like, that's how we have, like one custom page for ad because you can is unique, right?
+
+Yeah, right.
+
+[Speaker 4]
+Um, you is a flag. You set. It says no index.
+
+[Speaker 3]
+Sorry, was that it's
+
+[Speaker 4]
+Called no index. It's a meta description, a meta tag you set on the page, which tells Google not to index it. And so that's how she can publish a paid as landing page and not have a SEO considerations because Google is told explicitly enough to go look at it.
+
+You can talk to me afterwards. I'll tell you more. Agencies. Agencies for the longest time, right?
+
+[Speaker 6]
+The exit Madison Avenue worked on Google Labs. Go to the internet in this equation. Thank you hired. Marketing agencies still. Yeah, I mean. I think I think a few of us hit on this, um.
+
+[Speaker 1]
+We still need domain experts and people who are fairly technical. Um, I don't see a world where cursor is no longer hiring agencies to work on SEO or bringing those folks in-house. Um, the thing that we've been doing is basically kind of taking their domain expertise. Combining out with cursor and figuring out like what internal tools we want to build with them and then empowering them so that they can use those tools with other clients.
+
+So I don't see agencies going away, um?

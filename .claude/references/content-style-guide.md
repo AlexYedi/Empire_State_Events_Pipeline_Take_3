@@ -71,10 +71,21 @@ CTA (varies by content type) — See Content Type CTAs below.
 - **Hashtags:** 2-5 per post, relevant and specific (e.g., #AgenticAI, #DataReadiness, not just #AI)
 - **Tagging:** Never tag people or companies — doesn't translate across platforms. Alex formats manually.
 - **Emoji:** Sparingly but present. Use as structural markers or emphasis, not decoration.
-- **Length by type:**
-  - The Upcoming Week: Long-form (multi-event, narrative structure)
-  - Pre-Event Post: Mid-form (8-15 lines, hook + context + takeaway)
-  - Post-Event Recap: Long-form (narrative arc, multiple observations)
+- **Length by type (character counts include spaces, line breaks, and emojis — LinkedIn counts everything):**
+  - The Upcoming Week: Long-form roundup — target 1,300–2,200 chars, **hard cap 3,000**
+  - Pre-Event Post: Mid-form (8-15 lines) — target 900–1,500 chars, **hard cap 3,000**
+  - Post-Event Recap: Long-form narrative — target 1,500–2,200 chars, **hard cap 3,000**
+
+## LinkedIn Character Budget (hard limit — added 2026-06-10)
+
+**The LinkedIn feed-post hard cap is 3,000 characters** (stable since June 2023; verified June 2026). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
+
+- **Hard cap: 3,000 characters. Non-negotiable.** Count the post before presenting it. If a draft exceeds 3,000, cut it to budget *before* showing Alex — do not ship an over-limit draft with a "trim this" note.
+- **Engagement sweet spot: 1,300–1,900 characters.** Default target for most posts. Long-form recaps may run to ~2,200 but should rarely approach the cap.
+- **The "…see more" fold: ~140 chars on mobile, ~210 on desktop.** The hook and the reason to expand must land before the fold — front-load the scroll-stopper in the first ~140 characters.
+- **Sources/resources do NOT go inline in the post body.** A trailing sources/citations block is the most common thing that pushes a post over the cap. Put source links in the **first comment** (preferred) or carry them on the **carousel** — never let them blow the post budget. (This was a real cut Alex had to make by hand — design it out.)
+- **When over budget, cut in this order:** the inline sources/resources block → repeated data points (keep 2–3 max) → throat-clearing preamble → any line the carousel already carries visually → adjective trimming.
+- **State the count on hand-off.** When presenting any LinkedIn post for review, show its character count (e.g. "1,420 / 3,000") so Alex sees at a glance it's ship-ready.
 
 ## DM Structure
 

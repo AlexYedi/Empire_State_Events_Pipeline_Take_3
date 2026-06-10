@@ -107,7 +107,10 @@ generate because X." Do not force a post through a failed gate.
 
 ### Step 6 — Draft the post (2 variants)
 Follow the 6-part shape from the pattern file exactly. Word targets are targets,
-not caps, but stay within 180-295 words total.
+not caps, but stay within 180-295 words total — and a **hard cap of 3,000 characters**
+(LinkedIn's limit; 180-295 words sits well inside it). Count before presenting; sources
+go to the first comment, never inline. See `../references/content-style-guide.md` →
+LinkedIn Character Budget. (Added 2026-06-10.)
 
 Produce 2 distinct variants. They should differ in a meaningful way, not just
 wording:
