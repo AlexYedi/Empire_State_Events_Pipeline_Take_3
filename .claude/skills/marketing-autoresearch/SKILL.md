@@ -22,6 +22,7 @@ This skill is invoked as **Step 5 of `pre-event-content`**. Specific guardrails 
 - **Run on:** the per-event LinkedIn post (always), the Upcoming Week post (always), the synthesis post when invoked from `pattern-synthesis` (optional).
 - **Do NOT run on:** speaker/host DMs, prepared questions. Over-optimized DMs read as marketing copy and break the Level 3 personalization in `outreach-templates.md`. Prepared questions are private notes — no audience scoring applies.
 - **Score threshold:** default 80. Stop at 3 rounds even if below.
+- **Character cap (added 2026-06-10):** the optimized post MUST stay **≤ 3,000 characters** (LinkedIn hard cap). Optimizing a hook/insight/CTA can lengthen the post — if the winning cross-bred combination exceeds 3,000 chars, trim it back under before returning it. Never return an over-cap "winner." Target the 1,300–1,900 sweet spot. Canonical rule: `.claude/references/content-style-guide.md` → LinkedIn Character Budget.
 - **Replace persona #5** (CEO/founder voice) with **Alex's documentarian voice**: enterprise B2B GTM, NYC AI scene, "field correspondent not networker," substantive over performative. Pull tone signals from `.claude/references/content-style-guide.md` and anti-patterns from `.claude/references/content-anti-patterns.md`.
 
 ---
