@@ -111,6 +111,7 @@ CTA:
 - Each synopsis passes the "So What?" test *without* needing a hot take to get there
 - 2-5 relevant hashtags at the end
 - Emoji used sparingly as structural markers
+- **Character budget (added 2026-06-10):** the whole roundup is **≤ 3,000 chars** (LinkedIn hard cap), target 1,300–2,200. This format balloons fastest — count it and cut to budget BEFORE presenting. Sources/deeper links go to the first comment, never inline. Show the count on hand-off. See `content-style-guide.md` → LinkedIn Character Budget.
 
 ---
 
@@ -157,6 +158,7 @@ Present as inline options. Step 5 (autoresearch) will pick the strongest hook an
 - Emoji sparingly
 - Documentarian framing: specific detail (reporter), synthesis (student), interpretation (analyst) — hit at least one
 - **Source-check (added 2026-05-26):** any firm/person thesis or positioning claim is source-backed in the brief; if it's an unsourced brief assertion, verify or cut before this goes public
+- **Character budget (added 2026-06-10):** post is **≤ 3,000 chars** (LinkedIn hard cap), target 900–1,500. Count it; if over, cut to budget BEFORE presenting — never hand Alex an over-limit draft to trim. Sources go to the first comment or the carousel, never inline. Show the count on hand-off (e.g. "1,180 / 3,000"). See `content-style-guide.md` → LinkedIn Character Budget.
 
 ---
 

@@ -167,6 +167,8 @@ Granola Note URL: [web_url from Granola]
 
 content-correspondent then runs its standard logic per `.claude/skills/content-correspondent/SKILL.md`: bucket-sorts contacts, drafts Tier 1 comment + Tier 2 post + visual carousel brief + bucket A/B outreach DMs. The skill's existing "Granola → structured notes if the session was recorded; use for direct quotes from speakers" line is now operationalized — the structured input is exactly what it asked for.
 
+**Length guardrail (added 2026-06-10):** every Tier 2 post content-correspondent returns must be **≤ 3,000 characters** (LinkedIn hard cap) — the roundtable / topics×perspectives format with verbatim quotes is the one that overruns. Cut each version to budget BEFORE Step 5 commits it; sources / resource links go to the **first comment**, never inline in the post body. Canonical rule: `.claude/references/content-style-guide.md` → LinkedIn Character Budget.
+
 ## Step 5 — Write drafts to Notion via notion-writer
 
 Once content-correspondent returns drafts, dispatch `notion-writer` to commit them:
