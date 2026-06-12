@@ -249,3 +249,19 @@ Ran the post-event pipeline end-to-end, live, as a deliberate full-system test o
 - Pick a post to ship (or stagger A and B across the week — they don't compete; A is contrarian, B is data-backed).
 - Refine carousels in the Gamma editor (no MCP edit), export PDF for the LinkedIn document post.
 - Wire-ups (TODO 1 + finding-2 upstream wiring + finding-4 visual-briefs note) batched here, not actioned, pending green-light. Note: skill/command/agent changes are session-frozen — any wire-up needs a FRESH conversation to validate.
+
+---
+
+## 2026-06-11 — WINDOW CLOSED. Brake lifted, replaced by a steering bias.
+
+End-of-window close-out (6 days past the ~2026-06-05 target date). Inputs reviewed: this frictions log, the v2-trigger log (10 machine invocations across the window — pre-event 5x, content-correspondent 2x, check-new-events 2x, event-research 1x; steady generation), Notion Content Drafts schema, Alex's verbal read.
+
+**Outcome:** The window worked, then inverted. Publishing increased (Alex's read). But at execution volume the rule turned counter-productive — executing the work surfaced real-time improvement ideas, and the "capture-and-defer, don't build" discipline left that friction sitting in the active publishing path. The deferral itself became the drag on publishing. Systems framing: the balancing loop that protected the publishing stock flipped into the constraint draining it. The brake outlived its purpose.
+
+**Decision (Alex):** Retire the no-build rule. Build improvements in real time while executing.
+
+**Replacement — steering bias, not a brake:** Build freely, but each build should remove a *named friction on the active publishing path*. Friction-remover → build inline, now. Speculative architecture with no named publishing friction behind it → still skip (the original R2 / Shifting-the-Burden trap; the only thing the bias rules out). Same friction-remover-vs-R2-trap test as the 2026-05-21 entry — now applied LIVE, not deferred to a batch.
+
+**Note on the published-count metric:** never got a clean system number this close-out — Notion `Content Status = published` is a lagging proxy (drafts can be posted to LinkedIn without flipping status, and vice versa). The 12 trigger-log `?` marks were also never resolved to a trigger number, so YED-27's per-session signal didn't accrue. Neither blocks the decision (Alex's verbal read — "publishing increased, deferral now slowing it" — is sufficient and is the ground truth the status field only approximates), but if a future diagnostic needs a hard publish number, instrument LinkedIn reality, not the Notion status field.
+
+**Doc changes made this session:** CLAUDE.md open-priorities block (rule retired + bias added, pipeline-v2 ungated), memory `execution-focus-2026-05-15` (flipped to CLOSED + close-out), MEMORY.md pointer.
