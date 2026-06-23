@@ -160,6 +160,8 @@ triage path, not by uniform depth.**
 
 Use web search aggressively — current information is the value.
 
+**Gmail as a research source (added 2026-06-21).** Before researching any person or company, check Alex's mailbox for prior correspondence — it is the highest-signal context he has and the web cannot see it (an existing thread, a prior intro, a warm contact, a cold-outbound already sent, an open deal). The `person-researcher` and `company-researcher` agents now carry `mcp__claude_ai_Gmail__search_threads` + `mcp__claude_ai_Gmail__get_thread` for this. Gmail is a connected MCP on an existing free quota (no incremental cost — automate per CLAUDE.md MCP rule 1). Report only what the mailbox actually shows; never fabricate a relationship; summarize relationship state rather than pasting private contents into public-facing drafts. A found thread flips prioritization toward re-engage and changes the connection-note angle from cold-open to follow-up. **Registry caveat:** the agent registry is session-frozen, so if a run's agents predate this change, the parent thread should run the Gmail searches and pass the correspondence into the synthesizer.
+
 ### 2a: Topics & Subtopics
 
 **Sources:** Claude training data (deep knowledge) → WebSearch (current developments)
@@ -194,9 +196,10 @@ and ask follow-ups that demonstrate genuine engagement, not surface knowledge.
 
 ### 2b: People (Hosts & Speakers)
 
-**Sources:** WebSearch (LinkedIn profiles, recent talks, articles, podcasts) → Claude training data
+**Sources:** Gmail (prior correspondence — check first) → WebSearch (LinkedIn profiles, recent talks, articles, podcasts) → Claude training data
 
 For each person:
+- **Prior correspondence (Gmail):** has Alex emailed this person before? Summarize relationship state + most recent date. Drives prioritization (existing thread = re-engage) and the connection-note angle (follow-up, not cold-open). Omit if nothing found.
 - Current role and company (verify — titles change)
 - What they're known for / their public POV on topics relevant to this event
 - Recent public activity: talks, posts, articles, podcast appearances (last 6 months)
@@ -234,9 +237,10 @@ If someone is not findable via web search, note that honestly — don't fabricat
 
 ### 2c: Companies
 
-**Sources:** WebSearch (funding, product news, press) → Claude training data (industry positioning)
+**Sources:** Gmail (prior correspondence with anyone at the company — check first) → WebSearch (funding, product news, press) → Claude training data (industry positioning)
 
 For each company:
+- **Prior correspondence (Gmail):** has Alex emailed anyone here? Summarize relationship state + most recent date (active deal, prior pilot, warm contact, cold-outbound sent). Omit if nothing found.
 - What they do (1-2 sentences — assume Alex may not know)
 - Recent news: funding rounds (amount if available), product launches, partnerships, leadership changes
 - Industry/Space classification: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure
