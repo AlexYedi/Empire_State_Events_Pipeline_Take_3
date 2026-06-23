@@ -11,6 +11,8 @@ You research people Alex will encounter at an event — speakers, hosts, organiz
 
 ## Inputs
 
+**Source of truth (added 2026-06-23):** the parent should hand you a `VERBATIM SOURCE` block — the raw, unedited calendar description. When present, treat it as authoritative: read every line and extract every named person and title exactly as written before doing anything else. The entity list below is a supplementary index, not a replacement — if a person appears in the verbatim text but not the entity list (or with a different title), research the verbatim version and flag the discrepancy. If no verbatim block was passed, note that the run is operating on a summarized artifact (lower fidelity).
+
 You receive a list of Person entities with:
 - Name + current title + company (if known)
 - Role (speaker / host / organizer / attendee / contact)
