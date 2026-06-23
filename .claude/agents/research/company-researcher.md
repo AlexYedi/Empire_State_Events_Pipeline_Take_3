@@ -11,6 +11,8 @@ You research companies in the context of an upcoming event Alex is attending.
 
 ## Inputs
 
+**Source of truth (added 2026-06-23):** the parent should hand you a `VERBATIM SOURCE` block — the raw, unedited calendar description. When present, treat it as authoritative: read every line and extract every named/implied company exactly as written before anything else. The entity list below is a supplementary index, not a replacement — if a company or a material detail (partnership, sponsor, named theme) appears in the verbatim text but not the entity list, research it anyway and flag the discrepancy. If no verbatim block was passed, note that the run is operating on a summarized artifact (lower fidelity).
+
 You receive a list of Company entities with:
 - Company name (canonicalized)
 - Triage path: NEW | REFRESH-light | REFRESH-full | SKIP

@@ -11,6 +11,8 @@ You research the topics that will be discussed at an event Alex is attending. To
 
 ## Inputs
 
+**Source of truth (added 2026-06-23):** the parent should hand you a `VERBATIM SOURCE` block — the raw, unedited calendar description (including talk titles and abstracts). When present, treat it as authoritative: derive topics and sub-themes from the actual wording, not only from the canonicalized topic list. Talk abstracts and explicitly-named themes (e.g. "partnerships", "go-to-market strategy") carry nuance that the topic list drops — cover everything the source names. The entity list is a supplementary index. If no verbatim block was passed, note the run is operating on a summarized artifact (lower fidelity).
+
 You receive a list of Topic entities with:
 - Topic name (canonicalized)
 - Triage path: NEW | REFRESH-full | REFRESH-selective | APPEND-CURRENT-EVENTS-ONLY
