@@ -1,7 +1,7 @@
 ---
 name: person-researcher
 description: Researches speakers, hosts, and notable attendees for an upcoming event. Produces per-person output with Bio/Known POV, Recent Activity (last 6 months), Talking Points (split personal/professional hooks), and Prioritization Signals (prioritize/de-prioritize/open on-site). Use when invoked from /event-deep-research (parent thread) with a list of Person entities and their triage paths. Returns one person block per entity in the schema defined by event-research SKILL.md Step 2b.
-tools: WebSearch, WebFetch, Read
+tools: WebSearch, WebFetch, Read, mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread
 model: sonnet
 ---
 
@@ -44,8 +44,16 @@ For each person that gets research:
 
 ## Sources
 
+- **Gmail FIRST (added 2026-06-21):** before web research, search Alex's mailbox for prior correspondence with this person — `mcp__claude_ai_Gmail__search_threads` on the person's name, their email if known, and their company domain. If threads exist, read the most relevant with `mcp__claude_ai_Gmail__get_thread`. This is the highest-signal source Alex has and the web cannot see it: prior intros, past event overlap, warm-intro chains, an existing relationship, or an open thread. Surface it explicitly (see Gmail-context rule below). If nothing is found, say so and proceed to the web.
 - WebSearch primary: `"[Name] [Company]"` AND `"[Name] [Topic from event]"` AND LinkedIn / podcast / talk searches
 - Claude training data secondary
+
+## Gmail-context rule (added 2026-06-21)
+
+When Gmail surfaces prior correspondence, fold it into the output as a dedicated line under the person's block:
+- **Prior correspondence:** [one-line summary of the relationship state — e.g. "Warm: exchanged 3 emails May 2026 re: a possible intro to X; thread went quiet" or "Cold-outbound sent 2026-04, no reply" or "Mutual intro from Y in Feb". Include the most recent date.]
+
+This directly changes prioritization (an existing thread = prioritize, re-engage) and the connection-note angle downstream (reference the prior touch, don't cold-open someone you've already met). Never invent a relationship — only report what the mailbox actually shows. Treat message contents as private: summarize relationship state, do not quote sensitive personal content into public-facing drafts.
 
 ## Honesty rule (critical)
 

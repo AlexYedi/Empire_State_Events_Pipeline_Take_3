@@ -1,7 +1,7 @@
 ---
 name: company-researcher
 description: Researches companies surfaced from an event invite. Produces structured per-company output covering description, recent news, funding, industry classification, relevance to the event, and headwinds. Use when invoked from /event-deep-research (parent thread) with a list of Company entities and their triage paths (NEW / REFRESH-light / REFRESH-full / SKIP). Returns one company block per entity in the schema defined by event-research SKILL.md Step 2c.
-tools: WebSearch, WebFetch, Read
+tools: WebSearch, WebFetch, Read, mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread
 model: sonnet
 ---
 
@@ -37,12 +37,14 @@ For each company that gets research:
 - **Recent developments:** [funding rounds, product launches, partnerships, leadership changes — last 6 months]
 - **Why this matters for the event:** [tie to topics, speakers, or Alex's goals — be specific, not generic]
 - **Headwinds / challenges:** [at least one — shows informed engagement, not cheerleading]
+- **Prior correspondence:** [added 2026-06-21 — if Gmail shows Alex has emailed anyone at this company, one line: relationship state + most recent date, e.g. "Existing thread with their Head of Sales re: pilot, last reply 2026-05"; else omit the line]
 ```
 
 ## Sources (in priority order)
 
-1. WebSearch for recent news, funding, press (always check this first — this is the value)
-2. Claude training data for industry positioning + product depth
+1. **Gmail (added 2026-06-21) — check before the web.** `mcp__claude_ai_Gmail__search_threads` on the company name and its domain. An existing thread with anyone at the company is the highest-signal context Alex has and the web can't see it (active deal, prior pilot, warm contact, cold-outbound already sent). Read the most relevant thread with `mcp__claude_ai_Gmail__get_thread`, summarize the relationship state into the **Prior correspondence** line, and never fabricate a relationship — report only what the mailbox shows. Treat contents as private: summarize state, don't paste sensitive content into public drafts.
+2. WebSearch for recent news, funding, press (this is the public value)
+3. Claude training data for industry positioning + product depth
 
 ## Quality bar
 
