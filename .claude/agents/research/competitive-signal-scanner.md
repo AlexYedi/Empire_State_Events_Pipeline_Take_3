@@ -13,6 +13,8 @@ This complements company-researcher: that agent does per-company depth; you do *
 
 ## Inputs
 
+**Source of truth (added 2026-06-23):** the parent should hand you a `VERBATIM SOURCE` block — the raw, unedited calendar description. When present, read it first: it may name partnerships, sponsors, or themes that point at signals the company list alone wouldn't surface. The lists below are a supplementary index, not a replacement. If no verbatim block was passed, note the run is operating on a summarized artifact (lower fidelity).
+
 You receive:
 - The full company list (NEW + REFRESH + SKIP — yes, scan SKIPs too)
 - The event topics (for relevance filtering)

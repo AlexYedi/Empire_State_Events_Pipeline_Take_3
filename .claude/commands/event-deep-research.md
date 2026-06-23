@@ -41,6 +41,8 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 
 **Do NOT delegate this step.** Building the triage plan requires conversation with Alex.
 
+**Preserve the raw description verbatim (added 2026-06-23 — fidelity fix).** Parsing into entities is LOSSY: it is a summary. Keep the full, unedited invite/`description` text as a `VERBATIM SOURCE` block and carry it forward to Step 2 unchanged. The entity list is an *index* into the source, NOT a replacement for it. Never let a downstream agent see only the summarized entities — talk abstracts, named themes (e.g. "partnerships", "go-to-market strategy"), attendee mix, and ordering nuance live in the raw text and are invisible once compressed. Root-cause of a 2026-06-23 defect where all outputs were built off a lossy summary.
+
 ## Step 2 — Multi-agent research fan-out (this conversation)
 
 Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This must run in the parent thread because subagents cannot spawn other subagents (Anthropic SDK runtime constraint — see [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md): *"Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation."*).
@@ -52,7 +54,9 @@ The four parallel dispatches:
 3. **topic-landscape-analyst** — every Topic entity (NEW, REFRESH, or APPEND-CURRENT-EVENTS-ONLY). Topics never get full SKIP.
 4. **competitive-signal-scanner** — runs across ALL companies (including SKIP) to surface market signals in last 60 days.
 
-For each specialist, pass: the entity list scoped to that specialist, the triage path per entity, the event name + date, and Alex's stated focus.
+For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block from Step 1, quoted unchanged and labeled as the source of truth** ("read every line; derive findings from THIS text — the framing below is supplementary, not a replacement"); (2) the entity list scoped to that specialist; (3) the triage path per entity; (4) the event name + date; (5) Alex's stated focus.
+
+**Mandatory (fidelity fix, 2026-06-23):** the verbatim description is item (1) for a reason — it goes in EVERY specialist dispatch, ahead of the entity list. Do NOT paraphrase it into the prompt and drop the original. If the parent only hands subagents the summarized entity list, the run repeats the defect where talk-abstract nuance and named-but-unsummarized themes never reach research. The Step 2.5 synthesizer also receives the raw invite — keep that.
 
 Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
 
