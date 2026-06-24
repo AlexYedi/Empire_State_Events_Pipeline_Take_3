@@ -55,4 +55,4 @@ VC partners in the room / intros made:
 - Mark each pick hit/miss → **precision@8** and **recall** vs the actual 6–8 demoers.
 - **Calibration:** did Highs hit more than Meds?
 - **Surprises bucket:** any demoer not in a named firm's portfolio = the "and more" / road-show-courtship pattern we parked — the highest-value lesson.
-- Bonus: most of these names overlap Alex's job-target board (`~/.claude/plans/nyc-ai-portfolio-jobs.md`) — a hit tonight = a warm intro.
+- Bonus: most of these names overlap Alex's job-target board (`nyc-ai-portfolio-jobs.md`, same folder) — a hit tonight = a warm intro.
