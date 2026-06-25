@@ -43,6 +43,22 @@ If explanations are needed during development, I will invoke the explainer skill
 - **Pattern to watch for:** "Tool: X" in a skill spec usually meant *Alex copies output into tool X manually* — that's a manual handoff pattern from before MCPs were broadly available. When you see this pattern, audit whether the tool has a connected MCP; if yes, default to automation per rule 1 above unless judgment load (rule 2) gates it.
 </behavioral_rules>
 
+<definition_of_done>
+**Definition of Done for non-trivial builds (pilot — added 2026-06-25).** A *dynamic feedback policy, NOT a static brake.* Diagnosed root cause (systems analysis, `alex:systems-analyst`): rigor lived in optional docs/tools, never the execution path, so the memory-less agent shipped on "green checks" without durable artifacts, and the consequence surfaced weeks later. This gate puts a floor under "done" without blocking flow.
+
+**Scope test — the agent proposes, Alex confirms at session start.** A build is *non-trivial* if it: adds/changes a skill, agent, command, or pipeline component; alters a schema or data contract; came from an approved plan; or is hard to reverse. Everything else (typo, single-line fix, config tweak, doc edit, pure research/exploration) is *trivial* and auto-waives this gate.
+
+**The gate (≤3 items).** A non-trivial build session does not silently close until each item is satisfied or **explicitly waived with a one-line reason** (waivers are logged as data, not failures, so the pattern is visible):
+1. **Spec artifact before code** — a PRD or one-pager in **ChatPRD**, mirrored to **Notion** (the source of truth for artifacts), created *before* the build where feasible (guards against retroactive cargo-cult PRDs).
+2. **Linear issue** opened or updated for the workstream (the source of truth for "what's open").
+3. **One adversarial pass in writing** — a pre-mortem question, or an `alex:cto-principal-architect` / `alex:risk-playbooks` check.
+4. **(Activates once the eval/measurement layer is live)** the build-quality **judge ran within N hours** — if stale, this item FAILS. The measurement system's health is a *precondition of the gate*, not a separate dashboard (prevents silent metric rot).
+
+**Discipline:** keep this at ≤3 (+1) items. If it creeps toward 7, *shrink it* — growth is the rule-beating signal. The agent must surface this checklist (met / waived-with-reason per item) before closing a non-trivial build; it never hard-blocks (it informs).
+
+**Promotion path:** piloted here in Empire State first; promote to canonical `~/Documents/GitHub/alex-agents-skills/Me/canonical-claude-md.md` (user-scope, inherits everywhere) once it has proven it changes behavior without becoming a drag — the YED-29/30 project-scope-first-then-promote pattern. Plan of record: `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`.
+</definition_of_done>
+
 <standing_context>
 - Based in New York City
 - Actively building AI-native products, GTM systems, and exploring what is possible
