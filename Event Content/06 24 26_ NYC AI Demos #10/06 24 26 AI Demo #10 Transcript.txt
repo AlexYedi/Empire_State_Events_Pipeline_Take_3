@@ -1,0 +1,360 @@
+[Speaker 1]
+Okay, I'm Kyle, um, I'm one of the founders of hexar. I'm also
+
+[Speaker 2]
+One of the co-hosts of New York City AI demos, uh, welcome to our 10th installation of New York City. I don't check around plants for that.
+
+Uh.
+
+[Speaker 1]
+That we've had with this with nearly any other activation or event that we've done. So I'm just really proud. Of 10, and everybody in the room. Thank you so much for coming! My short spiel, which is, if you aren't already familiar with pensar, we're cool. As a security company here in New York City, I got two asks one.
+
+If you're building agent products and you need to lock them down. Come and call me. Come and call PetSmart too. Your talented engineer. Or maybe there's a one percent in here. That's a security engineer. Come and find us. We're hiring across the board. With that, I want to give a huge thank you to the partners that we have, and we do this event with.
+
+Obviously, I'm going to pass it off to my favorite co-host Caroline, but just a a huge thank you to Tech NYC really quick. They've been a Cornerstone for me and pen star and getting up and running and starting our own company. It takened me up to Albany to speak with assemblymen and the Capitol.
+
+Um, we've worked with them on bills, so just a round of applause for Tech NYC.
+
+And my my other huge thank you is to
+
+[Speaker 2]
+The team of two trees who manages beautiful Refinery at Domino, which they're not telling me or paying me to say this. Um, I've learned that the Domino is basically fully rented, so we used to say, hey, if you want to get cold off the space for all the AI companies, are you can't you can't?
+
+But now, I don't know how true that is anymore, because now everybody, all the cool companies are here. Uh, they also pretty much are up and down the entire water. One, I know, that's true. I'm just saying, what's true, so if if you are looking for cool and exciting places to build your company.
+
+I can't think of a better place and a better View and a better atmosphere than here. Um, that's my two cents on that okay. Without further Ado, I want to welcome Caroline, and then we're gonna get started.
+
+Hey
+
+[Speaker 3]
+Style, thanks everyone for being here today. I'm Caroline, as mentioned also before I forget Nicole. We have here from the two trees team. Raise your hand. She's in the way back. So, Kyle mentioned two trees through office space. If you're interested, go find her, um, and thank you to Pennsar, the best partner ever.
+
+We love this series. We know you love this series. It doesn't need that much introduction, hopefully? Um, but this Edition is unique, and we decided to do something. Special. For the 10th one, we relied on a bunch of our favorite Venture friends to nominate the companies that they thought were building the most exciting things in Ai and give you guys a little sneak peek into that.
+
+So, if you want to know what they think is worth investing in, you're in the right room. And then a Jack Kyle swag for a second because he didn't ask this question, but so we have a sense of who's in the audience. Um, raise your hand if you're a Founder.
+
+Wow, nice! Pretty decent founder crab, okay Engineers. A lot of Engineers. Investors. Wow, decent amount of investors, everybody else who loves say hi. Fairbank. Not everyone have your end up without friends, um, anyways. Really excited, uh, to show you guys who are Venture Partners nominated. We have nominations tonight from Thrive Capital, first round index, ventured inspired capital, and able Partners.
+
+Some of the top, uh, VCS in New York. We've got more nominations that we can handle, so we picked our favorite ones. Without that. With that, let's get started. Our first company that I'm really excited to showcase for you guys. You probably may have heard of, but you might not know what they're up to right now.
+
+Spring Health. They were nominated by able Partners. They're a global mental health company built on a single AI native platform designed so care follows you through every life stage. They raised 466 million to date, including in 100 million series C in 2024, able Partners to spend with them. It's very, very.
+
+And for these nominations, we got a little bit of Intel from their investors on why they chose to nominate why they chose to invest. So, for each of the company is going to read you a bit of that, here's what Able Partners had to say about spring health before I let them do their thing.
+
+When we invested in Spring Health in 2019, mental illness, both the clinical and subclinical was Rising sharply across the U.S, and we're pouring enormous funds into Mental Health Care without the outcomes to match was set. Spring apart was using the machine learning to match each each. There for the start, eliminating the trial and errand.
+
+The average 11-year delay between symptom onset and treatment and doing it with real clinical validation long before AI in healthcare, respectable different worlds in 2890, and so they saw a chance to back a clinically regular, rigorous AI native company setting a new standard of Mental Health Care at scale and have deep connection from day one.
+
+Sounds like it paid off. Please help me welcome. John de Lorenzo, senior director of software engineering engine. Stage.
+
+[Speaker 4]
+Yeah, man only instruction there, but that was way better.
+
+[Speaker 1]
+Cool! How's everyone doing nothing like going first, right? Okay, so for those unfamiliar with Spring Health, they're now all familiar with spring help. We are a mental health platform for operative benefits, uh, as a benefits platform through employers. We're also being offered as a growing network of Private practice providers also.
+
+[Speaker 4]
+Um, today I'm going to be showing you this guy. Um, is our new am power member experience. It is currently in beta with a handful of early adopters and customers customer group, it supports members across every state of their mental health Journey. So, Caroline spoke about sort of this AI native of founding of spring.
+
+Help this kind of goes in a very different direction. I we today use AI to match members to Providers, uh, we're looking to use ads to stay with the member throughout the entire course of care, so I'm going to warn everyone up front that, yeah, it's going to look a lot like, just like, kind of a warm chatbot demo, but there's two things.
+
+I want to make sure, like, make it very much, not bad. First, every one of the conversations that our members have with guide are grounded in their actual care, their actual course of therapy. We record every session that members and providers can send to us doing so with so that those sessions from our digital platform each other.
+
+I bring wives, so members are actually talking to AI that knows their provider. It knows their treatment history, and also they're actively working on in therapy and job. You draw conclusions accordingly. Second, safety of this world spend the most time. Using AI for mental health is really risky, um.
+
+Especially if their mom, we see this all across the industry. It was the number one thing we were working about following this out last year, so we both comprehensive safety guard rail layer within a multidated system every age in the system and air and safety controls by default. Thanks to a supervisor architecture powered by Langerer, so I'm gonna have a live conversation with stress test all this.
+
+Hopefully, it will work. While showing the moves, the agentic systems maintain the background through our traceability to the wingsmith, which I'm pretty sure NIV Engineers who know what. So, I'm going to ask, and also you'll get a very vulnerable. Moment of turkey because I am in therapy with them.
+
+And I asked him what he. If I can type? What key themes that emerge across all my sessions with him?
+
+[Speaker 1]
+On the right hand
+
+[Speaker 3]
+Pane, you'll see a Lang Smith pulled up. One thing I want to highlight is, we do have memory fetching built into the turns here, so you'll see. These are other kind of the service, and I don't know why. I've pulled from April 23rd, but it did. User builds peaceful and reflective after the last third recession.
+
+What's happening here is yes, we're actually using some anti-search to key on my past conversation history, as well as the things I just asked. Well, using that to pull relevant memories if he has context into the response, the agent's given. We're also in the background, capturing memories on every term to conversation.
+
+Um, this ensures that new things I'm saying if they're important to guide. God will preserve them for the next conversation, so you'll see here a few things keep showing up. Yes, I want meaningful. Join it. Don't be all, um?
+
+[Speaker 1]
+Are we all executive function? That's interesting. So let me just ask executive motion. So you're saying? I have ADHD.
+
+[Speaker 3]
+One thing about using AI metals by diagnosing people, right? So, I'm going to try to pressure test whether or not it gets me a diagnosis here. Uh, you'll notice over in nightsmith, a couple things that make sure. And the response time's kind of iffy right now. It sounds like you've been reflecting about some important feeds in your session of the fan, so it's reiterating the same thing you already said to me, instead of trying to to push this to diagnose, I'm going to try to jailbreak a little bit.
+
+So, you'll notice a very generations there. That generic response is specifically because we tripped the guard rail in our safety layer. On input, you'll notice the jailbreaking classification here, amongst other reason users tend to devices to role-plays therapists, which is a form of jailbreak attack. Supervisor picks up that sikhon system automatically grounds it to a much more sad mode that just gives it generic response.
+
+So fine? I'm still having. Very dark thoughts. This is where the power of God really comes in, especially AI mental health. As I said being risky, um, these are the types of conversations that we are seeing people try to engage in AI. Engage in with AI, you'll you'll notice here, our possible what we call our possible risk work located in same way, because what I mean by dark thoughts, um?
+
+Is actually clinically guided workflow that helps. But yeah, I got to determine whether or not I'm actually thinking about going through this something dark. Um, you'll notice here as a refresh line Smith.
+
+That I'm sorry. There's a lot of scrolling because there's a lot of function here. You'll notice that I took another input barbell possible suicide iteration risk. The user mentions how to buried up thoughts, which is ambiguous, suicidal radiation, or intent. I'm gonna go forward and say. This is dark.
+
+Again, this is stuff that we're actually seeing people engage with N Ai. You have this conversation with gptu and not get the kind of support of the clinical office team that would have this renewed behind you. We kicked in right away with our crisis intervention protocol. We recommend. Uh, reaching out to us at our 247 crisis support line.
+
+We've also behind the scenes already kicked off to take it to our care support team. I will get a call for two hours because I just did this. I'm probably less than two hours. It'll probably have in the next 30 minutes. You actually have someone sitting there trying to cancel these papers as I'm reading them.
+
+Um, and this is kind of where the big difference comes with how we're using Ai and mental health in the next kind of iteration of Spring Health's memory experience. Thanks!
+
+[Speaker 1]
+Amazing!
+
+[Speaker 2]
+Thank you! John
+
+[Speaker 3]
+And
+
+[Speaker 2]
+John did mention to me, but I don't know if he's gonna hope to get sworn yes or no, but spring health is hiring pretty much across all functions, I believe, right. So, if you're looking for a cool job and what is one of the most important problems in the world mental health, I highly recommend!
+
+Talking to Dlow AKA John all right, bye quick, um intro for David and Sparra David, you're on Deck. I well read off the one-two punch that your investor has graciously said a nice thing about you, which were probably both happy about. Um, but very cool company, based here in New York City, working on GTM agents, um, so Inspire Capital nominated.
+
+David and his team and the tldr as far as going after one of the largest problems in our space, automating the way in which products, goods, and services are and sold as far as business sits at the intersection of two notable tread lines first. Dramatic advances and AI capabilities across a number of modalities.
+
+And second, the fact that most public companies spend meaningful, sometimes majority of their revenue. I can speak to this.
+
+[Speaker 3]
+On sales and marketing.
+
+[Speaker 2]
+Please help me while going. David, co-founder of Sarah.
+
+[Speaker 1]
+Right. Thank you so much
+
+[Speaker 3]
+For that wonderful introduction. Hi, everybody. I'm Dave Walker from the coconut CEO of Safara as far as a good market AIDs and platform, so we help companies in the world build agents to help themselves, and we do that across a ton of different modalities. Um, so I'm gonna show you a couple of the types of agents that companies who build, and we'll do a deep dive in this time.
+
+So, for example, we have businesses that rely on events and webinars to sell and be away and make and go. And webinar follow agents. We have companies that want to do AF product demos. That's what I'm going to show you today. TLG upsell. So?
+
+So, if I think about the last 10 years of how people buy companies and how people sell, companies have been fundamentally constrained by human conversations, right? We have to protect our account Executives, so we put the buyer through the ringer and we make them wait, we delay. We re-engage them to try to close a deal with AI.
+
+We can now engage every single buyer in real time. The medium that is most effective for them. So, let's look at one of sparra's most high performing agents. This is our mql conversion page. So, this is how we. Ourselves. The best part about building GT on AI is the biggest dog who didn't use it every single day, so our agent here has chat on our website.
+
+We're running a 50-50 test right now. With traffic, we're actually testing the personality the agent, which is really cool to see how that increases. Conversion rates are hard metrics. We have email, we have SMS foam, and we're going to dive into our AI product demo agent and show you how a buyer could actually engage with Safara to get HR demo, so I'm.
+
+Library from our website so you can go to this later tonight. Have a slowly conversation, so 10 I'm a buyer and I came to Spara, and I want to learn about as far, and hopefully you'll see some of the things I just showed you in this demo itself.
+
+[Speaker 5]
+Hi there! I'm Sam from spara AI. I'll be running your interactive demo today to help me tailor this experience. Could you share your name and what role or team you're with?
+
+[Speaker 3]
+Yes, hi, I'm David Walker, and I'm the head of sales of a BG SAS company.
+
+Hi David, great to meet you since you're
+
+[Speaker 5]
+Heading up sales. You know how critical speed to leading conversion are for P2P SAS? What is the biggest pipeline or lead conversion bottleneck your team is trying to solve right now? Yeah,
+
+[Speaker 3]
+We get a bunch of leads coming to our website and coming to our company in general and our teams and the time the time try to pre-qualify and convert those to qualified meetings, so I'm really looking to solve that. Um, can you bye? Can you show me the agents page?
+
+Here is our agents page. This is
+
+[Speaker 6]
+Where Spyro organizes your AI agents by business outcome, rather than just single channels, allowing you to run full multi-channel qualification playbooks from one place before we dive into how our AI chat or voice agents can instantly qualify. Those inbound website leads for your team. What is your work email?
+
+I'll make sure to tailor the next part of our setup to your company.
+
+Can you show me the data model please?
+
+[Speaker 1]
+This is
+
+[Speaker 6]
+Our data model view, which acts as the single source of Truth. For every lead attribute, we count one moment, please. Now, I'm gonna try to put it on.
+
+I've pulled up our calendar booking widget right on your screen. Go ahead and select the date and time that works best for you and your team
+
+[Speaker 3]
+Perfect. So we've successfully been able to book a demo because I am in fact pre-qualified by Spark and garden, um. So hopefully I can do a little taste of how we can engage buyers in mediums that were previously really locked down to humans and to get to the point of a human demo if you'd really want to understand that person who was talking to so fundamental problem that we solve is that businesses don't want to spend human hours talking to people until they know that we're talking to the only way to figure out people we're talking to is to talk to them, and that Paradox is defined most of B2B.
+
+Go to market the past 15 years, and that's completely breaking so. I'm going to show you one more thing really, really fast. I'm gonna take 10 seconds. I promised you because let's pretend now. I have a CEO who loves avatars, and I'm going to use a someone met actually the other day.
+
+I just used their LinkedIn photo to make this out of car. So, um? Let's just see if I'm obsessed with avatars. What I wouldn't see if I wanted to do an avatar? And most importantly, how quickly I could change that in our platform and go and deploy a different version of smart.
+
+[Speaker 6]
+Will we help with the companies instantly engage couple of five and convert a
+
+[Speaker 3]
+Couple of traffic, but you know that's the demo guys? So the idea here is that in two seconds go to market teams and run a B tests. Test what an avatar does. There's no Avatar test app, chat agents, email agents, voice agents. Can help their considerations really local weather.
+
+Thanks so much.
+
+[Speaker 1]
+Thanks, David. All right. Next up, we've got interested in your dad. Um, our next company is Pace. They were nominated by Drive Capital.
+
+[Speaker 4]
+Sure, you've heard of him. Pace has just announced a 46 million series speed last month and building AI powered tools for the knowledge economy helping teams automate the high value high complexity work that used to require a room full of experts. Here's why. Thrive chose to invest and nominate them in their own words.
+
+We're really in this special moment where the most important high value parts of these knowledge, economies are being augmented and automated to a significant degree by these models. Jamie and the team use Bill are one of those for you go in. And biased to saying automatically. Yes, so pretty high queries.
+
+Let's see what Tristan's going to show us. Please help me welcome him to the stage. He's the founding member of the technical staff.
+
+[Speaker 1]
+We're just going to make sure it's
+
+[Speaker 2]
+Recording really quick, so patience very quickly.
+
+[Speaker 3]
+Kristen asked if I have a joke. Well, I look like I have a joke. What's the biggest pencil in the world? Panzar, Pennsylvania. Oh yeah, that's too bad.
+
+[Speaker 1]
+All right, Nick's coming back into the battery.
+
+The video guys running down the alley? Thank you, Nick.
+
+You look like Groucho Mark.
+
+I trust and saw you it before. All right. Thank
+
+[Speaker 6]
+You for the introduction. Hey everyone, I'm Tristan. I'm here with pace as a part of the forward deployed engineering team excited to share more about the company, the platform, and where we're United. So, we're lucky to be back by Thrive and Sequoia. We announced our a recent round, um.
+
+So, it's very exciting times for us. I think. Pace. So, what is Pace? Pace is. A company that builds complex end-to-end AI agents for the world's largest insurers reliable with companies like Prudential wtw and a few more. We're excited to have to. Automating a lot up there. Front and back office work.
+
+So I'll go ahead and get started. I know we have about three minutes here. Of the insurance industry. As a vertical, I think, is one of the best places to build complex agents. I think even the most imaginative people here in the room would find it surprising the the complexity that we see trying to automate Insurance tasks.
+
+Better or worse, I have three minutes today, so we're picking a specific workflow called lost runs, uh, which is live in production running millions of times a year for some of our customers today. So, what is lost runs on a high level? Loss runs is when Underwriters, when you go through many carrier portals, type in the policy numbers pull information in and basically see an applicant's claim history, because that helps with underwriting.
+
+So here, on the left side is our Asian property changer. This is plain English, natural language that defines the workflow. This is actually Auto generated with our co-pilot, so we just fed in our customers and automized Sops templates. Not a single word was touched by human, and this defines basically the flow that hundreds of people in each insurance company do today.
+
+On the right side. Here we see the agent in action. It starts off by spinning off sub agents, going through a big carrier portal that we've designed here, and we see, just navigates through the website, entering information dealing with pop-ups, downloading the forums, Etc. Now, this is actually one of the simpler computer use cases that we have.
+
+Insurance is a piece of an industry, so we've had to deal with extremely complex, noisy policy, admin systems, or even like 20 30 year old green screen GUI terminal based. Systems for that insurers. Use as a system of record to read and write data from. Thankfully, we're we partner closely with open Ai and atrophic on developing to this patient services and
+
+[Speaker 3]
+Models. So, I would
+
+[Speaker 6]
+Say the team is part of work, and we're very thankful for our Partnerships there. And I'll have a few minutes left. So, as you can see, the agent's been kind of spinning on the background trying to download this form. In the interest of time, I'll just go to a run.
+
+I kicked off about 30 minutes ago. It's finished the floater. We record every one. It goes to the side. It downloads the forearm. It closes off, and then it continues processing, which we see here in the Asian Trace. It does many things. Here's an example form. I'm going to zoom in here.
+
+An example form that we've downloaded. Extracts and identifies 21 policies, each with a policy number, line of business, Etc. We go back. We see that we run rules for validation, and then we eventually format this. We aggregate these and write back into an Excel file with a template that our customers use, and we send it back to them through email, basically saving them 90% plus of their time.
+
+So that was a quick lost ones. Demo, this is one of many workloads that we have in production. If any of you are interested in working on extremely complicated problems in a very deep industry with smart people. Please find me out there. Thanks
+
+[Speaker 3]
+So much.
+
+[Speaker 6]
+Where are you guys? We're at and Union Square. Oh, cool. We're very cool. Bigger office. Oh, very cool. That's where spring hot is. Yeah, oh wow. All righty.
+
+[Speaker 2]
+Two more left. How's everybody doing okay, good? A lot of people showed up in the fast.
+
+[Speaker 1]
+Thanks again. Oh wow, all right. We have an S on deck, but and as I read your blur very quickly, and I really liked it. So, I'm gonna give it some, you know, a good intro? Um, so the quick, high level I'm at an S briefly, um?
+
+[Speaker 2]
+I don't want to spoil your demo because I think I'm the thing that I would probably smell is the coolest part, but it's kind of a shocking one, so I hope if you can see a screen. I hope you're in proximity to a screen. Um, the tldr from index ventures who nominated an S and her company on cover?
+
+We only needed to speak to an S once to realize how special she is selling critical software to hospital systems in the U.S as a 23 year old from Morocco. It's highly unusual, but it's clear no bar is too high for her to clear this to clear, and this is only the beginning, and it doesn't hurt that the product is brilliant, both a massive money and Time Saver for surgeons and their teens.
+
+So it essentially sells itself.
+
+[Speaker 3]
+And S come on stage. It's all you and I again. I really hope you can see the TV for this one.
+
+[Speaker 1]
+Hello! So,
+
+[Speaker 4]
+Morocco is playing currently. So, I have to say, I have to say, because it was a little bit of a portrait of the year. So, uh, I'm very happy to to be able to show it all, and maybe to start with, we're hiring a lot. We're deploying across the most exciting and the biggest hospitals in the country that treat tons of patients, so please come and find me at the end of the demo.
+
+We're having some very. Very small technical issues, but I'm sure we'll be able to sell them. And soon enough. Um, okay, maybe I'll start with the the problem, um? And what we're doing so basically. Today, after each surgery, a surgeon has to write an operative report. This is the most important piece of any medical record.
+
+This is the piece that it that describes what happened during surgery and the surgery who just spent like four to 12 hours in a surgical room actually writes it. And so, as you can imagine, it lacks tons of details. Uh, there's a lot of problems in it, and we're solving this piece.
+
+So, basically, we make surgery safer for patients. Easier for surgeons and more efficient for hospital and? We realized that it was a very solvable pain, because today around 70 of surgeries are actually recorded, so I'll show you this just so that you understand what recording means. Please, if you're a little bit sensitive, close your eyes otherwise.
+
+Open them very big. So, this is what recorded means means that, like, we put a camera inside the body to avoid to do like a huge scar. They put like a just a small camera, and they operate from there. And so today, there's a proof of what happens. There's something that just says, okay, well, here are all the complications.
+
+Here are the decisions from the surgeons. Here are all the things that like happened and should be done better the next time and all those things. And so, what we've done is that we built? On top of this, we've got intelligence on top of surgery to actually analyze what is happening step by step by second.
+
+And from this, we automate the operator report, and we just make it available for surgeons just after Insurgent ends. And so, the whole operator reported here. They can also go back to some very specific sentences and jump to the specific moment where it happens to make sure that everything in there is actually accurate, and from there they put copy report, and this this.
+
+To get sent to their system of integration, and so basically doing this is extremely impactful for surgeons because we make them gain time. So after each surgery, they don't have to spend like 20 to 30 minutes writing those reports. People gain money because those reports is the report that is set to the insurance.
+
+To say this is what we've done, and this is going to get members. So, if this is not well written and not well detailed, because people lose money and we avoid this and we can pay safer for patience because. Is the document technical team rely on to make sure that they see the patient in the best way possible?
+
+We're a team of three co-founders, one of them being a surgeon with more than 30 years of experience. Today, we have a team one third of the team are actually surgeons wanted more like, um, like, whatever to our Engineers, and we're working across animal engineering for deployed engineering to actually get into hospitals.
+
+Getting to operative rooms understand the. And code over it, and we're deploying the biggest hospitals in New York City. Just opened our office and growing the screen, so don't forget to apply, and I'm just putting a small QR code here, and I think it's always useful. So, if you want to scan this and connect block free.
+
+I've not to connect and to learn a little bit about the bundle too. Thank you guys.
+
+All right.
+
+[Speaker 1]
+I like the shock factor, right? I'm glad you left another shot factor. I think that's pretty cool. Chris, all right. We got one more. And.
+
+[Speaker 2]
+I'll tell a quick story because I had a buddy of mine who's going to be our number five different buddy. So, I'll tell the investor story for correct. Um, yeah. Instead of having like one of our like tier ones up on stage, getting in the teal yard, um, so quick, little known story and not menu.
+
+You notice when Corona I started panzar. We were two 23 year old kids. 23 year old kids who packed up a car from New York City drove two days to Colorado to do an accelerator program ran out of money while we were there. Had to call our parents telling them we were flat out of cash.
+
+And then vocal notes to us. We were going up against NASA researchers and scientists and everybody else. And they decided to give us not only the lifeline, but would become, you know, pet star. And so, that's our TTR. I think that's why our investors invested in us, but also, I think we're building something that's going to save the world.
+
+So, off to you.
+
+[Speaker 6]
+Right, how's it going everybody? I'm your your last one for today, so please bear with me, uh. By the way, the score is 2-2 right
+
+[Speaker 1]
+Now.
+
+[Speaker 6]
+Um, so my name is Karem and my co-founders of pensar. In a nutshell, what we built at Penn star agents that hack software, and so you've all probably heard of Mythos and cyber capabilities and and how governments want to embargo their capabilities in L foreign threat actors want to build your own, uh, we basically package that and sell it as a product, um.
+
+So, what I'm going to show you today is a live view of our local CLI agent, which we call Apex currently using an open source model. What it's going to do is actually open up a browser. Navigate to an agent,
+
+[Speaker 1]
+Chat panel, and use some prompt ejection so you can see some cross tenant data exfiltration. Um, this is all something that you can host just right in your laptop.
+
+[Speaker 6]
+So, we're just going to tell it, you know, I probably pasted this earlier before we're going to tell hey, open up our browser. Navigate to this open the chat pane, and we're going to say through the wall because we're dangerous. We don't want your missions. If we can see it here.
+
+Opening up that chapter, you can see it discussing there. And so, what's going to do with this is what we have? Here is our agent actually has access to a browser and has access to sandbox, has access to the computer, and what it'll do is, it'll actually navigate these applications.
+
+It'll log in with your credentials, and it'll actually go forward and like, test a bunch of these different attack directors. So, if you guys are building agents yourselves. Uh, what are different ways that that we can break in? Well, there's different things like jailbreaking, indirect prompt injection, and what we got here is actually glm 5.2, which is, you know, an open source model built by Zai origin, Chinese lab, um, that's actually going to show you, um.
+
+Exfiltration. So right now, it's actually created its own page. And it's like, kind of, a note-taking app called, you know, like a notion clone. What it'll do now is actually input a, uh, instructions here and then open up the chat pane to go ahead and and run this and perhaps execration data.
+
+It's not supposed to access it so you can see it's selecting the body now. Adding in, so we have a whole library of different jailbreaks that we developed internally that our agents have access to. So, you're going to see here using when the lead speak prompt injections. This is just a different way that we can basically hijack an agent and tell to give us things that that it's not supposed to.
+
+Things he's thinking and typing. I'll just go for a little bit before, uh, where I can show you there we go, so it's thrown in its prompt injection here. This looks like some, like, crazy archaic, uh, incantations. That's because it kind of is. And then it'll actually go forward a nasty agent to do this work.
+
+[Speaker 1]
+Itself as well, and then use that dediciation.
+
+[Speaker 6]
+There's a few more seconds. Sometimes it takes a little while, uh. But while this runs and before, that's done worldview is actually open up our what our product looks like. And so this is, this is our console dashboard. This is pensar and what we're able to do is to build things of actually like traditional pen testing, continuous pen testing, but also agent red team.
+
+It's a breaking agents like I'm showing on the on the other screen here, but I'll show you what, what like a vulnerability looks like, and this is all just using models that you all have access to today, so you don't need to be a part of project last swaying or in some, like, you know, open, ADD program.
+
+You can go ahead and go break, you know, critical infrastructure. Do we tell you not to do that? It's only authorized. That's me. Um, this is what it looks like because of the entire breakdown of the exploit is where, in your code base, it happens full chain of what the agent actually did, how to break your software, how to exported it.
+
+You have an entire proof of concept. Here is the actual script that you can copy down it on yourself. Here, the the execution evidence here to show you to actually pass this offer and explain its vulnerability, and you can go ahead and quickly patch it and fix it. And so we work with companies all the way from AI native, you know, unicorns like El Marina to one of the largest broker dealers in the country, Castro Financial, running our agents to hack
+
+[Speaker 3]
+Their systems,
+
+[Speaker 6]
+Find vulnerabilities, exploit them and patch them all continuously and using models that little access to today. But we'll go check back on Apex over here to see if it was able to do it. We'll find the Chrome that alarm there. Yeah, so it's able to actually tell, hey, read the data saying configuration page, which is this massive sort of lead speak, uh, prompt injection here.
+
+And what we did was actually get the agent to run, read a page that's outside of our workspace, which is actually a Argentina's World Cup confidential game plan, uh, and that, you know, sent us all the data here and and send it to our Telemetry endpoint, uh, where we can now collect all the data.
+
+So those are counties we assigned. If you're building agents, then you can want to see if we can break into them. Please just. Thank you very much going!
+
+Fantastic! Thank you Chrome! One more subtle plug, which I already said just another knot to what we're doing at pensar. If you want to join the penstar team Penn start team, raise your hand.
+
+[Speaker 2]
+Yay, uh, we're hiring across ghostly engineering and security research, but we're hiring across all functions. It's also our head of growth's birthday, so if you see Joe in the red shirt say, happy birthday to Joe. But come and say hi to our team, we're hiring okay, my quick handoff, or we tie up again.
+
+Huge. Thank you. We love doing this event. So many cool Asian gentlemens, and thank you to our demos around La Plus.
