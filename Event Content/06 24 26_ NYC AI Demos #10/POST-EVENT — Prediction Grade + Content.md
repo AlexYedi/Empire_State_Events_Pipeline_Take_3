@@ -1,7 +1,7 @@
 # POST-EVENT — NYC AI Demos #10 (Prediction Grade + Content)
 Source: `06 24 26 AI Demo #10 Transcript.txt` (parsed 2026-06-24).
 
-> ⚠️ **Quote-accuracy caveat.** The transcript is low-fidelity ASR (garbled names, scrambled diarization). **No verbatim quotes are used below — everything is paraphrased.** Verify company names (esp. **Oncover** — Index's pick), people, and figures against your memory / the QR codes / badges before anything goes public. Customer names dropped in the Pensar demo were too garbled to cite and are omitted.
+> ⚠️ **Quote-accuracy caveat.** The transcript is low-fidelity ASR (garbled names, scrambled diarization). **No verbatim quotes are used below — everything is paraphrased.** Uncovr (uncovr.ai) is confirmed; verify other people names and figures against your memory / the QR codes / badges before anything goes public. Customer names dropped in the Pensar demo were too garbled to cite and are omitted.
 
 ---
 
@@ -11,13 +11,13 @@ Source: `06 24 26 AI Demo #10 Transcript.txt` (parsed 2026-06-24).
 |---|---|---|---|
 | Thrive | Rogo (High) | **Pace** — AI agents for insurers; $46M raise the prior month (Thrive + Sequoia) | ❌ not in our pool |
 | First Round | Crunched (High) | **Pensar** — host took slot 5; no identifiable FR pick | ❌ no FR pick presented |
-| Index | Wordsmith AI (High) | **Oncover** *(confirm name)* — surgical-video → operative-report AI | ❌ not in our pool |
+| Index | Wordsmith AI (High) | **Uncovr** (uncovr.ai) — surgical-video → operative-report AI | ❌ not in our pool |
 | Inspired | Deeptune (High #1) | **Spara** — GTM AI agents | ✅ **HIT** (Spara was a High *alternate* in our slate) |
 | Able | (forfeited) | **Spring Health** — AI mental-health platform, ~$466M raised | ❌ forfeited slot |
 
 ### Honest diagnosis — how bad, and why
-- **Recall, not ranking, was the killer.** Three of four misses (Pace, Oncover, Spring Health) **weren't in our research pools at all.** Our scoring was fine; our *lists* were incomplete. **Pace had the single freshest raise in the field ($46M the month before)** — exactly what our momentum vector hunts — and we never enumerated it because we anchored on Thrive's famous names + decacorns.
-- **Wrong selection model.** We bet on "hottest, most-demoable, seed–B." VCs nominated **highest-conviction** across stages: a ~$466M flagship (Spring Health), a brand-new raise (Pace), an obscure rising founder (Oncover). Our seed–B bias would have *down-ranked* Spring Health even if we'd found it.
+- **Recall, not ranking, was the killer.** Three of four misses (Pace, Uncovr, Spring Health) **weren't in our research pools at all.** Our scoring was fine; our *lists* were incomplete. **Pace had the single freshest raise in the field ($46M the month before)** — exactly what our momentum vector hunts — and we never enumerated it because we anchored on Thrive's famous names + decacorns.
+- **Wrong selection model.** We bet on "hottest, most-demoable, seed–B." VCs nominated **highest-conviction** across stages: a ~$466M flagship (Spring Health), a brand-new raise (Pace), an obscure rising founder (Uncovr). Our seed–B bias would have *down-ranked* Spring Health even if we'd found it.
 - **Structural self-sabotage (as flagged pre-event):** we knew "one per firm," then submitted a momentum pool (3 Inspired, 0 Able). Forfeiting Able was a guaranteed miss we chose — and their flagship Spring Health was hiding in plain sight.
 - **Unmodeled host slot:** Pensar (the host) took the 5th spot instead of a First Round company.
 - **The hit is real signal:** Spara (Inspired, GTM-AI) we held at High. Where enumeration was complete, the read worked. 1/5 is a recall failure, not a vector failure.
@@ -36,7 +36,7 @@ The misses are where the lesson is:
 
 → Thrive sent Pace — agents that run insurance "loss runs" in production. It had raised $46M the month before. The freshest raise in the entire room… and it wasn't even on my list. I'd anchored on the famous names and never dug deep enough to find it.
 
-→ Index sent Oncover — a 23-year-old's company turning operating-room video into surgical reports. Too new and too quiet for my research to surface.
+→ Index sent Uncovr — a 23-year-old's company turning operating-room video into surgical reports. Too new and too quiet for my research to surface.
 
 → Able sent Spring Health — a mental-health platform that's raised ~$466M. I'd written Able off as "no obvious AI pick" and conceded the slot. Their flagship was hiding in plain sight.
 
@@ -64,7 +64,7 @@ Five VCs each put one company on stage at NYC AI Demos #10. Strip the pitches an
 
 → Pace (via Thrive) ran an agent through the ugliest corner of insurance — "loss runs," pulling claim histories across ancient carrier portals, validating, and writing back to the customer's own template. Millions of runs a year, ~90% time saved. The moat is the misery: 30-year-old green-screen systems no one else will touch.
 
-→ Oncover (via Index) turns operating-room video into the operative report surgeons dread writing — instantly, with jump-to-the-moment traceability. A third of the team are surgeons. Forward-deployed into ORs. The most jaw-dropping live demo of the night.
+→ Uncovr (via Index) turns operating-room video into the operative report surgeons dread writing — instantly, with jump-to-the-moment traceability. A third of the team are surgeons. Forward-deployed into ORs. The most jaw-dropping live demo of the night.
 
 → Spara (via Inspired) put a GTM agent on stage that ran its own product demo — qualifying a buyer live across chat and voice, then spinning up a new avatar from a LinkedIn photo in seconds. The demo demoing itself.
 
@@ -81,21 +81,21 @@ Vertical AI isn't coming. In this room it had already arrived — in healthcare,
 ---
 
 ## FIRST COMMENT (method + the honest scorecard — post as first comment)
-For the curious on the "1 of 5": beforehand I scored each curating firm's NYC AI portfolio on five momentum signals — recent raise, product launch, new NYC office, NYC hiring spike, live-demo-ability — and committed picks before doors. Hit: Spara (Inspired). Misses: Pace (Thrive), Oncover (Index), Spring Health (Able), and First Round's slot went to the host, Pensar. The lesson wasn't bad scoring — it was incomplete lists (3 of 4 picks weren't in my pool) and the wrong assumption that VCs showcase their *hottest* company rather than their *highest-conviction* one. Full method + grade happy to share.
+For the curious on the "1 of 5": beforehand I scored each curating firm's NYC AI portfolio on five momentum signals — recent raise, product launch, new NYC office, NYC hiring spike, live-demo-ability — and committed picks before doors. Hit: Spara (Inspired). Misses: Pace (Thrive), Uncovr (Index), Spring Health (Able), and First Round's slot went to the host, Pensar. The lesson wasn't bad scoring — it was incomplete lists (3 of 4 picks weren't in my pool) and the wrong assumption that VCs showcase their *hottest* company rather than their *highest-conviction* one. Full method + grade happy to share.
 
 ---
 
 ## VISUAL BRIEF — 3-slide carousel (Arc 3: Before → After → What Changed) · 4:5 / Gamma / dark + amber accent
 *Adds info (a scorecard + a structure diagram); does not re-print the post.*
 
-**Slide 1 — Predicted vs Actual (SCORECARD MATRIX).** 5 rows (Thrive / First Round / Index / Inspired / Able). Cols: "My pick" | "Actually demoed" | ✅/❌. Rows: Rogo→Pace ❌ · Crunched→Pensar(host) ❌ · Wordsmith→Oncover ❌ · Deeptune→Spara ✅ · —→Spring Health ❌. Headline: "I forecast a demo night. 1 of 5."
+**Slide 1 — Predicted vs Actual (SCORECARD MATRIX).** 5 rows (Thrive / First Round / Index / Inspired / Able). Cols: "My pick" | "Actually demoed" | ✅/❌. Rows: Rogo→Pace ❌ · Crunched→Pensar(host) ❌ · Wordsmith→Uncovr ❌ · Deeptune→Spara ✅ · —→Spring Health ❌. Headline: "I forecast a demo night. 1 of 5."
 **Slide 2 — Why I missed (STRUCTURE DIAGRAM).** Left: what I submitted — a lopsided momentum pool (8 dots, 3 stacked on one firm, 0 on another). Right: the event — 5 even slots, one per firm. Big label: "Recall, not ranking. 3 of 4 picks weren't even on my list." 
 **Slide 3 — The reframe (TWO-LINE TAKEAWAY).** "VCs spotlight conviction, not heat." + "Predict the structure first; force a guess in every slot." Small CTA: "How do you stop a confident model running on an incomplete list?"
 
 ---
 
 ## NEXT STEPS
-- [ ] Confirm **Oncover** spelling + the founder's name (Index pick) and Pace's exact round label.
+- [ ] Confirm Uncovr's founder name and Pace's exact round label (names from low-fi ASR).
 - [ ] Pick a post variant (A = forecast post-mortem · B = room report) — or run both (A first, B as the follow-up).
 - [ ] Push the carousel to Gamma (same path as the Daytona deck) once a variant is chosen.
 - [ ] Optional: write the chosen variant + visual brief to Notion Content Drafts (Event Phase = post_event) via the pipeline.
