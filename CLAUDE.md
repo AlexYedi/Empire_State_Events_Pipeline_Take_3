@@ -59,6 +59,14 @@ If explanations are needed during development, I will invoke the explainer skill
 **Promotion path:** piloted here in Empire State first; promote to canonical `~/Documents/GitHub/alex-agents-skills/Me/canonical-claude-md.md` (user-scope, inherits everywhere) once it has proven it changes behavior without becoming a drag — the YED-29/30 project-scope-first-then-promote pattern. Plan of record: `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`.
 </definition_of_done>
 
+<measurement_rigor_layer>
+**Build-rigor + measurement/eval/observability layer (added 2026-06-25/26).** Cures the diagnosed root cause (Shifting-the-Burden: rigor lived in optional docs/tools, not the execution path). Lean stack: Notion + PostHog + Empire State Hub + ChatPRD — NO Supabase/Langfuse/gtm-os (those were tombstoned; do not reintroduce). North-star = acted-on value (outcome vs each artifact's assigned goal, trended).
+- **Plan of record:** `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`. **Linear:** project "Empire State — Build-Rigor & Measurement Layer" (YED-87…94, `cycle-1`). **PRD:** ChatPRD `61bb864f…` + Notion Project Ideas `38ad3699…`. **Learnings/gotchas:** `.claude/notes/measurement-layer-learnings.md` (read before extending — it has the PostHog/OTEL/.env/transcript gotchas).
+- **Live pieces:** the DoD gate (above) · signal scanners `/scan-trends`,`/scan-roles`,`/scan-voices` (skills `{trend,voice,role}-radar`) · telemetry Stop hook `.claude/hooks/build-session-emit.sh` (contract: `.claude/references/build-session-contract.md`) · the build-quality judge `/judge-build` + `.claude/evals/` (rubric `build-quality@1`, run-log, ≥80% calibration gate — judge is **advisory** until then).
+- **Coordinates with** the `eval-harness` project (Notion `348d3699…`) as the Tier-2 judge engine (it owns `rubric_version`) and **Empire State Hub** (the viz + build-in-public surface).
+- **Pending:** Alex sets `POSTHOG_PROJECT_KEY` (the `phc_` project key) in `.env` → PostHog projection lights up.
+</measurement_rigor_layer>
+
 <standing_context>
 - Based in New York City
 - Actively building AI-native products, GTM systems, and exploring what is possible
