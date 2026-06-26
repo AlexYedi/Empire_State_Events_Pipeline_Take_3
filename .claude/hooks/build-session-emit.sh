@@ -39,14 +39,18 @@ PROJECT=$(basename "${CWD:-${CLAUDE_PROJECT_DIR:-$(pwd)}}")
 ENDED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 RUN_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "nogit")
 
-# --- transcript-derived metrics (best-effort; content-gated = counts only) ---
-TOOL_USES=0; ASSISTANT_TURNS=0; TOKENS_IN=0; TOKENS_OUT=0; STARTED_AT=""; BUILD_TOUCHED=false; TOOLS_USED="[]"
+# --- transcript-derived metrics (content-gated = counts only; validated vs a real transcript 2026-06-26) ---
+# Token note: summing input_tokens across turns is MEANINGLESS (omits cache + re-counts growing context),
+# so we capture honest signals only: output_tokens (sum = total generated) + peak_context_tokens
+# (last turn's input+cache_read ≈ peak context). Precise cost is the deferred OTEL path.
+TOOL_USES=0; ASSISTANT_MSGS=0; USER_PROMPTS=0; OUTPUT_TOKENS=0; PEAK_CONTEXT=0; STARTED_AT=""; BUILD_TOUCHED=false; TOOLS_USED="[]"
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
   TOOL_USES=$(jq -s '[.[]? | (.message.content // []) | .[]? | select(.type=="tool_use")] | length' "$TRANSCRIPT" 2>/dev/null || echo 0)
   TOOLS_USED=$(jq -cs '[.[]? | (.message.content // []) | .[]? | select(.type=="tool_use") | .name] | unique' "$TRANSCRIPT" 2>/dev/null || echo "[]")
-  ASSISTANT_TURNS=$(jq -s '[.[]? | select(.type=="assistant")] | length' "$TRANSCRIPT" 2>/dev/null || echo 0)
-  TOKENS_IN=$(jq -s '[.[]? | .message.usage.input_tokens // empty] | add // 0' "$TRANSCRIPT" 2>/dev/null || echo 0)
-  TOKENS_OUT=$(jq -s '[.[]? | .message.usage.output_tokens // empty] | add // 0' "$TRANSCRIPT" 2>/dev/null || echo 0)
+  ASSISTANT_MSGS=$(jq -s '[.[]? | select(.type=="assistant")] | length' "$TRANSCRIPT" 2>/dev/null || echo 0)
+  USER_PROMPTS=$(jq -s '[.[]? | select(.type=="user") | .message.content | if type=="string" then 1 elif (any(.[]?; .type=="text")) then 1 else empty end] | length' "$TRANSCRIPT" 2>/dev/null || echo 0)
+  OUTPUT_TOKENS=$(jq -s '[.[]? | .message.usage.output_tokens // empty] | add // 0' "$TRANSCRIPT" 2>/dev/null || echo 0)
+  PEAK_CONTEXT=$(jq -s '[.[]? | .message.usage | select(.) | (.input_tokens // 0) + (.cache_read_input_tokens // 0)] | last // 0' "$TRANSCRIPT" 2>/dev/null || echo 0)
   STARTED_AT=$(jq -rs '[.[]? | .timestamp // empty] | first // ""' "$TRANSCRIPT" 2>/dev/null || echo "")
   if jq -es 'any(.[]?; (.message.content // []) | .[]? | select(.type=="tool_use" and (.name=="Edit" or .name=="Write")) | ((.input.file_path // "") | test("\\.claude/(skills|agents|commands|hooks)")))' "$TRANSCRIPT" >/dev/null 2>&1; then
     BUILD_TOUCHED=true
@@ -55,9 +59,10 @@ fi
 
 # Defensive defaults (guard against empty → invalid JSON)
 [ -z "${TOOL_USES//[0-9]/}" ] || TOOL_USES=0
-[ -z "${ASSISTANT_TURNS//[0-9]/}" ] || ASSISTANT_TURNS=0
-[ -z "${TOKENS_IN//[0-9]/}" ] || TOKENS_IN=0
-[ -z "${TOKENS_OUT//[0-9]/}" ] || TOKENS_OUT=0
+[ -z "${ASSISTANT_MSGS//[0-9]/}" ] || ASSISTANT_MSGS=0
+[ -z "${USER_PROMPTS//[0-9]/}" ] || USER_PROMPTS=0
+[ -z "${OUTPUT_TOKENS//[0-9]/}" ] || OUTPUT_TOKENS=0
+[ -z "${PEAK_CONTEXT//[0-9]/}" ] || PEAK_CONTEXT=0
 echo "$TOOLS_USED" | jq -e . >/dev/null 2>&1 || TOOLS_USED="[]"
 
 # --- optional semantic fields (set during the session by DoD/judge wiring; nullable) ---
@@ -73,13 +78,14 @@ fi
 RECORD=$(jq -nc \
   --arg sid "$SESSION_ID" --arg cv "$CONTRACT_VERSION" --arg rv "$RUN_VERSION" \
   --arg proj "$PROJECT" --arg started "$STARTED_AT" --arg ended "$ENDED_AT" \
-  --argjson tool_uses "$TOOL_USES" --argjson turns "$ASSISTANT_TURNS" \
-  --argjson tin "$TOKENS_IN" --argjson tout "$TOKENS_OUT" \
+  --argjson tool_uses "$TOOL_USES" --argjson amsgs "$ASSISTANT_MSGS" --argjson uprompts "$USER_PROMPTS" \
+  --argjson otok "$OUTPUT_TOKENS" --argjson peak "$PEAK_CONTEXT" \
   --argjson tools "$TOOLS_USED" --argjson touched "$BUILD_TOUCHED" \
   --argjson dod_met "$DOD_MET" --argjson dod_waived "$DOD_WAIVED" --argjson corr "$CORRECTION_ROUNDS" \
   '{event:"build_session", contract_version:$cv, session_id:$sid, run_version:$rv, project:$proj,
-    started_at:$started, ended_at:$ended, tool_uses:$tool_uses, assistant_turns:$turns,
-    tokens_in:$tin, tokens_out:$tout, tools_used:$tools, build_dir_touched:$touched,
+    started_at:$started, ended_at:$ended, tool_uses:$tool_uses, assistant_messages:$amsgs,
+    user_prompts:$uprompts, output_tokens:$otok, peak_context_tokens:$peak,
+    tools_used:$tools, build_dir_touched:$touched,
     dod_met:$dod_met, dod_waived:$dod_waived, correction_rounds:$corr}' 2>/dev/null) || exit 0
 
 [ -z "$RECORD" ] && exit 0
