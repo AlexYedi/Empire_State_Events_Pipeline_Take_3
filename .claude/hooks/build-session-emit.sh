@@ -13,6 +13,13 @@
 set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
 
+# Load project .env (where POSTHOG_PROJECT_KEY lives) if the key isn't already in the environment.
+# A .env is not auto-loaded into a hook's process, so source it here. All non-assignment lines in
+# .env are `#` comments, so this is safe; guarded so it never aborts the hook.
+if [ -z "${POSTHOG_PROJECT_KEY:-}" ] && [ -f ".env" ]; then
+  set -a; . ./.env 2>/dev/null || true; set +a
+fi
+
 INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 [ -z "$SESSION_ID" ] && exit 0
