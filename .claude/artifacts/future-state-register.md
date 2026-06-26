@@ -32,3 +32,29 @@ Tier-1 internal launch + portfolio explainer when: rubrics for 3+ skills AND CI 
 
 ### Rollback
 2 cycles NSM=0 AND judge-human agreement <80% → rewrite rubric before H2.
+
+---
+
+## Empire State — Build-Rigor + Measurement/Eval/Observability Layer
+- Slug: empire-state-build-rigor
+- ChatPRD: 61bb864f-5e01-4247-a2cc-e963ad7e07f2
+- Linear project: empire-state-build-rigor-and-measurement-layer-1795b16a8ba9 (Empire State initiative, team YED)
+- Current cycle: 1
+- Last updated: 2026-06-25
+- Future-state: every build + published artifact carries immediate objective confirmation it held, plus a trended acted-on-value signal vs its assigned goal; rigor lives in the execution path, so the pipeline compounds instead of drifting.
+- North-star metric: acted-on value (outcome vs assigned goal, trended)
+- Horizon: MVP (crawl→walk)
+- Prior cycles: cycle 1
+- Coordinates with: eval-harness (Tier-2 judge sub-component) · Empire State Hub (viz + build-in-public)
+
+### Deferred items
+| Deferred Item | Trigger to Address | Effort Estimate |
+|---|---|---|
+| Automated propose→approve learning loop | manual ritual proves value over ~1 mo | 4h |
+| Langfuse (self-host) | prompt-level debugging weekly OR PII review fails | — |
+| Cross-judge quorum | judge agreement <80% OR contested artifacts | 4h |
+| Promote DoD → agent-skills canonical | DoD changes behavior without drag (4–6 wks) | 1h |
+| Deep beta OTEL traces | needs Anthropic allowlist | — |
+
+### Rollback
+2 cycles: waiver-rate high on builds AND no acted-on-outcome renders AND judge agreement <80% → stop; simplify or escalate to H3.
