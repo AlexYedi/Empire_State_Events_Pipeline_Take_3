@@ -7,6 +7,13 @@
     "linear": {
       "type": "sse",
       "url": "https://mcp.linear.app/sse"
+    },
+    "elevenlabs": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "set -a; source '/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/.env'; set +a; exec /opt/homebrew/bin/uvx elevenlabs-mcp"
+      ]
     }
   }
 }
