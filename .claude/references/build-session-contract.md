@@ -19,14 +19,16 @@ One JSON object per session, appended to `build-sessions.jsonl`:
 | `project` | string | always | the repo/dir the session ran in |
 | `started_at` / `ended_at` | ISO-8601 | ended always; started best-effort | session window |
 | `tool_uses` | int | reliable | count of tool invocations |
-| `assistant_turns` | int | reliable | count of assistant turns |
+| `assistant_messages` | int | reliable | count of assistant messages (text/thinking/tool_use are separate messages — not logical "turns") |
+| `user_prompts` | int | reliable | count of real user text prompts (excludes tool_result messages) — raw feedback-round signal for the friction vector |
 | `tools_used` | string[] | reliable | unique tool names |
 | `build_dir_touched` | bool | reliable | did the session Edit/Write under `.claude/{skills,agents,commands,hooks}` (i.e. a "build")? |
-| `tokens_in` / `tokens_out` | int | **best-effort** | summed from transcript usage if present; else 0 — see note |
+| `output_tokens` | int | reliable | sum of `usage.output_tokens` = total generated (incl. thinking) |
+| `peak_context_tokens` | int | reliable | last turn's `input_tokens + cache_read_input_tokens` ≈ peak context size |
 | `dod_met` / `dod_waived` | bool/null | optional | set later by the DoD wiring (US-1) via `.claude/.state/<session>.build_meta` |
 | `correction_rounds` | int/null | optional | set later by the judge/DoD wiring (US-3/US-7) |
 
-**Token/cost note (honest tradeoff of the lean path):** precise per-model token/cost lives in Claude Code's OTEL *metrics*, which the lean foundation does **not** consume. The hook sums usage from the transcript best-effort; treat as approximate. Precise metrics are part of the deferred OTEL-collector upgrade.
+**Token note (validated vs a real Claude Code transcript, 2026-06-26 — the judge flagged the original):** do **NOT** sum `input_tokens` across turns — it omits cache_read and re-counts the growing context every turn (the cache_read sum reached 145M on one session). Only two honest signals are captured: `output_tokens` (sum = total generated) and `peak_context_tokens` (last turn's input+cache_read ≈ peak context). Precise per-model token/cost is the deferred OTEL-metrics upgrade.
 
 ## Forward-compatibility seam
 Semantic fields (`dod_met`, `dod_waived`, `correction_rounds`) are nullable. The DoD gate (US-1) and judge (US-3) write them to `.claude/.state/<session>.build_meta` during the session; the Stop hook folds them into the record. So those features light up the same contract without changing it.

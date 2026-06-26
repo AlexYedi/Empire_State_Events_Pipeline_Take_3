@@ -50,6 +50,7 @@ These are the rules that bit us during early runs. Trust them:
 5. **Funding Stage has NO "Pre-IPO"** — for late-stage private companies use the latest Series letter (Series F/G/H/I).
 6. **Verify schema with notion-fetch** on the data_source URL before any batch create against an unfamiliar DB.
 7. **Google Calendar Event ID** (Events DB only) — plain text property. Write the raw `event.id` from the GCal MCP response verbatim (e.g., `7d8h2k3l5m9n0p1q2r3s4t5u6v`). NOT the iCalUID. NOT URL-encoded. Leave empty if not provided in inputs.
+8. **Content Draft `Goal` + `Target`** (added 2026-06-26, YED-90) — when creating a Content Draft, ALWAYS set `Goal` (select: reach/engagement/connection/meeting/hybrid/internal) + `Target` (text). If the parent passed an explicit goal, use it; otherwise apply the **default-by-Content-Type** mapping in `.claude/skills/content-patterns/goal-tagging.md`. Do NOT leave `Goal` empty on a publishable draft — it's the assigned-goal for acted-on-value measurement (the north-star). `internal` for research_brief / post_event_brief / prepared_questions.
 
 ## Database IDs (from CLAUDE.md, verified 2026-04-09)
 

@@ -34,11 +34,15 @@ with `notion-fetch` on the data_source URL before any batch create (see
   Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date),
   relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
   for cross-DB property-name consistency)
-- **Content Drafts** (8 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
+- **Content Drafts** (10 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis/
   post_event_brief), Event Phase (select: pre_event/during_event/post_event), Content Status (select:
   needs_review/approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only),
-  Published URL (url), relations to Event/People/Topics/Project Ideas
+  Goal (select: reach/engagement/connection/meeting/hybrid/internal — added 2026-06-26, YED-90),
+  Target (text — the concrete target for the Goal), Published URL (url),
+  relations to Event/People/Topics/Project Ideas
+  Note: Goal + Target are the **assigned-goal** for acted-on-value measurement (set at creation;
+  see `.claude/skills/content-patterns/goal-tagging.md` for the default-by-Content-Type mapping).
   Note: linkedin_post_synthesis (added 2026-04-19) is used by the pattern-synthesis skill for
   two-thesis posts that relate to 2+ Events. Multi-Event relations are the tell for this type.
   Note: post_event_brief (added 2026-05-28, color: brown) is the post-event mirror of research_brief —
