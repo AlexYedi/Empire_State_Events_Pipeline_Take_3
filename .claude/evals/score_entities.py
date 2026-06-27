@@ -1,59 +1,61 @@
 #!/usr/bin/env python3
-"""Entity-accuracy scorer for the transcription quality scorecard (YED-95).
+"""Entity-accuracy scorer — corrected method (YED-95; regraded 2026-06-27).
 
-Rule: an entity is a HIT if its canonical string appears correctly (case-insensitive)
-at least once in the transcript — i.e., the name is recoverable. Score = hits / total.
-The phone transcript is the baseline; ElevenLabs is scored the same way; the delta is the lift.
-Limitation: 'appears once correctly' can over-credit inconsistent transcripts — note it.
+Why corrected (per the scorecard's first-run findings):
+  1. The file labeled '…Transcript.md' is the pre-event RESEARCH BRIEF, not a transcript —
+     so there is NO real phone baseline. Lift is therefore measured EL-plain -> EL+keyterms.
+  2. Score only SPOKEN proper nouns. Roster names speakers never say aloud (their own name /
+     company, host affiliations) must not penalize a transcript. 'Spoken' is inferred from
+     presence in >=1 EL transcript (LIMIT: no audio access — not verified against the .m4a).
+  3. Variant-aware: a HIT = any accepted variant appears (word-boundary, case-insensitive).
+     Mangles (e.g. Arklex -> 'Arc'/'Archlex') are reported but do NOT count as hits.
 """
-import os, sys
+import os, re
 
-BASE = "/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/Event Content"
+BASE = "/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/Event Content/06 25 26_ Agents Behaving Badly"
 
-EVENTS = {
-    "NYC AI Demos #10 (06-24)": {
-        "entities": ["Spring Health", "Spara", "Pace", "Uncovr", "Pensar",
-                      "Thrive", "First Round", "Index Ventures", "Inspired Capital", "Able Partners",
-                      "Kyle Bhiro", "John de Lorenzo", "Dave Walker", "Tristan", "Karem"],
-        "transcripts": {
-            "phone": f"{BASE}/06 24 26_ NYC AI Demos #10/06 24 26 AI Demo #10 Transcript.txt",
-            "elevenlabs": None,  # no audio
-        },
-    },
-    "Agents Behaving Badly (06-25)": {
-        "entities": ["Arklex", "Datadog", "Meta Superintelligence", "Columbia University", "AccelGentic",
-                      "Kilian Lieret", "Zhou Yu", "John Mark", "Yi Ju", "Arielle Mella"],
-        "transcripts": {
-            "phone": f"{BASE}/06 25 26_ Agents Behaving Badly/06.25.26.Agents.Behaving.Badly.Transcript.md",
-            "elevenlabs": f"{BASE}/06 25 26_ Agents Behaving Badly/ElevenLabs Scribe Transcript.md",
-        },
-    },
+TRANSCRIPTS = {
+    "EL plain (scribe_v1)":     f"{BASE}/ElevenLabs Scribe Transcript.md",
+    "EL +keyterms (scribe_v2)": f"{BASE}/ElevenLabs Scribe Transcript (keyterms).md",
 }
 
-import re
+# Spoken proper nouns (appear in >=1 EL transcript). Full-roster names never verbalized are excluded.
+SPOKEN = {
+    "Arklex":        ["Arklex"],                    # correct only; mangles below are NOT hits
+    "Datadog":       ["Datadog"],
+    "Columbia":      ["Columbia"],                  # short form is what's spoken
+    "Kilian":        ["Kilian"],                    # first name spoken; surname 'Lieret' not
+    "AccelGentic":   ["AccelGentic", "Accel Gentic"],
+    "Arielle Mella": ["Arielle", "Mella"],
+}
+MANGLES = {"Arklex": ["Archlex", "Arc"]}
+EXCLUDED_UNSPOKEN = ["Meta Superintelligence", "Zhou Yu", "John Mark", "Yi Ju", "Lieret"]  # research-brief-only
 
-def load(path):
-    if not path or not os.path.exists(path):
-        return None
-    with open(path, encoding="utf-8", errors="ignore") as f:
-        return f.read()
+def load(p):
+    return open(p, encoding="utf-8", errors="ignore").read() if os.path.exists(p) else None
 
-def count(text, ent):
-    # word-boundary, case-insensitive: kills 'Pace'-in-'space' false positives
-    return len(re.findall(r"\b" + re.escape(ent) + r"\b", text, flags=re.I))
+def n(text, s):
+    return len(re.findall(r"\b" + re.escape(s) + r"\b", text, flags=re.I))
 
-for event, cfg in EVENTS.items():
-    print(f"\n=== {event} ===")
-    ents = cfg["entities"]
-    for label, path in cfg["transcripts"].items():
-        text = load(path)
-        if text is None:
-            print(f"  [{label}] (no transcript)")
-            continue
-        counts = {e: count(text, e) for e in ents}
-        hits = [e for e in ents if counts[e] > 0]
-        miss = [e for e in ents if counts[e] == 0]
-        print(f"  [{label}] entity acc = {len(hits)}/{len(ents)} = {len(hits)/len(ents):.0%}  (word-boundary, >=1 correct)")
-        print("      counts: " + ", ".join(f"{e}={counts[e]}" for e in ents))
-        if miss:
-            print(f"      miss(0 correct): {', '.join(miss)}")
+print("Entity accuracy — SPOKEN proper nouns only, variant-aware (YED-95 regrade)")
+for label, path in TRANSCRIPTS.items():
+    t = load(path)
+    if t is None:
+        print(f"\n=== {label} ===\n  (missing: {path})")
+        continue
+    print(f"\n=== {label} ===")
+    hits = 0
+    for ent, variants in SPOKEN.items():
+        c = sum(n(t, v) for v in variants)
+        ok = c > 0
+        hits += ok
+        extra = ""
+        if ent in MANGLES:
+            mc = sum(n(t, m) for m in MANGLES[ent])
+            if mc:
+                extra = f"   (mangled x{mc}: {'/'.join(MANGLES[ent])})"
+        print(f"  {'HIT ' if ok else 'MISS'} {ent:<14} count={c}{extra}")
+    print(f"  -> spoken-entity accuracy = {hits}/{len(SPOKEN)} = {hits/len(SPOKEN):.0%}")
+
+print(f"\nExcluded (never spoken; research-brief-only): {', '.join(EXCLUDED_UNSPOKEN)}")
+print("Limit: 'spoken' inferred from transcript presence, not the .m4a audio.")
