@@ -45,15 +45,27 @@ Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title 
 
 **If multiple matches (same title, different dates):** present the candidates with dates and ask Alex to pick.
 
-## Step 2 — Ingest the manual transcript
+## Step 2 — Get the transcript (recording → ElevenLabs preferred; manual paste fallback)
 
-Granola auto-fetch is **disabled** (see banner) — get the transcript from Alex directly:
+Granola auto-fetch is **disabled** (see banner). Two paths, in order of preference:
 
-1. Ask Alex to paste/upload the transcript from his own recording of the event (or confirm he already has one ready).
-2. **Persist it immediately** to `event-transcripts/YYYY-MM-DD_<Event>.md` (date = the event's `Event Date`). Save FIRST, then proceed — a pasted-but-unsaved transcript is lost across sessions (see memory `feedback-comment-workflow-2026-05-26`).
-3. Capture what you have: the **raw transcript** (verbatim quote source, after Step 3.5 conditioning), any **summary / notes** Alex adds (angle/thesis input), and the **attendee names** he recalls (cross-reference against Notion People DB for bucket sorting).
+### 2A — Recording → `/ingest-recording` (PREFERRED — proven on n=4 events; YED-95)
+If Alex has the audio recording (`.m4a`/`.mp3`/`.wav`):
+1. **Auto-seed keyterms from the Step-1 Notion roster** — pull this event's related **People** (speakers/hosts) + **Companies** (orgs/products) names into a temp keyterms file, one per line. (The `--expand-names` flag below then also seeds first/last tokens — the *Arielle / Donohue / Curran* lesson: speakers are often referred to by first-or-last name only.)
+2. **Run the locked recipe** (`.claude/scripts/ingest_recording.py` — scribe_v2 + keyterms + word timestamps; see `/ingest-recording`):
+   ```bash
+   set -a; source ./.env; set +a
+   uv run --with elevenlabs python .claude/scripts/ingest_recording.py \
+     --audio "<recording>" --keyterms-file "<roster keyterms>" --expand-names [--num-speakers N]
+   ```
+3. Outputs (next to the audio): `… — Transcript (ElevenLabs).md` (the transcript) · `… .json` (word-level timestamps + confidence) · `… — REVIEW (low-confidence spots).md` (the quote-safety list → **carried into Step 3.5**).
+4. **Persist** the EL transcript to `event-transcripts/YYYY-MM-DD_<Event>.md`. This is now the verbatim quote source.
 
-If Alex has no transcript (didn't record), still draft from his freeform recap + the pre-event brief — note the lower fidelity and skip verbatim quotes.
+### 2B — Manual paste (FALLBACK — recorder-app / other transcript)
+1. Ask Alex to paste the transcript he has. **Persist immediately** to `event-transcripts/YYYY-MM-DD_<Event>.md` (save FIRST — unsaved = lost across sessions; memory `feedback-comment-workflow-2026-05-26`).
+2. Recorder-app ASR under-renders proper nouns (**~55% vs ~87%** for the EL recipe across n=4) — prefer 2A whenever the audio exists.
+
+Either path: also capture any **summary / notes** Alex adds (angle/thesis input) and the **attendee names** he recalls (cross-reference Notion People for bucket sorting). If there's neither transcript nor recording, draft from his freeform recap + the pre-event brief — note lower fidelity, skip verbatim quotes.
 
 <details>
 <summary>🚫 Granola auto-fetch — DISABLED (do not run; retained for re-enable when Granola is operational)</summary>
@@ -85,6 +97,7 @@ Before drafting, condition the transcript so speaker labels and proper nouns can
 
 - **Raw transcript** — the manually-uploaded transcript from Step 2 (persisted to `event-transcripts/`).
 - **Roster + known entities (ground truth)** — pulled from this event's Notion record: related **People** (speaker/host roster), **Companies** (canonical org/product names), and the linked pre-event **research_brief** Content Draft. Conditioning anchors speaker resolution + entity normalization to these.
+- **Quote-safety input (when Step 2A / ElevenLabs was used)** — the `… — REVIEW (low-confidence spots).md` list + the word-level `.json` confidence. Map EL per-word confidence directly onto the quote tiers below: low-confidence words must NOT be quoted verbatim (→ paraphrase or exclude), high-confidence spans are verbatim-safe. This is the **R1 quote-safety contract** — a clean-looking transcript must *raise* quote safety, not silently lower it (YED-95).
 
 **When to run:**
 - **Run by default** for multi-speaker panels, in-person / manual-paste transcripts, or any note where a named person will be quoted publicly.

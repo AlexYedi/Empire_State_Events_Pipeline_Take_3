@@ -36,6 +36,8 @@ def main():
     ap.add_argument("--keyterms", default="", help="comma-separated; seed full names AND first names")
     ap.add_argument("--keyterms-file", default=None, help="newline-separated keyterms file")
     ap.add_argument("--num-speakers", type=int, default=None)
+    ap.add_argument("--expand-names", action="store_true",
+                    help="also seed first/last tokens of multi-word names (Arielle/Donohue/Curran lesson)")
     ap.add_argument("--confidence-threshold", type=float, default=-1.0,
                     help="flag words with logprob below this for review (default -1.0 ~= p<0.37)")
     args = ap.parse_args()
@@ -47,6 +49,17 @@ def main():
     keyterms = [k.strip() for k in args.keyterms.split(",") if k.strip()]
     if args.keyterms_file and os.path.exists(args.keyterms_file):
         keyterms += [l.strip() for l in open(args.keyterms_file) if l.strip()]
+    if args.expand_names:
+        ORG_STOP = {"Partners","Capital","Ventures","Labs","Inc","Corp","Co","Group","AI","ML",
+                    "Systems","Cloud","Engine","Technologies","Team","Community","HQ","Studio","App"}
+        extra = []
+        for t in keyterms:
+            toks = t.split()
+            if len(toks) >= 2:
+                for tok in (toks[0], toks[-1]):
+                    if tok[:1].isupper() and len(tok) > 2 and tok not in ORG_STOP:
+                        extra.append(tok)
+        keyterms += extra
     keyterms = list(dict.fromkeys(keyterms))  # dedupe, keep order
 
     outdir = args.out or os.path.dirname(args.audio)
