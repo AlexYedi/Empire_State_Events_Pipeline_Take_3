@@ -111,6 +111,23 @@ Before drafting, condition the transcript so speaker labels and proper nouns can
 
 **Discipline (Rule 12):** the transcript is a primary source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use (CLAUDE.md Rule 12).
 
+## Step 3.6 — Post-event enrichment (bounded · gated-on-use · cached)
+
+Research the **net-new** entities the room surfaced that the pre-event brief didn't cover, so the brief stands alone and proper nouns / concepts are correct (the folder-only ABB run missed web-enrichable facts — YED-96). **Topology (hard rule):** subagents do the research and return structured text; the **parent owns the fan-out list and does all writes** (subagents can't spawn subagents — SDK constraint).
+
+**What to enrich:**
+- **Net-new speakers** flagged in the Step 3.7 Speaker Map (no pre-research) — full name · title · company · 1-line relevance · source URL · confidence.
+- **Net-new companies / funds** named on stage.
+- **Concepts / papers / frameworks** named (for the enriched Concept Glossary) — what it is, why it matters, a source link.
+
+**Bounds (cost guards — YED-96 R5):**
+- **Gated on use:** only enrich an entity that will appear in a public post OR is an opt-in outreach target. Don't crawl the long tail.
+- **Cap N per event** (default ≤ 8 entities); enrich the highest-signal first, list the rest as "un-enriched — pull on demand."
+- **Cache by entity:** check Notion People/Companies/Topics first (Step 3.8 dedup) — a recurring speaker/company already in the graph is NOT re-enriched; reuse the existing row.
+- **Quality gate:** if you can't confirm an entity to a confidence bar, mark it **UNRESOLVED** rather than guess — a hallucinated bio feeds both the graph and public posts.
+
+Feed results into the Step 3.7 brief (Concept Glossary · Speaker Map · Enrichment Resolutions) and the Step 3.8 write-back.
+
 ## Step 3.7 — Synthesize the `post_event_brief` (the data store / short-term memory)
 
 Before content-correspondent drafts a single post, synthesize the **`post_event_brief`** as a Notion Content Draft. This is the post-event mirror of the pre-event `research_brief` — one comprehensive, browsable page that captures *everything the event produced* so it can be referenced by every downstream draft AND mined later as part of the knowledge graph.
@@ -122,23 +139,29 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 - Slides/photos uploaded by Alex (catalog them, don't re-OCR)
 - Alex's own freeform recap / observations if provided
 
-**Required sections (mirror this scaffold; expand each as the material warrants):**
+**Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
+
+**Required sections (the full enhanced brief — mirror this scaffold; expand each as the material warrants):**
 1. **Page-index callout** at top + `/toc` hint (per CLAUDE.md gotcha `i`)
 2. **Quick Take** — three sentences: what the room actually was, the headline, the event-type tag for content routing (single-presenter talk / multi-presenter showcase / shared-conversation panel)
 3. **The Thesis** — the single sharpest takeaway from the room, as a quotable line if possible
-4. **Pre → Post Gap** — a table contrasting what the pre-event brief predicted vs. what actually happened (this is the highest-value beat for the post)
-5. **Insights** — ranked by durability / content value (numbered list)
-6. **Gotchas & Practitioner Playbook** — build-it-right rules a practitioner can act on
-7. **Tools Mentioned** — table: tool/product · what it is · context in the talk
-8. **Conditioned Quote Bank** — attributed, confidence-tagged (HIGH = verbatim-safe; MED = paraphrase only), with intended use per quote
-9. **Stat Bank** — numbers + value + confidence/caveat (never invent precision the speaker didn't claim)
-10. **Slides Catalog** — numbered list, one line per slide describing what it shows
-11. **People & Outreach State** — table: person · role · bucket (A/B/C/D) · spoke? · next action
-12. **Content Assets Produced** — bullet list of links to the comment / posts / DMs / Gamma carousel (fill after creation in Step 5)
-13. **Documentarian Angles** — the cuts available for future content (primary + alternates + synthesis candidates)
-14. **Conditioning Notes** — speaker resolution table, entity glossary (+ ⚠️ excluded-garble list), conditioning confidence score
-15. **Verification Flags** — what cannot be asserted publicly without independent source (Rule 12 items)
-16. **Open Loops** — follow-ups to close (touch-1 sends, comment opportunities, synthesis windows, questions to ask in the touch-2 thread)
+4. **Pre → Post Gap** — table contrasting what the pre-event brief predicted vs. what actually happened (highest-value beat). *Conditional:* if no pre-event brief is linked, pull it from the Event page; if none exists, mark "n/a — no pre-event research."
+5. **Speaker Map** — **content-derived** mapping of each raw diarization `speaker_id` → person · role · company, each with HIGH/MED/LOW confidence + the tell. ⚠️ Raw diarization IDs are **NEVER 1:1 with people** — attribute by content, not by ID. Flag net-new speakers (no pre-research) for the Step 3.6 enrichment pass.
+6. **Full Quote Bank** — EVERY quotable line, captured **whole (not snippets)**, attributed to the mapped speaker, each tagged HIGH (verbatim-safe) / MED (paraphrase only). Completeness is the point; selection happens downstream.
+7. **Pro-Tips** — actionable "if X, do Y" practices stated/implied in the room (attributed, confidence-tagged)
+8. **Best Practices / Patterns** — patterns recurring across speakers/companies
+9. **Pitfalls / Anti-Patterns** — what NOT to do; failures named in the room
+10. **Hot Takes** — contrarian / surprising claims (attributed, confidence-tagged; captured raw here — the publish gate in Step 4 decides what ships)
+11. **Substantive Insights** — ranked by durability / content value
+12. **Anecdotes** — memorable stories / moments as narrative (separate from the quote bank), for hooks
+13. **Concept Glossary (enriched)** — every concept / paper / framework / tool / method named; one line on what it is from context + the Step 3.6 web-enrichment (what it is, why it matters, a source link) inline, so the brief stands alone
+14. **Tools / Companies Mentioned** — table: name · what it is · context in the room
+15. **Stat Bank** — numbers + value + confidence/caveat (never invent precision the speaker didn't claim). *Format-variable* — rich at case-study/masterclass, thin at roundtable/demo.
+16. **Documentarian Angles** — the cuts available for future content (primary + alternates + synthesis candidates)
+17. **Open Loops & Verification Flags** — follow-ups to close (touch-1 sends, comment/synthesis windows) + what cannot be asserted publicly without independent source (Rule 12 items)
+18. **Enrichment Resolutions** — what the Step 3.6 pass resolved/corrected (net-new speakers identified, concepts confirmed, errors fixed — e.g. the ABB "Kilian = Meta not Amazon" catch), each with a source
+
+**Operational sub-sections (pipeline plumbing — keep these alongside the 18):** **Slides Catalog** (one line per slide) · **People & Outreach State** (person · role · bucket A/B/C/D · spoke? · next action) · **Content Assets Produced** (links to comment/posts/visual — fill after Step 5) · **Conditioning Notes** (speaker resolution + entity glossary + ⚠️ excluded-garble + conditioning confidence score).
 
 **Notion properties:**
 - `Title`: `Post-Event Brief — [Event Name] ([Event Date short])`
@@ -151,9 +174,27 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 - `Topics`: relations to every linked Topic
 - `icon`: 🗃️ (data store)
 
+**Also write the brief to the Event page + set the idempotency marker (v2 — YED-96):**
+- **Event page:** append a `## Post-Event Brief` section to the resolved Event row's page body (mirroring how the pre-event research brief sits on the Event page), so pre + post sit **side-by-side** for in-context comparison. The canonical Content Draft above stays the downstream source-of-truth; the Event-page copy is the readable surface. (For long briefs, the Event-page section may be a rich summary + a link to the canonical Content Draft — never truncate the canonical copy.)
+- **Idempotency marker:** before the first write, check the Event page for a `post_event_processed: YYYY-MM-DD` marker (a callout at the top of the `## Post-Event Brief` section). If present, do NOT re-create the brief/Content Draft — update in place. Prevents double-writes on a re-run (there is no state store).
+- **Rollback / safety:** the Event-page write is **append-only** under its own `## Post-Event Brief` heading — never `replace_content` the page (protects the pre-event brief already on the page).
+
 **Why this step exists:** without the brief, the post-event content is one-shot — written once, then orphaned. With it, the data store survives the publishing of any single draft and feeds future synthesis posts, weekly recaps, knowledge-base mining, and re-engagement DMs. The pre-event flow has this (research_brief); the post-event flow now mirrors it.
 
 After writing the brief, capture its URL and pass it to Step 4 (content-correspondent uses it as `=== Post-Event Brief ===` input alongside the conditioned quote bank).
+
+## Step 3.8 — Knowledge-graph write-back (dedup-mandatory)
+
+Persist what the event added to the **People / Companies / Topics** graph so it compounds across events. **Search-before-create dedup is mandatory** (pipeline rules #10/#11) — duplicate "Hebbia" / "Hermes Frangoudis" nodes rot the graph (YED-96 R4).
+
+1. **Build the delta:** from the Step 3.6 enrichment + the Speaker Map, list every People/Companies/Topics entity the event touched.
+2. **Dedup:** for each, `notion-search` the relevant DB first → classify **MATCH (existing row)** vs **NEW** ("net-new" is defined relative to the live DB index, not a guess).
+3. **Write (parent / main-thread only — the Notion MCP does NOT work from a subagent):**
+   - **NEW** → create the row (People: Name · Current Title · Role Context · Known POV/Bio · LinkedIn · `Events` relation · Last Researched; Companies: Company Name · Description · Industry/Space · Website · `Events` relation; Topics per schema).
+   - **MATCH** → enrich the existing row (append POV/bio, bump Last Researched) + add the `Events` relation to this event — do NOT create a second node.
+4. **Relink** all touched rows to the Event (bidirectional — the Event's People/Companies/Topics auto-populate).
+
+Schema + property formats: `.claude/references/notion-schema.md`. If Alex prefers a review gate over auto-write, surface the NEW-vs-MATCH delta for confirmation first.
 
 ## Step 4 — Invoke content-correspondent with structured Granola input
 
