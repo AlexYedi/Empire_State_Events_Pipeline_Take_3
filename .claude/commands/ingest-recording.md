@@ -11,8 +11,13 @@ repo `.env` (Creator tier). Recipe is locked in `.claude/scripts/ingest_recordin
 ## Steps
 1. **Build the keyterms seed** from the event's pre-event research entities (Notion People +
    Companies for that event, or the research brief). **Seed BOTH full names AND first names** —
-   e.g. `Arielle Mella` *and* `Arielle` (the spoken form is often the first name; this was the
-   one miss in testing until first names were added).
+   e.g. `Arielle Mella` *and* `Arielle` (the spoken form is often first-or-last-name only).
+   - **Auto path (inside `/post-event-content`):** the roster is pulled from the Step-1 Notion
+     Event record (related People + Companies) → written to a temp keyterms file. Pass
+     **`--expand-names`** so the script also seeds first/last tokens automatically (covers the
+     *Arielle / Donohue / Curran* surname-or-first-name-only misses).
+   - **n=4 finding:** auto-extracted seeds are a *floor* — a curated roster seed (clean speaker +
+     company names) scores higher. Use the Notion roster when available.
 2. **Run the recipe** (from the repo root):
    ```bash
    set -a; source ./.env; set +a
