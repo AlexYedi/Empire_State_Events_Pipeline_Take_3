@@ -23,3 +23,11 @@ Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal**
 ## How it's set
 1. The content skill picks the Goal (override the default when Alex states an intent via `steering-interview`).
 2. `notion-writer` sets `Goal` + `Target` on Content Draft creation; if no goal was passed, it applies the default-by-Content-Type above.
+
+## Outcome side (US-5) — closing the loop
+After an artifact publishes, `/tag-outcome` records the **realized outcome vs the Goal/Target** on the same row:
+- **Outcome** (select): `hit` (met/exceeded Target) · `partial` (real outcome, below Target) · `miss` · `pending` (not yet observable) · `na` (internal goal).
+- **Outcome Value** (text): the realized signal + source, e.g. `"[LinkedIn] 620 impressions vs 500 target"`, `"[HubSpot] connected + coffee booked"`.
+- **Outcome Date** (date): when observed.
+
+Goal+Target (assigned intent) **+** Outcome (realized) = the **acted-on-value north-star**. Outcome is set manually/HITL at crawl (see `.claude/skills/tag-outcome/SKILL.md`); never fabricated — not observable yet ⇒ leave `pending`.
