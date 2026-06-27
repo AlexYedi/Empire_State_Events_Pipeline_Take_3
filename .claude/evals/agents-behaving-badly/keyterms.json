@@ -1,0 +1,17 @@
+{
+  "_note": "ElevenLabs Scribe keyterms seed — 'Agents Behaving Badly' (2026-06-25). Re-seeded 2026-06-27 to fix the keyterms-induced 'Arielle'->'Ariel' degrade: explicitly include 'Arielle Mella' + all host/speaker names. Bias list = pre-event roster proper nouns + any spoken-but-unusual names found in v1.",
+  "model_id": "scribe_v2",
+  "keyterms": [
+    "Arklex",
+    "Datadog",
+    "Meta Superintelligence",
+    "Columbia University",
+    "AccelGentic",
+    "Kilian Lieret",
+    "Zhou Yu",
+    "John Mark",
+    "Yi Ju",
+    "Arielle Mella",
+    "Generationship"
+  ]
+}
