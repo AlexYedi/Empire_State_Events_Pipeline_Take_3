@@ -65,6 +65,10 @@ One subagent per speaker (general-purpose), each given ONLY its slice. Each agen
 ## Notes / gotchas
 - Subagents can't write Notion/Gmail (memory `empire-events-notion-write-path`) → agents write the
   deep-dive FILES; the parent commits to Notion + fires Gamma.
+- **Pin ABSOLUTE output paths per agent + verify locations after.** A relative `…/Deep-Dives/…` in a
+  fan-out prompt caused one 2x-AI agent to misfile into the *wrong* event folder (caught in
+  verification, relocated). Always give each agent the full event-folder path, and `ls` the
+  Deep-Dives folders before shipping.
 - Subagents can't spawn subagents (SDK constraint) — the fan-out runs from this command's main thread.
 - The same brief can also feed the time-sensitive `/post-event-content` recap — deep-dives are the
   *evergreen* expansion, run later and per-speaker.
