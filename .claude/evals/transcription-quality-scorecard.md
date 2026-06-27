@@ -30,7 +30,7 @@ The eval/measurement layer for the recording→clean-transcript ingest (Linear *
 | Event | Audio? | Baseline transcript | EL (plain) | EL (+keyterms) | Notes |
 |---|---|---|---|---|---|
 | NYC AI Demos #10 (06-24) | ❌ none | phone .txt exists | — | — | no audio → can't A/B |
-| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | ⚠️ **none** (file labeled "Transcript" is the Research Brief) | **4/6 = 67%** (scribe_v1) | **5/6 = 83%** (scribe_v2) | regraded 2026-06-27 (corrected scorer); see Regrade below |
+| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | **3/6 = 50%** (recorder-app, obtained 06-27) | **4/6 = 67%** (scribe_v1) | **5/6 = 83%** (scribe_v2) | real baseline obtained → fully redone; see Regrade below |
 
 ## Result (2026-06-27): keyterms is the fix
 Head-to-head on spoken proper nouns — plain `scribe_v1` vs `scribe_v2`+keyterms:
@@ -40,22 +40,23 @@ Head-to-head on spoken proper nouns — plain `scribe_v1` vs `scribe_v2`+keyterm
 - Note: `keyterms` **requires `scribe_v2`** (v1 returns a 400). Minor: Arklex correct-count was 1 vs 5 mangled mentions in v1 — worth a closer look if mention frequency matters, but the wrong variants are eliminated.
 **Takeaway:** the proper-noun problem is real and `keyterms` (on scribe_v2, seeded from pre-event entities) solves it. The earlier "EL is worse" was an artifact of (a) scoring vs a research brief and (b) scoring unspoken names with an exact matcher.
 
-## Regrade (2026-06-27) — corrected scorer, run via `score_entities.py`
-Scorer rebuilt to the corrected method: **EL-plain vs EL+keyterms** (no real phone baseline — the "…Transcript.md" is the research brief), **spoken proper nouns only** (roster names never verbalized excluded), **variant-aware** (mangles do NOT count as hits).
+## Regrade (2026-06-27) — REAL recorder-app baseline obtained; fully redone
+The mislabeled "transcript" (a research brief) was **deleted** and the **actual recorder-app transcript** added, so we now measure TRUE lift (not just EL-internal). EL transcripts relocated to `.claude/evals/agents-behaving-badly/`; scored via `score_entities.py` (spoken-entities-only, variant-aware, mangles ≠ hits).
 
-| Transcript | Spoken-entity accuracy | Detail |
-|---|---|---|
-| EL plain (scribe_v1) | **4/6 = 67%** | Datadog ✓ · Columbia ✓ · Kilian ✓ · Arielle ✓ · **Arklex ✗** (mangled ×5: "Arc"/"Archlex") · **AccelGentic ✗** (absent) |
-| EL +keyterms (scribe_v2) | **5/6 = 83%** | Arklex ✓ · Datadog ✓ · Columbia ✓ · Kilian ✓ · **AccelGentic ✓ (recovered)** · **Arielle ✗ (lost)** |
+| Transcript | Spoken-entity accuracy | Lift vs baseline | Detail |
+|---|---|---|---|
+| Baseline (recorder app) | **3/6 = 50%** | — | Datadog ✓ (1×) · Columbia ✓ · Arielle ✓ · **Arklex ✗** (Archlex) · **Kilian ✗** (absent) · **AccelGentic ✗** |
+| EL plain (scribe_v1) | **4/6 = 67%** | **+17 pts** | + Kilian; **Datadog 6×** vs baseline 1×; Arklex still mangled (Arc ×4 / Archlex), AccelGentic absent |
+| EL +keyterms (scribe_v2) | **5/6 = 83%** | **+33 pts** | + **Arklex ✓** + **AccelGentic ✓** (recovered); but **Arielle → "Ariel"** (degraded) |
 
-**Lift: +16 pts (67% → 83%).** keyterms recovered BOTH unusual names (Arklex, AccelGentic) — **but dropped "Arielle Mella"** (present in plain, absent in v2). Net +1, **not a pure win** — the prior "keyterms is the fix" was too clean.
+**Verdict:** ElevenLabs clearly beats the recorder-app baseline — **+17 plain, +33 with keyterms.** Two specifics: (1) the baseline drops *repeated* proper nouns hard (Datadog 1× vs 6–7×) and misses Kilian entirely; (2) keyterms is the top performer (recovers both hard names) but **degraded "Arielle"→"Ariel"** — a real, if minor, trade.
 
 **Caveats (honest):**
-1. The Arielle miss may be a **spelling variant** the matcher didn't catch ("Ariel"/"Ariella"), not a true regression — needs a 30-sec spot-check of the v2 transcript.
-2. **"Spoken" is inferred from transcript presence, NOT the .m4a** (no audio access here). A 2–3 min hand-checked gold slice from the recording would harden the ground truth.
-3. Excluded as never-spoken (research-brief-only): Meta Superintelligence, Zhou Yu, John Mark, Yi Ju, Lieret.
+1. The "Ariel" degrade may be a **seed gap** — add "Arielle/Mella" + host names to the keyterms seed and re-run.
+2. **"Spoken" is inferred from the 3 transcripts, NOT hand-checked vs the .m4a** — a 2–3 min gold slice would harden the ground truth.
+3. Excluded as never-spoken: Meta Superintelligence, Zhou Yu, John Mark, Yi Ju, Lieret.
 
-**Action (value-action contract):** keep `keyterms` as the default for proper-noun-heavy events; **add "Arielle/Mella" + host names to the keyterms seed and re-run** to confirm the drop is a seeding gap, not a keyterms artifact. Promote excluded names into the seed only if a gold slice shows they were spoken.
+**Action (value-action contract):** **adopt ElevenLabs over the recorder app** for events (clear entity lift); **`keyterms` is the default**, seeded from pre-event entities — and **extend the seed to cover names keyterms degrades** (Arielle). Recorder-app transcript = emergency fallback only.
 
 ## Findings (2026-06-27) — first run shook out the eval itself
 1. **Data-labeling error.** `06.25.26…Transcript.md` is the **pre-event Research Brief**, not a transcript. Scoring EL against it is meaningless. → We have **no real baseline transcript** for this event; need the actual phone/app transcript to measure "lift," or pivot the lift comparison to **keyterms vs no-keyterms** (both EL).
