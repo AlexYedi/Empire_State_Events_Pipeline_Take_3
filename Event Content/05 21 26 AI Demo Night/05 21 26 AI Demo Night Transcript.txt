@@ -1,0 +1,337 @@
+
+Foreign.
+
+[Speaker 1]
+Uh, so the type of data that we have in the NC fire for was just curated. No mistakes from different research articles and collects.
+
+[Speaker 2]
+The, you know, receiving some data and put it in this database. And we've been collecting that for over 10 years. So
+
+[Speaker 1]
+We have
+
+[Speaker 2]
+They have over 500 studies and you just look at the trend line goes up?
+
+[Speaker 1]
+So, in the last structured data, uh, yeah,
+
+[Speaker 3]
+Another one could work range are important, but it's by origins and so our stack. We sort of mostly focused on our chat, uh?
+
+[Speaker 2]
+You have a web app, which I just showed, which is, uh, you know, rap, react buttons, spring boot, backhand, uh, Playhouse, for, uh, for the database?
+
+[Speaker 1]
+And then. Now, we're also working on this chat interface, which is
+
+[Speaker 2]
+A feature chat, which is another open sour spray board and use that to the employer as a stacking the base
+
+[Speaker 1]
+Using Amazon. That's wrong, um. Uh, you know, plenty of time to client, please. Um. And you can build difference. Uh, fcts. I hope to show that live. So, there we go, so I know the chat. Let's see about boil a pork. Anybody can go there.
+
+[Speaker 2]
+Made a few customizations where you can just select a database agent. I'm gonna see if this actually works. What kind of bit is he bio portal? But then? But I'll have to do it.
+
+[Speaker 1]
+So, you know, you can make typos just totally fine.
+
+[Speaker 4]
+Um, and it starts, you know, looking. We wrote a couple of guys to describe what kind of datas in our mySQL database, so you saw those tool calls. It reads different guys. Then it sort of explains to you. What kind of data is there? You know which data clinical data?
+
+[Speaker 1]
+Um, okay,
+
+[Speaker 4]
+So that's that seems to work.
+
+[Speaker 1]
+So, what
+
+[Speaker 3]
+Might a researcher ask about? So they, for instance, might look for a specific Gene. So let's see if this works a little better.
+
+I want to know whether I want to know where the Pick 3 say is altered across cancer type.
+
+[Speaker 2]
+That actually works, uh, whisper works. That's great, um, so I'll ask you that so big. 3ca is a gene.
+
+[Speaker 1]
+Um, you know, you might might go one or Baraka. 2 those are other genes related to cancer, and so there's many, many genes.
+
+[Speaker 2]
+No, the other are in the genome that if you have some change to it can cause cancer. So, researcher might be interested in Pick 3 CA. Um. So, then it looks in the database. It figures out. Oh, there's these all these different cancer types, um? That have a big 3ca mutation so we can see the number of samples that have that.
+
+We can see some frequency, um. And you know, it says, you know, it's commonly mu Theta and hormone related, uh cancers. So it says in mutual cancer breast cervical. Um, and it tells you where the data is from. Now, that's cool, but you don't know. You might want to know.
+
+Also, what kind of musicians are in there so I could ask? Uh, what kind of mutations? Are there. Like, what positions in the gene?
+
+So then? You know, I hope it will. It will tell me that. So, basically, researchers might want to know. In that particular Gene. At what location is it mutated? And you know how many times? So, it's starting to look. Do one more select queries on the database. And then, you know, tells us, oh, there's missense mutations.
+
+Um, so these are different types of alterations in the gene. Uh, it tells a couple of common ones. But how do I know it is accurate, right? So, now, you're, like, okay, that's cool, but I know Airline's hallucinate. So, did it come up with this stuff is real. So now you can maybe ask, okay, maybe I can go back to the website, which I trust.
+
+So, you might ask, uh, can you show me this on the website? And then. We have a different agents. That's the Navigator agent that helps to navigate the websites. And it will then, uh, look for that particular event. So, say, okay, I'm going to generate links to visualize Pick 3 CA on C bio portal, um, so it's going to figure out the study information.
+
+Um, and this is all done using the rest API, so it's using the rest API and some on the front end. You have some libraries construct URLs, so it's using that. Um. And it'll give you a link like that, so? Um, over here gives a couple, so maybe we can click on one?
+
+So, now it takes me back to the website.
+
+[Speaker 3]
+Uh, and I can actually look at these mutations, and I saw in the chat that I mentioned some of those. So, now you can sort of validate that. It's that it's accurate, which in our domain is very important, obviously. Um. So, now you know, say it's not accurate. Now, how does the user get the feedback?
+
+So, Weber chat has, um. Functionality built in that you can just, you know, give a thumbs up or a thumbs down. You can write something. And I just wanted to show a bit how we did that. So, in one minute. So basically say, hey, this was wrong. No it, maybe I asked about Imaging data.
+
+In this example, it says no Imaging data exists.
+
+I have plot connected to. Believer chat! Responses and to land views so I can see the conversations. And I can just ask, do you see any new feedback? And then. Uh, it files a ticket on get up. Oh, well, there was a problem. And so, you know, just file the tickets.
+
+And then you say he picks it. He will fix it. And if it looks good, then I say, deploy to production. Um, and so there you have sort of your self-improvement Loop, which I thought is kind of something to think about for your own products, like, how do you continuously improve it based on feedback from the users?
+
+[Speaker 5]
+Okay, hello, everyone. My name is Grace. I work at the path. I don't know if you guys ever heard of red hat before. Awesome. So most of you guys have probably heard of red hat in terms of blemish Red Hot Enterprise Linux, or in terms of kubernetes with openshift, so you might be wondering, what are you doing here at an AI middle night?
+
+Well, we actually have AI too, which is a surprise to a lot of people, but it's something something. You can drink for a couple years now, so I'll talk about it a little bit and show this quick demo. But if you have any other questions about red hat AI?
+
+Please come up to be there tonight, and I'll be happy to talk about more. Um, clean. So, the AI general overview we had to accelerate the development and delivery of AI Solutions across four main pillars. So, the first being passing division and friends to be sports BLM and infant server?
+
+Um, connecting models to data or model customizations or rags, and, uh, JCPI deployments LS AI at scale with lmv today. Are there was going to be more like on the agenta exam Focus. Um, we're gonna be waiting on. We use a lot of open source things. That's our main thing.
+
+If you know anything about red hat, we really love open source and the great open source to the Enterprise. These are some of the open source projects that we either support with our developers, or just move right into our apps. So, this is what our demo is going to be today.
+
+It's going to be a little pipeline triage agent, so we're going to be hosting it in openshift, which is our version of Enterprise kubernetes. We're gonna have a build that succeeds a test that fails on purpose, and it's on purpose. And then the triage is going to take that failure.
+
+Use our models of service for using Quinn today, it's hosted on our red hybridship AI model of service platform, which essentially allows you to post your own models within your. I stack the tray, saying today, we're just going to be looking at it in the open ship pods, but you can also ship this out through open Telemetry to like a Jaeger and lung flow.
+
+Something else we have going on and eventually it's going to create an issue in GitHub, so hopefully the similar words live. If it doesn't, I do have a report of sale. No stress. So?
+
+First, one is going to all we have to do is create this pipeline in my. Okay, okay, so we can see here. This is our build pod that is supposed to succeed. Let's wait for it. And you can see the different status on the ghost is completed. We're now into our test spot that it's supposed to fail again, as it's supposed to fail and here, oh no, it cannot connect to the server.
+
+The connection is appears. Looks like we have an error. Sounds like we're going to have to use our triage on failure pod. Here we can watch the logs as well. Basically. What this is doing is sending a whole pipeline. It's sending the logs to an llm, which is going to compress them into or.
+
+What a GitHub issue should look like, and then make that GitHub issue. So it's going to take some time while we're doing that. A little intermission that we can look at is running some evals. Sometimes, people can use this if you don't have it more initialized. So, let's look at this actually.
+
+So, focusing on this specific step of the agent or whatever you have, we'll bring in a prompt to test some sample figure logs and then use an evaluation method to continue something like lmv valve, which is a open source product or today. We're just using a simple like keyword matcher and then that can give you better observability or an evaluate deployment where if the llm doesn't match the certain emails or doesn't live up to your standards will automatically convert back to the old employment.
+
+Um, so let's see if that can work.
+
+[Speaker 4]
+So, we're going to run. I have a good prompt, and I'll put a bad prompt. Sometimes, it's a good pump is not that good, so we'll call it the bad prompt in the federal prompt. So, this is a good prompt. You can see it's very robust. It's doing a lot of things.
+
+It has our output, um, what the analyze we love should look like, and it's going to be running on these five test cases. And then, this is our bad prompt. It's literally two sentences. It's not a robust. It's probably not going to give us high speed of that. Yeah.
+
+And our issues still haven't yet, but trust to come. Yeah, we can make four awkwardly now. But, as you can see, each one has its own individual score. So, for the first two, here, the score is basically 100, meaning it matches all the keywords. This would be a little bit more nuanced if you had a LL, and that's a judge kind of thing going on.
+
+Um, so, yeah, you can see down here. This one has unfortunately failed that horrible system prompt. It successfully identified two of the reasons for the Todd filling for the last three and did not. This one so far is under 23, so it's already doing better. And this is taking forever if it doesn't work.
+
+No worries. What was? My goal was?
+
+[Speaker 3]
+I'll show you guys this one now. But this is why it would look like accident of issue. Basically, it has all the information.
+
+[Speaker 4]
+On our recalls and mistakes. This part isn't super important. It's just making a tough issue. The point is that we have a lot of good as we delete, of course. Downstairs, a lot of good ads durability into our different blogs and different states of our pods, as we're going through here.
+
+Some other cool things that we can look at we can have have any secrets that we have in here. There are automatic is hidden by faults. You can add research photos, so if I want to create a resource code of, I can add it here and see, um, real time memory allocation and.
+
+You should do that. I know there's a ton of other super cool like networking things or scary things that you can add that if you're super interested in, please feel free to talk to you about later. But yeah, that's not it. For repacking tips, AI, hope you enjoy this demo and thank you.
+
+Next is roll mates obviously?
+
+[Speaker 3]
+Hi, everybody! My name is object. I'm a sophomore at golfers, and let's start with a little survey. Raise your hand in the job market for anyone who technical or CSU on this kind of code very well.
+
+[Speaker 2]
+Yeah, so there's this big one. That's a tool called Ai, and that's allowed people to generate more and more resumes than ever before and apply to 10 types of applications before and the result of this is that hiring managers don't have the volume to refuse all these applications and credibility has also gone down a lot more.
+
+It's a lot easier to just throw into changing, you know? What are the approaches in this job and how do I have the most confidence as many possible and so resumes are just words?
+
+[Speaker 5]
+That are no longer a valid proof of skill. For applicants that I manager do, and so I want to solve this problem both for people applying and also make it more efficient of a hiring process for higher values. But introducing what I call a little bit, and so, yeah.
+
+[Speaker 3]
+Basically,
+
+[Speaker 5]
+Rome is in a way to find better jobs, better connections, a better ways to stand out, and what I'm doing is I'm increasing the ROI of the time that you're spending and finding jobs. But how do you got them things you work about your application and focusing on? Here, tell tell you what jobs to apply.
+
+It's based on your GitHub and the price that you have in your hub and. Also, on the other hand, what politics you should be building for roles that you want to apply and then based on at least includes bring your own key, so it's completely free for students. And then the business lost item is obviously the algorithm sourcing platform.
+
+Applicants that have a higher credibility because their their bodies and their care credibility is based on the health incentive. They're just words underneath the paper on the resume, um. Businesses work that they need.
+
+[Speaker 3]
+The algorithm of sources better candidates are spend less time with the LGS.
+
+Here are just some stats, and they're going to show that if you have an identical resume to someone, but the other person has a like connection to someone. As a company that you're applying to, that person is always getting the job, and so it's more important today than ever to, um, with the number to speak for themselves, but know someone like-minded, who kind of understands your mentality and Beyond, just your technical skills to make sure that it's good to kind of mindset fit as well as a chemical stick for the company that you can work for and so.
+
+Based on your personal interest from the chatbot. If you don't pay any extra money for it because it's been very empty, so it's from whatever subscriptions I've read to Cloud whatever you're already paying for. Um, you can use that same subscription and enrollment, and now all the context of your projects and your guitar.
+
+Then there's any code questions that we've completed because all all these options can connect is to roll it, so all that context is inside enrollment. And based on that, it'll Source you the best jobs that a better companies like mine have to to kind of skills you first time.
+
+If you have? Interviews.
+
+So, sometimes seeing all the like, we go 500, um. Like I said before, these jobs are based on exactly what your personal interests are and what you are to accomplish. Um, and that is the parabilities based on four products existing if they help. Another feature that I'm going to have.
+
+It's very early stage, so a lot of us still in development, but higher views are some things that have been very recently introduced and no one knows how hard it is until they go in. And you know, they had no chance to prepare for it, and I want to fix that by having the kind of hiring practice system which scores usually sum your tone, your pace, the content of your of what you're delivering, and then score that you get based on enrollments hiring yourself.
+
+They're good breath with, um. And yes, you get no opportunities to understand why you're actually preservatives. Is that that even the loop aspect of kind of human organization kind of, understand that back and forth, um, ways I understand how you can and whatever reason is, how to disappear within Russian properties, and so I bring that back while leveraging your system that's very well.
+
+As a user for robot, I'd say you have these five jobs selected. This is just based on migra Hub, which I'm thinking of here. And so these offers are what I've given access to, and it's completely private your data. Companies, or they actually based off of all the companies will get is based off the data from here and then.
+
+Based on novice analysis of your? Um, different projects. And what kind of types of things are you connected, and how, what aspects of those projects are the highest signal or the one that we're applying to calculate the score of how China you are, and this this final summary and scores all digestive is like anything like that.
+
+It also something next steps based on if you already have technical skills in Yona Una decadu, instead of just kind of taking a shot in the dark. It'll tell you based on your existing like 10 connections and other things that are some people, what their positions are currently, and then you can reach out to them and then.
+
+And now, you know, exactly like. Now, you're almost in time, and I guess it's like how you already have all those houses most likely to respond to you based on a share kind of interests trajectory and also? It can also cause you based on what to confident about based on it.
+
+And, yeah, any questions?
+
+Can you speak a little on me? Yeah.
+
+[Speaker 2]
+Let me actually. Does the model, uh, assassin is similar trajectory. So, based on a, if you're applying to a company, so some people that are already working at a company, um, and then based on, like, where do I know where they want to call it? What kind of was that they were in college?
+
+How many were at your age kind of the source? People that are more likely to understand where you are and understand in your career because they're also interesting at some point, so I'll just help you so much.
+
+[Speaker 3]
+All right. Thank you.
+
+Anyway, how
+
+[Speaker 5]
+Do you have a waitress?
+
+As I talk to concerned about my journey first, that's there as well.
+
+[Speaker 1]
+Uh, but.
+
+[Speaker 2]
+Tell me the news.
+
+But naturally fine. Yeah, okay, so I thought a lot about. Creating contacts for AI agents through for work purposes. But outside of work, I created clips.
+
+Hold on just a moment. So at this point, I would bring up this video. We're going to skip this part. This is a video, so Clips basically takes links from YouTube. Tick tock. Articles Reddit posts anything of that manner, and it stretch them into usable links. So, that's same as a tick tock.
+
+In the background there. What's happening is? Going to Firebase a pub sub to a cloud of red worker when running a Docker image. The docker image has node the DLP ffmpeg. The image remains, but for each different content type, it's using a different character with. So, for a multimodal, uh, agent, like, Gemini, it's sending the video, or let's say Claude or open AI.
+
+It goes your El and Whisper C, plus plus. It then sends the metadata to firestore and Google cloud storage, or there's a bi-directional MCP that allows you to send things to it or receive things from it. Uh, link to use. I'm using to trace everything, so that scans, which I just showed you.
+
+There's the brains, which are. It's just a markdown files, so you can interact and use the contact.
+
+[Speaker 3]
+The modules are the way in which things are extracted.
+
+[Speaker 2]
+This is just the basic Json schema for a module. Uh. See here. I don't know if I'm able to log in, but from the the clip that I showed you where I saved The Tick Tock in my strap. It was about singularity, so you could be able to go to Libby and rent the book.
+
+Or if you were to save a recipe, it's able to extract, uh, how to? Cook the thing. The ingredients you can purchase them all on instacart. I just got access to the instacart API so you can load them all up to the park. It does research papers. And the modules are customizable.
+
+This is an example of me just doing a basic stage from. My status line. In technical instruction, so I save it. It goes to the technical instructions. Module and? I am able to. Then just have it loaded. Clyde Claude, interactive side of the MCD. And. Producing the status bar.
+
+Should take a second. I'm running it on fast here, so burning some tokens up pretty loudly.
+
+Let's jump ahead. This is not very interesting.
+
+Heads working.
+
+[Speaker 3]
+And in a moment, we'll have the status part at the bottom of the screen. Based on a technical tutorial that is able to clicks. Here it is.
+
+Uh, it's
+
+[Speaker 2]
+Ai agnostic, so you can bring your own AI API key, and it's free. It uses Gemini by default. I also have a version that uses package gem version within it so you can run it locally and it's free.
+
+[Speaker 3]
+Uh, it's good with Wi-Fi. It's not great in cell service at this point.
+
+[Speaker 2]
+That's it. It's free on iOS right now. It's in beta on Android. If anyone would like to test it, it also has a web app of Chrome extension and an upsetting signature so you can save anything to and from obsidies as well. I'm working on a notebook LM connection and on notion connection as well.
+
+And that is it. Thanks so much.
+
+[Speaker 3]
+Um,
+
+[Speaker 5]
+Here from Google. Is it here? No, yes. Okay, yay. Applause.
+
+[Speaker 2]
+Yeah, and I end up a student to work as a product manager PM for agency surviving in parkway, which is a CLI, Dr guro announcer a few weeks ago, Google Comics in Vegas, this. So, how many of you are familiar with survives, you know, crowd border antibiotics just on India?
+
+So, yes, the main idea is that? I was working with a friend. And we said, okay, you know, now they grab with me then yesterday because they're very good at doing stuff with agents by the time they don't always know the symptoms of new frameworks like DK? Or they don't know about the Scotty system.
+
+How to connect different services, so you know they have trained on across different informations about? About. Different sentences, like the inner platform or Google, and so on. Can, you can connect them together, and it's a very beautiful task skill problem, and you are very efficient about it. So, and that's why people end up talking Maxi and spend lots of tokens and society.
+
+Because these agents are much enough to find workarounds and try to grow things around, but they are not very optimized for that. So, what happens? Is that right now? Do work now as a whole environment infrastructure if? But there is lots of space between his services. So, in beta regulation, security things like the assignment Valentines accessibility.
+
+So, so? That brings them all together. Because this episode is requested by designed for UMass. As the main users could go to Google Cloud, access the platform and interact with it. But now, we just need to Avenger page that is very first. Origins number agents can easily chat with me, one services one another, and that's why our patients like, I mean, so is it tonight?
+
+It's not just alive that Williams is, but these are select class skills bundled together. To try to help agents guide them through a whole life cycle, of course. So this is, um, some skills are not for giving India knowledge about services, but they are for guiding to a whole Germany or experience across Google Clouds, so people are internal email, like us, decided to bring together and diapers experience about.
+
+Try to build it as people work out, and they said, okay, why not trying to externalize this experience? And, uh? To my degree is an expert. Whoever been talking to generation supporting assistant by results to give it superpowers about human cloud energy development. And so on, so let me idea that.
+
+Foreign.
+
+Our powerful agents, our phonics, and so on. They are very good, but they can still be able to perform most regas, but directly in DC, like they do it. Okay, so that's huge savings about the generosity time advantage, because instead of taking hours to make it the same class in one five minutes, 10 minutes.
+
+And that's when the fighters come from, prisoners say, like, yeah. So, as I showed them all, you can see here. What they did is, uh, they are gonna create a. So, I just asked, you know, because I will create a Victoria Victoria Builders as the agenda so that we create another sister where we have major that tried a pre-scoder and create someone's calling task.
+
+And then there is a. A man.
+
+And you can see what happens again, you see, is that we didn't be strong? Uh, EDCI started, and what is happening. Is that and identify the questions for first planning out a percent of the water pool? Then it looks at a different scaffolding examples, so there is lots of favorites that there's life and French on demand and put.
+
+And he starts about it. So in this case, you can see created the already called all the folders. Or development of agent testing of agents, deployment of agent, and also celebrity all together, including their account for infrastructure mass according. So,
+
+[Speaker 3]
+So
+
+[Speaker 2]
+The this obviously lower the value to every relations to start developing the problem, and they just focus on developing actually the core parts of the Angelic firmware, so that the Russell fiber structure is already pretty good for them, and they just input optimize and.
+
+So, this is the main floor, and you can see in this case I we confront. I asked me just a good agent he tested, and now running the evaluation sets. And once in this explanation, you will see that now the data.
+
+With some agents that were already created there for institution. And then you can also ask it to return the conversation States. So, for example, in this case, you can see that the domain you get the actual composition is significant agents in this cases that have been running. Reading out four or five minutes?
+
+And just with other prompts, you can ask you through the volume genetics process or to deploy to agent runtime and also how we should do different channels. Like, for example, like Gemini that has? So, this is the main floor here.
+
+[Speaker 3]
+And
+
+[Speaker 2]
+Regarding us more about how this works. The repositories of its source. So you can see I already out of 2000 starts. And. That was the whole life cycle of a project, and what happens there is when you just need a front for sale the agent, uh, the responsibility to make sure that the token optimization and lower count is better, optimizing to be very fast.
+
+And this is the main idea of the physics. Everything about it, certain skills, slight commands, and uh, they work well for the whole agent life cycle until you actually apply it. And. And here, so. Speedly lines along the way. Lots of complexity. A lot of means that you have to work and we discussion line.
+
+We just want to make sure that you are about highway that you may just run through it and make sure you're collating the most as passing possible from one side to the other and?
+
+Next, we have a doctor welcome Chris.
+
+It's not pretty to the last movie. It was a big, high violence in the assessment Brewery once again, I guess. But yeah.
+
+Okay, um, so this is my first live coded set of slides, so excuse me conversations. I have to think about your life. We're both participated, but not true. Um, but I meant to be still targeting. I work with is the doctor's anniversary, and I'll talk about how the drainage we went to both parts and then put one hand just clamp coming for us to show you what it was.
+
+Uh, so, yeah, my name is Chris. I've been talking for 80 10 years. I've worked on lots of different parts of Dhaka, and most recently, um, SDX. So, we started this because we were all moving forward and other agents and. It's kind of frustrating. It's like initially started with, like more than codepot, where you can, like, tag complete, and it was kind of cool, but that was kind of boring, just getting tired all the time.
+
+It just feel slow, you know? Keep doing that. So before came out the other engine like it turned to buy my dash command and be like, are you okay with running this and you're like for the first one is like your day. I'll read this, and then you know the 12 to like monkey and the loop, just hitting the hitting button, which is already ideal.
+
+And then you go, you know, you see what happens with, uh, to somebody to read the production databases? So, what we thought about was, well, what you want to do, is make these things run, which when I'm going to put them in a box because they don't want to break anything?
+
+That was probably what you thought, what it was like, how can you make games run risky safety inside box spring inside a period of time? Um, and then more recently I'm using a virtualists as well. Turns out MDM is a great radio virus or a great way to meet your company of Secrets.
+
+Um, I'd say your your software update. Now, I'm like, I don't know. Is it 30 days and let somebody else work up. What's, uh, what's wrong with it first, um? And actually sandboxing will help where it is too. So what do I mean by that? So, what do we build and what have you got, um?
+
+So, we built a new video platform from the gmm at the American only. Truly, Plus platform here, then a dominar. It's a Linux Mac windows. I even make work on Windows arms with people, and that's not the easier, but they'll come see. And what we do with that, then, is we run a micro DM.
+
+We put a container inside, and then we manage the file system access and the networking around here. So, I think you guys here. Uh, to the industry collab weights, uh, we can deliver the memory of things. So, how does it feel right again? Um, which is that there's still some rough edges, but the product is only like that's the general version.
+
+We also don't give it any secrets, so we'll be doing inference or get to anything else. Complete the secret from the outside. You rewrite the price on the layout. That way, you don't have that problem on the other end, helping you by uploading your API keys online, something you can get together.
+
+We've got something else, I said in the library. Um, so, yeah, that that's how we built the hard part was definitely was the event I'd say before the scratch and well, uh, London, England, work. So, um, I'm very allowed to work with. Uh, so, yeah, quickly. For demo, a 100 demo, yeah.
+
+So, what are we doing is an installment, because, uh?
+
+Looks like dragon this whole Ohio, so I didn't. It doesn't bother you or anything. It just kind of rise, which is, you don't have to use it. So, um.
+
+Just to show you kind of walking in front of the background so? I should. Yeah, yeah, make things easy on you.
