@@ -74,3 +74,15 @@ The mislabeled "transcript" (a research brief) was **deleted** and the **actual 
 
 ## Variants (bake-off)
 1. baseline transcript (if obtained) · 2. **Scribe plain** ✅ · 3. **+ keyterms** 🟡 · 4. Voice Isolator → Scribe (only if low confidence) · 5. + alias-map/LLM (contingency).
+
+## n=4 generalization (2026-06-27) — EL beats the recorder app on every event
+Recipe (scribe_v2 + keyterms) vs recorder-app baseline, on each event's verified spoken proper nouns (`.claude/evals/score_events.py`):
+
+| Event (format) | Baseline | EL (scribe_v2 + keyterms) | Lift |
+|---|---|---|---|
+| Agents Behaving Badly (panel) | 50% | 100% | +50 |
+| AI Demo Night (demo night) | 43% | 86% | +43 |
+| 2x AI by Fin (fireside) | 43% | 71% | +29 |
+| GTM+AI Masterclass #5 (masterclass) | 85% | 92% | +8 |
+
+**EL wins on all 4 — mean ~55% → ~87%. Recipe generalizes (n=1 → n=4).** Remaining misses are seed-coverage gaps, not model failures: Qwen (→"Quinn"), surnames Donohue/Curran (seed had first names only), Nowoslawski (baseline missed it too). AI Demo Night + 2x AI used AUTO-extracted seeds (noisier) → these are a FLOOR; curated seeds from the briefs' verified rosters score higher. Lesson: seed full names + first names + surnames. Gold slice (audio-verified) still recommended on one event (human listening step).
