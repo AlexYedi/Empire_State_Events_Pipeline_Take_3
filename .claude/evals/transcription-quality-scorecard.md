@@ -27,11 +27,24 @@ The eval/measurement layer for the recording→clean-transcript ingest (Linear *
 - People: `Kilian Lieret`, `Zhou Yu`, `John Mark`, `Yi Ju`, `Arielle Mella`
 
 ## Scorecard
-| Event | Audio? | Entity acc — phone | Entity acc — ElevenLabs | Lift | Notes |
+| Event | Audio? | Baseline transcript | EL (plain) | EL (+keyterms) | Notes |
 |---|---|---|---|---|---|
-| NYC AI Demos #10 (06-24) | ❌ no recording | _pending score_ | — (no audio) | — | baseline-only; can't A/B without audio |
-| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | _pending score_ | _pending (EL run in progress)_ | _tbd_ | first live A/B; plain Scribe v1 + diarize (no keyterms yet) |
+| NYC AI Demos #10 (06-24) | ❌ none | phone .txt exists | — | — | no audio → can't A/B |
+| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | ⚠️ **none** (file labeled "Transcript" is the Research Brief) | ✅ ran (65.6K chars) | 🟡 running | first live run; see findings |
 
-## Variants to test (bake-off — incremental, manage credits)
-1. **phone** (baseline) · 2. **Scribe raw + diarize** (this run) · 3. **+ keyterms** (raw-API biasing, seeded from ground-truth list) · 4. **Voice Isolator → Scribe** (only if low confidence) · 5. **+ alias-map / LLM pass** (contingency).
-Run 1↔2 first (answers "does EL lift?"); add 3 if residual proper-noun errors; 4/5 only if needed.
+## Findings (2026-06-27) — first run shook out the eval itself
+1. **Data-labeling error.** `06.25.26…Transcript.md` is the **pre-event Research Brief**, not a transcript. Scoring EL against it is meaningless. → We have **no real baseline transcript** for this event; need the actual phone/app transcript to measure "lift," or pivot the lift comparison to **keyterms vs no-keyterms** (both EL).
+2. **Score only SPOKEN entities.** Many ground-truth names (speaker self-names, host affiliations — Zhou Yu, Meta Superintelligence, AccelGentic, Yi Ju, Arielle Mella) **never appear in any transcript** because speakers don't say their own name/company aloud. Penalizing a transcript for unspoken names is wrong. Ground truth must be "entities actually verbalized," not the announced roster.
+3. **Matcher must be variant-aware.** Plain EL rendered `Arklex` → **"Arc" / "Archlex"**, got `Kilian` and `Columbia` right. Exact word-boundary matching scores these near-misses as 0 → false "EL is worse." Need fuzzy/variant matching (or per-entity human spot-check).
+4. **Qualitatively, plain EL is strong** — coherent, ~2× the content, correct on common terms — but **mangles unusual proper nouns** (exactly the `keyterms` case) and **over-segments diarization** (17 speakers for a ~4-person panel; `num_speakers` can cap it).
+
+## Confirmed capabilities (SDK)
+`keyterms` ✅ (proper-noun biasing — the fix) · `num_speakers` / `diarization_threshold` (diarization) · `timestamps_granularity` + per-word data (quote-safety contract) · `seed`/`temperature` (determinism).
+
+## Corrected method
+- **Lift comparison** needs a real baseline transcript. If none exists, report **EL-plain → EL+keyterms** as the lift on proper nouns.
+- **Ground truth = spoken entities only** (derive from the audio / a short gold slice, not the roster).
+- **Variant-aware scoring** (fuzzy match or human spot-check on the dozen names that matter).
+
+## Variants (bake-off)
+1. baseline transcript (if obtained) · 2. **Scribe plain** ✅ · 3. **+ keyterms** 🟡 · 4. Voice Isolator → Scribe (only if low confidence) · 5. + alias-map/LLM (contingency).
