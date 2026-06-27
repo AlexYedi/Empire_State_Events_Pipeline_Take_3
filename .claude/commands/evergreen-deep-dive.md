@@ -58,7 +58,7 @@ One subagent per speaker (general-purpose), each given ONLY its slice. Each agen
 ## Step 3 — Ship (main thread)
 - **Notion:** one Content Draft per deep-dive — `Content Type: linkedin_post_post`, `Event Phase:
   post_event`, linked to the Event row, `needs_review`. (Title prefix `Deep-Dive — `.)
-- **Gamma:** push each carousel (`format: social`, `4x5`, Stratos dark, `noImages`, PDF export).
+- **Gamma — render-on-publish (default for evergreen).** Author the carousel *brief* now, but **defer the Gamma render until Alex decides to publish that specific post.** Evergreen posts can sit for weeks; don't spend Gamma credits on a bank that may not ship, and don't risk stale assets. At publish time, push (`format: social`, `4x5`, Stratos dark, `noImages`, PDF export). (Render immediately only if Alex says he's posting soon.)
 - **Drip plan:** stagger ~2/week over 2–3 weeks; alternate broad-appeal ↔ deep/technical; lead with
   the widest-appeal framework. Surface the suggested order to Alex.
 
