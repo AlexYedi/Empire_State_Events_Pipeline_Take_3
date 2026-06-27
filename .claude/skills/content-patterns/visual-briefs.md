@@ -84,6 +84,12 @@ When proposing a post's visual, offer **four distinct format options**, not four
 - ⚠️ **Aspect gotcha:** Gamma `format: "presentation"` allows only `16x9 / 4x3 / fluid` — NOT 4:5. For LinkedIn 4:5 portrait (singles AND carousels), use `format: "social"` (`4x5 / 1x1 / 9x16`). Export carousels as PDF for the LinkedIn document post.
 - **Fallbacks only:** Canva for a clean single typography card where Gamma over-designs; Imagen for textless conceptual imagery.
 
+**Post-event learnings cuts (added 2026-06-27, YED-96).** When the source is a v2 `post_event_brief` with a learnings tier, three high-value visual cuts open up — each must ADD the tactic, never re-print the post's quotes:
+- **Pro-Tips checklist** — the room's "if X, do Y" tips as a clean checklist / framework card (Arc 1 mechanism, or a standalone matrix).
+- **Pitfalls / anti-patterns** — what NOT to do, as a contrast or red-accent risk card.
+- **Best-practice before→after** — a pattern shown as the shift it produces (Arc 3).
+Source each tip to the named speaker in the brief; the Arc-4 guard still applies (no quote-card-per-speaker repetition of the post body).
+
 ## The four narrative arcs
 
 Every carousel uses one of these four arcs. Each arc is a different way to render

@@ -12,10 +12,11 @@ Takes a transcript Alex uploads/pastes from his own recording of an attended eve
 
 **Input:** event name (one argument) + the transcript (manual upload/paste).
 
-**Output:**
-- **`post_event_brief` Content Draft** (the data store / short-term memory — the post-event mirror of the pre-event `research_brief`). Synthesized in Step 3.7 from the conditioned transcript + roster + pre-event brief; every downstream draft references it.
-- One Notion Content Drafts row per content piece (Tier 1 comment, Tier 2 post primary + visual brief, Tier 2 post alternate, bucket-sorted outreach DMs)
-- All drafts in `needs_review` status, Event Phase = `post_event`, linked to the Notion Event row
+**Output (v2 — YED-96):**
+- **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
+- **Knowledge-graph write-back** (Step 3.8) — People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event.
+- **LinkedIn post(s) + visual carousel brief → Gamma** (Step 4). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
+- All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
 
 ---
 
@@ -220,6 +221,12 @@ Granola Note URL: [web_url from Granola]
 ```
 
 content-correspondent then runs its standard logic per `.claude/skills/content-correspondent/SKILL.md`: bucket-sorts contacts, drafts Tier 1 comment + Tier 2 post + visual carousel brief + bucket A/B outreach DMs. The skill's existing "Granola → structured notes if the session was recorded; use for direct quotes from speakers" line is now operationalized — the structured input is exactly what it asked for.
+
+**v2 output set + gates (YED-96):**
+- **Canonical outputs = the brief (Steps 3.7–3.8) + LinkedIn post(s) + the visual carousel brief → Gamma.** These always run.
+- **Outreach is OPT-IN, not default.** Do NOT auto-draft bucket A/B DMs. Generate outreach **only for people Alex explicitly names** for this event (captured via the `steering-interview` "person you want to land well with" answer). Free-LinkedIn connection-message limits make blanket outreach low-yield. Default: skip and note "outreach skipped — none flagged."
+- **Attribution → public-content HARD GATE (the one irreversible failure — YED-96 R3):** a quote may be used **verbatim in a draft that @-tags a person ONLY if it is HIGH-confidence** in the conditioned quote bank. MED / low-confidence quotes → paraphrase, drop the tag, or exclude. A clean-looking transcript must not let a misattributed line reach a post that tags the wrong person.
+- **Quote-safety framing:** the brief is *permissive capture*; the post is *gated publish* — stance-license earned (post-event = high), Rule-12 source-check on thesis claims, confidence tags enforced (`content-style-guide.md` / `content-anti-patterns.md`).
 
 **Length guardrail (added 2026-06-10):** every Tier 2 post content-correspondent returns must be **≤ 3,000 characters** (LinkedIn hard cap) — the roundtable / topics×perspectives format with verbatim quotes is the one that overruns. Cut each version to budget BEFORE Step 5 commits it; sources / resource links go to the **first comment**, never inline in the post body. Canonical rule: `.claude/references/content-style-guide.md` → LinkedIn Character Budget.
 
