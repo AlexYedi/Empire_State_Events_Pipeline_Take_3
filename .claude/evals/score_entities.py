@@ -30,11 +30,17 @@ EVENTS = {
     },
 }
 
+import re
+
 def load(path):
     if not path or not os.path.exists(path):
         return None
     with open(path, encoding="utf-8", errors="ignore") as f:
-        return f.read().lower()
+        return f.read()
+
+def count(text, ent):
+    # word-boundary, case-insensitive: kills 'Pace'-in-'space' false positives
+    return len(re.findall(r"\b" + re.escape(ent) + r"\b", text, flags=re.I))
 
 for event, cfg in EVENTS.items():
     print(f"\n=== {event} ===")
@@ -44,8 +50,10 @@ for event, cfg in EVENTS.items():
         if text is None:
             print(f"  [{label}] (no transcript)")
             continue
-        hits = [e for e in ents if e.lower() in text]
-        miss = [e for e in ents if e.lower() not in text]
-        print(f"  [{label}] entity acc = {len(hits)}/{len(ents)} = {len(hits)/len(ents):.0%}")
+        counts = {e: count(text, e) for e in ents}
+        hits = [e for e in ents if counts[e] > 0]
+        miss = [e for e in ents if counts[e] == 0]
+        print(f"  [{label}] entity acc = {len(hits)}/{len(ents)} = {len(hits)/len(ents):.0%}  (word-boundary, >=1 correct)")
+        print("      counts: " + ", ".join(f"{e}={counts[e]}" for e in ents))
         if miss:
-            print(f"      miss: {', '.join(miss)}")
+            print(f"      miss(0 correct): {', '.join(miss)}")
