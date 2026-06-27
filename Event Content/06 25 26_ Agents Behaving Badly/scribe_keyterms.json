@@ -1,1 +1,0 @@
-{"detail":{"type":"validation_error","code":"invalid_parameters","message":"The 'keyterms' parameter is only supported with the 'scribe_v2' model. You specified 'scribe_v1'.","status":"invalid_parameters","request_id":"0d3eadf2391461155b4cd65078405b1e","param":"keyterms"}}
