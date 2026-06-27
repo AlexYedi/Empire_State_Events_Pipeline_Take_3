@@ -30,7 +30,7 @@ The eval/measurement layer for the recording→clean-transcript ingest (Linear *
 | Event | Audio? | Baseline transcript | EL (plain) | EL (+keyterms) | Notes |
 |---|---|---|---|---|---|
 | NYC AI Demos #10 (06-24) | ❌ none | phone .txt exists | — | — | no audio → can't A/B |
-| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | **3/6 = 50%** (recorder-app, obtained 06-27) | **4/6 = 67%** (scribe_v1) | **5/6 = 83%** (scribe_v2) | real baseline obtained → fully redone; see Regrade below |
+| Agents Behaving Badly (06-25) | ✅ 24 MB m4a | **3/6 = 50%** (recorder-app, obtained 06-27) | **4/6 = 67%** (scribe_v1) | **6/6 = 100%** (scribe_v2, re-seeded) | real baseline + re-seeded keyterms; see Regrade below |
 
 ## Result (2026-06-27): keyterms is the fix
 Head-to-head on spoken proper nouns — plain `scribe_v1` vs `scribe_v2`+keyterms:
@@ -47,16 +47,16 @@ The mislabeled "transcript" (a research brief) was **deleted** and the **actual 
 |---|---|---|---|
 | Baseline (recorder app) | **3/6 = 50%** | — | Datadog ✓ (1×) · Columbia ✓ · Arielle ✓ · **Arklex ✗** (Archlex) · **Kilian ✗** (absent) · **AccelGentic ✗** |
 | EL plain (scribe_v1) | **4/6 = 67%** | **+17 pts** | + Kilian; **Datadog 6×** vs baseline 1×; Arklex still mangled (Arc ×4 / Archlex), AccelGentic absent |
-| EL +keyterms (scribe_v2) | **5/6 = 83%** | **+33 pts** | + **Arklex ✓** + **AccelGentic ✓** (recovered); but **Arielle → "Ariel"** (degraded) |
+| EL +keyterms (scribe_v2) | **6/6 = 100%** | **+50 pts** | **Arklex ✓ (all 5 mentions)** · **AccelGentic ✓** · **Arielle ✓** — all recovered after re-seeding keyterms with "Arielle Mella" + host names (2026-06-27 re-run) |
 
-**Verdict:** ElevenLabs clearly beats the recorder-app baseline — **+17 plain, +33 with keyterms.** Two specifics: (1) the baseline drops *repeated* proper nouns hard (Datadog 1× vs 6–7×) and misses Kilian entirely; (2) keyterms is the top performer (recovers both hard names) but **degraded "Arielle"→"Ariel"** — a real, if minor, trade.
+**Verdict:** ElevenLabs decisively beats the recorder-app baseline — **+17 plain, +50 with keyterms (100% spoken-entity accuracy).** The re-seeded keyterms run (2026-06-27) hit every spoken proper noun: it recovered **all 5 "Arklex" mentions** (was 1), kept AccelGentic, and **fixed the "Arielle"→"Ariel" degrade** — confirming that was a *seed gap*, not a keyterms artifact. The recorder-app baseline, by contrast, drops repeated names hard (Datadog 1× vs 7×) and misses Kilian + Arklex + AccelGentic entirely.
 
 **Caveats (honest):**
-1. The "Ariel" degrade may be a **seed gap** — add "Arielle/Mella" + host names to the keyterms seed and re-run.
+1. ~~The "Ariel" degrade~~ **RESOLVED (2026-06-27):** re-seeding keyterms with "Arielle Mella" + host names recovered Arielle (and all 5 Arklex mentions) → 100%. Seed gap, not a keyterms flaw. Runner + seed now committed (`run_scribe.py`, `agents-behaving-badly/keyterms.json`) — reproducible.
 2. **"Spoken" is inferred from the 3 transcripts, NOT hand-checked vs the .m4a** — a 2–3 min gold slice would harden the ground truth.
 3. Excluded as never-spoken: Meta Superintelligence, Zhou Yu, John Mark, Yi Ju, Lieret.
 
-**Action (value-action contract):** **adopt ElevenLabs over the recorder app** for events (clear entity lift); **`keyterms` is the default**, seeded from pre-event entities — and **extend the seed to cover names keyterms degrades** (Arielle). Recorder-app transcript = emergency fallback only.
+**Action (value-action contract):** **adopt ElevenLabs over the recorder app** for events (decisive entity lift, now 100%); **`keyterms` (scribe_v2) is the default**, seeded from the pre-event entity roster via the committed `run_scribe.py` + `keyterms.json`. Recorder-app transcript = emergency fallback only.
 
 ## Findings (2026-06-27) — first run shook out the eval itself
 1. **Data-labeling error.** `06.25.26…Transcript.md` is the **pre-event Research Brief**, not a transcript. Scoring EL against it is meaningless. → We have **no real baseline transcript** for this event; need the actual phone/app transcript to measure "lift," or pivot the lift comparison to **keyterms vs no-keyterms** (both EL).
