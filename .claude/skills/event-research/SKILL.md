@@ -803,6 +803,7 @@ events. Over time, this is what powers event-tier scoring and the Signal Layer d
 
 **When to invoke:** within 24h of attendance, ideally same night while memory is live.
 **What it produces:** a dated `## Retro` block appended to the Event page body.
+**Relationship to the v2 Post-Event Brief (YED-96):** the `## Retro` is the short **signal scorecard** (did the Success Signals fire? event tier?). The **comprehensive** post-event record — the full learnings-tier `post_event_brief` (whole-quote bank, pro-tips/pitfalls/hot-takes, enriched concept glossary) — is produced separately by **`/post-event-content`** and appended to the SAME Event page as `## Post-Event Brief`. The page ends up with `## Research Brief` (pre) + `## Retro` (signal scoring) + `## Post-Event Brief` (the exhaustive post record) — pre + post side-by-side. Keep the Retro short; don't duplicate the brief's content here — link to it.
 **How it integrates with content-correspondent:** retro captures signal outcomes and raw
 observations; content-correspondent turns observations into DMs, comments, and posts.
 **Run retro first, then hand raw notes to content-correspondent.**
