@@ -20,3 +20,4 @@ Triggers:
 - 2026-06-09T20:40:56Z | session: `18eccfa1` | skills: pre-event-content | trigger: **?**
 - 2026-06-10T20:51:54Z | session: `509c2c6d` | skills: content-correspondent | trigger: **?**
 - 2026-06-10T20:56:03Z | session: `509c2c6d` | skills: pre-event-content | trigger: **?**
+- 2026-06-28T00:33:57Z | session: `5664db88` | skills: check-new-events | trigger: **?**
