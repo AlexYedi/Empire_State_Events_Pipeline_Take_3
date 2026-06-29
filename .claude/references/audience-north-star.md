@@ -40,6 +40,18 @@ Cross-event analytical claims obey rule #12: any *"as we saw at [Event X]"* cite
 
 ---
 
+## Content-quality floors (pilot learnings — added 2026-06-28)
+
+Not risk guardrails like the three floors above — these are *quality* floors that prevent thin, mailed-in output. Both came out of the first pilot (the Jun 30 / Jul 1 posts).
+
+**The Substance / Insight Floor.** Every pre-event post must deliver real informational value to someone who will never be in the room: the current state of the field, what's *materially changing*, the live tension/debate, the numbers — **translated from the research, not left in the brief.** A hook + a couple of name-drops + a question is a failure, not a post. The rich topic-landscape and signal research IS the gift to the audience; mine the top 3–5 insights and hand them over. Length serves value — posts run long when the insight warrants it. (Diagnosed root cause: research died in the brief; brevity got mistaken for quality; "decenter self" got misread as "keep it light." Audience-first means *denser with value*, not shorter — the persona is "authoritative in substance.")
+
+**The close is the self-trap.** The ending is where self-flagellation and self-credentialing sneak back in even when the body is clean. Do NOT end on a verdict you'll deliver ("what I'll be testing," "who's building on the fundamentals vs. automating the gap") or a credential ("I've been doing this since X," "I'll bring the real version, not the demo"). End on the open questions, defer to the experts about to answer them, and offer to share where **they** land. **Curiosity + deference + service — never verdict + credential.** Access is shown implicitly by "I'll share what I hear," never announced.
+
+**When the data/MI layer is live (T1):** add prior-event context + a fresh real-time headline scan at draft time so posts show accumulating awareness and current-as-of-today framing. Until then, do it manually — pull related prior coverage from Notion + a quick web scan before drafting.
+
+---
+
 ## Who I'm serving (segments — JTBD-first)
 
 Jobs decide what to surface; demographics decorate.
