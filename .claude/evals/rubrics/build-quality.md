@@ -9,7 +9,7 @@ Score each criterion **independently 0–1**. Composite = weighted sum. **Verdic
 | `correctness` | 0.30 | Does what its spec/PRD/issue/AC says. Logic sound; references real tools/DB-ids/files; if code, it parses/runs. |
 | `completeness` | 0.20 | All required parts present; covers the AC; no TODO stubs; handles obvious edge/failure cases. |
 | `convention_adherence` | 0.20 | Matches house conventions: file placement + frontmatter, naming, source-of-truth discipline, MCP/tool-name + Notion-plan constraints (e.g. `notion-search` not `notion-query-data-sources`). |
-| `anti_pattern_avoidance` | 0.20 | Avoids known traps: over-engineering/ceremony, duplicating state, **resurrecting a tombstoned/reversed decision** (gtm-os/Supabase/entity-spine), fabricated numbers, **orphan metrics** (no `{threshold→action→surface}`), hardcoded secrets, lossy summarization where fidelity matters. |
+| `anti_pattern_avoidance` | 0.20 | Avoids known traps: over-engineering/ceremony, duplicating state, **resurrecting a tombstoned/reversed decision** (gtm-os/Langfuse; Supabase-as-*measurement*-store — but Supabase IS sanctioned as the Market-Intelligence Engine system-of-record per the 2026-06-28 re-scope, so MI use is NOT an anti-pattern), fabricated numbers, **orphan metrics** (no `{threshold→action→surface}`), hardcoded secrets, lossy summarization where fidelity matters. |
 | `diagnostics` | 0.10 | Legible + maintainable; clear comments/errors; failures explicable; **honest about gaps/confidence** (no overclaiming). |
 
 ### Per-criterion anchors (≥1 pass, ≥1 fail)
