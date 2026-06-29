@@ -50,6 +50,8 @@ Not risk guardrails like the three floors above — these are *quality* floors t
 
 **When the data/MI layer is live (T1):** add prior-event context + a fresh real-time headline scan at draft time so posts show accumulating awareness and current-as-of-today framing. Until then, do it manually — pull related prior coverage from Notion + a quick web scan before drafting.
 
+**Always name people, not just companies (added 2026-06-28).** Pre-event posts must name the speakers/hosts as **Name (Company)** — never company-only. Two reasons: (1) it's the more human, generous framing the whole ethos is built on (people, not logos); (2) it's **tag-able** — Alex @-mentions each person on LinkedIn, which surfaces the post to *their* followings and can generate outsized reach. Attribution = person name **and** company. If a full name is genuinely unresolved, name what's known and flag before tagging. Pairs with [[feedback_name_people_and_thank_speakers]].
+
 ---
 
 ## Who I'm serving (segments — JTBD-first)
