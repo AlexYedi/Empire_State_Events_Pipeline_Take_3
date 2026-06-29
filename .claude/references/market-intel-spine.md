@@ -10,12 +10,13 @@ Plan of record: `~/.claude/plans/where-do-we-stand-sunny-puzzle.md`.
   (the Hub's project — the engine does NOT write there).
 - **Access = REST API, NOT the MCP.** Connect via PostgREST at `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`
   using `SUPABASE_API_KEY` (an `sb_secret_…` key) from `Take_3/.env` — read it at runtime, never print it.
-  The secret key bypasses RLS, so reads/writes work. Verified 2026-06-28: key authenticates (HTTP 200).
-- **⚠️ NEVER use the Supabase MCP for Empire State.** The connected MCP (`mcp__claude_ai_Supabase__*`) is on a
-  *different account* — org **`Same Old Expressions`** (`ovwgsrpbvweplmhmumqj`), projects `GTM_OS_HUB`
-  (`nnywrmetdoixdbevvsvf`) + `Signal_Pipeline_Analytical_Spine` (`abkvgihlbwfloentugtd`). Those are NOT ours.
-  (A schema was briefly applied to `abkvgihlbwfloentugtd` by mistake on 2026-06-28, then rolled back —
-  verified empty.) For Empire State, REST-to-`oicikjyzmxqfomrrqkvf` only.
+  The secret key bypasses RLS, so reads/writes work. **Verified live 2026-06-28:** full REST smoke test
+  passed (insert company + event + hyperedge → read-back → cascade-delete cleanup; all tables back to 0).
+- **Supabase MCP REMOVED (2026-06-28).** Alex disconnected the `mcp__claude_ai_Supabase__*` connector
+  (it was on a *different* account — org `Same Old Expressions`, projects `GTM_OS_HUB` +
+  `Signal_Pipeline_Analytical_Spine`; a schema briefly mis-applied to `abkvgihlbwfloentugtd` was rolled
+  back, verified empty). **REST is now the SOLE Supabase path** for Empire State — there is no MCP to
+  fall back to. If a Supabase MCP ever reappears, do NOT use it here; REST-to-`oicikjyzmxqfomrrqkvf` only.
 - **DDL (table creation) is one-time, by Alex in the dashboard.** PostgREST can't run DDL. Apply
   `.claude/references/market-intel-schema.sql` once via the `empire state ai` SQL Editor (or, if Alex
   provides a connection string, via `psql`). All *ongoing* entity/Event writes are REST `INSERT`/upsert.
