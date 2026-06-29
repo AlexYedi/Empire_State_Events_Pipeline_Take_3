@@ -100,8 +100,10 @@ device), and an `event kind='interview'` can be added to the timeline.
 - **Specialist thin** — re-invoke just that one with deeper scope; re-synthesize. Don't restart.
 - **No interviewer named** — skip person-researcher; dossier notes the interviewer profile is unavailable and
   pivots Section 5 to "what this stage's interviewer type usually cares about."
-- **Supabase write error / wrong project** — STOP writes; confirm the project ref with Alex
-  (`Signal_Pipeline_Analytical_Spine` = `abkvgihlbwfloentugtd`); the Notion dossier still stands alone.
+- **Supabase REST error** — STOP writes; confirm the ref is `oicikjyzmxqfomrrqkvf` (`empire state ai`)
+  and `SUPABASE_API_KEY` is set in `.env`; if tables 404, the one-time DDL hasn't been applied yet
+  (`.claude/references/market-intel-schema.sql` in the dashboard SQL Editor). The Notion dossier still
+  stands alone. Do NOT fall back to the Supabase MCP — wrong account.
 - **Agent registry session-frozen** — this command + dossier-synthesizer were added to disk; they are only
   discoverable in a FRESH conversation. First run must be a new session.
 
