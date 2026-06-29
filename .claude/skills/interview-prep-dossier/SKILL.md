@@ -91,8 +91,9 @@ every dispatch ahead of the entity list (fidelity rule from `/event-deep-researc
 
 ## Persistence (parent thread only — MCP not available in subagents)
 
-After Alex-review-grade synthesis passes the judge gate, persist to the graph spine
-(`.claude/references/market-intel-spine.md`, Supabase `abkvgihlbwfloentugtd`) and mirror to Notion:
+After Alex-review-grade synthesis passes the judge gate, persist to the graph spine via **REST** (project
+`empire state ai`, ref `oicikjyzmxqfomrrqkvf`, `SUPABASE_API_KEY` from `.env` — **never the Supabase MCP**,
+which is on the wrong account; see `.claude/references/market-intel-spine.md`) and mirror to Notion:
 - **Postgres:** upsert `company` (dedup on lower(name)); upsert `topic`(s); upsert `person` for each
   interviewer (search-before-create); create an `event` with `kind='role_posted'` (title = role @ company,
   source = JD) + `event_entity` edges (company role=`employer`, interviewer(s) role=`interviewer`, topics
