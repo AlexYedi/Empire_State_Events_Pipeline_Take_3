@@ -20,7 +20,8 @@ Single-thread skill run. Execute `.claude/skills/trend-radar/SKILL.md` end-to-en
 4. **Step 3 — Score & rank**: `source_weight × recency_decay (7-day half-life) × normalized_velocity`, then `× cross_source_bonus`. (`alex:signal-scoring`.)
 5. **Step 4 — Present ranked digest. STOP for approval.** No Notion writes before Alex picks (all / numbers / none).
 6. **Step 5 — Write approved topics**: dedup via `notion-search` scoped to Topics (`collection://d61ce9df-94b3-4637-aa09-d77e09ab3a74`) + `notion-fetch` — NOT `notion-query-data-sources` (plan-gated); existing → append dated note to `Current Events` + set `Last Updated`; net-new → confirm, then create.
-7. **Step 6 — Close out** + offer to feed a top trend into the content pipeline.
+7. **Step 5.5 — Persist to the graph spine (REST)**: trend-radar is now a **market-intel Event producer**. For each approved topic, dual-write to the Supabase graph (`empire state ai` / `oicikjyzmxqfomrrqkvf`) via **REST, never the Supabase MCP**: upsert `topic` (read-before-write on `name`) → insert `event` (`kind='market'`, mandatory `source`+`url`+`metadata.sources` provenance, normalized `confidence`) → insert `event_entity` edge. Feeds the `/ops/market-intel` dashboard. See SKILL.md Step 5.5 + `.claude/references/market-intel-spine.md`.
+8. **Step 6 — Close out** + offer to feed a top trend into the content pipeline.
 
 ## Guardrails
 - Public sources only — no LinkedIn/X scraping.
