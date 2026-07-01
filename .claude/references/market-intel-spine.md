@@ -54,6 +54,15 @@ name (+ company) before insert (no hard unique — people share names). `event` 
 Each row's `notion_page_id` links to the human-readable Notion view. Notion remains the review surface
 (comment-based feedback loop); Postgres is the source of truth the agentic layer reads.
 
+## Producers & readers (as of 2026-07-01 — M2)
+- **First producer:** `trend-radar` (`/scan-trends` Step 5.5) emits `market`-kind topic Events via REST
+  (provenance `source`+`url`+`metadata.sources` mandatory; normalized `confidence`). Voice/role producers = fast-follow.
+- **First reader:** the Hub `/ops/market-intel` dashboard (empire-state-hub) reads this graph over REST with
+  a server-only client (`MARKET_INTEL_SUPABASE_URL` + `MARKET_INTEL_SUPABASE_KEY`). See M2 plan.
+- **One-time seed:** the Notion→graph entity backfill (`.claude/references/market-intel-backfill.md`).
+- **Producer health / freshness** (veracity trust strip) is derived from `max(event_date)` + count per
+  `source` prefix — no `producer_run` table in V1 (fast-follow only if "ran-but-empty" fidelity is needed).
+
 ## Reversal note
 Reintroducing Supabase reverses the earlier measurement-layer tombstone. Ratified by Alex 2026-06-28 and
 re-scoped in CLAUDE.md `<measurement_rigor_layer>`: the ban applies to the *measurement/eval* layer only;
