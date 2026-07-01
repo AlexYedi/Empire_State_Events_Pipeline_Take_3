@@ -1,0 +1,831 @@
+[Speaker 1]
+One of the co-founders of deepline. We have a awesome lineup of speakers today, so thank you to the speakers for, uh, taking the time out of their busy schedules, uh. So, why we like throwing a putting on these events is the market has really changed in the last nine months or so.
+
+Uh, how go to market teams work if you looked at how the average good market team Works a year ago. It is completely unrelated to how a lot of them are working. Uh, from a technical perspective, a lot of the fundamentals are very similar. Uh, our company deepline started within that time frame, and we have come see both sides, uh, and what we actually solve is the underlying data challenges in infrastructure for cooking.
+
+So I'll go through a quick example, but I know we want to get it to be more interesting speakers, so I'll keep it short, um. And then we're going to do lightning talk, so it's pretty quick. We'll save room for questions at the end. If you happy questions, we'll walk around to the mic, uh, afterwards, as well.
+
+But, uh, let's hop to it. So? Awesome! Uh, what I'm going to be speaking about really quickly is some of the patterns that we've seen work really well across lots of different businesses. From companies selling to SMD to extremely traditional Enterprise companies with super long sales Cycles. Specifically, this pattern of explore and exploit finding solutions that are super unique to your particular business that wouldn't make sense for anyone else.
+
+So, I like to call programmatic GTM. What D5 actually solves in this workflow is we provide one API, one SDK, one billing profile so you can try hundreds of different providers with just one set of credits, uh, and what that unlocks is. Agents can now programmatically test 100 different variations of what could be the solution to your problem?
+
+So, if you're trying to figure out the best data provider for a particular task, which is the number one question everybody will have a Smith, no matter what vertical or industry you're in. The right answer is going to be going to. Super specific to you, and I probably couldn't guess what that answer will be.
+
+I might be able to point you in a direction, but the only way to really figure it out is deterministically testing out a bunch of different options and saying, uh, here's a sample of good outcomes. Let's just try to recreate. We also have orchestration databases, workflows, the place, the D plan bills in this entire world is, uh, infrastructure for go to market.
+
+So if you're building custom Solutions, custom applications, uh, we have all the apis you can possibly need. It comes with a database, the workflow engine. You shouldn't really need that many other, uh, tools to solve your problem, uh? That's, that's deep life, and I'll show a quick example. Of how we've been solving problems, and I am stealing this metaphor from a talk that I saw in modal.
+
+From a much more interesting topic as well, called lab coding, which is DJing with code. Please go down the rabbit hole. It's very entertaining. But the fun fact I got from. That is, when you're a professional sculptor like a world renowned Michelangelo. Type person. Most of the time, you're actually building your own sculpting tools, so you're taking pieces of wire.
+
+You're trying to find the perfect Edge for your taste and what's specific to you. Of ad.
+
+Advances in Ai encoding agents. You can basically do whatever you want. You can build stuff that's super custom now. So, as recently as October 2025, uh, she had to manually go through this process, um, building a propensity model for one of our clients. It took four weeks. We essentially manually enriched all these accounts 50, 000 accounts.
+
+We found the patterns using, uh, ml, and then we manually mapped everything. It took about four weeks. Uh, today we were able to do in about 30 minutes, and so all we changed is we started with the end State. We gave cloud code or codex a bunch of examples of what good looks like closed.
+
+One accounts versus closed lost accounts, and that same four-week process is now a trivial 30 minutes. You can back test it, make sure it does the same thing. It also found data points and ideas that we couldn't have thought of ourselves, so we had predefined a bunch of questions.
+
+Hypotheses, and then when we did it, this other way of having the agent generate a bunch of hypotheses. We actually got better outcomes, uh, than the initial feature generation feature engineering process. And we have customers like owner.com, who have done similar things where they did a predictive model on a likelihood to enter a cold call and the the model that just keeps working is you define the outcome.
+
+What good looks like you let the systems actually programmatically find the patterns, and this is kind of the mental. Switch from a year ago to today. We were doing this in, like data science worlds, but sales hasn't really had the tools to be able to programmatically find patterns until now, and so that's.
+
+That's basically what deepline is. We hope you programmatically find patterns and then deploy them, uh, instantly, perfect. So, what does a demo look like here? So, I am going to. Copy.
+
+Run that we just did. Um, just to save time here, but we'll run it again, just to show you guys what is happening under the hood. And so, what I'm doing here is I'm using a deep line. Pre-Reesearch tool, and this is going to go check. Social channels like Reddit Twitter.
+
+It's gonna go try to find the domain expertise available around a particular topic that I might not have internally, and then deepline GTM is our skill to say use the Integrations, the apis, and the infrastructure that we've provided to solve this problem, so it's going to go find public and private data sets to help find work emails for restaurant owners.
+
+And then it's going to evaluate all the data sources and generate a report to tell me what the best waterfall is. And this is a question we get a lot like, okay. Should I use Apollo or should I use people data lab? Should I use this other provider, uh, the answer is, I don't know.
+
+And it probably is not worth my time to figure out, uh. But you can figure this out really easily yourself and how you do it. Is this evaluate step of? Here's what good looks like. Here's the emails that we know are right. Can you just get these for me?
+
+Can you go back? And pretend you don't have these emails and then generate them again. And, uh, so I have a sample CSV. I'm going to let that run. And it's going to take. I'm going to go on fast mode and do light. I try to see if it goes a little faster, but usually it takes between, like three to five minutes, to get to a result.
+
+So, I've already pre-run. What we did previously. You can see the exact same prompt, and I'm going to go down to the second HTML report.
+
+[Speaker 2]
+Cool, and so what was interesting about this? Is we go down to the bottom?
+
+First one.
+
+[Speaker 1]
+So, I've looked at 500 rows, and then it scraped all the websites for those accounts. It went and found any email visible, and then it looked for social signals, and we have a partner that helps us get data from Facebook Marketplace from Facebook pages, uh, we do not do any scraping directly.
+
+We work with a bunch of providers and give you the best option for whatever you're trying to do, and then it's trying to find is this exact one that you provided. So if it has a different first name at that email address or? Different concept. It tried all of the paid providers.
+
+It tried Hunter.io and tried public health records and tried openstreetmap yelled places. Uh, drop leads Hunter. It'll probably do if I'd let it go further, it'll just keep trying different things and what it found at the end, is these top ones these top four accounted for 60 of the the wins, and they were the cheapest they were the easiest, and they were the fastest so?
+
+That is to say, like, we just gave it a set. We said, I don't know anything about restaurant data. I just said, go find the best data sources. It tried 30 or 40 different options, uh, from social media. Tried the websites I tried paid providers, and then it comes up with a plan of what the best waterfall would be to get the highest coverage, and this took less than 30 minutes total, and then at the end, I'm going to say, uh, deploy as a workflow.
+
+So? Yeah, so the last thing is, uh? Create and publish this as a D plan. Play what that actually looks like is? D plan actually just turns everything into typescript, so any go to market process or workflows turned into a script, and this is easily code reviewed. You can dip it.
+
+You can see it in GitHub. The goal here is really just to show that. Any concept that you can manage and go to market can be turned into code, and once it's in code, this makes it really easy for coding engines to work with it. It's much more effective than like configuring it to it.
+
+And so I'll
+
+[Speaker 2]
+Wrap it up.
+
+[Speaker 1]
+Um. The point here is that we're just trying to make you guys do less manual work, uh, spend less time spot checking gut, checking what's actually happening? Uh, so the easiest way to do that is create code to do the tasks that you were doing, which used to be very expensive, and now it's very cheap, uh, thanks to the coding agents that we have, and then the only other thing I'm saying is use evals and back tests.
+
+Just show the model what good looks like, and then let it go. Find the best and give it as many options to get to that solution as possible as. And that'll save you a ton of time. We've now done this for over 500 customers and every single time we follow the exact same pattern, and it's find public data sources.
+
+Find private data sources, tap tests, and it works every single time, and I think. Honestly, like, surprised. He keeps working at this point, like how each these ideas are getting. There's always a public Source. There's always a private source, and then you combine those two in a unique way, and you're going to get a really, really good results.
+
+Um, I think I skipped over the numbers, but generally like this pattern that I just showed you on the restaurant side, uh, captured 61 more leads than the best pay provider that we found, uh, and that was a paid provider that specialized in restaurant data and that that's pretty surprising.
+
+Um, and the reason is, we did an extra set of mapping, uh, I did not get
+
+[Speaker 2]
+The
+
+[Speaker 1]
+Cutting agent did to social profiles, and that is something that provider wasn't doing. And again, I'm not going to know the Red. But we just tell it what to try. Give a bunch of options and then let it figure it out. Awesome! That, is it from me a d plan?
+
+So, uh, if you want to try out deepline, it takes less than two minutes to set up for a quad code CLI codex CLI. Yeah, about the command line interface. Everything integrated, uh, and we connect to all of your crms, outbound tools, anything essentially, so it replaces all the CLIS and mcps, and we're actively hiring.
+
+So if you have any engineering, uh candidates or forward deployed Engineers, uh, would love to connect with them as well.
+
+[Speaker 2]
+Happy! Two weeks and just a question or two, and then we will get to uh camp. Any questions here? Yeah, um. You guys like? Seek out like any numbers from GNC. Yeah, so we have a validation, uh, tool. We have a couple. And we'll just run it through all of those and use that for DNC.
+
+So, uh, the ones that we recommend are Trestle and ipqs. Yeah.
+
+Yeah, we
+
+[Speaker 1]
+Generally recommend best practices, so we'll give you a default of. This is probably what you should use, and then we're going to be tested and see whether it's a good fit for you. And then you can modify it and change that that script. So we give you a default script.
+
+You can change however you want. It's effectively like open source. You can fix. Anyone else can do one more? Yeah. This was the best go to market events up into all summer.
+
+[Speaker 2]
+Connecting with all these amazing places. You see, we've been doing a really great job. Yeah, I wasn't prepared for that one, and I thought. I think it's just a really exciting time to be building in GTM. Honestly, so?
+
+[Speaker 1]
+It's been very easy to find great folks who are excited about it as well. And, uh, really good customers. A lot of people who have been pushing us towards their their friends. And then, really time. Teams like ramp or willing to host, uh, it's been very easy to get people to show up.
+
+I think the hardest part or that the most valuable part is, uh, the more excited folks who are about the topics and people, uh, the easier it is to recruit folks to attend, so get really good speakers and then everything else kind of falls into place.
+
+[Speaker 2]
+All right. Hello, everyone. My name is Keon. I'm on the growth
+
+[Speaker 3]
+Platform team here. Ram, where we're tasked with effectively building all the tooling and data foundations for our go to market folks, whether those be sales marketing. And a bunch of other folks across the company. That overtime have come to leverage the tooling that our team builds. Um, let's go full screen here.
+
+Um, today, largely going to talk about, uh, the growth MTP that we've built for salespeople, which actually unintentionally in line with what Jay was saying our goal is to enable everyone to build the perfect tool or workflow that suits what they want to do. On go to market. Now, in addition to decentralized tooling, so just taking a quick step back at how our team has come to where it is today.
+
+Four or five years ago, we built what was called Alfon automation team or oats for short, which was an AISDR before the team was really in vote before the term was early in Vogue, and that consisted of automating the work of albon sdrs. Over time, we inadvertently built a database on ramp's entire time Tam as a result of building out that data set, so we kept enriching it with technographics, data firmware, Graphics data from dozens of different sources, and we quickly realized that this had a lot of value for our human-led sales.
+
+And so we built a CDP app, which is effectively an audience Builder where anyone can go in, pull an audience from that database, for whatever purpose it is that they have on on, go to market. That quickly showed us that, you know, we stand to gain a lot here, from investing more and more resources and building tooling for our sellers, which brought us to ramp Revenue.
+
+You may have seen some screenshots of it online, but effectively what it is is a One-Stop childhood. You can get a view of your book of business, whether you're pre-sales or post sales person. They all start happening with happening within that book of business meeting crap. So, what do you need to know for every meeting that you've got coming up today?
+
+Post call follow-ups. All these different processes are automated. But effectively. The idea is you log in here in the morning as the Str. You see, all the prospects that you should be focusing on explanation of why you should be focusing on every single one of those. That's what you've got here, a little yeah, copywriter, and on the right hand side.
+
+What you have is a chronological view of all the intense signals happening on your account. Um, so that's what you get when you click into those. But this is like this one size fit install solution, uh, which is great, and it is what we intend to be like. A state-of-the-art solution for all of our sales people, but it can only really contain what our singular team can built for the sales folks, and it doesn't take advantage of, you know, the with the horsepower of three 400 sales people who are in this building every day and who are in Cloud code or in codecs building tooling up their own.
+
+So, how do we enable all of them? That's where the mcc. Comes into play, so we built a growth mCP and the idea here is that we want to power everyone to build their own tooling, and then bring those learnings back into the centralized solution as well, so that we have.
+
+We can then disseminate the best of the best from what everyone in the field is actually building. So, where does the growth NCP spit? It sits between the clients and the GTM systems with that VR CRM or Outreach tool. Whatever it may be and what's really unique about it is what energy enables.
+
+Is it inherits the auth and controls front that we know our sales people should have and what you know provisionization they should have so that everyone can only do what they're allowed to do only do what they're allowed to view through their AI clients, uh, but do so in a way for, you know, they're unable to do what they could do in rap Revenue, but from.
+
+From the AI interface. So, these are some examples of the tools that the growth MCP contains related to intense signals. Getting meetings grieves getting an overview of the account that you're about to talk to, enrolling prospects into a sequence or writing, an email, whatever it may be. Um, but I'll walk through some specific examples, but the idea is that, you know, every single one of these has a descriptions are, you know, at this point 79 tools, we're adding more every single day based on what we're learning from the field and what they all need.
+
+Um, and what it creates is this really cool Loop, where we effectively have the supply wheel that's developed, or we build ramp revenue and then the growth. MCP has all the tools that ramp Revenue actually leverages through API. In this case, we enable everyone to access those via the FCP and reps build their own workflows that can be in the form of again AI.
+
+If you have AI client. It can also be in the form of web apps. We have an internal platform called rampify, where anyone can develop a web of their own, deploy it puree internal leave. And you know they can share that with their teammates. And then we looked at the data at that in those web apps and those clients and so forth.
+
+See, okay, what is the leading to outlier outcomes to very successful performance for them to go to market folks. Take the learnings of the best of the best and bring it back into ramp Revenue, and this Loop keeps repeating. Um, and decentralized application becomes better and better over time.
+
+So this has been like a really cool, and frankly, not something that I think we necessarily knew would happen in the beginning, um. But we really try to act well the entire company and then make it really exciting. Some common use cases. These are the similar things that you will see in the graph Revenue.
+
+Folks are self-serving them again. It could be in the client. It could be on the web worker, maybe. For example, someone just had a call with a with a customer called Acme or a prospect in this case. Asks, you know what? What was discussed on call after the CRM be updated?
+
+You know, regular manual pass that are thankful for 80.5 they should be doing? Immediately, the the agent knows what fields to update gets approval from the rep and moves on. Um, or for example, if I'm in Prospection mode, and I want to figure out who within my book of business, I should be reaching out to today.
+
+I will ask the agent exactly that, you know, who's exhibiting intense signals in my book. It will tell me who it will tell me why I can go, dig deeper, go back and forth here. And again, we can start to learn, and we store these. Uh, the intent underlying the questions that are being asked to the agent to figure out you know.
+
+What are the clusters of activities that are happening here? Full Prospect brief, and these I will tab. You are actually much shorter versions from what you would actually see when using dmtb for your purposes of this presentation, but Meeting brief as well, one or the other functionalities that you can get out of this.
+
+And again, it all applies to pre-sales all the way through Pro sales. When we started, we exclusively started with sdrs and 80s. As we saw a ton of Roi there, we expanded into post sales, and I would send out everything just as much value from enabling our customer success and account managers with similar tools.
+
+So again, two more examples here. And then I'll wrap up, but you can log create opportunities, do some web research, and then map it to our CRM to see. For example, who within a VC portfolio or the VC who you're about to meet is already on ramp and who isn't?
+
+So that you can try to get them to introduce you to their portfolio companies. Some key learnings here. Uh, the auth has been a big part of it, and like what this is really enabled us to do, is like, not let everyone across the company willy-nilly go into the CRM and just make updates across the board, but do so in a safe control manner.
+
+The tool descriptions have been a huge unlock to just make sure that you know the right tools are being accessed at the right time, and logging the agent's rationale. So, every time an agent is making a tool call to the FD, we,
+
+[Speaker 2]
+The
+
+[Speaker 3]
+Agent, also has to write a rationale for why that tool is being called, and then we cluster all that information. And that's part of that Loop. I was mentioning earlier where?
+
+[Speaker 2]
+We then figure out what our folks using it for take that learning and bring it to the centralized tooling.
+
+[Speaker 3]
+And the last point I'll make here is. You know, historically, in product management, user research is done by shadowing folks by asking them questions of what it is that they do day to day. This is really a much higher level fit LED version of that. Excuse me, um? It's a much higher Fidelity version of that because you're effectively just letting the user show you okay.
+
+What are gaps in your existing tooling that it's not doing for them, and they just end up doing it themselves, um. And they're really, you know, especially with sales people like sales people are the most rational users on Earth, because they're, you know, there's a direct coordination between the output of their work and their paycheck, and so they are very heavily heavily incentivized to use this tooling build what is going to be most useful for them, and they're really not going to waste timeline.
+
+You know, building things that just just look cool. But yeah, it's been a really fun ride, um. Continue to add tools by the day, continuing to improve ramp Revenue by the day. To the extent that you have ideas for, we should be building next or things that you think we benefit from.
+
+We're hiring, we're looking for customers like for partners at all times. Definitely feel free to reach out and I'll be sticking around in the in the reception afterwards as well. Thank you very much.
+
+[Speaker 2]
+What is it? I noticed that you're getting your friendship from God. What do you feel like you can not do yet that you do now. That makes sense. Like, what can you not do for your mCP yet, and
+
+[Speaker 3]
+That you're still relying on alcohol? Um, so going, for example, we use that to get the call transcripts, right? So all of the historical call transcripts are fetched via Vietnam, which we dumped into our snowflake Warehouse, and we can also access directly as well, so it's willing for them, like data, just for the transference.
+
+Yeah.
+
+[Speaker 4]
+The tools that you decided to build on your own, that now you're looking at procuring something external or vice versa. Yeah, that's a great question. Like
+
+[Speaker 3]
+We, we definitely never want to build things purely for the sake of building internally and for every build versus buy a decision. It's like. We will only build internally if it's going to give us some sort of competitive Advantage. Otherwise, there's no, you know, rational for using internal resources on that, um, are there tools that we, I think, because we've taken such a, uh, in-house approach to the majority of our tooling.
+
+I don't think there's anything that we necessarily procured, certainly, that today we're going. We're trying to bring in-house call your some examples. But a lot of our stack is ultimately in-house, and so we really from the beginning have been taking the approach. You're like, what can we do ourselves?
+
+Um. And on the flip side. But yeah, I mean, there are some 30-party softwares who. Publishing a name, but who we we will eventually aim to bring in house. On the flip side, I think we, um, they're none of the things that we have built in house. Do we think do I think we would bring third party tools in for?
+
+[Speaker 5]
+I am wondering how a two-sided question what percentage of your reps are actually diying, like, what? What's the amount of other actually like, truly building. Yeah, and then two with the role of the CRM and all this.
+
+[Speaker 3]
+Yeah, um. So the vast majority are. It's about the extent of the diying. So, like, if you consider just querying in class, for example, uh, every day, well, that's, you know, the vast majority or percentage are building web apps. That's a smaller number. But. Um, it's so it's. It's really like a spectrum more than like a discreet number that I could give you.
+
+The CRM still plays a very political. Um, it's very much a system of record, um, for a number of different things. And it's also serves as our integration layer into a bunch of third-party apps, like our routing application, gong, whatever it may be. Um, and connecting the data from those apps to the relevant accounts, opportunities, and so forth.
+
+Uh, two questions. Thank you for the great talk, uh, one is, what do you think about shared tool layer?
+
+[Speaker 6]
+Do you think about that? Like, cross-functionally as well. I imagine that there is data science and how to change building really good tools that are useful for go to markets. They have their own mCP, like, how do you think about this on a broader level in Tesla Market? Yeah, um, so I'm sorry about that.
+
+Like where all those sort of Atomic pool calls? How do you think about what was the person?
+
+[Speaker 3]
+What does trying to put it to deterministic workflow and turn to eyes, uh, rather than you know. Call that time.
+
+[Speaker 6]
+Yeah, so on
+
+[Speaker 3]
+The on the first piece in terms of the data scientific, we operate as a full-fledged pdp pod. So we've got product engineering data and design on our team, and, uh, so we have data scientists directly embedded into our team. Um, and it's, it's really all at one, um. Now, the data team builds workflows and so forth for it.
+
+A bunch of other things as well, which you know these
+
+[Speaker 2]
+Serve
+
+[Speaker 3]
+Different purposes, uh, but
+
+[Speaker 2]
+Yeah,
+
+[Speaker 3]
+I don't know if that answers. Yeah, part of the question, and can you repeat the second part, please?
+
+[Speaker 6]
+Second, one is, how do you think about what gets turned into deterministic workflow versus what goes in the mcps and just keep calling out. Yeah, it's really, um, it. Anything that we Implement into our centralized tooling, better access via apis, and say ramp Revenue. Yes, an mCP tool call, so it's fairly comprehensive in that regard.
+
+[Speaker 3]
+So, we're like to the extent that we can imagine someone may want to use it via the area. Yeah, we will make it available. As long as they have the right permissions to do so. Yep, in the back. How do you evaluate the system? Evaluate what sorry? Um, if I hear the system, I think that the answer to that is, like, very different for every single part within it, um.
+
+Like, whether it's like, for example, the quality of a copy that it's writing or the quality of the, let's say, that's prospection, data, or whatever it may be. So, we have different. I suppose parameters for every single one of those, um? Is there a specific part of the system if you were wondering about?
+
+[Speaker 2]
+Yeah, this last question, uh, well, how do you got? How did you guys think about going about evaluating, um, the outputs for subjective things like copy, as opposed to something like righty milk wrong email. Yeah,
+
+[Speaker 3]
+Yeah, great question. Um, so we, for example, we have an AI copywriter, which we've, um, probably across our SQR team. And in the beginning, we had hold out groups when we initially rolled in our beta to see how do sdrs perform if they do versus don't have access to the tool, but also, over time, we, you know, there are a lot of folks who aren't natural holdouts.
+
+I suppose you could call them who don't use the the copywriter for whatever reason, and we are able to a B test in that manner. Now, there's obviously some self selection there. So, what we will do is like, filter it down to an audience where it's like, like, for, like, audience of contacts, or being reached out to so you have the copywriter does versus a Cuban written copy.
+
+I'm not necessarily human right in, but maybe they go into an airplane and do something of their own. As
+
+[Speaker 2]
+A great idea
+
+[Speaker 3]
+Sure more than
+
+[Speaker 4]
+So, uh, along the party I came by owner, uh, we follow like the centralized model, largely in part because we want to keep reps more focused on like the calling, um.
+
+[Speaker 7]
+And we kind of like Cowboys, like vodka. I was wondering what drove the decision to move to the decentralized wall vehicle? Yes, I will, um, say that we, we very much, are still doing both, like rare Revenue, has the kind of usage.
+
+[Speaker 3]
+I think every SDR by 99 of them log into Revenue every week is not every day. It's, it's got a very high use it, and this is more so for like building more bespoke workflows. Um.
+
+[Speaker 8]
+What drove the desire to build out the MCB one is? Um, folks were starting to use claw on their own, and we're running into a roadblocks. I'm, like, oh, I want to do take this action at that action. I can't, and we don't want to block the creativity block, their output, and so forth.
+
+And it goes back to the point earlier, like, they're rational. So, if, like, they're doing this day in, day out, it's ultimately for their paycheck, but also for the best of the company, because we also want them to maximize revenue, and so it makes sense for us too. Cool!
+
+Thank you everyone!
+
+[Speaker 1]
+Thank you.
+
+Hello! I'm Chris, I'm here from modal. Um, here, let me. Enhance. Beautiful!
+
+[Speaker 7]
+Uh, I knew from Odell I sawg is called data is all you need clean data, specifically, um. I don't know at all in January as the first go to market engineer prior to that. I ran a data science team at a company called pave, specifically working on our compensation benchmarking data product.
+
+Um, so I basically spent my entire career thinking about the inequality, which makes me very fun at dinner parties. Um, but you will get to benefit from. My knowledge of everything that I've learned from sharing a spreadsheets for far too long. Um, what is modal? Uh, modal helps AI teams build and scale really quickly.
+
+Uh, we're an AI infrastructure platform, uh, that handles workloads from LLM imprints. Uh, to a genetic sandboxes and reinforcement learning for some of the. Best companies in the world, including ramp. And we're growing really quickly, um, our Revenue. As well as a power law. So, the
+
+[Speaker 2]
+Top 10 customers?
+
+[Speaker 7]
+Uh, that we have represent a disproportionate amount of our Revenue. And the goal, for we're going to Market engineering is don't get blindsided. Make sure that we have all the right information all the right data that we need to arm our reps. Uh, the account teams to, uh,
+
+[Speaker 2]
+Know what's going on with those accounts at all times. And then the middle.
+
+[Speaker 7]
+The next 100 to 2000 make up probably the next third of our Revenue. Uh, we really want to nail the handoff. We have a great plg and self-serve motion, so we want to make sure that we're identifying companies once they hit up point of usage or some sort of signal that indicate that we should give them to a rep or an account team.
+
+And we want to build system to do that very reliably. And then, for the next thousand plus, uh, we want to automate this as much as possible. So, go to market engineering at modal, uh, is responsible for the data workflows that achieve these three goals. And in order to do that.
+
+Uh, we kind of established two core philosophies, um, both of which are meant to increase the speed that we're able to iterate. Knowing that this Market is very Dynamic, and our team and companies going very quickly. So, the first is centralize the data and decentralize the agents. We want to consolidate all of our data and business logic abstractions like segmentation territories and.
+
+Account, uh scoring and warming signals and things like that. We want to centralize all of that into our data warehouse and then give the Reps, uh, and everyone else at the company access to it via their agents, uh, and mtps. And then. Secondly, we want to build a state machine or a router.
+
+Um, I say this, because oftentimes you think about these go to market workflows. You're just like, oh, like, they're gonna go to our website and then put in their email, and then we're going to activate this agent that agent. Then it's going to write copy, and then you create this group Goldberg machine that ends up being very difficult to maintain.
+
+So, in order to serve my own sanity, we process everything in batch in a single DBT project. Which is just a lot easier to to build, debug, and understand what's going on. Um, so this is what this looks like. In practice, we visited one data pipeline to roll them all.
+
+We ingest data from a ton of different sources. Um, our DVC project, uh, handles all of our enrichment orchestration, uh Entity, resolution and qualification. And then it decides what gets pushed towards CRM. To be accessed by reps. The goal is that everything in our CRM is valuable information. It's usable and it's accurate.
+
+And this inspires trust. The one thing that kills data teams kills go to market engineering teams is if you're racing, wasting the rest time or losing money on the table because the data just isn't accurate.
+
+[Speaker 2]
+Um,
+
+[Speaker 7]
+Garbage and garbage out is what people say around machine learning system. Data Systems is really the same here, ultimately. At the very end. You want, uh, to enable a rep or an agent to take some sort of action. And that is dependent on having good data going in. Uh, so I think every company has a go to market data pipeline that looks basically like this.
+
+Uh, you start off with defining your cam. Um, bringing in all the contacts and companies. Uh, yeah, different, and Richmond content providers. Uh, you reach them with either bespoke signals or some third-party data. You create your own qualification, segmentation, logic, and then you find a bunch of signals from your internal data and maybe even external data.
+
+2 all that results in some campaign or some action that somebody needs to take. So, it's really worth making sure that all this is working. Because if you don't, you're gonna really annoy a lot of your customers and reps. So, I'm going to go through an example of. How I think about defining Pam and the framework that I've developed for evaluating, uh, different vendors and data quality?
+
+Across our entire pipeline.
+
+So, ultimately, the goal with TM definition is you want to populate your CRM with relevant companies and contacts. There are so many different sources here, like Jai mentioned Bay handle 97 of them, and all of those are an opportunity to find new customers. Uh, but how do you know which verses are good?
+
+How do you know which sources are best you're about to spend? Tens to hundreds of thousands of dollars on. This is probably worth taking five minutes to see which one's actually the best. Uh, so I created this, uh, quad prompt. Again, like I mentioned. Uh, all you have to do is tell it to evaluate and give it a framework to evaluate and give it the right data.
+
+And oftentimes, it can tell you. Something definitive very quickly. So? A data scientist guide to data quality. See and remember this, uh, from your like, high school, or call our stats class. Um, I definitely find myself looking this out every single times. I get a Precision recall are? But applying this to photomarket
+
+[Speaker 1]
+Data percent is
+
+[Speaker 7]
+Of all the companies and contacts identified as your ICP, including your Tam.
+
+[Speaker 2]
+What percentage of them are actually in your ICP group?
+
+[Speaker 7]
+Recall.
+
+[Speaker 2]
+Uh, if
+
+[Speaker 7]
+You're looking at all the companies and contacts that are actually in your ICP, maybe you look at it from.
+
+[Speaker 1]
+Uh, who are your actual customers or your best customers? What percentage of those did this external Source identify its ICP? Uh, type 1 error is, uh, companies that work incorrectly identified as ICP. This results in reps wasting their time you give them a bunch of companies. Maybe you include them in their territories, and now they're pissed at you because they won't make quote because half the chairs towards garbage.
+
+Or type 2 error companies that are ICP that were not identified. Well, that's just money left on the table. You're never going to reach out to them because it's not going to make it to the Preps.
+
+[Speaker 7]
+Uh, both of these huge problems. So? Uh, you can use an agent to basically. Pull data from as many sources as you have access to. Uh, tell it to Define Precision as using the LLM as a judge to valid example of results. So, like, hey, here's my Persona, like, can you?
+
+Do a bunch of deep research on these people, and and to make sure that these are right. Uh, recall. What percentage of your existing customers in contacts? Did the provider find? Um, is ever going to find all of them, but relatively, uh, you can compare sources against each other and then coverage.
+
+What percentage of entities. Could you reach at all what percentage of them, uh, could any of these sources find? Other metrics. Uh, because oftentimes these sources. Uh, charge on a cost per return. Row or record? Doing a cost for strong fit is the more accurate version of, uh, how much you're actually paying for these contacts or companies.
+
+Uh, and then combined coverage from local providers. If you were to combine all of them and see where they're giving you redundant information or see where they're actually adding. Contacts individually can be really helpful in creating a portfolio of data sources. Um, you can take this framework and apply it to basically everything in your data pipeline.
+
+This is exactly what we've done at modal, uh, because each one of these extractions or each one of these Concepts? Uh, has massive leverage if you get segmentation, right? If you get. Your enrichments, right? Then, that triggers actions, and we've never had more leverage than now. When agents can take action on literally every single signal that you find, so it's really important to make sure those are right.
+
+Um, so lastly, I can show you. Kind of what this looks like in practice. So this is that person Discovery evaluation? I got a chance to send it back to deepline because they actually spared very well. We also evaluated sambal and parallel. Uh, and this was produced in roughly like 30 minutes.
+
+Um, and informed, uh, like multi-tens of thousands of dollars buying a decision. Um, so it was worth validating because the results weren't exactly, uh, what I would have expected? Uh, and then you can also have it create an app for you to review it manually. Um,
+
+[Speaker 2]
+I use believer.
+
+[Speaker 7]
+Finding a random sample of 100 rows and always, like, manually verifying it. Uh, because you don't want to trust that alarm for literally and everything.
+
+[Speaker 2]
+The other thing I did
+
+[Speaker 7]
+Before is, uh. Is enrichment providers, like specifically phonographic enrichments and fundraising data. Um, so we compared, uh, clay EXA, parallel. Um, and I had to manually kind of. Created this, like? This foundational brown truth set, and then we evaluated the performance and accuracy across all these different data types, as we will tell the agent, like which data types are most important to us and what we would pay a premium for?
+
+And that led to our body decision for parallels. What we use for this? Um, so there's no limit to things that you can apply us to. I think a year ago, it just would have been. Way too much time and effort. But now, when the systems that you build the data systems, you go to market.
+
+Inform every action that your agents take. There's never been more leverage in getting this right, and teachers have to do it.
+
+Lastly, uh, I mentioned that we are hiring. On the go to market engineering, team sales, engineering, and basically everything.
+
+[Speaker 1]
+Give about five minutes.
+
+Let me take a couple bucks.
+
+[Speaker 3]
+Uh, so the question is?
+
+[Speaker 7]
+Do I have a framework for when we should use an agent or when we should use human judgment? It's a great question, I think, uh. I mean, first off anything, where, uh, the action is very hard to take back. Um, so any sort of Outreach to customers? Uh, any sort of like account assignment.
+
+Building territories. I would never let an agent do that in his entirety unless I've proven that it's very consistent and hitting the kind like. Quality metrics that I would want. Um, on the flip side, anything that? I know that the information is out there on the internet somewhere, and it can be accessed programmatically.
+
+I will always basically use an Asian for for enrichment or things like that. Um, and honestly, the agents are getting better and better, and I find myself constantly surprised by, uh, the decisions they'll make that are sometimes out of my own.
+
+Specifically for, say, Prospect data.
+
+[Speaker 9]
+Uh, there's a terrible amount of redundancy and consistent misses as well. And I noticed in your framework, it's all about validation verification. How do you weight the ability to find data points that you might already? Have you know, even if it's perhaps a less verified data set? Um, so the question was, how do you?
+
+[Speaker 7]
+How do you address the redundancy of prospect data? I guess your own database, so it'll oftentimes give you a lot of things you already have. Or redundancy against your other providers. Um. Specifically. Might have it here. Uh, specifically, I think about it as like, costs per strong fit. Um, and basically, that treats all the things that.
+
+You already have as? As like some cost, and you apply that towards, like the weighted costs for a new record. Um, and I think rather that way.
+
+Give one more question.
+
+[Speaker 3]
+Awesome! Well, if you look at anything, I'll be around after this, but thanks so much for coming!
+
+[Speaker 2]
+And uh, just on that last question. A lot of providers are starting to let you do exclusions.
+
+[Speaker 1]
+Um, which they didn't mostly didn't support like a year ago, and that's been saving a lot of customers have broken podcast a lot of spend.
+
+[Speaker 2]
+Everyone. My
+
+[Speaker 9]
+Name is Julia. I am the head of godmark Innovation at notion. Um, my team encapsulates both our GTM architecture and our GTM AI roadmap, so it made a lot of sense to bring everyone together and bring it all Under One Hood. Um, I'm going to talk to you today about a problem that probably most of your fixing right now.
+
+It's actually like, really similar. It's really relevating to hear, like everyone else, working on the same exact thing over and over in a different. So,
+
+[Speaker 8]
+Yeah, I'm going to
+
+[Speaker 9]
+Talk to you about the problem of context, which, unsurprisingly, is one of the most important parts of building repeatable AI workflows. Um, so how do you build your context layer and how do you make that work for all good markets? So, rather than shipping your org chart, having every different Department creating their own little Point Solutions.
+
+How do you bring this all together and bring it into a shared context layer that people can innovate and create flexible workflows on top of, and so this is how we as notion approach this. Um, so the GTM stack is very complicated. We all know this G10's been strung together over the years out of tons of different vendors.
+
+We have a really complex vendor. Stack your CRM, your Outreach, your renewals, platform your call, transcript platform, your marketing campaign platform. Everyone has a little bit of data about the customer locked away in these various different places. And reps waste a ton of time. Hopping around to all these different tools, sourcing the data just generally trying to figure out what's going on from a day-to-day basis, our reps historically, and spend like hours a day, just finding the right answer the right context about their customer?
+
+Um, so then you scale letter cost sales. Every rep, especially, we find our like power user Builder reps have their own processes and their own vision. And their own view of the data, which can sometimes get a little bit difficult. So, the constraint isn't really the creativity of our reps or the ideas that they have about their workflows.
+
+It's more about how we bring them together again on that shared context and make sure that they and their agents are working off of that. Um, so at notion everybody has access to custom agents. They're embedded directly into our platform, and reps have been doing really amazing things with that, and creating all these bespoke workflows.
+
+But they get tripped up when they can't find the data point that they're looking for or they're not working off of the most accurate or the most recent or complete data. Um, so what my team does is we're trying to get all the systems out of the reps ways, so they don't have to think about it, present the architecture and the shared context that creates the foundation for workflows.
+
+So, yeah, yeah, zoom out across the entire company. This goes outside of gtm as well. We have folks in product that also benefit from this work. So, like, great questions that we're answering every day product doesn't know that customer conversation is showing a pain point that they should address the perfect candidate for an on-site marketing event.
+
+Is a salesperson's Prospect or marketing doesn't know that? Um, there's like a really good outbound angle that an XDR is using, and then we could use that for messaging. And then support doesn't know that they're working on a ticket for a customer with an active deal cycle. So, all this stuff happens all the time, and how do we fixed that?
+
+These are all shared politics problems. Data is everywhere across the stack in people's heads in docks, and they check files course field
+
+[Speaker 1]
+Everywhere,
+
+[Speaker 9]
+Uh. So, how do we pull this together? So, what we did at notion, unsurprisingly, is we used lotion? This is a picture of the motion developer platform. Which was recently launched as a companion to our custom agents. So unsurprisingly, we used this to bring together our structured data and our unstructured data account plan, seller nodes, call transcripts, product usage metrics, and qas all together in one place.
+
+The fun thing about this was actually as the developer platform was being built. The GTM use case was one of the main test cases for the developer platform, so they kind of grew up alongside each other. Um, I got to work with one of the lead PMS, who was working on the developer platform, and he was actively involved with us building these GTM customer hubs and all of the like issues and questions and feedback that came in ended up making its way into the developer platform.
+
+So that was super cool. Um, so the most important feature for us across the developer platform here was workers, which you see over there. Workers are basically a Sandbox runtime inside of notion that allows you to write and execute customer code. That's, that's it. It allows you to do database syncs.
+
+It allows you to integrate notion with whatever you want, create custom agent cool, big web book Traders, and for us to create the data protection, uh, this database syncing feature was the most important part, so workers allowed us to. Integrate notion again, but any data source and bring that all together in one place.
+
+So, yeah, we focus on bringing together all of our structured and unstructured data into one layer, and we call it the customer hubs. This is a screenshot that the customer has. We started with three major sinks, so we synced in gone called transcripts, Salesforce objects, and zendesk support tickets.
+
+You can see all the various different things that we're sinking in up on this top layer right here. This is basically a system of interrelated databases that are all keyed off of the the customer ID. Um, so again, we're layering this alongside Stellar notes, account plans, proposals, product usage data, things that you want to know about the customer, and the really cool thing is, um, this is both structured and unstructured data.
+
+So, if I am the seller and I login to customer helps. I can actually like write notes Here. Add things, add context, and then myself and my agents can work off of that context as it builds and grows. Um, so again, Notions based off a markdown. It is very friendly for humans and Asians, and we think that this visual layer here that allows people to eat in a friendly way and also agents to ingest all this context is a really good way to go about it.
+
+Um, so, yeah, this is our front page of our customer hubs, so you'll see the summary down here. I blacked out the important details, but the summary was created by an agent, but again, the great thing about this front page is the human can add context, too. And also all of the different Associated records are synced in on a regular basis, and the rep doesn't even have to think about whether the data is up to date.
+
+Um, here's some more of the customer hubs. So, again, human and agent collaboration this portion right here was created by a company overview agent. This part was written by a salesperson. They're both collaborating on the same thing. Um, here's a SWOT analysis again. Sorry, WC details. I'm not there, but again created by our SWOT analysis helper for using deal reviews and pipeline reviews and things like that.
+
+Um, so one additional context gets added. The agents continually updating. You can also trigger the agents and actions in various ways. So, for example, new record new call ending into the database. You could kick off an agent to draft and post call follow-up, for example. And again. I'm formerly in data science, and I just like geek out about this a lot, but it's really cool to me.
+
+That notion works off of this system of like databases full of documents. Each one of these records is both a document and a database. At the same time, you can query these with SQL, and then you can have like a ton of unstructured context like this call transcript attached to it at the same time, so you can like search and fetch these documents while also getting the benefit of working, you know, with more traditional databases?
+
+So cool! The central team, uh, the team that I work with kind of creates the foundation here, and also a set of more universally useful agents, and then AES can create their own custom agents to augment their workflows again, very similar to what you've heard before here. We really want to create that shared foundation and kind of guys with five chips, but you're never going to anticipate every very unique sales, you know, methane, her motion that an individual person can have and works really well.
+
+And so, you want to give that flexibility to them.
+
+[Speaker 2]
+So,
+
+[Speaker 9]
+A couple of examples of this one of our AES has imported a bunch of outbounding best practices. He really likes this book called fanatical prospecting methodology. If any of you've heard of that, um, and what he does is he Imports this context, and then he has his agent run on the customer hubs as well as that to draft his Outreach messages.
+
+Um, another person has set up a worker to sink in, like payout, transformation, news, or thing. New podcasts that have come out and they can take that data and also drop messaging that might be relevant to their customers or even pinpoint customers. That would be good to reach out to based on this information.
+
+And each of these agents. Again, inside of notion Works basically from a skill file that can be continuously updated either by the agent itself or by people on my team or the AES. The really nice thing about this is because it's markdown files. You can really just click on it and like, write something.
+
+Um, no one has to like jump into GitHub or update anything like that, so it's really great for our non-technical folks to be able to work in this way.
+
+It's a great question anticipating questions. I'm going to get, um. Why this versus an L1 plus an SCP? The answer can also be both, you know, we're not, uh, being so prescriptive, that we don't want people to innovate on top of this. But a couple other reasons for us at least.
+
+Being more opinionated about the data Foundation that allows us to save time and also save money. The sinks are done first, so rather than the data being fetched at the time of the inference. The data is just there and then. The agent Works on top of it, so we're kind of like converting gpus to CPUs here.
+
+Just the way they like to talk about this, rather than having to run an FCP, look at the skill file, burn some tokens doing that, the data is just there, and then the agent can pull it. The event operates on this unified context again with the workers. The workers are great again because they're just sandbox code.
+
+They also don't require gpus to run. They're basically just like API and code running in the background. And if you're thinking the same data the same way, every time you don't actually need an agent for that. So, we've used workers for that reason. And again, flexibility is the name of the game.
+
+So when your context is already there, it can be used by your agents, wherever they are in notion outside of notion, and it can be extended with additional skills tools MCP. Anything else? Yeah, so another couple of reasons for us. We really like that the data's persisted, and it's also cited.
+
+So I will Arrow pointing to the citations here. Because the data exists in motion when the agent runs, it's asked to cite everything that it puts into the summary, so you can actually just click on that, and it'll take you to the record that it's using inside notion again.
+
+Trust is very important for us and preventing hallucinations, so this really helps our GTM team understand where synthetics is coming from. Another fun feature here in terms of kind of closing the loop. Folks can submit tickets if they want additional features on the customer hubs or if they want to report an issue.
+
+And we have another agent that runs on that, and they can then create tickets for us to update customer as well.
+
+Um, and then finally collaboration like agents and people can update on new info. Inherently, multiplayer artifacts are created and stored in the same place and can be continually edited and changes can be tracked as well. For product logs, for example. Um, and also really great for non-technical users. Like you mentioned, who wouldn't know how to get into a data warehouse or jump into GitHub?
+
+And it is also push and pull so your agents can slack you. I have a channel where all my agents like me. For example, you can set up triggers and alerts sorry money, like the whole team working for you. And then finally here, um, just another example of humans and agents working together.
+
+So this is a sales docs. This is where we're kind of gathering the context that perhaps only a rep has, so it's a really important source of data. For us, this is the seller's point of view or context that they have learned from maybe going on on-site event having a texting conversation, creating their own proposals, and this is computed as a database.
+
+That's like all the other data, uh, some of the agents can adjust that as well. Cool. So again.
+
+[Speaker 10]
+Unstructured and structured data together, creating one context layer where humans and agents can work together. Um, this work is constantly evolving for us as we expand from this shared context idea to more shared action as we go forward. But we very much believe that good context is the Bella Knight before after it fast with efficient agents.
+
+[Speaker 3]
+For women.
+
+[Speaker 2]
+That's a great
+
+[Speaker 9]
+Question! Yeah, so for agents, we find it is really important to not let them run about that, but everything. So, each of our agents has different permissions and different access. And because they're inside of notion, they inherit a lot of the permissions of the way. The notion permission system works, so if you can't see a page the agent, you can clearly think of it as another collaborator in notion.
+
+So it's like a person with seat, so the permissions work basically the same way for both people and the agents.
+
+Is there no GitHub whatsoever? Everything's in notion. Uh, well, I mean, if you asked other teens, I'm not sure. For myself. I mean, we obviously we use GitHub to do like code reviews and things like that, uh. That being said, one really amazing use case that we found for noseman.
+
+Is that, um, we love to create something that I call the self-healing knowledge base, where, for example, you know, say our product team is working, or our engineering team is working in GitHub. But our Ops team and our GTM team needs to know something about what they're doing in there.
+
+So, a great example of this is actually our signals repository, where we're adding new signals over time. Both first party signals, and then then. Think about Trend signals from third-party providers. Every time a new signal is added. A rep or GTM folks have no way of knowing about that, but we've actually set up a worker and an agent that reviews GitHub figures out if there's any new signals and then writes it to our Wiki about the signals and so a new record is added to the database.
+
+Every time a signal is added, it's documented, the code is added, and then kind of described and like plain text, and it's a really great way for kind of our technical teams and our non-technical teams to work together. Can you do one more?
+
+[Speaker 2]
+That's a great
+
+[Speaker 9]
+Question. Um, I think it depends on how you prompt the custom agent. So, again, the pro, the custom agents kind of work as they have a set of instructions that are like markdown files, and you can like tag certain things for it to look at, and you're able to reference either notion docs, or like people or different elements inside of notion.
+
+So, it really depends on how you're prompting the agent, and each agent has its own set of instructions.
+
+Next up, we have Brian to promote a.
+
+[Speaker 1]
+Everybody, how's it going?
+
+[Speaker 7]
+I'm account director at open AI, let's. Early stage bootstrap company.
+
+[Speaker 2]
+Um, so, yeah, I work primarily with financial
+
+[Speaker 9]
+Services and Professional Services organizations of AI, mostly large Enterprise large Enterprise organizations. I kind of Moonlight it as like a GTM engineer, um, so really closely with our GTA Innovation team, and then also build out different plugins that are either made available internally or externally. So kind of like a liaison between our product team GTM Innovation team for all things sales, but then also do some selling.
+
+[Speaker 2]
+All right, so.
+
+[Speaker 9]
+I'm going to talk about some of the use cases that I found to be incredibly valuable, and some of the work that I've been doing with rgtm Innovation team just to kind of proliferate. Some of the use cases that we found to be most valuable. So, I'm just going to give you a quick kind of like before and after before I jump into the demo, but This is this is me before.
+
+Um, is that? For those of you who have never sold before, this is basically what the role looks like in its totality. There's a little bit more to it than this, but you have a customer interaction, and then you have to write a bunch of notes. So, maybe you have some follow-up notes that are kind of like mostly gobbledygook from the customer interaction that you had?
+
+And then, maybe you have some sort of follow-up task or follow-up email that you need to send the customer. And then, maybe you need to do some routing internally, so maybe you're routing whatever context came out of that discussion or came out of that customer interaction via slack to your manager or to the billing team or to your deal desk team, Etc, so.
+
+This is.
+
+[Speaker 2]
+There's
+
+[Speaker 9]
+All kind of decent things generally right. Like, they're not like. Writing notes, writing the eval, updating a Salesforce object or field. It's not like the most complicated thing in the world, but These things tend to compound, and when you're doing it on one account, it's fine when you're doing it on five accounts and then 20 accounts and then 50 accounts.
+
+In some cases, it becomes very unwieldy and very difficult to manage, right? So you have a lot of account directors or sellers will say something to their manager. Like, oh yeah, I meant to update this, or you have a lot of just really poor Salesforce hygiene, right where you know?
+
+Hypothetically, if you're a company who's going public, it's not free to have like a terrible Salesforce hygiene, right? Um, so? Getting these things in order. Like, yeah, it seems like small again, like on the micro level, but at the macro level becomes really important for essentially just the way the entire business operates.
+
+Right? So? So, one day. I Brute Forest with codex the absolute s***, uh, out of Salesforce and kind of got like a claim to fame internally as like the person who. Basically does all things on Salesforce via via codecs, so I Brute Force, uh, Salesforce, with the Salesforce CLI, uh, via codecs.
+
+Uh, and now I've gone. From what I should have previously, where again we're doing all the manual steps to now? Just a few kind of reviews and approvals on a daily basis. So, I have two main use cases that I typically use codex for as a seller, so one.
+
+Is a morning triage. So, essentially, every morning I just review these P0, P1, P2 emails and then approved. Whether now the draft goes out, right? It's connected to all of our internal context, so it's connected to all of our documentation. Uh, it's connected to Salesforce, so it has all of the account context.
+
+Uh, it's connected to slack, so it has all the contacts that I may have shared with other. Uh, colleagues, or with my manager or whoever else so. Use case number one. Use case number two, um, is just general hygiene, which I'll kind of walk through in a moment so.
+
+Let's do a demo. I just really love this horse. I used this. All right. So, we're gonna we're gonna have to play a little bit of pretend here because I don't want to get fired. So, I made this fake. Transcript. From a call with McCombs Consulting. Which we're going to drop.
+
+And yeah, these don't come out being all right.
+
+[Speaker 2]
+There we go.
+
+[Speaker 9]
+All right, so we're going to let that cut for a second, um, while it's cooking, um, one of the main things that I want you to get out of this entire lightning talk is just the idea that we're trying to move away from multi-step right. So, like this idea of, like, going back and forth with Chachubik's here, going back with going back and forth from codex, like, that's, that's dying, um, and should be dead like in the very near future.
+
+What we want to move towards instead is the past, uh, or a long Horizon thinking, where, again? These tasks are just getting completed across a number of different surfaces across a number of different tools across a number of different data sources, so your post viable data sources, and then you're just coming back to something that again, you could either just do some additional review or minor edits to, and then just approve, right.
+
+So, instead of this world where, historically, again, I would go back and forth between all of these different systems.
+
+I now have this skill, so this transcript account close that skill. It's going to take somewhere between two and five minutes and go through and look across all the services again, right? So, it's going to go. It's going to look through slack. It's going to look through Salesforce, but it's not just going to come back unless you can find any reason to come back.
+
+What happened? It's actually going to execute on for a different task, right? So, we're going to do the social version of this.
+
+[Speaker 2]
+And so,
+
+[Speaker 9]
+You see, we have a number of different things that. Codex has gone ahead and done on my behalf based off of this skill that we created, called the transcript, the account close out.
+
+[Speaker 2]
+But
+
+[Speaker 9]
+Basically it's looked at that Source, so it's looked at the call transcript. It's gone in just based off that call transcript, identify which account. It should be. Operating within or editing. It's identified the opportunity in that account. And then it's created a number of different follow-up tasks. Based off that transcript as well.
+
+Not something that Don can do, but again, just being able to do this on top of everything else that it's doing really impressive. And then, it's also drafted to Gmail drafts for me that I could just go and approve. And then I'll show you one thing that I thought was really cool because I didn't ask it to do this.
+
+It just kind of did it? Which isn't. The best thing to say if there's anybody security minded in the house, but?
+
+But it created a proposal for me that I could just share with the customer. And not only did it create this proposal, but it's like spot on in terms of like the data that's in Salesforce, right? So, it's creating the context aware proposal based off of the data that's in Salesforce so I can just share with the customer that again.
+
+It's already a part of the draft that it created for me as well, so it's already embedding value again. I'd rather just prove this, send it right out work, make some small edits, and.
+
+And then it's also. I've created a number of slack messages, so these are these are. Usually illustrative, but I'm just going to pull this up really quickly, and I'll show you what it looks like it's a bunch of slap messages. To me, like, these could have gone to someone in billing.
+
+These could have gone to my manager. These could have gone to a deal desk, whoever else but? Again, these are actual tasks that it's executing on on my behalf, and so, where this starts to get really powerful is when you have this in kind of like this. Always on mode, right where
+
+[Speaker 2]
+It's? Good morning, or maybe every couple hours or whatever Cadence makes the most sense when it's doing this on this kind of. In this kind of always on fashion?
+
+[Speaker 9]
+It becomes a proactive partner, right? So again, I talked earlier about how the idea of kind of, like, multi-term. In the very near term. This is kind of the future where we see work going right. Like, we see this future where? Sellers and also pretty much most good Market functions, especially customer facing functions, will be mainly focused on judgment, building relationships, being in front of people and less so on data processing and all the other kind of my new show that come to the job.
+
+And so the last thing I wanted to show you was essentially how I'm working today. So just give me one moment.
+
+And I can buy it right, perfect, and to do so. Gonna need a little bit of crowd participation, so we're all going to take a selfie real quick.
+
+[Speaker 7]
+Well, I so glow. Right there? Thank you! Whoever is doing that airplane in the back?
+
+[Speaker 2]
+And so, for the most part today.
+
+[Speaker 9]
+I'm mostly. Interacting with codex via my phone, so I'm doing everything overly if I'm at home. I'm pretty much either on a couch or maybe on the park bench, or maybe I'm in bed, hopefully? Hopefully no one from opening eyes here, but um, but yeah, like, I, I'm pretty mobile, and then also like.
+
+As a seller, like you're, you're in a lot of Ubers. You're you're in a lot of. Uh, power lines in a lot of airlines. You got what I'm saying? Um, I'm I'm moving around a lot, right? So being mobile is probably important to me, so?
+
+So, we're going to do a quick little test.
+
+[Speaker 2]
+That was like the very like Dad selfie, not my best work. All right. Um, please thank.
+
+[Speaker 9]
+Jai and Seth for having me today and make sure that you attach this photo as a memento. And yeah, create it as a draft that you could put in my inbox.
+
+All right.
+
+[Speaker 2]
+And
+
+[Speaker 9]
+So we're going to let that go for all of. I don't know, that should take more than 30 seconds. Wow, that is a terrible photo.
+
+[Speaker 2]
+And then I'm just going to plug this back in.
+
+Yeah, I'm pretty sure. Made no mistakes.
+
+All right, it says it's done. Let's see how it's. All right. There we go.
+
+[Speaker 9]
+So, just like that, that could have been again, an Uber. I could have been on the park bench, but I now have local access to my computer via my phone and access to whatever my computer has access to, right. Like, just think about what that unlocks and how that's going to change the way that people work.
+
+So, that's all I wanted to show you today. But, yeah.
+
+[Speaker 2]
+Who any questions?
+
+Know. Yeah, so I generally like my general version. All things codex. Like, I always want to have some level of human in the loop.
+
+[Speaker 9]
+Aside from maybe, like the lowest risk, things like updating, like specific fields within Salesforce, where it's like? Like, reversible. Like, it's, I don't know whether or not it's wrong. I generally. You like to add, like, a little bit more control over what I'm actually putting out into the world, because I think one of the biggest things, like, I've done this talk a bunch of times important about, like, what are the most durable skills in AI, like the one that I call out the most, is accountability?
+
+Like, regardless of how many agents you have running for you, like, ultimately, like, it's, it's you, right? Like, it's, it's your work. So, you're always going to be accountable for your work. So, I like to still more than maybe others might.
+
+Do you have, like, uh, the opposite? Like, say you said, the manager slack message seem other customer? You have an inbound model that works as well. Could you elaborate on that? Yeah, so you're talking about how you're documenting, moving your processes forward. If the customer responds with a question, or if your manager responds with a query about your update like, you have an inbound.
+
+Yeah, I know, so it works very similarly, right? Like, so I'm still like that kind of, like, always on, uh, kind of narrative, that I was talking to earlier. Like, I'm still also, um, looking at anything that's coming in now. I'm like a pretty regular basis, like a F1 automation that's looking at my slacks every three hours just to see whether or not anything is.
+
+Relatively important for me to kind of like respond to immediately. So, and then I also have that create drafts on my behalf before I respond, right? So, like, for most of the work that I'm doing, it's like create a draft before you tell me that the thing happened, right?
+
+Like, I don't want to know that something happened. Like, I don't want the signal. Like, I want the action to have already taken place, and then I want to know whether or not I should approve that action. Okay, yes, we do one more. What the, what's your thought on like, how to go from that multi-turn framing to like the single shot?
+
+Like, what is the rate limiting step that's preventing that from happening for more people? Three limiting stuff for us, providing that for more preventing people more people from doing that. I mean, the first is, like, customer education, like the, the percentage of people who, like, really even fully, understand, like, what kotas can do versus, like, what chat GBT is, it's like?
+
+It's like an astronomically white gas still, so I think we had a lot of work to do. Just as an organizations like, get people up to do on that, but I think question behind your questions, like? You have to find, like the highest leverage points in a workflow. And figure out, like how you how you add determinism to those High leverage points, right?
+
+So if you have a workflow that say, for example, I would use e-commerce as an example, and like refunds if you have e-commerce platform, and you have to offer refunds at some point, right? Like, that's not something that you could like lead to a stochastic like ballistic model. Um, like, you can't say, oh, like, maybe it'll be one dollar this time.
+
+Or maybe it'll be a hundred dollars this time, right? Like, there has to be like some level of different. So, when you find those High leverage points like, that's how you? Again, I answered that human in the loop version on the loop. Like, for that particular point and then try and automate the rest, I think the biggest blocker for a lot of organizations is doing the level of process mapping that's required to do that for every single workflow, so I think you have to start somewhere with, like, some high value workflow, but that can kind of work backwards from again.
+
+What is the high Leverage point that you actually want to? Go ahead and insert some level of determinism or answer some level of like human bloom, and then from there. How much of this like, what percentage of this kind of actually I've made? But I think that's the biggest blocker is just the amount of process mapping.
+
+Like, if you ask, like a second line or third line leader, like how something gets done versus like asking nic, who reports to that second line or third line person? How that thing gets done, like, they're gonna say, eight different things? And so you find when you work really closely with that, they're not necessarily super sure how the sausage is getting made.
+
+They're just sure that it's getting made and so figuring out again. What are the actual processes and how do we actually automate them? That's the biggest challenge.
+
+Assembly of Jacob from attention?
+
+[Speaker 2]
+How's
+
+[Speaker 5]
+It going everyone? My name is Jacob Fleischer. I am the head of sales at attention. I'm also the one non-technical person presenting today, so a lot of fun, um, if you don't know who our attention you kind of set, the intersection between Revenue, intelligence, and orchestration, so we analyze customer interactions at scale to help Drive decisions across the gun market.
+
+So,
+
+[Speaker 10]
+To
+
+[Speaker 5]
+Be coaching your reps, be autofilling CRM, close one close lost. Um, we've also built very deeply and let our API and mcp. So, like customers like a bridge. Audible. They power a lot of their go to market agents using, um. We also just raised our series B, announced velocity.
+
+That's also why I have a closed pad right now. I normally don't, um. But in my third week of attention, I was our fifth employee over three years ago, I said to our CEO when we or if we raise our BM to buzz my head. And he said, no, when so, here we are as of today.
+
+[Speaker 4]
+Um, so if you find like being on the non-hractical side, I get to dream big and I got to go to my growth team and say we should build this. And you know, they're the ones that say that's not possible. Or, hmm, that's interesting. And I think being a sales leader I get to sit like thought Rosie to actually understand, like, what's happening, and I get very obsessive over gatherings and Trends of my sales team and try to automate and build workflows around the map.
+
+So here's something we actually brought to life that I came up with was dreaming big, which is around a routing optimization. Uh, so one of the big problems that involved is that a lot of routing?
+
+[Speaker 9]
+Is, you know, it goes. It's like to your Enterprise team, or you're a mid-market team or SMB?
+
+[Speaker 8]
+But the logic is pretty bound to like a person's territory or like their segmentation. Um, but what it doesn't take into account is like matching that at that specific lead in that person to the rate AE, who potentially share, like the same interests, come from, you know. Similar cities went to the city of universities.
+
+I think what I realized qualitatively, pretty early on as I started to scale. My team is, I would join a call. Uh, the cro would say, yeah, I'm a die-hard Arsenal fan, like that's what I'm doing this weekend, and I'd be like, damn, I wish my rep. Noah was on this call.
+
+Like, he's a die-hard Arsenal fan, so I thought, hmm. Is there potentially a way that we can start understanding behaviors of our buyers and their interests and create like databases of our own wraps, interests, and when Deeds come inbound, or when we start to distribute accounts, can we have higher intent or signal around interest to make sure, because at the end of the day, what I've learned is people buy from people they like, right?
+
+That's where you kind of start. So, tell me how, how pack that system to try and will end through that process? Um, what we saw from. This was a 30 left and win rates after being able to assign opportunities, uh, to what we call our best of match.
+
+[Speaker 2]
+Uh, so how we did this is the Jordans
+
+[Speaker 8]
+Together, uh, data across Salesforce. Attention in deep line lies our DLI string, so we've got thermographics. And now, stage win loss played loss positions.
+
+[Speaker 4]
+Uh, use the engine guy to really start to deeply understand, like our Champions. Our economic brought buyers events, competitors personas, Geo, and really start to leverage these transcripts as we go for this exercise. Through it, our closed lost to understand. Can we optimize a better IE, uh, for this new Outback, and then we also use deep line for, uh, the contact the account enrichment.
+
+[Speaker 8]
+And we were able to join all these records together, and we built this all in Cloud code. Um, to really start to uncover the hidden fit signals to understand where our Aes Excel and where they underperform, right? So, it's not always just about hey, are they both Arsenal fans?
+
+We started to really start to understand Trends. Um, around Gia. One of our reps, we were able to understand and for
+
+[Speaker 2]
+Us
+
+[Speaker 8]
+As like a scaling startup. I'm trying to stay away from segmentation as part as long as possible to create, like too much hierarchy and structure. Um, so we were able to understand, like, s, b, and Enterprise behaviors we actually were able to figure out that NOAA, he's the Arsenal fan, uh, MK, who has a way higher win rate in, uh, International rules.
+
+And the funny thing about that is like, that is, like, the collect data data. NOAA has a UK passport, right? Like, he's one of our. He's our only math musical citizenship. So, like, I think it is like a really interesting, allocative qualitative point that he closes other GEOS at a higher rate than other reps when he also happens to be able to.
+
+Um, school and network ties are huge. Like, I think from here, I know I'm originated in Italy. So, if we're talking to a cro that is our head of rev Ops that is from Philly. I'd like to join that first call, talk about the evils, and really start to break down the barriers and also enables you like, I'm very big, ongoing in person, right?
+
+And if you match common interests. Those in-person events go way better because you're doing commonalities between the people meeting. Um, and also just vertical fluency, right? Like, we really started to understand, who performs better in financial services and insurance, and B2 software and Tech,
+
+[Speaker 2]
+Um, so it
+
+[Speaker 8]
+Really put us in a position to take. Make the most of our at that and put our reps in the position to win more and ultimately make more money.
+
+[Speaker 2]
+Um,
+
+[Speaker 8]
+And just to wrap off, you're like the end results that we saw from this. Um, is a we did a historical rerun of all of our Salesforce data. So, we came out with new account scoring models using deepline to re-enriage our CRM to firmographic data, and now we're impairing it into our like live workflow when someone books time with us to be optimized to be routed to the red rack.
+
+So, so far, we've seen that 30 left Inland rates, uh, and 25 times
+
+[Speaker 10]
+Close. So for me, as
+
+[Speaker 8]
+I had a sales like, I absolutely love that, but I think both people and it's been selling more fun for our reps because we're talking to people people. Line with them, as well as in the position to win more, which is
+
+[Speaker 2]
+Obviously great. So, yeah, thank you.
+
+Is that you can spread bandwidth pretty equally? Um, so have you noticed that, like, some reps are like more likable than others would have, like more common?
+
+[Speaker 8]
+Yeah, ideally, what we see is that, like, it normalizes over time, or like people get filtered out. And I think as like a very like fast scaling startup. If people are getting filtered out for not being likable, yeah, for me, that, like, maybe they're not the best fist for us, and maybe they should be selling to a different Persona.
+
+So, it is also like a filtering mechanism, right? Because if that is coming up like, that is a different problem to solve for.
+
+Yeah, are there any potential concerns around
+
+[Speaker 4]
+Over centralization? Like, for example, for us, it'd be like an Italian rep selling to Italian restaurants. But maybe he doesn't do as well or other disease like,
+
+[Speaker 2]
+Um, we haven't really hit that, like, like, over specialization too much. Um, I would say like. It could happen, but so far like it hasn't really been an issue for us.
+
+We can do one more awesome.
+
+You told me on a 10 command in 2022, and I loved it. These startups later. Get tell me what? Extension has evolved the product into. Since 2015.
+
+[Speaker 5]
+We can chat in more depth afterwards, but maybe like the quick sales pitch, like where we've really headed to his? Being able to activate voice and customer at scale across the entire code Market, right? So, it's like, more simplistic use cases like autofilling CRM. But it's more so being able to help now.
+
+Take best next action for your reps and kind of create this recursive Loop of, like, here's your knowledge base. Here's what reps did in a given conversation. Lex suggests the best next action. Measure the outcome of that action, understand the fourth. It didn't learn from that and make the knowledge here so smarter over time.
+
+So our whole goal is to help kind of create this, like best. Next action engine for aes and then scale that up to Enterprise leaders to really understand, like, what's happening in my conversations? Where are the? So, why are we losing? Why are we not to really be like the backbone of date of the GTM decisions, and we believe that, like, your transcripts are eaten in emails.
+
+I'll get that, like, best data set to help inform those decisions. So, how do you best activate that at scale?
+
+[Speaker 8]
+Mexican
+
+[Speaker 1]
+Foods are speakers for the evening. Thank you again to everyone for joining us. Thank you to our plants in the back, but absolutely. We do these around once a month. Try to just keep these community events going. They're super fun for me as soon as they start and not.
