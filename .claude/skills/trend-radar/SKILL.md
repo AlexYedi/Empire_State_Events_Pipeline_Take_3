@@ -154,6 +154,51 @@ This deliberately does NOT add a `Trend Velocity` property — the Topics DB has
 
 ---
 
+## Step 5.5 — Persist to the graph spine (REST — the market-intel producer write)
+
+After the Notion write, ALSO emit each approved topic as a **signal Event** into the Market-Intelligence
+graph (the system of record) — this makes trend-radar the first **Event producer** feeding the Hub
+dashboard. **REST only — NEVER the Supabase MCP** (removed; it was on the wrong account). Full contract:
+`.claude/references/market-intel-spine.md`. Plain HTTPS (PostgREST), so safe to run inline in this thread.
+
+**Setup (once per run):** read `SUPABASE_API_KEY` (an `sb_secret_…` key) from `.env` — never print it. Base:
+`https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`. Headers on every call: `apikey: <key>`,
+`Authorization: Bearer <key>`, `Content-Type: application/json`, `Prefer: return=representation`.
+
+For each **approved** topic (read-before-write dedup):
+
+1. **Upsert the topic.** `GET /topic?name=eq.{canonical}&select=id,engagement_count`.
+   - Found → `PATCH /topic?id=eq.{id}` with `{"last_engaged_at":"{nowISO}","engagement_count":{existing+1}}`. Capture `id`.
+   - Not found → `POST /topic` with `{"name":"{canonical}","source":"trend_radar","last_engaged_at":"{nowISO}","engagement_count":1}`. Capture `id`.
+   - Leave `relevance_score` at 0 — it is a *computed* output owned by the deferred recompute producer; producers write only the raw inputs (`engagement_count`, `last_engaged_at`). The V1 dashboard sorts by signal activity/recency and labels it honestly.
+
+2. **Insert the signal Event** (a signal IS a `market`-kind event). `POST /event`:
+   ```json
+   {
+     "title": "{canonical topic} — rising",
+     "kind": "market",
+     "event_date": "{nowISO}",
+     "description": "{one-line why it's rising}",
+     "source": "trend_radar:{comma-sep sources, e.g. HN,HF,newsletter}",
+     "confidence": {topic_score normalized to 0-1 — e.g. topic_score / max_topic_score this run},
+     "url": "{top signal url}",
+     "metadata": {"source_count": {n}, "sources": ["HN","HF"], "topic_score": {raw}, "top_signal_url": "{url}"}
+   }
+   ```
+   Capture the event `id`. **Veracity mechanism 1 (provenance):** `source` + `url` + `metadata.sources` are
+   MANDATORY — no undated/unsourced signal ever. **Mechanism 2 (honest confidence):** the normalized
+   `confidence` + `source_count` are what the dashboard shows inline, labeled `trend_radar`. Dedup on
+   (title, event_date::date, kind) — GET before POST if re-running the same day; skip identical signals.
+
+3. **Link the hyperedge.** `POST /event_entity` with
+   `{"event_id":"{event_id}","entity_type":"topic","entity_id":"{topic_id}","role":"subject"}`.
+
+**Idempotency:** same-day re-runs are safe — topic upsert is read-before-write; the Event dedup prevents
+duplicate signals. If the REST write fails (key/network), log it and continue — the Notion write already
+succeeded; the graph write is additive, not a gate.
+
+---
+
 ## Step 6 — Close out
 
 - Summarize: topics logged (updated vs. created), sources used, any source gaps.
