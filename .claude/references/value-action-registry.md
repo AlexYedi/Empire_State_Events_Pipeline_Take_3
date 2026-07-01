@@ -13,6 +13,9 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 | acted-on outcome vs goal | US-4 + US-5 | trending down | kill / retune the build or the distribution play | Hub dashboard + weekly |
 | owned-asset engagement | US-5 / US-6 | below goal target | revise the asset / distribution strategy | Hub dashboard + weekly |
 | telemetry ingestion health | US-2 hook | 0 `build_session` events / 48h on active days | investigate hook/exporter (observability-of-observability) | weekly / PostHog alert (US-6) |
+| signal-source freshness (stalest producer) | M2 trust strip | > 7d since a producer's last successful run | flag "source may be stale/broken"; investigate that producer | Hub dashboard (trust strip) |
+| signal provenance coverage | M2 trust strip | < 80% of recent signals carry `source`/citation | tighten producer sourcing — a producer is emitting uncited signals | Hub dashboard (trust strip) |
+| producer liveness | M2 trust strip | any producer silent > 14d | producer health check — is the source/API broken? | Hub dashboard (trust strip) |
 
 ## Rules
 - **Adding a metric?** It does not ship without a row here (threshold + action + surface). Can't fill the row ⇒ don't collect the metric.
