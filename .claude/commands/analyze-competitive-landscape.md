@@ -1,7 +1,7 @@
 ---
 name: analyze-competitive-landscape
-description: Produces competitive landscape brief with threat levels, differentiators, and recommended actions.
-usage: /competitive-intelligence:analyze-competitive-landscape --scope enterprise-saas --audience exec --window 30d --format deck
+description: "Executive competitive-landscape brief — threat levels, differentiators, counter-plays. Use when sizing up rivals in a segment before a GTM push, board update, or competitive deal. Fans out market-insights-director + battlecard-program-manager."
+argument-hint: "[scope + audience + window + format, e.g. 'enterprise-saas, exec, 30d, deck']"
 ---
 
 # Command: analyze-competitive-landscape

@@ -1,7 +1,7 @@
 ---
 name: create-messaging-brief
-description: Generates a messaging brief with hook banks, proof points, and CTA strategy.
-usage: /copywriting:create-messaging-brief --goal pipeline --persona "RevOps" --offer "AI copilot"
+description: "Messaging brief — headline, pillars, proof points, hook bank, CTA strategy. Use when launching or repositioning an offer, or standing up copy for a persona/channel, before writing the actual copy."
+argument-hint: "[goal + persona + offer, e.g. 'pipeline, RevOps, AI copilot']"
 ---
 
 # Command: create-messaging-brief
