@@ -1,3 +1,8 @@
+---
+description: "Turn an event recording (.m4a) into a clean, diarized, proper-noun-correct transcript (ElevenLabs scribe_v2 + roster-seeded keyterms) that feeds /post-event-content. Use after an event once the audio is in the event folder — beats the recorder-app transcript by ~50pts on spoken proper nouns. Manual command, not a folder-watch."
+argument-hint: "[audio path in the event folder; optional --num-speakers N — keyterms auto-seed from the event roster]"
+---
+
 # /ingest-recording — recording → clean transcript (YED-95)
 
 Turn an event recording into a clean, diarized, proper-noun-correct transcript that feeds

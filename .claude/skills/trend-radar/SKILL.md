@@ -60,8 +60,15 @@ Each hit gives `title`, `url`, `points`, `num_comments`, `created_at_i` (unix), 
 
 Newsletters are human-curated — the editor already did the ranking, so this is the densest source.
 
-- Prereq: Alex applies a Gmail label (recommend **`newsletters`**) to his AI/tech newsletters. If unlabeled, fall back to known senders (e.g. `from:(news.bensbites.com OR tldr.tech OR thesequence OR importai)`).
-- `mcp__claude_ai_Gmail__search_threads` with `label:newsletters newer_than:7d` (match the lookback).
+- Prereq: a Gmail **`newsletters`** label carries Alex's curated AI/tech/GTM newsletters. It is
+  populated by a server-side Gmail filter (Alex-maintained) that auto-labels the senders below on
+  arrival — so the label stays current without manual upkeep. Mirrors Alex's own `Content/*` curation.
+- **Primary query:** `mcp__claude_ai_Gmail__search_threads` with `label:newsletters newer_than:7d`
+  (match the lookback). **Note the connected Gmail MCP is read-only (no label-write scope), so this
+  skill only *reads* the label — never tries to create/apply it.**
+- **Fallback (if the label ever returns empty — e.g. filter lapsed):** query the curated senders directly:
+  `from:(semianalysis@substack.com OR pragmaticengineer@substack.com OR chinai@substack.com OR thechipletter@substack.com OR superhumancode@news.codenewsletter.ai OR thecode@mail.joinsuperhuman.ai OR techpresso@dupple.com OR hello@newsletters.venturebeat.com OR tokensandai@mail.beehiiv.com OR whatsupinai@mail.beehiiv.com OR post-training@mail.aitinkerers.org OR compoundwithai@substack.com OR newsletter@ittnewsletter.com OR nlw@aidailybrief.ai OR aicollectivenewsletter@mail.beehiiv.com OR info@realpython.com OR lenny@substack.com OR elenaverna@substack.com OR speedrun@substack.com OR neweconomies@substack.com OR convergences@substack.com OR charlie@thisisgoingtobebig.com OR newsletter@garysguide.com OR info@technyc.org OR info@betaworks.com OR nytdirect@nytimes.com) newer_than:7d`
+  (Venture Street + Work-Bench use plus-tagged Substack addresses — add `venturestreet+pitch-deck-examples@substack.com`, `venturestreet+playbooks@substack.com`, `workbench+gtm-weekly@substack.com` if needed.)
 - `mcp__claude_ai_Gmail__get_thread` on each hit; extract the **lead/headline items** (what each newsletter chose to feature) + their links.
 - **Velocity proxy:** appearance counts as a curation vote; a topic featured by multiple newsletters is a strong corroboration signal.
 

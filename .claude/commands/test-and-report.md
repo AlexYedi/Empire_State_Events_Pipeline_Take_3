@@ -1,7 +1,7 @@
 ---
 name: test-and-report
-description: Creates a copy experimentation plan with reporting template and action items.
-usage: /copywriting:test-and-report --channels "email,ads" --kpis "ctr,conversion" --window 14d
+description: "Copy-experimentation plan — hypotheses, sample-size/duration, reporting template, action items. Use when A/B testing copy rigorously and tracking results to significance."
+argument-hint: "[channels + kpis + window, e.g. 'email,ads, ctr,conversion, 14d']"
 ---
 
 # Command: test-and-report

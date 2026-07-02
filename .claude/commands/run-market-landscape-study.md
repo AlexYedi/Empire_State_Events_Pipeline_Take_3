@@ -1,7 +1,7 @@
 ---
 name: run-market-landscape-study
-description: End-to-end secondary and primary research sprint covering market size, trends, and competitor mapping.
-usage: /market-research:run-market-landscape-study --scope "AI Sales Tech" --regions na,emea --horizon 3y --format deck
+description: "End-to-end market study — TAM/SAM/SOM, trends, competitor map, scenarios. Use when entering a new market/category or pressure-testing a thesis and you need the full landscape, not a quick scan."
+argument-hint: "[scope + regions + horizon + format, e.g. 'AI Sales Tech, na,emea, 3y, deck']"
 ---
 
 # Command: run-market-landscape-study

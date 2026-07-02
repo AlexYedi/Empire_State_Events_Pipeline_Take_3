@@ -1,7 +1,7 @@
 ---
 name: generate-channel-copy
-description: Produces channel-ready copy variations (email, ads, social, landing) with guidelines.
-usage: /copywriting:generate-channel-copy --channels "email,linkedin" --persona "CIO" --offer "data platform"
+description: "Channel-ready copy variations (email/ads/social/landing) with A/B variants + QA checklist. Use when you have a messaging brief and need the actual drafts per channel."
+argument-hint: "[channels + persona + offer, e.g. 'email,linkedin, CIO, data platform']"
 ---
 
 # Command: generate-channel-copy
