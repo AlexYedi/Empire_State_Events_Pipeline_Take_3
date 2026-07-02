@@ -41,6 +41,14 @@ If explanations are needed during development, I will invoke the explainer skill
   2. **Manual step justified by judgment load (KEEP manual).** When the step requires Alex's judgment (review before a contact lands in CRM, approve copy before publishing to a channel, sign off on a strategic decision), keep it manual. The rule is *automate where automation preserves quality*, not *automate everything that's MCP-eligible.*
   3. **Anthropic-side inference cost discipline (the original rule, still applies).** Don't burn Claude tokens on redundant inference, oversized contexts, repeated re-runs of expensive operations, or architecture that compounds API spend. This rule is about Anthropic billing, NOT about whether to use vendor MCPs.
 - **Pattern to watch for:** "Tool: X" in a skill spec usually meant *Alex copies output into tool X manually* — that's a manual handoff pattern from before MCPs were broadly available. When you see this pattern, audit whether the tool has a connected MCP; if yes, default to automation per rule 1 above unless judgment load (rule 2) gates it.
+- **Command/skill invocation proactivity — BALANCED default (added 2026-07-02).** Two layers, never conflated:
+  **(A) Invocation** = whether to START a workflow without Alex typing `/x` — *this policy governs only this.*
+  **(B) In-pipeline behavior** = what a running workflow writes and where its gates are — **owned entirely by each pipeline's own spec** (decided at design time). This policy NEVER overrides, adds, or removes a running pipeline's internal writes/gates; a write a pipeline was designed to do automatically keeps happening as designed.
+  Three invocation tiers:
+  - **Tier 1 — auto-fire:** research / drafting / analysis / synthesis (reviewable artifact, nothing irreversible). Proactively invoke when the moment clearly matches the tool's trigger (e.g., Alex mentions an upcoming event → run event research + pre-event draft unprompted).
+  - **Tier 2 — auto-START, then stop at the pipeline's own gate:** workflows with a write/approval step (`/scan-*` present a digest; `/event-deep-research` presents a brief before writing). Proactively start; they pause at their built-in gate. Safe by construction.
+  - **Tier 3 — manual only:** truly irreversible / outward-facing / judgment-heavy — external publish (LinkedIn), CRM writes, spending Apollo/Clay credits, anything Alex has said is his call. Surface + recommend; don't start unprompted.
+  When unsure which tier, treat as the higher (more cautious) tier. "Proceed without prompting" / batch-autonomy instructions temporarily raise the ceiling (see [[feedback_ship_all_variants_2026-05-30]]). Discover the toolkit via `/toolbox`.
 </behavioral_rules>
 
 <definition_of_done>
