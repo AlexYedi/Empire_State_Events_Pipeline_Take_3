@@ -90,5 +90,7 @@ Keep it dense and skimmable — this is a menu, not documentation. Do not invent
 
 ## Notes
 - **Freshness by design:** re-scans every run, so newly-added commands/skills appear automatically — no upkeep.
-- **Hub fast-follow:** a browsable `ops/toolbox` page in empire-state-hub can render this same catalog from a
-  generated manifest (deferred until the CLI proves the shape).
+- **Hub surface (BUILT 2026-07-02):** a browsable `ops/toolbox` page in empire-state-hub renders
+  `src/data/toolbox.json` — a snapshot manifest. Regenerate it by re-running the Step-1 scan in JSON form
+  (add `group`/`tier` heuristics) and overwriting that file when tools change. This live `/toolbox` command
+  is the always-current source; the Hub page is the browsable/shareable snapshot.
