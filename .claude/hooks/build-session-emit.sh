@@ -65,13 +65,19 @@ fi
 [ -z "${PEAK_CONTEXT//[0-9]/}" ] || PEAK_CONTEXT=0
 echo "$TOOLS_USED" | jq -e . >/dev/null 2>&1 || TOOLS_USED="[]"
 
-# --- optional semantic fields (set during the session by DoD/judge wiring; nullable) ---
+# --- optional semantic fields (written during the session by dod-close.sh; nullable) ---
+# Prefer this session's own build_meta; fall back to a single un-suffixed _pending.build_meta
+# (written when $CLAUDE_CODE_SESSION_ID was absent — e.g. --resume/Dock/subagent). The consumed
+# file is removed after the append so .state/ doesn't leak (mirrors v2-trigger-log's cleanup).
 META_FILE=".claude/.state/${SESSION_ID}.build_meta"
+[ ! -f "$META_FILE" ] && [ -f ".claude/.state/_pending.build_meta" ] && META_FILE=".claude/.state/_pending.build_meta"
 DOD_MET=null; DOD_WAIVED=null; CORRECTION_ROUNDS=null
 if [ -f "$META_FILE" ]; then
-  DOD_MET=$(jq -c '.dod_met // null' "$META_FILE" 2>/dev/null || echo null)
-  DOD_WAIVED=$(jq -c '.dod_waived // null' "$META_FILE" 2>/dev/null || echo null)
-  CORRECTION_ROUNDS=$(jq -c '.correction_rounds // null' "$META_FILE" 2>/dev/null || echo null)
+  # NB: use has()/else-null, NOT `// null` — jq's `//` treats `false` as empty, which would
+  # silently collapse a legitimate dod_met:false / dod_waived:false back to null.
+  DOD_MET=$(jq -c 'if has("dod_met") then .dod_met else null end' "$META_FILE" 2>/dev/null || echo null)
+  DOD_WAIVED=$(jq -c 'if has("dod_waived") then .dod_waived else null end' "$META_FILE" 2>/dev/null || echo null)
+  CORRECTION_ROUNDS=$(jq -c 'if has("correction_rounds") then .correction_rounds else null end' "$META_FILE" 2>/dev/null || echo null)
 fi
 
 # --- build the authoritative record (content-gated) ---
@@ -93,6 +99,10 @@ RECORD=$(jq -nc \
 # --- 1. authoritative append-only record (always) ---
 mkdir -p .claude/artifacts
 printf '%s\n' "$RECORD" >> .claude/artifacts/build-sessions.jsonl
+
+# consumed the build_meta into this row — remove it so .state/ stays clean and a stale
+# meta never bleeds into the next session's row (parallels v2-trigger-log's rm of .relevant_skills)
+[ -f "$META_FILE" ] && rm -f "$META_FILE" 2>/dev/null
 
 # --- 2. PostHog projection (derived; only if key present) ---
 if [ -n "${POSTHOG_PROJECT_KEY:-}" ]; then
