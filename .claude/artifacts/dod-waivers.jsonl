@@ -1,0 +1,3 @@
+{"ts":"2026-07-11T10:44:30Z","session_id":"9523d6a1-bcdc-4ac8-ad31-053d7d4cffb4","item":"spec artifact","reason":"approved plan-of-record (in-session) served as spec; realignment+cleanup, retro-PRD not warranted"}
+{"ts":"2026-07-11T10:44:30Z","session_id":"9523d6a1-bcdc-4ac8-ad31-053d7d4cffb4","item":"linear issue","reason":"work falls under existing Build-Rigor & Measurement project (YED-87..94); no new issue opened; YED-105 reconciled instead"}
+{"ts":"2026-07-11T10:44:30Z","session_id":"9523d6a1-bcdc-4ac8-ad31-053d7d4cffb4","item":"judge","reason":"advisory/not-yet-calibrated; /judge-build on dod-close.sh deferred to the A2 calibration batch"}
