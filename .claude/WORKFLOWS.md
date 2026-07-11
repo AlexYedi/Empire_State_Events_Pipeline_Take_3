@@ -16,6 +16,31 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 | C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
 | D — Voice Pass | 🟡 Scaffolded | `/voice-pass` | Polish: voice-editor over `needs_review` Content Drafts |
 
+### Commands added since (2026-05 → 2026-07) — not part of the original four-workflow spine
+
+The four workflows above are the pipeline core. These commands were built afterward and were not
+reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 months behind reality).
+
+| Command | Status | Purpose |
+|---|---|---|
+| `/post-event-content` | ✅ Wired | Day-to-day post-event: manual transcript → conditioning → `post_event_brief` → content-correspondent drafts. (The live B path; `/post-event-synthesis` is the deferred fuller chain.) |
+| `/ingest-recording` | ✅ Wired | Event `.m4a` → ElevenLabs scribe_v2 roster-seeded clean transcript (feeds `/post-event-content`). |
+| `/evergreen-deep-dive` | ✅ Wired | Presenter-level evergreen deep-dive posts, decoupled from event timing (content bank). |
+| `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
+| `/scan-trends` · `/scan-roles` · `/scan-voices` | ✅ Wired | Signal scanners (skills `trend-radar` / `role-radar` / `voice-radar`), Notion-only, HITL, legitimate-sources only. |
+| `/judge-build` | ✅ Wired (advisory) | LLM-as-judge scores a build artifact vs `build-quality@1`; writes run-log + calibration ack. Advisory until ≥20 runs @ ≥80% agreement. |
+| `/dod-close` | ✅ Wired (2026-07-11) | Closes a non-trivial build against the DoD gate; writes `dod_met`/`dod_waived`/`correction_rounds` to telemetry via `.claude/hooks/dod-close.sh`. The writer that closed the rigor loop. |
+| `/rigor-review` | ✅ Wired (first run pending) | Weekly ≤10-min learning loop over build-sessions + judge log + waivers + outcomes; proposes codified fixes. |
+| `/tag-outcome` | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). |
+| `/systems-analyze` | ✅ Wired | Dispatches `systems-analyst` for the eight-phase Meadows diagnostic (Workflow E). |
+| `/toolbox` | ✅ Wired | Discovery — lists the toolkit. |
+| `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report` | ✅ Built (thin docs, 2026-07-02) | Imported market-research + copywriting command suite; no PRD/Linear yet (candidate for retro-codification). |
+
+> **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
+> `empire-state-hub` repo). Source of truth: `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` +
+> `.claude/references/market-intel-spine.md`. **Rigor/measurement layer** source of truth:
+> `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md` + `.claude/references/{build-session-contract,value-action-registry}.md`.
+
 ---
 
 ## ✅ Resolved 2026-05-07 — orchestrator → synthesizer pivot
@@ -395,5 +420,7 @@ Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until comma
 - Scheduled task: daily 8am → nudge if events with status=intake older than 24h
 
 ---
+
+*Partial refresh 2026-07-11 — added the "Commands added since" table (the doc had drifted ~2 months behind; the MI Engine, signal scanners, judge/rigor layer, and market-research suite were all missing). The four-workflow body below is unchanged and still accurate.*
 
 *Last updated: 2026-05-07 — orchestrator → synthesizer pivot landed ON DISK. Anthropic SDK constraint (subagents cannot spawn subagents) confirmed via official docs + 6-agent layer-by-layer test. Fan-out moved to parent thread; synthesizer is text-in/brief-out. `notion-writer` updated to `model: sonnet` + scoped `tools:` frontmatter. All 4 specialists got `tools: WebSearch, WebFetch, Read` for hygiene. **VALIDATION PENDING:** all changes were made mid-session, but the harness loads the agent registry at session start and freezes it — meaning none of these changes are visible in the current conversation's registry (confirmed when `notion-writer-v2` test failed with "Agent type not found" while the deleted `event-research-orchestrator` was still listed as available). End-to-end validation requires a FRESH conversation. Workflow A status: 🟠 → ✅ on disk; pending fresh-conversation validation.*
