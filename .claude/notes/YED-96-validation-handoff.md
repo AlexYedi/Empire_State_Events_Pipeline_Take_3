@@ -1,3 +1,9 @@
+> ✅ **RESOLVED — this handoff is complete (marked 2026-07-11).** YED-96 (Post-Event Brief v2) was
+> validated and shipped in a fresh session — git commit `10f71af` "Finish YED-96 and fully tested
+> post-event improved system," plus the subsequent end-to-end runs (NYC GTM Masterclass #5 deep-dives,
+> `35407d5`/`593788f`). This file is kept only as a historical record of the handoff protocol; the work
+> below is DONE. Do not re-run it.
+
 # YED-96 — Validation handoff (start a fresh session to close the loop)
 
 **Why a fresh session:** the `/post-event-content` command + supporting skills were just edited (full 16-section post-event brief v2). The agent/skill registry is **session-frozen**, so the edits only load in a **new** conversation launched **from this repo, in a terminal** (not the Dock — env inheritance).
