@@ -120,7 +120,7 @@ Every LinkedIn post produced by `pre-event-content`, `pattern-synthesis`, and `c
 
 The `.claude/` directory now uses the agents + commands + skills triangle:
 - `.claude/agents/` — subagent role definitions (called via the Task tool with `subagent_type`). Organized into `research/`, `content/`, `sales-methodology/`, `ops/`.
-- `.claude/commands/` — slash-command workflow files. The four pipeline workflows live here: `event-deep-research.md` (✅ wired), `post-event-synthesis.md` (🟡 scaffolded), `weekly-recap.md` (🟡 scaffolded), `voice-pass.md` (🟡 scaffolded).
+- `.claude/commands/` — slash-command workflow files. The four pipeline workflows live here: `event-deep-research.md` (✅ wired), `post-event-synthesis.md` (🟡 scaffolded), `weekly-recap.md` (🟡 scaffolded), `voice-pass.md` (🟡 scaffolded). **Authoring or editing a command? Follow `.claude/references/command-orchestration-convention.md`** — the required 7-step orchestration skeleton (intake→dispatch→collect→synthesize→named output→failure modes). A command that only *lists* agents without dispatch/output logic fails `build-quality@2` completeness (the `thin-declarative-command` fix, rigor-review 2026-07-15).
 - `.claude/skills/` — methodology packages with SKILL.md + references/. New parent folders: `research-methodology/`, `company-deep-research/`, `content-quality/`, `transcript-intelligence/`, `icp-research/`, `cold-email/`.
 
 ### Purpose
