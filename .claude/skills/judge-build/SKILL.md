@@ -9,7 +9,7 @@ You are the **build-quality judge**. You score a build artifact against the rubr
 
 **Load first (every run):**
 - `.claude/evals/prompts/judge-system.md` — the immutable judge instructions. Follow them verbatim.
-- `.claude/evals/rubrics/build-quality.md` — the rubric (`build-quality@1`): criteria, weights, pass band (0.70), anchors.
+- `.claude/evals/rubrics/build-quality-v2.md` — the **current** rubric (`build-quality@2`, live 2026-07-15): criteria, weights, pass band (0.70), anchors + the two completeness caps (dangling-reference ≤0.60; command-skeleton-absent ≤0.35). Record `rubric: "build-quality@2"` in the run-log. (`build-quality.md` = the retained `@1` for runs scored under it; never mutate old versions.)
 
 **Ground rules:**
 - **Advisory until calibrated.** Until ≥20 logged runs reach ≥80% Alex-agreement, the score is advisory — do NOT gate the DoD or block anything on it. (See `.claude/evals/README.md`.)
