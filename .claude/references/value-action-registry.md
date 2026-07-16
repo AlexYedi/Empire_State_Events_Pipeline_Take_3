@@ -4,7 +4,7 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 
 | Metric | Source | Threshold | Action | Surface |
 |---|---|---|---|---|
-| build-quality judge score | US-3 judge | < 0.70 | flag artifact for rework before "done" | in-session (judge verdict / DoD) |
+| build-quality judge score | US-3 judge (`build-quality@2` live 2026-07-15) | < 0.70 | flag artifact for rework before "done" | in-session (judge verdict / DoD) |
 | judge–human agreement | US-3 calibration (`alex_ack`) | < 80% | judge stays **advisory**; tighten rubric, don't trust the score | weekly review |
 | judge last-ran | US-1 DoD meta-item | > N hrs on a build | DoD item FAILS (anti-silent-rot) | in-session DoD boundary |
 | DoD waiver-rate on builds | US-1 waiver log | climbing wk/wk | revisit the scope test / enforcement | weekly review |
