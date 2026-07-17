@@ -4,8 +4,8 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 
 | Metric | Source | Threshold | Action | Surface |
 |---|---|---|---|---|
-| build-quality judge score | US-3 judge (`build-quality@2` live 2026-07-15) | < 0.70 | flag artifact for rework before "done" | in-session (judge verdict / DoD) |
-| judge–human agreement | US-3 calibration (`alex_ack`) | < 80% | judge stays **advisory**; tighten rubric, don't trust the score | weekly review |
+| build-quality judge score | US-3 judge (`build-quality@2` live 2026-07-15) | < 0.70 | **gate** a new/independent build's "done" (flag for rework); **advisory** on self-produced/re-judged work — see status note below | in-session (judge verdict / DoD) |
+| judge–human agreement | US-3 calibration (`alex_ack`) | < 80% | judge reverts to **advisory**; tighten rubric, don't trust the score | weekly review |
 | judge last-ran | US-1 DoD meta-item | > N hrs on a build | DoD item FAILS (anti-silent-rot) | in-session DoD boundary |
 | DoD waiver-rate on builds | US-1 waiver log | climbing wk/wk | revisit the scope test / enforcement | weekly review |
 | corrective-rounds ÷ acted-on value | US-2 `user_prompts` + US-5 | up 2+ consecutive wks | find where the agent keeps missing; tighten the skill/rubric | weekly review |
@@ -16,6 +16,9 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 | signal-source freshness (stalest producer) | M2 trust strip | > 7d since a producer's last successful run | flag "source may be stale/broken"; investigate that producer | Hub dashboard (trust strip) |
 | signal provenance coverage | M2 trust strip | < 80% of recent signals carry `source`/citation | tighten producer sourcing — a producer is emitting uncited signals | Hub dashboard (trust strip) |
 | producer liveness | M2 trust strip | any producer silent > 14d | producer health check — is the source/API broken? | Hub dashboard (trust strip) |
+
+## Judge status (versioned — never change silently)
+- **2026-07-17 — build-quality judge → PROVISIONAL-TRUSTED.** Crossed the calibration gate (22 acked runs @ 86.4% agreement ≥ the ≥20-@-≥80% bar). Scope of trust: it **gates** the DoD "done" on *genuinely new, independent builds* (a `< 0.70` verdict flags before shipping). It stays **advisory** on self-produced / re-judged work — ~7 of the 22 acked runs are re-judges of same-session fixes (correlated), so the sample isn't fully independent. **Drop "provisional"** once independent-first-look agreement holds ≥80% across ~15+ runs (revisit each `/rigor-review`). The 3 disagrees (trend-radar leniency · gcc judge-variance · multi-agent unverified-as-verified) are logged calibration signals, not noise. Judge runs on the cheap model (Haiku); `build-quality@2` is the live rubric.
 
 ## Rules
 - **Adding a metric?** It does not ship without a row here (threshold + action + surface). Can't fill the row ⇒ don't collect the metric.
