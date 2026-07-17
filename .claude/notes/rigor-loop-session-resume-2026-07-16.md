@@ -1,33 +1,32 @@
-# Rigor-loop session — resume breadcrumb (2026-07-16)
+# Rigor-loop + cross-provider-judge session — resume breadcrumb (updated 2026-07-17)
 
 Session id: `652ea70d-f701-4759-bcd1-d2fbe08989a0`. Resume: `claude --resume 652ea70d-f701-4759-bcd1-d2fbe08989a0`
-from a terminal in `Empire_State_Events_Pipeline_Take_3`. This note exists only as a fallback if resume fails.
+from a terminal in `Empire_State_Events_Pipeline_Take_3` (add `--add-dir …/empire-state-hub --add-dir …/alex-agents-skills`).
+Fallback note if resume fails. **This supersedes the older content of this file.**
 
-## What this session did (all on disk already)
-- **Phase 1 (judge calibration):** ran `/judge-build` (Haiku) on 9 pipeline artifacts; Alex acked 8 agree / 1 disagree (trend-radar too-lenient). Logs: `.claude/evals/logs/2026-07-11-*-jb-cal2-*.jsonl`.
-- **Phase 2 (first `/rigor-review`):** seeded `.claude/evals/correction-recurrence.md` (3 classes; `thin-declarative-command` count 5 cleared threshold). DoD writer confirmed (non-null telemetry triplets).
-- **Executed all fixes (Alex directed):**
-  - `.claude/references/command-orchestration-convention.md` (new — codified fix for the recurrence).
-  - `.claude/evals/rubrics/build-quality-v2.md` (new — **live** rubric; dangling-ref cap ≤0.60, command-skeleton cap ≤0.35). Wired into `judge-build/SKILL.md`, `evals/README.md`, `value-action-registry.md`, `CLAUDE.md`.
-  - `.claude/references/signal-taxonomy.md` (new) + trend-radar rewired + Step 5.5 pre-flight.
-  - Rebuilt 5 GTM commands to the convention (analyze-competitive-landscape, run-market-landscape-study, create-messaging-brief, generate-channel-copy, test-and-report) — all re-judged pass.
-  - Re-judged the 5 orphan alex-agents-skills on Haiku, then **again WITH other-thread live-doc verification context** (the meaningful runs). Logs: `2026-07-16-*-jb-ctx-*.jsonl`. Blind Haiku (`jb-haiku-orphan-*`) and Opus (`jb-1783773964/3-*`) runs are marked `superseded`.
-- **DoD closed:** `.claude/.state/652ea70d-….build_meta` = `{dod_met:true, dod_waived:true, correction_rounds:1}`; 2 waiver reasons in `dod-waivers.jsonl`.
+## What shipped this session (all on disk; now also in CLAUDE.md + Linear)
+1. **Rigor-loop closed** — judge calibration (Phase 1), first `/rigor-review` (Phase 2, seeded `correction-recurrence.md`), DoD writer confirmed. Judge **calibration gate CROSSED (22 acked @ 86.4%) → provisional-trusted.**
+2. **Rubrics:** `build-quality@2` (`build-quality-v2.md`: dangling-ref ≤0.60 + command-skeleton ≤0.35 caps) → **`@3`** (`build-quality-v3.md`: composite **confidence-honesty cap ≤0.65**). @3 is LIVE (judge-build skill, README, registry, gemini-judge.sh default all point to it).
+3. **Command-orchestration convention** (`.claude/references/command-orchestration-convention.md`) + 5 GTM commands rebuilt to it + trend-radar dangling-ref fixed (`signal-taxonomy.md` created).
+4. **Cross-provider judge (YED-109):** spec `.claude/references/cross-provider-judge.md`; adapter `.claude/hooks/gemini-judge.sh` (calls `gemini-pro-latest`→gemini-3.1-pro; key in `.env` as `GEMINI_API_KEY`, billing ON, ~2-4¢/run). Scoped quorum: **Sonnet** (house-aware, via Agent tool) + **Gemini** (independent, via adapter); NO model tiebreak → human adjudicates, fail-safe FLAG in autonomous mode.
+   - **Approach A** (backfill): 83% Gemini-vs-Alex / 94% Gemini-vs-Haiku on 18 labeled artifacts.
+   - **Approach B** (prospective, held-out): STARTED — first 2 dual-judge entries; Gemini caught a real adapter bug (rubric-version mislabeling), now fixed.
 
-## WHERE WE STOPPED — the open decision + remaining writes
-**Calibration ledger (superseded excluded): 10 acked (9 agree, 1 disagree) + 12 pending = 22 live runs.**
-Crossing the ≥20-runs-@-≥80% gate turns the judge from advisory → trusted.
+## State of the systems of record (2026-07-17 reconciliation, option (a))
+- ✅ CLAUDE.md `<measurement_rigor_layer>` updated to current reality.
+- ✅ Linear: YED-88/89/93/94 closed Done; **YED-109** opened (cross-provider judge, In Progress) with shipped + roadmap checklist.
+- ✅ This breadcrumb refreshed.
+- ⏳ **DEFERRED to the reconciliation session:** ChatPRD → Notion PRD for the cross-provider judge (durable spec of record); refresh the plan-of-record.
 
-Acks Alex has GIVEN but I have NOT yet written to the logs:
-1. **Agree — all 10 clean passes:** the 4 context-grounded orphans (`jb-ctx-0` advanced-rag 0.814, `jb-ctx-1` agent-memory 0.830, `jb-ctx-2` langgraph 0.886, `jb-ctx-3` mcp-servers 0.897) + 6 post-fix (`jb-rejudge-0/1/2/4/5/6`: analyze-competitive 0.866, run-market-landscape 0.850, create-messaging 0.945, generate-channel-copy-v3 0.925, test-and-report 0.879, trend-radar 0.895).
-2. **Disagree — multi-agent (`jb-ctx-4`, 0.72):** the unverified `create_supervisor`/`langgraph-supervisor` presented as verified fact should FLAG, not pass. (Pass band too forgiving of confidence-honesty violations.)
+## Roadmap / open items (also in YED-109)
+- [ ] **Drop "provisional"** — ~15 independent Approach-B runs holding ≥80% Gemini-vs-Alex.
+- [ ] **Wire the dual-judge into `/judge-build`** (currently a manual dual-dispatch).
+- [ ] **Mechanize the dangling-ref check** (judge should verify referenced files exist; models under-apply the @2 cap — bf17).
+- [ ] **Specify the judge-trigger/merge mechanic** (Sonnet + Gemini → one `quorum` run-log block).
+- [ ] **ChatPRD/Notion PRD** for the cross-provider judge.
+- [ ] **`/dod-close`** never re-run after the Gemini workstream — the build_meta reflects `{dod_met:true,dod_waived:true,correction_rounds:2}` from earlier; consider a final close reflecting the full session.
+- [ ] Deferred arcs resume now the loop is hardened: MI **M2 (YED-106)**, **YED-103** audience-first, **YED-59** Capstone 2.
 
-STILL PENDING (Alex was mid-decision when he paused to update his laptop):
-3. **gcc-v2 (`jb-rejudge-3`, 0.49 flag) ack** — Alex asked for clarification. My recommendation = **disagree** (flag was predominantly judge inconsistency vs its 0.945 sibling; keeps the Haiku-variance signal visible). Options given: disagree (86.4%) / agree (90.9%) / exclude-as-superseded (21 live runs). Gate crosses either way. **Awaiting Alex's pick.**
-
-TODO on resume (in order):
-1. Get Alex's gcc-v2 verdict (disagree recommended).
-2. Write all 12 acks into the log rows (a small Python script mirroring `write_acks.py`; alex_ack strings + keep the disagrees' reasoning).
-3. **Offer the multi-agent file fix:** hedge/flag `create_supervisor`/`langgraph-supervisor` in `alex-agents-skills/skills/multi-agent-orchestration/SKILL.md` as UNVERIFIED (coordinate — it's the other thread's repo/file).
-4. Recompute + report final gate status (≥20 @ ≥80% → judge graduates advisory→trusted; note that graduation is itself a governance change — value-action-registry's "judge–human agreement <80% → advisory" row).
-5. Consider a second `/dod-close` note only if new build work happened after the first close (the file fixes are corrective; likely fold into existing close).
+## Small loose ends
+- The spec `cross-provider-judge.md` still cites `build-quality@2` in ~2 spots (Sonnet flagged) — bump to @3 currency.
+- Approach-B prospective acks not yet recorded (adapter=agree-flag-then-fixed; spec=agree-pass) — needed for Approach B to start counting toward the drop-provisional gate.
