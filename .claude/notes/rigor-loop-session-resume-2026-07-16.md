@@ -27,6 +27,12 @@ Fallback note if resume fails. **This supersedes the older content of this file.
 - [ ] **`/dod-close`** never re-run after the Gemini workstream — the build_meta reflects `{dod_met:true,dod_waived:true,correction_rounds:2}` from earlier; consider a final close reflecting the full session.
 - [ ] Deferred arcs resume now the loop is hardened: MI **M2 (YED-106)**, **YED-103** audience-first, **YED-59** Capstone 2.
 
-## Small loose ends
-- The spec `cross-provider-judge.md` still cites `build-quality@2` in ~2 spots (Sonnet flagged) — bump to @3 currency.
-- Approach-B prospective acks not yet recorded (adapter=agree-flag-then-fixed; spec=agree-pass) — needed for Approach B to start counting toward the drop-provisional gate.
+## Loose ends — CLOSED 2026-07-17
+- ✅ `cross-provider-judge.md` `@2`→`@3` bumped (both spots).
+- ✅ Approach-B prospective acks recorded — 4 entries, all agree (Gemini spec pass, Gemini adapter-fixed pass, Sonnet adapter flag, Sonnet spec pass). **Approach B is counting: 4 of ~15 toward dropping "provisional."**
+- ✅ Final `/dod-close` run — `{dod_met:true, dod_waived:true, correction_rounds:4}`; only the spec/ChatPRD-mirror item waived (Linear item MET via YED-109 → the 2-session Linear-waiver cluster is broken).
+
+## Reconciliation session now reduces to (fresh chat, grounded in this note + YED-109):
+1. **ChatPRD → Notion PRD** for the cross-provider judge (the one durable-spec item left).
+2. **Refresh the plan-of-record** (`~/.claude/plans/check-chatprd-linear-github-tranquil-ripple.md` is stale) or supersede → point to YED-109.
+3. (Separate build decision) the YED-109 judge roadmap: wire dual-judge into `/judge-build`; mechanize the dangling-ref check.
