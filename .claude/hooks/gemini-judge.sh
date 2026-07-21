@@ -41,6 +41,12 @@ RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
 set -a; . ./.env 2>/dev/null; set +a
 [ -n "${GEMINI_API_KEY:-}" ] || { echo "ERROR: GEMINI_API_KEY not set in .env" >&2; exit 1; }
 
+# --- deterministic dangling-reference pre-pass (mechanizes the @3 dangling-ref cap; models under-apply it — bf17) ---
+DANGLING=""
+if [ -x .claude/hooks/check-refs.sh ]; then
+  DANGLING=$(.claude/hooks/check-refs.sh --artifact "$ARTIFACT" 2>/dev/null)
+fi
+
 INSTR='You are scoring ONE build artifact. Follow the judge system rules and the rubric above.
 Score each of the 5 criteria INDEPENDENTLY 0-1 with 1-3 sentences of reasoning citing the specific thing.
 Scoped-quorum note: you are the INDEPENDENT cross-provider judge. Weight your judgment most on correctness and
@@ -53,11 +59,12 @@ Compute raw = correctness*0.30 + completeness*0.20 + convention_adherence*0.20 +
 # --- build request body safely with jq (no manual escaping) ---
 REQ=$(jq -n \
   --rawfile sys "$SYSTEM" --rawfile rubric "$RUBRIC" --rawfile art "$ARTIFACT" \
-  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" \
+  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" \
   '{contents:[{parts:[{text:(
       $sys + "\n\n===== RUBRIC (version is stated in the rubric text below) =====\n" + $rubric
       + "\n\n===== ARTIFACT TYPE =====\n" + $atype
       + "\n\n===== PER-ARTIFACT CONTEXT/SPEC =====\n" + (if $ctx=="" then "(none supplied — score correctness/completeness against the artifact'\''s own stated purpose; note reduced confidence)" else $ctx end)
+      + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per build-quality@3, a load-bearing reference that does not exist caps completeness ≤0.60.") end)
       + "\n\n===== ARTIFACT PATH =====\n" + $path
       + "\n\n===== ARTIFACT CONTENT =====\n" + $art
       + "\n\n===== INSTRUCTIONS =====\n" + $instr
@@ -79,6 +86,16 @@ USAGE=$(printf '%s' "$BODY" | jq -c '.usageMetadata // {}' 2>/dev/null)
 [ -n "$VERDICT_JSON" ] || { echo "ERROR: empty verdict (thinking tokens may have starved output; raise maxOutputTokens)" >&2; exit 1; }
 echo "$VERDICT_JSON" | jq -e '.criterion_scores | length == 5' >/dev/null 2>&1 || { echo "ERROR: malformed verdict JSON:" >&2; echo "$VERDICT_JSON" | head -c 600 >&2; exit 1; }
 
+# --- deterministic @3 dangling-ref cap enforcement (only ever LOWERS a score; never raises — safe) ---
+if [ -n "$DANGLING" ]; then
+  VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c '
+    .criterion_scores |= map(if .id=="completeness" and .score>0.60
+      then (.score=0.60 | .reasoning=(.reasoning + " [check-refs: capped to 0.60 — referenced file(s) missing on disk]")) else . end)
+    | (if .weighted_score>0.60 then .weighted_score=0.60 else . end)
+    | .verdict=(if .weighted_score>=0.70 then "pass" else "flag" end)')
+  echo "  check-refs: dangling reference(s) present → completeness/composite capped ≤0.60 deterministically" >&2
+fi
+
 WS=$(echo "$VERDICT_JSON" | jq -r '.weighted_score'); VD=$(echo "$VERDICT_JSON" | jq -r '.verdict')
 echo "== Gemini judge ($RESOLVED) — $ARTIFACT =>  $WS ($VD)  [set:$CALSET]"
 echo "$VERDICT_JSON" | jq -r '.criterion_scores[] | "  \(.id) \(.score) — \(.reasoning)"'
@@ -96,10 +113,11 @@ OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
 jq -nc \
   --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" \
   --arg jm "gemini:$RESOLVED" --arg sid "$SID" --arg calset "$CALSET" --arg rver "$RUBRIC_VER" \
-  --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
+  --arg dangling "$DANGLING" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
   '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_type:$atype, rubric:$rver,
     judge_model:$jm, session_id:$sid, criterion_scores:$v.criterion_scores,
     weighted_score:$v.weighted_score, verdict:$v.verdict, alex_ack:null,
     confidence_honesty_violation:($v.confidence_honesty_violation // false),
+    dangling_refs:($dangling | if .=="" then [] else split("\n") end),
     calibration_set:$calset, judge_provider:"google", usage:$usage}' > "$OUT"
 echo "  logged → $OUT"

@@ -1,31 +1,32 @@
 ---
-description: "Score a build artifact (skill/command/hook/ref/code) against the build-quality rubric — per-criterion 0–1 + reasoning, weighted composite, pass/flag verdict — write an authoritative run-log, and capture your ack (calibration). Advisory until ≥80% agreement. Never rewrites, never blocks."
+description: "Cross-provider build-quality judge — score an artifact (skill/command/hook/ref/code) with a two-seat quorum (Claude/Sonnet + Gemini) against build-quality@3: mechanized dangling-ref cap, per-criterion 0–1, weighted composite, merge to one quorum verdict, authoritative run-logs, capture your ack (calibration). Agree→auto; disagree→escalate (fail-safe FLAG in autonomous). Provisional-trusted. Never rewrites, never blocks."
 argument-hint: "[artifact path or pasted content] [+ optional: the issue/AC it should satisfy]"
 ---
 
-# /judge-build — Build-quality judge
+# /judge-build — Cross-provider build-quality judge
 
-Run the **judge-build** methodology on an artifact. Methodology: `.claude/skills/judge-build/SKILL.md`.
+Run the **judge-build** quorum on an artifact. Methodology: `.claude/skills/judge-build/SKILL.md`. Design: `.claude/references/cross-provider-judge.md`.
 
 **Input:** a file path (e.g. `/judge-build .claude/skills/trend-radar/SKILL.md`) or pasted content, optionally with the spec/AC it should meet.
 
 ## Trigger
 Runs when Alex types `/judge-build <artifact>` or says "judge this build", "score this skill/hook against the rubric", or at a DoD boundary once the judge is calibrated.
 
-## Shape (single-thread)
-Execute `.claude/skills/judge-build/SKILL.md`:
-1. Load `judge-system.md` + `rubrics/build-quality.md`.
-2. Read the artifact (+ spec if given).
-3. Score the 5 criteria independently (0–1 + reasoning); apply the judge-circularity caution.
-4. Weighted composite → verdict (pass ≥0.70 / flag).
-5. Append the run-log JSON line (authoritative).
-6. Present the verdict + **ask "agree / disagree?"** → write `alex_ack` (calibration).
+## Orchestration (execute `.claude/skills/judge-build/SKILL.md`)
+1. **Intake** — resolve the artifact path + `artifact_type`; capture any spec/AC; determine **mode** (interactive = Alex in the loop, default; autonomous = batch/headless).
+2. **Pre-pass (mechanized)** — `bash .claude/hooks/check-refs.sh --artifact <path>` → the verified missing-references list (ground truth for both seats; enforces the `@3` dangling-ref cap deterministically).
+3. **Dispatch two seats** — (a) **Claude/Sonnet** seat via the `Agent` tool with `model: sonnet` (house-aware, independent of the Opus main thread); (b) **Gemini** seat via `bash .claude/hooks/gemini-judge.sh --artifact <path> --artifact-type <t> --calibration-set prospective`. Both score all 5 `build-quality@3` criteria (0–1 + reasoning) using `judge-system.md` + `build-quality-v3.md`.
+4. **Collect** — the Gemini adapter wrote its own run-log line; append the Claude/Sonnet seat's line (`judge_provider:"anthropic"`, `rubric:"build-quality@3"`).
+5. **Merge → named output** — `bash .claude/hooks/quorum-merge.sh --artifact <path> --mode <mode> --claude-verdict '<json>' --gemini-log <path>` writes the authoritative **`quorum` record** (`.claude/evals/logs/…-quorum-….jsonl`) with `agree` + `resolution` (`auto` / `escalated` / `failsafe_flag`) + `final_verdict`.
+6. **Present + ack (calibration)** — show both seats' per-criterion scores (scoped-quorum weighting noted); on **agree** ask "agree / disagree?" once; on **escalated** show the divergent criterion side-by-side and ask Alex to adjudicate; write the answer to the quorum record's `alex_ack`. Autonomous mode records `failsafe_flag` and does not block.
+7. **Failure modes** — no spec → score vs stated purpose, flag reduced confidence; artifact too large → judge load-bearing sections, no silent truncation; **Gemini seat errors → do NOT silently single-judge**: record the Claude seat, mark the quorum incomplete, flag for re-run.
 
 ## Guardrails
-- **Advisory only** until ≥20 runs hit ≥80% Alex-agreement — don't gate the DoD on it yet.
+- **Provisional-trusted** — gates new/independent builds; advisory on self-produced work. Approach-B prospective runs (~2 of ~15 Gemini-vs-Alex) retire "provisional." Don't hard-block on the score.
 - Scores + flags; **never rewrites, never hard-blocks.** Honest about un-assessable criteria.
-- Authoritative run-log is local (`.claude/evals/logs/`); Notion/PostHog projection deferred.
+- Authoritative run-logs are local (`.claude/evals/logs/`); Notion/PostHog projection deferred.
+- **No model tiebreak** — a disputant can't adjudicate its own split; Alex is the only independent tiebreaker (fail-safe FLAG when he's not in the loop).
 
 ## Ground truth
-- Methodology + rubric + judge prompt: `.claude/evals/` · calibration gate: `.claude/evals/README.md`
-- Coordinates with `eval-harness` (Notion `348d3699…`).
+- Methodology + rubric + judge prompt: `.claude/evals/` · calibration gate: `.claude/evals/README.md` · quorum design: `.claude/references/cross-provider-judge.md`
+- Scripts: `.claude/hooks/{check-refs,gemini-judge,quorum-merge}.sh` · Coordinates with `eval-harness` (Notion `348d3699…`).
