@@ -1,58 +1,67 @@
 ---
 name: judge-build
-description: "LLM-as-judge for build artifacts (skills/commands/hooks/refs/code). Scores an artifact against the build-quality rubric per-criterion (0–1 + reasoning), aggregates a weighted composite, writes an authoritative run-log, and prompts Alex to ack/disagree (the calibration field). Lean single-judge, cheap-model-first. ADVISORY until it reaches ≥80% human agreement. Coordinates with eval-harness; never auto-rewrites, never hard-blocks."
+description: "Cross-provider LLM-as-judge for build artifacts (skills/commands/hooks/refs/code). Runs a two-seat quorum — Claude/Sonnet (house-aware) + Gemini (independent) — scores each against the build-quality rubric per-criterion (0–1 + reasoning), mechanically enforces the dangling-reference cap, merges to one quorum verdict, writes authoritative run-logs, and prompts Alex to ack/disagree (the calibration field). Agree→auto; disagree→escalate (fail-safe FLAG in autonomous mode). PROVISIONAL-TRUSTED. Coordinates with eval-harness; never auto-rewrites, never hard-blocks."
 ---
 
-# Judge Build Skill
+# Judge Build Skill (cross-provider quorum)
 
-You are the **build-quality judge**. You score a build artifact against the rubric so quality is a measurable signal, not a vibe. Part of the build-rigor measurement layer (PRD US-3 / Linear YED-89); home is `.claude/evals/` (coordinates with `eval-harness`).
+You orchestrate the **build-quality judge** so quality is a measurable, cross-provider signal — not a vibe, and not a single model rating its own family's work. Part of the build-rigor measurement layer (PRD US-3 / Linear YED-89; cross-provider quorum = YED-109). Home is `.claude/evals/`. Full design: **`.claude/references/cross-provider-judge.md`** (read it once).
 
 **Load first (every run):**
-- `.claude/evals/prompts/judge-system.md` — the immutable judge instructions. Follow them verbatim.
-- `.claude/evals/rubrics/build-quality-v3.md` — the **current** rubric (`build-quality@3`, live 2026-07-17): criteria, weights, pass band (0.70), anchors + the composite **confidence-honesty cap ≤0.65** (unverified-asserted-as-verified → flag) + the inherited completeness caps (dangling-reference ≤0.60; command-skeleton-absent ≤0.35). Record `rubric: "build-quality@3"` in the run-log. (`build-quality-v2.md`/`build-quality.md` = retained `@2`/`@1` for runs scored under them; never mutate old versions.)
+- `.claude/evals/prompts/judge-system.md` — the immutable judge instructions. Follow verbatim.
+- `.claude/evals/rubrics/build-quality-v3.md` — the **current** rubric (`build-quality@3`, live 2026-07-17): 5 criteria + weights, pass band 0.70, and the caps — composite **confidence-honesty cap ≤0.65** (unverified-asserted-as-verified → flag) + completeness caps (dangling-reference ≤0.60; command-skeleton-absent ≤0.35). Record `rubric: "build-quality@3"` in every run-log. (`build-quality-v2.md`/`build-quality.md` = retained `@2`/`@1`; never mutate old versions.)
 
 **Ground rules:**
-- **Advisory until calibrated.** Until ≥20 logged runs reach ≥80% Alex-agreement, the score is advisory — do NOT gate the DoD or block anything on it. (See `.claude/evals/README.md`.)
+- **Provisional-trusted.** Calibration crossed the gate (≥20 @ ≥80%) on a Claude-only sample → gates new/independent builds, advisory on self-produced work. The cross-provider quorum + Approach-B prospective runs (currently ~2 of ~15 Gemini-vs-Alex) is what retires "provisional." Until then, still do NOT hard-block on the score.
 - **Score + flag only.** Never rewrite the artifact; never hard-block. Surface a verdict for Alex to ack.
-- **Cheap-model-first.** A separate cross-judge / stronger model is deferred (lean foundation, 2026-06-26).
-- **Honest:** if you can't assess a criterion (missing context), say so and score conservatively — don't invent.
+- **Honest:** if a criterion can't be assessed (missing context), say so and score conservatively — don't invent.
 
 ---
 
 ## Inputs
 - **Artifact** — a file path (e.g. `.claude/skills/trend-radar/SKILL.md`) or pasted content. Note its `artifact_type` (skill/command/hook/ref/code).
-- **(Optional) Spec** — the issue/PRD/AC it should satisfy (for the `correctness`/`completeness` criteria). If absent, infer from the artifact's own stated purpose and say so.
+- **(Optional) Spec** — the issue/PRD/AC it should satisfy (for `correctness`/`completeness`). If absent, infer from the artifact's own stated purpose and say so.
+- **Mode** — `interactive` (Alex in the loop, default) or `autonomous` (batch/headless). Drives disagreement resolution.
+
+## Step 0 — Mechanized dangling-reference pre-pass (both seats share this ground truth)
+Run `bash .claude/hooks/check-refs.sh --artifact <path>`. Its stdout is the list of load-bearing `.claude/…` references that **do not exist on disk** — verified fact, not model opinion. This closes the `bf17` gap (models under-apply the cap). Pass this list to BOTH seats. The Gemini adapter runs check-refs itself and enforces the cap; for the Claude seat, treat the list as authoritative and cap completeness ≤0.60 (composite ≤0.60) if it is non-empty.
 
 ## Step 1 — Read the artifact + its spec
-Read the file(s). If a spec/AC was given (or findable in Linear/the PRD), hold the artifact against it. Note the `artifact_type`.
+Read the file(s). If a spec/AC was given (or findable in Linear/the PRD), hold the artifact against it. Note `artifact_type`.
 
-## Step 2 — Score each criterion independently (0–1 + reasoning)
-Per `judge-system.md`: for each of the 5 rubric criteria (`correctness`, `completeness`, `convention_adherence`, `anti_pattern_avoidance`, `diagnostics`), assign a 0–1 score and a 1–3 sentence reasoning citing the specific thing. Apply the **judge-circularity caution** — be skeptical of plausible-but-wrong work. Use the rubric anchors.
+## Step 2 — Run the two seats (both score all 5 criteria independently, 0–1 + reasoning)
+- **Claude (Sonnet) seat — house-aware.** Dispatch via the `Agent` tool with **`model: sonnet`** (independent of the Opus main thread, avoids Opus-judging-Opus self-preference; keeps house context). Give it `judge-system.md` + `build-quality-v3.md` + the artifact + the Step-0 missing-refs list + any spec. It returns the 5-criterion JSON (`{criterion_scores[], confidence_honesty_violation, weighted_score, verdict}`). Apply the **judge-circularity caution** (be *more* skeptical of plausible-but-wrong work).
+- **Gemini seat — independent (cross-provider).** Run `bash .claude/hooks/gemini-judge.sh --artifact <path> --artifact-type <t> --calibration-set prospective [--context "<spec>"]`. It scores the same rubric, mechanically enforces the dangling-ref cap, and **writes its own run-log line** (`judge_provider:"google"`).
+- **Scoped quorum weighting** (per the spec): Gemini carries **full weight** on the provider-neutral criteria (`correctness`, `completeness`); the Claude/Sonnet seat is **primary** on the house-specific criteria (`convention_adherence`, `anti_pattern_avoidance`) where Gemini lacks native Empire-State context; `diagnostics` shared.
 
-## Step 3 — Aggregate + verdict
-`weighted_score = Σ(score × weight)`. **verdict = `pass` if weighted_score ≥ 0.70, else `flag`.**
+## Step 3 — Write the Claude seat's run-log line
+Append the Sonnet verdict as one JSON line to `.claude/evals/logs/<YYYY-MM-DD>-<artifact-slug>-<run-id>.jsonl` per the README schema (`judge_model:"claude:sonnet"`, `judge_provider:"anthropic"`, `rubric:"build-quality@3"`, `calibration_set:"prospective"`, `alex_ack:null`). (The Gemini line was written by its adapter in Step 2.) These local logs are the source of truth.
 
-## Step 4 — Write the authoritative run-log (always)
-Append one JSON line to `.claude/evals/logs/<YYYY-MM-DD>-<artifact-slug>-<run-id>.jsonl` per the README schema (`run_id`, `timestamp`, `artifact`, `artifact_type`, `rubric: "build-quality@1"`, `judge_model`, `session_id`, `criterion_scores[]`, `weighted_score`, `verdict`, `alex_ack: null`). This local log is the source of truth; a Notion/PostHog projection is deferred.
+## Step 4 — Merge to one quorum verdict
+Run `bash .claude/hooks/quorum-merge.sh --artifact <path> --mode <interactive|autonomous> --claude-verdict '<sonnet json>' --gemini-log <the gemini log path from Step 2> [--claude-run-id <id>]`. It computes `agree`, resolves (`auto` / `escalated` / `failsafe_flag`), and appends the `quorum` record. **Resolution:** agree → auto-verdict; disagree + interactive → **escalate to Alex**; disagree + autonomous → **fail-safe FLAG** (non-destructive, queued for later review — never auto-resolve a split with a correlated model).
 
-## Step 5 — Present verdict + ack prompt (the calibration step)
-Show Alex:
+## Step 5 — Present verdict + ack (the calibration step)
 ```
-## Build-quality judge — {artifact}  →  {weighted_score} ({verdict})
-- correctness {s} — {why}
-- completeness {s} — {why}
-- convention_adherence {s} — {why}
-- anti_pattern_avoidance {s} — {why}
-- diagnostics {s} — {why}
+## Build-quality quorum — {artifact}  →  {final_verdict}  ({resolution})
+Claude/Sonnet {ws}  |  Gemini {ws}   agree: {bool}
+- correctness {c-s}/{g-s} — {why}         [Gemini full weight]
+- completeness {c-s}/{g-s} — {why}        [Gemini full weight; check-refs: {missing or none}]
+- convention_adherence {c-s}/{g-s} — {why}[Claude primary]
+- anti_pattern_avoidance {c-s}/{g-s} — {why}[Claude primary]
+- diagnostics {c-s}/{g-s} — {why}
+{if escalated: the divergent criterion, both seats' reasoning SIDE-BY-SIDE, highlighted}
 {if flag: the 1–2 highest-leverage fixes}
 ```
-Then ask: **"Do you agree with this verdict? (agree / disagree — and why)"** → write the answer into the run-log's `alex_ack`. This is what calibrates the judge toward the ≥80% trust gate. Tell Alex the current agreement rate if ≥5 acks exist.
+- **Agree** → ask once: **"Agree with this verdict? (agree / disagree — and why)"** → write into the quorum record's `alex_ack`.
+- **Escalated** → the disagreement is the highest-value output: show it, ask Alex to adjudicate → that call becomes the `alex_ack` and the tiebreak. A disagree is *more* valuable than an agree — it shows where to tighten the rubric.
+- **Autonomous** → no prompt; record `failsafe_flag` and note it's queued. Tell Alex the running Approach-B agreement rate if ≥5 prospective acks exist.
 
 ## Failure modes
-- **No spec available** — score `correctness`/`completeness` against the artifact's own stated purpose; flag the reduced confidence.
+- **No spec available** — score `correctness`/`completeness` against the artifact's own stated purpose; flag reduced confidence.
 - **Artifact too large** — judge the load-bearing sections; note what wasn't covered (no silent truncation).
-- **Rubric feels wrong for this artifact type** — record that in the ack note; it's a signal to add an artifact-type-specific rubric later (don't bend the score).
+- **Gemini seat errors** (billing lapse → Flash-Lite, HTTP error) — the adapter surfaces it and exits non-zero; do NOT silently fall back to a single-judge pass. Record the Claude seat, note the quorum is incomplete, and flag for a re-run.
+- **Rubric feels wrong for this artifact type** — record it in the ack note; a signal to add an artifact-type rubric later (don't bend the score).
 
 ## Reuses / references
-- `.claude/evals/{prompts/judge-system.md, rubrics/build-quality.md, README.md}` · pattern from `eval-core` (forced per-criterion structured scoring + run-log with `alex_ack`).
+- `.claude/hooks/{check-refs.sh, gemini-judge.sh, quorum-merge.sh}` · `.claude/evals/{prompts/judge-system.md, rubrics/build-quality-v3.md, README.md}` · design: `.claude/references/cross-provider-judge.md`.
 - Coordinates with `eval-harness` (Notion `348d3699…`) — same judge home; eval-harness owns `rubric_version`.

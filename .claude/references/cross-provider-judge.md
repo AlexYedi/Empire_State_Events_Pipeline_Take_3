@@ -45,5 +45,42 @@ Same `.claude/evals/logs/*.jsonl` schema. New/used fields:
 4. **Free tier on this key = Flash-Lite only** — Pro needs billing (enabled 2026-07-17). Don't silently fall back to a free model if billing lapses; surface it.
 5. **Cost:** ~2–4¢/run · backfill (~15–22 runs) ≈ $0.50–0.90 one-time · ongoing ≈ $1–6/mo. Claude seat stays subscription-free.
 
+## Judge-trigger / merge mechanic (spec, added 2026-07-21 — roadmap item 4, precedes the `/judge-build` wiring)
+How the two seats become one `quorum` verdict inside `/judge-build`. Each seat writes its own schema-stable run-log
+line (contract unchanged); the command computes a **separate additive `quorum` record** — no seat needs to know the
+other's result at write time (avoids an order-dependency the adapter can't satisfy).
+
+**Seats + who runs them:**
+- **Claude (Sonnet) seat** — dispatched by the command via the `Agent` tool with `model: sonnet` (independent of the
+  Opus main thread; house-aware). The subagent runs the `judge-build` methodology and returns the 5-criterion JSON
+  verdict as text. The command appends its run-log line (`judge_model:"claude:sonnet…"`, `judge_provider:"anthropic"`).
+- **Gemini seat** — the command runs `.claude/hooks/gemini-judge.sh --artifact <path> [--context …] --calibration-set prospective`
+  via Bash; the adapter writes its own line and prints the verdict.
+
+**Pre-pass both seats share (mechanized, not model-discretion):** the command first runs
+`.claude/hooks/check-refs.sh --artifact <path>`. Its stdout — the list of *load-bearing referenced paths that do not
+exist* — is (a) injected into BOTH seats' prompts as ground truth ("VERIFIED-MISSING REFERENCES: …"), and (b) used to
+**deterministically enforce** the `@3` dangling-reference cap (completeness ≤0.60 / composite ≤0.60) regardless of what
+the model scored. This closes the `bf17` gap (models under-apply the cap). `gemini-judge.sh` calls `check-refs.sh`
+internally and enforces the cap on its own output; the Claude seat is told to treat the list as authoritative.
+
+**Merge (`.claude/hooks/quorum-merge.sh`):** given `--claude-verdict <json>`, `--gemini-log <path>` (or `--gemini-verdict <json>`),
+`--artifact <path>`, and `--mode interactive|autonomous`, it:
+1. reads both verdicts (`weighted_score`, `verdict`),
+2. sets `agree = (claude.verdict == gemini.verdict)`,
+3. resolves: `agree` → `resolution:"auto"`, final verdict = the agreed verdict; `disagree` + `interactive` →
+   `resolution:"escalated"`, final verdict = `flag` pending Alex; `disagree` + `autonomous` → `resolution:"failsafe_flag"`,
+   final verdict = `flag`,
+4. appends one `quorum` record to `.claude/evals/logs/<date>-<artifact>-quorum-<run>.jsonl`:
+   `{run_id, timestamp, artifact, claude_run_id, gemini_run_id, claude:{verdict,score}, gemini:{verdict,score},
+   agree, resolution, final_verdict, mode, alex_ack:null}` — the schema-stable §6 block, additive to the seat lines.
+
+**Resolution surfacing:** on `escalated`, the command shows Alex both seats' per-criterion reasoning side-by-side with the
+divergent criterion highlighted, and asks the agree/disagree ack → written to the quorum record's `alex_ack`. On `auto`,
+one ack covers both. `autonomous` mode never blocks — it records `failsafe_flag` and queues the split for later review.
+
+**Autonomy detection:** `--mode` is passed by the command based on whether Alex is in the loop (interactive session →
+`interactive`; batch/headless → `autonomous`, per the [[feedback_ship_all_variants]] batch-autonomy convention).
+
 ## DoD
 Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-close`. Spec artifact = this file (mirror to ChatPRD/Notion). Adversarial pass = the quorum-circularity catch (already in writing, this session).
