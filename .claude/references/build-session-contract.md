@@ -37,4 +37,4 @@ Semantic fields (`dod_met`, `dod_waived`, `correction_rounds`) are nullable. The
 Per the 2026-06-26 decision (lean foundation, defer the platform): the **OTEL collector + Langfuse** path is deferred. Add it only on a named trigger — weekly prompt-level agent-trace debugging, or wanting Langfuse's datasets/experiments for the rubric. When added: Claude Code OTEL → collector → relabel to `gen_ai.*` → fan out to {PostHog, Langfuse}, each writing/deriving this same `build_session` contract. **If Langfuse is adopted, first resolve judge ownership (eval-harness vs Langfuse) to avoid two judges.**
 
 ## Emitter
-`.claude/hooks/build-session-emit.sh` (Stop hook). Writes the authoritative JSONL always; POSTs to PostHog `/capture/` only if `$POSTHOG_PROJECT_KEY` is set. Disable via `settings.local.json` → `{"hooks":{"disable":["build-session-emit"]}}`.
+`.claude/hooks/build-session-emit.sh` (Stop hook). Writes the authoritative JSONL always; POSTs to PostHog `/capture/` only if `$POSTHOG_PROJECT_TOKEN` is set. Disable via `settings.local.json` → `{"hooks":{"disable":["build-session-emit"]}}`.

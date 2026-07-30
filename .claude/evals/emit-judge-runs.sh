@@ -4,13 +4,13 @@
 # swappable projection. Idempotent via $insert_id = run_id (re-runs dedup, no double-count).
 # Content-gated: scores / verdict / per-criterion scores / ack only — NO reasoning text, no prompts.
 #
-# Usage: run after a judge run (or wire into /judge-build). Reads POSTHOG_PROJECT_KEY from .env.
+# Usage: run after a judge run (or wire into /judge-build). Reads POSTHOG_PROJECT_TOKEN from .env.
 set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
-if [ -z "${POSTHOG_PROJECT_KEY:-}" ] && [ -f ".env" ]; then
+if [ -z "${POSTHOG_PROJECT_TOKEN:-}" ] && [ -f ".env" ]; then
   set -a; . ./.env 2>/dev/null || true; set +a
 fi
-[ -z "${POSTHOG_PROJECT_KEY:-}" ] && { echo "no POSTHOG_PROJECT_KEY — JSONL remains the record; skipping projection"; exit 0; }
+[ -z "${POSTHOG_PROJECT_TOKEN:-}" ] && { echo "no POSTHOG_PROJECT_TOKEN — JSONL remains the record; skipping projection"; exit 0; }
 HOST="${POSTHOG_HOST:-https://us.i.posthog.com}"
 
 n=0
@@ -18,7 +18,7 @@ for f in .claude/evals/logs/*.jsonl; do
   [ -f "$f" ] || continue
   while IFS= read -r line; do
     [ -z "$line" ] && continue
-    payload=$(printf '%s' "$line" | jq -c --arg k "$POSTHOG_PROJECT_KEY" '
+    payload=$(printf '%s' "$line" | jq -c --arg k "$POSTHOG_PROJECT_TOKEN" '
       {api_key:$k, event:"judge_run",
        distinct_id:("judge-" + (.artifact_type // "artifact")),
        timestamp:.timestamp,
