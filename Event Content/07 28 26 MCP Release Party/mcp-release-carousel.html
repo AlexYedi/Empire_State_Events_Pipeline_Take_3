@@ -1,0 +1,273 @@
+<style>
+  :root{
+    --ground:#0b1220; --surface:#16213a; --surface2:#1d2c49;
+    --ink:#eef3fb; --muted:#93a3be; --line:#2a3a5c; --line-soft:#20304e;
+    --emerald:#34d399; --emerald-deep:#0f5c46; --emerald-ink:#0b1220;
+    --amber:#eaa64f; --amber-deep:#5a3f1a;
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#060a12;color:#eef3fb;font-family:var(--sans);-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:26px;padding:34px 16px 60px}
+  .hint{max-width:1040px;width:min(1040px,92vw);color:#93a3be;font-size:14px;line-height:1.6;text-align:center;letter-spacing:.01em}
+  .hint b{color:#eef3fb;font-weight:600}
+
+  /* Each slide is a 4:5 frame; container queries scale everything inside it. */
+  .slide{
+    position:relative;width:min(1040px,92vw);aspect-ratio:4/5;background:
+      radial-gradient(120% 80% at 82% -10%, #1a2a49 0%, rgba(26,42,73,0) 55%),
+      linear-gradient(160deg,#0d1524 0%, #0b1220 62%, #0a0f1c 100%);
+    border:1px solid #2a3a5c;border-radius:20px;overflow:hidden;
+    container-type:inline-size;box-shadow:0 24px 60px -30px rgba(0,0,0,.9);
+  }
+  .pad{position:absolute;inset:0;padding:7.2cqw 7cqw 6cqw;display:flex;flex-direction:column}
+  .eyebrow{font-family:var(--mono);font-size:2.05cqw;letter-spacing:.16em;text-transform:uppercase;color:#93a3be;display:flex;align-items:center;gap:1.4cqw}
+  .eyebrow .dot{width:1.5cqw;height:1.5cqw;border-radius:50%;background:#34d399}
+  .eyebrow .num{color:#34d399;font-weight:600}
+  h1{font-size:9.2cqw;line-height:1.02;letter-spacing:-.03em;font-weight:800;margin:0;text-wrap:balance}
+  h2{font-size:5.5cqw;line-height:1.06;letter-spacing:-.02em;font-weight:750;margin:0;text-wrap:balance}
+  .lede{font-size:3.35cqw;line-height:1.4;color:#cdd8ea;font-weight:420;max-width:82%}
+  .cap{font-size:2.5cqw;line-height:1.45;color:#93a3be}
+  .cap b{color:#eef3fb;font-weight:600}
+  .chip{font-family:var(--mono);font-size:.86em;background:#16213a;border:1px solid #2a3a5c;color:#cfe;padding:.08em .5em;border-radius:.45em;white-space:nowrap}
+  .spacer{flex:1 1 auto}
+  .foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:1.85cqw;letter-spacing:.06em;color:#6f80a0;border-top:1px solid #20304e;padding-top:2.4cqw}
+  .foot .brand{color:#93a3be}
+  figure{margin:0}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .diagram{flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0;padding:1cqw 0}
+
+  /* SVG shared text styling via classes (sized in viewBox units) */
+  .n-label{font-family:var(--sans);font-weight:650;fill:#eef3fb}
+  .n-sub{font-family:var(--mono);fill:#93a3be}
+  .m{font-family:var(--mono)}
+  .amber{fill:#eaa64f} .em{fill:#34d399} .mut{fill:#93a3be} .ink{fill:#eef3fb}
+
+  @media (max-width:560px){ .lede{max-width:100%} }
+  @media print{
+    @page{size:1080px 1350px;margin:0}
+    html,body{background:#0b1220}
+    .wrap{padding:0;gap:0}
+    .hint{display:none}
+    .slide{width:1080px;height:1350px;aspect-ratio:auto;border:none;border-radius:0;box-shadow:none;break-after:page;page-break-after:always}
+    .slide:last-child{break-after:auto}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .slide{scroll-margin-top:20px}
+  }
+</style>
+
+<div class="wrap">
+  <!-- SLIDE 1 — HOOK -->
+  <section class="slide" id="s1">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span>MCP · 2026-07-28 release candidate</div>
+      <div class="spacer"></div>
+      <h1>One release.<br>Two gaps.</h1>
+      <p class="lede" style="margin-top:4cqw">The largest revision to the Model Context Protocol since launch <b style="color:#fff">closed the scaling gap</b> and <b style="color:#fff">opened the authorization gap</b> — in the same release.</p>
+      <div class="spacer"></div>
+      <div class="foot"><span class="brand">MCP Release Party · NYC</span><span>01 / 06</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 — STATELESSNESS BEFORE -->
+  <section class="slide" id="s2">
+    <div class="pad">
+      <div class="eyebrow"><span class="num">①</span>&nbsp;Statelessness · before · 2025&#8288;-&#8288;11&#8288;-&#8288;25</div>
+      <h2 style="margin-top:3cqw">Stateful: pinned to one instance</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 620 470" role="img" aria-label="Stateful architecture: a client sticky-routed to one MCP server instance, with three instances all backed by a shared session store.">
+          <defs>
+            <marker id="ar-a" markerWidth="9" markerHeight="9" refX="7" refY="4.2" orient="auto"><path d="M0,0 L8,4.2 L0,8.4 Z" fill="#eaa64f"/></marker>
+            <marker id="ar-m" markerWidth="9" markerHeight="9" refX="7" refY="4.2" orient="auto"><path d="M0,0 L8,4.2 L0,8.4 Z" fill="#93a3be"/></marker>
+          </defs>
+          <!-- Client -->
+          <rect x="238" y="6" width="144" height="52" rx="11" fill="#16213a" stroke="#2a3a5c"/>
+          <text x="310" y="38" text-anchor="middle" class="n-label" font-size="23">Client</text>
+          <line x1="310" y1="58" x2="310" y2="92" stroke="#93a3be" stroke-width="2.4" marker-end="url(#ar-m)"/>
+          <!-- Load balancer -->
+          <rect x="214" y="94" width="192" height="52" rx="11" fill="#16213a" stroke="#2a3a5c"/>
+          <text x="310" y="126" text-anchor="middle" class="n-label" font-size="21">Load balancer</text>
+          <!-- sticky route -->
+          <path d="M310,146 L310,196" stroke="#eaa64f" stroke-width="2.6" stroke-dasharray="7 6" marker-end="url(#ar-a)"/>
+          <text x="326" y="176" class="m amber" font-size="17">sticky route</text>
+          <!-- three servers -->
+          <g>
+            <rect x="40" y="200" width="150" height="56" rx="11" fill="#111b30" stroke="#20304e"/>
+            <text x="115" y="234" text-anchor="middle" class="n-sub" font-size="18" fill="#93a3be">MCP server</text>
+          </g>
+          <g>
+            <rect x="235" y="198" width="150" height="60" rx="11" fill="#20180a" stroke="#eaa64f" stroke-width="2.2"/>
+            <text x="310" y="226" text-anchor="middle" class="n-label" font-size="18">MCP server</text>
+            <text x="310" y="246" text-anchor="middle" class="m amber" font-size="13.5">holds your session</text>
+          </g>
+          <g>
+            <rect x="430" y="200" width="150" height="56" rx="11" fill="#111b30" stroke="#20304e"/>
+            <text x="505" y="234" text-anchor="middle" class="n-sub" font-size="18" fill="#93a3be">MCP server</text>
+          </g>
+          <!-- dashed to store -->
+          <path d="M115,256 L115,300 L280,300" stroke="#eaa64f" stroke-width="1.8" stroke-dasharray="4 6" fill="none" opacity=".8"/>
+          <path d="M310,258 L310,300" stroke="#eaa64f" stroke-width="1.8" stroke-dasharray="4 6" opacity=".8"/>
+          <path d="M505,256 L505,300 L340,300" stroke="#eaa64f" stroke-width="1.8" stroke-dasharray="4 6" fill="none" opacity=".8"/>
+          <!-- session store cylinder -->
+          <g transform="translate(230,318)">
+            <ellipse cx="80" cy="12" rx="80" ry="14" fill="#20180a" stroke="#eaa64f"/>
+            <path d="M0,12 L0,74 A80,14 0 0 0 160,74 L160,12" fill="#20180a" stroke="#eaa64f"/>
+            <ellipse cx="80" cy="12" rx="80" ry="14" fill="none" stroke="#eaa64f"/>
+            <text x="80" y="42" text-anchor="middle" class="n-label" font-size="17">Shared session</text>
+            <text x="80" y="62" text-anchor="middle" class="n-label" font-size="17">store</text>
+          </g>
+        </svg>
+      </div>
+      <p class="cap">Sticky routing and a <b>shared session store</b> bridge every request. Any follow-up must return to the exact instance that holds your context — so you can't freely cycle the fleet.</p>
+      <div class="foot"><span class="brand">Slide: Alex Hancock (Block / MCP)</span><span>02 / 06</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — STATELESSNESS AFTER -->
+  <section class="slide" id="s3">
+    <div class="pad">
+      <div class="eyebrow"><span class="num">①</span>&nbsp;Statelessness · after · 2026&#8288;-&#8288;07&#8288;-&#8288;28</div>
+      <h2 style="margin-top:3cqw">Stateless: any instance, any request</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 620 470" role="img" aria-label="Stateless architecture: a client through a load balancer fanning to three identical MCP servers, no session store.">
+          <defs>
+            <marker id="ar-e" markerWidth="9" markerHeight="9" refX="7" refY="4.2" orient="auto"><path d="M0,0 L8,4.2 L0,8.4 Z" fill="#34d399"/></marker>
+            <marker id="ar-m2" markerWidth="9" markerHeight="9" refX="7" refY="4.2" orient="auto"><path d="M0,0 L8,4.2 L0,8.4 Z" fill="#93a3be"/></marker>
+          </defs>
+          <rect x="238" y="26" width="144" height="52" rx="11" fill="#16213a" stroke="#2a3a5c"/>
+          <text x="310" y="58" text-anchor="middle" class="n-label" font-size="23">Client</text>
+          <line x1="310" y1="78" x2="310" y2="112" stroke="#93a3be" stroke-width="2.4" marker-end="url(#ar-m2)"/>
+          <rect x="214" y="114" width="192" height="52" rx="11" fill="#16213a" stroke="#2a3a5c"/>
+          <text x="310" y="146" text-anchor="middle" class="n-label" font-size="21">Load balancer</text>
+          <!-- fan out solid emerald -->
+          <path d="M280,166 L150,224" stroke="#34d399" stroke-width="2.6" marker-end="url(#ar-e)" fill="none"/>
+          <path d="M310,166 L310,224" stroke="#34d399" stroke-width="2.6" marker-end="url(#ar-e)"/>
+          <path d="M340,166 L470,224" stroke="#34d399" stroke-width="2.6" marker-end="url(#ar-e)" fill="none"/>
+          <g>
+            <rect x="70" y="232" width="150" height="58" rx="11" fill="#0e2a22" stroke="#34d399" stroke-width="1.7"/>
+            <text x="145" y="266" text-anchor="middle" class="n-label" font-size="18">MCP server</text>
+          </g>
+          <g>
+            <rect x="235" y="232" width="150" height="58" rx="11" fill="#0e2a22" stroke="#34d399" stroke-width="1.7"/>
+            <text x="310" y="266" text-anchor="middle" class="n-label" font-size="18">MCP server</text>
+          </g>
+          <g>
+            <rect x="400" y="232" width="150" height="58" rx="11" fill="#0e2a22" stroke="#34d399" stroke-width="1.7"/>
+            <text x="475" y="266" text-anchor="middle" class="n-label" font-size="18">MCP server</text>
+          </g>
+          <text x="310" y="352" text-anchor="middle" class="m em" font-size="20">identical · no session store</text>
+          <rect x="196" y="378" width="228" height="46" rx="23" fill="rgba(52,211,153,.08)" stroke="#34d399" stroke-width="1.3"/>
+          <text x="310" y="406" text-anchor="middle" class="m em" font-size="18.5">any request → any instance</text>
+        </svg>
+      </div>
+      <p class="cap">Each request carries everything the server needs — <span class="chip">no initialize</span> <span class="chip">no session</span>. Drop a normal load balancer in front and autoscale by adding servers.</p>
+      <div class="foot"><span class="brand">Slide: Alex Hancock (Block / MCP)</span><span>03 / 06</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — MRTR -->
+  <section class="slide" id="s4">
+    <div class="pad">
+      <div class="eyebrow"><span class="num">②</span>&nbsp;Multi Round-Trip Requests · SEP-2322</div>
+      <h2 style="margin-top:3cqw">Server asks the client — no held connection</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 620 452" role="img" aria-label="Before and after of elicitation: before uses a held-open SSE stream and shared state across two server instances; after uses self-contained round trips carrying requestState.">
+          <defs>
+            <marker id="mr-a" markerWidth="8" markerHeight="8" refX="6.4" refY="3.8" orient="auto"><path d="M0,0 L7,3.8 L0,7.6 Z" fill="#eaa64f"/></marker>
+            <marker id="mr-e" markerWidth="8" markerHeight="8" refX="6.4" refY="3.8" orient="auto"><path d="M0,0 L7,3.8 L0,7.6 Z" fill="#34d399"/></marker>
+          </defs>
+          <!-- divider -->
+          <line x1="310" y1="6" x2="310" y2="446" stroke="#20304e" stroke-width="1.2"/>
+          <!-- BEFORE (left) -->
+          <text x="18" y="28" class="m amber" font-size="18" font-weight="600">BEFORE</text>
+          <text x="18" y="48" class="n-sub" font-size="13.5" fill="#93a3be">SSE stream + server-side state</text>
+          <rect x="20" y="62" width="104" height="34" rx="8" fill="#16213a" stroke="#2a3a5c"/><text x="72" y="84" text-anchor="middle" class="n-label" font-size="15">Client</text>
+          <rect x="182" y="62" width="104" height="34" rx="8" fill="#20180a" stroke="#eaa64f"/><text x="234" y="80" text-anchor="middle" class="n-label" font-size="13.5">Server A</text><text x="234" y="92" text-anchor="middle" class="n-sub" font-size="10.5" fill="#eaa64f">waits in memory</text>
+          <line x1="72" y1="96" x2="72" y2="404" stroke="#2a3a5c" stroke-width="1.3" stroke-dasharray="3 4"/>
+          <line x1="234" y1="96" x2="234" y2="404" stroke="#2a3a5c" stroke-width="1.3" stroke-dasharray="3 4"/>
+          <!-- steps -->
+          <line x1="74" y1="128" x2="230" y2="128" stroke="#93a3be" stroke-width="1.8" marker-end="url(#mr-a)"/><text x="152" y="122" text-anchor="middle" class="m mut" font-size="12">1 · tools/call</text>
+          <line x1="232" y1="172" x2="76" y2="172" stroke="#eaa64f" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#mr-a)"/><text x="152" y="166" text-anchor="middle" class="m amber" font-size="12">2 · elicitation (SSE held open)</text>
+          <line x1="74" y1="216" x2="230" y2="216" stroke="#93a3be" stroke-width="1.8" marker-end="url(#mr-a)"/><text x="152" y="210" text-anchor="middle" class="m mut" font-size="12">3 · response → other instance</text>
+          <line x1="232" y1="260" x2="76" y2="260" stroke="#eaa64f" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#mr-a)"/><text x="152" y="254" text-anchor="middle" class="m amber" font-size="12">4 · reconcile via shared store</text>
+          <!-- shared store -->
+          <rect x="150" y="300" width="168" height="40" rx="10" fill="#20180a" stroke="#eaa64f" stroke-dasharray="4 4"/>
+          <text x="234" y="318" text-anchor="middle" class="n-label" font-size="13">Shared storage</text><text x="234" y="332" text-anchor="middle" class="n-sub" font-size="11" fill="#eaa64f">or sticky routing</text>
+          <text x="20" y="382" class="n-sub" font-size="12.5" fill="#93a3be">Every instance depends on</text>
+          <text x="20" y="398" class="n-sub" font-size="12.5" fill="#93a3be">shared state to bridge the two.</text>
+
+          <!-- AFTER (right) -->
+          <text x="332" y="28" class="m em" font-size="18" font-weight="600">AFTER</text>
+          <text x="332" y="48" class="n-sub" font-size="13.5" fill="#93a3be">self-contained round trips</text>
+          <rect x="334" y="62" width="96" height="34" rx="8" fill="#16213a" stroke="#2a3a5c"/><text x="382" y="84" text-anchor="middle" class="n-label" font-size="15">Client</text>
+          <rect x="486" y="62" width="118" height="34" rx="8" fill="#0e2a22" stroke="#34d399"/><text x="545" y="80" text-anchor="middle" class="n-label" font-size="12.5">MCP server</text><text x="545" y="92" text-anchor="middle" class="n-sub" font-size="10" fill="#34d399">any instance</text>
+          <line x1="382" y1="96" x2="382" y2="404" stroke="#2a3a5c" stroke-width="1.3" stroke-dasharray="3 4"/>
+          <line x1="545" y1="96" x2="545" y2="404" stroke="#2a3a5c" stroke-width="1.3" stroke-dasharray="3 4"/>
+          <line x1="384" y1="132" x2="543" y2="132" stroke="#93a3be" stroke-width="1.8" marker-end="url(#mr-e)"/><text x="463" y="126" text-anchor="middle" class="m mut" font-size="12">1 · tools/call (id:1)</text>
+          <line x1="543" y1="182" x2="385" y2="182" stroke="#34d399" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#mr-e)"/><text x="464" y="168" text-anchor="middle" class="m em" font-size="12">2 · input_required</text><text x="464" y="196" text-anchor="middle" class="n-sub" font-size="10.5" fill="#93a3be">the original request ends here</text>
+          <line x1="384" y1="240" x2="543" y2="240" stroke="#93a3be" stroke-width="1.8" marker-end="url(#mr-e)"/><text x="463" y="234" text-anchor="middle" class="m mut" font-size="12">3 · tools/call (id:2)</text>
+          <line x1="543" y1="284" x2="385" y2="284" stroke="#34d399" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#mr-e)"/><text x="463" y="278" text-anchor="middle" class="m em" font-size="12">4 · complete</text>
+          <rect x="360" y="312" width="200" height="40" rx="10" fill="rgba(52,211,153,.08)" stroke="#34d399"/>
+          <text x="460" y="330" text-anchor="middle" class="n-label" font-size="12.5">state travels with the client</text><text x="460" y="344" text-anchor="middle" class="m em" font-size="12">in requestState</text>
+          <text x="332" y="382" class="n-sub" font-size="12.5" fill="#93a3be">No SSE stream, no shared state.</text>
+          <text x="332" y="398" class="n-sub" font-size="12.5" fill="#93a3be">Any instance can finish it.</text>
+        </svg>
+      </div>
+      <div class="foot"><span class="brand">Slide: Alex Hancock (Block / MCP)</span><span>04 / 06</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — TASKS -->
+  <section class="slide" id="s5">
+    <div class="pad">
+      <div class="eyebrow"><span class="num">③</span>&nbsp;Tasks extension · long-running tool calls</div>
+      <h2 style="margin-top:3cqw">A slow tool call becomes a handle</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 620 470" role="img" aria-label="A long-running MCP task: the client makes a tools call, receives a task id, polls while working, supplies input when required, and polls again until completed.">
+          <defs>
+            <marker id="tk" markerWidth="8" markerHeight="8" refX="6.4" refY="3.8" orient="auto"><path d="M0,0 L7,3.8 L0,7.6 Z" fill="#34d399"/></marker>
+            <marker id="tkm" markerWidth="8" markerHeight="8" refX="6.4" refY="3.8" orient="auto"><path d="M0,0 L7,3.8 L0,7.6 Z" fill="#93a3be"/></marker>
+          </defs>
+          <rect x="66" y="8" width="150" height="40" rx="9" fill="#16213a" stroke="#2a3a5c"/><text x="141" y="34" text-anchor="middle" class="n-label" font-size="18">Client</text>
+          <rect x="404" y="8" width="176" height="40" rx="9" fill="#0e2a22" stroke="#34d399"/><text x="492" y="28" text-anchor="middle" class="n-label" font-size="16">MCP server</text><text x="492" y="42" text-anchor="middle" class="n-sub" font-size="11" fill="#34d399">runs the task</text>
+          <line x1="141" y1="48" x2="141" y2="446" stroke="#2a3a5c" stroke-width="1.4" stroke-dasharray="3 4"/>
+          <line x1="492" y1="48" x2="492" y2="446" stroke="#2a3a5c" stroke-width="1.4" stroke-dasharray="3 4"/>
+          <!-- steps -->
+          <line x1="143" y1="86" x2="488" y2="86" stroke="#93a3be" stroke-width="2" marker-end="url(#tkm)"/><text x="316" y="79" text-anchor="middle" class="m mut" font-size="14">1 · tools/call</text>
+          <line x1="490" y1="128" x2="145" y2="128" stroke="#34d399" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#tk)"/><text x="316" y="121" text-anchor="middle" class="m em" font-size="14">2 · task created — taskId</text>
+          <!-- loop box -->
+          <rect x="120" y="146" width="392" height="80" rx="10" fill="none" stroke="#2a3a5c" stroke-dasharray="4 5"/>
+          <text x="134" y="163" class="m mut" font-size="12" fill="#93a3be">loop · poll while working</text>
+          <line x1="143" y1="186" x2="488" y2="186" stroke="#93a3be" stroke-width="2" marker-end="url(#tkm)"/><text x="316" y="180" text-anchor="middle" class="m mut" font-size="13.5">3 · tasks/get (taskId)</text>
+          <line x1="490" y1="214" x2="145" y2="214" stroke="#34d399" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#tk)"/><text x="316" y="208" text-anchor="middle" class="m em" font-size="13.5">status: working</text>
+          <!-- input required -->
+          <rect x="150" y="242" width="332" height="34" rx="9" fill="rgba(234,166,79,.10)" stroke="#eaa64f"/>
+          <text x="316" y="264" text-anchor="middle" class="n-label" font-size="14">server needs user input to continue</text>
+          <line x1="490" y1="304" x2="145" y2="304" stroke="#34d399" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#tk)"/><text x="316" y="298" text-anchor="middle" class="m em" font-size="13.5">status: input_required</text>
+          <line x1="143" y1="342" x2="488" y2="342" stroke="#93a3be" stroke-width="2" marker-end="url(#tkm)"/><text x="316" y="336" text-anchor="middle" class="m mut" font-size="13.5">tasks/update — inputResponses</text>
+          <line x1="490" y1="384" x2="145" y2="384" stroke="#34d399" stroke-width="2.4" marker-end="url(#tk)"/><text x="316" y="378" text-anchor="middle" class="m em" font-size="14" font-weight="600">status: completed → result</text>
+        </svg>
+      </div>
+      <p class="cap">The <span class="chip">taskId</span> handle carries the whole interaction — poll, supply input, poll again. No held connection; work can run for hours.</p>
+      <div class="foot"><span class="brand">Slide: Alex Hancock (Block / MCP)</span><span>05 / 06</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — SO WHAT -->
+  <section class="slide" id="s6">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span>the frontier moved</div>
+      <div class="spacer"></div>
+      <h1>Scaling is<br>plumbing now.</h1>
+      <p class="lede" style="margin-top:4cqw">The open question is what an authorized agent may <em style="font-style:normal;color:#34d399">do</em> next — and where you enforce it.</p>
+      <div class="spacer"></div>
+      <div style="display:flex;flex-direction:column;gap:1.4cqw">
+        <div class="cap"><b>Talks:</b> Alex Hancock (Block / Goose) · Scott Yak (Datadog) · Michael Levan (Solo.io)</div>
+        <div class="cap"><b>Hosted by</b> Angie Jones · Agentic AI Foundation, at Datadog · 2026-07-28</div>
+      </div>
+      <div class="foot" style="margin-top:3.4cqw"><span class="brand">MCP Release Party · NYC</span><span>06 / 06</span></div>
+    </div>
+  </section>
+</div>
