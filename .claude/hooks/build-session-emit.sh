@@ -4,7 +4,7 @@
 # Contract-first, lean foundation (decided 2026-06-26: defer the OTEL collector + Langfuse platform):
 #   1. ALWAYS append an authoritative `build_session` record to .claude/artifacts/build-sessions.jsonl
 #      (source of truth; survives any backend change).
-#   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_KEY is set (derived, swappable adapter).
+#   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_TOKEN is set (derived, swappable adapter).
 #
 # Content-gated by construction: emits metadata + counts ONLY — never prompt/tool-input/output bodies (YED-81).
 # Contract: .claude/references/build-session-contract.md (v1).
@@ -13,10 +13,10 @@
 set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
 
-# Load project .env (where POSTHOG_PROJECT_KEY lives) if the key isn't already in the environment.
+# Load project .env (where POSTHOG_PROJECT_TOKEN lives) if the key isn't already in the environment.
 # A .env is not auto-loaded into a hook's process, so source it here. All non-assignment lines in
 # .env are `#` comments, so this is safe; guarded so it never aborts the hook.
-if [ -z "${POSTHOG_PROJECT_KEY:-}" ] && [ -f ".env" ]; then
+if [ -z "${POSTHOG_PROJECT_TOKEN:-}" ] && [ -f ".env" ]; then
   set -a; . ./.env 2>/dev/null || true; set +a
 fi
 
@@ -105,9 +105,9 @@ printf '%s\n' "$RECORD" >> .claude/artifacts/build-sessions.jsonl
 [ -f "$META_FILE" ] && rm -f "$META_FILE" 2>/dev/null
 
 # --- 2. PostHog projection (derived; only if key present) ---
-if [ -n "${POSTHOG_PROJECT_KEY:-}" ]; then
+if [ -n "${POSTHOG_PROJECT_TOKEN:-}" ]; then
   PAYLOAD=$(echo "$RECORD" | jq -c \
-    --arg k "$POSTHOG_PROJECT_KEY" --arg did "alex-${PROJECT}" --arg ts "$ENDED_AT" \
+    --arg k "$POSTHOG_PROJECT_TOKEN" --arg did "alex-${PROJECT}" --arg ts "$ENDED_AT" \
     '{api_key:$k, event:"build_session", distinct_id:$did, timestamp:$ts, properties:.}')
   curl -sf --max-time 5 -X POST "${POSTHOG_HOST:-https://us.i.posthog.com}/capture/" \
     -H "Content-Type: application/json" -d "$PAYLOAD" >/dev/null 2>&1 || true
