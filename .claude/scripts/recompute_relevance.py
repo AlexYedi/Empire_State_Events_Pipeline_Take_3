@@ -99,12 +99,24 @@ def main():
                 b = ev_boost.get(l["event_id"], 0)
                 proximity[l["entity_id"]] = max(proximity.get(l["entity_id"], 0), b)
 
+    # 2b. confidence mass — sum of each topic's signal confidences (signal STRENGTH, richer than raw count,
+    #     so a strong signal outranks a weak one and same-day topics differentiate).
+    _, sig_links = req("GET", "/event_entity?select=entity_id,event_id&entity_type=eq.topic")
+    _, sig_events = req("GET", "/event?select=id,confidence&kind=eq.market")
+    conf_by_event = {e["id"]: float(e.get("confidence") or 0) for e in (sig_events or [])}
+    conf_mass = {}
+    for l in (sig_links or []):
+        if l["event_id"] in conf_by_event:
+            conf_mass[l["entity_id"]] = conf_mass.get(l["entity_id"], 0.0) + conf_by_event[l["event_id"]]
+
     # 3. compute
     rows = []
     for t in topics:
         d = parse_ts(t.get("last_engaged_at"))
         recency = 0.5 ** (((now - d).total_seconds() / 86400.0) / HALF_LIFE_DAYS) if d else 0.0
-        engagement = 1.0 + math.log1p(t.get("engagement_count") or 0)
+        # engagement weight from confidence mass; fall back to raw count if a topic has no scored signals
+        mass = conf_mass.get(t["id"], 0.0) or float(t.get("engagement_count") or 0)
+        engagement = 1.0 + math.log1p(mass)
         prox = proximity.get(t["id"], 0.0)
         rel = round(recency * engagement + prox, 4)
         old = float(t.get("relevance_score") or 0)
