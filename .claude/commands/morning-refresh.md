@@ -66,6 +66,16 @@ For each matched/new topic, write via REST (`.claude/references/market-intel-spi
 3. **Insert the hyperedge** — `POST /event_entity` (event→topic, role='subject').
 Track counts as you go for the report. If a write fails, log it and continue (additive, not a gate).
 
+## Step 4.5 — Recompute relevance (the evolving-viewpoint step)
+Now that new signals are written (each touched topic's `engagement_count` + `last_engaged_at` are current),
+refresh the ranking — **pure math, no tokens** (YED-121):
+```bash
+python3 .claude/scripts/recompute_relevance.py --top 15
+```
+This is what makes the viewpoint *evolve*: every daily run reweights the whole graph by
+recency × engagement (+ upcoming-event proximity), so the report ranks by what's actually rising/relevant
+**now**, not a raw count. Capture its Top-N for the report's ranked section below. (See `/recompute-relevance`.)
+
 ## Step 5 — Compute the deltas (for the report)
 - **Added** = topics newly created this run + signals newly inserted.
 - **Changed/Reinforced** = existing topics that got a new signal (engagement bumped) — note new vs prior count.
@@ -97,6 +107,9 @@ Newsletters: {n} new ({senders}) · HN: {n} · Web: {n} · Events in window: {n}
 
 ## Events that happened → handoff
 - {event} ({date}) — run /post-event-content?
+
+## Top by relevance (post-recompute — rising × relevant)
+- {topic} — {relevance_score} ({recency} × eng {n})
 
 ## Worth posting today
 - {1-2 lines: the strongest content angle from today's delta}
