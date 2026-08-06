@@ -60,12 +60,14 @@ Each hit gives `title`, `url`, `points`, `num_comments`, `created_at_i` (unix), 
 
 Newsletters are human-curated — the editor already did the ranking, so this is the densest source.
 
-- Prereq: a Gmail **`newsletters`** label carries Alex's curated AI/tech/GTM newsletters. It is
-  populated by a server-side Gmail filter (Alex-maintained) that auto-labels the senders below on
-  arrival — so the label stays current without manual upkeep. Mirrors Alex's own `Content/*` curation.
-- **Primary query:** `mcp__claude_ai_Gmail__search_threads` with `label:newsletters newer_than:7d`
-  (match the lookback). **Note the connected Gmail MCP is read-only (no label-write scope), so this
-  skill only *reads* the label — never tries to create/apply it.**
+- Prereq: a Gmail label **`Content/newsletters`** (nested under `Content`) carries Alex's curated
+  AI/tech/GTM newsletters. It is populated by a server-side Gmail filter (Alex-maintained) that
+  auto-labels the senders below on arrival — so the label stays current without manual upkeep.
+- **Primary query:** `mcp__claude_ai_Gmail__search_threads` with `label:Content/newsletters newer_than:7d`
+  (match the lookback). **The full nested path is required** — Gmail's API search does NOT match a nested
+  label by its leaf name (`label:newsletters` returns empty; `label:Content/newsletters` works — verified
+  2026-08-06). **Note the connected Gmail MCP is read-only (no label-write scope), so this skill only
+  *reads* the label — never tries to create/apply it.**
 - **Fallback (if the label ever returns empty — e.g. filter lapsed):** query the curated senders directly:
   `from:(semianalysis@substack.com OR pragmaticengineer@substack.com OR chinai@substack.com OR thechipletter@substack.com OR superhumancode@news.codenewsletter.ai OR thecode@mail.joinsuperhuman.ai OR techpresso@dupple.com OR hello@newsletters.venturebeat.com OR tokensandai@mail.beehiiv.com OR whatsupinai@mail.beehiiv.com OR post-training@mail.aitinkerers.org OR compoundwithai@substack.com OR newsletter@ittnewsletter.com OR nlw@aidailybrief.ai OR aicollectivenewsletter@mail.beehiiv.com OR info@realpython.com OR lenny@substack.com OR elenaverna@substack.com OR speedrun@substack.com OR neweconomies@substack.com OR convergences@substack.com OR charlie@thisisgoingtobebig.com OR newsletter@garysguide.com OR info@technyc.org OR info@betaworks.com OR nytdirect@nytimes.com) newer_than:7d`
   (Venture Street + Work-Bench use plus-tagged Substack addresses — add `venturestreet+pitch-deck-examples@substack.com`, `venturestreet+playbooks@substack.com`, `workbench+gtm-weekly@substack.com` if needed.)
@@ -218,7 +220,7 @@ succeeded; the graph write is additive, not a gate.
 
 - **Algolia returns noise / non-AI front page** — tighten the `query` and raise the `points>` floor; rely more on the focus terms.
 - **HF MCP empty** — broaden the query to core themes; note the thin return rather than inventing trends.
-- **No `newsletters` label yet** — fall back to known senders (Step 1c) and tell Alex to label his newsletters once, which upgrades this source permanently.
+- **`label:Content/newsletters` returns empty** — first confirm the full nested path is used (leaf-only `label:newsletters` never matches a nested label); if still empty, fall back to known senders (Step 1c). The label is the better source — it surfaced newsletters (e.g. `AI Business`, `noriagentic`) the hardcoded sender list missed.
 - **Topic over-merging** — if two genuinely distinct topics collapse to one slug, split them and record the distinction in the taxonomy mapping (Step 2). Under-merging (same topic, two slugs) is worse — it hides corroboration; err toward merging when names are near-synonyms.
 - **Notion schema drift** — the live schema is authoritative; if `Current Events` was renamed, `notion-fetch` the data_source and use the actual property name.
 
