@@ -80,14 +80,9 @@ Newsletters are human-curated — the editor already did the ranking, so this is
 
 Collapse raw items into **canonical topics** so corroboration is countable. Apply `alex:signal-taxonomy`'s schema/mapping discipline:
 
-1. Extract 1–3 candidate topic tags per item from its title/abstract.
-2. Map synonyms to one canonical `topic_slug`. Maintain the mapping inline; promote it to `.claude/references/signal-taxonomy.md` once it stabilizes. Seed examples:
-   - `AI agents` / `agentic` / `agent frameworks` → **Agentic AI**
-   - `RAG` / `retrieval augmented generation` → **RAG**
-   - `LLM eval` / `evals` / `benchmark` → **LLM Evaluation**
-   - `MCP` / `model context protocol` → **MCP / Tool Use**
-   - `fine-tuning` / `LoRA` / `post-training` → **Model Adaptation**
-3. Keep names human-readable (GTM-facing) but consistent — this is the same `topic_slug` the Notion Topics DB title will match against.
+1. **Load the canonical map** from **`.claude/references/signal-taxonomy.md`** at the start of this step — it is the persistent taxonomy (read it so normalization is consistent run-to-run, not re-derived ad-hoc). Extract 1–3 candidate topic tags per item from its title/abstract.
+2. Map synonyms to one `canonical_topic` using that file's map (case-insensitive token match). If a raw tag matches nothing there, create a new canonical entry (human-readable, GTM-facing) and **append it back to `signal-taxonomy.md` in this same run** — that is how the map grows.
+3. Keep names human-readable (GTM-facing) but consistent — this is the same `canonical_topic` the Notion Topics DB title and the Postgres `topic.name` will match against.
 
 Group every item under its canonical topic. A topic's members may span all three sources — that's the point.
 
@@ -174,6 +169,11 @@ dashboard. **REST only — NEVER the Supabase MCP** (removed; it was on the wron
 `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`. Headers on every call: `apikey: <key>`,
 `Authorization: Bearer <key>`, `Content-Type: application/json`, `Prefer: return=representation`.
 
+**Pre-flight (do FIRST, before any REST call):** confirm `SUPABASE_API_KEY` is set in `.env`. If it is
+absent/empty, **skip this entire step** and print `graph-spine write skipped: SUPABASE_API_KEY not set`
+in the Step 6 summary — the Notion write already succeeded and the graph write is additive, never a gate.
+Do NOT fall back to the Supabase MCP (wrong account). Do NOT invent or hardcode a key.
+
 For each **approved** topic (read-before-write dedup):
 
 1. **Upsert the topic.** `GET /topic?name=eq.{canonical}&select=id,engagement_count`.
@@ -232,7 +232,7 @@ succeeded; the graph write is additive, not a gate.
 
 ## Reuses / references
 
-- `alex:signal-taxonomy` — topic normalization (Step 2). Canonical map → `.claude/references/signal-taxonomy.md` once it stabilizes.
+- `alex:signal-taxonomy` — topic normalization discipline (Step 2). Canonical map lives in `.claude/references/signal-taxonomy.md` (persistent; read at Step 2, append new mappings back).
 - `alex:signal-scoring` — weighting, decay, cross-source blend (Step 3).
 - Notion Topics DB schema — `CLAUDE.md` "Notion Database IDs" + `.claude/references/notion-schema.md`.
 - Downstream — the content pipeline (`pre-event-content`, `pattern-synthesis`, `content-correspondent`).

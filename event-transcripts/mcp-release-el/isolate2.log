@@ -1,0 +1,35 @@
+[split] part2 via INPUT-seek (-ss before -i) from 1805s...
+[probe] part2 duration:
+4552.589333
+[isolate] part2...
+[isolate] part2.mp3 (55.9 MB) -> isolating...
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/606a5602-ef56-46de-a5fa-9c8a6260d871/scratchpad/isolate_audio.py", line 20, in <module>
+    for chunk in stream:
+                 ^^^^^^
+  File "/Users/sameoldexpressions/.cache/uv/archive-v0/J9_SZJrC2Ib27JZ1/lib/python3.14/site-packages/elevenlabs/audio_isolation/client.py", line 62, in convert
+    with self._raw_client.convert(
+         ~~~~~~~~~~~~~~~~~~~~~~~~^
+        audio=audio, file_format=file_format, preview_b_64=preview_b_64, request_options=request_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as r:
+    ^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "/Users/sameoldexpressions/.cache/uv/archive-v0/J9_SZJrC2Ib27JZ1/lib/python3.14/site-packages/elevenlabs/audio_isolation/raw_client.py", line 108, in convert
+    yield _stream()
+          ~~~~~~~^^
+  File "/Users/sameoldexpressions/.cache/uv/archive-v0/J9_SZJrC2Ib27JZ1/lib/python3.14/site-packages/elevenlabs/audio_isolation/raw_client.py", line 106, in _stream
+    raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
+elevenlabs.core.api_error.ApiError: headers: {'date': 'Wed, 29 Jul 2026 03:13:56 GMT', 'server': 'uvicorn', 'content-length': '249', 'content-type': 'application/json', 'vary': 'Accept-Language', 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, PATCH, OPTIONS, DELETE, GET, PUT', 'access-control-max-age': '600', 'strict-transport-security': 'max-age=1800;', 'x-trace-id': '2e9c5a0b6564dafc3fd3e398eaeae84c', 'x-region': 'us-central1', 'via': '1.1 google', 'alt-svc': 'h3=":443"; ma=2592000'}, status_code: 400, body: {'detail': {'type': 'validation_error', 'code': 'audio_too_long', 'message': 'Audio duration is 3611.0 seconds, which exceeds the maximum of 3600 seconds.', 'status': 'invalid_audio_duration', 'request_id': '2e9c5a0b6564dafc3fd3e398eaeae84c', 'param': 'audio'}}
+[probe] iso1 + iso2 durations:
+1804.979977
+[mp3 @ 0x79ac40000] Failed to find two consecutive MPEG audio frames.
+/private/tmp/claude-501/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/606a5602-ef56-46de-a5fa-9c8a6260d871/scratchpad/iso2.mp3: Invalid data found when processing input
+[concat] joining iso1 + iso2 (re-encode for clean join)...
+[mp3 @ 0xae5018280] Failed to find two consecutive MPEG audio frames.
+[in#0/concat @ 0xae5018000] Impossible to open '/private/tmp/claude-501/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/606a5602-ef56-46de-a5fa-9c8a6260d871/scratchpad/iso2.mp3'
+[in#0/concat @ 0xae5010000] Error during demuxing: Invalid data found when processing input
+[done] final:
+-rw-r--r--@ 2 sameoldexpressions  staff    19M Jul 28 23:14 /Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/event-transcripts/mcp-release-el/Jul 28 at 18-05 — isolated.mp3
+1804.979977
