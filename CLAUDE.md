@@ -83,7 +83,9 @@ If explanations are needed during development, I will invoke the explainer skill
 - Key tools in stack: Claude, n8n, Supabase, Linear, PostHog, Vercel, Railway, 
   Cursor, GitHub, Replit, Bolt, Lovable, Framer, Notion, Gamma, Canva, Magic 
   Patterns, Miro, Granola, ChatPRD, Perplexity, ElevenLabs, NotebookLM, 
-  Google Workspace (incl. Gemini/Imagen 3, Google Vids, Google Slides), 
+  Google (FREE tier as of 2026-08 — downgraded from paid Workspace: Gmail, Drive 15GB shared 
+  across Gmail/Drive/Photos, Docs/Sheets/Slides, Gemini app + Imagen via AI Studio; lost Workspace-only 
+  features like Google Vids and Workspace-integrated Gemini), 
   Wispr Flow, Warp, Devin, Factory, Mobbin, HubSpot, Apollo
 </standing_context>
 
