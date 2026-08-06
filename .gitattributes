@@ -1,0 +1,4 @@
+
+# Append-only telemetry log — auto-union on merge instead of conflicting (retires recurring conflicts)
+.claude/artifacts/build-sessions.jsonl merge=union
+.claude/artifacts/dod-waivers.jsonl merge=union
