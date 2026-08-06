@@ -27,3 +27,7 @@ venv/
 .claude/.state/
 
 na2-f81e-cd3a-4dd2-96c7-505f7480973d
+
+# Cloud-stored reference documents (books, whitepapers, filings) — keep OUT of git
+Industry & Market Content/
+*.epub
