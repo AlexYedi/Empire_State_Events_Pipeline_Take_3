@@ -37,9 +37,9 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 | `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report` | ✅ Built (thin docs, 2026-07-02) | Imported market-research + copywriting command suite; no PRD/Linear yet (candidate for retro-codification). |
 
 > **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
-> `empire-state-hub` repo). Source of truth: `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` +
+> `empire-state-hub` repo). Source of truth: `.claude/references/roadmap.md` +
 > `.claude/references/market-intel-spine.md`. **Rigor/measurement layer** source of truth:
-> `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md` + `.claude/references/{build-session-contract,value-action-registry}.md`.
+> `.claude/references/{roadmap,build-session-contract,value-action-registry}.md`.
 
 ---
 
