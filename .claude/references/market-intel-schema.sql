@@ -1,6 +1,10 @@
 -- Market-Intelligence Engine — thin graph spine v1 (Milestone 1)
--- Applied 2026-06-28 to Supabase project Signal_Pipeline_Analytical_Spine (ref abkvgihlbwfloentugtd)
+-- Applied 2026-06-28 to Supabase org `A.Yedi`, project `empire state ai` (ref oicikjyzmxqfomrrqkvf)
 -- via migration `market_intel_graph_spine_v1`. Kept here for version control.
+-- Provenance correction (2026-08-07, YED-130): an earlier header wrongly named ref
+-- `abkvgihlbwfloentugtd` (Signal_Pipeline_Analytical_Spine). A schema was briefly mis-applied
+-- there and rolled back; the canonical system of record is `oicikjyzmxqfomrrqkvf` — see
+-- `market-intel-spine.md` §"System of record".
 -- 4 first-class objects (company, person, topic, event) + event_entity hyperedge.
 -- Event is the temporal hyperedge AND the signal model (a signal = a market-kind event).
 -- relevance_score / last_engaged_at / engagement_count = decay+reinforcement lifecycle (stored now, computed later).
