@@ -23,9 +23,9 @@ import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 TAKE3 = os.path.abspath(os.path.join(HERE, "..", ".."))
 DEFAULT_DATA = os.path.abspath(os.path.join(TAKE3, "..", "empire-state-hub", "src", "data", "build-arcs.json"))
-DEFAULT_OUT = os.path.join(
-    "/private/tmp/claude-501/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3",
-    "141aa1f6-c2bf-45a8-8ad8-c0636ed44272", "scratchpad", "build-arcs.html")
+# Stable, non-session default (was a hardcoded past scratchpad path). To republish to the SAME
+# Artifact URL, pass --out pointing at this conversation's scratchpad file, then re-run the Artifact tool.
+DEFAULT_OUT = os.path.join(TAKE3, ".claude", "artifacts", "build-arcs.html")
 
 # The template. Data is injected at the __DATA__ marker (NOT an f-string — CSS uses literal braces).
 TEMPLATE = r"""<title>Build Arcs — Empire State</title>
@@ -253,12 +253,24 @@ TEMPLATE = r"""<title>Build Arcs — Empire State</title>
 
 def main():
     args = sys.argv[1:]
-    data_path = args[args.index("--data") + 1] if "--data" in args else DEFAULT_DATA
-    out = args[args.index("--out") + 1] if "--out" in args else DEFAULT_OUT
+
+    def argval(flag, default):
+        # guard against a flag given with no following value (avoids an IndexError)
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 < len(args):
+                return args[i + 1]
+            sys.exit(f"{flag} requires a value")
+        return default
+
+    data_path = argval("--data", DEFAULT_DATA)
+    out = argval("--out", DEFAULT_OUT)
     with open(data_path) as f:
         data = json.load(f)
     html = TEMPLATE.replace("__DATA__", json.dumps(data, ensure_ascii=False))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
+    out_dir = os.path.dirname(out)
+    if out_dir:  # bare filename (no dir component) → makedirs("") would crash
+        os.makedirs(out_dir, exist_ok=True)
     with open(out, "w") as f:
         f.write(html)
     print(f"✅ generated artifact from {os.path.relpath(data_path, TAKE3) if data_path.startswith(TAKE3) else data_path}")
