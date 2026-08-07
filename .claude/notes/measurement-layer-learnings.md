@@ -1,6 +1,6 @@
 # Measurement / build-rigor layer — learnings & gotchas (for review)
 
-Captured 2026-06-25/26 while building the build-rigor + measurement/eval/observability layer (Linear project "Empire State — Build-Rigor & Measurement Layer", YED-87…94). Plan of record: `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`.
+Captured 2026-06-25/26 while building the build-rigor + measurement/eval/observability layer (Linear project "Empire State — Build-Rigor & Measurement Layer", YED-87…94). Plan of record: `.claude/references/roadmap.md` (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
 
 ## Decisions that shaped it
 - **Re-homed to Empire State, NOT gtm-os** — gtm-os has nothing shipped to measure; the evals are about *this* pipeline's I/O. Dropped gtm-os / single-vs-swarm / job-hunt-system from scope. Focus repos = Empire State Take 3, Empire State Hub, agent-skills.

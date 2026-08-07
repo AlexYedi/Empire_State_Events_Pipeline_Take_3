@@ -111,4 +111,4 @@ device), and an `event kind='interview'` can be added to the timeline.
 - `.claude/skills/interview-prep-dossier/SKILL.md` — methodology + dossier structure + quality bar
 - `.claude/agents/research/dossier-synthesizer.md` — synthesizer contract
 - `.claude/references/market-intel-spine.md` — Postgres schema, project id, dedup rules
-- `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` — engine framing + all decisions
+- `.claude/references/roadmap.md` — MI Engine framing + milestones (retired the machine-local `where-do-we-stand-sunny-puzzle.md`)
