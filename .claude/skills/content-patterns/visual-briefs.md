@@ -36,22 +36,23 @@ A text-only post is a valid, intentional variety choice for a simple informative
 The carousel brief is embedded in the LinkedIn post's Notion page body under a
 `## Visual Brief — N-slide carousel` H2 heading, immediately after the post copy.
 
-**Default ship path (updated 2026-05-26): MCP auto-render via Gamma.** Gamma is
-the **default generator for ALL visual content** — singles and carousels. After
-producing the brief, the calling skill (`content-correspondent`,
-`pre-event-content`, `pattern-synthesis`) fires `mcp__claude_ai_Gamma__generate`
-and surfaces the resulting `gamma.app/docs/...` URL(s) to Alex. Gamma builds
-data-forward layouts (infographics, matrices, stat callouts, charts) from the
-brief content — exactly what these visuals need. See `## MCP execution — Gamma
-(default); Canva (fallback only)` below.
+**Default ship path (updated 2026-08-07 — Claude design; Gamma REMOVED).** Claude
+is the default generator for all structured / label-dense visual content — singles
+and carousels. After producing the brief, Claude authors the visual as a
+**self-contained HTML/SVG design** and publishes it via the **Artifact tool**;
+Alex exports to 4:5 PDF/PNG (⌘P → Save as PDF gives a LinkedIn-ready carousel).
+Claude renders exactly what's authored — no re-interpretation, which is what broke
+dense labels in Gamma/Canva. See `## Execution — Claude design (default) + Gemini
+(pictorial)` below.
 
-**Why the swap from Canva (2026-05-26):** Canva's `generate-design` repeatedly
-garbled dense text labels (color-name hallucinations, placeholder "Q"s, gibberish
-body copy) and produced Instagram-typed assets. Gamma renders accurate labels +
-real infographics and supports true 4:5 via `format: "social"`. **Canva is now a
-fallback only** (a clean single typography card where Gamma over-designs); Imagen
-for textless conceptual imagery. The per-slide "Tool:" routing field is retained
-as human-readable visual-mode intent, NOT the execution path.
+**Why Gamma was ripped out (2026-08-07):** Gamma was chosen in 2026-05 over Canva
+because Canva's `generate-design` garbled dense labels. But Gamma is still a
+constrained app that re-interprets the brief — it re-flows and mangles dense labels
+too, and forces a tool→export hand-off. Authoring the pixels directly in HTML/SVG
+removes both failure modes: nothing re-interprets the content, and iteration stays
+in-conversation (edit the file, republish, same URL). **Pictorial imagery**
+(conceptual / editorial / photographic, no dense labels) → **Gemini** (Alex's
+subscription, frontier-flexible, not an app harness). **Canva is vestigial.**
 
 Slide count is determined by the post's thesis complexity, not by a default:
 
@@ -79,10 +80,10 @@ When proposing a post's visual, offer **four distinct format options**, not four
 
 **Emphasis: real visual information** — infographics, architecture / flow diagrams, statistics, charts/graphs, matrices, before/after, "where the value moves." Typography-only cards are a fallback, not the goal; never stock or decorative AI imagery. Every statistic in the post is a candidate for a chart or a stat-callout.
 
-**Tooling (updated 2026-05-26): Gamma is the DEFAULT generator for ALL visual content** — every single image and every carousel — because it builds charts, matrices, and stat callouts from content, where Canva's `generate-design` garbled dense labels.
-- `mcp__claude_ai_Gamma__generate`: pick a dark/editorial theme via `get_themes` (e.g. **Stratos** — deep navy, high-contrast, tech). Set `imageOptions.source: "noImages"` so infographics/diagrams lead instead of stock photos. Put the real stats in `inputText`; `additionalInstructions` should say "turn every statistic into a visual."
-- ⚠️ **Aspect gotcha:** Gamma `format: "presentation"` allows only `16x9 / 4x3 / fluid` — NOT 4:5. For LinkedIn 4:5 portrait (singles AND carousels), use `format: "social"` (`4x5 / 1x1 / 9x16`). Export carousels as PDF for the LinkedIn document post.
-- **Fallbacks only:** Canva for a clean single typography card where Gamma over-designs; Imagen for textless conceptual imagery.
+**Tooling (updated 2026-08-07): Claude design is the DEFAULT generator for all structured visual content** — every single image and every carousel — authored as self-contained HTML/SVG and published via the Artifact tool, because Claude renders exactly the labels / diagrams / matrices / stat-callouts as authored (no app re-interpretation — the failure mode of both Gamma and Canva).
+- **Author:** hand-write the design — dark editorial ground, ONE meaning-bearing accent (see palette below), real typographic hierarchy, inline SVG for diagrams / arrows / timelines. Load the `artifact-design` (+ `artifact-diagramming`, `dataviz`) skills first for calibration.
+- **Size + export:** 4:5 (1080×1350) per slide; use container-query units so it's exact at full size and responsive. Add print CSS (`@page{size:1080px 1350px}` + a page-break per slide) so ⌘P → Save as PDF yields a clean multi-page carousel PDF.
+- **Pictorial only:** Gemini for conceptual / editorial / photographic imagery with no dense labels (Claude writes the prompt; Alex generates). Gamma removed; Canva vestigial.
 
 **Post-event learnings cuts (added 2026-06-27, YED-96).** When the source is a v2 `post_event_brief` with a learnings tier, three high-value visual cuts open up — each must ADD the tactic, never re-print the post's quotes:
 - **Pro-Tips checklist** — the room's "if X, do Y" tips as a clean checklist / framework card (Arc 1 mechanism, or a standalone matrix).
@@ -196,42 +197,41 @@ Every slide in every carousel must specify:
 8. **Alt text** — one sentence describing what the slide *shows*, not how it
    *looks*. This is the accessibility artifact and the LLM-readable version of
    the slide for posts that get scraped by agents.
-9. **Tool routing** — which tool the slide is best generated in:
-   - **Labeled concept diagrams** (boxes + arrows, before/after, "where the value
-     moves," stack/layer diagrams, anything whose meaning depends on text labels) —
-     build as a **Canva typography + shape layout**: real editable text + simple
-     rectangles/arrows. **NEVER a single generated image.** Generated-image tools
-     (Imagen / GPT-Image / Stable Diffusion) bake labels into pixels, where they
-     come out garbled, duplicated, or misspelled — observed live on the AI Demo
-     Night "moat moves" visual (2026-05-26). If Canva's typography generation can't
-     hold the layout, fall back to **Gemini Imagen 4** *only* with an explicit
-     "accurate, non-duplicated, correctly-spelled text labels" instruction — and
-     reject any raster whose labels are garbled. The label must be real text, not
-     generated pixels.
-   - **GPT-Image-1 or Gemini Imagen 4** — photographic, illustrative, or *textless*
-     conceptual imagery only (no embedded labels to misspell)
-   - **Magic Patterns** — branded marks, dashboards, designed components
-   - **Canva** — bold typography cards, quote cards, simple data viz, AND labeled
-     concept diagrams (per the first bullet above)
-   - **Avoid** — any single generated/raster image for a slide whose meaning
-     depends on text labels (Stable Diffusion variants especially)
+9. **Tool routing** (updated 2026-08-07 — Claude design default):
+   - **Any slide whose meaning depends on text labels** (boxes + arrows, before/after,
+     "where the value moves," stack/layer diagrams, matrices, stat cards, timelines) —
+     **author as Claude HTML/SVG** (real text + inline `rect`/`line`/`path`, published
+     via the Artifact tool). The label is real text, never generated pixels — which is
+     why this beats both Canva shape-layouts and any raster tool. This is the default
+     for essentially every content-pipeline slide.
+   - **Gemini** — photographic, illustrative, or *textless* conceptual imagery only
+     (no embedded labels to misspell). Claude writes the prompt.
+   - **Avoid** — any generated/raster image for a slide whose meaning depends on text
+     labels (labels come out garbled / duplicated / misspelled — observed live on the
+     AI Demo Night "moat moves" visual, 2026-05-26). Gamma removed; Canva vestigial.
 
 ---
 
-## MCP execution — Gamma (default); Canva (fallback only)
+## Execution — Claude design (default) + Gemini (pictorial)
 
-**Default = Gamma.** Use the Gamma pattern from the Option framework above:
-`mcp__claude_ai_Gamma__generate` with `format: "social"` + `cardOptions.dimensions: "4x5"`
-for LinkedIn portrait (singles and carousels), a dark theme (Stratos via `get_themes`),
-`imageOptions.source: "noImages"`, the real stats in `inputText`, and
-`additionalInstructions` telling Gamma to turn every statistic into a visual. Surface
-the `gamma.app/docs/...` URL(s); export carousels as **PDF** for the LinkedIn document
-post. Gamma can't be MCP-edited — Alex refines theme/text in the Gamma editor. For a
-multi-card carousel, generate once with `numCards` set; don't fire per-slide.
+**Default = Claude design (HTML/SVG via the Artifact tool).** Author the carousel/single
+as one self-contained HTML file — a `.slide` frame per slide at 4:5 (1080×1350), dark
+editorial ground, one meaning-bearing accent, real typographic hierarchy, and
+hand-authored inline SVG for diagrams / arrows / timelines. Load `artifact-design`
+(+ `artifact-diagramming`, `dataviz`) first. Publish via the Artifact tool → Alex
+exports with ⌘P → Save as PDF (each slide prints as one 4:5 page → LinkedIn carousel)
+or screenshots frames for PNGs. Iterate in-conversation: edit the file, republish to the
+same URL. No app re-interprets the content — the labels render exactly as written.
 
-The Canva pattern below is a **fallback only** (demoted 2026-05-26 — `generate-design`
-garbled dense labels and produced Instagram-typed assets). Use it only when Gamma can't
-satisfy a brief, e.g. a precise single typography card.
+**Pictorial imagery = Gemini** (Alex's subscription). Claude writes an architectural
+prompt (composition + style + mood + negatives — see the style guide's AI Image
+Prompting rules); Alex generates and reviews. Use only for conceptual / editorial /
+photographic imagery with no dense labels.
+
+> ⛔ **DEPRECATED 2026-08-07 — Gamma removed, Canva vestigial.** The Gamma/Canva MCP
+> mechanics below are retained only as historical reference (how the pre-2026-08
+> pipeline worked). **Do not use them** — the live path is Claude design + Gemini above.
+> Flagged for deletion in a follow-up cleanup.
 
 ### Canva fallback — auto-render (added 2026-05-24, demoted to fallback 2026-05-26)
 
@@ -476,7 +476,7 @@ visually — what the reader should walk away with after swiping through.]
 
 **Slide count:** N
 **Aspect ratio:** 4:5 (1080x1350) — LinkedIn carousel default
-**Tool routing summary:** [which slides go to which tool; e.g., "Slides 1, 4 → Canva typography; Slides 2-3 → GPT-Image-1 diagram"]
+**Tool routing summary:** [nearly always "all slides → Claude design (HTML/SVG)"; note any slide that is textless pictorial → Gemini]
 
 ---
 
@@ -488,7 +488,7 @@ visually — what the reader should walk away with after swiping through.]
 - **Palette:** dark bg + white text + [accent color, with hex]
 - **Source attribution:** [if any data point or quote — exact source line]
 - **Alt text:** [one sentence describing what the slide shows]
-- **Tool:** [Canva / GPT-Image-1 / Imagen 4 / Magic Patterns]
+- **Tool:** [Claude design (HTML/SVG) — default; Gemini only for textless pictorial]
 
 ### Slide 2 of N — [Job]
 
