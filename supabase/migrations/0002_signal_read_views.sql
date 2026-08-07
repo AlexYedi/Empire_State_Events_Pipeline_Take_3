@@ -76,24 +76,28 @@ create policy tpm_anon_read on topic_intelligence.topic_pair_metric
 --   momentum/trend_label ride along only for surviving (event_count>=5) rows, so they
 --   never describe a below-k population.
 -- -----------------------------------------------------------------------------
-create or replace view signal_read.v_topic_movement
+-- Column contract matches the gtm-os-hub adapter (lib/sources/topic-intelligence.ts):
+--   theme, event_count, distinct_speaker_count, momentum, trend_label, is_low_confidence, as_of_date.
+-- distinct on (subject, window) + order by as_of_date desc => LATEST snapshot per theme (one row/theme).
+drop view if exists signal_read.v_topic_movement;
+create view signal_read.v_topic_movement
   with (security_invoker = on) as
-select
-  tc.cluster_id                                                    as theme_id,
-  tc.display_name                                                  as theme_name,
-  tc.canonical_slug                                                as theme_slug,
+select distinct on (tt.subject_id, tt.window_type)
+  tc.display_name                                                  as theme,
   tt.window_type,
   tt.as_of_date,
   tt.event_count,
   case when tt.distinct_speaker_count >= 5
        then tt.distinct_speaker_count else null end                as distinct_speaker_count,
   tt.momentum,
-  tt.trend_label
+  tt.trend_label,
+  tt.is_low_confidence
 from topic_intelligence.topic_trend tt
 join topic_intelligence.topic_cluster tc
   on tc.cluster_id = tt.subject_id
 where tt.subject_level = 'cluster'      -- V1 populates cluster-level only
-  and tt.event_count >= 5;             -- k-anonymity: withhold below-threshold themes
+  and tt.event_count >= 5              -- k-anonymity: withhold below-threshold themes
+order by tt.subject_id, tt.window_type, tt.as_of_date desc;
 
 comment on view signal_read.v_topic_movement is
   'Anon-safe (security_invoker, k>=5). Per-theme trajectory counts only; no PII. '
@@ -111,27 +115,28 @@ comment on view signal_read.v_topic_movement is
 --   So a pair connected by 5 shared events but only 2 bridging people surfaces the
 --   event count and NULLs the person count — never re-identifying a <5 group of people.
 -- -----------------------------------------------------------------------------
-create or replace view signal_read.v_topic_intersections
+-- Column contract matches the gtm-os-hub adapter: theme_a, theme_b, cooccurrence_event_count,
+--   bridge_person_count, is_new_pair, intersection_score, as_of_date. Latest snapshot per pair.
+drop view if exists signal_read.v_topic_intersections;
+create view signal_read.v_topic_intersections
   with (security_invoker = on) as
-select
-  tpm.subject_a_id                                                 as theme_a_id,
-  ca.display_name                                                  as theme_a_name,
-  ca.canonical_slug                                               as theme_a_slug,
-  tpm.subject_b_id                                                 as theme_b_id,
-  cb.display_name                                                  as theme_b_name,
-  cb.canonical_slug                                               as theme_b_slug,
+select distinct on (tpm.subject_a_id, tpm.subject_b_id, tpm.window_type)
+  ca.display_name                                                  as theme_a,
+  cb.display_name                                                  as theme_b,
   tpm.window_type,
   tpm.as_of_date,
   case when tpm.cooccurrence_event_count >= 5
        then tpm.cooccurrence_event_count else null end             as cooccurrence_event_count,
   case when tpm.bridge_person_count >= 5
        then tpm.bridge_person_count else null end                  as bridge_person_count,
-  tpm.is_new_pair
+  tpm.is_new_pair,
+  tpm.intersection_score
 from topic_intelligence.topic_pair_metric tpm
 join topic_intelligence.topic_cluster ca on ca.cluster_id = tpm.subject_a_id
 join topic_intelligence.topic_cluster cb on cb.cluster_id = tpm.subject_b_id
 where tpm.subject_level = 'cluster'
-  and (tpm.cooccurrence_event_count >= 5 or tpm.bridge_person_count >= 5);
+  and (tpm.cooccurrence_event_count >= 5 or tpm.bridge_person_count >= 5)
+order by tpm.subject_a_id, tpm.subject_b_id, tpm.window_type, tpm.as_of_date desc;
 
 comment on view signal_read.v_topic_intersections is
   'Anon-safe (security_invoker, k>=5). Theme-pair co-occurrence + shared-speaker counts '
