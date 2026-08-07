@@ -12,7 +12,7 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124).
 ## Next 3 moves (the runway)
 
 1. **RAG / knowledge base (YED-118) — the M3 kickoff build, PRD-first (decided 2026-08-07).** Greenfield on empire-state (`documents`/`doc_chunks` are 404 today), so it's unblocked by the graph decision and starts first. Write the one-pager (ChatPRD → Notion) before any code.
-2. **Graph consolidation (YED-130) — decided: consolidate onto empire-state.** Topic-intelligence (YED-110/120, Done) lives on a separate gtm-os spine; port its substrate onto `oicikjyzmxqfomrrqkvf` so there's one graph. Probe gtm-os first to confirm direction + spec the entity-ID mapping (PRD-first). Gates M3 pillar 1 (surface topic-intelligence on empire-state-hub — YED-122 §B / YED-114).
+2. **Graph consolidation (YED-130) — direction PROVISIONAL, under neutral investigation.** The two MI spines must merge, but *which way* (empire-state→gtm-os or gtm-os→empire-state) is being decided by a **neutral thread rooted at `~/Documents/GitHub/`** (the only vantage that can probe both spines; no repo bias). Brief: `~/Documents/GitHub/mi-consolidation-investigation-brief.md`. It returns a recommendation + PRD-first migration plan. Gates M3 pillar 1 (surface topic-intelligence on empire-state-hub — YED-122 §B / YED-114).
 3. **Drop "provisional" on the build-quality judge** (~13 more held-out runs ≥80%) + scope the third lens (YED-126).
 
 *Sequenced behind these, not dropped:* a second non-content MI lens (M3 pillar 3); the content-quality control system; audience-first content (YED-103); job-search Capstone 2 (YED-59).
@@ -72,7 +72,7 @@ telos; both repos now share it as a balanced component. gtm-os CLAUDE.md carries
 
 ## Open threads / debt
 
-- **✅ MI graph reconciliation — DECIDED 2026-08-07: consolidate onto empire-state (tracked in YED-130).** Verified via REST that topic-intelligence lives on a separate gtm-os spine (`topic_cluster/trend/pair_metric/intersection` are 404 on `oicikjyzmxqfomrrqkvf`); the plan ports it onto the empire-state graph so there's one system of record. Execution is PRD-first (probe gtm-os to confirm direction, then spec the entity-ID mapping).
+- **MI graph reconciliation — consolidate to ONE spine; DIRECTION PROVISIONAL (YED-130).** Verified topic-intelligence lives on a separate gtm-os spine (`topic_cluster/trend/pair_metric/intersection` 404 on `oicikjyzmxqfomrrqkvf`). The two graphs merge — but *which direction* is being decided by a **neutral, parent-folder-rooted investigation** (the only vantage that can probe both spines; removes home-repo bias — same outside-vantage logic as the employment rebalance). Brief: `~/Documents/GitHub/mi-consolidation-investigation-brief.md`. The earlier 'onto empire-state' lean is re-opened as provisional pending that evidence.
 - Drop-provisional on the judge (calibration continuation).
 - Content-quality control system: awaiting Alex's rulings (variants 2 vs 3; visual brief mandatory vs optional; research-brief artifact discrete vs event-body; pre-event stance) before building the canonical invariants contract — see `buzzing-scribbling-sky.md` (Step 1 diagnosis).
 - CLAUDE.md `<project_architecture>` refreshed 2026-08-07; keep it current as M3 ships.
