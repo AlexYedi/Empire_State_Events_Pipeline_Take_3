@@ -6,8 +6,11 @@ Plan of record: `.claude/references/roadmap.md` (the former `~/.claude/plans/whe
 
 ## System of record (resolved 2026-06-28)
 - **Project:** Supabase org **`A.Yedi`**, project **`empire state ai`** — ref **`oicikjyzmxqfomrrqkvf`**
-  (host `oicikjyzmxqfomrrqkvf.supabase.co`). Companion: `empire-state-hub` = ref `ytfzzsxcxxbejnowmkmk`
-  (the Hub's project — the engine does NOT write there).
+  (host `oicikjyzmxqfomrrqkvf.supabase.co`). **empire-state-hub has NO Supabase project of its own** — it is
+  a read-only PostgREST client of this engine project. *(Note 2026-08-07, YED-130: the ref
+  `ytfzzsxcxxbejnowmkmk` — a 2nd project on the A.Yedi account, earlier labeled the "Hub companion" but
+  never wired into any code/env — is now repurposed as the MI consolidation **staging twin / test kitchen**,
+  NOT the hub's data plane. The hub remains a read-only client of the engine project.)*
 - **Access = REST API, NOT the MCP.** Connect via PostgREST at `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`
   using `SUPABASE_API_KEY` (an `sb_secret_…` key) from `Take_3/.env` — read it at runtime, never print it.
   The secret key bypasses RLS, so reads/writes work. **Verified live 2026-06-28:** full REST smoke test
