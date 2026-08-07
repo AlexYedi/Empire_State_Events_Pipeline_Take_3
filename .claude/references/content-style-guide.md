@@ -286,29 +286,32 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 | Conceptual or abstract idea | AI-generated custom image | Gemini/Imagen for what doesn't exist as a photo. |
 | Multi-event weekly preview | Carousel (1 slide per event) | Each event gets its own visual treatment. |
 
-### Tool Selection for Visuals
+### Tool Selection for Visuals (updated 2026-08-07 — Gamma removed)
+
+Two lanes, and **neither is a constrained app that re-interprets your content** — the failure mode that garbled dense labels in Gamma and Canva.
 
 | Need | Tool |
 |---|---|
-| Social-optimized infographic / data graphic / designed slide | **Gamma** (default — builds charts, matrices, stat callouts) |
-| Multi-slide carousel (LinkedIn PDF) | **Gamma** (`format: social`, 4:5; export PDF) |
-| Custom conceptual image, photorealistic, or editorial | Gemini (Imagen) |
-| Clean single typography card (fallback) | Canva |
+| Diagrams, matrices, stat cards, timelines, carousels — any label-dense / structured visual | **Claude design** — self-contained HTML/SVG via the Artifact tool → export 4:5 PDF/PNG. **DEFAULT.** Pixel-exact; renders exactly what's authored, no re-flow. |
+| Conceptual / editorial / illustrative / photographic imagery | **Gemini** (Alex's subscription — frontier flexibility, no app harness). Claude writes the prompt; Alex generates. |
 | Presentation-style video | Google Vids |
+
+**Removed 2026-08-07:** Gamma (the app re-interpreted content and broke dense labels — the exact thing it was chosen to fix over Canva, now solved better by Claude authoring the pixels directly). **Canva is vestigial** — Claude + Gemini cover both the structured and pictorial lanes. See CLAUDE.md rule #13 + `content-patterns/visual-briefs.md`.
 
 ### Visual Identity (Minimal V1)
 - No locked brand kit yet — identity develops through iteration
 - Default toward clean, professional, high contrast
 - Wild card visuals are where color, illustration, and editorial boldness live
 
-### Workflow
-- Skill generates visual briefs/prompts (not images directly)
-- Alex brings briefs into tools, iterates, develops prompting intuition
-- Over time: automate generation, move human-in-the-loop to output review only
+### Workflow (updated 2026-08-07 — Claude design default)
+- **Structured visuals:** Claude authors the HTML/SVG design from the brief and publishes it (Artifact tool); Alex exports to 4:5 PDF/PNG (⌘P → Save as PDF yields a LinkedIn-ready carousel; screenshot frames for PNGs). Iteration stays in-conversation — edit the file, republish, same URL. No app hand-off, no label re-interpretation.
+- **Pictorial imagery:** Claude writes the Gemini prompt (architectural, not aspirational — see the AI Image Prompting rules above); Alex generates in Gemini and reviews output.
+- The two failure modes we designed out: (1) an app re-flowing/garbling dense labels (Gamma/Canva); (2) a tool→tool→export hand-off with switching cost. Claude renders the pixels; Gemini is frontier-flexible, not a harness.
 
 ---
 
 *Last updated: 2026-08-07*
+*Version: 0.7 — Gamma REMOVED as visual generator. Claude design (self-contained HTML/SVG via Artifact tool) is now the default for structured/label-dense visuals; Gemini for pictorial imagery; Canva vestigial. Updated the Tool Selection table + Workflow. See CLAUDE.md rule #13 + `content-patterns/visual-briefs.md`. Proof: AI Demo Night consolidation carousel.*
 *Version: 0.6 — Added the Opener rule (never lead an event post with "I"; lead with topic / headline-stat / host-company / people / NYC-AI-ecosystem). First-line enforcement of decenter-self. See memory `feedback-no-i-led-openers-2026-08-07`.*
 *Version: 0.5 — Added (1) the stance-license rule (a viewpoint must be earned with space/presence/expertise; hot takes in synopses add zero value) and (2) the decenter-self / curator-not-protagonist rule, from the Upcoming Week post review (NYC Tech Week roundup). These refine — not replace — the bold-stance rule: stance is deferred to formats with room for context + analysis (post-event, deep posts), and grows with Alex's expertise. See memory `feedback-upcoming-week-stance-and-self-2026-05-30`.*
 *Version: 0.4 — Added (1) predictions-vs-stances voice rule and (2) visuals-must-add rule, from the AI Demo Night post review. See memory `feedback-comment-workflow-2026-05-26`.*
