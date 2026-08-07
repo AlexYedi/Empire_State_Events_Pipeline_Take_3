@@ -19,7 +19,16 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124).
 
 ---
 
-## North stars (three nested, honest)
+## Shared mission (empire-state + gtm-os) — the top frame
+
+Build a cohesive, lens-agnostic **intelligence + GTM-engineering + content body of work** that
+*demonstrates* full-stack-GTM capability. **Employment is a first-class, genuinely-pursued outcome of
+that work — one balanced component carried in equal measure by both projects — never an "at all costs"
+imperative that narrows or distorts the build.** The engine serves many lenses; job-search is one of
+them, weighted like the others. (Recalibrated 2026-08-07: gtm-os had over-indexed on employment as its
+telos; both repos now share it as a balanced component. gtm-os CLAUDE.md carries the same statement.)
+
+## North stars (three nested under the shared mission)
 
 - **Program:** "build better, not faster" as the default for every project; the measurement layer's operational north-star is **acted-on value** (outcome vs. each artifact's assigned goal, trended).
 - **Career/product:** the **Market-Intelligence Engine** — a lens-agnostic research engine (Job-Search + Content cores today) that is the differentiator and the job-search asset.
