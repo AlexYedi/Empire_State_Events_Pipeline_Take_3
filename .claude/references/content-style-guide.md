@@ -52,6 +52,8 @@ INSIGHT — One deeply considered observation or one genuinely novel question.
 CTA (varies by content type) — See Content Type CTAs below.
 ```
 
+**Opener rule — never lead with "I" (added 2026-08-07 — the strongest first-line rule we have).** An event post's first line must lead with the *subject*, never Alex. Pick one of five leads: the **topic / core tension**; a **relevant recent headline or stat** (often the strongest hook — e.g., "This stat should make you rethink AI agents: [stat]…"); the **host company** *in service of the event* (never a bare "Company just…" product-ad construction — see the company/product-name row in `content-anti-patterns.md`); the **people** (host/speaker) who make the room worth showing up for; or the **NYC AI ecosystem** framing ("The NYC AI ecosystem is playing host to another … tonight"). **Banned openers:** "Tonight I'm at…", "I wrote…", "One stat reframed how *I* think…" — they center Alex and waste the hook. The curator's "I" may appear *later*, once the subject is established. This is the first-line enforcement of the decenter-self rule.
+
 ## Content Type CTAs
 
 | Content Type | CTA Approach |
@@ -306,7 +308,8 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 
 ---
 
-*Last updated: 2026-05-30*
+*Last updated: 2026-08-07*
+*Version: 0.6 — Added the Opener rule (never lead an event post with "I"; lead with topic / headline-stat / host-company / people / NYC-AI-ecosystem). First-line enforcement of decenter-self. See memory `feedback-no-i-led-openers-2026-08-07`.*
 *Version: 0.5 — Added (1) the stance-license rule (a viewpoint must be earned with space/presence/expertise; hot takes in synopses add zero value) and (2) the decenter-self / curator-not-protagonist rule, from the Upcoming Week post review (NYC Tech Week roundup). These refine — not replace — the bold-stance rule: stance is deferred to formats with room for context + analysis (post-event, deep posts), and grows with Alex's expertise. See memory `feedback-upcoming-week-stance-and-self-2026-05-30`.*
 *Version: 0.4 — Added (1) predictions-vs-stances voice rule and (2) visuals-must-add rule, from the AI Demo Night post review. See memory `feedback-comment-workflow-2026-05-26`.*
 *Version: 0.3 — Added 10 visual content best practices (format specs, 2-second thumb test, one-visual-one-idea, data principles, carousel architecture, color strategy, AI prompting rules, accessibility, format-by-content-type)*
