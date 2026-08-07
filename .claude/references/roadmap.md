@@ -11,9 +11,9 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124).
 
 ## Next 3 moves (the runway)
 
-1. **MI Engine M3 — "the engine as differentiator" — kickoff: surface + reconcile topic-intelligence.** The topic-intelligence layer is already BUILT (YED-110 & YED-120 Done) — but it landed in the **gtm-os** ecosystem, not empire-state. So the next move is **not** "build it," it's: (a) resolve whether gtm-os's topic-intelligence runs on the *same* Supabase graph as the empire-state MI engine (`oicikjyzmxqfomrrqkvf`) or a separate spine — **an open structural decision** (see Open threads); then (b) surface it on the canonical **empire-state-hub** (YED-122 §B signal_read views + render; YED-114 spine node).
-2. **Knowledge/RAG layer (YED-118)** — a document knowledge base as a new MI producer/source. Write its one-pager (ChatPRD → Notion) *before* building.
-3. **Drop "provisional" on the build-quality judge** — ~13 more held-out Approach-B runs holding ≥80% Gemini-vs-Alex, so the engine's outputs are trusted, not just shipped.
+1. **RAG / knowledge base (YED-118) — the M3 kickoff build, PRD-first (decided 2026-08-07).** Greenfield on empire-state (`documents`/`doc_chunks` are 404 today), so it's unblocked by the graph decision and starts first. Write the one-pager (ChatPRD → Notion) before any code.
+2. **Graph consolidation (YED-130) — decided: consolidate onto empire-state.** Topic-intelligence (YED-110/120, Done) lives on a separate gtm-os spine; port its substrate onto `oicikjyzmxqfomrrqkvf` so there's one graph. Probe gtm-os first to confirm direction + spec the entity-ID mapping (PRD-first). Gates M3 pillar 1 (surface topic-intelligence on empire-state-hub — YED-122 §B / YED-114).
+3. **Drop "provisional" on the build-quality judge** (~13 more held-out runs ≥80%) + scope the third lens (YED-126).
 
 *Sequenced behind these, not dropped:* a second non-content MI lens (M3 pillar 3); the content-quality control system; audience-first content (YED-103); job-search Capstone 2 (YED-59).
 
@@ -63,7 +63,7 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124).
 
 ## Open threads / debt
 
-- **⚠️ MI graph reconciliation (M3 kickoff decision, needs Alex):** is gtm-os's topic-intelligence on the *same* Supabase graph as the empire-state MI engine (`oicikjyzmxqfomrrqkvf`), or a separate gtm-os spine? Decide one-graph-or-two before building more MI on top. This is the highest-priority structural unknown surfaced by the re-anchoring pass.
+- **✅ MI graph reconciliation — DECIDED 2026-08-07: consolidate onto empire-state (tracked in YED-130).** Verified via REST that topic-intelligence lives on a separate gtm-os spine (`topic_cluster/trend/pair_metric/intersection` are 404 on `oicikjyzmxqfomrrqkvf`); the plan ports it onto the empire-state graph so there's one system of record. Execution is PRD-first (probe gtm-os to confirm direction, then spec the entity-ID mapping).
 - Drop-provisional on the judge (calibration continuation).
 - Content-quality control system: awaiting Alex's rulings (variants 2 vs 3; visual brief mandatory vs optional; research-brief artifact discrete vs event-body; pre-event stance) before building the canonical invariants contract — see `buzzing-scribbling-sky.md` (Step 1 diagnosis).
 - CLAUDE.md `<project_architecture>` refreshed 2026-08-07; keep it current as M3 ships.
