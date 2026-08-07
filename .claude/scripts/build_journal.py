@@ -38,8 +38,8 @@ DEFAULT_SINCE = "2026-07-01"
 
 PR_RE = re.compile(r"\(#(\d+)\)\s*$")
 YED_RE = re.compile(r"\b(YED-\d+)\b")
-# churn we never want to surface as "shipped" (they carry no PR number anyway, but be explicit for the count note)
-CHURN_RE = re.compile(r"^(Update (build-sessions|dod-waivers)\.jsonl|build session|Merge branch)", re.I)
+# NB: churn (build-sessions/dod-waivers updates, bare "build session" commits) is excluded from "shipped"
+# for free — those commits carry no "(#N)", so PR_RE never matches them. No explicit churn filter needed.
 
 
 def gh_repo(path):
@@ -107,13 +107,19 @@ def load_telemetry_by_day(since):
 
 def main():
     args = sys.argv[1:]
+
+    def argval(flag, default):
+        # guard against a flag given with no following value (avoids an IndexError)
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 < len(args):
+                return args[i + 1]
+            sys.exit(f"{flag} requires a value")
+        return default
+
     dry = "--dry-run" in args
-    since = DEFAULT_SINCE
-    out = DEFAULT_OUT
-    if "--since" in args:
-        since = args[args.index("--since") + 1]
-    if "--out" in args:
-        out = args[args.index("--out") + 1]
+    since = argval("--since", DEFAULT_SINCE)
+    out = argval("--out", DEFAULT_OUT)
 
     prose = load_prose()
     telem = load_telemetry_by_day(since)
@@ -157,6 +163,7 @@ def main():
                 "prs": len(e["shipped"]),
                 "commits": e["commits"],
                 "sessions": t.get("sessions", 0),
+                "tools": t.get("tool_uses", 0),
                 "dod_met": t.get("dod_met", False),
                 "dod_waived": t.get("dod_waived", False),
                 "correction_rounds": t.get("correction_rounds", 0),
