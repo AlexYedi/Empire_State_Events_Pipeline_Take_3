@@ -1,0 +1,35 @@
+{
+  "_note": "Human-owned prose sidecar for the build journal (YED-119). Keyed by build date (YYYY-MM-DD). Each entry: a short headline + a summary of no more than 3 lines answering WHAT was done, WHY, and the VALUE — no fluff. The generator (build_journal.py) merges these over the auto-derived facts (PRs, Linear refs, rigor telemetry). Leave a date out and the entry still renders from facts alone. This is the deliberate low-fluff seed to be revisited later with a fuller voice.",
+  "2026-08-06": {
+    "headline": "The build-arcs surface + the first live intelligence run",
+    "summary": "Shipped the public Build Arcs page (3 → 13 arcs, themed) and a shareable artifact, so a month of work is legible to a hiring manager at a glance. Ran the progressive market-intelligence engine live for the first time — seven cited signals, a new topic, a recomputed viewpoint — entirely on subscription, zero API tokens. The portfolio now shows an instrumented system that documents and re-ranks itself, not just claims it does."
+  },
+  "2026-08-05": {
+    "headline": "Branch-first discipline, promoted to canonical",
+    "summary": "Landed the governed batch: branch-first git discipline and a hook-schema reference, promoted into the cross-project canonical config, plus the hub's build-in-public content (changelog + candid README). Enforced in a hook rather than left to habit, so the right change-management path is the default in every project, not a thing to remember. Makes disciplined, reviewable change the paved road."
+  },
+  "2026-07-31": {
+    "headline": "Promoting the proven primitives",
+    "summary": "Swept the strongest Empire State primitives — the toolbox skill, the PostHog/Vercel and hook-schema references — into the personal plugin via governed PRs, and added a toolbox/counts generator so the build-in-public surface can't drift from reality. Validate locally, promote deliberately. Every future project now inherits accumulated discipline automatically."
+  },
+  "2026-07-30": {
+    "headline": "A dedicated telemetry project",
+    "summary": "Repointed build-rigor telemetry to its own PostHog project so build signal isn't mixed with product analytics, with read and write keys split by scope. Observability for the delivery system deserves the same rigor as the product. Clean, trustworthy build telemetry the hub can read honestly."
+  },
+  "2026-07-21": {
+    "headline": "The cross-provider judge",
+    "summary": "Wired a second, cross-provider judge (Gemini alongside Sonnet) into the build-quality gate and mechanized the dangling-reference check. An LLM grading its own model family self-prefers; a different provider is the cheapest robust mitigation. Build quality now gets an independent, adversarial second opinion instead of a rubber stamp."
+  },
+  "2026-07-17": {
+    "headline": "Closing the rigor loop + judge calibration",
+    "summary": "Calibrated the judge against a human anchor — crossing the trust gate to provisional-trusted — and wired the missing writer so DoD telemetry fields stop coming back null. Rigor that isn't written to the execution path decays silently. Rigor became measurable where the work actually happens, not in an optional doc."
+  },
+  "2026-07-15": {
+    "headline": "The command-orchestration convention",
+    "summary": "Authored the required command skeleton (intake → dispatch → collect → synthesize → named output) after a thin, declarative command failed the quality bar, and ran live LLM-as-judge execution. A command that only lists agents without dispatch/output logic isn't done. Commands now meet a completeness standard the judge can enforce."
+  },
+  "2026-07-11": {
+    "headline": "Rigor loop close + drift cleanup",
+    "summary": "Closed the first pass of the rigor loop and fixed confirmed documentation drift across the project config. Source-of-truth docs that lie are worse than none. The running system and its documentation agree again."
+  }
+}
