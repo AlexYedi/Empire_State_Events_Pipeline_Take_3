@@ -113,8 +113,9 @@ def _conn_str() -> str:
     port = os.environ.get("TWIN_DB_PORT", "5432")
     user = os.environ.get("TWIN_DB_USER", "postgres")
     name = os.environ.get("TWIN_DB_NAME", "postgres")
-    if "canonical" in host or "oicikjyzmxqfomrrqkvf" in host:
-        sys.exit("REFUSING: target host looks like canonical. 2a rehearses on the twin only.")
+    if ("canonical" in host or "oicikjyzmxqfomrrqkvf" in host) and os.environ.get("MI_ALLOW_CANONICAL") != "1":
+        sys.exit("REFUSING: target host looks like canonical. 2a rehearses on the twin first; "
+                 "set MI_ALLOW_CANONICAL=1 to apply to canonical (only after the twin rehearsal is green).")
     return f"host={host} port={port} user={user} dbname={name} sslmode=require"
 
 
