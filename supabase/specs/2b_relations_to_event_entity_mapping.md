@@ -71,15 +71,20 @@ Carry these from `compute_topic_intelligence.sql` unchanged — only the FROM/JO
 
 ---
 
-## 5. ⚠️ The one load-bearing decision — needs Alex's confirm
+## 5. The one load-bearing decision — RESOLVED (grounded in the existing taxonomy; open to override)
 
 **Scoping the recompute to the IRL event graph, not the trend-radar events.**
 
 Empire `public.event` currently holds **17 `kind='market'` trend-radar signals** (a "market signal = an event" modeling choice from the base pipeline) with ~20 `event_entity` edges — a *different semantic* from the IRL speaker/host graph. After 2b re-ingest, `public.event` holds **both kinds** (market + IRL). If the recompute reads *all* `event_entity` topic tags, the 17 market signals' topic tags leak into cluster co-occurrence and inflate/distort the themes — conflating "this theme is heating at real events" with "a market-radar item mentioned this topic."
 
-**Recommendation (95%, high):** give the re-ingested IRL events a **distinct `event.kind`** (proposal: `kind='community'`) and **scope every CTE of the recompute to the IRL kind** (`join public.event e … where e.kind = 'community'`). Rationale: the topic-intelligence product *is* "what's heating at the IRL events" — the market-radar events belong to a different lens (trend-radar) that already has its own consumers. Scoping keeps the two graphs coherent inside one table (the ADR-4 "two event kinds" consequence) without cross-contamination. The `kind` filter is also the natural invariant boundary (`event_count` over IRL events only).
+**Decision — GROUNDED in the existing taxonomy (not invented):** re-ingest the IRL events under the **existing `kind='attended'`** value and **scope every CTE of the recompute to `where e.kind='attended'`**. The base pipeline already documents this taxonomy (`.claude/references/market-intel-spine.md` §event): `attended` = *"Alex participates — meetups"* vs `market`/`funding`/`launch`/`exec_move` (happen *to* entities) vs `role_posted`/`application`/`interview` (job-lens). The re-ingested speaker/host/meetup graph **is** the `attended` semantic.
 
-**Alternatives considered:** (a) *no filter* — rejected, silently conflates two semantics; (b) *separate `irl_event` table* — rejected, re-introduces the schema fork 2b is trying to collapse and complicates the atomic swap. One shared `event` table + a `kind` discriminator is the best-of-both.
+Why `attended`, not a new `community`/`irl` value:
+- **Semantically exact** — `attended` is defined precisely as the meetup graph we're re-ingesting.
+- **Inventing a kind would break live code** — `recompute_relevance.py:84` already queries `kind=eq.attended&event_date=gt.now` to reinforce relevance from upcoming meetups. A new value fragments meetups across two kinds and makes that query silently miss the re-ingested events. `attended` keeps the base pipeline whole and is the natural invariant boundary (`event_count` over `attended` events only).
+- **Currently 0 rows** — `attended` is defined + queried but unpopulated (all 17 live events are `market`); the re-ingest is its first, intended populator.
+
+**Alternatives considered:** (a) *no filter* — rejected, silently conflates trend-radar with meetup activity; (b) *a new `community`/`irl` kind* — rejected, ignores the existing taxonomy and breaks `recompute_relevance.py`; (c) *separate `irl_event` table* — rejected, re-introduces the schema fork 2b is collapsing and complicates the atomic swap. One shared `event` table + the existing `kind` discriminator is the best-of-both.
 
 **Second, smaller decision — cluster identity:** carry gtm's `topic_cluster.cluster_id` **UUIDs verbatim** into Empire's new `topic_cluster` (the 30 themes are curated work product; their ids are stable identity). Then `public.topic.cluster_id` and `topic_trend.subject_id` reuse those UUIDs, so the Increment-1 carried `signal_read` grain stays resolvable across the swap. *(Recommendation: yes, carry verbatim — 90%, high.)*
 
@@ -92,7 +97,7 @@ Because the semantics are pinned, the invariant suite can assert:
 2. **Monotonicity:** adding an IRL event never *decreases* any pair's `cooccurrence_event_count` (all_time).
 3. **Symmetry / canonical order:** `subject_a_id < subject_b_id`; no self-pairs; `pair(A,B)` appears once.
 4. **Bridge integrity:** `bridge_person_count = cardinality(bridge_entity_ids)`; every bridge person is in the speaker set (`role IN speaker/host/panelist`) at ≥2 distinct events spanning the two clusters.
-5. **Kind isolation:** zero `event_entity` rows from `kind<>'community'` events contribute to any `topic_trend`/`topic_pair_metric` row (guards the §5 decision).
+5. **Kind isolation:** zero `event_entity` rows from `kind<>'attended'` events contribute to any `topic_trend`/`topic_pair_metric` row (guards the §5 decision).
 6. **Zero-orphan:** every counted `event_entity.entity_id` resolves to a live, non-tombstoned Empire topic/person (via 2a merge-map).
 7. **Golden cases:** 3 hand-built IRL events → hand-computed expected clusters/pairs match the SQL and the fresh reference impl.
 
