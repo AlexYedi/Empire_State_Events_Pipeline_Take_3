@@ -38,7 +38,7 @@
 | `co_event` | event → event | dropped (derivable; not consumed by compute) | — |
 | `related_topic` | topic → topic | dropped (topic-topic; not consumed by compute) | — |
 
-**Role vocabulary (the reviewed "role-vocab expansion" AC2b.1 asks for):** the Empire `event_entity.role` values become the closed set `{'tagged_topic','speaker','host','panelist','attendee'}`. The **speaker set** for the compute is `role IN ('speaker','host','panelist')` — the exact image of gtm's `('speaker_at','host_of','panelist_at')`. `attendee` is deliberately excluded from that set.
+**Role vocabulary (the reviewed "role-vocab expansion" AC2b.1 asks for):** the Empire `event_entity.role` closed set is `{'subject','tagged_topic','speaker','host','panelist','attendee'}`. Note `'subject'` is the **existing** role (live-verified: all 20 current edges are `(entity_type='topic', role='subject')` — how a `market` signal tags its one subject topic); IRL meetup tags use `'tagged_topic'` (distinct semantic: one subject vs. N tags). The **speaker set** for the compute is `role IN ('speaker','host','panelist')` — the exact image of gtm's `('speaker_at','host_of','panelist_at')`. The compute reads topic tags as `role='tagged_topic'` only, so market's `'subject'` tags never enter even before the `kind` filter. `attendee` is deliberately excluded from the speaker set.
 
 ---
 
@@ -86,6 +86,14 @@ Why `attended`, not a new `community`/`irl` value:
 
 **Alternatives considered:** (a) *no filter* — rejected, silently conflates trend-radar with meetup activity; (b) *a new `community`/`irl` kind* — rejected, ignores the existing taxonomy and breaks `recompute_relevance.py`; (c) *separate `irl_event` table* — rejected, re-introduces the schema fork 2b is collapsing and complicates the atomic swap. One shared `event` table + the existing `kind` discriminator is the best-of-both.
 
+**Confirmed by Alex (2026-08-08):** no `community`/sub-type — *events are events*. All previously-ingested events are **assumed attended** (Notion Events DB review waived). Attendance is differentiated **going forward** as a derived fact, not a type — see §5.1.
+
+### 5.1 Forward attendance differentiation (planned, not built)
+Event type stays uniform (`kind='attended'` for the meetup graph). Whether Alex *actually attended* a given event is captured **going forward** from two signals, decoupled from `kind`:
+1. **Post-event content uploaded** for the event (the `/post-event-content` flow ran → he was there), or
+2. **Explicit callout** afterward ("I went to X").
+Historicals default to assumed-attended (no back-review). When the distinction is first needed, add a nullable `event.attended_confirmed_at timestamptz` (or `metadata.attended_confirmed`) set by those two signals — a one-line addition, **deferred** per the base pipeline's *store-now/compute-later, don't-build-until-a-named-friction* rule. The theme compute is unaffected (it scopes on `kind`, never on confirmed attendance).
+
 **Second, smaller decision — cluster identity:** carry gtm's `topic_cluster.cluster_id` **UUIDs verbatim** into Empire's new `topic_cluster` (the 30 themes are curated work product; their ids are stable identity). Then `public.topic.cluster_id` and `topic_trend.subject_id` reuse those UUIDs, so the Increment-1 carried `signal_read` grain stays resolvable across the swap. *(Recommendation: yes, carry verbatim — 90%, high.)*
 
 ---
@@ -104,4 +112,24 @@ Because the semantics are pinned, the invariant suite can assert:
 ---
 
 ## 7. Downstream build order (unchanged from ADR-4, gated on this spec being reviewed)
-Review this spec → build `topic_cluster` + `topic.cluster_id` (AC2b.2) → re-ingest IRL events per §2 into `canonical_v2` (AC2b.1) → rewrite compute per §2–4 with the §5 kind-scope (AC2b.3) → invariants + fresh reference impl (§6, AC2b.4) → **full Phantom Test Case DB rehearsal + proven rollback** → atomic swap → decommission gate.
+Review this spec → **build the `canonical_v2` event-graph foundation + bounding-zone enums (§8)** → build `topic_cluster` + `topic.cluster_id` (AC2b.2) → re-ingest IRL events per §2 into `canonical_v2` (AC2b.1) → rewrite compute per §2–4 with the §5 kind-scope (AC2b.3) → invariants + fresh reference impl (§6, AC2b.4) → **full Phantom Test Case DB rehearsal + proven rollback** → atomic swap → decommission gate.
+
+---
+
+## 8. Bounding-zone constraints (check #2) — grounded in live values
+
+`event.kind`, `event_entity.role`, and `event_entity.entity_type` are bare `text` today — any string is legal, so a typo'd/rogue value could silently escape the compute's `kind='attended'` scope filter (a silent-correctness bug invariant #5 might not catch). **Live-verified current values** (Empire prod DB, 2026-08-08, read-only): `event.kind` = `{market: 17}`; `event_entity` = `{(entity_type='topic', role='subject'): 20}` — today's data uses only `market` + `subject`.
+
+**Locked — enumerate the vocabularies as `CHECK` constraints in `canonical_v2`** (never on live `public`; the constraint reaches `public` only via the atomic swap). This is the bounding zone: a new tracked signal type is a deliberate one-line enum edit, not an accident.
+
+- **`kind`** ∈ the full documented taxonomy (`market-intel-spine.md`), extended per Alex 2026-08-08:
+  `('attended', 'market', 'funding', 'launch', 'exec_move', 'partnership', 'adverse', 'role_posted', 'application', 'interview')`
+  - *meetup lens:* `attended` (the only kind the theme compute reads).
+  - *trend-radar lens (happens-to-entities):* `market`, `funding`, `launch`, `exec_move`, **`partnership`** (new — partnership announcements), **`adverse`** (new — adverse events). `exec_move` already covers executive team shifts; `launch` already covers product launches.
+  - *job lens:* `role_posted`, `application`, `interview`.
+- **`entity_type`** ∈ `('company', 'person', 'topic')`.
+- **`role`** ∈ `('subject', 'tagged_topic', 'speaker', 'host', 'panelist', 'attendee')`.
+
+The trend-radar kinds (`market`…`adverse`) are **isolated from the topic-intelligence compute by the `kind='attended'` scope** — they feed the trend-radar lens, never the meetup theme math.
+
+**DDL:** `supabase/migrations/0005_increment_2b_canonical_v2_event_graph.sql` — creates schema `canonical_v2` + `event`/`event_entity` with these enums + RLS deny-all. Applied **only** during the Phantom Test Case rehearsal, then on prod at cutover — never ad-hoc on `public`.
