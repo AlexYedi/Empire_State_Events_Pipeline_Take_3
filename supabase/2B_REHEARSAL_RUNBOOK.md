@@ -65,19 +65,19 @@ Inject one deliberate fault on the twin and confirm it is caught, then undo it:
 - a mis-scoped tag (flip one re-ingested event to `kind='market'`) → re-run steps 3–4 → the `kind isolation` / `conservation` invariant fails.
 A gate that never fails on a planted fault isn't a gate. Undo the injection before step 6.
 
-## Step 6 — Atomic swap (author here, then prove) — AC2b.5
-**Design (author the SQL as `staging/2b_swap.sql` + `staging/2b_rollback.sql`, run each inside ONE transaction; prove both on the twin before prod):**
-- **Entity graph → `public`:** for each of `event, event_entity, company, person, topic` — `alter table public.<t> rename to <t>_pre2b;` then `alter table canonical_v2.<t> set schema public;`. FKs bind by OID and survive the schema move. `public.*` stays RLS deny-all (anon blocked; server secret-key reads only).
-- **Intelligence stays in `topic_intelligence` (NON-exposed — do NOT move to public, or the k≥5 view suppression is bypassed via direct REST):** rename `topic_intelligence.{topic_cluster,topic_trend,topic_pair_metric}` → `*_pre2b`, `alter table canonical_v2.<t> set schema topic_intelligence;`, then re-apply the 0002 anon `grant select` + permissive RLS `*_anon_read` policies to the new tables.
-- **Repoint `signal_read` views:** `create or replace` `v_topic_movement` + `v_topic_intersections` (defs are OID-bound, so recreate) over the new `topic_intelligence.*`. Column contract + k≥5 suppression unchanged.
-- **Write path:** the nightly job now calls `canonical_v2.compute_topic_intelligence` (now `topic_intelligence`-resident after the move) → wire to the scoped writer role per `0003_roles_grants_definer.sql`.
-- **Verify within 60s:** both hub endpoints (`/signal`, `/ops/market-intel`) return non-empty; a poller confirms `signal_read` never served a partial across the swap.
+## Step 6 — Atomic swap — AC2b.5 — ✅ PROVEN on the twin 2026-08-10 (1.62s)
+`staging/2b_swap.sql`, ONE transaction:
+- **Originals PARKED in a dedicated `pre2b` schema** (NOT renamed in place — that collides on constraint names like `company_pkey`; a separate schema keeps names unique). `alter table public.<t> set schema pre2b;` then `alter table canonical_v2.<t> set schema public;`. FKs bind by OID and survive.
+- **Intelligence → `topic_intelligence` (NON-exposed — moving it to public would bypass k≥5 suppression via direct REST):** old `{topic_cluster,topic_trend,topic_pair_metric,ingestion_run}` → `pre2b`, canonical_v2's → `topic_intelligence`, then re-apply the 0002 anon `grant select` + permissive `*_anon_read` RLS.
+- **Entity grants:** `service_role` gets DML on the new `public.*` (hub reads via secret key / BYPASSRLS); anon/authenticated get gated `select`.
+- **Recreate `signal_read` views** (OID-bound → recreate) over the new `topic_intelligence.*`. k≥5 suppression + column contract unchanged.
+- **Proven result:** `public.event` 17→59, `event_entity` 20→429, `topic_trend` 96→40, `topic_pair_metric` 286→136; `signal_read` served the recomputed graph. (Write path: at prod cutover wire the nightly `compute_topic_intelligence` to the scoped writer role per `0003`.)
 
-## Step 7 — PROVE the rollback — *the gate the whole plan hinges on*
-Run `staging/2b_rollback.sql`: swap `*_pre2b` back into place, move the canonical_v2 tables back, restore the original views. Then assert **exact original row counts, zero loss** (compare to the step-0 snapshot). **If the rollback cannot be demonstrated on the twin, the Empire prod DB is never touched.**
+## Step 7 — PROVE the rollback — ✅ PROVEN on the twin 2026-08-10 (1.25s, exact, zero loss)
+`staging/2b_rollback.sql`: move canonical_v2 tables back, restore originals from `pre2b`, restore original views, drop `pre2b`. **Verified: post-rollback counts equal the pre-swap snapshot exactly** (event 17 / event_entity 20 / topic_trend 96 / topic_pair_metric 286 / intersections 56 / movement 14), no `*_pre2b` leftovers. *This is the gate: proven, so prod cutover is unlocked.*
 
-## Step 8 — Time the swap window
-Record the swap transaction duration → sizes the prod pipeline **write-freeze** (spec §4). 
+## Step 8 — Swap window — ✅ measured: swap 1.62s + rollback 1.25s
+Prod pipeline **write-freeze** need is ~2s. Trivial — a brief freeze around the cutover transaction covers it.
 
 ## Step 9 — Decommission gate (SEPARATE, dated — never bundled)
 Only after prod cutover + N nights of invariants-passing + both hubs healthy + zero outstanding human-review merges: **cold, encrypted logical export of the gtm spine** first, then retire it. Decommission is its own dated approval.
