@@ -303,12 +303,18 @@ def main() -> int:
 
     print("\nStructural invariants:")
     inv_fails = invariants(as_of_str)
-    print("\nRead-path probe:")
+    print("\nRead-path probe (non-fatal — checks the watch's own anon-key path, not graph health):")
     probe_fails = read_path_probe()
 
-    ok = (t_mis == 0 and p_mis == 0 and not inv_fails and not probe_fails)
-    print("\n" + ("✅ PASS — graph coherent, invariants hold, read path healthy."
-                  if ok else "❌ FAIL — investigate above. pre2b rollback remains available."))
+    # FATAL = graph coherence only (independent recompute + invariants). The read-path probe is a
+    # secondary signal reported as a WARNING, so an anon-key/config hiccup can't masquerade as a
+    # graph-health failure (avoids false alarms during the watch).
+    ok = (t_mis == 0 and p_mis == 0 and not inv_fails)
+    if probe_fails:
+        print("  ⚠️  read-path probe warnings (non-fatal): " + "; ".join(probe_fails))
+    print("\n" + (("✅ PASS — graph coherent, invariants hold."
+                   + (" (read-path probe had warnings — see above)" if probe_fails else " read path healthy."))
+                  if ok else "❌ FAIL — graph incoherence above. pre2b rollback remains available."))
     return 0 if ok else 1
 
 
