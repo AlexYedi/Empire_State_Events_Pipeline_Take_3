@@ -1,0 +1,54 @@
+name: MI 2b nightly health-check (throwaway)
+
+# Post-swap N-night watch for the MI consolidation (YED-130 Increment 2b).
+# Runs the read-only health-check nightly; the job FAILS (and opens an issue) only if the
+# consolidated graph loses coherence or a read path breaks — alert-on-failure-only.
+#
+# DELETE this workflow + supabase/scripts/healthcheck_2b.py once `pre2b` is dropped
+# (i.e. the gtm spine is decommissioned and the watch is over).
+#
+# REQUIRED repo secrets (Settings > Secrets and variables > Actions):
+#   MI_DB_DSN            The SESSION POOLER connection string (IPv4 — GitHub runners can't reach
+#                        the IPv6-only direct db.<ref>.supabase.co host). From Supabase dashboard
+#                        > Connect > Session pooler, e.g.:
+#                        postgres://postgres.oicikjyzmxqfomrrqkvf:<PW>@aws-0-<region>.pooler.supabase.com:5432/postgres
+#   MI_SUPABASE_URL      https://oicikjyzmxqfomrrqkvf.supabase.co
+#   MI_SUPABASE_ANON_KEY the publishable/anon key
+#
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # 08:00 UTC nightly (~04:00 ET)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install psql (libpq client)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Run MI 2b health-check
+        env:
+          MI_DB_DSN: ${{ secrets.MI_DB_DSN }}
+          MI_SUPABASE_URL: ${{ secrets.MI_SUPABASE_URL }}
+          MI_SUPABASE_ANON_KEY: ${{ secrets.MI_SUPABASE_ANON_KEY }}
+          PSQL_BIN: psql
+        run: python3 supabase/scripts/healthcheck_2b.py
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "MI 2b health-check FAILED ($(date -u +%Y-%m-%d))" \
+            --body "The nightly post-swap health-check failed — the consolidated MI graph lost coherence or a read path broke. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
+            || echo "issue-create failed; check the Actions run directly"
