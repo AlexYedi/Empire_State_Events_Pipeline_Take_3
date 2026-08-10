@@ -11,7 +11,8 @@ RUN ORDER: apply migrations 0005 + 0006 first (they create canonical_v2's tables
 then run this. Idempotent — safe to re-run.
 
 WHAT IT WRITES (all into canonical_v2, all idempotent):
-  A. copy public.{company,person,topic} -> canonical_v2.*            (structure-identical)
+  A. copy public.{company,person,topic,event,event_entity} -> canonical_v2.*  (preserves the
+       existing trend-radar 'market' events so the swap keeps BOTH kinds, spec §5)
   B. carry the 30 curated clusters  topic_intelligence.topic_cluster -> canonical_v2.topic_cluster
   C. assign canonical_v2.topic.cluster_id via topic_intelligence.topics + topic_crosswalk
   D. re-ingest IRL events   gtm signal.events   -> canonical_v2.event (kind='attended')
@@ -166,6 +167,12 @@ insert into canonical_v2.topic (id, name, description, notion_page_id, source, r
          last_engaged_at, engagement_count, metadata, created_at, updated_at
   from public.topic
   on conflict (id) do nothing;
+-- carry the EXISTING event graph (the trend-radar 'market' events + their edges) so the swap
+-- PRESERVES them alongside the re-ingested IRL events (spec §5: public.event holds BOTH kinds).
+-- event first, then event_entity (FK event_id -> event). role='subject'/entity_type='topic' pass
+-- the 0005 bounding enums by construction.
+insert into canonical_v2.event        select * from public.event        on conflict (id) do nothing;
+insert into canonical_v2.event_entity select * from public.event_entity on conflict (id) do nothing;
 
 -- B. carry the 30 curated clusters verbatim (same cluster_id UUIDs)
 insert into canonical_v2.topic_cluster select * from topic_intelligence.topic_cluster
