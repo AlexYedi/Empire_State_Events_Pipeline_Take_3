@@ -181,11 +181,27 @@ prior record** — they are pure-NEW, nothing to retrieve.
   (`/event_entity?entity_type=eq.company&entity_id=eq.{id}`;
   `/event?kind=eq.market&order=event_date.desc&limit=25`). **Expect near-empty returns**
   until event-research write-back ships — wire the read, don't depend on the payload.
+  **Best-effort, non-blocking (v1.1, YED-132):** run every graph call with a bounded timeout
+  (`curl --max-time 8 -s -w '%{http_code}'`); on ANY non-2xx, timeout, error, or empty array,
+  record `graph: no signals (<reason>)` in the audit line and **continue immediately** — never
+  retry-loop, never let the graph read gate the run. The graph is the lowest-priority source;
+  a from-scratch pass is the correct fallback when it's empty or unreachable.
 
-**Cost guards (mirror post-event Step 3.6 / YED-96 R5):** cache-by-entity (skip no-prior
-entities); cap prior-brief-body pulls to recurring events + returning people; default cap
-≤ 8 enriched entities per event, highest-signal first, the rest listed as "not pulled — on
-demand." Log what was capped — no silent truncation.
+**Cost guard — an enforced selection procedure, not a soft cap (v1.1, YED-132).** The cap is
+a step with a deterministic ranking + a required audit artifact, so it can't be silently
+skipped (the prose-only `≤8` was the "rigor-in-prose-not-execution-path" trap). Execute in order:
+1. **Skip-no-prior (deterministic filter):** drop every entity with no prior record from the
+   retrieval set — pure-NEW entities are researched from scratch in Step 2, never retrieved here.
+2. **Rank the survivors** by fixed priority: (a) the event-series / host prior brief (continuity —
+   always pull if it exists); (b) returning speakers/hosts (People with a prior record);
+   (c) companies with a non-empty `Recent Developments`; (d) topics with a `Current Events` note.
+3. **Hard cap N = 8** (default): fetch rich bodies for the top-8 ranked only; list every remaining
+   candidate by name as "not pulled — on demand."
+4. **Mandatory audit line** (emit before dispatching the conditioner — this line *is* the
+   enforcement; if it's absent, the cap wasn't applied):
+   `Prior-knowledge retrieval — pulled: [names] · skipped-no-prior: [n] · capped/not-pulled: [names] · graph: [ok N sigs | no signals (reason)]`
+The conditioner re-applies a relevance filter downstream, but the *retrieval* cap lives here so
+cost is bounded **before** any large body is fetched.
 
 ### 1.7b: Condition (dispatch `knowledge-conditioning` subagent)
 
