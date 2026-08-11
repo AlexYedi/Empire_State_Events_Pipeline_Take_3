@@ -43,6 +43,18 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 
 **Preserve the raw description verbatim (added 2026-06-23 — fidelity fix).** Parsing into entities is LOSSY: it is a summary. Keep the full, unedited invite/`description` text as a `VERBATIM SOURCE` block and carry it forward to Step 2 unchanged. The entity list is an *index* into the source, NOT a replacement for it. Never let a downstream agent see only the summarized entities — talk abstracts, named themes (e.g. "partnerships", "go-to-market strategy"), attendee mix, and ordering nuance live in the raw text and are invisible once compressed. Root-cause of a 2026-06-23 defect where all outputs were built off a lossy summary.
 
+## Step 1.7 — Prior-knowledge retrieval + conditioning (this conversation + a distiller subagent)
+
+Before fan-out, load what the pipeline already knows about these entities so research **compounds** instead of restarting from web search every run. Run **Step 1.7 of `.claude/skills/event-research/SKILL.md`**:
+
+1. **1.7a Retrieve (this thread — MCP reads must run in the parent):** for entities with a prior record (from the Step 1.5b dedup), pull prior Event brief bodies, People/Companies page bodies, Topics `Current Events` (newsletter/trend notes), Gmail correspondence + `label:Content/newsletters newer_than:14d`, and Supabase graph `market` signals over REST (`SUPABASE_API_KEY` from `.env`, **never** the MCP — see `.claude/references/market-intel-spine.md`). Cache-by-entity, cap ≤ 8 enriched entities, log what's dropped.
+2. **1.7b Condition (delegated):** dispatch `knowledge-conditioning` with the `VERBATIM SOURCE` block + triage plan + all raw pulls. It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged (`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity cards, Graph Signals, and an Audit. Text-in / text-out; no I/O.
+3. **1.7c Persist (this thread):** write the pack as a `prior_context_pack` Content Draft (`Platform: notion_only`, icon 🗃️) so "what prior knowledge fed this brief" is auditable. `notion-writer` relinks it + mirrors a `## Prior-Context Pack` section onto the Event page in Step 4.
+
+**First-touch event (no prior record for any entity):** skip 1.7b/1.7c, note it, and run Step 2 from scratch. The graph read commonly returns empty until event-research write-back ships — expected, not a failure.
+
+**Verify-first (the discipline):** the pack is prior context, never current fact. Downstream readers treat `KNOWN` as a foundation and `STALE` / `UNVERIFIED` as leads to refresh/verify; nothing stale or unsourced flows into the brief as fact (CLAUDE.md Rule 12).
+
 ## Step 2 — Multi-agent research fan-out (this conversation)
 
 Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This must run in the parent thread because subagents cannot spawn other subagents (Anthropic SDK runtime constraint — see [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md): *"Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation."*).
@@ -54,7 +66,7 @@ The four parallel dispatches:
 3. **topic-landscape-analyst** — every Topic entity (NEW, REFRESH, or APPEND-CURRENT-EVENTS-ONLY). Topics never get full SKIP.
 4. **competitive-signal-scanner** — runs across ALL companies (including SKIP) to surface market signals in last 60 days.
 
-For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block from Step 1, quoted unchanged and labeled as the source of truth** ("read every line; derive findings from THIS text — the framing below is supplementary, not a replacement"); (2) the entity list scoped to that specialist; (3) the triage path per entity; (4) the event name + date; (5) Alex's stated focus.
+For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block from Step 1, quoted unchanged and labeled as the source of truth** ("read every line; derive findings from THIS text — the framing below is supplementary, not a replacement"); (2) the entity list scoped to that specialist; (3) the triage path per entity; (4) the event name + date; (5) Alex's stated focus; **(6) that specialist's slice of the Step 1.7 Prior-Context Pack** — Companies cards → company-researcher; People cards → person-researcher; Topic cards → topic-landscape-analyst; Graph Signals + Continuity Ledger → competitive-signal-scanner — with the standing instruction: treat `KNOWN` as starting context, `STALE` / `UNVERIFIED` as leads to refresh/verify via web search, and never restate `UNVERIFIED` as fact. Omit (6) for a first-touch event or for specialists whose slice is empty.
 
 **Mandatory (fidelity fix, 2026-06-23):** the verbatim description is item (1) for a reason — it goes in EVERY specialist dispatch, ahead of the entity list. Do NOT paraphrase it into the prompt and drop the original. If the parent only hands subagents the summarized entity list, the run repeats the defect where talk-abstract nuance and named-but-unsummarized themes never reach research. The Step 2.5 synthesizer also receives the raw invite — keep that.
 
@@ -66,7 +78,7 @@ Invoke the synthesizer subagent with all four specialist returns plus the triage
 
 ```
 subagent_type: event-research-synthesizer
-prompt: [event invite + triage plan + Alex's stated focus + all 4 specialist returns]
+prompt: [event invite + triage plan + Alex's stated focus + all 4 specialist returns + the Step 1.7 Prior-Context Pack (Continuity Ledger + Graph Signals especially)]
 ```
 
 The synthesizer:

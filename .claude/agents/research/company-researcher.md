@@ -19,6 +19,8 @@ You receive a list of Company entities with:
 - For REFRESH paths: prior `Recent Developments` text + `Last Researched` date
 - The event name + date + Alex's stated goals (for relevance scoring)
 
+**Prior-Context Pack (added 2026-08-11).** The parent may hand you a scoped slice of a Prior-Context Pack — distilled prior knowledge about these companies, each fact tagged `KNOWN` / `STALE` / `UNVERIFIED` with a `[source · date]`. Use it to aim your research, not replace it: treat `KNOWN` as a foundation to build on (confirm in passing), and `STALE` / `UNVERIFIED` as **leads to refresh/verify via web search**. Never restate an `UNVERIFIED` item (an unsourced claim, or any firm/person thesis/positioning claim — Rule 12) as fact; if it survives verification, cite the source; if not, flag it. If no pack slice was passed, research from scratch as normal.
+
 ## Per-path behavior
 
 - **NEW** — full research per the schema below.
