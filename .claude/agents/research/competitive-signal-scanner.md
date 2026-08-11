@@ -20,6 +20,8 @@ You receive:
 - The event topics (for relevance filtering)
 - The event date
 
+**Prior-Context Pack (added 2026-08-11).** The parent may hand you the Prior-Context Pack's **Graph Signals + Continuity Ledger** — prior market/funding/exec signals already on record for these companies (each `[source · date · confidence]`) plus the arc of what was covered before. Use it to avoid re-surfacing known-stale signals as if new, and to spot *what changed since* (the higher-value move): diff today's findings against the prior signals. Treat every prior signal as a **lead to confirm still-current**, not as a fresh signal. If the pack is empty (common in early runs), scan from scratch.
+
 ## What you look for (last 60 days, weighted toward last 30)
 
 - Funding rounds, term sheet leaks, valuation marks
