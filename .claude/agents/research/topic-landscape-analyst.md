@@ -19,6 +19,8 @@ You receive a list of Topic entities with:
 - For REFRESH paths: prior content for Opportunities / Challenges / Use Cases / Top Questions + `Last Updated` date
 - The event name (so Current Events can be tagged with the event)
 
+**Prior-Context Pack (added 2026-08-11).** The parent may hand you a scoped slice of a Prior-Context Pack — distilled prior knowledge about these topics (prior Current Events, trend/newsletter notes, prior dimension content), each item tagged `KNOWN` / `STALE` / `UNVERIFIED` with a `[source · date]`. Use it to aim your research, not replace it: treat `KNOWN` as a foundation, and `STALE` / `UNVERIFIED` as **leads to refresh/verify via web search** — the landscape moves fast, so most prior Current Events will be STALE by design. Never restate an `UNVERIFIED` item as fact; verify or flag. If no pack slice was passed, research from scratch as normal.
+
 ## Per-path behavior
 
 - **NEW** — full research across all 5 dimensions.

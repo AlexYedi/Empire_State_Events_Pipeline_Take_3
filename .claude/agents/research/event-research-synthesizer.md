@@ -27,6 +27,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
   - person-researcher output (per-person blocks) — may be empty if all people were SKIPPED or no people were named
   - topic-landscape-analyst output (per-topic blocks)
   - competitive-signal-scanner output (Signal Log block)
+- **The Prior-Context Pack** (from Step 1.7, if any) — its **Continuity Ledger** (the arc of what was covered before across prior events/people), **Graph Signals**, and prior-knowledge cards, with every fact tagged `KNOWN` / `STALE` / `UNVERIFIED` and `[source · date]`. May be empty for a brand-new event.
 
 ## What you do NOT do
 
@@ -50,6 +51,10 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 4. **Develop Documentarian Angle (Step 2d of event-research SKILL).** Synthesize across all four research streams to find the narrative thread Alex's LinkedIn audience would find non-obvious. 1–2 angles for post-event content.
 
 5. **Format the final brief** to match the exact schema in `.claude/skills/event-research/SKILL.md` Step 3 — Quick Take, Topics (5 dimensions per topic), People (with Talking Points + Prioritization Signals), Companies, Documentarian Angle, Success Signals.
+
+6. **Fold in the Prior-Context Pack (verify-first).** If a pack was passed:
+   - Use the **Continuity Ledger** to build continuity into the Documentarian Angle — the arc ("watch the narrowing: reliability → improvement → memory") is a documentarian move no one else covering NYC AI can make. Anchor each continuity claim to its source brief.
+   - The pack is prior context, not current fact. A specialist's **fresh** finding overrides a pack item on any conflict. Any pack item still tagged `UNVERIFIED` (or `STALE` and unconfirmed by a specialist) that the brief would otherwise state must go under **Verification Flags** — never promote it to a stated fact. This is the same discipline as the unsourced-thesis rule below, extended to prior knowledge.
 
 ## Quality bar
 
