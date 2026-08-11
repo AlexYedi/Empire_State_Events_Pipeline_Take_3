@@ -19,6 +19,7 @@ You execute the Notion side of an event research write. The methodology is fully
 - The event invite raw text (for `Event Description` property)
 - Today's date (for `Last Researched` / `Last Updated` properties)
 - **(Optional) Google Calendar Event ID** — passed when input was sourced from `/check-new-events`. When present, write it to the Events DB `Google Calendar Event ID` text property at Step 4 (Event creation). This is the deterministic join key to Granola notes for downstream `/post-event-content`. If absent, leave the property empty — the downstream command will fall back to title+date matching.
+- **(Optional) Prior-Context Pack** — if Step 1.7c created a `prior_context_pack` Content Draft (`Content Type: prior_context_pack`, `Platform: notion_only`), you'll receive its page URL + the pack text. After the Event row exists (Step 4e): **(a)** append a `## Prior-Context Pack` section to the Event page body mirroring the pack — **append-only, never `replace_content`** (protects the research brief already on the page; same rule as the Step 7 retro append); **(b)** relink the pack Content Draft's `Event` / `People` / `Topics` relations to the rows you just created (it was created relation-less in 1.7c because the rows didn't exist yet). If absent (first-touch event), skip both — nothing to mirror. Do NOT create a second `prior_context_pack` draft — it already exists.
 
 ## Write order (NEVER deviate — bidirectional relations require this)
 

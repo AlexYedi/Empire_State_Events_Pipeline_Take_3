@@ -137,7 +137,83 @@ Before proceeding to Step 2, show the triage plan and get approval:
 > **Proceeding with this plan. OK to research?**
 
 Alex may want to override (e.g., "force full refresh on Microsoft", "skip Bob — already
-know him"). Apply overrides, then move to Step 2.
+know him"). Apply overrides, then move to Step 1.7.
+
+---
+
+## Step 1.7: Prior-Knowledge Retrieval + Conditioning
+
+Between triage approval (1.5d) and the research fan-out (Step 2), pull what the pipeline
+already knows about this event's entities, distill it into a **Prior-Context Pack**, and
+persist the pack. This is the pre-event mirror of post-event `transcript-conditioning`
+(`.claude/commands/post-event-content.md` Step 3.5). Goal: research **starts from**
+accumulated knowledge and compounds — without dumping stale, unfiltered prior artifacts
+into the fresh pass. The pack carries **detail with provenance, framed as verify-first
+leads** (never a raw dump, never a thin summary).
+
+**All retrieval runs in the parent thread** — the Notion/Gmail MCP connectors are not
+available inside subagents ([[project_notion_writes_must_be_parent_thread]]); Supabase is
+REST-over-Bash. Only the conditioning distiller is a subagent (text-in / text-out).
+
+### 1.7a: Retrieve (parent thread)
+
+For each entity on a NEW/REFRESH path (plus SKIPs and the event series), pull prior
+knowledge, reusing the page URLs already captured in Step 1.5b. **Skip entities with no
+prior record** — they are pure-NEW, nothing to retrieve.
+
+- **Notion** (`notion-fetch` on captured URLs; `notion-search` for the series/host — NOT
+  `notion-query-data-sources`, which is plan-gated on Alex's plan):
+  - Prior **Event** page bodies for the same series or overlapping people/companies — the
+    `## Research Brief` / `## Post-Event Brief` sections (the continuity source).
+  - **People** page bodies: Known POV/Bio, Notes, prior Talking Points, `Last Researched`.
+  - **Companies** page bodies: Description, Recent Developments, Recent Funding, `Last Researched`.
+  - **Topics** `Current Events`: the accumulating dated `[Trend Radar {date}] …`
+    newsletter/trend notes + `Last Updated`.
+- **Gmail** (`mcp__claude_ai_Gmail__search_threads` / `get_thread`): prior correspondence
+  with named people/companies; recent newsletter coverage of the topics via
+  `label:Content/newsletters newer_than:14d` (the **full nested label path is required** —
+  leaf `label:newsletters` returns empty). Do this **once, centrally, here** — don't make
+  each specialist re-run it.
+- **Supabase graph** (REST to `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`,
+  `SUPABASE_API_KEY` from `Take_3/.env` via Bash — never the MCP; see
+  `.claude/references/market-intel-spine.md`): prior `market`-kind signals on these entities
+  via `event_entity` hyperedge joins
+  (`/event_entity?entity_type=eq.company&entity_id=eq.{id}`;
+  `/event?kind=eq.market&order=event_date.desc&limit=25`). **Expect near-empty returns**
+  until event-research write-back ships — wire the read, don't depend on the payload.
+
+**Cost guards (mirror post-event Step 3.6 / YED-96 R5):** cache-by-entity (skip no-prior
+entities); cap prior-brief-body pulls to recurring events + returning people; default cap
+≤ 8 enriched entities per event, highest-signal first, the rest listed as "not pulled — on
+demand." Log what was capped — no silent truncation.
+
+### 1.7b: Condition (dispatch `knowledge-conditioning` subagent)
+
+Hand the subagent the `VERBATIM SOURCE` block, the triage plan, and all raw pulls from 1.7a.
+It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged
+(`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity
+cards, Graph Signals, and an Audit (confidence + dropped + coverage gaps). Full contract:
+`.claude/agents/research/knowledge-conditioning.md`. It does no I/O — it distills what it
+was handed.
+
+If NO entity had any prior record (a genuinely first-touch event), skip 1.7b/1.7c, note
+"no prior context — first-touch event," and proceed to Step 2 as a from-scratch run.
+
+### 1.7c: Persist the pack (parent thread, Notion)
+
+Write the pack as an auditable internal artifact (mirrors the `post_event_brief` pattern) so
+"what prior knowledge fed this brief" is a first-class, reviewable record and a rigor-loop
+input:
+- **Content Draft:** `Content Type: prior_context_pack`, `Platform: notion_only`,
+  `Event Phase: pre_event`, `Content Status: needs_review`, icon 🗃️; body = the full pack
+  (page-index callout per gotcha `i`). Relations to Event/People/Topics are set once the
+  Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and let
+  `notion-writer` relink + mirror it in Step 4.
+- The Event-page mirror (a `## Prior-Context Pack` section) is appended by `notion-writer`
+  in Step 4 (see 4e).
+
+Then move to Step 2 — pass each specialist its relevant pack slice, and the Continuity
+Ledger + Graph Signals to the synthesizer (Step 2.5).
 
 ---
 
@@ -612,6 +688,7 @@ find and append cleanly:**
 - `## Research Brief` (topics, people with talking points + prioritization signals, companies, documentarian angle)
 - `## Success Signals` (3–5 signals from 2e)
 - `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes — omit section if none)
+- `## Prior-Context Pack` (append-only mirror of the Step 1.7 pack, if one was produced — the readable side-by-side surface; the canonical copy is the `prior_context_pack` Content Draft from 1.7c. Omit section if this was a first-touch event with no prior context. Relink the `prior_context_pack` Content Draft's Event/People/Topics relations to this Event row here.)
 - `## Retro` — leave empty; Step 7 appends here after the event
 
 **Capture the Event page URL.**
