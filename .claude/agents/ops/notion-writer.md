@@ -32,6 +32,8 @@ Step 4: Event (set People + Companies + Topics)   → capture URL
 Step 5: Content Draft (set Event + People + Topics)
 ```
 
+**Re-run → UPDATE the brief, don't duplicate (v1.2, YED-132).** If triage flagged this as a re-run of an existing Event, a `research_brief` Content Draft already exists. Follow SKILL Step 4f "Re-run path": update the existing `research_brief` body + the Event page `## Research Brief` section in place with the corrected brief (audit-trailed with a `> Re-researched [date] — corrections: …` line), rather than creating a second draft. A duplicated stale brief is what `pre-event-content` would read.
+
 ## Per-step behavior
 
 For each entity, route to its triage path:
