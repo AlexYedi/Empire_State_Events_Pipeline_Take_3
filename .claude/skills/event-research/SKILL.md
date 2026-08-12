@@ -728,6 +728,23 @@ find and append cleanly:**
 Page body content: the full research brief (same as Event page body — having it in both
 places means Alex can find it from either the Event or Content Drafts view).
 
+#### Re-run path (Event already exists — the corrections case, v1.2, YED-132)
+
+When Step 1.5b detected a **re-run** of the same Event (matching `Google Calendar Event ID`,
+else title+date), a `research_brief` Content Draft already exists from the prior run — and a
+re-run's whole value is often *corrections* the verify pass produced (e.g. a mis-sourced thesis,
+a stale funding/stat number). Do **NOT** create a second `research_brief`: the stale copy is what
+`pre-event-content` would read. Instead:
+- **Update the existing `research_brief` Content Draft body in place** with the freshly-synthesized
+  (corrected) brief; keep `Content Status: needs_review`.
+- **Replace the Event page `## Research Brief` section** with the corrected brief (this one section
+  is replaced; everything else on the page stays append-only).
+- **Audit-trail the change:** prepend a one-line note to both —
+  `> Re-researched [date] — corrections: [what changed, e.g. "Claygent 1B→5B runs; framework attribution Berry→Amin; dropped unverified deliverability benchmarks"]`.
+This is what makes a verify-pass correction actually reach downstream content. Without it the
+corrected facts live only in the `prior_context_pack` and the content flow keeps reading the stale
+brief.
+
 ### 4g: Confirm Notion Writes
 
 After all pages are created/refreshed/skipped, report:

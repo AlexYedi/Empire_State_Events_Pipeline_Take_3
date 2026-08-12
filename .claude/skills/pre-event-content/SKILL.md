@@ -47,12 +47,14 @@ Alex provides one of:
    - People with roles, POVs, connection angles
    - Companies with recent developments
    - Documentarian angle
+   - **Verification Flags / provenance exclusions (v1.2, YED-132)** — the brief's `Verification Flags` section AND, if a `prior_context_pack` Content Draft is linked to this Event, its `UNVERIFIED` and `do-not-cite` items. These are the claims that must NOT flow into public copy as fact.
 4. Confirm with Alex what content types to generate for this event:
    - The Upcoming Week post (only if multiple events queued for the week)
    - Pre-Event LinkedIn post
    - Speaker/Host DMs
    - All of the above
 5. **Check for an `## Author Steer — [date]` block** on the Event page (from the `steering-interview` skill). If present, honor it: answer #1 steers the content/angle/what-to-avoid, #2 steers structure/format, #4 is context to keep top of mind. If no steer block exists and Alex is present, offer to run `steering-interview` first ("anything you want to steer before I draft? or skip").
+6. **Build the provenance exclusion list + apply it as a standing rule (v1.2, YED-132).** From the Verification Flags + `prior_context_pack` items collected in (3), assemble this run's **do-not-assert list**. Standing rule for Steps 2–6: **no item on the exclusion list appears in public copy as a stated fact.** For each, choose exactly one — (a) **drop it** (default; a `do-not-cite` benchmark like unverified deliverability stats is dropped, never paraphrased); (b) **attribute it explicitly** to its primary source, and only if one exists ("Attention's own release says…"); or (c) **soften to Alex's own observation**, never a factual claim about the firm/person (CLAUDE.md Rule 12). Thesis/positioning claims default to (b) or (c), never bare assertion. Surface the honored exclusions at the Step 7 write — a one-line `Excluded per provenance: […]` — so Alex sees what was kept out and why.
 
 ---
 
