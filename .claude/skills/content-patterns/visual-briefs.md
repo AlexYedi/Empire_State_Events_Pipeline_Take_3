@@ -39,8 +39,9 @@ The carousel brief is embedded in the LinkedIn post's Notion page body under a
 **Default ship path (updated 2026-08-07 — Claude design; Gamma REMOVED).** Claude
 is the default generator for all structured / label-dense visual content — singles
 and carousels. After producing the brief, Claude authors the visual as a
-**self-contained HTML/SVG design** and publishes it via the **Artifact tool**;
-Alex exports to 4:5 PDF/PNG (⌘P → Save as PDF gives a LinkedIn-ready carousel).
+**self-contained HTML/SVG design** and renders it to a 4:5 PDF/PNG. Default export is a
+headless-Chrome auto-render (⌘P → Save as PDF from a published Artifact is the manual
+fallback); see `## Execution` below for the exact command.
 Claude renders exactly what's authored — no re-interpretation, which is what broke
 dense labels in Gamma/Canva. See `## Execution — Claude design (default) + Gemini
 (pictorial)` below.
@@ -82,7 +83,7 @@ When proposing a post's visual, offer **four distinct format options**, not four
 
 **Tooling (updated 2026-08-07): Claude design is the DEFAULT generator for all structured visual content** — every single image and every carousel — authored as self-contained HTML/SVG and published via the Artifact tool, because Claude renders exactly the labels / diagrams / matrices / stat-callouts as authored (no app re-interpretation — the failure mode of both Gamma and Canva).
 - **Author:** hand-write the design — dark editorial ground, ONE meaning-bearing accent (see palette below), real typographic hierarchy, inline SVG for diagrams / arrows / timelines. Load the `artifact-design` (+ `artifact-diagramming`, `dataviz`) skills first for calibration.
-- **Size + export:** 4:5 (1080×1350) per slide; use container-query units so it's exact at full size and responsive. Add print CSS (`@page{size:1080px 1350px}` + a page-break per slide) so ⌘P → Save as PDF yields a clean multi-page carousel PDF.
+- **Size + export:** 4:5 (1080×1350) per slide; use container-query units so it's exact at full size and responsive. Add print CSS (`@page{size:1080px 1350px}` + a page-break per slide) so headless Chrome `--print-to-pdf` (default) — or ⌘P → Save as PDF (fallback) — yields a clean multi-page carousel PDF. See `## Execution` for the render command.
 - **Pictorial only:** Gemini for conceptual / editorial / photographic imagery with no dense labels (Claude writes the prompt; Alex generates). Gamma removed; Canva vestigial.
 
 **Post-event learnings cuts (added 2026-06-27, YED-96).** When the source is a v2 `post_event_brief` with a learnings tier, three high-value visual cuts open up — each must ADD the tactic, never re-print the post's quotes:
@@ -222,6 +223,34 @@ hand-authored inline SVG for diagrams / arrows / timelines. Load `artifact-desig
 exports with ⌘P → Save as PDF (each slide prints as one 4:5 page → LinkedIn carousel)
 or screenshots frames for PNGs. Iterate in-conversation: edit the file, republish to the
 same URL. No app re-interprets the content — the labels render exactly as written.
+
+### Export — automated PDF (default), ⌘P manual fallback
+
+The carousel renders to an upload-ready 4:5 PDF **fully automatically** — no Gamma/Canva,
+no manual print dialog. Verified live 2026-08-12 (RevGenius "Where the Value Moved").
+
+1. **Author for clean pagination.** In the HTML: one `.slide` per slide at 1080×1350;
+   `@page{size:1080px 1350px;margin:0}`; `-webkit-print-color-adjust:exact` (so backgrounds
+   print); `.slide:not(:last-child){break-after:page}` (avoids a trailing blank page). Fonts
+   must be CSP/offline-safe — **macOS system faces only** (e.g. Iowan Old Style + Menlo),
+   never a webfont URL (it will silently fall back).
+2. **Render with headless Chrome:**
+   ```
+   "/Applications/Tech Stack/Google Chrome.app/Contents/MacOS/Google Chrome" \
+     --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=3000 \
+     --print-to-pdf=OUT.pdf "file://IN.html"
+   ```
+   ⚠️ Chrome is at the **NON-standard path** `/Applications/Tech Stack/Google Chrome.app` on
+   Alex's machine — there is no `/Applications/Google Chrome.app`. Locate it with
+   `mdfind "kMDItemCFBundleIdentifier == 'com.google.Chrome'"`; don't assume the default.
+3. **Verify before handing over.** Grep the PDF bytes for page count and `/MediaBox` — expect
+   N pages at `810 1013` pt (= 1080×1350 px @72dpi). Optionally screenshot the stacked slides
+   (`--screenshot --window-size=1160,<N×1350 + gaps>`) and eyeball for overflow / clipped labels.
+4. **Deliver** the PDF for a LinkedIn **document** post (renders as the swipeable carousel);
+   drop a copy in the event folder.
+
+**Fallback:** if headless Chrome isn't available, publish the HTML via the Artifact tool and
+Alex exports with ⌘P → Save as PDF — the same `@page` CSS makes it a clean multi-page carousel.
 
 **Pictorial imagery = Gemini** (Alex's subscription). Claude writes an architectural
 prompt (composition + style + mood + negatives — see the style guide's AI Image
