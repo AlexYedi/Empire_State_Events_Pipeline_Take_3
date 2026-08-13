@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Buy-Side Inversion</title>
+<style>
+  :root{
+    --ground:#0D141F; --ground-2:#111D2B; --ink:#EAF1F8; --ink-dim:#8095A8; --ink-mute:#5C7186;
+    --line:#243A4E; --line-bright:#37536E; --gold:#E9B24A; --gold-line:#C9962F; --gold-soft:rgba(233,178,74,.12);
+    --add:#5BBE97; --add-soft:rgba(91,190,151,.1); --sub:#D57062; --sub-soft:rgba(213,112,98,.1);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:"Menlo","SF Mono","JetBrains Mono",ui-monospace,"Courier New",monospace;
+    --sans:"Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#05090E;}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .slide{position:relative;width:1080px;height:1350px;margin:0;padding:86px 92px 74px;background:var(--ground);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(148,178,208,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,178,208,.045) 1px,transparent 1px);background-size:60px 60px;background-position:-1px -1px;pointer-events:none;}
+  .slide::after{content:"";position:absolute;top:44px;left:92px;width:26px;height:26px;border-left:2px solid var(--gold);border-top:2px solid var(--gold);opacity:.9;}
+  .slide > *{position:relative;z-index:1;}
+  @media screen{body{padding:34px 0;}.sheet{display:flex;flex-direction:column;align-items:center;gap:30px;}.slide{box-shadow:0 24px 70px rgba(0,0,0,.6);border-radius:2px;}}
+  @media print{html,body{background:var(--ground);}.sheet{display:block;}.slide{box-shadow:none;border-radius:0;}.slide:not(:last-child){break-after:page;}}
+  @page{size:1080px 1350px;margin:0;}
+  .eyebrow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:17px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim);padding-bottom:20px;border-bottom:1px solid var(--line);}
+  .eyebrow .idx{color:var(--gold);letter-spacing:.22em;}
+  .foot{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:15.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);padding-top:18px;border-top:1px solid var(--line);}
+  .foot b{color:var(--ink-dim);font-weight:600;}
+  h2.head{font-family:var(--serif);font-weight:600;font-size:78px;line-height:1.02;letter-spacing:-.012em;text-wrap:balance;margin:34px 0 0;color:var(--ink);}
+  h2.head em{font-style:italic;color:var(--gold);}
+  h2.head em.dead{color:var(--sub);}
+  h2.head em.live{color:var(--add);}
+  .kicker{font-family:var(--mono);font-size:18px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+  .cover .head{font-size:118px;line-height:.96;margin-top:0;}
+  .cover .lede{font-family:var(--serif);font-size:32px;line-height:1.42;color:var(--ink);max-width:24ch;margin-top:38px;}
+  .cover .lede span{color:var(--ink-dim);}
+  .cover .stamp{display:inline-flex;align-items:center;gap:16px;margin-top:48px;font-family:var(--mono);font-size:19px;letter-spacing:.14em;color:var(--ink-dim);}
+  .cover .stamp .ar{color:var(--gold);font-size:24px;}
+  /* flow */
+  .flow{display:flex;flex-direction:column;align-items:stretch;gap:0;margin-top:4px;}
+  .fnode{border:1px solid var(--line-bright);border-radius:13px;padding:23px 30px;background:var(--ground-2);display:flex;align-items:center;gap:22px;}
+  .fnode .fn-idx{font-family:var(--mono);font-size:15px;letter-spacing:.14em;color:var(--ink-mute);border:1px solid var(--line-bright);border-radius:100px;padding:6px 13px;white-space:nowrap;}
+  .fnode .fn-txt{font-family:var(--serif);font-size:34px;line-height:1.06;color:var(--ink);}
+  .fnode .fn-sub{font-family:var(--sans);font-size:18px;color:var(--ink-dim);margin-top:4px;}
+  .farrow{height:34px;display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;color:var(--ink-mute);}
+  .flow.bad .fnode{border-color:rgba(213,112,98,.4);background:linear-gradient(90deg,var(--sub-soft),rgba(17,29,43,.4));}
+  .flow.bad .farrow{color:var(--sub);}
+  .flow.bad .fnode.term .fn-txt{color:var(--sub);text-decoration:line-through;text-decoration-thickness:2px;}
+  .flow.good .fnode{border-color:rgba(91,190,151,.42);background:linear-gradient(90deg,var(--add-soft),rgba(17,29,43,.4));}
+  .flow.good .farrow{color:var(--add);}
+  .flow.good .fnode.term{border-color:var(--gold-line);background:linear-gradient(90deg,var(--gold-soft),rgba(17,29,43,.4));}
+  .flow.good .fnode.term .fn-txt{color:var(--gold);}
+  .stamp-pill{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--add);border:1px solid rgba(91,190,151,.5);background:var(--add-soft);border-radius:100px;padding:8px 15px;}
+  .note{font-family:var(--serif);font-size:26px;line-height:1.4;color:var(--ink);max-width:36ch;margin-top:30px;}
+  .note b{color:var(--gold);font-style:italic;font-weight:600;}
+  /* split bar */
+  .split{display:flex;gap:20px;margin-top:6px;}
+  .half{flex:1;border:1px solid var(--line-bright);border-radius:14px;padding:40px 34px;display:flex;flex-direction:column;gap:16px;min-height:520px;justify-content:center;}
+  .half .h-tag{font-family:var(--mono);font-size:16px;letter-spacing:.16em;text-transform:uppercase;}
+  .half .h-big{font-family:var(--serif);font-size:52px;line-height:1;}
+  .half .h-sub{font-family:var(--sans);font-size:20px;line-height:1.4;color:var(--ink-dim);}
+  .half.dead{border-color:rgba(213,112,98,.5);background:linear-gradient(160deg,var(--sub-soft),rgba(17,29,43,.5));}
+  .half.dead .h-tag{color:var(--sub);} .half.dead .h-big{color:var(--sub);text-decoration:line-through;text-decoration-thickness:2px;}
+  .half.live{border-color:var(--gold-line);background:linear-gradient(160deg,var(--gold-soft),rgba(17,29,43,.5));box-shadow:0 0 40px var(--gold-soft);}
+  .half.live .h-tag{color:var(--gold);} .half.live .h-big{color:var(--gold);}
+  .closer{font-family:var(--serif);font-size:29px;line-height:1.38;color:var(--ink);margin-top:32px;max-width:42ch;}
+  .closer b{color:var(--gold);font-weight:600;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- SLIDE 1 — COVER -->
+  <section class="slide cover">
+    <div class="eyebrow"><span>Field notes · NYC AI × GTM</span><span class="idx">01 / 03</span></div>
+    <div class="body">
+      <div class="kicker">A contrarian read from RevGenius</div>
+      <h2 class="head">AI is about<br>to make email<br><em class="live">valuable</em> again.</h2>
+      <p class="lede">The "cold email is dead" story assumes a human on the other end. <span>The moment the buyer is an AI, the math inverts.</span></p>
+      <div class="stamp"><span>Human buyer</span><span class="ar">&rarr;</span><span>AI-enhanced buyer</span></div>
+    </div>
+    <div class="foot"><span>The buy-side inversion</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 2 — THE OLD LOOP / NEW LOOP -->
+  <section class="slide">
+    <div class="eyebrow"><span>Why "email is dead" was a human problem</span><span class="idx">02 / 03</span></div>
+    <h2 class="head">Humans fatigue.<br>Filters <em class="live">don't.</em></h2>
+    <div class="body">
+      <div style="display:flex;gap:34px;align-items:stretch;">
+        <div style="flex:1;">
+          <div style="font-family:var(--mono);font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin-bottom:14px;">The old loop · human buyer</div>
+          <div class="flow bad">
+            <div class="fnode"><span class="fn-idx">1</span><div class="fn-txt">Volume</div></div>
+            <div class="farrow">&darr;</div>
+            <div class="fnode"><span class="fn-idx">2</span><div class="fn-txt">Fatigue</div></div>
+            <div class="farrow">&darr;</div>
+            <div class="fnode term"><span class="fn-idx">3</span><div class="fn-txt">Email dies</div></div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--mono);font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--add);margin-bottom:14px;">The new loop · AI-enhanced buyer</div>
+          <div class="flow good">
+            <div class="fnode"><span class="fn-idx">1</span><div><div class="fn-txt">Volume</div><div class="fn-sub">= the haystack</div></div></div>
+            <div class="farrow">&darr;</div>
+            <div class="fnode"><span class="fn-idx">2</span><div><div class="fn-txt">Tireless filter</div><div class="fn-sub">scans for what maps to the exec's agenda</div></div></div>
+            <div class="farrow">&darr;</div>
+            <div class="fnode term"><span class="fn-idx">3</span><div class="fn-txt">Relevant surfaces</div></div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><span class="stamp-pill">No fatigue</span> &nbsp; An AI buyer doesn't drown in volume — <b>it mines it.</b></p>
+    </div>
+    <div class="foot"><span>Flip one assumption, the doom loop inverts</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 3 — THE SPLIT -->
+  <section class="slide">
+    <div class="eyebrow"><span>Email's value doesn't die — it splits</span><span class="idx">03 / 03</span></div>
+    <h2 class="head">Dead for the generic.<br>Reborn for the <em>relevant.</em></h2>
+    <div class="body">
+      <div class="split">
+        <div class="half dead">
+          <div class="h-tag">Spray &amp; pray</div>
+          <div class="h-big">Dead</div>
+          <div class="h-sub">A tireless filter is merciless with generic noise. No inbox-overwhelm to hide in.</div>
+        </div>
+        <div class="half live">
+          <div class="h-tag">Genuinely relevant</div>
+          <div class="h-big">More valuable<br>than ever</div>
+          <div class="h-sub">Surfaced because it maps to a live priority — regardless of surrounding volume.</div>
+        </div>
+      </div>
+      <p class="closer">The old arms race was deliverability. The new one is <b>relevance</b> — ranking inside someone else's buying agent. Call it SEO for the buy-side.</p>
+    </div>
+    <div class="foot"><span>RevGenius IRL · Aug 2026</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+</div>
+</body>
+</html>
