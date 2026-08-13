@@ -1,0 +1,175 @@
+<meta charset="utf-8">
+<title>AI Briefing Governance — Carousel</title>
+<style>
+  :root{
+    --bg:#0f172a;        /* dark slate */
+    --panel:#1e293b;
+    --ink:#f8fafc;       /* near-white */
+    --muted:#94a3b8;     /* slate-400 */
+    --line:#334155;
+    --accent:#DC2626;    /* red — contrarian/security/risk */
+    --ok:#10b981;
+  }
+  @page{size:1080px 1350px;margin:0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#000}
+  .slide{
+    width:1080px;height:1350px;
+    background:var(--bg);color:var(--ink);
+    font-family:"Iowan Old Style","Palatino",Georgia,serif;
+    padding:96px 88px;
+    display:flex;flex-direction:column;
+    position:relative;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    break-inside:avoid;
+  }
+  .kicker{font-family:"Menlo",monospace;font-size:22px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .accent-bar{width:88px;height:8px;background:var(--accent);margin:26px 0 0}
+  h1{font-size:118px;line-height:.98;font-weight:700;letter-spacing:-.01em;margin-top:38px}
+  h1 .red{color:var(--accent)}
+  h2{font-size:66px;line-height:1.04;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:44px;line-height:1.22;color:var(--ink);margin-top:34px;font-weight:400}
+  .sub .red{color:var(--accent);font-weight:700}
+  .spacer{flex:1}
+  .src{font-family:"Menlo",monospace;font-size:20px;color:var(--muted);letter-spacing:.04em}
+  .footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:40px}
+  .pageno{font-family:"Menlo",monospace;font-size:20px;color:var(--muted)}
+
+  /* split columns */
+  .cols{display:flex;gap:34px;margin-top:52px}
+  .col{flex:1;background:var(--panel);border-radius:20px;padding:40px 36px;
+    border-top:8px solid var(--line)}
+  .col.agent{border-top-color:var(--accent)}
+  .col h3{font-family:"Menlo",monospace;font-size:26px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:26px}
+  .col.agent h3{color:var(--accent)}
+  .col ul{list-style:none}
+  .col li{font-size:37px;line-height:1.5;padding-left:38px;position:relative;margin-bottom:16px}
+  .col li::before{content:"—";position:absolute;left:0;color:var(--muted)}
+  .col.agent li::before{color:var(--accent)}
+  .note{font-size:32px;color:var(--muted);margin-top:40px;line-height:1.4;font-style:italic}
+
+  /* matrix */
+  table{width:100%;border-collapse:collapse;margin-top:56px}
+  th,td{padding:30px 18px;text-align:center;font-size:32px;border-bottom:2px solid var(--line)}
+  th{font-family:"Menlo",monospace;font-size:23px;letter-spacing:.03em;color:var(--muted);
+    text-transform:uppercase;font-weight:400;vertical-align:bottom}
+  td.rowlabel{text-align:left;font-size:38px;font-weight:700}
+  .x{color:var(--accent);font-size:46px;font-weight:700}
+  .chk{color:var(--ok);font-size:42px;font-weight:700}
+  .partial{color:var(--muted);font-size:30px;font-family:"Menlo",monospace}
+
+  /* flow */
+  .flow{display:flex;flex-direction:column;gap:24px;margin-top:56px}
+  .node{background:var(--panel);border-left:10px solid var(--accent);
+    border-radius:14px;padding:34px 40px;font-size:40px;line-height:1.3}
+  .node .lbl{font-family:"Menlo",monospace;font-size:22px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);display:block;margin-bottom:10px}
+  .arrow{color:var(--accent);font-size:40px;text-align:center;line-height:.4}
+  .deals{font-size:34px;color:var(--ink)}
+  .deals b{color:var(--accent)}
+  .close{font-size:52px;line-height:1.2;font-weight:700;margin-top:40px}
+  .close .red{color:var(--accent)}
+</style>
+
+<!-- SLIDE 1 — HOOK -->
+<section class="slide">
+  <div class="kicker">The AI Briefing · Agentic Governance · Aug 14</div>
+  <div class="accent-bar"></div>
+  <h1><span class="red">92%</span> can't see their own AI agents</h1>
+  <p class="sub">And <span class="red">95%</span> doubt they could contain one that turned.</p>
+  <div class="spacer"></div>
+  <div class="src">Cloud Security Alliance · 2026 CISO AI Risk Report (n=235)</div>
+  <div class="footer">
+    <div class="src">The agent governance gap</div>
+    <div class="pageno">1 / 4</div>
+  </div>
+</section>
+
+<!-- SLIDE 2 — SPLIT -->
+<section class="slide">
+  <div class="kicker">What actually breaks</div>
+  <div class="accent-bar"></div>
+  <h2>One badge vs. a badge<br>that multiplies</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Human identity</h3>
+      <ul>
+        <li>Hired once</li>
+        <li>One identity</li>
+        <li>Permissions reviewed</li>
+        <li>Logs out</li>
+      </ul>
+    </div>
+    <div class="col agent">
+      <h3>Agent identity</h3>
+      <ul>
+        <li>Mints credentials at runtime</li>
+        <li>Spawns sub-agents</li>
+        <li>Inherits access</li>
+        <li>Never sleeps</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">Non-human identities already outnumber employees at most companies.</p>
+  <div class="spacer"></div>
+  <div class="footer">
+    <div class="src">Why 95% can't contain it</div>
+    <div class="pageno">2 / 4</div>
+  </div>
+</section>
+
+<!-- SLIDE 3 — MATRIX -->
+<section class="slide">
+  <div class="kicker">The mechanism</div>
+  <div class="accent-bar"></div>
+  <h2>The rulebooks weren't<br>written for actors</h2>
+  <table>
+    <tr>
+      <th style="text-align:left">Framework</th>
+      <th>Behavior known<br>at deploy?</th>
+      <th>Real-time<br>enforcement?</th>
+      <th>Defines<br>agentic AI?</th>
+    </tr>
+    <tr>
+      <td class="rowlabel">NIST AI RMF</td>
+      <td class="x">✗</td><td class="x">✗</td><td class="x">✗</td>
+    </tr>
+    <tr>
+      <td class="rowlabel">ISO 42001</td>
+      <td class="x">✗</td><td class="x">✗</td><td class="x">✗</td>
+    </tr>
+    <tr>
+      <td class="rowlabel">EU AI Act</td>
+      <td class="x">✗</td><td class="x">✗</td><td class="partial">just started*</td>
+    </tr>
+  </table>
+  <p class="note">*The EU AI Act began naming "agentic AI" as a distinct class this month — the first crack in a framework built for AI that answers, not AI that acts.</p>
+  <div class="spacer"></div>
+  <div class="footer">
+    <div class="src">Source: CSA research note, 2026</div>
+    <div class="pageno">3 / 4</div>
+  </div>
+</section>
+
+<!-- SLIDE 4 — CTA / FLOW -->
+<section class="slide">
+  <div class="kicker">Where the value is moving</div>
+  <div class="accent-bar"></div>
+  <h2>The market is racing<br>the standards</h2>
+  <div class="flow">
+    <div class="node"><span class="lbl">Starts with</span>CISO anxiety — "we're 92% blind"</div>
+    <div class="arrow">▼</div>
+    <div class="node"><span class="lbl">Becomes</span>An agent-identity / NHI vendor category</div>
+    <div class="arrow">▼</div>
+    <div class="node"><span class="lbl">Then, in one week this summer</span>
+      <span class="deals"><b>Cisco → Astrix</b> · <b>Cyera → Oasis ($1B)</b> · <b>Okta → Permiso</b></span></div>
+  </div>
+  <p class="close">If you run agents in production —<br>what's actually in your <span class="red">agent inventory?</span></p>
+  <div class="spacer"></div>
+  <div class="footer">
+    <div class="src">The AI Briefing · Startup Grind NYC</div>
+    <div class="pageno">4 / 4</div>
+  </div>
+</section>

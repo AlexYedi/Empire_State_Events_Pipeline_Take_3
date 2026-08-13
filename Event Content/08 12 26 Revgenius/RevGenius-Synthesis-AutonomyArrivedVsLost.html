@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Autonomy Arrived vs Autonomy Lost</title>
+<style>
+  :root{
+    --ground:#0D141F; --ground-2:#111D2B; --ink:#EAF1F8; --ink-dim:#8095A8; --ink-mute:#5C7186;
+    --line:#243A4E; --line-bright:#37536E; --gold:#E9B24A; --gold-line:#C9962F; --gold-soft:rgba(233,178,74,.12);
+    --add:#5BBE97; --add-soft:rgba(91,190,151,.1); --sub:#D57062; --sub-soft:rgba(213,112,98,.1);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:"Menlo","SF Mono","JetBrains Mono",ui-monospace,"Courier New",monospace;
+    --sans:"Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#05090E;}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .slide{position:relative;width:1080px;height:1350px;margin:0;padding:86px 92px 74px;background:var(--ground);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(148,178,208,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,178,208,.045) 1px,transparent 1px);background-size:60px 60px;background-position:-1px -1px;pointer-events:none;}
+  .slide::after{content:"";position:absolute;top:44px;left:92px;width:26px;height:26px;border-left:2px solid var(--gold);border-top:2px solid var(--gold);opacity:.9;}
+  .slide > *{position:relative;z-index:1;}
+  @media screen{body{padding:34px 0;}.sheet{display:flex;flex-direction:column;align-items:center;gap:30px;}.slide{box-shadow:0 24px 70px rgba(0,0,0,.6);border-radius:2px;}}
+  @media print{html,body{background:var(--ground);}.sheet{display:block;}.slide{box-shadow:none;border-radius:0;}.slide:not(:last-child){break-after:page;}}
+  @page{size:1080px 1350px;margin:0;}
+  .eyebrow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:17px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim);padding-bottom:20px;border-bottom:1px solid var(--line);}
+  .eyebrow .idx{color:var(--gold);letter-spacing:.22em;}
+  .foot{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:15.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);padding-top:18px;border-top:1px solid var(--line);}
+  .foot b{color:var(--ink-dim);font-weight:600;}
+  h2.head{font-family:var(--serif);font-weight:600;font-size:78px;line-height:1.02;letter-spacing:-.012em;text-wrap:balance;margin:34px 0 0;color:var(--ink);}
+  h2.head em{font-style:italic;color:var(--gold);}
+  h2.head em.won{color:var(--add);} h2.head em.lost{color:var(--sub);}
+  .kicker{font-family:var(--mono);font-size:18px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
+  .kicker.won{color:var(--add);} .kicker.lost{color:var(--sub);}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+  .cover .head{font-size:104px;line-height:.98;margin-top:0;}
+  /* duo cover */
+  .duo{display:flex;gap:0;margin-top:44px;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .duo .col{flex:1;padding:38px 34px;}
+  .duo .col.jun{background:linear-gradient(160deg,var(--add-soft),rgba(17,29,43,.5));}
+  .duo .col.aug{background:linear-gradient(160deg,var(--sub-soft),rgba(17,29,43,.5));border-left:1px solid var(--line);}
+  .duo .mo{font-family:var(--mono);font-size:16px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mute);}
+  .duo .ev{font-family:var(--serif);font-size:30px;line-height:1.05;margin-top:8px;color:var(--ink);}
+  .duo .vb{font-family:var(--serif);font-size:40px;font-style:italic;margin-top:20px;}
+  .duo .jun .vb{color:var(--add);} .duo .aug .vb{color:var(--sub);}
+  .bridge{text-align:center;font-family:var(--mono);font-size:17px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:26px;}
+  /* tiles */
+  .tiles{display:flex;flex-direction:column;gap:15px;margin-top:6px;}
+  .tile{border:1px solid var(--line-bright);border-radius:13px;padding:23px 28px;background:var(--ground-2);display:flex;gap:22px;align-items:center;}
+  .tile .t-n{font-family:var(--mono);font-size:15px;letter-spacing:.1em;color:var(--ink-mute);border:1px solid var(--line-bright);border-radius:100px;padding:7px 12px;white-space:nowrap;}
+  .tile .t-txt{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--ink);}
+  .tiles.a .tile{border-color:rgba(91,190,151,.4);} .tiles.a .tile .t-n{color:var(--add);border-color:rgba(91,190,151,.5);}
+  .tiles.b .tile{border-color:rgba(213,112,98,.4);} .tiles.b .tile .t-n{color:var(--sub);border-color:rgba(213,112,98,.5);}
+  .band{font-family:var(--mono);font-size:18px;letter-spacing:.12em;text-transform:uppercase;margin-top:26px;padding-left:2px;}
+  .band.won{color:var(--add);} .band.lost{color:var(--sub);}
+  /* quadrant */
+  .quad-wrap{display:grid;grid-template-columns:38px 1fr;grid-template-rows:1fr 34px;gap:14px;margin-top:6px;}
+  .yaxis{grid-row:1;grid-column:1;writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);font-size:14.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);text-align:center;align-self:center;}
+  .xaxis{grid-row:2;grid-column:2;font-family:var(--mono);font-size:14.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);text-align:center;}
+  .quad{grid-row:1;grid-column:2;position:relative;height:548px;border:1px solid var(--line-bright);border-radius:12px;overflow:hidden;background:linear-gradient(45deg,rgba(91,190,151,.20) 0%,rgba(91,190,151,.05) 34%,rgba(17,29,43,.25) 50%,rgba(213,112,98,.05) 66%,rgba(213,112,98,.20) 100%);}
+  .quad svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .zone{position:absolute;font-family:var(--mono);font-size:17px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;}
+  .zone.ship{left:26px;bottom:22px;color:var(--add);}
+  .zone.stay{right:26px;top:22px;color:var(--sub);}
+  .qchip{position:absolute;font-family:var(--mono);font-size:16px;letter-spacing:.03em;padding:9px 14px;border-radius:8px;white-space:nowrap;background:var(--ground-2);}
+  .qchip.g{color:var(--add);border:1px solid rgba(91,190,151,.55);}
+  .qchip.r{color:var(--sub);border:1px solid rgba(213,112,98,.55);}
+  .qchip.seam{color:var(--gold);border:1px solid var(--gold-line);background:linear-gradient(120deg,var(--gold-soft),var(--ground-2));box-shadow:0 0 22px var(--gold-soft);}
+  .closer{font-family:var(--serif);font-size:27px;line-height:1.36;color:var(--ink);margin-top:26px;max-width:44ch;}
+  .closer b{color:var(--gold);font-weight:600;font-style:italic;}
+  .ask{font-family:var(--serif);font-size:52px;line-height:1.14;color:var(--ink);max-width:20ch;}
+  .ask b{color:var(--gold);font-style:italic;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- SLIDE 1 — COVER / HOOK -->
+  <section class="slide cover">
+    <div class="eyebrow"><span>Field notes · a two-thesis synthesis</span><span class="idx">01 / 05</span></div>
+    <div class="body">
+      <div class="kicker">Two NYC rooms · seven weeks apart</div>
+      <h2 class="head">Same founder.<br>Opposite <em>verdicts.</em></h2>
+      <div class="duo">
+        <div class="col jun"><div class="mo">June · NYC AI Demos #10</div><div class="ev">Autonomous agents doing real work on stage.</div><div class="vb">Autonomy arrived.</div></div>
+        <div class="col aug"><div class="mo">August · RevGenius</div><div class="ev">The founders who build them say don't trust one unsupervised.</div><div class="vb">Autonomy lost.</div></div>
+      </div>
+      <div class="bridge">David Walker (Spara) was in both rooms &darr;</div>
+    </div>
+    <div class="foot"><span>Autonomy arrived vs. autonomy lost</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 2 — THESIS A -->
+  <section class="slide">
+    <div class="eyebrow"><span>Thesis A · June · NYC AI Demos #10</span><span class="idx">02 / 05</span></div>
+    <div class="kicker won">Autonomy arrived</div>
+    <h2 class="head">Point it at a bounded job,<br>and it <em class="won">ships.</em></h2>
+    <div class="body">
+      <div class="tiles a">
+        <div class="tile"><span class="t-n">Spara</span><div class="t-txt">A GTM agent that demoed <em>itself</em> — qualified the buyer watching it.</div></div>
+        <div class="tile"><span class="t-n">Pace</span><div class="t-txt">Insurance agents on 20-year-old carrier terminals — in production, millions of runs.</div></div>
+        <div class="tile"><span class="t-n">Pensar</span><div class="t-txt">Agents that run their own exploit chains end-to-end.</div></div>
+      </div>
+      <p class="band won">Bounded task &rarr; the agent ships</p>
+    </div>
+    <div class="foot"><span>Five funds, autonomous agents, real work</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 3 — THESIS B -->
+  <section class="slide">
+    <div class="eyebrow"><span>Thesis B · August · RevGenius</span><span class="idx">03 / 05</span></div>
+    <div class="kicker lost">Autonomy lost</div>
+    <h2 class="head">In the room built to<br>sell it, the dream <em class="lost">lost.</em></h2>
+    <div class="body">
+      <div class="tiles b">
+        <div class="tile"><span class="t-n">Bennaceur · Attention</span><div class="t-txt">An AI-agent CEO: "we doubled down on human SDRs."</div></div>
+        <div class="tile"><span class="t-n">Berry · Clay</span><div class="t-txt">The "go make me money" agents — "not seeing results" there.</div></div>
+        <div class="tile"><span class="t-n">Walker · Spara</span><div class="t-txt">Humans still buy when someone needs skin in the game.</div></div>
+      </div>
+      <p class="band lost">Judgment &amp; relationship &rarr; the human stays</p>
+    </div>
+    <div class="foot"><span>The founders' own verdict</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 4 — THE RESOLUTION (THE MAP) -->
+  <section class="slide">
+    <div class="eyebrow"><span>The reconciliation · both were true</span><span class="idx">04 / 05</span></div>
+    <h2 class="head">One line splits <em>ship</em><br>from <em class="lost">stay.</em></h2>
+    <div class="body">
+      <div class="quad-wrap">
+        <div class="yaxis">cost of a wrong answer: contained &rarr; the relationship</div>
+        <div class="quad">
+          <svg viewBox="0 0 900 548" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="70" y1="500" x2="830" y2="60" stroke="#E9B24A" stroke-width="2.2" stroke-dasharray="3 10" stroke-linecap="round"/>
+          </svg>
+          <span class="zone ship">Autonomy ships</span>
+          <span class="zone stay">Human stays</span>
+          <span class="qchip g" style="left:6%;bottom:12%;">Loss-runs</span>
+          <span class="qchip g" style="left:19%;bottom:31%;">Scoped demo</span>
+          <span class="qchip r" style="right:8%;top:12%;">The close</span>
+          <span class="qchip r" style="right:19%;top:31%;">Outbound</span>
+          <span class="qchip seam" style="left:50%;top:50%;transform:translate(-50%,-50%);">Spara: inbound intake auto · human closes</span>
+        </div>
+        <div class="xaxis">task: bounded &rarr; unbounded</div>
+      </div>
+      <p class="closer">Autonomy ships where the task is <b>bounded</b> and a wrong answer is cheap to catch. It loses where <b>judgment and the relationship are the product.</b></p>
+    </div>
+    <div class="foot"><span>Walker's Spara lives on the seam</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 5 — INVITATION -->
+  <section class="slide">
+    <div class="eyebrow"><span>Your turn</span><span class="idx">05 / 05</span></div>
+    <div class="body">
+      <div class="kicker">The open question</div>
+      <p class="ask">Where's the line in <em>your</em> world — what have you handed an agent <b>unsupervised</b>, and what will you <b>never?</b></p>
+    </div>
+    <div class="foot"><span>RevGenius × NYC AI Demos #10</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+</div>
+</body>
+</html>

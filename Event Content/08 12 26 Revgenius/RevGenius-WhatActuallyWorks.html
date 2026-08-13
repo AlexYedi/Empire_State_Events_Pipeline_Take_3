@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What Actually Works</title>
+<style>
+  :root{
+    --ground:#0D141F; --ground-2:#111D2B; --ink:#EAF1F8; --ink-dim:#8095A8; --ink-mute:#5C7186;
+    --line:#243A4E; --line-bright:#37536E; --gold:#E9B24A; --gold-line:#C9962F; --gold-soft:rgba(233,178,74,.12);
+    --add:#5BBE97; --add-soft:rgba(91,190,151,.1); --sub:#D57062; --sub-soft:rgba(213,112,98,.1);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:"Menlo","SF Mono","JetBrains Mono",ui-monospace,"Courier New",monospace;
+    --sans:"Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#05090E;}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .slide{position:relative;width:1080px;height:1350px;margin:0;padding:86px 92px 74px;background:var(--ground);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(148,178,208,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,178,208,.045) 1px,transparent 1px);background-size:60px 60px;background-position:-1px -1px;pointer-events:none;}
+  .slide::after{content:"";position:absolute;top:44px;left:92px;width:26px;height:26px;border-left:2px solid var(--gold);border-top:2px solid var(--gold);opacity:.9;}
+  .slide > *{position:relative;z-index:1;}
+  @media screen{body{padding:34px 0;}.sheet{display:flex;flex-direction:column;align-items:center;gap:30px;}.slide{box-shadow:0 24px 70px rgba(0,0,0,.6);border-radius:2px;}}
+  @media print{html,body{background:var(--ground);}.sheet{display:block;}.slide{box-shadow:none;border-radius:0;}.slide:not(:last-child){break-after:page;}}
+  @page{size:1080px 1350px;margin:0;}
+  .eyebrow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:17px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim);padding-bottom:20px;border-bottom:1px solid var(--line);}
+  .eyebrow .idx{color:var(--gold);letter-spacing:.22em;}
+  .foot{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:15.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);padding-top:18px;border-top:1px solid var(--line);}
+  .foot b{color:var(--ink-dim);font-weight:600;}
+  h2.head{font-family:var(--serif);font-weight:600;font-size:80px;line-height:1.02;letter-spacing:-.012em;text-wrap:balance;margin:34px 0 0;color:var(--ink);}
+  h2.head em{font-style:italic;color:var(--gold);}
+  .kicker{font-family:var(--mono);font-size:18px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+  .cover .head{font-size:122px;line-height:.96;margin-top:0;}
+  .cover .lede{font-family:var(--serif);font-size:32px;line-height:1.42;color:var(--ink);max-width:25ch;margin-top:38px;}
+  .cover .lede span{color:var(--ink-dim);}
+  .cover .stamp{display:inline-flex;align-items:center;gap:14px;margin-top:48px;font-family:var(--mono);font-size:18px;letter-spacing:.14em;color:var(--ink-dim);}
+  .cover .stamp b{color:var(--ink);font-weight:600;}
+  /* comparison */
+  .cmp{display:flex;flex-direction:column;gap:13px;margin-top:8px;}
+  .chead{display:grid;grid-template-columns:230px 1fr 1fr;gap:18px;padding:0 24px;font-family:var(--mono);font-size:14.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);}
+  .chead .o{color:var(--sub);} .chead .t{color:var(--gold);}
+  .crow{display:grid;grid-template-columns:230px 1fr 1fr;align-items:center;gap:18px;border:1px solid var(--line);border-radius:11px;padding:20px 24px;background:linear-gradient(90deg,var(--ground-2),rgba(17,29,43,.3));}
+  .crow .who{font-family:var(--serif);font-size:29px;line-height:1;color:var(--ink);}
+  .crow .who .role{display:block;font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin-top:6px;}
+  .crow .over{font-family:var(--sans);font-size:20px;color:var(--sub);}
+  .crow .trust{font-family:var(--sans);font-size:20px;color:var(--ink);}
+  .crow .trust b{color:var(--gold);font-weight:600;}
+  /* convergence */
+  .conv{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .sources{display:flex;justify-content:space-between;gap:16px;}
+  .src{flex:1;border:1px solid var(--line-bright);border-radius:11px;padding:18px 16px;background:var(--ground-2);text-align:center;}
+  .src .nm{font-family:var(--serif);font-size:25px;color:var(--ink);}
+  .src .rl{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-top:5px;}
+  .conv svg{width:100%;height:118px;display:block;overflow:visible;}
+  .sink{border:1px solid var(--gold-line);border-radius:14px;padding:32px 34px;background:linear-gradient(120deg,var(--gold-soft),rgba(17,29,43,.5));box-shadow:0 0 40px var(--gold-soft);text-align:center;}
+  .sink .lab{font-family:var(--mono);font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+  .sink .big{font-family:var(--serif);font-size:44px;line-height:1.08;color:var(--gold);margin-top:8px;}
+  .sink .big span{color:var(--ink);}
+  /* map */
+  .map{display:flex;flex-direction:column;gap:15px;margin-top:8px;}
+  .co{display:grid;grid-template-columns:230px 1fr;align-items:center;gap:26px;padding:22px 26px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(90deg,var(--ground-2),rgba(17,29,43,.3));}
+  .co .name{font-family:var(--serif);font-size:37px;color:var(--ink);}
+  .co .name .role{display:block;font-family:var(--mono);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin-top:6px;}
+  .co .layers{display:flex;flex-wrap:wrap;gap:10px;}
+  .co .chip{font-family:var(--mono);font-size:16px;letter-spacing:.06em;padding:8px 14px;border-radius:7px;border:1px solid var(--line-bright);color:var(--ink-dim);}
+  .co .chip.hot{color:var(--gold);border-color:var(--gold-line);background:rgba(233,178,74,.09);}
+  .closer{font-family:var(--serif);font-size:28px;line-height:1.36;color:var(--ink);margin-top:28px;max-width:42ch;}
+  .closer b{color:var(--gold);font-weight:600;font-style:italic;}
+  /* agent discovery */
+  .disc{display:flex;flex-direction:column;gap:0;margin-top:6px;}
+  .top-node{border:1px solid var(--line-bright);border-radius:13px;padding:24px 30px;background:var(--ground-2);text-align:center;}
+  .top-node .tn-l{font-family:var(--mono);font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);}
+  .top-node .tn-t{font-family:var(--serif);font-size:34px;color:var(--ink);margin-top:6px;}
+  .disc svg{width:100%;height:74px;display:block;overflow:visible;}
+  .branches{display:flex;gap:22px;}
+  .br{flex:1;border-radius:13px;padding:26px 28px;}
+  .br .b-l{font-family:var(--mono);font-size:14px;letter-spacing:.12em;text-transform:uppercase;}
+  .br .b-t{font-family:var(--serif);font-size:30px;line-height:1.08;margin-top:8px;}
+  .br .b-s{font-family:var(--sans);font-size:18px;line-height:1.4;color:var(--ink-dim);margin-top:10px;}
+  .br.known{border:1px solid var(--gold-line);background:linear-gradient(160deg,var(--gold-soft),rgba(17,29,43,.5));}
+  .br.known .b-l{color:var(--gold);} .br.known .b-t{color:var(--gold);}
+  .br.unknown{border:1px solid var(--line-bright);background:var(--ground-2);}
+  .br.unknown .b-l{color:var(--ink-mute);} .br.unknown .b-t{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- SLIDE 1 — COVER -->
+  <section class="slide cover">
+    <div class="eyebrow"><span>Field notes · NYC AI × GTM</span><span class="idx">01 / 05</span></div>
+    <div class="body">
+      <div class="kicker">A field dispatch · RevGenius IRL</div>
+      <h2 class="head">What actually<br><em>works.</em></h2>
+      <p class="lede">Four founders who each built a company on "AI will fix your pipeline" — <span>and spent the night naming what didn't.</span></p>
+      <div class="stamp"><span>Clay · Attention · HubSpot · </span><b>Spara</b></div>
+    </div>
+    <div class="foot"><span>From Hype to Revenue · Spara · 7 WTC</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 2 — OVERHYPED vs TRUSTED -->
+  <section class="slide">
+    <div class="eyebrow"><span>What they'd stop believing · what they trust</span><span class="idx">02 / 05</span></div>
+    <h2 class="head">Overhyped &rarr; trusted.</h2>
+    <div class="body">
+      <div class="chead"><span>Operator</span><span class="o">Overhyped</span><span class="t">Where the value is</span></div>
+      <div class="cmp">
+        <div class="crow"><div class="who">Everett Berry<span class="role">Clay</span></div><div class="over">Black-box "go make me money" agents</div><div class="trust"><b>Agents inside a workflow</b> a human built</div></div>
+        <div class="crow"><div class="who">Anis Bennaceur<span class="role">Attention</span></div><div class="over">The last 10% skipped after Claude Code</div><div class="trust"><b>Human SDRs</b> that do things that don't scale</div></div>
+        <div class="crow"><div class="who">Ari Echt-Wilson<span class="role">HubSpot</span></div><div class="over">The tooling itself</div><div class="trust"><b>Taste + timing</b> — knowing what good looks like</div></div>
+        <div class="crow"><div class="who">David Walker<span class="role">Spara</span></div><div class="over">Replace-the-rep autonomy</div><div class="trust"><b>Trust</b> — skin in the game to fix it</div></div>
+      </div>
+    </div>
+    <div class="foot"><span>Four operators, one recanting</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 3 — THE HUMAN IS THE MOAT (convergence) -->
+  <section class="slide">
+    <div class="eyebrow"><span>They all pointed at the same thing</span><span class="idx">03 / 05</span></div>
+    <h2 class="head">The human is<br>the <em>moat.</em></h2>
+    <div class="body">
+      <div class="conv">
+        <div class="sources">
+          <div class="src"><div class="nm">Berry</div><div class="rl">Clay</div></div>
+          <div class="src"><div class="nm">Bennaceur</div><div class="rl">Attention</div></div>
+          <div class="src"><div class="nm">Echt-Wilson</div><div class="rl">HubSpot</div></div>
+          <div class="src"><div class="nm">Walker</div><div class="rl">Spara</div></div>
+        </div>
+        <svg viewBox="0 0 896 118" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M112,4 C112,60 448,58 448,114" fill="none" stroke="#37536E" stroke-width="2"/>
+          <path d="M336,4 C336,60 448,58 448,114" fill="none" stroke="#37536E" stroke-width="2"/>
+          <path d="M560,4 C560,60 448,58 448,114" fill="none" stroke="#37536E" stroke-width="2"/>
+          <path d="M784,4 C784,60 448,58 448,114" fill="none" stroke="#C9962F" stroke-width="2"/>
+        </svg>
+        <div class="sink">
+          <div class="lab">The one scarce input</div>
+          <div class="big">Judgment · taste · accountability<br><span>the move worth making</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Every product routes AI through a human</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 4 — WHO SITS WHERE (confirmed) -->
+  <section class="slide">
+    <div class="eyebrow"><span>Who sits where · confirmed on stage</span><span class="idx">04 / 05</span></div>
+    <h2 class="head">One motion,<br>four bets.</h2>
+    <div class="body">
+      <div class="map">
+        <div class="co"><div class="name">Clay<span class="role">the workbench</span></div><div class="layers"><span class="chip">Data</span><span class="chip">Enrichment</span><span class="chip">Orchestration</span></div></div>
+        <div class="co"><div class="name">Attention<span class="role">acts on approval</span></div><div class="layers"><span class="chip">Signal</span><span class="chip hot">Judgment / Approval</span></div></div>
+        <div class="co"><div class="name">HubSpot<span class="role">protects the send</span></div><div class="layers"><span class="chip">Send / Deliverability</span></div></div>
+        <div class="co"><div class="name">Spara<span class="role">meets the hand-raiser</span></div><div class="layers"><span class="chip hot">Signal</span><span class="chip">Inbound intake</span></div></div>
+      </div>
+      <p class="closer">Strip the logos: the <b>signal-triggered, human-approved</b> system is what shipped.</p>
+    </div>
+    <div class="foot"><span>The supervised system won</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+  <!-- SLIDE 5 — THE NEW AXIS: AGENT-DISCOVERY -->
+  <section class="slide">
+    <div class="eyebrow"><span>The new distribution war</span><span class="idx">05 / 05</span></div>
+    <h2 class="head">When an AI picks<br>your <em>stack.</em></h2>
+    <div class="body">
+      <div class="disc">
+        <div class="top-node"><div class="tn-l">Berry's demo agent went shopping for its own tools</div><div class="tn-t">The buyer is an AI. It assembles the stack.</div></div>
+        <svg viewBox="0 0 896 74" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M448,4 C448,40 224,34 224,70" fill="none" stroke="#C9962F" stroke-width="2.2"/>
+          <path d="M448,4 C448,40 672,34 672,70" fill="none" stroke="#37536E" stroke-width="2"/>
+        </svg>
+        <div class="branches">
+          <div class="br known"><div class="b-l">Known brand</div><div class="b-t">Picked.</div><div class="b-s">"I'd heard of it, so — great, that seems fine." Checks the box.</div></div>
+          <div class="br unknown"><div class="b-l">Unknown tool</div><div class="b-t">Verified.</div><div class="b-s">Gets the scrutiny — the human stops to look it up.</div></div>
+        </div>
+      </div>
+      <p class="closer">The next distribution war is being the brand an AI recommends <b>before anyone checks its work.</b></p>
+    </div>
+    <div class="foot"><span>RevGenius IRL · Aug 2026</span><span><b>Alex Yedi</b></span></div>
+  </section>
+
+</div>
+</body>
+</html>
