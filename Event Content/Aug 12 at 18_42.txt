@@ -1,0 +1,376 @@
+[Speaker 1]
+Insane now, right? Seems like we're moving on fourth speed with Ai and companies disrupting other companies
+
+[Speaker 2]
+Every week. So, to get a group together today next month of companies that are doing really well? In this difficult climate to share what they're doing is pretty cool. So, David's going to be the MC tonight? Founder and CEO Sparrow, and I'll let you take it away. Thank you guys for coming.
+
+Jerry's
+
+[Speaker 3]
+The best! These ponytail Jared from my office, so, uh, feel free to call that, too. Um. So tonight, we've got some exceptional guests. I'm David. I'm the conferencio Sparrow we build, go to market agents. And before we start, I want to make one of the bug we have Jared, who's one of the founders of rep genius.
+
+And we have John, who is the New York chapter head and the head of sales at Sparrow. So if you want to sponsor or be a part of a web genius event. Guess what, you can buy Spara and organize that with John, uh? Two birds, one seven, all right.
+
+So tonight, we've got three exceptional guests. And I'm going to let them introduce themselves, but I'll just give a quick, uh, quick intro, so? All the way on the end. Here we have anise spinosaur kind of. Yeah, good, all right, cool? Um. He is the co-founder CEO of attention, incredible company based here in New York.
+
+Uh, we have ever buried the head of go to market engineering at Clay. Another incredible company, based here in New York, and we have Ari Ack Wilson. Good, okay, good enough, um? Who is the director of demand automation at HubSpot? Not an air-based company, but cool company. Well, that's why, um, so we're going to start off by.
+
+Ask you one question which is? Uh, what are you? What is the most overhyped thing and go to market AI today? And what is the single thing you're seeing? The most value in it keeps on, keep answers brief.
+
+[Speaker 4]
+All right. Hi, everyone. Yes, I'm uh, not from the New York based company, and I'm also recently here in New York, uh, good to see you all and. Let's see the most overhyped thing. I'm gonna have to say it's the tooling, um. That really like. No tool is necessarily what's going to solve all the problems, but it's really about how you implement it.
+
+How you enable teams to use it and using experimentation to find Roi?
+
+And what's working?
+
+[Speaker 1]
+Oh, okay, oh yes, they. Well, I would say experimentation.
+
+[Speaker 5]
+Uh, really figuring out what are the core problems to solve? How do we? It has the structure and run tests in order to see what works and doing that iteratively again and again. Um, so?
+
+So, I think, um.
+
+[Speaker 3]
+Black Box agents are very overhyped and have been for the whole course of time. AISCR is a classic example, but I give home physics expire a lot of credit for kind of exposing a lot of controls and visibility into what agents are doing. That's also the approach for taking that clay, and we're actually seeing agents like doing very extensive work for us.
+
+[Speaker 4]
+I've personally been using agents to like build clay workflows, um, nowadays the way I use clay is I kind of give an agent like a Excel file of data, and I'm like, enrich everything to 90 plus accuracy. And, like, don't stop until you're done, and the agent will work for, like several hours, and like, build a workflow that does that just fantastic.
+
+And then. I'm also, we're also seeing a lot of results from the someone that, just like outbound, an inbound agents that we have. But, um. We have a lot of controls and like observability into that, and I'm not seeing a lot of results from agents where it's like, hey, like, um.
+
+Go make me money. Um, and I think I think that will continue to be a trend. Okay,
+
+[Speaker 2]
+I'll have an American Train one actually, uh, I think Cloud code is being overhanged right now. Um.
+
+[Speaker 4]
+I think that.
+
+[Speaker 2]
+Most people actually, uh, build the first 80 percent with cloth code or 90 and will not go do the last
+
+[Speaker 4]
+10, and that's actually the most important thing officially. If you're trying to help a funnel? Um.
+
+[Speaker 2]
+What is actually very useful if a um? Building with beams using GitHub actually and Building Systems all together. Trying to go the last mile, but also the second thing is something that has been really helped be helpful. Helpful to me was connecting clock code with chat GD codecs and get them to talk to one another and ping pong until they get to the immersive solution.
+
+You have more mics all right. Okay, I love it. So, I want to talk about humans and sellers. Um. When you're thinking about hiring or marketers when you're thinking about hiring today? What's changed and how you think about hiring for?
+
+[Speaker 4]
+Sure, uh, so we're definitely looking for, like, strong AI fluency. Um, I've had this experience inside of play. We launched an API recently, and some of our sellers were like, I can't figure out how to log into the API, and it's like, yeah, you can just ask codex how to log in and like it'll do it for you.
+
+So kind of looking for people that understand the that, um, you really don't have to know a ton anymore about the underlying stuff that you're using. Um, and then I do think um. Where we are going is this world where the seller has kind of become like, somewhat like labelers.
+
+For agentic systems that are being built underneath them. And um, so we are looking for people that have kind of like strong judgment. And can actually kind of say like this agent is doing the wrong thing, and we need to correct it. And, uh, and I think that isn't here yet, but um.
+
+Based on based on what we're seeing at clay, I think, for example, like the inbound SDR will definitely be something that is, like, fully agentic, within probably by the end of the year.
+
+[Speaker 2]
+Thanks, um, yeah, I asked. I've been asking the same question for years now, which is the first, um, uh, walk me through a time when you hacked the systems. You're an advantage. Any of you guys try to apply to IC. That's one of their questions and the questionnaire. So, I try to identify their how scrapping someone is.
+
+Uh, second thing is, I try to see how much they think in systems, right. So, um. I'll ask a question, like, uh, tell me how I use AI every day and that the answer is, oh, I use it for cooking. It's not very great, but if they tell me about something extremely.
+
+Um, difficult, but incredible that they build and like how they went through Revitable spirit. And I think that's gonna be great.
+
+[Speaker 4]
+Nice, um, I'll speak a little bit more from the marketing perspective.
+
+[Speaker 3]
+I definitely feel like we're seeing a big change in the role that a marketer plays, especially within Automation. And where else is he more of a merging between the marketing and the sale role, and two things that I look for in particular is one still being able to really, really understand what this looks like and be able to articulate it, because if you can't do that, you can't tell AI how to do it and then get AI to replicate it well.
+
+Um, and that is still some of the like. Core marketing functionality we need to have, but then we also need people to be more Technical and more systems focused, and that is absolutely where. We're seeing like programs that we used to divide up and allow people to like Tinker across different emails or nurturing flows.
+
+It is like collapsing down, and marketers are handling much more complex systems and need to figure out how to optimize, tell AI to optimize, Etc, so I think it's a. Technical piece, but also you've got to have good judgment and know what that looks like. Love it! So quickly, I want to pull the room.
+
+Just take a quick pause here. How many of you are in sales raise your hands?
+
+[Speaker 2]
+Okay, marketing. Marketing, all right, rev-offs. Let's go! Founders.
+
+That Engineers. Okay, who didn't raise their hand. What do you do? Hotels whose sales okay? Easy mess on my part. Anyone else?
+
+[Speaker 4]
+Got some. We've got some Finance folks in the room
+
+[Speaker 2]
+Finance.
+
+[Speaker 4]
+I enrich the list so.
+
+[Speaker 2]
+Okay, cool. So we have operators of different types. Um, so this question is going to be really more GTM, um, specific, but it really applies to other areas I'm interested in centralization versus decentralization within a company. When it comes to building agents and Anissa had this question written for you specifically.
+
+But I think it's applicable to everybody. Um, I think every org I talk to is in every operator I talk to is facing this challenge of you know? There's things my company is doing at the sort of company level, and maybe you slowly and aren't covering all the service area.
+
+I want them to cover, and my edges are really important to me, and I just want to go to thank myself, and how does that fit within the future of work? So, we'll start at the end of the lease and then and work backwards. Thank you! So, um, yeah, I think the pendulum has sung in different directions for us.
+
+Initially, I wanted every single person, every company to build their own agents, and use AI every single day and and. Um, what we ended up seeing is that a people were burning tokens on rebuilding things that were built, but in a poor way. And then, um. Me, just that it would distract people from their coordination or their core Focus, right?
+
+So from there, what we ended up doing, at least on through was that we put everything on GitHub and people were winning. Our growth team were shipped things and then commit them to GitHub, and that's kind of like how we would have the ability to review everything and have everyone aligned within the same, um focuses, right?
+
+We still let people use obviously AI every single day, but when it comes to shipping to a system, you have to kind of all centralize it within GitHub. Yeah, we are, um.
+
+[Speaker 4]
+We have basically like org wide agents, team agents, and personal agents, so we're using on town right now to be effective for us, and then obviously people can kind of build their own skills. I don't know if it's really a full agent, but. I like scheduled skills, kind of kind of agentic, and so we give everybody that flexibility.
+
+And then, like, you, we have kind of a skills repository that we deploy for our all of our sellers. And then we take a sort of like org or team wide view of certain tasks that our Ops Team. That are obscene builds. So, for example, we have these like account agents that kind of like monitor accounts very like thoroughly.
+
+Um, and those are maintained by our Ops Team. But when they push data to our sellers, our sellers can like dialogue and kind of like change some sort of like Last Mile configs on those agents. As it relates to kind of their book of business or the accounts that they're working so.
+
+I think there's kind of like an 80 20 thing that we're doing, where, where, um? You have Ops team like a centralized team building 80 of the foundation, and then you kind of try to provide some flexibility. And obviously, if your team is using that chat interface, you need to have some flexibility because they're going to kind of instruct their agents to do different things.
+
+[Speaker 3]
+Uh, yeah. I mostly agree that it's a little bit of both, or we've also seen, um, swings or switches between everybody use and learn the thing, and then everybody does it in a million different ways. And you don't actually know what works well. Uh, and we've actually found in a lot of cases when we let everybody do it.
+
+The outcomes are not as good as if we have one team, learn how to do it really well and optimize it over time. And that's certainly been the case, uh, with my team automates Outreach on behalf of sales, and previously there was like more. Oh, every sales rep is going to go and build their own way of doing personalization and prompting for all their Outreach.
+
+And instead, we said, we're going to handle as much of that as possible for you. And we're gonna. Prove that over time, we're going to get you more meetings, more deals, more revenue, and so that's been a clear switch than we've seen. Yeah,
+
+[Speaker 2]
+So as I should, just having this debate today, and I'd be curious if anyone is dealing with this, but the skills like customizing your skills, I think, is a very interesting cross-section of this because. Um, uh, it's it. Like, when I was going through the content that we were going to enable our sellers on and like, how to build skills?
+
+I was like, this is way too deep. Like, there is sort of like deep understanding of how context works and how tool calling works and and some prompt engineering things. And I'm like, this feels like this is too much detail for our sellers. Um, like, can we take like our car off of this, um?
+
+And can our Ops seem to do like more of this, so it's just kind of a call to anyone that's working on like skills development in particular. Um, I would love to speak to you about about about. Because I'm trying to figure that out right now.
+
+[Speaker 1]
+Okay, that is a great forehand. And the next thing I want to do, all right, I'm going to give everybody two options tell you up front. You can only pick one and raise your hand. Do you want us to get super tactical and ask these brilliant, um, GTM leaders about how they're specifically using AI to be better themselves, or do you want to go more big picture and hit them against each other as the startup, the growth company and the big Enterprise.
+
+Talk about the future all right. Raise your hand for big picture. Raise your hand for micro tactical. Oh, come on, really. It's a concept, all right. Big picture wins. Okay, so I'm making this up on the spot. It is not my notes, but I just realized we have a amazing hydro startup.
+
+We have an amazing gross stage company, and we have a big Enterprise. Very interesting. I want to interview to give the pitch on why you as the representation of your entire class of company, uh, is best positioned to win with AI over the next couple years. Sorry Enterprise, but you know you're on the throne?
+
+You gotta go first,
+
+[Speaker 4]
+And also I am not a seller, um, a marketer in a technical marketer, um.
+
+[Speaker 2]
+Let's see you! Wow, why are we considering they did not know I was gonna ask no?
+
+[Speaker 3]
+All right,
+
+[Speaker 2]
+So you guys ready for the full clay pitch. I've been doing this for for three years now. Um, I think I think with play, we kind of look at like, what's not changing, and we think like, there's a couple principles for clay in general, number one. Is that go to market?
+
+Is creative? Uh, the best companies have very unique things they do that are accustomed to them. Number two is that go to market is always changing, so tactics kind of expire. You have to kind of like, keep evolving. And then, um, probably like the the third thing that we're really interested in right now is kind of this idea of, like everything but the l11, so we think like, there's data evals that we can provide there's like data infrastructure.
+
+There's storage, there's orchestration, there's kind of agent building experiences. And we're not going to go in the direction of like a Harvey or something of like building our own or cursor and building our own models, but we think there's a lot of scaffolding that we can provide and then rapidly evolve.
+
+As LM capabilities evolved. But we also think that basically. Our customers will always want to build very custom things that are unique to them and then number two. They will always want to do, like, very creative things. And so, the the I think clay will be well positioned because I just like, fundamentally, agree with those.
+
+Those principles will go to market, and I think those things will be true in, like, any kind of um AI. Thank you.
+
+[Speaker 1]
+I like the way you said, um, yeah. The way I think about, you know how, we're gonna build, um, a trillion dollar business is basically really simple. You either can build something that the the laps won't eat up. Um, and something that truly drives value for your customers. Or you can right, and so, um, specifically, our mission is to maximize sales for all our customers.
+
+And so, um. As you think about the labs and how horizontal they are, in our case, we have to be as focused as possible on the outcome driven, right? So drive as much revenue and as much sales as we can for our customers. And so, as we focus into that, there's a few things that, um.
+
+Will allow us to win a first of all, um, as a, an extremely focused go to market founder, uh, and Technical. At the same time, I can make a very opinionated product with my teams. Um, that will help our customers drive as much sales as possible. That's the first thing.
+
+The second thing is, I view every, uh, successful product and business as three things. It's a combination of infrastructure production and Logistics, and so if you think about it that way, um. You have to build the best possible aggregation of information that. Then, you have to build on top of the best possible reasoning from a marketing sales perspective.
+
+And then, how do you deliver that? Within, you know, Logistics, and so we deeply deeply thought about this. But also, we've been iterating on this for a year years, and so we deeply believe that within sales execution, no one is better positioned as us from both a technical and a good marketing perspective.
+
+Thank you. That's how I'm fair to help the founder here, but uh, all right. Thanks for giving me time to thank good.
+
+[Speaker 3]
+But yeah, so I'm going to take maybe a different approach that will probably not resonate with everybody in the room for sure, but um, I, I think, is an important point to make, which is kind of the opposite of customization and creativity. I say that as a true fan of clay.
+
+Um, which is, I think that?
+
+[Speaker 2]
+What the Enterprise can do is actually figure out how to do something well and make it super easy to use for, um, its customers, and I think that's what we're on a mission to do and can do. And that's from talking to all of our customers from knowing them extremely well, doing all the testing, having the data and context to do so, and then made that, yeah, really easy to use, so you don't have to, because, frankly, there is so much to learn and so much changing that is.
+
+Overwhelming for all of us, or I'm certainly in that camp, and so having something that's easy to use and start implementing is going to be a huge. Advantage. I love it, um. This was.
+
+[Speaker 1]
+Prompted by our conversation, Ariana and I were talking about hubspot's advantage of distribution and. It got me thinking about hubspot's customer base and we were talking about how you know the owner of a butcher shop is hubspot's customer base. Probably not sitting in a clot all day long. Um, and I do think that, you know, we probably represent some diverse perspectives in this room, but generally speaking, the New York GTM Tech Community ecosystem.
+
+We do live in a boat. Uh, there are so many people. That are consuming software in so many different ways for different types of businesses. And one of the things I think is that I'm really excited about, and I'm cheating because I just get to take credit for, like everything in the world, and talk about cool stuff instead of.
+
+Um, uh, being on panel, but is that AI is bringing the physical world and the digital world much closer? It's a little scary, but it's also pretty interesting that in a lot of fields where there wasn't actually a lot of old school software. There now is a much deeper connection, so I'm pretty interested in, um, how that's going to play out okay?
+
+Um, next.
+
+Oh yes, okay. I really like this one. We're talking about, go to market all right. So, um. Sales is a signal of noise problem.
+
+[Speaker 2]
+Uh, if?
+
+If or or we hope, we never have to do again. What is an inbox look like? Five years from now. I'm ICP, for I don't know. 10, 000 companies. They can get all the data about me on clay. They can use any number of different tools and agents to write seemingly customized emails based on the same signal.
+
+And it's not crazy to think I get a thousand emails a day. I'm actually not that far off. That's, that is crazy, right? Yeah, so you know? Phone calls. Hopefully, our coins can be illegal, we'll see. So, maybe we focus on email, but I'm really curious what you guys think about the future of standing out and signaling noise and how the existing channels are going to change.
+
+Cool, all right. Uh.
+
+[Speaker 3]
+I think standing out is going to be a lot about timing and multi-channel and coordination across channels. Um, I think even today, what matters way more than sending the email or doing the research and knowing everything is actually when you do it? We see way better results based off of, um, knowing we are top of mind for someone based off of some type of behavior or signal or trigger and making sure we are.
+
+The first to reach out and do so immediately, and it makes such a difference more than anything AI related. And that's going back to a lot of the basics. And then the second piece, which you also talked about, was, um, calling, and I think that's big and relates to another core piece of, like, I am not a believer that AI is going to replace humans in all of these functions.
+
+And I think a big reason we see, that is, that humans play a huge role in, um. Improving conversions, improving revenue. And that's, like, we double our deal creation if somebody gets on the call the moment we send an email.
+
+[Speaker 1]
+Yeah, I'll take that inbox in five years. Question I, I think what we haven't seen so far, is agents on the buying side as much, but I think that definitely is coming. And. Like for me, I mean, the, uh? Fortunate situation of interacting with procurement teams the last, like three years.
+
+I actually get the sense that most Executives companies are not that happy with their procurement teams and how their company buys and things like that. You can imagine a world where an executive comes in and just has priorities, and they kind of like assign agents to help them accomplish those priorities, including procuring software and other things that they that they might use.
+
+And then, if those agents are connected to the inbox, then those agents are actively scanning for things that sort of Advance the executive's priorities so. People sometimes ask me, like, um, will AI like replace sales people, and my answer is, like, no, until the buy-in side sort of starts to become much more energetic, and then you definitely can't imagine the world where kind of, like, Asians are selling to, um, to, to agent buyers, and so that's my kind of inbox.
+
+In five years, question the the inbox becomes sort of a like, uh. Agent managed filter for accomplishing someone's priorities and clearly in that situation. If you're selling agents or hitting them with something that is their priority, then their buying agents will pick it up, and they'll be. Maybe those agents will have meetings, and then yourself will get bought.
+
+So, um, I like, wasn't necessarily all the way there on that, um, a year ago. But um, based on what I'm saying, I think I think that is kind of where we end up. Yeah. Okay
+
+[Speaker 2]
+If the inbox is managed by buying agents? Do you actually think the buying agents are going to care if they received an email? Uh, well, there will be some way that the I don't think the buying agents, um.
+
+[Speaker 1]
+Will be like, purely like researching things and making decisions. I do think like a portion of it will be like email communication. Um, and I think the wine agents can do things like, hey, does this vendor align with our security policies and privacy policies and things like that? And so, yes, I think, like, if you're an executive, you have some purview of something you want to accomplish, and you have a personal agent that knows that you're that personal agent is connected to your inbox.
+
+And, um, if something comes across the inbox that is relevant to some goal that you're accomplishing. I suspect the agents that will engage with it, but um, it seems a little crazy, even to me, but I just that seems to be where, like, things are headed. Um. So, I mean, I bounced what I already said, which is, I think you need to?
+
+Meet the buyers at the exact right moment, right? Um, all this being said. I think it's a combination of two things there's awareness versus events and a lot of people don't become a little soon, right? People can have intend to buy, but they've never probably heard about you then.
+
+They're most likely not gonna buy her from you, so you have to deeply create that level of awareness and capturing that at the right time when it comes to awareness. I think you have to do a lot. The panel is going to be really, really strong on marketing, which is, you have to create a lot of content.
+
+You have to make sure that you give. Um, your audience as many available resources as possible and useful resources for them, so that when the intent comes, they'll actually consider you right? The other thing is, is that? That's for a world where even spy, I think, for what it's worth humans will always buy because of ego.
+
+He goes, but I think for all, he's even if they rely on their insurance to do the research from a marketing perspective. They need to make sure that all of your documentation is up to date your website's optimizer radio and all these things. So, um? At that point. From my intent perspective, you can make sure that you're aggregating all the right signals where they're there third party or first party to, uh.
+
+Reach out at the right moment, right? So, for example, your attention. We use our own product to capture all a competitor renewal contract dates to reach out at the right time, right? Really easy. There's a lot of things in your first party data, like conversational data that you should be using.
+
+That is going to be extremely relevant to reach out at the right moment. Yeah, I actually, um, on anesis point. So I was, um, I was kind of in this world myself, which is why I've been thinking about buying agents. I was building a little like, um sales, uh, demo SDR.
+
+So, like it joins a call, and it's like, hey, I'm clay. And then it, like screen shares, and like downloads, buy, and stuff. But anyway. To make that work, I needed like a couple other pieces I didn't have. So it went ahead and like found 11 labs, and then I found this thing called recall.ai, which allows you to screen share it.
+
+Also found like cloudflare to do some, like, tunneling stuff. I often looked at the codes I actually have no idea what's going on inside, but um. Basically, like I'd heard of 11 Labs. I had heard of Cloud Clara Styles, like right. That seems fine. Hadn't heard of recall. So then I actually kind of like looked at it a little bit and asked some more questions about it.
+
+And then, I was, like, okay, like, kind of Niche thing. But, like, you know, like, let's go forward? Um, but, but that kind of got me thinking, like, you know, I? There's probably like 11 lounge competitors recall competitors that are out there, but for some reason that um Claude is surfacing these particular tools, and I'm kind of just like checking the box.
+
+So, uh, I, I do like to your point. I do think on a brand and awareness is, is? Very, very helpful and actually more important than in that world. Thank you.
+
+[Speaker 2]
+Well, since we brought it up, I have some thoughts on this too, um. As a company that builds agents that can do a heck of a lot of selling to a point that's a little bit scary. I definitely agree. There will be ancient agent buying, but I think there will be a lot of human to human and human agent and ancient human buying as well.
+
+I think ego does play a role into it, I think.
+
+[Speaker 1]
+The way I would describe it is that if the decision is just the decision at the surface level. Um, we're gonna have agents buying meaning, like. Low-Cost, low opportunity costs, right? Two-way door decision, like, there's a lot of factors and? Very, very high brand awareness, right? Like, oh, hubspot's the best CRM for me?
+
+Sure, fine. I probably don't need to talk to someone, right? It's like, I'm not gonna get fired because we pick Hub stock because Claude told me to kind of thing, right? Um. And so I think for a lot of purchases, you know, uh, and I think people misinterpret this, and they think that it's about costs and dollars, and that is important, but it's much more about opportunity, cost of time, and two waivers is one way to our decisions, so you could be buying a 25 000 piece of software, uh?
+
+But you're gonna spend a ton of Cycles training an entire team to use it and implementing you know how much change management and all that kind of stuff across your board. That might be a two or three hundred thousand dollar decision. And so, a big part of why humans are still going to buy from humans is.
+
+There is a desire to build trust that someone else has skin in the game to fix the problem, so you make that decision you go. Buy that software. Six months in. It's not going well. Your boss is yelling at you. You're honestly worried about getting fired. You have a human who you worked with in the sales process.
+
+You can call and say we're not going to renew unless we fix this problem. I don't care what your policies are. I need you to elevate this, like, I'm gonna get in trouble. This relationship's gonna be over right, and you know that they're gonna go scramble and figure it out, and so I think what we're going to see is just this huge spectrum of, you know, what used to be?
+
+We had, like, plg and SLG that was. And now we're going to be operating in three dimensions where we're going to have the type of product the consequence of the decision that's being made where. And then, we're also going to have where in the journey they are that buying process, and we're going to see agent agent Discovery.
+
+We might even see agent Agent sort of like demo. We have a demo agent really, really cool. Give us a better demo than I do so, um. It's not saying much, but it's very cool. And then we're going to see elements where humans kick in, so I think we'll have these tracks that run in parallel and people will jump between human and agent buying and selling on both sides.
+
+So, what? Basically, it's going to be really complicated, but super cool. Okay. We've got maybe time for one more. Is that about right? Yeah, two more months, okay? Let's take a question from the audience. First hand up.
+
+[Speaker 3]
+Hi, my favorite percent, so we work in a healthcare and AI love to talk to you. One thing I'm finding similar, ironically, is the more we're using AI, the more that people want to have events in their life and don't want to work on email. That's
+
+[Speaker 1]
+Crazy. I don't agree, well, I feel like the fact that it works here. What question is, is there something you're also serving. And then, also, how are you using AI to advance in person?
+
+[Speaker 3]
+I mean, Everett Everett was just on my podcast. He spent an hour talking about this, no? Go ahead.
+
+[Speaker 1]
+Um, okay, so, um, so, yeah, so, like many things of clay, we sort of like, are overthinking our events and field marketing. But basically, we kind of said, like. You have to kind of invite the right people. You have to get them to the event. You have to kind of make sure they have a good time at the event and then capture all the context and like, sell to the map to the event.
+
+So we have things like we have like an internal tool that helps us build seating charts where we make sure, like a clay person is sitting at the right at the right table, and an AI helps us suggest, like seating parents. So, like, uh? You know, I don't know if, like, um, I would put like, uh, series a CDO with, like a public company CEO, right?
+
+Like, what would they talk about, like, watch different scales of problems so? We, we have put a lot of effort into basically like. Instrumenting our events so that they are, uh, they are like efficient and high quality. And maybe, just like two other examples, um? When we do our when we do our targeting, we kind of, like, um, really work hard to build a top 20 list of people that can attend an event, and I think it's actually like a real test of a company's data.
+
+If you can, like, instantly build an amazing list of 20 Executives to put around your founder at, like, whatever random City they're going to be in. And then we do a lot to kind of like orchestrate the invite. So, like we Auto text, everybody from the founder, like the day of the event to make sure they're coming stuff like that.
+
+So, um? So, yeah, we. We put a lot of effort into it, and you can hear me, um, pontificate on that ad nauseam on David's podcast, which is probably coming out soon, right? David, I haven't heard, but um. Uh, but yeah, I, I think I think you can surround and and in person, environment, or physical experience with tons of AI technology and then, but not make it feel like, like, that's what's happening.
+
+I'm actually gonna democrata or actually going to talk about something that clay here has democratized, which is GTM Alpha right. And so, in order to get that Alpha, you need to do things that generally don't scare that most of the people like the in the world aren't viewing, right?
+
+Um, I'm not necessarily going to talk about it, but even though we did events, I think, um. When the whole world was going really hard on AISDRs and saying that it was the future, we actually doubled out on sdr's human STRs, who do things that on scale. I think that even to this day, today we have, I mean, I'll give a shout out to our SDR team who's all here today, but I think they?
+
+Um, they really, really go hard at meeting people in person where they are, and they do these things that don't scale, which gets them incredible results. I think if you're lazy and you're doing what 95 or even 99 of the world is doing, you're not going to be very successful.
+
+[Speaker 2]
+Uh, yeah, I'll just say, I agree, on the piece of the in person or the human connection is becoming more important, and not something we're definitely seeing, and the opportunity is having really figuring out the role that Asians automation AI can play in, um. Removing, reducing all the annoying removal tasks and that helps the sellers.
+
+It helps us humans focus more time on the human connection, part building relationships, Etc. That's definitely my, uh. Biggest goal within marketing is helping our sellers do more of that.
+
+Thank you for asking, um, all right, we've got. That's about to wrap it up. It's a really good one. Guess what?
+
+[Speaker 1]
+That's a good one. Okay, go ahead. Um, are you guys thinking at all about the Judgment and discernment that's becoming more important as AI is coming up, like, not sending emails to prospects with m-dashes in them, Etc, like, how are you guys thinking about that?
+
+Yes, absolutely. We have the my whole team just did, um.
+
+[Speaker 2]
+A big exercise on like email rubrics, and what does good look like and consistently training our eye for that? Um, so that's related to what I was talking about earlier on, just like the knowing what good looks like having taste matters so much, because we're all sick of seeing AI slab.
+
+[Speaker 1]
+Yes, we published an AI writing policy clay that we're origin across the company now. Um, basically, because our stocks started to become very fuller and dashes? Um, and so I think, uh. You can find it like LinkedIn and X, but basically it's like writing this thinking. Um, their readers should spend less time reading than you spent writing.
+
+Longer is not better, and then I'm reading the fourth one, but um, yes, we are very concerned with with that. Thanks! So I actually built a lot of our internal systems when it comes to, uh, helping our CRS send a semi-automated messages. I think that, um. The first thing is, you can start with a skill.
+
+And within that skill. You ate all of the rules from Wikipedia on what AI slop is, and you, I ended up adding one thing that basically is right, like hologram, because I think he's the best writer.
+
+[Speaker 4]
+And so he
+
+[Speaker 1]
+Actually sounds like a human right. So that actually helped helped the tongue. Obviously, remove all the impressions made, um, in a way back. With each sentence, you cannot remove a single word without removing the actual sense of that sentence, uh, feel free to. Reach out to me on LinkedIn, and I'll send you that skill.
+
+I called it the master human answer then, uh,
+
+[Speaker 4]
+Yeah.
+
+[Speaker 1]
+He humanizes everything that you're right to that guy. On top of that then, um? I realized that even outbound emails still sounded a little bit like AI, so I ended up creating this whole panel of different llms that, um. Yeah, end up reviewing it one after the other. And there's a website called the slot index that actually gives you a ranking of llms based on how
+
+[Speaker 2]
+Much
+
+[Speaker 1]
+They sound like humans or not. And so, every now and then, I try to see what are some of the latest alms that sound less like Ai, and more like humans, and I include them into this, uh, kind of like judge panel that makes a message go through multiple layers before, again, getting humanized by Mike Master humanizer.
+
+This is. Yeah, yeah, yeah, you can copy paste it to AI detectors and illustrators. I
+
+[Speaker 3]
+Want to add one more thing to that, which is, as we're talking somewhat in systems or what we send via email, outbounds, email, Etc, but I also think that's incredibly incredibly important for all your work internally, and
+
+[Speaker 5]
+One
+
+[Speaker 3]
+Of the policies and the ability to take in a stance of is everything you share. You are responsible for even if AI did because of it. I'll complete it and, and I think that's just really important if someone gives you something that's obviously written by AI and you're spending hours just trying to understand what it means.
+
+It's their responsibility to admit to that. It is not something they can pass off to. The AI is, oh, AI, gave it to me.
+
+[Speaker 2]
+For decentralized stuff, we solved this pretty simply. We train on each person's inbox.
+
+[Speaker 3]
+So, it's just the context is literally the emails that they sent. M is human emails that they sent, and then the drafts feel very personalized. So, like the drafts that I get from Sparrow for myself are totally different than John's.
+
+[Speaker 2]
+Because we don't ever fight, and so they shouldn't be different. So, it's to me, it's not just not sounding like AI, but it's actually sounding like yourself. I think that's really important. All right, on that note, we've got D, we've got humanizing skills. We've got trying to sound like ourselves.
+
+We had a battle of different stage companies. That was great. Thank you to our wonderful panelists and East Everett and all right. Thanks so much and everybody. Please
+
+[Speaker 1]
+Have a wonderful night.
+
+[Speaker 5]
+For what?
