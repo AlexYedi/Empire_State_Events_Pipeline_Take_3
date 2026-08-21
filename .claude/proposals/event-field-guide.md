@@ -52,26 +52,42 @@ Off the **same research pass**, produce a second rendering — a long-form, pros
 
 **Two compression levels off one retrieval:** the *structured brief* keeps the COMPRESSED Prior-Context Pack (N=8, verify-first — correct for feeding specialists). The *Field Guide* surfaces the RICH version generously (cross-event continuity is a novice-grounding tool + documentarian edge). Both derive from the same Step 1.7 retrieval — no second fetch.
 
-## What changes technically (to detail after adversarial pass)
+## Resolved design decisions (post-adversarial pass, 2026-08-21)
 
-- **Specialists** (`company-researcher`, `person-researcher`, `topic-landscape-analyst`): add the historical-spine + novice-on-ramp + elevation instructions and richer return schema. (Registry is session-frozen → test in a fresh conversation.)
-- **Field Guide renderer:** likely a NEW synthesis-only subagent (text-in/text-out, prose renderer) distinct from `event-research-synthesizer`. **Open question (for pre-mortem): can one call reliably produce ~8,500w cited prose, or does it need section-by-section generation / a stronger model?**
-- **`/event-deep-research` command + `event-research` SKILL:** add the Field Guide as a second rendering step; parent thread does the MCP writes (Notion page for the Guide).
-- **Notion:** decide the Guide's home — Event page section vs. its own `field_guide` Content Draft. Keep the `research_brief` Content Draft as-is.
+**Topology (SEV-1.1 — MCP constraint):** All Notion-memory + email-recency retrieval happens in the **parent thread** (MCP is unavailable in subagents). Parent builds a per-entity, provenance-tagged **evidence pack** and injects it as text into the web specialists, which do web grounding/verification only. This is the existing Step 1.7 pattern, made explicit for the elevation layers.
+
+**Single evidence set, two views (SEV-2.6):** one retrieval → one **provenance-tagged, ranked evidence set**. The compressed Prior-Context Pack (specialists) is a strict **top-N subset** of the rich set (Field Guide) — never an independent re-summarization. Consistency is structural, not hoped-for.
+
+**Renderer (SEV-1.2):** a NEW `field-guide-renderer` subagent (text-in/text-out), distinct from `event-research-synthesizer`. Renders **section-by-section** (each section against only its evidence slice) + a light stitch/transition pass. **Model: Opus** (prose quality is the goal; single-shot Sonnet is what produced the lattice). Registry is session-frozen → build/test in a fresh conversation.
+
+**Critical-path decoupling (SEV-3.8):** structured brief + Notion writes commit **first, independently**. The Field Guide is a **strictly-additive Phase 2** that can fail without touching the pipeline.
+
+**Canonicality (SEV-2.7):** structured brief stays the **sole pipeline input**. Field Guide is stamped **"reading companion — not source of truth."** Corrections destined for content go on the brief. (Revisit if the split-attention friction bites.)
+
+**Anti-padding enforcement (SEV-3.9 — makes "ceiling not quota" real):** NO positive per-section word targets. Replace with an **evidence-count gate** ("< N grounded facts for this entity → 2–3 sentences and stop") + a **density criterion on `/judge-build`** (flag high word-to-cited-fact ratio). Section budgets below are **hard maxes only**, paired with a coverage checklist; brevity is rewarded.
+
+**Provenance discipline (SEV-2.4 / SEV-2.5 / SEV-3.10 — memory-laundering guard):** every claim carries a source tier (`web-verified` / `notion-prior` / `email-signal`). A `notion-prior` claim may **not** appear in the Field Guide unless web **re-grounds** it (Rule 12 extended to the memory layer). Newsletters are **lead-generators only**, never corroboration — require independent origin. "Mechanism behind the claim" + inline-jargon prose are the highest fabrication-risk zones → bind to the same source-tier discipline; density judge also flags uncited mechanism assertions. Gmail name-collision is a known precision risk — verify identity before importing a thread as context.
+
+**Citations (SEV-3.11):** **endnotes**, collected at each section end — body stays audio-clean. (Prevents a full rewrite when audio is added.)
+
+**Field Guide idempotency (SEV-3.12):** define an **upsert** — match on the Event relation, refresh in place; no duplicate pages on re-run. Home = a `field_guide` Content Draft linked to the Event row (enables Cross-Event Threads). Linking to the Event row is a schema touch → **write the ADR** before wiring. Keep the `research_brief` Content Draft as-is.
+
+**Specialists** (`company-researcher`, `person-researcher`, `topic-landscape-analyst`): add historical-spine + novice-on-ramp instructions + accept the injected evidence pack + richer return schema. (Fresh conversation to test — registry freeze.)
+
+## Sequencing (OPEN — needs Alex)
+
+The pre-mortem flagged goal-conflation: the diagnosed disease is a **form regression** (prose → lattice), whose cheapest cure is **loosening the structured brief's lattice** to allow in-section prose (~70–80% of the April feel, ~5% of the cost, one session, reversible). The Field Guide is the larger commute/novice/audio bet. Two paths:
+- **Phase 1 (lattice-loosen the structured brief) → Phase 2 (Field Guide).** Cheap readability win first; also improves the brief Alex + the pipeline read; de-risks Phase 2.
+- **Straight to the Field Guide.** The commute read is the headline deliverable; skip the interim.
+
+Either way the Field Guide gets built — this is only about what ships first.
 
 ## Non-goals (v1)
 
 - No change to the structured-brief contract or the content pipeline's inputs.
-- No audio build (prose is written audio-*ready*; wiring is later).
-- No new depth "toggle" — Alex chose **always-maximal** depth. (Cost/runtime increase accepted, his call.)
-
-## Risks / open questions (seed for adversarial pass)
-
-1. Single-call generation of ~8,500w dense cited prose — output-length + context pressure. Renderer architecture TBD.
-2. Two compression levels off one retrieval — consistency risk?
-3. "Ceiling not quota / never pad" — what mechanism actually enforces it vs. the model padding to look thorough?
-4. Always-maximal + 8.5k words × multiple entities = latency + inference cost per run. Acceptable envelope?
-5. Hidden couplings that make "two-artifact split is safe" false.
+- No audio build (prose is written audio-*ready* with endnote citations; wiring is later).
+- No depth "toggle" — Alex chose **always-maximal** depth (cost/runtime increase accepted, his call).
+- Field Guide is not yet canonical for the content pipeline (companion only, v1).
 
 ## Success criteria
 
