@@ -36,6 +36,7 @@ For each person that gets research:
 ```
 #### [Name] — [Title, Company] ([Role])
 - **Known POV / Bio:** [what they're known for, public positioning, where they sit in the discourse]
+- **Career arc (historical spine, added 2026-08-21):** the sourced through-line — prior roles / companies founded / notable prior work → **how their current POV formed** (the experiences that shaped it) → where they landed now. Dates and named prior work, not adjectives. This is raw material for the Deep Read's people narrative; gather *facts*, not prose. Cite anything specific in the Evidence Ledger. If the arc isn't discoverable, say so plainly.
 - **Recent activity (last 6mo):** [talks, posts, articles, podcast appearances — name specific items, link or date]
 - **Talking Points:**
   - *Personal hook:* [one concrete thing — recent post, shared background, mutual connection. NOT a generic compliment. Must be referenceable in 10 seconds without notes.]
@@ -45,6 +46,20 @@ For each person that gets research:
   - *De-prioritize because:* [0–2 concerns: dormant / off-topic scope / mismatch with goals — leave empty if none]
   - *Open on-site:* [1–3 questions Alex wants to learn live that he couldn't find via research — what's their actual lane, is the team growing, what are they building next]
 ```
+
+**Evidence Ledger (REQUIRED — added 2026-08-21, feeds the Deep Read endnotes).** After each person block, list every specific/recent/contestable claim you asserted (prior roles, dates, a stated thesis/POV, a named talk or shipped product, a metric). The Deep Read renderer builds its endnotes **only** from this ledger — a claim with no row cannot be cited downstream and will be dropped or flagged unverified. Any **thesis/positioning/belief claim about the person or their org** must have a `web-verified` row with a primary-source URL (Rule 12); if you can't source it, don't ledger it as verified — flag it under Verification Flags instead. The spike proved missing URLs break endnotes, so the URL is mandatory for any `web-verified` row.
+
+```
+##### Evidence Ledger — [Name]
+- claim: [≤15 words] | tier: web-verified | source: [publication/profile/talk] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [their stated thesis/POV] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [carried from pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
+```
+
+- `tier: web-verified` — grounded in a current web source this run. **URL required.**
+- `tier: notion-prior` — carried from the injected pack, NOT re-grounded. Informs the Deep Read only as flagged prior context, never as fact. Prefer to re-ground and promote to `web-verified`.
+- `tier: email-signal` — from Gmail; a relationship **lead**, never a public-facing fact. Keep private contents out.
+- **Common-knowledge background** needs no row. Reserve rows for the specific/recent/contestable.
 
 ## Sources
 

@@ -13,7 +13,7 @@ cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null || true
 
 ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""
 MODEL="gemini-pro-latest"
-RUBRIC=".claude/evals/rubrics/build-quality-v3.md"
+RUBRIC=".claude/evals/rubrics/build-quality-v4.md"
 SYSTEM=".claude/evals/prompts/judge-system.md"
 LABEL=""; PRINT_ONLY=0
 while [ $# -gt 0 ]; do
@@ -41,10 +41,17 @@ RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
 set -a; . ./.env 2>/dev/null; set +a
 [ -n "${GEMINI_API_KEY:-}" ] || { echo "ERROR: GEMINI_API_KEY not set in .env" >&2; exit 1; }
 
-# --- deterministic dangling-reference pre-pass (mechanizes the @3 dangling-ref cap; models under-apply it — bf17) ---
+# --- deterministic dangling-reference pre-pass (mechanizes the @4 dangling-ref cap; models under-apply it — bf17) ---
 DANGLING=""
 if [ -x .claude/hooks/check-refs.sh ]; then
   DANGLING=$(.claude/hooks/check-refs.sh --artifact "$ARTIFACT" 2>/dev/null)
+fi
+
+# --- density pre-pass (deep_read only; supplies the number-side of the @4 density cap — NOT a deterministic cap:
+#     padding vs. legitimate novice on-ramp is a judgment call, so the script flags and the judge decides) ---
+DENSITY=""
+if [ "$ATYPE" = "deep_read" ] && [ -x .claude/hooks/density-check.sh ]; then
+  DENSITY=$(.claude/hooks/density-check.sh --artifact "$ARTIFACT" 2>/dev/null | grep -E '^density-check: (words|OK|PADDING-RISK|UNCITED-LONGFORM)' | head -1)
 fi
 
 INSTR='You are scoring ONE build artifact. Follow the judge system rules and the rubric above.
@@ -54,17 +61,18 @@ completeness (provider-neutral). For convention_adherence and anti_pattern_avoid
 house context, so judge them conservatively and say so if unsure. House-context primer (for convention_adherence/anti_pattern_avoidance): project skills in .claude/skills/ take NO alex: prefix (that prefix is for alex-plugin skills only); use notion-search NOT notion-query-data-sources; subagents cannot spawn subagents (fan-out runs from the parent thread); MCP writes are parent-thread only; Supabase as the Market-Intelligence store is sanctioned (NOT an anti-pattern), Supabase as a measurement store is tombstoned.
 Return ONLY a JSON object with EXACTLY:
 {"criterion_scores":[{"id":"correctness","score":0.0,"reasoning":""},{"id":"completeness","score":0.0,"reasoning":""},{"id":"convention_adherence","score":0.0,"reasoning":""},{"id":"anti_pattern_avoidance","score":0.0,"reasoning":""},{"id":"diagnostics","score":0.0,"reasoning":""}],"confidence_honesty_violation":false,"weighted_score":0.0,"verdict":"pass"}
-Compute raw = correctness*0.30 + completeness*0.20 + convention_adherence*0.20 + anti_pattern_avoidance*0.20 + diagnostics*0.10 (round 3 dp). THEN apply build-quality@3 caps to get the final weighted_score: if the artifact asserts an unverified/uncited claim as verified, set confidence_honesty_violation=true and cap weighted_score<=0.65; if it references a load-bearing file that does not exist, cap<=0.60; if a command only lists agents without dispatch/output, cap<=0.35. verdict="pass" if final weighted_score>=0.70 else "flag".'
+Compute raw = correctness*0.30 + completeness*0.20 + convention_adherence*0.20 + anti_pattern_avoidance*0.20 + diagnostics*0.10 (round 3 dp). THEN apply build-quality@4 caps to get the final weighted_score: if the artifact asserts an unverified/uncited claim as verified, set confidence_honesty_violation=true and cap weighted_score<=0.65; if it references a load-bearing file that does not exist, cap<=0.60; if a command only lists agents without dispatch/output, cap<=0.35; and (deep_read artifacts ONLY) if the DENSITY SIGNAL below flags padding AND on inspection the long prose is generic-explainer filler rather than legitimate novice on-ramp (defining jargon / explaining a mechanism from common technical background — which is uncited BY DESIGN and must NOT be penalised), cap<=0.65. An honestly-short section is a PASS, never a shortfall. verdict="pass" if final weighted_score>=0.70 else "flag".'
 
 # --- build request body safely with jq (no manual escaping) ---
 REQ=$(jq -n \
   --rawfile sys "$SYSTEM" --rawfile rubric "$RUBRIC" --rawfile art "$ARTIFACT" \
-  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" \
+  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" \
   '{contents:[{parts:[{text:(
       $sys + "\n\n===== RUBRIC (version is stated in the rubric text below) =====\n" + $rubric
       + "\n\n===== ARTIFACT TYPE =====\n" + $atype
       + "\n\n===== PER-ARTIFACT CONTEXT/SPEC =====\n" + (if $ctx=="" then "(none supplied — score correctness/completeness against the artifact'\''s own stated purpose; note reduced confidence)" else $ctx end)
-      + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per build-quality@3, a load-bearing reference that does not exist caps completeness ≤0.60.") end)
+      + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per build-quality@4, a load-bearing reference that does not exist caps completeness ≤0.60.") end)
+      + "\n\n===== DENSITY SIGNAL (deep_read only; words÷citations — a FLAG, not a verdict; you decide padding vs. legitimate on-ramp) =====\n" + (if $density=="" then "(not a deep_read artifact, or density-check unavailable — density cap N/A)" else $density end)
       + "\n\n===== ARTIFACT PATH =====\n" + $path
       + "\n\n===== ARTIFACT CONTENT =====\n" + $art
       + "\n\n===== INSTRUCTIONS =====\n" + $instr
@@ -86,7 +94,8 @@ USAGE=$(printf '%s' "$BODY" | jq -c '.usageMetadata // {}' 2>/dev/null)
 [ -n "$VERDICT_JSON" ] || { echo "ERROR: empty verdict (thinking tokens may have starved output; raise maxOutputTokens)" >&2; exit 1; }
 echo "$VERDICT_JSON" | jq -e '.criterion_scores | length == 5' >/dev/null 2>&1 || { echo "ERROR: malformed verdict JSON:" >&2; echo "$VERDICT_JSON" | head -c 600 >&2; exit 1; }
 
-# --- deterministic @3 dangling-ref cap enforcement (only ever LOWERS a score; never raises — safe) ---
+# --- deterministic @4 dangling-ref cap enforcement (only ever LOWERS a score; never raises — safe;
+#     density is intentionally NOT hard-capped here — padding vs. on-ramp is a judgment the model makes above) ---
 if [ -n "$DANGLING" ]; then
   VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c '
     .criterion_scores |= map(if .id=="completeness" and .score>0.60
