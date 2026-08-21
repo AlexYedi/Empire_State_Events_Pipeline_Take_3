@@ -273,6 +273,7 @@ Return to Alex:
 
 ## Reference
 
+- `.claude/references/audience-north-star.md` — **top-level ethos** (mission, persona, three floors, Learn-More Set); `.claude/references/content-style-guide.md` + `content-anti-patterns.md` codify the operative rules and win on voice conflicts.
 - `../content-patterns/two-thesis-synthesis.md` — text pattern definition
   (required reading every invocation).
 - `../content-patterns/visual-briefs.md` — carousel-as-narrative visual pattern

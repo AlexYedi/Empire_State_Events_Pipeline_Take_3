@@ -1,6 +1,6 @@
 ---
 name: steering-interview
-description: A short, 4-question intake that captures Alex's deliverable-specific steering context BEFORE research/content is generated — what to say, how to shape it, what to research deeper, and any personal context/goals/relationships to keep top of mind. Use at the start of any content flow (pre-event, post-event, weekly recap, project ideation, or any standalone content request). Invoke when Alex says "steer this", "interview me first", "before you build it ask me", or automatically as the first step of the event content flows. Runs in the main conversation (it is an interactive interview, NOT a subagent).
+description: A short, 5-question intake that captures Alex's deliverable-specific steering context BEFORE research/content is generated — what to say, how to shape it, what to research deeper, who it's for, and any personal context/goals/relationships to keep top of mind. Use at the start of any content flow (pre-event, post-event, weekly recap, project ideation, or any standalone content request). Invoke when Alex says "steer this", "interview me first", "before you build it ask me", or automatically as the first step of the event content flows. Runs in the main conversation (it is an interactive interview, NOT a subagent).
 ---
 
 # Skill: Steering Interview
@@ -33,9 +33,9 @@ The interview must run in the **parent thread** (the main conversation), where t
 
 ---
 
-## The interview — one batched prompt, four questions
+## The interview — one batched prompt, five questions
 
-Ask all four together in a **single conversational message** (not four round-trips), tied to the specific deliverable by name. Free-text answers — these are open-ended elicitation, so do NOT use multiple-choice (`AskUserQuestion` is for picking between options, which this is not). Alex may answer any subset, or skip entirely.
+Ask all five together in a **single conversational message** (not four round-trips), tied to the specific deliverable by name. Free-text answers — these are open-ended elicitation, so do NOT use multiple-choice (`AskUserQuestion` is for picking between options, which this is not). Alex may answer any subset, or skip entirely.
 
 Present it like this (adapt the deliverable name):
 
@@ -44,12 +44,13 @@ Present it like this (adapt the deliverable name):
 > 2. **Structure / format** — any format preference for this one? (carousel vs single, short vs long, a specific hook, a thread, lead with X, etc.)
 > 3. **Additional research** — anything to dig deeper on? A person, company, source, claim, or angle you want researched harder than the default.
 > 4. **Anything else** — context from something you read / built / attended, a relationship or goal tied to this, a person you want to land well with, where your own thinking has moved. (This is the one that makes your voice more informed over time — don't skip it if you have something.)
+> 5. **Audience** — who is this one primarily for? Which segment(s) — remote/geographically-excluded builder, time-/family-constrained practitioner, aspirant/outsider, GTM peer, hiring manager, or the speakers/hosts — and any specific reader or outcome you're aiming at? (Sets what to surface and which variant carries the commercial-judgment / HM-activation angle.)
 
 ---
 
 ## What each answer steers (routing — this is the point)
 
-The four answers do NOT all feed the same stage. Route them:
+The five answers do NOT all feed the same stage. Route them:
 
 | # | Answer | Must land before | Routes into |
 |---|---|---|---|
@@ -57,6 +58,7 @@ The four answers do NOT all feed the same stage. Route them:
 | 2 | **Structure / format** | content generation | content shape + the visual-brief arc/format |
 | 3 | **Additional research** | **the research fan-out** (so it can actually steer the agents) | the `/event-deep-research` specialist prompts (company/person/topic/signal scope) |
 | 4 | **Anything else** | everywhere | research + content + the voice corpus (see persistence) |
+| 5 | **Audience** | content generation | which segment's job the post serves → what to surface + which variant carries the HM-activation angle |
 
 **Critical timing:** because #3 steers research, the interview must run **before** the research fan-out — not after the brief. In `/check-new-events` that means Step 6a.0, ahead of `/event-deep-research`.
 
@@ -86,7 +88,7 @@ Capture the answers verbatim (lightly cleaned) into a structured **Author Steer*
 ## Integration points (where this is wired in)
 
 - **`/check-new-events`** → **Step 6a.0: Steering interview**, run per event *before* `/event-deep-research`. Pass answer #3 into the research input; carry #1/#2/#4 to the `pre-event-content` invocation.
-- **`pre-event-content`** → honors the captured steer when generating posts/notes/questions (content #1, format #2, context #4).
+- **`pre-event-content`** → honors the captured steer when generating posts/notes/questions (content #1, format #2, context #4, audience #5).
 - **`event-deep-research`** → its input accepts an optional steer block; #3 scopes the fan-out.
 - **`post-event-content` / `weekly-recap` / `project-ideation`** → same intake at the top.
 

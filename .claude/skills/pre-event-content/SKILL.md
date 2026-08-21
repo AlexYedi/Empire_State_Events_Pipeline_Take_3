@@ -13,6 +13,7 @@ Content Drafts database.
 by the event-research skill). The skill reads from the brief — it does not do its own research.
 
 **Reference files (read before generating any content):**
+- `.claude/references/audience-north-star.md` — **top-level ethos**: mission (democratize access), embedded-expert-correspondent persona, the three floors (Receipts / HM-Activation / Anti-Goodhart), and the Learn-More Set. The style-guide + anti-patterns codify its operative rules.
 - `.claude/references/content-style-guide.md` — voice, tone, post architecture, audience, formatting
 - `.claude/references/content-anti-patterns.md` — words, phrases, and patterns to avoid
 - `.claude/references/outreach-templates.md` — **200-char connection request note patterns** (Patterns 1-3), anti-patterns, personalization rubric, character-count discipline
@@ -87,7 +88,7 @@ FOR EACH EVENT (set the table — tight):
     * The tension/open question that exists in the FIELD — attributed to the field, not
       to Alex, and left OPEN. ("The field is split — X has shown A; Y just bet on B.")
     * Then STOP. No verdict, no "here's what I'd ask," no editorial kicker.
-  - 1-2 sources/citations for the research behind the synopsis (so Alex can share deeper links)
+  - **Learn-More Set: 3–5 curated resources** (papers, company announcements, speaker writing, publications on the topics/tech/companies/people) → first comment; mandatory every post (see `content-style-guide.md` → The Learn-More Set)
 
 EVENTS PENDING (if any):
   - Brief mention of events Alex has applied to / hoping to attend
@@ -154,6 +155,7 @@ Present as inline options. Step 5 (autoresearch) will pick the strongest hook an
 
 ### Quality Checks
 - Exactly 2-3 data points from the research brief, with sources available if Alex wants to reference
+- **Learn-More Set: 3–5 curated resources → first comment/carousel** (mandatory every post; separate from the in-body data points — see `content-style-guide.md` → The Learn-More Set)
 - One clear insight or question that passes the expert-pause test
 - No words/patterns from the anti-patterns file
 - 2-5 relevant hashtags
