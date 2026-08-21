@@ -161,6 +161,12 @@ For each entity on a NEW/REFRESH path (plus SKIPs and the event series), pull pr
 knowledge, reusing the page URLs already captured in Step 1.5b. **Skip entities with no
 prior record** — they are pure-NEW, nothing to retrieve.
 
+**Capture source URLs while you retrieve (added 2026-08-21 — YED-136).** When a prior brief
+body, trend note, or Gmail thread carries a source link for a fact, keep the URL attached to that
+fact when you hand the raw pulls to the conditioner — it flows through the Prior-Context Pack's
+`[source · date · url]` tags into the Deep Read's endnotes. The render spike caught that dropping
+URLs here breaks citations three stages downstream.
+
 - **Notion** (`notion-fetch` on captured URLs; `notion-search` for the series/host — NOT
   `notion-query-data-sources`, which is plan-gated on Alex's plan):
   - Prior **Event** page bodies for the same series or overlapping people/companies — the
@@ -251,6 +257,18 @@ triage path, not by uniform depth.**
   Challenges, Use Cases, and Top Questions — those are reused from the existing record.
 
 Use web search aggressively — current information is the value.
+
+**Three research layers the Deep Read depends on (added 2026-08-21 — YED-136).** The specialists now
+gather three things beyond today's snapshot, because the Deep Read (Step 4.5) is prose that needs them:
+1. **Historical spine** — topic lineage (origin of the debate, prior approach, the inflection); company
+   founding-thesis → funding-arc → evolution → today; person career arc / how their POV formed. *Facts
+   and dates with sources*, not prose — the renderer writes the prose.
+2. **Novice on-ramp** — the *mechanism* behind key claims (how it actually works, in plain terms) + the
+   jargon a newcomer must know, named so the renderer can define it inline. Common, uncontested technical
+   background needs no citation; specific/recent/contestable claims (funding, CVE, metric, positioning) do.
+3. **A URL-carrying Evidence Ledger** per entity — every specific/recent/contestable claim as a row with
+   its `tier · source · url · date`. The Deep Read's endnotes are built **only** from these ledgers; a
+   claim with no row can't be cited downstream. Contract: the specialist agent files' "Evidence Ledger" section.
 
 **Verbatim source-text rule (added 2026-06-23 — fidelity fix).** The raw calendar `description` is the source of truth and must reach every research subagent UNCHANGED, quoted as a `VERBATIM SOURCE` block, with any parsed-entity list or framing presented *alongside* it (supplementary), never *instead of* it. Entity parsing is a lossy summary: it reliably captures names but drops talk-abstract wording, explicitly-named themes (e.g. "partnerships", "go-to-market strategy"), attendee-mix cues, agenda ordering, and timezone notes. A 2026-06-23 defect built an entire run's outputs off the summarized artifact alone — entities survived, nuance did not. Rule: read the full description, extract everything, and only then layer framing on top. Same discipline applies to the synthesizer (it receives the raw invite) and to any hole-check (diff outputs against the verbatim text, not the summary).
 
@@ -402,56 +420,48 @@ aim for, and what to pay attention to. No bullet points, no hedging. Three sente
 
 ---
 
-## Step 3: Present the Brief
+## Step 3: Present the Brief — the SCAN HEAD (ADR-5)
 
-Present all research in a structured format for Alex to review. Use this exact structure:
+The brief is **one artifact with two layers** (ADR-5 · `.claude/proposals/event-field-guide.md`): a **Scan head** (in-room, phone-glanceable) and a **Deep Read** (the prose commute read). **Step 3 presents and commits the Scan head. The Deep Read is rendered and appended later, in Step 4.5, decoupled — a render failure never blocks this.**
+
+The synthesizer returns two blocks: the **Scan head** and a `## Evidence Set` (URL-carrying, organized by render section). **Display only the Scan head to Alex** — the Evidence Set is internal fuel for Step 4.5, not brief content. Use this exact head structure:
 
 ```
 ## Event Research Brief: [Event Name]
 **Date:** [date] | **Location:** [location]
+*Scan head — the in-room layer. A prose Deep Read is appended after you approve (Step 4.5).*
 
 ### Quick Take
 [2–3 sentences: who this room is, why it matters for Alex, best angle to work it.
 Mobile-readable — this is the commute-scan summary.]
 
----
+### People at-a-glance
+[Per person — the 10-second resolution. Full career-arc prose lives in the Deep Read, NOT here:]
+#### [Name] — [Title, Company] ([Role])
+- *Who:* [one line]
+- *Personal hook:* [one concrete thing — not a generic compliment]
+- *Professional hook:* [one concrete thing tied to their work Alex can engage on]
+- *Signals:* Prioritize — [1–3] · De-prioritize — [0–2 or "None"] · Open on-site — [1–3 to learn live]
 
-### Topics
-[For each topic, organized by these dimensions:]
-#### [Topic Name]
-- **Current Events:** [dominant stories, trending developments, share-of-voice narratives]
-- **Opportunities:** [upsides, potential benefits, where momentum is flowing]
-- **Challenges:** [shortcomings, trade-offs, downsides, what's overhyped]
-- **Use Cases & Practical Applications:** [real-world deployments, enterprise examples, measurable impact]
-- **Top Questions:** [3 smart questions for conversation]
-
-### People
-[For each person, use this expanded per-person format:]
-#### [Name] — [Title, Company] ([Role: speaker / host / organizer / attendee])
-- **Known POV / Bio:** [what they're known for, public positioning]
-- **Recent activity:** [talks, posts, podcasts — last 6 months]
-- **Talking Points:**
-  - *Personal hook:* [one concrete thing — not a generic compliment]
-  - *Professional hook:* [one concrete thing tied to their work Alex can engage on]
-- **Prioritization Signals:**
-  - *Prioritize because:* [1–3 positive signals]
-  - *De-prioritize because:* [0–2 concerns, or "None"]
-  - *Open on-site:* [1–3 questions to learn live]
-
-### Companies
-[For each company: description, recent news, funding, relevance, headwinds]
-
-### Documentarian Angle
-[Narrative framing, unique perspectives, content angles]
+### Questions to ask
+[Consolidated from the research: topic Top Questions + per-person Open-on-site, de-duped and
+grouped. In-room questions only — NOT pre-event-content's outbound prepared questions.]
 
 ### Success Signals
 [3–5 concrete signals: what would make this event a win; include at least one anti-signal]
 
+### Verification Flags
+[Every unverified/unsourced/ambiguous item — mismatched domains, ambiguous identities,
+unsourced thesis/positioning claims. Surfaced here, never silently resolved.]
+
 ---
 
-**Ready to write this to Notion and HubSpot?**
+**This is the scan layer.** On approval I'll (1) write entities to Notion + HubSpot, then
+(2) render and append the prose **Deep Read** (~45-min commute read) beneath it.
 Any changes before I proceed?
 ```
+
+**What is NOT in the head:** the topic/company bullet lattice. That depth is now the **Deep Read** (Primer/Landscape + Companies), rendered in Step 4.5 from the Evidence Set. Putting the lattice in the head is the regression this design exists to remove. The Documentarian Angle also drops out of the head as a standalone section — it lives as the Quick Take's "best angle" line, and the full continuity narrative becomes the Deep Read's Cross-Event Threads.
 
 **Wait for Alex's approval.** He may want to:
 - Add or remove people/companies
@@ -698,11 +708,12 @@ whole point of the triage is that SKIP still links the existing record to this E
 Page body content: the full research brief from Step 3 (formatted in markdown), PLUS any
 "Prior [Company] snapshot" audit-trail blocks from 4b refresh paths.
 
-**Structure the Event page body with these top-level sections so the Step 7 retro can
-find and append cleanly:**
+**Structure the Event page body with these top-level sections so Step 4.5 and the Step 7 retro can
+find and append cleanly (ADR-5 two-layer brief):**
 - `## Quick Take` (2–3 sentence synthesis from 2f — first block, mobile-readable)
-- `## Research Brief` (topics, people with talking points + prioritization signals, companies, documentarian angle)
+- `## Research Brief` (the **Scan head** from Step 3: People at-a-glance, Questions to ask, Verification Flags — NOT the old topic/company lattice; that depth is the Deep Read)
 - `## Success Signals` (3–5 signals from 2e)
+- `## Deep Read` — **leave empty here with a `<!-- deep_read_rendered: pending -->` marker; Step 4.5 renders and appends the prose Deep Read under it, decoupled, after this write commits.** Never block the Step-4 commit waiting on it.
 - `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes — omit section if none)
 - `## Prior-Context Pack` (append-only mirror of the Step 1.7 pack, if one was produced — the readable side-by-side surface; the canonical copy is the `prior_context_pack` Content Draft from 1.7c. Omit section if this was a first-touch event with no prior context. Relink the `prior_context_pack` Content Draft's Event/People/Topics relations to this Event row here.)
 - `## Retro` — leave empty; Step 7 appends here after the event
@@ -725,8 +736,12 @@ find and append cleanly:**
 "Topics": ["[topic URL 1]", ...]                    — relation (JSON array)
 ```
 
-Page body content: the full research brief (same as Event page body — having it in both
-places means Alex can find it from either the Event or Content Drafts view).
+Page body content: the **Scan head** (same as the Event page's `## Research Brief` +
+`## Quick Take` + `## Success Signals` + `## Verification Flags`), plus an empty
+`## Deep Read` section carrying the `<!-- deep_read_rendered: pending -->` marker. Step 4.5
+appends the rendered prose Deep Read here too, so Alex gets the full two-layer artifact from
+either the Event or the Content Drafts view. Having it in both places means the content
+pipeline (`pre-event-content`, etc.) can read the one richer brief from Content Drafts.
 
 #### Re-run path (Event already exists — the corrections case, v1.2, YED-132)
 
@@ -756,6 +771,77 @@ After all pages are created/refreshed/skipped, report:
 > - Content Draft: research brief created
 >
 > All relations linked. [any issues to flag]
+
+---
+
+## Step 4.5: Render + append the Deep Read (ADR-5 — decoupled, additive)
+
+The Deep Read is the prose "commute read" half of the one brief. It is rendered **after** Step 4
+has committed the Scan head + entity records, and **appended** under the `## Deep Read` marker.
+This phase is **decoupled and non-blocking**: a render failure is a warning, never a pipeline
+failure — the Scan head, the entity records, and the content pipeline are already intact and
+depend on nothing here (ADR-5 Decision 3). Runs **in the parent thread** — the render dispatches
+and the Notion append both happen inline (MCP writes are parent-thread only;
+[[project_notion_writes_must_be_parent_thread]]).
+
+**Precondition (GATE):** Step 4 confirmed the Scan-head write (4g). If Step 4 didn't commit, do
+NOT render — fix Step 4 first. Never render into a page that doesn't exist yet.
+
+### 4.5a: Assemble render inputs
+
+From the synthesizer's `## Evidence Set` (organized by render section, URL-carrying) plus event
+meta, build the per-section evidence slices `field-guide-renderer` expects
+(`.claude/agents/content/field-guide-renderer.md`). Pass each renderer call:
+- **Mode:** `render-section: <section>`
+- **Event meta:** name, date, location, Alex's stated focus/goals, and how novice he is on this material.
+- **The evidence slice for that section** — the URL-tagged rows from the Evidence Set, tiers intact.
+- **The Scan head** (for consistency — the renderer must not contradict it).
+
+### 4.5b: Render section-by-section (one renderer call per section, in order)
+
+Dispatch `field-guide-renderer` (Opus) **once per section**, in this order, waiting for each:
+
+| # | Section | Skip when |
+|---|---|---|
+| 1 | The Frame | never (always render — it's the orientation) |
+| 2 | Primer / Landscape | no topics researched |
+| 3 | Companies | no companies researched |
+| 4 | People | no people researched (all SKIP / none named) |
+| 5 | Cross-Event Threads | first-touch event / no Continuity Ledger |
+
+**Never ask the renderer to write the whole Deep Read in one call** — it collapses in the back
+half (renderer contract). One section per call. If a section's evidence slice is thin, the
+renderer's anti-padding gate makes it write 2–3 honest sentences and stop — that's correct, not
+a failure. If a renderer call returns a `> Gap:` note (e.g. a `web-verified` fact missing its
+URL), keep it in the output and surface it to Alex; it flags a URL to attach before public reuse.
+
+### 4.5c: Stitch
+
+Dispatch `field-guide-renderer` in **`stitch`** mode with all rendered sections in order. It adds
+the "how to read this" opener, smooths transitions into one voice, and consolidates endnotes into
+one numbered list — **without adding, changing, or removing any fact or citation.** The result is
+the final Deep Read.
+
+### 4.5d: Append under the marker (parent-inline, idempotent)
+
+Replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content
+Draft with the stitched Deep Read, and flip the marker `<!-- deep_read_rendered: pending -->` →
+`<!-- deep_read_rendered: [YYYY-MM-DD] -->`. Everything else on the page stays append-only; only
+this one marked section is replaced (idempotent — a re-run replaces just the Deep Read).
+
+- Use `notion-update-page` with **real newlines**, not `\n` escapes (gotcha m /
+  [[project_notion_updatepage_newline_gotcha]]).
+- The `## Deep Read` body reads cleanly aloud (endnotes, no inline URLs) — it's the substrate for
+  a later audio step and for `pre-event-content`.
+
+### 4.5e: Confirm (or warn)
+
+> **Deep Read appended:** [N sections rendered · M skipped (reason) · ~W words] — Event page + Content Draft updated.
+> [Any `> Gap:` notes: e.g. "Primer endnote [5] missing URL — attach before public reuse."]
+
+If the render phase failed entirely, report it as a **warning** and leave the marker `pending`:
+> ⚠️ **Deep Read not rendered** — [reason]. The Scan head + all entity records committed fine and
+> the content pipeline is unaffected. Re-run just Step 4.5 to append the Deep Read (idempotent).
 
 ---
 

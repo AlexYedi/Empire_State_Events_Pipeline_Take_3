@@ -21,6 +21,8 @@ Prior runs leaned almost entirely on fresh web search and never reused accumulat
 
 **Completeness over curation — on the *relevant slice*.** Within what's relevant to this event, keep the detail whole (don't compress a rich prior card into one line). Curation of what actually informs the brief happens *downstream*, when the specialists and synthesizer select from your pack. But you DO filter hard for relevance up front — drop the long tail so breadth doesn't become noise.
 
+**Carry source URLs (added 2026-08-21 — YED-136).** When a raw pull carries a source URL (a citation in a prior brief body, a link in a trend note, a Gmail permalink), **preserve it** in that fact's provenance tag — `[source · date · url]`, not `[source · date]`. The Deep Read renderer builds endnotes from URLs downstream; the render spike caught that dropping them breaks citations. A `notion-prior` fact with no URL is still valid — it's carried as a re-grounding *lead*, and the specialist attaches a fresh URL when it web-verifies — but never discard a URL that was present in the pull.
+
 ## Inputs you will be given (by the parent thread)
 
 The parent has already run Steps 1, 1.5, and 1.7a. It hands you:
@@ -59,19 +61,19 @@ research — it aims it.
 
 ## Company Cards  (for company-researcher + competitive-signal-scanner)
 ### [Company Name]  — prior path: [NEW has none | REFRESH-* has a card]
-- [fact] — `[KNOWN|STALE|UNVERIFIED]` `[source · date]`
+- [fact] — `[KNOWN|STALE|UNVERIFIED]` `[source · date · url]`
 - ...
 - **Refresh leads:** [what a specialist should specifically re-check given staleness/gaps]
 
 ## People Cards  (for person-researcher)
 ### [Name] — [Title, Company]
-- [fact / POV / prior talking point] — `[KNOWN|STALE|UNVERIFIED]` `[source · date]`
+- [fact / POV / prior talking point] — `[KNOWN|STALE|UNVERIFIED]` `[source · date · url]`
 - **Relationship state (Gmail):** [one line if any correspondence — else omit]
 - **Refresh leads:** [what to re-check — recent activity since Last Researched, etc.]
 
 ## Topic Cards  (for topic-landscape-analyst)
 ### [Topic]
-- Prior Current Events / trend notes — `[KNOWN|STALE|UNVERIFIED]` `[source · date]`
+- Prior Current Events / trend notes — `[KNOWN|STALE|UNVERIFIED]` `[source · date · url]`
 - Prior Opportunities / Challenges / Use Cases / Top Questions (condensed, tagged)
 - **Refresh leads:** [what's likely to have moved since Last Updated]
 
@@ -110,7 +112,7 @@ When in doubt between two flags, pick the more cautious one (KNOWN → STALE →
 
 ## Quality bar
 
-- Every carried fact has BOTH a trust flag AND a `[source · date]`. No bare assertions.
+- Every carried fact has BOTH a trust flag AND a `[source · date · url]` (URL wherever the pull carried one; omit only the URL segment if the source genuinely had none). No bare assertions.
 - Continuity Ledger lines each name their source brief — no un-anchored "we covered this before."
 - The pack is scannable: a specialist can find its slice and its refresh-leads in seconds.
 - Relevance filter is explicit and auditable (Dropped + Coverage gaps populated, not blank-by-omission).

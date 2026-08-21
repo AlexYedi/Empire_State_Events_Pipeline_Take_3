@@ -15,11 +15,11 @@ the concrete path to dropping "provisional." This spec is the design; build foll
 - Why Gemini Pro not Flash-Lite: free tier on this key = Flash-Lite only (too weak → noisy disagreements). Billing enabled 2026-07-17; Pro is the quality independent seat. Cost is negligible at judge volume.
 
 ## Scoped quorum (not naïve 50/50)
-Both judges score all 5 `build-quality@3` criteria, BUT their votes are **weighted by domain competence**:
+Both judges score all 5 `build-quality@4` criteria, BUT their votes are **weighted by domain competence**:
 - **Provider-neutral criteria** (`correctness`, `completeness`) — Gemini's independent read carries full weight; this is where cross-provider catches Claude's blind spots.
 - **House-specific criteria** (`convention_adherence`, `anti_pattern_avoidance`) — Claude (Sonnet) retains primary judgment; Gemini lacks native Empire-State context (notion-search vs notion-query-data-sources, SDK subagent constraint, tombstoned decisions) unless heavily briefed. Gemini's vote here is advisory only.
 - `diagnostics` — shared.
-Gemini gets the SAME `judge-system.md` + `build-quality@3` + per-artifact spec/context the Claude judge gets (apples-to-apples), plus a house-context primer for the convention criteria.
+Gemini gets the SAME `judge-system.md` + `build-quality@4` + per-artifact spec/context the Claude judge gets (apples-to-apples), plus a house-context primer for the convention criteria. For `deep_read` artifacts it also runs `density-check.sh` and gets the density signal (a flag, not a hard cap — the model judges padding vs. legitimate on-ramp).
 
 ## Quorum resolution (no model tiebreak — it would be circular)
 A disputant cannot adjudicate its own disagreement, and we have no genuinely-independent *third* provider. So:
