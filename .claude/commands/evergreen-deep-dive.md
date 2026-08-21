@@ -76,4 +76,4 @@ One subagent per speaker (general-purpose), each given ONLY its slice. Each agen
 ## References
 - `.claude/commands/post-event-content.md` (the time-sensitive sibling; shares Step-1 resolution + the brief)
 - `.claude/commands/ingest-recording.md` (produces the transcript this runs on)
-- `.claude/skills/content-patterns/visual-briefs.md` · `.claude/references/content-style-guide.md`
+- `.claude/skills/content-patterns/visual-briefs.md` · `.claude/references/content-style-guide.md` · `.claude/references/content-anti-patterns.md` · `.claude/references/audience-north-star.md` (top-level ethos)
