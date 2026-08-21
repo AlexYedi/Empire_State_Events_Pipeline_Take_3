@@ -13,7 +13,7 @@ Five tone pillars — use all five together. They reinforce each other:
 2. **Commercially aware, not salesy** — Understand the business context. Never pitch.
 3. **Informed, not lecturing** — Share what you've learned. Never explain down.
 4. **Opinionated but open to being wrong** — Take a position. Invite correction.
-5. **Documentarian, not influencer** — Capture what happened, what it means, and why it matters. Never make it about you.
+5. **Documentarian, not influencer** — Capture what happened, what it means, and why it matters. **Always lead with the audience and the subject** — and bring yourself in wherever it *adds value*: your analysis, your perspective, or a unique point of view derived from what you've learned, built, or experienced — through events, interactions, or the **intersections where they converge**. The rule isn't "never about you"; it's **never about you at the audience's expense.** Self in service, not performance. *(This is the counterweight — see the Audience-First North-Star section below.)*
 
 **Predictions vs. stances (added 2026-05-26):** Soften *predictions about event content* — frame what you expect an event to be about as curiosity or hypothesis ("I was curious going in," "I expected," "the question I brought in"), never a cocky "I predicted." But never soften *stances on subjects, topics, or analysis* — take the bold, contrarian, or definitive position on the substance. The hedge is only for guesses about what an event will contain, used as a narrative starting point.
 
@@ -33,6 +33,19 @@ Five tone pillars — use all five together. They reinforce each other:
 **The test before shipping any viewpoint:** *can this same piece also carry the context and analysis that earns it?* If the format has no room for that, cut the viewpoint and surface the tension neutrally instead.
 
 **Decenter the self — curator, not protagonist (added 2026-05-30).** The subject of a post is the events, topics, and tensions — **not Alex.** First-person "I/me" that centers Alex ("seven rooms on *my* calendar," "here's what *I'm* walking into") reads as a thinly-veiled personal brag and undercuts the documentarian frame (pillar 5). Lead with the field and the abundance; position Alex as the curator pointing at what's worth watching. The "I" that survives is the curator's, not the brand-builder's. Model: *"Hundreds of events for NYC Tech Week — the seven worth watching are…"* (subject = the events; the "I" is incidental). When you catch an "I/me" that centers Alex rather than the content, cut or recast it.
+
+## Audience-First North-Star (why · who · the counterweight)
+
+**Why the content exists — democratize access.** Bring NYC AI/tech's rooms, people, and ideas to those locked out by geography, schedule, approval gates, or life circumstance. **The audience is served first.** Full canonical spec: `.claude/references/audience-north-star.md` — every content skill imports it as its top-level ethos.
+
+**Persona — embedded expert correspondent.** In the room (**witness**) → generous (**audience-first**) → analytically authoritative (connects what's said to prior coverage, Alex's own work, and current news; points to where to go deeper).
+
+**The counterweight to every decenter-self rule — audience-first is an *ordering*, NOT an *erasure*.** The decenter-self, stance-license, and never-lead-with-"I" rules mean *the audience comes before Alex* — they do **not** mean *erase Alex*. He is present, named, and opinionated wherever his presence, access, judgment, or insight **is** the value. **Attribution follows value: when the call is his and it's right, he claims it plainly, with conviction.** Humble in *priority* (audience first), never in *false modesty* about what he knows. **"Self in service, not self in subtraction"** — a post can be heavily Alex and still be audience-first, as long as it serves the reader rather than performs for them.
+
+**The three floors (non-negotiable, every post):**
+1. **Receipts** — ≥1 detail only possible from physically being there (a fragment of real dialogue, a room reaction, a slide that wasn't online). Architectural, not a brag. *A post that could have been written from a recap fails this floor.*
+2. **Hiring-Manager Activation** — one variant per post carries an explicit commercial-judgment angle. The search is active now; this is an output, not a hope.
+3. **Anti-Goodhart** — "resonance" is defined before it's measured and is NOT default LinkedIn engagement. Target signal: someone outside the room used something specific Alex surfaced.
 
 ## Post Architecture
 
@@ -62,6 +75,8 @@ CTA (varies by content type) — See Content Type CTAs below.
 | Pre-Event Post | Educational reminder + "If you're deep into this subject, what are you most looking forward to learning/hearing about?" |
 | Post-Event Recap | No CTA. Pure documentarian. Let the content speak. |
 
+**The close is the self-trap.** The ending is where self-credentialing and self-flagellation sneak back in even when the body is clean. Do NOT end on a verdict you'll deliver ("what I'll be testing," "the real version not the demo") or a credential ("I've been doing this since X"). End on the open questions, defer to the experts about to answer them, and offer to share where **they** land. **Curiosity + deference + service — never verdict + credential.**
+
 ## Data Points
 
 - Pull in **at least 2, no more than 3** specific stats/facts/data points per post
@@ -88,6 +103,15 @@ CTA (varies by content type) — See Content Type CTAs below.
 - **Sources/resources do NOT go inline in the post body.** A trailing sources/citations block is the most common thing that pushes a post over the cap. Put source links in the **first comment** (preferred) or carry them on the **carousel** — never let them blow the post budget. (This was a real cut Alex had to make by hand — design it out.)
 - **When over budget, cut in this order:** the inline sources/resources block → repeated data points (keep 2–3 max) → throat-clearing preamble → any line the carousel already carries visually → adjective trimming.
 - **State the count on hand-off.** When presenting any LinkedIn post for review, show its character count (e.g. "1,420 / 3,000") so Alex sees at a glance it's ship-ready.
+
+## The Learn-More Set (mandatory — every post)
+
+**3–5 "learn more" resources every post.** Every post ships with a curated set of **3–5 resources** — the key paper, the company's own announcement, a speaker's talk or writing, the publication/newsletter on the topic — spanning the post's topics, tech, companies, and people. This is the persona's *"points to where to go deeper"* and the mission's *"democratize access"* made concrete: the post delivers the translated insight; the set hands the curious reader the door to go further.
+
+- **Placement: first comment (preferred) or the carousel — NEVER crammed into the post body.** Inline sources are the #1 thing that blows the char cap and dilute the post; keeping them out preserves the post's value while adding value for the subset who want more.
+- **Especially valuable when a post runs short** — a tight post + a rich learn-more set delivers full value without padding the body.
+- **Reach mechanic:** name the people and publications (per the name-people ethos); Alex can @-mention sources manually where it may pull their engagement/reach (tagging doesn't auto-translate across platforms — he formats by hand).
+- **Real and verified only** — every resource is a genuine, checkable source (no fabricated links/titles); firm/person thesis claims obey CLAUDE.md rule #12 (primary-source citation before public use).
 
 ## DM Structure
 
@@ -121,6 +145,8 @@ The single most important test for every piece of content:
 > that would make an expert pause, appreciate the thought behind it, and want to engage?**
 
 If not, it's not ready. Succinct, not trying to do too much, but nailing the one thing.
+
+**The Substance / Insight Floor.** Every post must hand a non-attendee real informational value — the field's current state, what's *materially changing*, the live tension, the numbers — **translated from the research, not left in the brief.** A hook + a couple of name-drops + a question is a failure, not a post. The rich topic/signal research IS the gift; mine the top 3–5 insights and hand them over. **Denser with value, not shorter** — audience-first ≠ light. *Reconciled with the character budget:* the post stays within the 3,000-char cap (sweet spot 1,300–1,900); density comes from translating the single, robust deep-research brief into the body, not from exceeding the cap. Depth the post can't hold is served by the internal brief + the Learn-More Set (below), not by a separate published long-form tier.
 
 ## "So What?" Self-Critique
 
@@ -310,7 +336,8 @@ Two lanes, and **neither is a constrained app that re-interprets your content** 
 
 ---
 
-*Last updated: 2026-08-07*
+*Last updated: 2026-08-21*
+*Version: 0.8 — Codified the Audience-First North-Star (YED-103) into production: mission + embedded-expert-correspondent persona + the ordering-not-erasure counterweight to decenter-self (incl. softening Tone Pillar 5 from "never make it about you" → "never about you at the audience's expense; bring yourself in where it adds value / analysis / unique POV, incl. cross-event convergence"), the three floors (Receipts / HM-Activation / Anti-Goodhart), the Substance/Insight Floor (density via translating the single robust deep-research brief, within the char cap), the Learn-More Set (3–5 citations every post, first comment/carousel), and the close-is-the-self-trap rule. Wires the north-star into the files the skills read. See `audience-north-star.md`.*
 *Version: 0.7 — Gamma REMOVED as visual generator. Claude design (self-contained HTML/SVG via Artifact tool) is now the default for structured/label-dense visuals; Gemini for pictorial imagery; Canva vestigial. Updated the Tool Selection table + Workflow. See CLAUDE.md rule #13 + `content-patterns/visual-briefs.md`. Proof: AI Demo Night consolidation carousel.*
 *Version: 0.6 — Added the Opener rule (never lead an event post with "I"; lead with topic / headline-stat / host-company / people / NYC-AI-ecosystem). First-line enforcement of decenter-self. See memory `feedback-no-i-led-openers-2026-08-07`.*
 *Version: 0.5 — Added (1) the stance-license rule (a viewpoint must be earned with space/presence/expertise; hot takes in synopses add zero value) and (2) the decenter-self / curator-not-protagonist rule, from the Upcoming Week post review (NYC Tech Week roundup). These refine — not replace — the bold-stance rule: stance is deferred to formats with room for context + analysis (post-event, deep posts), and grows with Alex's expertise. See memory `feedback-upcoming-week-stance-and-self-2026-05-30`.*
