@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-refs.sh — deterministic dangling-reference check for the build-quality judge.
 # Extracts load-bearing repo-relative file references from a build artifact and reports which do NOT exist.
-# Mechanizes the build-quality@3 dangling-reference cap (models under-apply it — bf17). CONSERVATIVE by design:
+# Mechanizes the build-quality@4 dangling-reference cap (models under-apply it — bf17). CONSERVATIVE by design:
 # only flags clearly path-shaped `.claude/…` (and `~/.claude/…`) tokens, and SKIPS any reference whose surrounding
 # non-whitespace run contains a glob (`*`), an angle-bracket `<placeholder>`, an ellipsis (`...`/`…`), or a URL
 # (`://`) — so a false "dangling" never wrongly caps a good artifact. It errs toward under-flagging (safe): if a
