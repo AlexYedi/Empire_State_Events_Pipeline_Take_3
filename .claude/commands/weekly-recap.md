@@ -80,5 +80,5 @@ When ready, this becomes a candidate for:
 - `.claude/skills/pre-event-content/SKILL.md` — existing skill that builds The Upcoming Week
 - `.claude/skills/pattern-synthesis/SKILL.md` — existing two-thesis synthesis
 - `.claude/skills/content-patterns/two-thesis-synthesis.md` — pattern definition (per CLAUDE.md)
-- `.claude/references/content-style-guide.md` — voice + audience
+- `.claude/references/content-style-guide.md` — voice + audience · `.claude/references/audience-north-star.md` — top-level ethos (mission, persona, three floors, Learn-More Set)
 - CLAUDE.md § Phase 2 cadence rules (max 1 synthesis post/week)
