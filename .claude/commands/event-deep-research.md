@@ -9,9 +9,10 @@ Run the full event research pipeline using multi-agent fan-out **from the parent
 
 **Input:** pasted calendar invite text (or invite + Alex's natural-language context like "Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI").
 
-**Output:**
-- A research brief presented in conversation for Alex's review
+**Output (ADR-5 — one artifact, two layers):**
+- The **Scan head** of the research brief presented in conversation for Alex's review (in-room layer: Quick Take · People at-a-glance · Questions to ask · Success Signals · Verification Flags)
 - Once approved → all 5 Notion DBs written (Companies, Topics, People, Events, Content Drafts) + HubSpot CRM (Companies, Contacts with associations, Notes)
+- Then, **decoupled and additive**, the prose **Deep Read** (~45-min commute read) is rendered section-by-section by `field-guide-renderer` (Opus) and **appended** beneath the Scan head on the Event page + `research_brief` Content Draft. A render failure never blocks the pipeline.
 
 ---
 
@@ -70,6 +71,8 @@ For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block fr
 
 **Mandatory (fidelity fix, 2026-06-23):** the verbatim description is item (1) for a reason — it goes in EVERY specialist dispatch, ahead of the entity list. Do NOT paraphrase it into the prompt and drop the original. If the parent only hands subagents the summarized entity list, the run repeats the defect where talk-abstract nuance and named-but-unsummarized themes never reach research. The Step 2.5 synthesizer also receives the raw invite — keep that.
 
+**Return contract (added 2026-08-21 — YED-136):** each specialist now returns, alongside its prose blocks, (a) a **historical spine** (topic lineage / company founding→funding→evolution arc / person career arc — facts + dates), (b) **mechanism + jargon** material for the novice on-ramp, and (c) a per-entity **Evidence Ledger** — every specific/recent/contestable claim as a `tier · source · url · date` row. These feed the Deep Read render loop (Step 4.5); the URLs are mandatory for `web-verified` rows (the spike caught that missing URLs break endnotes). Preserve them when handing returns to the synthesizer.
+
 Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
 
 ## Step 2.5 — Synthesis (delegated to event-research-synthesizer)
@@ -84,14 +87,14 @@ prompt: [event invite + triage plan + Alex's stated focus + all 4 specialist ret
 The synthesizer:
 1. Reconciles cross-references (signal-scanner findings vs. company-researcher findings)
 2. Surfaces verification flags from specialists (mismatched domains, ambiguous identities)
-3. Writes Quick Take, Success Signals, Documentarian Angle
-4. Formats final brief in the schema from event-research SKILL.md Step 3
+3. Writes Quick Take, Success Signals, and assembles the **Scan head** (Quick Take · People at-a-glance · Questions to ask · Success Signals · Verification Flags) per event-research SKILL.md Step 3 — **NOT** the old topic/company lattice
+4. Emits a `## Evidence Set` — URL-carrying, organized by Deep-Read render section — as internal fuel for Step 4.5 (do NOT display it to Alex as brief content)
 
-The synthesizer returns the assembled brief as text. **No Notion / HubSpot writes happen yet.**
+The synthesizer returns **two blocks** (Scan head + Evidence Set) as text. **No Notion / HubSpot writes happen yet.** Hold the Evidence Set for Step 4.5 — preserve its URLs.
 
 ## Step 3 — Present brief for Alex review
 
-Display the brief from the synthesizer. Wait for Alex's approval.
+Display **only the Scan head** from the synthesizer (the Evidence Set is internal — keep it for Step 4.5). Wait for Alex's approval.
 
 Alex may request:
 - Add or remove people / companies → restart from Step 1 with adjusted entity list
@@ -117,7 +120,19 @@ notion-writer executes Steps 4a–4g of `.claude/skills/event-research/SKILL.md`
 - Event (uses People + Companies + Topics URLs) → capture URL
 - Content Draft "[Event Name] — Research Brief" (uses Event URL)
 
-Returns the confirmation block from Step 4g.
+Returns the confirmation block from Step 4g. The Event page + `research_brief` Content Draft now hold the **Scan head** plus an empty `## Deep Read` section carrying `<!-- deep_read_rendered: pending -->` — Step 4.5 fills it.
+
+## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)
+
+**Only after Step 4 committed the Scan head (4g).** Run **Step 4.5 of `.claude/skills/event-research/SKILL.md`** in this conversation (the render dispatches and the Notion append both happen here — MCP writes are parent-thread only). This phase is **non-blocking**: a render failure is a warning, never a pipeline failure — the Scan head + entity records are already committed.
+
+1. **Assemble slices (4.5a)** from the synthesizer's `## Evidence Set` (held from Step 2.5) — one URL-carrying evidence slice per Deep-Read section + event meta + Alex's focus + novice level.
+2. **Render section-by-section (4.5b)** — dispatch `field-guide-renderer` (Opus) **once per section**, in order: The Frame → Primer/Landscape → Companies → People → Cross-Event Threads. Skip a section whose evidence slice is empty (no people → skip People; first-touch → skip Cross-Event Threads). **One section per call** — never ask for the whole Deep Read at once. Surface any `> Gap:` notes the renderer flags.
+3. **Stitch (4.5c)** — dispatch `field-guide-renderer` in `stitch` mode with all rendered sections → the final Deep Read (opener + smoothed transitions + consolidated endnotes; no fact/citation added or removed).
+4. **Append (4.5d)** — inline `notion-update-page` (real newlines, gotcha m): replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content Draft with the stitched Deep Read; flip the marker to `<!-- deep_read_rendered: [today] -->`. Idempotent — a re-run replaces only that section.
+5. **Confirm / warn (4.5e).** On total render failure, warn and leave the marker `pending`; offer to re-run just Step 4.5.
+
+**Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
 ## Step 5 — HubSpot writes (this conversation)
 
@@ -157,6 +172,8 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 - **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
 - **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per CLAUDE.md gotcha (e), verify with notion-fetch on the data_source URL if it persists.
 - **notion-writer fails with "Prompt is too long"** — its `tools:` whitelist may have drifted to inherit too much. Verify `.claude/agents/ops/notion-writer.md` frontmatter still scopes `tools:` to Notion MCP + Read only.
+- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending`, and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section.
+- **A `field-guide-renderer` call returns a `> Gap:` note** (e.g. a `web-verified` fact missing its URL) — keep it in the output, surface it to Alex; it marks a citation to complete before public reuse. Trace it back to the specialist's Evidence Ledger / Step 1.7 URL capture.
 
 ## Why fan-out runs in the parent thread (architectural note)
 
@@ -169,6 +186,8 @@ A previous version of this pipeline used an `event-research-orchestrator` subage
 The orchestration shape is defined here. The actual research / write methodology is in:
 - `.claude/skills/event-research/SKILL.md` — full 7-step methodology (parse → triage → research → present → Notion writes → HubSpot writes → retro)
 - `.claude/agents/research/event-research-synthesizer.md` — synthesizer contract (text-in, brief-out)
-- `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts
+- `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts (now w/ historical spine + novice on-ramp + Evidence Ledger)
+- `.claude/agents/content/field-guide-renderer.md` — Deep Read renderer contract (Opus, section-by-section + stitch, endnotes)
 - `.claude/agents/ops/notion-writer.md` — Notion write contract
+- `docs/adr/ADR-5-event-field-guide.md` + `.claude/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
 - `CLAUDE.md` § Project Architecture — Notion/HubSpot schemas, write order, gotchas, SDK constraints

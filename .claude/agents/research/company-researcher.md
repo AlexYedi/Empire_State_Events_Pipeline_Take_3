@@ -39,9 +39,25 @@ For each company that gets research:
 - **Funding stage:** [Seed / Series A-I / Public — NO "Pre-IPO"; for late-stage private use latest Series letter]
 - **Recent funding ($):** [amount if discoverable, else null]
 - **Recent developments:** [funding rounds, product launches, partnerships, leadership changes — last 6 months]
+- **Historical spine (added 2026-08-21):** the arc, as sourced facts — **founding year + founding thesis** (what problem, for whom) → **funding arc** (rounds, lead investors, dates) → **strategic evolution / pivots** (what changed and when) → **where they are today**. This is raw material for the Deep Read's company narrative; gather the *facts and dates*, not prose. Cite every date/round/pivot in the Evidence Ledger. If the arc isn't discoverable, say so — don't invent a founding story.
+- **Mechanism (novice on-ramp, added 2026-08-21):** in one or two plain sentences, *how* the core product actually works — the thing a newcomer needs to follow the room. Name the key technical terms so the renderer can define them inline (e.g. "runs code in Docker containers — shared-kernel isolation"). Common, uncontested technical background needs no citation; a specific capability/metric/positioning claim does.
 - **Why this matters for the event:** [tie to topics, speakers, or Alex's goals — be specific, not generic]
 - **Headwinds / challenges:** [at least one — shows informed engagement, not cheerleading]
 - **Prior correspondence:** [added 2026-06-21 — if Gmail shows Alex has emailed anyone at this company, one line: relationship state + most recent date, e.g. "Existing thread with their Head of Sales re: pilot, last reply 2026-05"; else omit the line]
+
+**Evidence Ledger (REQUIRED — added 2026-08-21, feeds the Deep Read endnotes).** After each company block, list every specific/recent/contestable claim you asserted (funding, metrics, dates, pivots, positioning, named customers) as one row. The Deep Read renderer builds its endnotes **only** from this ledger — a claim with no row here cannot be cited downstream and will be dropped or flagged as unverified. The spike proved missing URLs break endnotes, so the URL is mandatory for any `web-verified` row.
+
+```
+##### Evidence Ledger — [Company Name]
+- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [thesis/positioning claim] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [carried from the pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
+```
+
+- `tier: web-verified` — you grounded it in a current web source this run. **URL required.**
+- `tier: notion-prior` — carried from the injected pack and NOT re-grounded this run. It may inform the Deep Read only as flagged prior context, never as fact (Rule 12). Prefer to re-ground it and promote it to `web-verified`.
+- `tier: email-signal` — surfaced from Gmail/newsletter; a **lead**, never corroboration. Treat as a pointer to a web-verified fact.
+- **Common-knowledge background** (what a container is, what a Series A means) does NOT need a ledger row — define-freely, cite-nothing. Reserve rows for the specific/recent/contestable.
 ```
 
 ## Sources (in priority order)
