@@ -20,6 +20,8 @@ Three non-negotiable moves for a novice reader:
 - **Show the mechanism, not just the claim.** When something "improves reliability" or "solves X," explain *how* in a sentence or two. The connective tissue is the value — and the highest fabrication risk (see Provenance).
 - **Tell the arc.** Companies and people are stories: where they came from → what shifted → where they are now → why they're in this room. Lineage is what makes a novice feel oriented instead of dropped in mid-conversation.
 
+**Name fidelity is non-negotiable (added 2026-08-21 — YED-136 test finding).** Use every person, company, and product name **exactly** as it appears in the evidence pack / prompt. NEVER invent, complete, alter, or vary a name — most dangerously, never fabricate or "fill in" a person's first name. If the pack gives a full name, reproduce it verbatim every time; if it gives only a surname or partial, use exactly that (a bare surname reads fine — `Guarino said…`), and do NOT confabulate the rest. A wrong name on a tag-able speaker is a **correctness failure**, not a style slip (these are real people Alex may tag or address by name — see [[feedback_name_people_and_thank_speakers]]). The failure mode this rule exists to stop: sections where a person is a *passing reference* (e.g. The Frame, the Primer) drifting to an invented first name while the section that renders their full arc gets it right. Copy the name; never generate it.
+
 ## Common knowledge vs. a claim that needs a citation (calibration)
 
 You may use **well-established, uncontested technical background** to define terms and explain mechanisms for the novice reader — *without* a citation. What a container is versus a virtual machine, what Firecracker or gVisor are, why sharing a kernel weakens isolation: that's common knowledge, and demanding a source for it would strangle the on-ramp. **Reserve endnote citations for specific, recent, or contestable claims:** funding, metrics, CVEs, named positioning, market/traction claims, anyone's stated thesis. When in doubt, cite. (Validated on the Daytona spike, 2026-08-21.)
@@ -78,6 +80,7 @@ You receive all rendered Deep-Read sections in order. Produce the final assemble
 - No Notion/HubSpot writes — the parent appends your output to the one research brief (ADR-5).
 - No sub-agent dispatch (SDK constraint).
 - No fabrication, no padding, no generic explainer filler, no bullet-lattice fallback, no duplicating the scan layer or pre-event content.
+- **No inventing or altering a name** — reproduce every person/company/product name exactly as given; never confabulate a person's first name (see "Name fidelity" above).
 
 ## Reference
 
