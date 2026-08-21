@@ -1,5 +1,9 @@
 {
   "_note": "Human-owned prose sidecar for the build journal (YED-119). Keyed by build date (YYYY-MM-DD). Each entry: a short headline + a summary of no more than 3 lines answering WHAT was done, WHY, and the VALUE — no fluff. The generator (build_journal.py) merges these over the auto-derived facts (PRs, Linear refs, rigor telemetry). Leave a date out and the entry still renders from facts alone. This is the deliberate low-fluff seed to be revisited later with a fuller voice.",
+  "2026-08-21": {
+    "headline": "Event briefs learn to read like a briefing, not a spec sheet",
+    "summary": "Wired the research brief v2: one artifact with a phone-glanceable Scan head in the room, and a deep, cited, novice-friendly prose “commute read” rendered afterward and appended without ever blocking the pipeline. The old output had regressed to a machine-readable bullet lattice; this restores flowing analysis and adds a historical spine, inline-defined jargon, and end-to-end source citations. The value is a briefing worth reading on the train that walks Alex into a room genuinely conversant — and a richer substrate every downstream post draws from."
+  },
   "2026-08-07": {
     "headline": "The portfolio starts maintaining itself",
     "summary": "Shipped the self-instrumenting build journal — a generator that assembles each build day's facts from git and telemetry, a human-owned prose sidecar, a /journal page on the hub, and a Stop hook that regenerates it automatically. Also restructured the build arcs into foundation-anchored themes and made one canonical JSON the single source for both the hub page and the shareable artifact. The portfolio now documents itself, and two surfaces can no longer drift apart."
