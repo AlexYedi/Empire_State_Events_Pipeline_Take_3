@@ -92,6 +92,25 @@ Only prompt if Step 1 had disambiguation (multiple or no Notion matches). Otherw
    Proceeding to condition + draft. [y / change / cancel]
 ```
 
+### Step 3.4 — Detect event format (showcase branch)
+
+Before conditioning, classify the event format from the transcript + event name:
+
+- **Founder / Startup Showcase** — multiple founders pitch back-to-back, a QR/opt-in
+  intro mechanic (named series: **The Shortlist**). If detected, apply the
+  **`.claude/skills/content-patterns/founder-showcase.md`** style throughout:
+  **establish the showcase FOCUS first** (hiring / product-launch / funding / mixed —
+  ask Alex to clarify the purpose if ambiguous; it drives everything downstream);
+  Step 3.7's brief becomes the **per-company 6-dimension breakdown**; Step 4's content-correspondent
+  produces the **showcase recap** (**every company referenced — none dropped**) **+ one-slide-per-company
+  carousel** (not a single-thesis room report) **+ a focus-driven first comment** (one verified
+  reference link per company — careers pages if hiring, launch/blog/feature pages if product, etc.);
+  the contact-extraction pass captures **founders + explicitly called-out teammates in the crowd**
+  → CRM + an **Apollo enrichment CSV**. Enforce the showcase sensitivities: **confidential "stays in
+  the room" funding is never published**, and **garbled transcript names are web-verified before any
+  public/CRM use** (fan out one `company-researcher` per company).
+- **Standard** (talk / panel / roundtable / demo) — proceed with the normal flow below.
+
 ## Step 3.5 — Condition the transcript (`transcript-conditioning`)
 
 Before drafting, condition the transcript so speaker labels and proper nouns can be trusted in public copy. Diarization splits on pauses, not identity, and ASR mangles proper nouns (Vercel → "Purcell", Mahan → "vahan", MCP → "FCP") — quoting that raw misattributes lines and prints garbled names. Invoke the `transcript-conditioning` skill with:
