@@ -16,6 +16,7 @@ Takes a transcript Alex uploads/pastes from his own recording of an attended eve
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
 - **Knowledge-graph write-back** (Step 3.8) — People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event.
 - **LinkedIn post(s) + visual carousel brief → Gamma** (Step 4). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
+- **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `.claude/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
 
 ---
@@ -266,6 +267,53 @@ Each draft becomes one Content Drafts row with:
 - `Event` relation = Notion Event URL
 - `People` relation = matched People DB rows for each bucketed contact
 
+## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
+
+**Spec + rationale:** `.claude/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md **Rule 6** (prefer create over update), **Rules 10/11** (dedup-search before create), and **HubSpot Write Orchestration** (Company → Contact + association → Note).
+
+**Topology (hard rule):** all HubSpot writes happen **in the parent thread** — the HubSpot MCP is unavailable inside subagents, and the confirmation table must render inline (memory `project_notion_writes_must_be_parent_thread`).
+
+### 5.5a — Build the candidate list (selective — default is exclusion)
+A person qualifies for a HubSpot write **only if one holds**:
+- Alex **actually spoke with them** in the room (`People & Outreach State` → spoke? = yes), OR
+- they are an **opt-in outreach target** (named in Step 4), OR
+- they are a **deliberate pipeline / job-search target** (e.g. a hiring manager at a company Alex is pursuing).
+
+Everyone else stays in Notion People — do NOT create a HubSpot record for "someone I researched." If the candidate list looks like the whole roster, that is the failure signal — cut it back to real relationships.
+
+- **Showcase reuse:** for a **founder-showcase** event (Step 3.4), the contact-extraction pass already produced the candidate set (founders + explicitly called-out teammates) + the Apollo enrichment CSV — **reuse that set**, don't re-derive.
+- **Default skip:** if nobody clears the bar, skip this step and note `HubSpot: skipped — no contact cleared the relevance bar; Notion People holds the roster.`
+
+### 5.5b — Dedup-search (mandatory — Rule 11)
+For each candidate, search HubSpot before deciding to write:
+- `mcp__claude_ai_HubSpot__search_crm_objects` by **name + company** (email is the primary dedup key when known).
+- Classify each: **NEW** (no match) vs **EXISTS** (matched contact — capture its record id).
+- (If unsure of internal property names, call `mcp__claude_ai_HubSpot__search_properties` / `discover_hubspot_schema` first — per the HubSpot MCP guidance.)
+
+### 5.5c — GATE: confirmation table (STOP — Alex approves before any write)
+Present the full plan and **wait**. This is a Tier-3 irreversible external write — never auto-execute.
+
+```
+🧩 HubSpot write plan — [Event Name] ([date])   (post-event · create-once)
+
+| # | Person            | Company       | Status | Action                    | Note preview                                  |
+|---|-------------------|---------------|--------|---------------------------|-----------------------------------------------|
+| 1 | [name]            | [company]     | NEW    | create Co→Contact→assoc→Note | "Met at [event] [date]; discussed X; next: Y" |
+| 2 | [name]            | [company]     | EXISTS | add Note only             | "[event] [date]: discussed X; next: Y"        |
+| … |                   |               |        |                           |                                               |
+
+Approve all / edit row N / skip row N / skip HubSpot entirely?
+```
+
+### 5.5d — Write (create-once, in dependency order — only approved rows)
+- **Company** (if NEW) → `mcp__claude_ai_HubSpot__manage_crm_objects` (standard fields). If the company already exists, reuse it — do not duplicate.
+- **Contact** — **NEW** → create + associate to the Company (HubSpot association). **EXISTS** → do **NOT** recreate and do **NOT** field-merge existing properties (Rule 6 — the fragile update path); proceed to the Note only.
+- **Note** (every approved row, new or existing) → create a Note engagement via `manage_crm_objects`, associated to the contact, body = `event · date · role · what was discussed · next step`. The Note **is** the event-association mechanism (Static Lists are unavailable via MCP).
+  - **Idempotency:** before adding, check the contact for an existing Note that names **this event** — if present, skip (no note-spam on re-run).
+
+### 5.5e — Report
+Roll the results into the Step 6 summary: created contacts/companies, Notes added, rows skipped (with reason). If the HubSpot MCP is unavailable, **fail clean** — surface the candidate + note table in chat so Alex can act manually; the Notion writes (Steps 3.7–3.8, 5) are already committed and unaffected.
+
 ## Step 6 — Summary
 
 ```
@@ -277,6 +325,8 @@ Drafts created: N
   - Tier 2 post + visual brief: [Notion URL]
   - Bucket A outreach: N drafts
   - Bucket B outreach: N drafts
+
+HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
@@ -322,6 +372,9 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 - **Notion Event row not found** — present top 3 title-similarity candidates from Events DB. If none, allow "create draft without Notion anchor" path.
 - **Notion People DB doesn't match Granola attendees** — pass attendee names through unmatched; content-correspondent will still draft outreach but Content Draft `People` relation will be sparse. Acceptable — Alex can backfill in Notion if needed.
 - **notion-writer fails** — flag the error, return the in-memory drafts to Alex in chat so the work isn't lost. He can paste manually.
+- **HubSpot (Step 5.5) MCP unavailable / errors** — fail clean: surface the candidate + Note table in chat for manual entry. Notion writes (Steps 3.7–3.8, 5) are already committed and unaffected. Never retry blindly against the CRM.
+- **HubSpot dedup ambiguous** (multiple contacts match name+company) — do NOT guess. Present the matches to Alex in the Step 5.5c gate and let him pick the record or mark NEW.
+- **HubSpot candidate list looks like the whole roster** — that's the over-creation signal. Re-apply the 5.5a bar (spoke-with / opt-in / pursued-target) and cut it back; the rest belong in Notion People only.
 
 ---
 
@@ -345,6 +398,8 @@ The `summary_markdown` + diarized `transcript` together is intentional: summary 
 - **Conditioning skill (Step 3.5)**: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md` — speaker resolution, entity glossary, confidence-scored quote bank
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder
 - **Downstream agent**: `.claude/agents/ops/notion-writer.md` — Content Drafts row creation, property mapping
+- **HubSpot step spec (Step 5.5)**: `.claude/proposals/post-event-hubspot-step.md` — the gated selective create-once pattern + pre-mortem
+- **HubSpot CRM schema + Notes convention**: `.claude/references/notion-schema.md` (canonical fields for all three write destinations)
 - **Notion Events DB ID**: `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`
 - **Notion Content Drafts DB ID**: `6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 - **Upstream chain**: `/check-new-events` → `/event-deep-research` writes `Google Calendar Event ID` to Events DB → this command uses it
