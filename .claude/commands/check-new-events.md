@@ -143,7 +143,9 @@ The Google Calendar Event ID line is the deterministic join key for downstream `
 
 This is the format `/event-deep-research` already accepts (per its required-inputs spec: "natural-language description with cues like 'Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI'").
 
-Follow Steps 1 through 6 of `/event-deep-research` exactly — including the three human-in-the-loop checkpoints (entity confirm, triage approval, brief approval). Do NOT bypass any approval gate.
+Follow **all** steps of `/event-deep-research` exactly — Steps 1 through 6 **and Step 4.5 (Render + append the Deep Read)**, which sits between Steps 4 and 5. Step 4.5 is easy to skip precisely because it is not an integer step, but it is **mandatory**: it renders the Deep Read body (the ~40-min field-guide commute read) beneath the Scan head. A run that commits the Scan head but leaves the Event page's `## Deep Read` at `<!-- deep_read_rendered: pending -->` is **incomplete, not done** — the brief will look thin. Track any such event and surface it in the Step 7 summary (see the "Deep Read PENDING" block below). Include the three human-in-the-loop checkpoints (entity confirm, triage approval, brief approval); do NOT bypass any approval gate.
+
+**Registry precondition (Step 4.5).** `field-guide-renderer` is session-frozen — if this session predates its registration, the render loop cannot dispatch and *every* event will strand at `pending`. If you cannot dispatch `field-guide-renderer`, say so up front and either run the whole batch in a fresh conversation, or process the events and list every Deep Read as PENDING in the summary — never report an event as fully complete with an unrendered Deep Read.
 
 When Step 1 (entity confirm) runs, the entities will largely already be in the input — confirm should be a fast y/n.
 
@@ -159,7 +161,8 @@ After both 6a and 6b complete for one event, present:
 
 ```
 ✅ [Event title] complete.
-   - Research brief: [Notion URL]
+   - Research brief (Scan head): [Notion URL]
+   - Deep Read: rendered ✅   |   ⚠️ PENDING — re-run Step 4.5
    - Content drafts: N items in needs_review
 
 [X] more events pending: [list]
@@ -192,6 +195,11 @@ Parse warnings (needs your attention):
 Pending (not processed this session): K events
   - [list]
   - Action: re-run /check-new-events later to continue
+
+⚠️ Deep Read PENDING (Scan head shipped, body NOT rendered): J events
+  - [Event title] — Event page marker still `deep_read_rendered: pending`
+  - Action: re-run Step 4.5 of /event-deep-research (idempotent) in a session where field-guide-renderer is registered
+  - This is the #1 silent-degradation to check: a "thin brief" IS an unrendered Deep Read. If J > 0, the batch is not fully done.
 ```
 
 ---
@@ -204,6 +212,7 @@ Pending (not processed this session): K events
 - **All events are dupes** — report "Found N events but all are already in Notion" and exit.
 - **Parse warning on an event** — exclude from this run, surface at end with the missing field, don't fail the whole session.
 - **`/event-deep-research` fails mid-event** — report which event failed, mark it as "errored" in the summary, and prompt whether to continue with the next event or quit.
+- **Deep Read didn't render (Step 4.5)** — the Scan head is fine, but the Event page shows `deep_read_rendered: pending`. NON-fatal per event, but it MUST appear in the Step 7 "Deep Read PENDING" block — never report an event as fully "complete" with an unrendered Deep Read (that is exactly how the whole Aug-2026 batch shipped thin). Re-run Step 4.5 (idempotent) in a session where `field-guide-renderer` is registered.
 - **Notion search fails (Step 4)** — fail open: proceed without pre-dedup, let `/event-deep-research` Step 1.5 dedup catch it.
 
 ---
