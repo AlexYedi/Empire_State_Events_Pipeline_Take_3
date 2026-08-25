@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Shortlist — August Founder Showcase</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --ink:#f3f5f7; --muted:#9aa4b2;
+    --line:#262d38; --accent:#e0912f; --accent-soft:#f2b968;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  html,body{background:#000;}
+  .slide{
+    position:relative;width:1080px;height:1350px;overflow:hidden;
+    background:var(--bg);color:var(--ink);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    padding:84px 88px;display:flex;flex-direction:column;
+  }
+  .slide:not(:last-child){break-after:page;}
+  .kicker{font-family:Menlo,monospace;font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-soft);}
+  .rule{height:3px;background:var(--accent);width:120px;margin:22px 0 0;}
+
+  /* Cover */
+  .cover{justify-content:center;}
+  .cover h1{font-family:"Iowan Old Style",Georgia,serif;font-size:104px;line-height:1.02;font-weight:700;letter-spacing:-.01em;margin-top:26px;}
+  .cover .sub{font-size:40px;color:var(--muted);margin-top:34px;line-height:1.32;}
+  .cover .big{font-family:Menlo,monospace;font-size:46px;color:var(--ink);margin-top:52px;font-weight:600;}
+  .cover .big b{color:var(--accent-soft);}
+  .cover .host{font-size:28px;color:var(--muted);margin-top:auto;}
+
+  /* Company card */
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .tag{font-family:Menlo,monospace;font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 18px;}
+  .cname{font-family:"Iowan Old Style",Georgia,serif;font-size:82px;font-weight:700;letter-spacing:-.01em;margin-top:30px;line-height:1;}
+  .domain{font-family:Menlo,monospace;font-size:26px;color:var(--accent-soft);margin-top:14px;}
+  .founders{font-size:29px;color:var(--ink);margin-top:20px;font-weight:600;}
+  .oneline{font-size:33px;color:var(--muted);font-style:italic;margin-top:16px;line-height:1.3;}
+  .grid{margin-top:40px;display:flex;flex-direction:column;gap:26px;flex:1;}
+  .row .lab{font-family:Menlo,monospace;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:9px;}
+  .row .val{font-size:31px;line-height:1.34;color:var(--ink);}
+  .hiring .val{color:var(--accent-soft);font-weight:600;}
+  .foot{border-top:1px solid var(--line);padding-top:24px;display:flex;justify-content:space-between;font-family:Menlo,monospace;font-size:23px;color:var(--muted);}
+
+  /* Synthesis */
+  .syn{justify-content:center;}
+  .syn h2{font-family:"Iowan Old Style",Georgia,serif;font-size:78px;line-height:1.08;font-weight:700;margin-top:26px;letter-spacing:-.01em;}
+  .syn h2 em{color:var(--accent-soft);font-style:italic;}
+  .syn .chips{margin-top:44px;display:flex;flex-wrap:wrap;gap:16px;}
+  .syn .chip{font-family:Menlo,monospace;font-size:24px;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px 20px;}
+  .syn .take{font-size:38px;color:var(--muted);line-height:1.38;margin-top:52px;}
+  .syn .cta{font-family:Menlo,monospace;font-size:30px;color:var(--accent-soft);margin-top:auto;font-weight:600;}
+  @page{size:1080px 1350px;margin:0;}
+</style>
+</head>
+<body>
+
+<!-- 1. COVER -->
+<section class="slide cover">
+  <div class="kicker">Founder Showcase · NYC · Aug 2026</div>
+  <div class="rule"></div>
+  <h1>The Shortlist</h1>
+  <div class="sub">Six early-stage founders. One stage.<br>Skip the job-board black hole — hear the real story.</div>
+  <div class="big"><b>6</b> founders · <b>all</b> hiring · <b>1</b> room</div>
+  <div class="host">Hosted at Company Ventures · Curated by The Shortlist (Andrew Yeung &amp; team)</div>
+</section>
+
+<!-- 2. NORTH -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">01 / 06</div><div class="tag">Cloud &amp; AI FinOps</div></div>
+  <div class="cname">North</div>
+  <div class="domain">north.cloud</div>
+  <div class="founders">Matt Biringer (CEO) · Yassine Açoine (CTO)</div>
+  <div class="oneline">A financial operating system for cloud, AI &amp; data spend.</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">Engineers create the spend, finance is accountable for it — and nobody owns the seam between them.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">One layer across AWS/Azure/GCP + AI token spend + data warehouses, with autonomous commitment buying.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">Shipped North v3 (Aug 2026): Azure + native OpenAI/Anthropic/Snowflake. Series A led by Companyon.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Engineering · GTM · Customer Success · Marketing</div></div>
+  </div>
+  <div class="foot"><span>Series A</span><span>New York City</span></div>
+</section>
+
+<!-- 3. ANTIMETAL -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">02 / 06</div><div class="tag">Autonomous Infra Ops</div></div>
+  <div class="cname">Antimetal</div>
+  <div class="domain">antimetal.com</div>
+  <div class="founders">Matthew Parkhurst (CEO) · Shreyas Iyer (CTO)</div>
+  <div class="oneline">"Production that runs itself."</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">AI made writing code cheap. Operating and maintaining what you ship didn't shrink — it grew.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">Builds a "world model" of your systems — finds issues, diagnoses root cause, fixes, then verifies &amp; hardens.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">$24.3M from Sound Ventures, Nat Friedman, Naval, and the founders of Box &amp; Dropbox.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Engineering (infra/product/platform) · Design · GTM</div></div>
+  </div>
+  <div class="foot"><span>Series A</span><span>New York City · Chelsea</span></div>
+</section>
+
+<!-- 4. HEADSTART -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">03 / 06</div><div class="tag">Agentic Systems (Services)</div></div>
+  <div class="cname">Headstart</div>
+  <div class="domain">headstart.nyc</div>
+  <div class="founders">Nicole Hedley (CEO) · Chris Hedley</div>
+  <div class="oneline">Builds production agentic systems for enterprises.</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">The AI frontier moves faster than any company can actually implement it — keeping up is a full-time job.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">One-to-many deployment through private-equity portfolios; an agent system that deploys agent systems.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">Bootstrapped &amp; profitable from day zero (turned down term sheets). Subject of an Anthropic case study.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Applied-AI Product Managers · Engineers</div></div>
+  </div>
+  <div class="foot"><span>Bootstrapped · Profitable</span><span>New York City · SoHo</span></div>
+</section>
+
+<!-- 5. ARIST -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">04 / 06</div><div class="tag">Consulting Automation</div></div>
+  <div class="cname">Arist</div>
+  <div class="domain">arist.co</div>
+  <div class="founders">Michael Ioffe (CEO) · Ryan Laverty</div>
+  <div class="oneline">Agents that automate management consulting.</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">Execs don't know their org's real problems — and finding out means a $5M McKinsey engagement.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">Interview thousands of employees, diagnose the org, then execute the fix. Origin: SMS learning in Yemen.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">$22.5M Series B (Aug 2026); UKG-backed; powers the U.S. Dept. of Labor's AI-literacy program.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Generalists who want extreme ownership</div></div>
+  </div>
+  <div class="foot"><span>Series B</span><span>New York City</span></div>
+</section>
+
+<!-- 6. POINTONE -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">05 / 06</div><div class="tag">Legal / Professional Services</div></div>
+  <div class="cname">PointOne</div>
+  <div class="domain">pointone.com</div>
+  <div class="founders">Jeremy Ben-Meir (CTO) · Katon Luaces (CEO)</div>
+  <div class="oneline">AI for the business of law &amp; professional services.</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">Timekeeping — a firm's revenue engine — is manual, lossy, and universally hated.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">Passive capture turns the workday into compliant, complete time entries; then bill review &amp; pricing.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">$16M Series A led by 8VC (Bessemer, General Catalyst, YC). 10x revenue in six months.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Engineers — at pace with revenue</div></div>
+  </div>
+  <div class="foot"><span>Series A · YC W24</span><span>New York City</span></div>
+</section>
+
+<!-- 7. THUNDER -->
+<section class="slide">
+  <div class="card-top"><div class="kicker">06 / 06</div><div class="tag">Growth-Marketing Agents</div></div>
+  <div class="cname">Thunder</div>
+  <div class="domain">thunder.inc</div>
+  <div class="founders">Dilip Rajan (CEO) + co-founders</div>
+  <div class="oneline">Agents that run B2B paid growth end-to-end.</div>
+  <div class="grid">
+    <div class="row"><div class="lab">Problem</div><div class="val">Growth context is fragmented across tools; ad budgets are 7–8 figures and every call is high-stakes.</div></div>
+    <div class="row"><div class="lab">What makes them unique</div><div class="val">They don't sell you software — they run your Google &amp; LinkedIn ad channels for you, end to end.</div></div>
+    <div class="row"><div class="lab">Recent momentum</div><div class="val">Pre-seed from Company Ventures; founder built BuzzFeed Quizzes &amp; sold Jumpcut.</div></div>
+    <div class="row hiring"><div class="lab">Hiring</div><div class="val">Founding Growth Lead (forward-deployed) · Engineers</div></div>
+  </div>
+  <div class="foot"><span>Pre-seed</span><span>New York City · SoHo</span></div>
+</section>
+
+<!-- 8. SYNTHESIS -->
+<section class="slide syn">
+  <div class="kicker">The pattern in the room</div>
+  <div class="rule"></div>
+  <h2>Five of six build AI that <em>operates</em> —<br>not AI that <em>writes</em>.</h2>
+  <div class="chips">
+    <span class="chip">Production ops</span>
+    <span class="chip">Cloud &amp; AI spend</span>
+    <span class="chip">Org diagnosis</span>
+    <span class="chip">Back-office compliance</span>
+    <span class="chip">Ad execution</span>
+  </div>
+  <div class="take">In 2026 the bottleneck moved from <b>making</b> software to <b>running</b> it. This room is where that bet gets staffed.</div>
+  <div class="cta">All six are hiring · warm intros via The Shortlist</div>
+</section>
+
+</body>
+</html>
