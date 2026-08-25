@@ -231,8 +231,12 @@ Live Notion schema is the source of truth — verify with `notion-fetch` before 
 - Writes content drafts to Notion Content Drafts database
 - Supporting reference files: content-style-guide.md, content-anti-patterns.md, outreach-templates.md
 - Shared patterns directory: .claude/skills/content-patterns/ holds reusable content-shape definitions
-  (no SKILL.md — not a skill itself). Any content skill can import from here. First entry:
-  two-thesis-synthesis.md.
+  (no SKILL.md — not a skill itself). Any content skill can import from here. Entries:
+  two-thesis-synthesis.md; visual-briefs.md; goal-tagging.md;
+  **founder-showcase.md** (added 2026-08-25 — the recurring "founder / startup showcase" recap style:
+  per-company 6-dimension breakdown, one-slide-per-company carousel, contact-extraction → CRM + Apollo,
+  and the "stays in the room" funding + garbled-name-verification guards. Wired into content-correspondent
+  + /post-event-content showcase branch. First codified from The Shortlist — August Founder Showcase).
 - Voice & style is a living system — update-voice-and-style.md skill propagates learnings to all files
   including content-patterns/*.md
 - Cold outreach only for V1. Warm outreach variant and custom messaging skill deferred.
