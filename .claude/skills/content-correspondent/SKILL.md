@@ -184,6 +184,25 @@ The same event can generate different post angles. Pick one per event and commit
 | Peers (AEs, CS, AM in transition) | "What I'm learning from builders about how our jobs are changing" | "Honest admission: I came expecting to ask questions. I left feeling like the one who should be building." |
 | General Tech/AI Audience | "Signal from the NYC AI scene — what's real vs. noise" | "Everyone talks about AI GTM. Last night I was in a room of 60 people actually doing it. Here's the gap." |
 
+#### Special event format — Founder / Startup Showcase
+
+Some events aren't a talk or a panel — they're a **founder showcase** (a.k.a. startup
+showcase): several early-stage founders pitch back-to-back, primarily **to recruit**.
+Named series: **The Shortlist**. These have their own codified content style — do NOT
+force them into the single-thesis "room report" shape above.
+
+When the event is a showcase (multiple founders each pitching, a QR/opt-in intro
+mechanic), apply **`../content-patterns/founder-showcase.md`**. It governs: establishing
+the **showcase focus** (hiring / product-launch / funding / mixed — Alex can clarify it),
+the per-company **6-dimension breakdown** (who they are · problem · what's unique · culture
+· recent/funding · hiring), the recap post shape (**every company referenced — none dropped**),
+the **one-slide-per-company carousel** (Arc-4 company-spotlight grid), the **focus-driven
+first comment** (one verified reference link per company — careers pages if hiring, launch/blog
+pages if product, etc.), the **contact-extraction → CRM + Apollo** flow (founders + explicitly
+called-out teammates in the crowd), and the sensitivities (**confidential "stays in the room"
+funding must never be published**; **verify garbled transcript names before anything public or
+CRM-bound**). First codified from The Shortlist — August Founder Showcase (2026-08-24).
+
 ---
 
 ## The Closed Loop
