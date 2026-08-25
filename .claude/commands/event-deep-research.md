@@ -122,6 +122,14 @@ notion-writer executes Steps 4a–4g of `.claude/skills/event-research/SKILL.md`
 
 Returns the confirmation block from Step 4g. The Event page + `research_brief` Content Draft now hold the **Scan head** plus an empty `## Deep Read` section carrying `<!-- deep_read_rendered: pending -->` — Step 4.5 fills it.
 
+**Record the Deep Read ledger row (YED-139 — mandatory, do not skip).** The moment notion-writer returns the Event page URL/ID, register it in the per-session Deep Read gate ledger, defaulting to PENDING:
+
+```
+.claude/hooks/deep-read-ledger.sh add "<event title>" "<Event page id or URL>"
+```
+
+This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The Stop-hook gate (`deep-read-gate.sh`) fails the run at close if any row is still pending — so a silently-skipped Deep Read cannot close green. Skipping this `add` is the one way to defeat the gate; it is as mandatory as the Notion write it sits beside.
+
 ## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)
 
 **Only after Step 4 committed the Scan head (4g).** Run **Step 4.5 of `.claude/skills/event-research/SKILL.md`** in this conversation (the render dispatches and the Notion append both happen here — MCP writes are parent-thread only). This phase is **non-blocking**: a render failure is a warning, never a pipeline failure — the Scan head + entity records are already committed.
@@ -129,8 +137,16 @@ Returns the confirmation block from Step 4g. The Event page + `research_brief` C
 1. **Assemble slices (4.5a)** from the synthesizer's `## Evidence Set` (held from Step 2.5) — one URL-carrying evidence slice per Deep-Read section + event meta + Alex's focus + novice level.
 2. **Render section-by-section (4.5b)** — dispatch `field-guide-renderer` (Opus) **once per section**, in order: The Frame → Primer/Landscape → Companies → People → Cross-Event Threads. Skip a section whose evidence slice is empty (no people → skip People; first-touch → skip Cross-Event Threads). **One section per call** — never ask for the whole Deep Read at once. Surface any `> Gap:` notes the renderer flags.
 3. **Stitch (4.5c)** — dispatch `field-guide-renderer` in `stitch` mode with all rendered sections → the final Deep Read (opener + smoothed transitions + consolidated endnotes; no fact/citation added or removed).
-4. **Append (4.5d)** — inline `notion-update-page` (real newlines, gotcha m): replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content Draft with the stitched Deep Read; flip the marker to `<!-- deep_read_rendered: [today] -->`. Idempotent — a re-run replaces only that section.
-5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. Offer to re-run just Step 4.5 (idempotent). In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
+4. **Append (4.5d)** — inline `notion-update-page` (real newlines, gotcha m): replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content Draft with the stitched Deep Read; flip the marker to `<!-- deep_read_rendered: [today] -->`. Idempotent — a re-run replaces only that section. **On success, flip the ledger row too (YED-139):**
+   ```
+   .claude/hooks/deep-read-ledger.sh rendered "<Event page id or URL>"
+   ```
+   This clears the pending state the Stop-hook gate checks. Do it only after the Notion append actually succeeded.
+5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. **Leave the ledger row `pending`** (do NOT flip it) — the Stop-hook gate will FAIL the run at close, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record the acknowledgement so the gate reports it as waived rather than failed:
+   ```
+   .claude/hooks/deep-read-ledger.sh waive "<Event page id or URL>" "<reason, e.g. renderer unregistered this session>"
+   ```
+   In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
@@ -147,6 +163,19 @@ Run **Step 5 of `.claude/skills/event-research/SKILL.md`** in this conversation.
 ## Step 6 — Final summary
 
 Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot results + next steps).
+
+## Step 6.5 — Deep Read gate (run close — YED-139)
+
+Before declaring the run complete, run the authoritative marker check (this is the in-conversation half of the gate — it reads the *real* Notion state, complementing the Stop-hook ledger check):
+
+1. **Enumerate touched Event pages** — from the ledger (`.claude/hooks/deep-read-ledger.sh list`) plus this run's own record.
+2. **Re-fetch each marker** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->` marker. This catches any drift between the ledger and Notion (the ledger is a local echo; Notion is the truth).
+3. **Verdict:**
+   - **All `rendered` (or explicitly waived)** → run passes; report Deep Read ✅.
+   - **Any `pending`** → the run is **NOT complete**. Interactive: **block close** — present the pending event(s), offer the idempotent Step 4.5 re-run, and do not report the run as done. Autonomous/batch: report the run **FAILED** with the pending list (never a silent pass).
+4. Reconcile the ledger with what you found (flip `rendered` / `waive` as appropriate) so the Stop-hook gate agrees with the authoritative Notion state.
+
+This step and the Stop-hook `deep-read-gate.sh` are belt-and-suspenders: the hook fires even if this step is skipped; this step reads real Notion state and gives the interactive block.
 
 ---
 
@@ -172,7 +201,7 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 - **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
 - **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per CLAUDE.md gotcha (e), verify with notion-fetch on the data_source URL if it persists.
 - **notion-writer fails with "Prompt is too long"** — its `tools:` whitelist may have drifted to inherit too much. Verify `.claude/agents/ops/notion-writer.md` frontmatter still scopes `tools:` to Notion MCP + Read only.
-- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending`, and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section.
+- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending` (and the ledger row `pending` — do not flip it), and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 gate + the Stop-hook `deep-read-gate.sh` will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
 - **A `field-guide-renderer` call returns a `> Gap:` note** (e.g. a `web-verified` fact missing its URL) — keep it in the output, surface it to Alex; it marks a citation to complete before public reuse. Trace it back to the specialist's Evidence Ledger / Step 1.7 URL capture.
 
 ## Why fan-out runs in the parent thread (architectural note)

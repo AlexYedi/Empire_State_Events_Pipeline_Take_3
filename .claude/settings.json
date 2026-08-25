@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: v2-trigger detection/logging for Empire State's pipeline-specific skills. Two detectors feed one shared state file (.claude/.state/<session>.relevant_skills) which the Stop hook logs: PostToolUse:Skill catches natural-language SKILL invocations (v2-trigger-detect.sh); UserPromptExpansion catches SLASH COMMAND invocations (v2-cmd-detect.sh, added 2026-05-24 to fix the slash-command blind spot — slash commands never emit PostToolUse:Skill).",
+  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: (1) v2-trigger detection/logging for Empire State's pipeline-specific skills. Two detectors feed one shared state file (.claude/.state/<session>.relevant_skills) which the Stop hook logs: PostToolUse:Skill catches natural-language SKILL invocations (v2-trigger-detect.sh); UserPromptExpansion catches SLASH COMMAND invocations (v2-cmd-detect.sh, added 2026-05-24 to fix the slash-command blind spot — slash commands never emit PostToolUse:Skill). (2) YED-139 Deep Read marker gate: the pipeline writes a per-session ledger via deep-read-ledger.sh (row PENDING at Scan-head commit, flipped RENDERED on Step 4.5); the Stop hook deep-read-gate.sh fails the run (decision:block interactive / loud FAILED autonomous) if any Event closed with an unrendered Deep Read. Disable either Stop hook via .claude/settings.local.json {\"hooks\":{\"disable\":[\"deep-read-gate\"]}}.",
   "hooks": {
     "PostToolUse": [
       {
@@ -27,6 +27,10 @@
     "Stop": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/deep-read-gate.sh"
+          },
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-trigger-log.sh"
