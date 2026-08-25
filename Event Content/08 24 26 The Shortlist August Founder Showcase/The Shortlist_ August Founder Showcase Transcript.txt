@@ -1,0 +1,717 @@
+
+Yeah, um, thank you guys. So much for coming. We have some of the coolest Founders in here tonight.
+
+[Speaker 1]
+Uh, we're gonna start off. I just want to let you guys know to scan the QR code. This is like the way, actually. Um, this is like your only way. You're gonna get an intro to Founders, um, outside of this room. We will send these out to the founders and they will opt in for an intro and interview, maybe, and then get hired if you're really good.
+
+But yeah, make sure you make sure you fill this out. It closes one hour after the event, um.
+
+[Speaker 2]
+I'll hand it off to you again. Cool.
+
+[Speaker 3]
+Um, for those who have been here before, um, I'm gonna repeat. Why? I always say, um, who's been through a s***** hiring process in the last? Let's say, this year, raise our hands.
+
+[Speaker 4]
+Okay, that's good. Um, who has been to meet a founder or a company that they thought look great online, and they met them in person, and they were was a big big hand at the back, and they were thoroughly misled with who they
+
+[Speaker 3]
+Met.
+
+[Speaker 4]
+Okay, lots of nods. Um, I guess there's kind of a thesis behind, like, why Andrew singabe and I started the shortlist, um, ready to solve the same problem on two sides of the same coin. One for if you're looking for a role. You're gonna apply! You go into an Ashby or greenhouse, and you go into a big black hole, and you end up going to meet the company, and it's not what you thought it would be based on everything you read online and then from found.
+
+Aside from company side, you are just getting bombarded with people that maybe look okay on paper, um. And they didn't make the grade. It's, I mean, with AI hiring, is becoming like more than ever. Um, so we're going old school. We're doing stuff in real life. Pretty people together, giving every founder here and throughout this year.
+
+A chance to stay on stage, tell their story, and bring that story to life in a more like, authentic, fun, and intriguing way. And Singaphi said about the ulti good of what you do. We are inundated with people that have like to be here. We get 2, 000 people.
+
+Apply some month 3, 000. Um, people try and get in through interesting ways, and we'll go into sometimes. It works. Sometimes it doesn't. Um, but yeah, if you, if you got in? Thank you! If you did get through the door and you got to primed, I approve or decline everybody, so that's on me.
+
+Before we last thing I said before we get going, I'd like to invite Matt from company Ventures who are hosting us tonight to come to the stage if he's here.
+
+Hi, everybody! Thanks, uh, all for coming. Um, I just wanted to quickly introduce myself and explain to you where you are. So, I am the. Co-Founder of company Ventures started this firm with the blind fellow who owns this building. And uh, we leverage the buildings to. Be a ideal destination for early stage time.
+
+So if you are here and saying this would be a cool place to work one day. I'd encourage you to check out our website. We host a Residency program at any given time. There are 20 or 30 companies working under our roof. Could be you? Uh, if you decide to start a company one day, please keep us in the loop.
+
+We'd love to hear from you. We're a pre-seed seed Sage specialist. We don't take Equity as a condition of Entry. We just like to work with really smart people. And hopefully be as helpful as possible. One of those companies being Thunder, who you're going to hear from today, so indication of the types of pine folks you were.
+
+Thanks everybody for coming. Hope you enjoyed the outdoor scenery. It's like one of the nicest days we've had. So it worked out perfectly. Have a great time! See you!
+
+Follow us on socials. Um, thanks everyone for coming out. I'd like to welcome your scene from North.
+
+[Speaker 3]
+Can you guys hear me? Yeah. Are you excited? Yeah, so my name is Justina Swan.
+
+[Speaker 5]
+I'm from Morocco. I moved here when I was 18 and 11 years later. I'm a co-founder and CTO and. My company is North Park, so I'm really happy and ten percent like what we do. Who we're hiring for and like, what journey is? Um, so thank you guys for coming.
+
+Appreciate it. I built this between a crying baby and a very tired wife, so hopefully I remember what I put, uh, together. Excellent! It's not working. Oh, there you go. Cool, uh. So, what are we? What do we do? We are a cloud Ai and data Financial operating system.
+
+What does that mean? We help companies take control over their cloud spend. And obviously AI spend. That's very like a Hot Topic. So what we do is we help companies get a really good control over where their spend is going and how to take control over, uh, tokenomics, and all the really fundamental, uh, architecture behind all that.
+
+And then, we also help companies get a really good shop. Understanding of their data. So through that, we've built North that allows customers to really have a good understanding of their financial literacy. So we raised before series V about 7.3 million, uh, this is pre pre, uh, series B.
+
+You guys are probably one of the first people to hear this, but we just closed our series B. Thank you um!
+
+[Speaker 6]
+This stays in the room we raised almost 34 million, which is crazy to say,
+
+[Speaker 2]
+So we're doing a lot of hiring in the next couple of months, and we have Donna here to help us.
+
+[Speaker 6]
+Do that. So, notably, some of the really cool customers that we have, we have ramp. So, you guys probably see in a bunch of their ads all around the city. Uh, we have Brave, uh, the competitor
+
+[Speaker 5]
+To Google Chrome when it comes to privacy. I simply AI, one of the largest like lln providers in terms of like inference and all that good stuff, and then notably the New York Public Library, which I think a lot of you guys like walked around and and seen. Um, so who we're hiding for.
+
+We were hiring for engineers we're hiring from GTM. We're hiring for a lot of Cs and marketing, so. Uh, if I was gonna like put a profile around the type of people that were hiring for, it's, uh, people that are really hungry for a challenge. People that are really talented and want to get away from the nine to five and I really want to deliver on something that is truly Grand in my opinion.
+
+What we help customers do is not only be more literate when it comes to their financial information, but unlock a lot of the money that they would have otherwise lost. To hire more, be more efficient and build a product, so that's something that you're interested. Uh, I think we have something really good to present here.
+
+So? Why did we build this? Any guesses? That's rhetorical. Um, the the main challenge that? Drop. Um. The the creation of North is that there's a real dichotomy between the people that are in charge of creating the spend, the engineers, and the people responsible for that spent the finance people and what we're trying to do.
+
+Here is build the product in between those two different personas. So what we've done is we started by building a mechanism to help customers solve and improve their spend and save in AWS. That.
+
+Your architectures will provision based off of, like, how are you using your architecture? So, we've built a immense amount of products and features around, uh, the multiple clouds, so Azure 80 plus gcp, but then we're working with athropic and open AI as well, and then a lot of the data warehouses and data providers.
+
+So, think of data breaks and snowflake, and then we have 20 more Integrations coming in, which is why we need more Engineers to help us build that. Oops! Okay, so the founding story? I come from an engineering background, and I saw this problem like firsthand, so I was responsible for, like big teams and big projects, and the spend was tremendous, and nobody cared about.
+
+It was always a problem that people were aware of, but never had a solution for it, like, show his how many people here have heard of spend being a problem, either AI data, or or um, or on the cloud side? Okay, a lot of you guys. So, that's what motivated me to start this company.
+
+The real anchor here is that my other co-founder was selling against the cloud, and you saw that the people that were in charge and spending on the cloud had no idea what they're built. Was saying, so I think those two emerging together and us figuring out that there's a huge real opportunity is the reason for us founding this company.
+
+So why work for us? Our product is amazing in my opinion. Um, we've raised. A, series B, so I think that's somewhere there, but, uh, we're closer two billion dollars of like annual spend, which is amazing. So, we're managing large amounts of money for people that trust us with their financial literacy.
+
+Um, we've saved more than 300 million dollars lifetime, so we've been business like very short three years, so you can imagine that scaling exponentially as we grow, and then we're in the intersection of AI Cloud. So, what people don't understand is, like, the age instance. All this AI needs to be hosted and live somewhere, which is the cloud.
+
+And then the series V, and then 3X growth year over year. Some other stars are even, uh, more I'd say than that, but we're we're in a very uh competitive market, and we're growing really fast. Um, so? I was tasked with talking about four different f*** stories. So, the first story here is that, uh, we work with really cool people, and when I started this company, I was convinced that we should never hire, uh, either family, friends, or people in a very close Network.
+
+And my other co-founder convinced
+
+[Speaker 1]
+Me otherwise,
+
+[Speaker 5]
+And that has been the biggest like perspective change. So Donna, for example, is dating my brother and she's an amazing hire. And, uh, my, uh, my other co founder has. Brother working for him, and it's not nepotism, but it's really bring people that that you believe can join. Join the the mission, so that's a fun story.
+
+We have a really cool product and a really cool marketing behind that. Um, so we serve data. We serve Cloud, we serve AI models. We help people we like token economics. We have an infrastructure that is fragmented and what we help customers do is bring that together to have a real vision.
+
+We're bringing different Cloud providers together. We're really working really hard to make SAS sexy. I think a lot of B2B business is boring, and we want to move away from. I think a perfect example of some of the other. Sas tools that you've seen around the subway, or or in different marketing.
+
+And we want to be that next, really cool product out there. Sorry for getting in my back. I'll look at you yesterday. Cool! Third one story. We do really cool sponsorships, so. Um. Guys from the UK, uh, we sponsor Bristol, uh, FC City, which is the second division company, um second division team.
+
+And we also sponsor. Uh, some of the Brooklyn Nets games. And that's, uh, LeBron James, sitting right under our, uh, our ass. So, it's pretty cool. It's a good sword.
+
+Even better is normally the product. The people that we work with, but the impact that we have on our customers and the fact that we see that every day, so want to walk around either on the West Village or Midtown. I walk past the New York public library, and I can see that we have an impact on how we make them more efficient and help them save money.
+
+However, they use their money is up to them, but we know that we make a real impact. I want to use my Ram credit card to pay for expenses. I know they work and are powered by real efficiency through our product same goes with browser for brave. Same goes for vo, which is a delivery company that has delivered things to my house accidentally throw, like baby products.
+
+Uh, sum up, which is a transaction credit card company that one of our. Marketing person like stumbled onto when they went to Portugal. And the okay, and this one is stay in touch, which is powering a lot of the hotels and the POS systems around New York.
+
+So, the last point that? The team has asked me. Can I explain? That's, like, why joined North and, and like, who we are and like, why? Some of you guys are sitting in this room, I should think about applying. I am convinced that we're going to be the number one in the industry.
+
+That's it. Take it.
+
+Thank you for coming this.
+
+[Speaker 3]
+It's my first time. One thing that I always think about you're joining. At an early stage company is.
+
+[Speaker 2]
+Yes, you will get paid, and there'll be a salary, but you. Also, I would think about it like an investor like you're placing a bet with your time? Um, and what does that mean for your career? There's heaps of studies out there that show you get three, four, five bets to make in your life.
+
+Whether it's joining a company or. Are they chasing something or building your own company, whatever it is, um?
+
+[Speaker 4]
+But it's, you know, there's lots of noise. It's AI hype. Is it frothy? This and the other, but I'd say one thing that will never go out of fashion is like saving businesses money, so very English Moroccan. Next up, I would like to welcome Trias from anti-metal.
+
+[Speaker 1]
+Amazing! Cool well!
+
+[Speaker 5]
+Like I've said, I'm Travis, uh co-founder and CTO Matthew metal, extremely excited to be here. Thank you for the shortlist team for putting this together. And thank you all for coming. Really excited to tell you a little bit about what we're working on. And you know what? We're what we've been up to the past couple years.
+
+So, to kick things off. What is antimal and what do we do? So, we're building production that runs itself. I'm sure many of you here have Engineers, or you've worked at companies that have deployed software to the cloud to on-prem, whatever it might be. I think a lot of us spend a lot of time thinking about what are we going to build next, or how do we write software?
+
+And we actually think about what comes after that, that the hard part about software is often the operations and maintenance that comes at deploying something scaling it to your customers and making sure it works for the life of the thing. As your company grows as your team grows, as you build more features, so that's really what we're focused on and.
+
+Think about how can we build a self-healing Loop like running a production environment that finds bugs? Triages them finds a fix and basically fixes them for you while you're asleep. So, we are a series, a company we've raised 24.3 million from sound Ventures. Not Friedman, Daniel gross, Buckley Adventures, Naval.
+
+Arvin Trini, boss, founder of like Steve, the founders of Dropbox and box, uh, and I think something you'll notice. Yes, we have some institutional investors, but we also have a number of people who are Founders or former Founders. And I think the reason is, these are people who build businesses and scale them and seen.
+
+This problem really sucks, like scaling software and having to hire a team around that, and doing operations and maintenance is by no means an easy Challenge, and so we have a lot of people on our bench that I've seen this problem intimately and faced it. And in terms of our customers, we work with, you know, a variety of people.
+
+As you can imagine, any company that deploys software to the cloud on cram wherever they might be. We can basically serve them, so we work with small AI native teams that are you know? 10, 10 people startups all the way to large Enterprises. So we work companies like Logitech pendo, um.
+
+You know, like pocket? If you guys know them, they're like the AI transcription device and a variety of others. So we help them run their production environments. And, you know, deliver an amazing experience to their customers. And finally, we're hiring across support. We're hiring Engineers, uh, people who want to work on infra product platform designers.
+
+Whether you want to work on product or brand and also people on GTM from people who want to do top of funnel sourcing to closing deals to customer success. So, to start a little bit on the motivation of this, and I kind of allude to it. You know, what is the big problem?
+
+Like, what is anti-metal trying to solve? And I, I think this is probably like, maybe a platitude to say many people in this room realize this, but AI has changed the way that we cook fundamentally. Like, I think the software development life cycle used to look like the top, where oftentimes we think about the limiting step of delivering something being.
+
+Can you write the code and like, once you wrote the code, it was kind of trivial to be. Like, okay, we're going to go deploy it and like it to the customer, because that was the thing that took the most amount of time. Now you can just like send Claude off and go to sleep.
+
+And you know you have a working application by the time you wake up, and so the limiting step is no longer writing code or writing test necessarily, but it is operations and maintenance, and what we've seen. And many people have seen is that this part of the software development life cycle really hasn't contracted that much.
+
+With AI, you still spend ridiculous amount of time, you know, debugging things, and probably more than more than before because of AI slav. You have
+
+[Speaker 6]
+To
+
+[Speaker 5]
+Scale your infrastructure. You have to make a bunch of decisions about you know how you actually want to deploy and scale your business, and so we think this is still the most expensive limiting step, and so this is what we're trying to tackle. So, what have we built? Basically, we've built a platform that plugs into your entire data surface for your software systems, so observability, infrastructure, your code, and effectively.
+
+What we do is we find issues in your environment. Those can be things that you tell us like alerts that you set up, or they could be things that we find right so we can go look across your logs, your traces, Etc and say, hey, this looks like an anomaly.
+
+This looks like it's something that's going to break. This looks like a weird pattern that's happening today. That wasn't happening yesterday. We then investigate and fix them, so we come to an RCA. We understand what is the root cause of this thing? Why is it happening? We Trace that across your system and look at all the components involved.
+
+And then, we actually suggest remediation so that remediation can be. As you can imagine code like app code that changes, it could be an infra change. They could even be an operational face, like, go into this dashboard and click this button or go into this product and change the setting.
+
+And then we verify and Harden your environment. So when I say, verify and Harden, you can imagine as your Building Systems really quickly. Your ability to Monitor and optimize them is only as good as your ability to observe them. And so, what we do is we don't only come in and say, hey, these are these bugs, and we're going to fix them.
+
+We actually tell you how can we improve visibility into your environment? Not only so anti-middle, can do a better job, but you and your team can get a better understanding of how your software is behaving, so I'm sure many of you work on agents have thought about things like agent tracing, or like even things like memory usage.
+
+Usage. We find a lot of early stage teams don't have that set up, and so we come in. We have a variety of agents to help them out, and we instrument observability for them. We monitor what's going on there, and we help them get through a really healthy posture.
+
+I think the interesting thing here as well is many people today are used to a very sort of reactive flow here, right? Like, you have something break. You go look at it. Your engineer is kind of triage it, and you fix it. One thing we're really pushing at an anti-metal, and we've already delivered to a number of our customers is, how do you start to be proactive, so you have all these signals in your system.
+
+You kind of have a prior distribution of like these things kind of break. These things are brittle. These things are like, really important to deliver you my product, and you can effectively have an agent that watches for those and checks. Is this gonna break soon? Like, is the scaling?
+
+Is my database going to run out of memory. Am I going to have a task queue? That's big enough for, like, the next job I want to run. So, not only are we helping you firefight things that are, you know, generally, fires. We're trying to put out the next fire, or, you know?
+
+Even happening.
+
+Okay, I messed up this side. Um, I think I copied this exactly from, uh, from the first one, but? The key insight for us is really a couple of things right when you talk about why it's really code. Volume is exploding, right? So? Everyone is writing more code. AI is making that much faster.
+
+People are deploying systems faster than ever before, and we have more systems to maintain and more systems to operate. Like, I was mentioning earlier. The second thing that I think a lot of you may recognize you through experience or maybe anecdotally is. These models are actually not that good a production systems, so there's a variety of reasons for that.
+
+Probably the biggest one is that there's no really good canonical representation for what infrastructure looks like, uh, and how it operates so you can imagine you have this really, really Dynamic system where you're emitting, like thousands of logs or traces, or even millions of like data points all the time.
+
+Ask an LM to, like, go rock. All of that and understand what's going on is not necessarily a need to pass right. And so, even you can think about the trading distribution of these models. There's not a lot of stuff online that, like, these vinyl companies have access to Beyond, maybe like terraform code, or things like that that are more like static assets.
+
+And then you know, the final piece is.
+
+[Speaker 4]
+You know, basically, there is no good representation for this, and that is kind of the key Insight that we think about. You have all this data coming from various places. None of it fits into context. None of it is really well structured, and also like all modern observability platforms have basically been built for the eyes of becoming.
+
+How to serve a dashboard? How to give someone inside how to give someone an alert that they can action on? The three report of agents is way way higher, and it actually necessitates that we need sort of a new paradigm for this so
+
+[Speaker 5]
+Effectively.
+
+[Speaker 3]
+One
+
+[Speaker 5]
+Of the biggest things we work on is how we construct what we call a world model for software systems. How can we take any arbitrary software system regardless what the company does, what type of infrastructure they run, what language they write their code, and then basically put that into representation that is legible by an agent, so does various layers to it.
+
+We have an amazing blog post on this so that you can check out. But at a core level, you can think about what is actually exists in your system. How does it evolve over?
+
+[Speaker 4]
+Time. How do we map causality into that meaning? How do we understand what discrete components are communicating with each other to like service a call, service B, and what fashion and then semantic. How do you as humans kind of refer to your system? You know, make it work. So why work for us?
+
+I think there are a variety of reasons, and there's probably like a lot of plot of teams. I can tell you like where many hats or whatever, but I think some things that are specific to us. We are building agents that really operate people's environments, right? And so, I think.
+
+The.
+
+The other part that I think is interesting is many agent companies can get ground truth or something, like hiring experts or data labelers or whatever that might be so you can imagine, you know, maybe something, uh, like, like ramp, was a good example we talked about earlier. When you want to categorize your card transactions, you could look at it historically.
+
+What people have written in and kind of like, say, hey, this is like what the best label looks like? When you're talking about a large software system, like, even if you are an expert SRE, and you go look at another company software system. You're gonna have absolutely no clue what's going on, and so generating ground truth is extremely hard.
+
+And so, unlike, you know, maybe a domain where you can hire an expert to come in and say, like, tell me what's wrong here. Label this data. We can do some of that. We often have this, like, very interesting Loop, where customer ground truth has to come from the product, and so that is like an insanely hard product problem of almost.
+
+How do you get people to label data for you in a way that doesn't feel like labeling data. So, how do you get the right attribution signal? How do you get them tell you when you're right when you're wrong? And then, how do you use that to create better agents?
+
+That is an ml problem, and then how you use that. Do you know reinforcement learning or improvements on top of those agents. So, again, an ml problem. So, I think it's interesting that this sort of like gamut of, like what we work on has very hard product problems to like fetch data.
+
+That's hard data science problems all the way to very hard animal problems and agent problems. Third thing is, we care about brand and distribution just as much as product. I think that's true for a lot of companies, but uh, we really live by this. Like, I'll show you one of my stories about this, exactly, and we've done some really cool stuff here combination of, you know, we need to tell people about the research we're doing and the product we're building, um?
+
+But also like, we love doing guerrilla marketing and Barbara stunts. And you know, things that make the brand seem bigger than life? The last two outcomes over outputs. I think you know a lot of people tell you you have a lot of autonomy. Um, you have a lot of license that's true in Anky metal as well, but I think more importantly in our philosophy is that we care a lot about outcomes over outputs delivering value to the customer, making the business more effective and what I really believe is you hire great people.
+
+You give them very clear Direction. You give them a lot of trust, and you let them run, and you tell them to deliver amazing outcomes, and so that is the type of culture we build. That's the type of company we want to build, um. And, you know, people who work with us get an insane amount of latitude to work on problems that they find interesting to work directly with customers, um, to even find, you know, new areas of like technology to exploit and bring it to the product.
+
+And then. Finally, we are in New York City. We are in Chelsea at 28th and 7. These are some pictures of our beautiful office. We have an amazing office in Chelsea. We're in person five days a week. Um, and yeah, we collaborate together. We spend time together. Did you come to our office?
+
+You can see. Many of these are glass walls. Almost all of them have, uh, whiteboard Mark. Them, because we literally just go up to walls and draw things with each other. And we live in our own artifacts. It's amazing. Cool. So, like you've seen, I was also told to give four stories, so I have a couple for you
+
+[Speaker 3]
+First. Does anyone know what this is?
+
+[Speaker 4]
+But which part?
+
+[Speaker 3]
+So, this is Cafe select. It's a restaurant in SoHo, and this is where I met my co-founder, Matt. So funny story Matt was working on a startup at the time I was working at meta on their infrastructure team, especially in their data center team and, um. I was getting bored of big attack.
+
+I'm like, this is like a retirement community. For Millennials, you know, Matt was at the start of. He's like, I think I want to found something I actually didn't want to necessarily be a Founder, but I really was interested by this problem. Having worked at Facebook and singing infrared, that scale I was like.
+
+This sucks just as much as seven person company. I worked on like, surely. There's a better way to do this. So, Matt and I got injured through a mutual friend. We were supposed to meet a cafe, select for, like, I think, like, at 3 P.M like late lunch or something for like an hour.
+
+This.
+
+[Speaker 5]
+This was like one of our favorite
+
+[Speaker 3]
+Places. This was like this is part of the core anti-metal lore. So when we hired our first few employees, we'd bring them to Cafe select. They had to have the exact same cranberry tequila drink that Matt and I drank the first day, um, and we just celebrated, you know, company anniversary.
+
+Recently, we brought the entire King here to the back room, which it's an amazing place, and it's also like one of those places where I've just I have a ton of cloud. Everyone just moved by name, so I love it. Second thing here. So we initially started the business, and we were actually working on, um, you know, cost optimization for the cloud actually.
+
+Very, very similar to something you know North is working on and at the time we had actually run that business up to, uh, just under 5 million in Revenue. And you know, under three months, we had grown really quickly, but it was also cleared us that hey, like, llms are on the horizon, and there's new technology, and our vision is always.
+
+How do we automate away the sort of like burden of infrastructure. And so, we found this amazing niche to call us, but it's kind of clear. Either have a fork in the road here. We kind of like push on this direction. And, you know, continue to do cost optimization or?
+
+We go, take another Direction and it's kind of like going from Series a company back to CN, like starting over again. That's a really hard call to make, and so. As you do with all good decisions, we run the cabin in the woods, uh, in Upstate New York. We brought the team there.
+
+As you can see, the team was, I think, four or five people at the time. Um. And we sat down. We're like, hey, these are, you know, the options we have in front of us. Here are the convictions we have, and we brought the team along, and we, you know, this is, like, honestly, the the trip where we made the decision of hey, we're going to go build an entirely new product.
+
+We're going to raise more money. We're going to build a larger team, and we're going to go actualize on the real Nation that we want to execute on. And so, the reason I bring this up is obviously it's a huge pivotal moment in in the companies you know. History pivotal literally, like scientific, um?
+
+But, on the other hand, I think it's also important, like, you know, Matt and I, as Founders, could go in a black room and come back and say, hey, like, guys! This is what we're doing and like, not bring the employees along for the ride, and instead we took these guys out for a week, and we were, like, let's actually talk about.
+
+You know what we can do here. Let's like, talk through all the options. What ideas do you guys have, and so you know we care a lot? And we trust our team a lot. And, uh, this is one example where I think we walked out. And you know, I don't believe in consensus driven alignment at all, but you know we did walk away with a feeling of hey, everyone felt hurt everyone unders.
+
+And people understood while we were leaving on the table and what we were going for.
+
+Cool the other one,
+
+[Speaker 4]
+Um? So I mentioned we love doing gorilla marketing stunts. This is an amazing one. We did so. We had a launch and we were thinking about okay, what's? Like the most viral thing you can do, so we were like, we need something where, like everyone gets this item at the same time, and like they're posting on Twitter, whatever it might be.
+
+So we thought, like, what do you do? You sound like champagne to their door? Like, not everyone drinks like, do we send them something in the mail. It's like, dude, I checked my mail, like once a week. They're like, you know, no one's gonna look at this at the same time.
+
+So, like, what's the most innocuous thing you can bring to someone's office that they would just let in, or like, pizza like a pizza shows up your door, like some guy ordered this, or even if they didn't. You're like, it's, it's. Like, I'm gonna, I'm gonna let it in so.
+
+We sent pizzas to over 100 startups and VCS around New York and SF. Um, all of them in these anti-metal branded boxes, the anti-metal Pizza Company, and you can tell that we are a SAS company slices as a service, and we delivered them to a bunch of, uh, a bunch of different companies VCS, and this is actually.
+
+Right before a race, so you know you can tell we sound like eight pieces of the Sequoia, and we send like 10 to Kleiner Perkins. And you know, they're, like, why? Why did they get more pieces than me? So this is super fun. As you can see, we like took a van and like, literally dropped off pizzas to a bunch of companies in New York.
+
+As you might imagine, delivering uh, almost like a thousand pizzas within a few hours, span is like one of the most operationally difficult tasks ever, and you need, you know, no pizza place can, like, deliver that many pizzas. So, coordinating a number of cast rabbits to get that done, um?
+
+Well, this is super cool. And if you come to our office, these pizza boxes are, like, all over the walls of the bookshelves and. Yeah, like, probably like one one of our favorite stunts. People still talk about it to this day, um. And soon in two months. Hopefully we'll have something that he beats in this way.
+
+And the last one. This was just, uh, this is an offset we did in 38 in Florida. In March. So, just a couple months ago, and you know, I think everyone says this. But, like, yeah, work hard. You also play hard, but you have fun with this game, and I think a lot of people you know.
+
+It's like, hey, you come in, you do a job, whatever, I think, for us, our team. Uh, they're people we care about. These are people who are giving probably the most important thing they can give you in their lives, which is their times for many years, many months. And so, for us, we always want to celebrate that to spend time together.
+
+Um, and so, you know, we did stuff like, go to Florida and enjoy the beach, and you can see here playing beer pong in the ocean. So, you know, we
+
+[Speaker 3]
+Have a bunch of fun together. We were able to do
+
+[Speaker 4]
+Awesome stuff like, you know, playing spike ball, like, hacking by the pool, um? Chilling on the beach, like just hanging out together. And I think in general, that's like a big part of our company culture. We optimize a lot on collaboration on working together. I'm getting to know the people who work without a really, really deep level and caring about them mentally.
+
+And yeah, I mean, that's one of my favorite Parts about being a Founder. Is that you get to pick the people you work with and you get to work with amazing people every single day? So, last note I'll leave you guys on. You know, building software is no longer the bottleneck increasingly operating and maintaining it and making sure it works for the life gear companies as you scale increasingly is, and so that is the future we're building.
+
+That is what we're building an anti-metal, uh, we're going to continue to, you know, tip away this Mission. It's a huge, huge expanse of many, many things to build, but you know, we believe we're the right people to build it, and we're really driven to make this come to reality.
+
+So, please come build with us. We have a few people from our team mother here. Grant, who is standing in the back as well as Luz. Right next to him. If you guys are want to learn more about anti-metal, see the product anything. Please find one of us after this.
+
+Thank you so much.
+
+[Speaker 3]
+I thought what
+
+[Speaker 2]
+You were building was quite impressive in your cat table until I figured out delivering a thousand pieces that blew my mind more than the rest. Did you use Asians for the software? No, it's just free agents. Unfortunately, it would have been way easier. Well, next time. Next up have Nicole from Head Stuff.
+
+[Speaker 3]
+Hey guys!
+
+[Speaker 7]
+I'm Nicole, I'm the co-founder and CEO of Head Start, and my co-founder is actually my brother. So we're all in on the nepotism problem.
+
+[Speaker 8]
+Highly recommend!
+
+[Speaker 7]
+I'm also an engineer by training. I started Head Start in 2022. I had a friend that was early at openai. He was employee 99. He's doing great
+
+[Speaker 4]
+Two
+
+[Speaker 7]
+Apartments in San Francisco, and he actually gave me early access to the models. So, on a New York basis, I saw it much earlier than I would say. A lot of New York people San Francisco AI basis, I was still pretty far behind, but early enough to really see what was coming with the llms.
+
+So, what is Head Start? We build production magentic systems that give our clients a compounding Advantage. So, if anyone knows recently, billions of dollars have been poured into the deployment space, so Blackstone started a joint Venture with impropic open AI started. Open AIS deployment Company Google AWS Microsoft. Everyone is pouring billions of dollars into the space.
+
+We did this really from the first llms gpd35 gpg4 in the API. Now, it just has a name, so it's a little bit easier to talk about what we do. We are bootstrapped and profitable from Day Zero. This was a very intentional video very intentional choice. We actually went through some processes.
+
+We had terms sheets from VCS and we wanted to retain ownership of the company and really give the team a lot of ownership of the company. We cared about the team's dilution we cared about prep stack and not having that in the cup table, and so it was a team decision to stay bootstrapped and profitable.
+
+We're not planning on raising money. We may change our change. Minds, but we are team first, no matter what. In our approach to everything. Uh, we deploy AI via private Equity Firms, so we have a lot of relationships, so it's a one-to-many deployment. We're not going, you know, company by company to sell.
+
+We're able to sell to multiple companies at once and our ICP, our mid-market companies, as well as Enterprise companies. We're hiring applied AI product managers and Engineers, and would love to talk to anyone who fits that description. So our challenge. In 2022, we saw the Frontier technology, and we knew there would be a need for implementation.
+
+What's happened is the pace of development on the frontier and the research in the labs has so far exceeded any company's ability to really implement it and process it. Even the products that anthropic and openai both have available in addition to just the models on the API, it's really hard.
+
+It's almost a full-time job to keep up with what's available and how to use it. And so, early on, we became AI native, and we started solving these hard problems, leveraging the latest llms. Our Evolution today is towards building an agentic system that helps us deploy these agentic systems.
+
+So, most companies are going going about this from a pure head count perspective. How do we hire hundreds and hundreds and hundreds of Engineers and get them out in the world. We're doing it from a combination of head count. How do we hire really smart people, but also a platform perspective?
+
+How do we build an agent? How do we build an age-ended system that's going to do this deployment alongside our team and do it effectively in the smart way? Millions of companies need help building magentic systems that add business value. I always used to joke that our Tam is everyone.
+
+What we found in doing the work is doing. The work unlocks more work when you do it. Well, there's an Roi, and so the Tam is really expanding here. Massively, our vision at Head Start is to create agentic systems that free humans up for more fulfilling work, and so we embody this as a culture.
+
+We're not 996, we only expect 40 hour work weeks. We want people to work really hard. When they're with our team and working, and then we want people to be free and enjoy their lives and do fun things and touch grass and all the great things. Why work for us?
+
+Stay ahead of the frontier and even more than staying ahead of the frontier. Help Define the frontier. Like, what is work going to look like when all these agentic systems exist? It should be about problem solving. It should be about having fun, it should be about tackling bigger, better things like curing cancer.
+
+I'm sure everyone's seeing the latest from entropic those are the kind of problems that we should be working on as the technology gets better and better. Solve hard problems. Get exposure to c-suite execs. We work with very large, multi-billion dollar Enterprise companies, and we're in the room with the c-suite.
+
+Every single time, our Engineers are presenting the work in front of them. It's a really amazing opportunity to partner with some of the biggest companies in the world. Work with smart people. Um, we've been mainly referral driven up until this point, so the company that I was at previously seven of us came over to Head Start, new company, and everyone's brought in kind of friends and friends as we get bigger.
+
+We're looking to expand that, but really, just smart people that want to work hard and have fun. And then, finally, have fun. Great benefits. We have an office in SoHo, New York City. We're hybrids, so we're like three to four days week in the office lunch for all.
+
+[Speaker 2]
+Of the team. All those things?
+
+[Speaker 3]
+And then some stories, uh,
+
+[Speaker 7]
+Residency. So one of the things that we offer is called Head Start residency to our clients. We actually teach them about our methodologies. How to be AI native? How to build in the way that we do? This is my suitcase prior to flying to Vancouver swived for the entire team that I had not yet met, uh, these are our Red Bulls and two of our Engineers, Jordan and Stefan, uh, this hackathon with a client in Vancouver.
+
+And then another story is at the JP Morgan Healthcare conference. This is one of our clients really, just to show you we're doing big things, and we're partnering with really cool clients. It's a partnership. It's not them telling us what to do. We're working with them to build the biggest companies that they can build, which is really exciting.
+
+And Head Start in the wild. Anthropic did a case study on us very early on. This was October of 2024, a company called every based in New York ranked a coding agent that we built alongside all of the big guys that we had Wall Street Journal, New York Times, so lots of fun excitement about the work that we're doing.
+
+And then. Finally, we started in a, we work myself and my brother again, and here's our office in SoHo. We have a board room, little Corgi, and much
+
+[Speaker 3]
+Bigger team now, so.
+
+[Speaker 6]
+Come for the heart problems stay because you'll grow faster than you thought possible. Working on these problems with a great team of people?
+
+Comfortable. What does that mean?
+
+[Speaker 5]
+We make money. So
+
+[Speaker 2]
+This is one thing that, um, most people won't know. Whilst we made that people, uh, in the room, I
+
+[Speaker 4]
+Guess
+
+[Speaker 2]
+Everyone who's there, um, we also have founders. We turn bounders away, and Nicole came highly recommended from. I guess a client and a very good friend who said tremendous things? Um, saying, thank you so much. And not seven days a week in office last.
+
+[Speaker 7]
+Reaper. This is crazy 40 hour, two crazy. Next up, we have Michael from arrest.
+
+[Speaker 3]
+Make sure scan the QR code. Haven't already to opt in for interest? Awesome!
+
+What's up, how we doing? Hi, my name is Michael. I run a company called Daris. Um, who here used to work at McKinsey or currently works at McKenzie? One person, hell yeah.
+
+[Speaker 7]
+No, just one person. Okay, cool. Um, Eris automates, uh, like McKinsey, we're close. We'll talk about that more in a second, um.
+
+[Speaker 9]
+Essentially, if you think about a large Enterprise like Ford or Exxon Mobil.
+
+[Speaker 6]
+They have a lot of problems, and the challenge is that if you're an executive at one of these large companies, you have no idea what those problems are because they, the way you find out about those problems, is usually by hiring a Consulting from, like McKinsey, that interviews like 20 to 30 people looks at a little bit of data, tells you what the problems are, and then charges you like 5 million.
+
+It's not a really effective model. Um, the cool thing is that agents are now very, very good at interviewing thousands of people looking at tons of data from a bunch of different systems telling you what the problems are and then actually executing the fix as well. And so, that's what we do.
+
+We've raised that 37 million. We just dropped up a series V.
+
+[Speaker 2]
+Backed by ukg, the large HR
+
+[Speaker 4]
+Tech company.
+
+[Speaker 2]
+And, uh, we're hiring for a bunch of different roles. We're having a good time.
+
+[Speaker 6]
+Um, as I shared the problem, is that these, like, huge problems, are very, very difficult to diagnose, right, because these organizations are complex, it's impossible to talk to every single person, um, and so most organizations are sort of Flying Blind, um. A few good examples. Um, Starbucks has had, like, the worst three years ever.
+
+Any Starbucks fans in here?
+
+[Speaker 7]
+Not anymore. Great. And storeworks decides such a brutal for years because they hired a McKinsey consultant as their CEO, and that McKinsey consultant hired McKinsey to solve all his Starbucks's problems, and it shows that if they just listened to their employees, their employees would have told them all the answers, right?
+
+Most organizations have tons of brilliant people that know all the problems in the organization and can answer those problems, but they never ask their employees another really great example. Who here knows about a company called Intel? Great, okay, cool.
+
+[Speaker 2]
+Intel in 2006 got rid of their mobile ship Division, who thinks that's a good idea. He got rid of their mobile ship division. In 2006, they got rid of their GPU division. In 2015, they got rid of their self-driving car division. In 2018, Intel today is not doing well.
+
+Nvidia is doing super well as are a lot of other ship companies.
+
+[Speaker 7]
+Until at a return relied on. Consultants make these decisions. They did not interview the people that were actually doing the work. They did not look at all the data if they had done all of that work properly. They probably would be doing far better than they are right now.
+
+[Speaker 2]
+So, um, yeah, the way that. And again, the way that Aristols is just to recapitially to everybody. We interview a lot of people. We look at a lot of data. We figure out what's going on, and then we actually work with people individually in slack and teams and text message to solve the problem from there.
+
+Let's move on. We had a very, very odd start. We've been around for eight years initially as a college side project to deliver learning in the war zone in Yemen, who here knows anything about Yemen. Zero people, three people. Thank you.
+
+[Speaker 6]
+So before, uh, back in 2019, uh, when Eris started the conflict in Yemen was the single largest humanitarian crisis on the planet. My background is in humanitarian work, and we were trying to figure out how to deliver learning in a war zone where you can't deliver learning via, you know, an online course can't really do Coursera, like in warzone?
+
+And if you also can travel there, we can send money there. We there is no way to effectively deliver learning. It turns out that we can effectively send text messages and WhatsApp messages, and we ended up working with a few professors from Harvard, a small school instead of Boston.
+
+And, uh, adoption College. Also, a small school set of Boston, which is where I went. And we were able to develop the first text message course. It turns out that delivering learning via text message is super effective. A company called Pepsi reached out to us and was, like, hey, this text message course that you developed for war zones would be really, really effective for training.
+
+Our employees who were, like, cool? And we went on this journey of initially developing an AI first training platform for large Enterprises. We ended up working with about 10 percent of the Fortune 500, uh, and organizations like the US government, and we eventually realized that companies are paying us a hundred thousand dollars to deliver trading.
+
+And we're paying McKinsey five million dollars to figure out what to strain on, and we were like, we want the 5 million, not the hundred thousand, uh. And so we started, you know, developing solutions to sort of take on the McKinsey budgets and also models about six months ago, caught up to the point where doing AI voice generous scale actually worked, and so
+
+[Speaker 9]
+We sort of, uh, shifted into that. Uh, the idea of delivering learning via text message in 2019 was considered to be really, really dumb. And we, for a very long time, had to contend with the fact that nobody understood why we were doing that, and it all paid off.
+
+And we're super happy now, so. The the core philosophical principle behind our work historically has been that the people closest to the work are the ones that actually understand what's going on, right? Nobody, like nobody in terms of, like, like leaders. Software platforms in general focuses on meeting people where they are especially Frontline and field teams that often have a lot of Truth and are often left behind, and so the core driving principle of airs has been.
+
+How do you meet people where they are and meet, especially Frontline and field teams where they are? So, why should you work for us? Uh, hey, we have a really good time. We support people the way that they need it, right? So, we're relatively flexible. Not super flexible, but relatively flexible in the best way.
+
+And the problems you solve here are extremely practical. Eris is the US government's partner for delivering AI training to the entire U.S government and, uh, American workers that are left behind. We've delivered a few hundred thousand courses so far over the past few months. If you work at Harris, you'll be solving very tactical problems, helping the American Workforces very, very specific and tactical way.
+
+Um, so a few stories, sorry, did a little learning in War zones. This was a classroom in Yemen that we initially focused on delivering learning to this course is happening. Um, in the basement of a school. Um, Story two. We help, uh, Department of Labor with their AI training program Story three.
+
+We have a good time on Retreats. This is us at Yosemite. Um, Story four, one of our marketing team members, spent a lot of money sponsoring a ludicrous concert. If you work at ERS, we recommend that you do not do this. Um, so, uh, we are a very, very small team serving, uh, you know, over 20 percent of the abortion 100.
+
+We're growing extremely fast. And we're only about about 30 people, right? So, if you work at Harris,
+
+[Speaker 6]
+You have a ton of ownership, um, Sam, in the back. What's up, Sam? Um,
+
+[Speaker 9]
+Sam is our one-person growth team, um, most apartments in Arizona store. One person, um, and so if you work at Harris, you will have a ton of autonomy, a ton of budget to work with, but you will be somewhat alone in terms of your execution. The reality is, we find that today, given the context of the tools that we have.
+
+Individuals can do exceptional work if they're given the right resources, the right support, and the right autonomy, and so much of what we focus on is, how do we empower the individual to do the best work of their lives. And at Eris, so far, that's one of the reasons we've been able to grow so fast and work with such incredible companies, despite being so lean.
+
+Yeah. Any questions? Thank you.
+
+[Speaker 3]
+I thought the ludicrous story is getting differently. And did you join RSU? It's like hang out with them, because that'd be pretty cool.
+
+[Speaker 5]
+Um, I
+
+[Speaker 2]
+Love him the backstory of, like each company, and like, where they, where they started from, um, you see, so many that are super successful. Now, I'm doing great things, but didn't start that way. But yeah, I'm disappointed. Like, Ludacris isn't your CMA, um? Next up!
+
+We have. Jeremy yes, 0.1. Okay.
+
+[Speaker 3]
+Yeah. How you doing everybody?
+
+So, I'm Jeremy, if you look in your pamphlets, you've probably seen my co-founder Cadence. So, you got lucky that he wasn't able to make it tonight, um? Here's a picture of me.
+
+[Speaker 9]
+So? Here's a one-liner on point one, but uh. It's not super important when it says we raise 20 million dollars. Our series a was just a few months ago, but who years worked at a law firm raise of hands, anybody, a few hands Professional Service firm.
+
+[Speaker 10]
+Mackenzie includes is included in that, and so I know we have at least one okay.
+
+[Speaker 9]
+You probably are aware that there's a lot of old technology in these forms, especially on the business side. You've probably heard of Harvey for law firms, we're focused more on the business of Law and also Professional service firms more broadly, whereas there more on the practice side is a good way that you can think of 0.1.
+
+So? You can see.
+
+[Speaker 3]
+All right u?
+
+[Speaker 9]
+It's a little bit different than other presentations. I'm just going to jump right into one story, and there's
+
+[Speaker 2]
+The whole thing.
+
+[Speaker 9]
+So I used to live here. This is in, uh, California and Mountain View. Which is near Palo Alto on a little one of their 3, 000 compounds that looks like this. Every everything looks the same. It's a nice, nice little town, uh, and I was living there in my co-founder, Caden, or you can read about on your on your thing, and he was at a company called applied intuition.
+
+Anybody knows applied intuition? Oh, quite a few yeah, fantastic company, obviously. Very high talent bar, uh, great Engineers. He was no exception. He's probably one of the best Engineers there, so he was there out of college. I was at Google. And we were living together. We were met through a friend of a friend became very close.
+
+And oh, no, that's that. Okay. We, we became very close. Well, it's fine, actually. Yeah, he moved into my closet. He was a deployed engineer, so a lot of them go. They're deployed to like Europe, Stockholm, Munich. He was one of them, so he went abroad. We subleased his room and a very cliche Silicon Valley.
+
+Thing he moved into my call. I had a nice closet, actually, it was, and that was his tatami mat here. And these are my clothes, which I managed to find a picture.
+
+[Speaker 10]
+Uh, so we became really close. My girlfriend didn't not love that he was in my closet. It's okay, it became friends. Forced into it a little bit. Um, what's yeah, so okay, so we, we, we like living together, and we I was looking at actually joining a series a company, but we were like, you know, we really like living together.
+
+We like. Sooner jamming on ideas. So, why don't we just leave our jobs and work together? We're just very good friends. We wanted to spend more time together for some reason. So, so we left our jobs and after about a year for each of us and moved to Upstate New York.
+
+And I saw some pictures of upstate New York earlier, and I'm very familiar because my family spends a lot of time up there, and so we got to live up there for free. And this is a Caden taking a picture in a in a report taking sorry, a video call.
+
+So we quit our jobs and moved Upstate and. Uh, let's see. Oh yeah, oh, these were great. So we were, we're all we were next to a farm, and we had goats on the farm, and it was fantastic, and they eat anything. I don't know if anybody's ever dealt with ghosts.
+
+I, I had not. It was great. So, we just wanted to do Discovery, right? We were, uh? We didn't have any particular industry Focus we were looking at law. We were looking at prop Tech. I like proptech, he liked law. And so we were. We just went out there.
+
+Let's focus on attorneys focused on property managers. Ended up finding that the attorneys really hated time keeping hated timekeeping. So if anybody's ever had to keep time, you probably hated it, too. It's awful. It takes a lot of time. You probably don't capture all of your time. And managing partners of firms and procurement sort of had a sense of this at the time.
+
+I think it wasn't super. That mainstream for law firms understanding this. This is about two and a half years ago. But timekeepers really hated it. So, we decided to build a Time Keeper. For law firms. And we went to YC. They have a lot of very. Sort of infant infant infantilizing tasks for you to perform, and why I say like carving ice.
+
+So I did that, and it's a picture of me carving ice. Uh, it was fun, though. YC is fine, so we did YC about a little under two years ago. A little over two years ago, sorry. And at the end of YC razor Z around. And then we were moving.
+
+We were living in dog patch at the time in San Francisco, so we eventually left Upstate New York, obviously to do. YC, we moved to dockpatch. And we kept our tickets like this. It's a horrible way to do it. I thought it'd be super cool to have this picture two years later, and it sort of is, I can use it almost like, right now, but it's a very inefficient way to track what you're doing to serve major law firms.
+
+It just does not make any sense, so
+
+[Speaker 3]
+I highly do not recommend.
+
+So, okay, so eventually we moved to New York.
+
+[Speaker 10]
+We and we did not go back. We are now staying in here. We stayed in New York ever since. This was actually our first office, even though we only had three people
+
+[Speaker 3]
+And we
+
+[Speaker 10]
+We were put into the massive office in like a holding place where we waited for a much smaller office that we eventually were going to move into.
+
+Um, yeah, so? I skipped something in this, because now I'm at this slide. Uh, well. It was a very small company at the time. We had, like, no money, and we were still. We were working with larger firms. But at the time you know, uh? We really hadn't hit the revenue goal that we had, like we were aiming to hit NYC, and so we were wondering, like, what are we, you know?
+
+Where do we like, we need a little bit of Exit Vlog today? We hit that. This is at our holiday party when we're holiday parties. This is our first engineer, Billy. He's great, and we did hit the revenue goal, uh, it was a piddle least very small Revenue goal, but we hit it.
+
+A little over a year ago. And then, okay, we hit Revenue goal. We want to make sure we're hiring at Pace with our Revenue. So, do we bring on people. The answer is yes, none of these people are actually at point one. We just thought we put it on our website because it looked like we had more people we were serving.
+
+We made the law firms, so we thought, well, that's it, you know. It looks like a serious group of people. This is me and Katon to sort of make it sort of anchor the picture in some reality. And eventually we did actually bring on people Vicky's here tonight, uh?
+
+We did. We had enough for a real picture of people that actually worked at the company real professionals.
+
+[Speaker 3]
+This is now about a year ago, actually a little under a year ago. So, I don't this slide. I'm not. I don't know what this is. This is not, I'm not gonna talk about this. We have a fantastic culture at the company.
+
+[Speaker 10]
+I, I can talk. I mean, we're very, I think we're very like, we really focus on high throughput, communication, and transparency and feedback. Uh, we think it's just the best way to learn and grow. We need to be a different company every single month. The only way we do that.
+
+Well, we do that by bringing on excellent people who are gonna wish us to grow. But we also do that by growing ourselves, and we can only do that by communicating with each other. Understanding what we're doing well, understanding we're doing poorly. That's a little bit about our culture.
+
+And then, a few months ago, we raised. Series a, it was about 16.5 million a little bit more actually. And this is a picture of the team, but since then, it's grown about three times. We have just under 40 people now. Obviously, revenue has grown, uh, substantially. It's been an unbelievable year.
+
+I think as you're thinking about point one. I started by telling you a little bit about the timekeeper. And how we sold into law firms and how managing partners and procurement sort of understood this. We've really seen the market for automated time keeping develops substantially over the last two and a half years now.
+
+Really, every major law firm is thinking about procuring an automated timekeeper. And we've of course expanded the business to other products, and we're seeing the same appetite growth across those other product segments, not only within law firms, but actually in Professional Services as a whole, so that's driven a lot of our Revenue growth.
+
+And, of course, the revenue growth has driven a lot of our people growth, so it's been, uh. Very, very big year as a result. That's all I had actually for tonight. I appreciate everybody. Thank you.
+
+[Speaker 3]
+I'm so glad Caden wasn't there. That was way better. Thank you um! I guess I knew point one before meeting Jeremy and the rest of the team, um, just a bit like a bit of an Insight there, um, I guess. Thanks, be friends. What kind of friends? Um, uh, a friend of mine just moved to York.
+
+Um, was thinking about starting a company had still, which I think is one of the best ideas ever.
+
+[Speaker 2]
+Um, and it was, does he start a company, or does he join somewhere and then? The way I think about companies and joining there is the type of talent they're able to attract. Is that somewhere where I would want to
+
+[Speaker 6]
+Work, or does someone this really want to work? Is there any New Testament to? Where you guys are building, um, I'm deaf. So many questions on the goats. Yeah, what did you feed them?
+
+[Speaker 8]
+Grab the grass that they were standing on actually. Yeah, but
+
+[Speaker 2]
+You should be anything, so I made this one for later. I think they would go for the grass in the cells, but you just you plucked it out of the ground, and it's better to them.
+
+All right. Last but not least, we have Dilip from Thunder.
+
+[Speaker 3]
+All right. Thank you. Um, so I am Phillip co-founder and CEO of Thunder. Um, thanks again, ivern team for having us present today.
+
+[Speaker 4]
+We are building AI agents, uh, to automate growth marketing end to end, and as our wedge, we're starting with agents second run paid advertising channels for B2B software companies that are sales Lad, um, fully end to end. And we're a lot earlier stage and a lot of the other companies that are presented before us, um.
+
+The team is just me, my two co-founders over there, Miss Shane Ryland, who are waving. Um, so combine this after if you want to learn more about thunder. But. Uh, we are back by incredible investors. We raised the pre-seed round from company Ventures whose co-hosts in the event today, as well as early leaders at Coastal Ventures open Ai and HumpSpot.
+
+We since building our Asian platform and launching the first version going live with customers just a few months ago, our growing Revenue incredibly quickly. And our, uh? Very quickly trying to hire for growth generalists and Engineers to help us build on that momentum. And I'll talk a bit more about the roles we're hiring for at the end, but I first want to talk a little bit about the plot.
+
+The problems we're working on and what working with us is like. Um, so? We really believe that growth marketing is one of the most interesting problems. We can work on right now within the AI agent space for a few reasons. Great marketing is a combination of Art and Science, qualitative and quantitative, creative taste, and data-backed execution.
+
+And in addition to that, the problem is incredibly complex because the context needed to make really good decisions is very fragmented and to kind of illustrate that a little bit, um. For regulatory example, think about coding agents for a moment for a coding agent. The majority of the context is contained in the code base.
+
+That's hopefully well, well labeled with good comments, but also as git to help agents Traverse all the changes made in the code base over time. Uh, and why they were made as well as maybe some additional contact sitting in just jare tickets and error logs. But really, the the context is fairly well contained compared to Growth marketing.
+
+Think about it, like running paid ads. There's a ton of context we needed to make decisions sitting across a bunch of different fragmented marketing tools and team members. So there's just the ad platforms to start, and there's all the data contained in the ad platforms. That you can slice and dice in various ways and all the campaigns that are run for the company and all the creative assets you might index.
+
+Then there's the CRM data. So there's a ton of data about every sale that have every sales process. Um, what a good customer look like, uh, win rates. Contract value. All these things that are important to understand, and I should attribute to the revenue that ads drives. Then you have a bunch of information scattered across the web of what different competitors are doing what their messaging is, like, what their possession positioning is what keywords they're bidding on, what their landing pages look like, what their creative looks like.
+
+There's a bunch of search volume and keyword data goes on and on. There's a ton of fragmented context to try and make good decisions, and the decisions are really high stakes. Our customers have seven figure eight-figure. Ad budgets is a really high stakes decisions and making good decisions on the ads actually directly impacts Revenue.
+
+High stakes, extremely impactful, and very interesting problem to work on. And, you know, building agents that can actually reason across all of this context and make strong decisions that drive pipeline revenue for our customers? Um, is a pretty interesting problem to work on and. From a. For a technical perspective, we've been building, uh, agents with our own custom agent harness.
+
+We orchestrated across a bunch of different Frontier and open source models. We interacted the agents in a cloud Asian platform we built. So, on the go on my phone on my computer, I'm spinning up agents and sandboxes that have access to all of our customers company context. In addition to access their CRM, their ad platforms, a bunch of different data and tools for our agents to design campaigns just directly go and run campaigns, optimize them, report attribute revenue, and keep building the next experiment and improve the next.
+
+The next growth experiment for our customers and?
+
+[Speaker 3]
+Here we go, um.
+
+[Speaker 4]
+One of the really interesting incidents we found is that, rather than sell, our customer software go hand them our Asian platform to, hey, connect this to your ads platforms. Go run your own ads. It's a lot better for both our customers and us to sit closer to the problem, and that's true in the AI era than ever before.
+
+You want to sit as close to the customer problem as possible. So, what we do is we just take the problem entirely off their plate. And we say, hey, don't, you know, don't take our software, use it, and tell us how it works. Let us just run your ad channels for you, so that's exactly what we do when we onboard a new customer.
+
+We connect Thunder's agent platform directly to their ad platforms, their CRM and all their company contacts, and we proceed. They're, they're paid Google and Linkedin and other ad platforms directly for them and Dr and use our platform to drive the results. And the results have been great. So far, so, uh, we've been working at a bunch of fast growing series agency companies, um, including.
+
+A company that actually presented an earlier shortlist event called basic Capital. That's a series, a fintech company in New York, and since working at them two months ago. We've driven more pipeline and closed, want revenue for them than they were seeing from paid channels all year today. For the last six months.
+
+[Speaker 2]
+So, we're seeing really great results for our customer customers
+
+[Speaker 4]
+And just as important as that. We're getting an awesome feedback loop because our agents are directly running against huge ad budgets. They're making decisions every day that are driving revenue, and we're getting the full feedback loop. We're seeing all the different workflows that have to be run across customers.
+
+[Speaker 2]
+Where a human is still needed in the loop where human contacts and business judgment is required and for anything we do manually. We make sure we don't do it more than two or three times as a rule. And make sure we automate it via our platform, so our agencies get better and better and make compress time and work and results for all of our customers.
+
+Um, so? Who are you working with? If you join us is, uh, just the three co-founders today, and hopefully a lot more people that we hire quickly. Um, to give a little background in each of us. Um, I'll date myself a little bit and say. If you've ever seen a BuzzFeed quiz, uh, on the Internet or taking a BuzzFeed quiz, that was my product.
+
+Um, so I started my career working at BuzzFeed soon after the. A16 series they had, and um, I worked on a growth and product for a bunch of their internal and external products, including BuzzFeed quizzes, and grew that to billions of content views. I then left to start my previous company jump cut.
+
+Um, I had the fortune of working on collaborating with teams at anthropic on early agents in late 23 and early 24 had an agentic workflows at that point, given where the models were. We had a bunch of amazing customers like Netflix and ultimately sold the company at the start of 2025.
+
+Um, and then I started, uh, Thunder with Miss Shane Ryland, and I covered their backgrounds briefly, um, initially as our CTO. He before this. Was Tech lead, uh, for a bunch of engineering teams at LinkedIn building out the core ads platform infrastructure. So, he really understands the martech space and and some of these problems.
+
+Um, he also brings deep machine learning background and a ton of experience working on browser use agents as well. And Rylan, my other co-founder is. Is a polymat, uh, he's an expert on AI memory. Research has given time presented papers in New York on continual learning and memory for agents.
+
+He's also an incredible designer. And if you talk to him after this, definitely ask him about his previous life. As a Turin musician, big Tick Tock star. But yeah, you bring a diverse set of backgrounds to tackle this problem. Um. This picture is actually, uh, from the lobby downstairs.
+
+Uh, where we were first working. When we first started the company, but we've since moved to an office in SoHo. Uh, and a few things that we really believe in and and hold, uh, deer as a team. We're incredibly customer obsessed, which we have to be because we're working directly on operating our customers at platforms directly and driving results for them and.
+
+[Speaker 4]
+All the small details that matter. So, even though we're extremely AI native as a team, we are not AI slot cannons. We really believe that, uh, in addition to AI increasing. The quantity of our output. It also needs to increase the quality of our output, and we obsess over all the details and, and that's what really helps us improve our product, uh, every week over week.
+
+And finally, uh, we're both, uh, incredibly hard working and kind, and we believe empathy is really important. We pride ourselves on having high EQ. Because we need to support each other and doing some of the best work of Our Lives. And to win, um? Yeah, we need to have, but high ownership hard work, but also be kind to each other and in the work that we do.
+
+Um. Why work with us? So, in addition to the fact that we really believe that this is one of the most interesting problems you can work on within the agent space, the reasons I mentioned. If you're an engineer, you get to work at an agent lab that has an extremely tight feedback loop with high stakes high impact work for our customers, and as a growth operator, uh, you'll not just see one growth funnel for one company that you work for, but you'll see growth funnels across dozens of different companies.
+
+And you know what's helping them scale as they grow from seed series A's? Here's B series get a ton of reps in, and it's a great, great role, uh, for a future founder or head of growth or head of marketing. Um, and in success. The opportunity here is massive.
+
+One way to think about this is over the last 25 years. The internet has turned into an 800 800 billion dollar advertising machine that today marketers have had to operate by hand, and we finally get to automate it now. And there's a ton of value to capture in doing that.
+
+Um.
+
+Hiring for two roles? 100 engineers can get to work on the agents directly, as well as all the infrastructure evals tools everything to make the agents run and improve over time. Um, but I want to
+
+[Speaker 3]
+Call
+
+[Speaker 4]
+It the growth generalist role. In particular, we're hiring for a founding growth lead, but it's not to grow us, it's a little bit unique. It's to grow our customers. Think of it essentially as a forward deployed growth role, where you'll be work collaborating directly with ads of marketing and Founders and all of our customers and owning their paid channels and dragging outcomes using Thunder and building the feedback loop for us to continue improving the product.
+
+And in addition to just being customer facing and operating customer accounts and working on growth. You'd be also thinking about how we increasingly. I work. Potentially even build out a team, and I'll think about how we further compress work and take on take on more customers and drive more impact and revenue for that.
+
+Um, so that's a little bit about thunder. If you'd uh, like, to chat more, uh, please come find myself, uh, or Rylan or Nisha in the back there after this. Thanks so much.
+
+Awesome!
+
+[Speaker 2]
+It's the quickest turnaround I've ever seen from Dylan. Last week was in the south of France and left his anniversary dinner with his girlfriend, jump on a call with me, um, which was kind of crazy, um. Guys, that's a wrap. We're done. Shortlist August is over, um, we will be opening up.
+
+We're running a little bit behind. Um, so I think there's drinks to follow. I believe somegavi, you may not. Yeah, awesome. Um, can I? Before we do that, can I just grab all the founders on stage for a quick photo? Um, before we do that. Qr code. If not, cigari will shout at me, um?
+
+Make sure you request intros to companies you want to talk to. And thanks everyone for coming out.
+
+[Speaker 3]
+I'm sorry, no restaurant. Okay.
+
+Yeah, yeah.
