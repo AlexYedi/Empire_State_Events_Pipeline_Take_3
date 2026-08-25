@@ -166,6 +166,14 @@ the reader can compare. Vary the *content*, not the *frame*.
 > Pick a different arc instead (often Arc 1 or Arc 3) that visualizes the
 > *implication* of the convergence rather than re-printing the quotes.
 
+> **Arc 4 variant — Company-Spotlight Grid (added 2026-08-25):** for **founder /
+> startup showcase** recaps (see `founder-showcase.md`), slides 2…N are one
+> **company card** each, in an identical frame (founder/role · one-liner · Problem ·
+> Unique · Recent/funding · Hiring · stage/HQ), bracketed by a cover (Slide 1) and a
+> synthesis (Slide N). The added information is the structured 6-dimension breakdown
+> the post text only summarizes — not a re-print. Amber (hiring) accent. First shipped:
+> The Shortlist — August Founder Showcase.
+
 ---
 
 ## Universal slide requirements
