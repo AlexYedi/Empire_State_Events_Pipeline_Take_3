@@ -63,6 +63,11 @@ If Alex tries to run `/weekly-recap` before this is built:
 
 ## Wiring TODO (for the build session)
 
+- [ ] **Steering — two-touch** (`.claude/skills/steering-interview/SKILL.md`): run **Touch 1 (Aim)**
+  at the top (what to foreground for the week, audience), and **Touch 2 (Sharpen)** after the event
+  set is assembled and before drafting — ≤3 genuine forks derived from the week's shape (which
+  through-line, which events lead), never generic. Persist to `## Author Steer` (Sharpen). Skippable.
+
 - [ ] Decide pattern-synthesis trigger automation — programmatic detection of "opposing theses" is hard; might just surface candidate pairs to Alex and let him decide
 - [ ] Cadence rule enforcement: store last synthesis post date somewhere, refuse if <7 days
 - [ ] Anti-signal aggregation: requires Step 7 retros to be consistently filled in — depend on Workflow B running reliably first
