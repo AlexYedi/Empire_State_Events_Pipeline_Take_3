@@ -1,0 +1,401 @@
+[Speaker 1]
+To be able to do this together. So, what is pleasant life? First of all, so we are a VC, we're new to New York. We just opened our offices a few months ago, and I'm new. I've just been there one month. Um, but yeah, we're super excited. We have about 73 offices.
+
+Probably, we do a bunch of different things. So, firstly, we're a traditional VCS, so we usually best in the series a startups. We're doing about 50 000 to 2 million on our checks, and we're averaging about a check a day for business day, uh, last year, um. We also provide, uh, like matching with corporate, uh, Innovation team, so we want to meet as many startups as possible be able.
+
+Those Partnerships have been. That's completely stagnostic. We just like matching people and solving problems, so we want to meet every sort of that there is. So, come find me if that's you especially. And then, we also run accelerator programs. So, those rotate about every three months. Our next one is focus on Professional Services, so if that's also, you come talk to me, and those are completely Equity free.
+
+We're really just found our first trying to help startups here in New York, and as I said, I'm on the program side of things that's really my wheelhouse trying. Help startups and Founders kind of get the most out of the ecosystem here. So I'm also an event if you're in the event space.
+
+Come talk to me. We're trying to do more events like this. And yeah, we're super excited to be here and excited to learn about GTM. No, thank you.
+
+So, back to our panel. Let me quickly introduce surgery panelists. We have Kenny, Josh, and Eric, so I will let them introduce their name position of what the company does.
+
+[Speaker 2]
+Awesome! Thank you dwella! So I'm Tammy and one of the co-founders and CEO of vibranium Labs. I have programming labs. We're building Tony nasari, which is the first AI on-call engineer to supercharge your incident response. We're solving engineering issues 55 faster with 50 more AI, 50 less cost. And so thanks for coming everyone.
+
+And so, as Joel has said, um, our topic today is going to really centered on. Okay, in the age of AI, there's just so much noise. Marketing sales so much AI generated content messaging that's going out into the world for its customers. How do we kind of break the Brew and actually reach partners and customers?
+
+In the the context of this environment, and so super excited to have my friends Josh and Eric here, and I'll let them introduce themselves as well. For the.
+
+Management of the organization. So, this basically is trying to dedicate what we call Shadow I.T or Shadow AI, where people are trying to create stuff and feed in data from companies that you shouldn't be doing in, like these unofficial tools, so you working can build out all these tools.
+
+We figure we handle the front end backend authentication SSO database, so you don't ever have to use your environment to connect with another SAS product to create your, uh, for. Stack application and you're not building a prototype. You can actually deploy it, we deploy it, and our team. We've slashed about 40K a month worth of SAS application from it, or we built our own basically like versions that work for us.
+
+For HubSpot notion, intercom things like that. So, yeah, really excited to be here and talk more about GCM. Prince. Thank
+
+[Speaker 3]
+You. Welcome. Everyone really excited to be here. And my name is Eric. I'm a revenue AI engineer at a company called Flex was Flex. Flex helps split your rent into. Um, Flex is a multi-family space. We do our main product as a B2B to see products where you are able to split your rent.
+
+We work with property management companies to help. Uh, keep the buildings full and I, as an AI Revenue engineer, am responsible for our entire AI program at the company. The company is quite mature in its AI Journey. However, you know, we're reaching the point where? Um, my perspective as well, where?
+
+Um, we're not just looking for fun tools and fun. Things are split up on hackathons. We're looking for programs that are splen up with intention where there's data behind it, and they actually help move the needle either in terms of saving money saving time or your company. I'm very excited to be here.
+
+I want to thank the variety Labs team for having me here. And I'm very excited to kick it off.
+
+So,
+
+[Speaker 1]
+As you can see, we have a variety of experiences here with a CEO of style and. Revenue AI engineer, and so I guess our main question and the reason why everyone is here, right, is. We want to know what's one thing you think has worked for you to break through AI swap?
+
+So, we're just going to go through one by one and then from there. All right. So, how many of you guys have watched, uh, the Odyssey? Oh, actually, the majority of people, all right, so. Your old story.
+
+[Speaker 2]
+There's, there's two very famous lines, one of them. I'm sure you've seen as a view. Get these bears out of here, but not that one.
+
+[Speaker 3]
+Um, what one line from the movie there's another school?
+
+[Speaker 2]
+It's just there's
+
+[Speaker 3]
+No conflict, but one, I think, the most kind of famous line for me that have impacted me. I still think about actually since I watched me a month ago. Is the line where you know, it says, you know, what you most want is what you want to have and what you?
+
+Already had is kind of what you lost, and so you know why. I've been thinking about that a lot is, I think you know, the Odyssey is really harping on this idea of, like,
+
+[Speaker 2]
+Okay, the idea
+
+[Speaker 3]
+Of being home or kind of the place before the beginning?
+
+[Speaker 2]
+And so, what does that relate to GTM at all?
+
+[Speaker 3]
+Um, for me, as I thought kind of more and more about, like, what is my like, ATM philosophy, or what if I had to describe gtn as a framework. Where does it all begin? And for me, I think the key to YouTube is actually really returning or to the basics.
+
+And what does that mean? So for me, like, you know, in this age of AI, the way to fight ass love or break through as love is not just kind of using more AI. But leveraging kind of what is the most true and personal and exciting to you? Sights.
+
+Um, that are very expert and specialized compared to to even my thoughts, but to kind of break down my framework one. Who you are and what excites you meeting. What works in the market for
+
+[Speaker 2]
+Where your product is?
+
+[Speaker 3]
+And then three. How can AI amplify those things by 10x or 100x? And so, I guess to, like, put that, more concretely, I think, in the early days of vibranium. Um, starting like two years ago, or 18 months, you know, the typical Playbook in the pre-ai age. And even now, I think people, a lot of the time, think, like, okay.
+
+I should spin up a ton of email in boxes. You know, put it into instantly. Get a bunch of contacts from Apollo and then just start spitting like tons of emails. And now, like, you know, Claude, or or Chachi PT or whatever? It sounds so good we're taking. Actually, spin up emails.
+
+That sounds like pretty human and pretty On Target. And I think you know at scale, you may or may not like get talks, um, that lead to potential sales calls or conversations, but Go again! This is like two years ago for me, not understanding, kind of like, what is the market like, who actually will communicate?
+
+So we're targeting Engineers or engineering leaders. And I think over time I thought a lot of the time is engineering. Their ctOS VPS are getting inundated by so many companies that they don't necessarily, you know, respond to emails well or there's about chance you do. But it's because you really hit them at the right time, but the value proposition that was really perfect.
+
+And so, it feels like, really, like, you know, shooting that needle in the middle of hey stuff, and so not understanding that I think you know, definitely took kind of that impersonal. High level approach and over time realize, like, oh, okay, like this is actually probably just what every devtool company or engineering team is doing, and with AI, every email is probably starting to sound the same.
+
+So? Then, okay, what was, like, my Odyssey moment, like, I think, where we started seeing more traction was definitely like going to events like this or conferences coming into contact with Enterprise leaders, our Founders? Um and and in in physical spaces, but also in digital spaces. I'll say like some of the most effective Communications for us have come through LinkedIn Outreach or posting content about kind of personal stories about my transition and.
+
+Or as a ex-lawyer to a Founder in the last two years and realized that, like, oh, the reason why a channel like LinkedIn was
+
+[Speaker 4]
+Emails.
+
+[Speaker 3]
+People can actually see your profile if you send a message they look at who you are, how you're branding yourself, your previous posts, videos that actually kind of. Tell a sense of your voice and your identity. And so I think I realized like, oh, actually, like, maybe the starting place for at least our vertical, where there's some noise and so much, targeting towards the same people is actually like a base of personalization and voice and identity that actually starts from me, not just kind of personalizing into the email that goes to them, if that makes sense.
+
+And so, you know, for me, that they kind of hit a realization where? I'm very extroverted people. I love communicating and connecting. And for me, it was kind of this. Like, oh wow, okay, this is actually like a more exciting way for me to approach people and connect and kind of leading with that relationship or a connection actually led to more conversations about sales at the end of the day, which is, you know, as a business, what we're really focused on.
+
+That's our KPS, our outcome. But, you know, one of the core lessons, and I think a lot of AI Community experiences. That makes. 400, 500, 000 a year. And the reason is because they're realizing you can't just throw more and more content into space to get people's attention, and so for me, it was actually like, oh, this is kind of core to who I am.
+
+It's like, I like connecting with people. I like personal connection and being able to actually speak to someone about a company or products. It lowers people's guard. They're more willing to listen through the AI fatigue, and I think they're more open to hear. What you're building because you're a person.
+
+You're not just a message coming through email. So, I think just to kind of put a bow on everything I think. Am I like, way over, okay?
+
+So, I think you know, this isn't like a super kind of ground level execution gonna take for me, but I do think I thought a lot about my framework and how the starting place for me is really that connection of, you know, identity, and personal, uh, personal and personalization.
+
+Um, and ultimately, I think these days a lot of the most successful things are the ones. Pushing a real human brand aren't just like, and so, um. That's kind of like the beginning. I would say of the framework that I'm thinking about, we're supposed to kind of hear your thoughts as well later on, but uh, let me close it.
+
+Here is the way over, and then push, uh, to Joshua. I did not watch the Odyssey. I did not have a movie quote this time, but um.
+
+[Speaker 2]
+I agree with literally everything, Penny just said, and a lot of it. What I'm about to say is probably going to be somewhat derivative of that, but um, I think, for me, working at Remy working in the GTM team, um, personalization has become so big, especially because of AI small, has become such a big thing, right.
+
+Like, Kenny said, a lot of the sequencing, the the emails that we get like, I don't know about you guys, but my inbox is flooded with. Hey, open protection. Like the moment I see that spin, right? Um, and we still try to do these old outbounds, too, and we're not seeing any replies, right?
+
+But the only require we get is the out of office ones. So, what did that get us to do? And I think if I had to break it down into two main focuses for us already? Identity as a brand as a as Remy, and then the community right, and so.
+
+We've taken a very interesting approach where, um. Let me give you some context of prior to Remy. Remy is a. Ascendant product of an a different product that we've built, called my studio mind studio. Really quick is an agentic workflow automation tool in n8nzapier, uh, we are more user-friendly and no code right.
+
+And Remy is built on top of that SDK. Anyway, that doesn't matter, um, one of the ways I wanted to grow mind Studio writing as a brand. Was it actually to push our product to people. It becomes such eternal. I see it in people's eyes on, it starts saying, oh yeah, I work at Remy.
+
+Here's what it is. People's brain shuts off, right? Um. So, we've actually. And I just checked this because of this event. Over 10K community members on Luma. And just our brand alone, uh, within the last eight months. And how did we do this? It wasn't about Remy. It wasn't about my studio.
+
+It was actually we set up, uh boot camps and webinars about the broader topic of Agents and agentic workflows, right? Because That.
+
+We take. We've leveraged that so that we hold these boot camps that are more about these broader profits. But then, we use mindstate. We use Remy, Showcase that, and let people like. Use that to then practice their own prompting skills, or they're all like understanding of Json, right? I mean, actually, be able to generate their own thing, so I think it's a more indirect way, but that has actually helped us not only get users, but also even now, we're doing this huge push into, you know, mid-size Enterprises right.
+
+And, um, rather than setting up full email, uh? We can actually go back to the list of participants in our two-hour free webinars, as well as our paid food camps that people have joined, and it makes the LinkedIn connections or emails so much more warmth of by saying hey, so you joined this.
+
+Webinar, or like this class three four months ago, would love to catch up, update you on how to change from an agent workflow, or like, would love to talk more about AI transformation. Shadow AI things like that, and that bodes a lot more to people wanting to talk. I think there's this desire to build a community and the last thing I'm going to say is, like, yeah, we're seeing a lot of startups doing that events of a program leads program managers.
+
+Very highly solve their jobs. Now, they're saying anthropic with like the 400k salary, right? I like to bring up, and I have no information with them whatsoever. But Corgi, if you guys have heard of it, right? Huge, like, Fitness company or financial or infrastructure company, but they've created a whole brand around opening up a cafe called Corey and then allowing that place to be a place where science can build events and things like that, and that actually creates this whole other community that.
+
+You, probably. They probably could not have gotten um if they were just trying to pitch their their or whatever plan I can actually know. So, yeah, I'm gonna do that at that. But, uh, brand for salad, Grand identity, and community has been a big focus and a big like success for us.
+
+You just saw a master class of marketing, by the way, you just you just saw masterclassive marketing. He knows, quorging everyone knows Corgi NX, spamming all their stuff and then cafes. Is the brand, which I think a lot of companies have done very successfully. Of course, I'll get into.
+
+I have been just back some background in me. I spent almost a decade in marketing before getting into. Um, systems in Ai and revenue and go to market. I might grow my hands up. Story was. I was at the main generation manager at a hospitality company here in New York and tldr.
+
+I just went up a great campaign outbound to our unknown accounts in HubSpot, where our sales people would be able to claim those accounts. If they were, you know, responded to, and then you know, deposited in Salesforce, I get a last minute slack notifications from our commercialized people, saying, hey, you can't send that out because all those unknowned content hubs are actually owned in Salesforce.
+
+Just imagine my anger. Yeah, so? So that was kind of my moment. Um, I'm passionate about AI, my personal life, professional life, of course. Now, I do it for a living, hoping to drive the AI program at flex. As I mentioned. I feel like I'm threading a needle here down the line because I.
+
+Really love the themes that are brought up here. I'm much more I love how we're going more high level down to implementation. Um, I'm not going to tell you what more 2000 at the very granular number but level, but I feel I mentioned brand earlier. I feel like brand is the number of way to gain Association at the top of homo, right?
+
+So you have Josh here, who knows about Corgi, but doesn't know what they do. They provide Insurance for startups, by the way. Um, that was not like downtime Insurance stuff like that. Even, I don't know, I'm crazy, um. And. Bringing out that Community, uh, that Community aspect, bringing out the brand aspect, I believe, is so much more important.
+
+I'll tell you a story. Everyone here knows clay, right? Like, raise your hand if you don't know about play. Shouldn't be a hand up in this room. Great, um? Just quick fun little story. I'm not like doxing anywhere or doing anything fun, but I was at a role actually for a nice, fast, intense 90 days earlier this year, where I was a good market engineer for the first time.
+
+Um, by the part that role in May. And in June, I enroll in Alpha chords, which is Clay's go to market incubator program. So is the second one ever, and I'm in that program with Venture capitalists who Miss building. I'm with accounting Executives who can't stay out of claw and he pick up the phone and want a career change.
+
+I'm with Executives who hate managing people who want to build again. You see a team here and? I get a LinkedIn message. I love LinkedIn for everything, but I get a LinkedIn message from a clay SDR. And he's, like, hey, Saudi logged in. Personally, I was doing some clay work for interviews and things like that, so I have an accountant in the database, and he says, Hey, saw that you were in the clay platform, and you're taking a look, and you're really interested, uh, we'll love to hop on the phone and see if, uh, you know, we can help you.
+
+At Kaizen, my tax company. The only problem was, is that on my LinkedIn? I have a start and end date. That end date was a month ago. So we have the best outbound enrichment, go to market layer. So said by them one of the Reps reaching out to me and couldn't take five literal seconds to just look at my LinkedIn and notice that I was not at that company anymore.
+
+Um. I don't have any grass with clay, but that kind of turned me off. Um, and I think it comes back to LinkedIn being very powerful, where if you can go on their page and see a real human being. This is what we crave. We crave that in-person feeling that we have now, where there's authenticity, and you have a conversation about things other than work, and it was lost in that moment, because I know that that dude spun up people on Gmail emails for personal licenses and then somehow enrich that to the company that they were working at.
+
+Clearly I was in and then sent me an incorrect email, and I immediately just discarded it and deleted this connection. Quest because I'm? It's inexcusable. I'm sorry, I'm an operator. It's just how it works. I don't like that kind of stuff. So. That's my little fun story about how?
+
+You know, we have a bunch of great tools, and I do believe that they are fantastic when it comes to enrichment and finding out what people like to do, and there was one great story. I'm a Storyteller if you can't tell, but someone in my class. We did a fun project as pilot, an extra credit project in clay, where you're supposed to enrich something other than a company, right?
+
+So, you're not trying to find VPS of engineering to sell, you know, vibrating wants to unfortunately. Sorry guys, um, someone in our class. Ren enrichments on other classmates. And the enrichments for other classmates were actually connections. And so it was this person Tammy. You would be a great connection with Josh because you both love to play Pickleball, right?
+
+You guys like, flip it a wall.
+
+[Speaker 3]
+That's a that's a blue formal, and I put that out like dangerous police jackpot Center, um.
+
+[Speaker 2]
+And I think it's really powerful where these tools are all very much. You know you, you have. There's outbounds,
+
+[Speaker 4]
+Especially good marketing Engineers. Something's outbound. It's get in front of our customers and things like that, but there's really, really unique ways that you can use these tools.
+
+[Speaker 2]
+And then I really think that there's like a 90-10 rule where that tool can get you 90 of the way there that clay SDR could have found out that I was. At a company that was, you know, Tech, forward AI forward? It found that my title was a good marketing engineer that's fantastic.
+
+I was in New York, and I had all these other attributes, but that last 10 is that human being checking my LinkedIn or? Doing anything other than sending me an incorrect LinkedIn message. So, I really believe in the power of these AI tools and using them as a call it a ship support, but then departing and getting someone's attention is really.
+
+What remains that I would say Q an element and that implementation can be whatever you want events like we're having right now. Things like that so? I can talk for her so many stuff there, but I'm happy to answer any and all questions after as well about implementation and streams, and things like that so.
+
+So, so I think you know we've had?
+
+[Speaker 3]
+An intense failure and sexually like hit a little bit of a consensus here
+
+[Speaker 4]
+And coming back coming. Coming back to kind of like the framework that I think about who you are kind of core identity. What works in the market and the third, like, how does
+
+[Speaker 3]
+The AI amplify all that? And so, like my devil's Advocate?
+
+[Speaker 4]
+Because I can never shake off my paternity. Um, it's like, let's say, you know, you're an early stage startup or growing startup. You have a pretty decent brand. You're doing the right things in terms of community events, which are starting to work more and more. Like, where is the differentiator from an AI perspective to either amplify what you're doing, or where is it necessary these days?
+
+I guess I'm kind of curious from your perspective, like? Like, reverse tip of the iceberg, where it's like, okay, right now. We just kind of said, like, okay, I sort of overrate it. Let's get back to business principles and identity and fundamentals. But where, where is the actual value out of the AI from your perspective, which I think people?
+
+Are all these kind of curious about from, like, maybe a mechanistic level?
+
+[Speaker 2]
+I'm gonna go next because I think this is a direct follow-up to almost what I was saying. Um, I mentioned the 90 10 rule that's a principle of the gold market engineer principle. I don't solve for inch cases, and I never will like. If something way, way over their breaks, we'll fix it by.
+
+When 90 of this stuff to work all the time and I want to get stuff in people's hands? Um, I also love percentages because I think of things as spectrums right, and so. I mentioned ship the port and then you get off and you deliver hand over someone. Sometimes that's very literal, um, back at a startup where my first role out of school I was going to start a strong VM.
+
+They're recently Bob by doinia, plus a sixth employee there, just me and the CEO New York, and we used to bake cookies and ship them, and we did a bunch of call them silly. Uh, direct mail campaigns where we send donuts, and we said there's a hole in this donut.
+
+Don't let there be a hole in your security access. We were a privilege access management company selling software. Um, also, Engineers who didn't like to talk about, so we had to get their attention otherwise, um. That is I, what I would call on the spectrum of personalization and optimization Auto call it optimization automation, a zero, a hundred percent personalization with no?
+
+Optimization because we were doing that all by hand. I had a Google sheet and there was no automation there whatsoever. Now, you flip all the way to Automation, and you start to lose percentages, and you start to lose share of that personalization. Take, for example, I keep bringing this up that LinkedIn connection I got.
+
+That was probably very automated and very easy to send, because I know, because I'm a clay user, and it connects directly to LinkedIn, and that dude probably wasn't even logged in on this laptop that day, like it was probably scheduled to go out. That is full Automation, and you lose a lot of personalization.
+
+Personalization in that context is going to be. You cannot read my LinkedIn. I think I said that four times now, right, like, yeah, um? And I think. To directly answer Kenny's question. You're using these tools to help gain a competitive Advantage or gain market share through speed, where it is necessary and?
+
+I don't think it's necessary to. I've been told to pay attention more. Pay attention to detail every single review I've ever had in my entire life. Even my father, scolding me like pay attention across the roads and stuff, um, like? Use it where it's necessary to help enrich use it, where it's necessary to help do research for you.
+
+So I was just talking with cat over here about. Increasing personalization by, you know? Going and doing market research. Where are buyers of a potential software product on social media? Is it Reddit? Is it X? That's something that you can very easily ask whatever provider you're using instead of like manually scraping Reddit and things like that so you can still run direct campaigns to people's doors.
+
+Find their addresses.
+
+[Speaker 5]
+Make sure you've definitely double check that, um.
+
+[Speaker 2]
+Find their titles and find the company they work at, but then use your level of humanity and personalization to truthfully, like, deliver it last mile and. Show them that last little bit that is not automated.
+
+[Speaker 5]
+Yeah, well, quickly add on to that, is, I love the way that you like, talk about optimization and personalization. And, you know, I think there's a lot of times where people think. Oh, because AI? What's what? What role do I fight, right? Uh, very early on with Remy, when we're still looking for a partner of pmf or whatever you want to call it.
+
+Uh, we had a conviction that, like. This is for craft managers because Remy is actually able to create a spec off for you before. It actually goes out an application, right? So you can change whatever on the spec off, and Randy will take those updates and then go into coding mode.
+
+So, we like to frame it as it's a product name. Right, and so naturally, we thought, okay, let's target opinions. Um, so one of the things I did early on was get on calls a PS who filled with Remy and see what how their experience has been? One of the biggest questions I constantly asked them was.
+
+Okay if Remy is the PM? What do you do, right? Like, are you scared, um, at all, and? It's so funny because I talk to like several commands, and they said all the exact same thing that actually it enhances them to think a lot more about the Strategic aspects right, and so I think what AI helps you to do and can't workplace for humans is the part that like?
+
+More strategically okay is. The time and resource I'm putting into this initiative or this effort into building something worth it. Like, you get more of that breathing space to think that instead of just like constantly spending hours and hours actually building out a document or a pipeline and then re having to then realize?
+
+Oh, maybe this wasn't worthwhile, so it kind of gives you that? Creative planning and thinking of that. Maybe they have to come here. My last example here is right now. We are focused on reaching out to the right ICP, right? The ideal customer profile, and so I actually built an app on Revenue that, um, not only I'm rich is the contact, but it actually goes through researches their company, um, to see if there's any signals that they are open to AI adoption and AI transformation as well as it tracks their role.
+
+Combined all that I hateful. That's given a score of how close they are to our ICP and their willingness to be reached out to. I think I'm back together. It created a lot of automation while still I'm reaching out personally and personalizing those messages, and so that I think, was a really good, uh, use case for me of, like, how am I balancing automation versus personalization?
+
+I don't think that increased in AI means a decrease in human value and human strategic thought. So, um? Yeah, I guess that's just what I'm gonna leave off. Awesome! Thanks guys!
+
+[Speaker 1]
+Wonderful, um, so we wanted to open up for some Q and A um, so we're not going to have time to get everyone, I believe, but we do have everyone's LinkedIns right behind on the TV. Does anyone have a request by the way?
+
+They're actually taking photos. Yeah.
+
+Uh, you guys talked about the spectrum of personalization and automation and authorization and?
+
+[Speaker 6]
+Sounds like AI is more supporting automation and optimization you submit. I'm curious if you guys run into any? Use cases if they. To increase it up. The personalization part of it, too, because I think that's possible. I'm just curious about how these shoes, right?
+
+Yeah, that's a great question, um. I won't spend too much time on here, but another. Place unopin United is the difference between signal and intent.
+
+[Speaker 2]
+Um, someone changing a job. Things like that you can call that personalization personalization in 2017, and hey, Sawyer this at this? Would you be interested in it like, you know, just very basic stuff? And now, I'm seeing LinkedIn campaigns about, like? They're sending ships in a bottle with, like the person's alma mater, on a drinking glass.
+
+And it's like. I, I would be flattered, but also. Let's also overall smaller companies. We have budgets and things to appear to, um. I really think once again. It's a really great question because it makes me think, like, part of the personalization is the optimization is the automation, right?
+
+Um, I was talking trash about clay, but it really does allow you to. Use their equation specifically to that tool where it's like, go find me file leadership that. Been a part of in the past three months and? You know, deposited for me in the cell so I can work around there, like, that is, automation that just saves me time.
+
+And the course you ask for sources and things like that. So it's not pulling bogus, but? The ability to do that is what I would honestly consider like automation and personalization. I almost just made a new word trying to combine those, um. I. I also think you know I'll I was at clay HQ listening to a panel and someone asked a question about personalization on it.
+
+The person on the panel is just like, dude, I don't know what's your goal? Right, and so I won't ask. I won't say that to you, but I also really think it depends on like. What is your definition of personalization? Is it going to be sending them a glass with alma monitor?
+
+I went to Fordham. I live in Brooklyn, you know, just in case.
+
+[Speaker 5]
+Or
+
+[Speaker 2]
+Is it going to be more something like they change jobs they went to? Um, you know, a certain conference last year that you attend every single year at Clockwork that you want to try to meet. Like, what is your definition? And then you slot AI in where you use your best judgment as appropriate, so I don't want to answer a question or leave off a question, but I think I'll leave prepare so.
+
+[Speaker 3]
+Yeah, I think two quick thoughts to kind of follow. I'm Eric is saying, definitely one is definitely in the research realm. I think where, not just clawed. But, like, you know, whether you're using open Claw, and he's like, these models are now able to. Parse public information in a way that I think is your very good like felt understanding of who they are like.
+
+If you just scrape the about me section of a LinkedIn, which obviously these days is probably also AI written, but? But, you know, usually people take a little bit of time to to, you know, edit the little about me section of their LinkedIn or. Even just the description of what their position is, and it gets granular because they want to sell who they are and what their vision and and motivation is.
+
+And so, for us, like, you know, when, when I use Hermes, or we also use Victory these days to kind of script LinkedIn pages to give me a briefing on, like, okay, who this person is, it'll get you down to the level. Like, okay, this person has LED like digital transformation, migration to Cloud like it gives.
+
+It gets you pretty deep, and then once it also. Pulls in, you know, public Google search information. If there was ever an interview by them or something written by them, I think AI has gone incredibly good at picking up on not only specific facts, but patterns about who this person is and be able to employ that in not only like messaging to them, but in your conversations with them, you have a sense of kind of who they are.
+
+And then, I think the second. Kind of clear. Other use case for me is like, you know, if a, if it's somebody who's kind of already in your
+
+[Speaker 5]
+Funnel, someone
+
+[Speaker 3]
+You're talking to, being able to quickly pull from private conversations you've had, and recontextualizing. Because a lot of the sales process is always, like, okay, what did we talk about? Why do you care about this? People are so busy, uh, on both ends, whether it's the vendor or the customer, the partner.
+
+They're going to forget why we're even here, and being able to always bring it back to that. Like, okay, why are we here? What do you care about? What do we hear from you about like your pain points? These things, I think, AI from a process and also just intelligence perspective can easily do by just, you know, integrating into your cult transcriber or whatever you're using to log kind of that kind of call history, and so I think two very various cases for me.
+
+[Speaker 1]
+Okay, we can take one more question. Um,
+
+[Speaker 6]
+So, uh, thank you for all the panel. Uh, I want to ask before you guys decide to go to an offline event
+
+[Speaker 5]
+Or go to, uh, buy a booth at an event. What is this all the Ally that you guys consider and what? Make sure to backtrack.
+
+[Speaker 2]
+Or Bill marketer here, by the way. Um, so I'm also part of my marketing Journey as a field marketer, so I was responsible for traveling three, four, five, six, seven, eight, nine times a quarter, um, at nmx Platinum. Don't cancel namex. They will punish you by not giving you rewards on future, just an FYI, um.
+
+I dealt with sales. Reps were very opinionated, so I was told, and I was in a specific vertical for a manufacturing company as a field marketer and. Clich answer. Are you making money? Are you making that company money? I think that reps. Would I mean? I just gave this advice to you guys.
+
+What is your goal winning local events?
+
+[Speaker 6]
+Um.
+
+I want to respond by saying, almost follow the money where? We have this level of AI enrichment. And.
+
+[Speaker 7]
+As a field marketer back in the day, I used to go to attendee and sponsor lists and write them into an Excel sheet by hand. That was my day. And then I would present that to the sales team and say, do any of these interest deal? And you don't have to do that anymore because you can send your Bots to go do that formula.
+
+[Speaker 2]
+So, an example of automation finding personalization is. Or your. Is your ICC going in this event? Just straight up. Is your ICP going to this event? I would then decide on what your budget is. It's then. Depending on what your demand is. If you're running five times, demand 500 million to 100 million is a large number.
+
+But where does that fit into that specific plan? Are you paying out a certain amount and you need to make that same 5ml on your spend at the event, or you're spending 10K, and you hope to make 50K you're trying to do 100 times these certain marketing events. I realized that, you know, smaller companies might not have those metrics, so I'm always of the attitude of just try something and go and see if it's for you.
+
+We went to a commercial real estate. Um, in New York called CRE Tech as a Hospitality company, not a tech company, but has a Hospitality company who you know felt we deserved a space to go in and talk with real estate Partners about msps and beautifying their spaces and the entire time I got sold rental furniture the entire time.
+
+I didn't talk to a single customer, everyone's like, yo. You want some chairs. I'm like to sit in right now. Yeah, probably like not in the future. So sometimes you really just have to go, and all the data might lead you to that specific area to that. Literal area.
+
+The event that you're going to, and then you just have to take that data, incorporate it, and determine if you go or not. I went high level low level things like that, um, I'll stop there. Just on those metrics.
+
+[Speaker 5]
+Yeah, and you know some events are going to be ahead events, they can't really judge just by the description of an event, right? Sometimes you got to be there and see who accurate. Actually.
+
+Yeah, so you you won't ever know, like, fully right, like you're taking a bet on going and but the other, the other side of that is, you know, you also never know the type of connections you're gonna make, even if they're not directly into your ICP like, um, obviously, it's kind of like a shot in there.
+
+That way, you can have that you're building out a network, and that person might kill someone else, right? Um, in terms of like your question about what are the metrics, or like, what, uh, should you consider before you go to? Then, I think you need to be very crystal clear about what you're looking for very early on with Remy.
+
+Experienced.
+
+Is just like, I wasn't very crystal clear about who our ICP is, and then, like, how do I align that with the type of events I should be going to? Um, and then the last thing is, I think. So I haven't done your curiosity for the type of events I think helps a lot, um.
+
+You know, way back. I don't know if you guys let's say for you guys, like college, like, you know, you're asked to when you go into an interview like, make sure you have some questions ready, right? And I don't know if every anyone's been on the interviewer side. But like, you can easily tell if you if those people have just like recited a question in their head.
+
+And just like reading off script, right? Um. There's a very different feeling for when someone is genuinely curious about learning about you or the event that you're part of. And I think some of the best relationships that I've built for Remy was actually because we're just being able to talk about Shadawaya or like, what is the biggest issues with the point AI into an Enterprise, um, even with meeting Penny, I met him at, like?
+
+Random Korean investment event that I don't think any of us was really interested in. They were not. So that was a mess on them. But, like, we actually got clothes from there because we didn't pay attention, or like, sure, we have to do it. But like?
+
+[Speaker 4]
+Oh, but Kenny and I got into a really long conversation about, like.
+
+[Speaker 5]
+Can you?
+
+Would connect me with people that he knows who he thinks would be a good use case for Remy and things like that. So, I think events, yeah, sure. Like, obviously. Go for things that? Fit into your ICP, but also like, you never know how you talk with people and like who they can think of in their Network.
+
+Um, so I think that's helped a lot.
+
+[Speaker 3]
+Yeah, I guess, just two quick kits for me. I think one, if it's some, but if it's an event where my ICP is gonna be, you know, definitely. There's a sales like partnership opportunity there, so I will go whether it's a good Dev conference or founder dinner, or something like that,
+
+[Speaker 5]
+Uh. But otherwise, you know, honestly, these days, like?
+
+[Speaker 3]
+Just like AI, slop or AI is multiplying. I also think the in-person side of the AI events, so the tech events are also growing and growing growing. And so, for me, having been to like hundreds of events in these last two years, like?
+
+[Speaker 6]
+I just want
+
+[Speaker 3]
+To go over, like the most, like, correct. People are,
+
+[Speaker 5]
+So, like, that means like,
+
+[Speaker 3]
+Usually, that means like the the company or the brand hosting the event is, like, pretty well known like, resemble. I went to Corgi event last week, and like, honestly, Corgi is literally zero to do with anything that I do, but I just know because they're so well known in the start space.
+
+It's going to bring people a really interesting, and, uh, I think I've got some really cool people through those events. And then, uh. On the flip side. Also, like, if it's something of interest to me, like a, you know, GTM oriented event? Uh, you know if the organization posting it or the company is like, you know, seems credible or part of them was referred to them through a friends like?
+
+I think that definitely pushes me to go more and so, you know, even even with events. I think there's that, like, almost like I need, I need that I need to know. There's some, like, personal connection that I can make, or that there's some real like backing and credibility for me to actually go.
+
+So those are my last thoughts. I,
+
+[Speaker 2]
+I have a thought before escapes from my head, just real quick, um. This just reminded me of something that's very, very important. That's worked for me as well, and Tammy, I thank you. Experienced this, like? And he does. We're going to start out that could benefit potentially from query services.
+
+Sometimes, you have to give away something for free. Without expecting something in return. That has worked very well, of course. People like group things, and when I don't, I don't mean like a pen and a notebook in a conference. I mean, there was this big, uh, individual Market space and marketing.
+
+Specifically, there was this big movement of gating your content in white papers to scrape information. Everyone knows this to ungating it. It's like. Seo is changing. We need this on the. We need this on the internet attributed to us. We're going to rank better. We're going to give this to them because it works better as a marketing strategy when we rank higher.
+
+When our ads do better and we're able to use this content to help bring to the door website. There's a whole obviously strategy behind that, and I think that's like, a. That's a small example of like The Wider ecosystem in general, right, like? These events, not this one. In particular, I hope not.
+
+But, like, in the future, like, you go, and you host something, or you give something to someone and. You hope they take? The impression that you gave that that's what they take and everything else. So you give them your impression, right, you give them. A problem to solve a solution to the problem that they might have good food conversation if they like pickleball or not.
+
+You know? That's what they take with them, and so sometimes like, it's very, very important. People are always like, if that were vice presidents and Founders myself. I've run events in the middle of January and February 1st. I'm like, where's the money? And I'm like, so not, like, you know, we all live in this capitalistic Society.
+
+Sometimes, like things are still burn. Things are built over time. Things are built, the relationships, and when the moment comes, if you have a good relationship with people like. The opportunity to overturn itself. A
+
+[Speaker 1]
+Wonderful, um, I woke up. Q a here, you will have the opportunity to talk to Tani, Josh, and Eric. We will open up the room to just networking and free discussion. Um, so thank you so much to our panelists who share them around of Applause and.
+
+So, we obviously had a group discussion, but I think, because we're running a little bit over time, uh, please feel free to not always eat more. Kim Bob, um, have a drink.

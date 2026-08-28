@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root{
+    --bg:#10141b; --panel:#171d28; --line:#28303e;
+    --ink:#f4f1ea; --muted:#98a2b3; --dim:#6b7688;
+    --amber:#f2a900;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --mono:"Menlo","SF Mono",monospace;
+  }
+  html,body{ background:var(--bg); }
+  body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color:var(--ink); font-family:var(--sans); }
+  .slide{
+    width:1080px; height:1350px; position:relative; overflow:hidden;
+    background:var(--bg); padding:96px 90px 84px;
+    display:flex; flex-direction:column;
+  }
+  .slide:not(:last-child){ break-after:page; }
+  .kicker{ font-family:var(--mono); font-size:26px; letter-spacing:3px; text-transform:uppercase; color:var(--amber); }
+  .pg{ position:absolute; bottom:56px; right:90px; font-family:var(--mono); font-size:22px; color:var(--dim); letter-spacing:1px; }
+  .brandfoot{ position:absolute; bottom:56px; left:90px; font-family:var(--mono); font-size:22px; color:var(--dim); letter-spacing:1px; }
+  h1{ font-family:var(--serif); font-weight:600; line-height:1.03; letter-spacing:-1px; }
+  .rule{ width:96px; height:5px; background:var(--amber); border-radius:3px; }
+  .spacer{ flex:1; }
+
+  /* Slide 1 */
+  .cover h1{ font-size:104px; }
+  .cover .sub{ font-family:var(--serif); font-style:italic; font-size:46px; color:var(--muted); margin-top:34px; }
+
+  /* generic headline block */
+  .head h1{ font-size:82px; }
+  .lead{ font-size:36px; line-height:1.4; color:var(--muted); max-width:820px; }
+  .lead b{ color:var(--ink); font-weight:600; }
+
+  /* chart */
+  .cap{ font-family:var(--mono); font-size:24px; color:var(--muted); }
+  text{ font-family:"Menlo","SF Mono",monospace; }
+
+  /* dial */
+  .anchor{ font-family:var(--mono); font-size:24px; color:var(--muted); }
+
+  /* convergence rows */
+  .node{ background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:30px 34px; }
+  .node .who{ font-family:var(--serif); font-size:40px; color:var(--ink); }
+  .node .what{ font-family:var(--sans); font-size:28px; color:var(--muted); margin-top:6px; }
+  .dest{ background:var(--amber); color:#161007; border-radius:18px; padding:38px 40px; font-family:var(--serif); font-weight:700; font-size:50px; line-height:1.1; }
+
+  .quote h1{ font-size:112px; }
+</style>
+</head>
+<body>
+
+<!-- 1 · COVER -->
+<section class="slide cover">
+  <div class="kicker">NYC GTM Leaders · Vol. 1</div>
+  <div class="spacer"></div>
+  <h1>Three operators.<br>One question.<br>The least scalable<br>answer.</h1>
+  <div class="sub">Breaking Through the AI Slop</div>
+  <div class="spacer"></div>
+  <div class="rule"></div>
+  <div class="brandfoot">Field notes · Aug 27, 2026 · Midtown NYC</div>
+  <div class="pg">1 / 6</div>
+</section>
+
+<!-- 2 · THE DATA -->
+<section class="slide head">
+  <div class="kicker">The setup</div>
+  <h1 style="margin-top:22px;">Volume up.<br>Replies down.</h1>
+  <div style="margin-top:40px;">
+    <svg width="900" height="560" viewBox="0 0 900 560" role="img" aria-label="Two diverging lines: sends per rep rising from 1,150 to 7,400 per month while cold-email reply rate falls from 5.1% to 3.4%.">
+      <!-- axes -->
+      <line x1="90" y1="40" x2="90" y2="470" stroke="#28303e" stroke-width="2"/>
+      <line x1="90" y1="470" x2="860" y2="470" stroke="#28303e" stroke-width="2"/>
+      <text x="150" y="520" fill="#6b7688" font-size="26">2025</text>
+      <text x="740" y="520" fill="#6b7688" font-size="26">2026</text>
+      <!-- sends line (rising, amber) -->
+      <polyline points="170,410 780,70" fill="none" stroke="#f2a900" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="170" cy="410" r="9" fill="#f2a900"/>
+      <circle cx="780" cy="70" r="11" fill="#f2a900"/>
+      <text x="150" y="392" fill="#f2a900" font-size="27">1,150/mo</text>
+      <text x="640" y="56" fill="#f2a900" font-size="34" font-weight="bold">7,400/mo</text>
+      <text x="470" y="205" fill="#f2a900" font-size="25" transform="rotate(-27 470 205)">sends / rep</text>
+      <!-- reply line (falling, white) -->
+      <polyline points="170,150 780,300" fill="none" stroke="#f4f1ea" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 14"/>
+      <circle cx="170" cy="150" r="9" fill="#f4f1ea"/>
+      <circle cx="780" cy="300" r="11" fill="#f4f1ea"/>
+      <text x="150" y="135" fill="#f4f1ea" font-size="27">5.1%</text>
+      <text x="800" y="308" fill="#f4f1ea" font-size="27">3.4%</text>
+      <text x="430" y="250" fill="#98a2b3" font-size="25" transform="rotate(14 430 250)">reply rate</text>
+    </svg>
+  </div>
+  <div class="cap">AI pushed sends per rep ~6× in a year. Reply rates fell by a third.</div>
+  <div class="pg">2 / 6</div>
+</section>
+
+<!-- 3 · THE DIAL -->
+<section class="slide head">
+  <div class="kicker">The frame · Eric's rule</div>
+  <h1 style="margin-top:22px;">Automate the 90%.<br>Own the 10%.</h1>
+  <div class="spacer"></div>
+  <svg width="900" height="330" viewBox="0 0 900 330" role="img" aria-label="A spectrum from 100% human, hand-done outreach on the left to full automation on the right; a marker near the automated end reads the last 10% is human.">
+    <rect x="40" y="150" width="820" height="20" rx="10" fill="#28303e"/>
+    <rect x="40" y="150" width="700" height="20" rx="10" fill="#f2a900" opacity="0.28"/>
+    <circle cx="740" cy="160" r="18" fill="#f2a900"/>
+    <text x="740" y="120" fill="#f2a900" font-size="26" text-anchor="middle" font-weight="bold">the last 10%</text>
+    <text x="740" y="92" fill="#f2a900" font-size="26" text-anchor="middle" font-weight="bold">is human</text>
+    <text x="40" y="230" fill="#98a2b3" font-size="26">100% human</text>
+    <text x="40" y="262" fill="#6b7688" font-size="23">hand-baked donuts (StrongDM)</text>
+    <text x="860" y="230" fill="#98a2b3" font-size="26" text-anchor="end">full automation</text>
+    <text x="860" y="262" fill="#6b7688" font-size="23" text-anchor="end">the scheduled Clay DM</text>
+  </svg>
+  <div class="spacer"></div>
+  <div class="cap">The tool ships you to port. The last mile is yours.</div>
+  <div class="pg">3 / 6</div>
+</section>
+
+<!-- 4 · THE CONVERGENCE -->
+<section class="slide head">
+  <div class="kicker">The convergence</div>
+  <h1 style="margin-top:22px;">Three roles.<br>One answer.</h1>
+  <div style="display:flex; gap:48px; align-items:center; margin-top:54px;">
+    <div style="flex:1; display:flex; flex-direction:column; gap:22px;">
+      <div class="node"><div class="who">Tanny</div><div class="what">Identity-first — be a person</div></div>
+      <div class="node"><div class="who">Josh</div><div class="what">Community-first — teach, don't pitch</div></div>
+      <div class="node"><div class="who">Eric</div><div class="what">90/10 — own the last mile</div></div>
+    </div>
+    <div style="font-family:var(--mono); font-size:64px; color:var(--amber);">&rarr;</div>
+    <div class="dest" style="flex:0 0 300px;">A human who owns the output.</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="cap">Every fix routed back to the one asset AI can't flatten.</div>
+  <div class="pg">4 / 6</div>
+</section>
+
+<!-- 5 · THE LAG -->
+<section class="slide head">
+  <div class="kicker">The honest tension</div>
+  <h1 style="margin-top:22px;">Every fix is a<br>fix on a lag.</h1>
+  <div style="margin-top:52px; display:flex; align-items:flex-end; gap:60px;">
+    <div style="text-align:center;">
+      <div style="width:150px; height:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; position:relative;">
+        <div style="position:absolute; bottom:0; width:100%; height:78%; background:var(--amber); border-radius:0 0 12px 12px;"></div>
+      </div>
+      <div style="font-family:var(--mono); font-size:30px; color:var(--amber); margin-top:16px; font-weight:bold;">5&ndash;18%</div>
+      <div style="font-family:var(--mono); font-size:23px; color:var(--muted);">signal-based</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:150px; height:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; position:relative;">
+        <div style="position:absolute; bottom:0; width:100%; height:14%; background:#4a5568; border-radius:0 0 12px 12px;"></div>
+      </div>
+      <div style="font-family:var(--mono); font-size:30px; color:var(--muted); margin-top:16px;">1&ndash;3%</div>
+      <div style="font-family:var(--mono); font-size:23px; color:var(--muted);">generic blast</div>
+    </div>
+    <div style="flex:1; font-family:var(--serif); font-style:italic; font-size:40px; line-height:1.35; color:var(--ink);">
+      &hellip;until &ldquo;signal-based&rdquo; is the new template everyone copies &mdash; and the clock resets.
+    </div>
+  </div>
+  <div class="pg">5 / 6</div>
+</section>
+
+<!-- 6 · CLOSING LINE -->
+<section class="slide quote">
+  <div class="kicker">What survives</div>
+  <div class="spacer"></div>
+  <h1>&ldquo;Stand behind<br>every sentence.&rdquo;</h1>
+  <div style="font-family:var(--mono); font-size:28px; color:var(--amber); margin-top:40px;">&mdash; Clay's AI-writing policy, Aug 2026</div>
+  <div class="spacer"></div>
+  <div class="rule"></div>
+  <div class="brandfoot">NYC GTM Leaders, Vol. 1 · Breaking Through the AI Slop</div>
+  <div class="pg">6 / 6</div>
+</section>
+
+</body>
+</html>
