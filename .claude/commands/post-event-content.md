@@ -217,6 +217,28 @@ Persist what the event added to the **People / Companies / Topics** graph so it 
 
 Schema + property formats: `.claude/references/notion-schema.md`. If Alex prefers a review gate over auto-write, surface the NEW-vs-MATCH delta for confirmation first.
 
+## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
+
+The `post_event_brief` (Step 3.7) now exists — it has surfaced the room's real tensions, competing
+theses, quote-safety calls, and the documentarian cuts. **Before content-correspondent drafts a
+single post**, run **Touch 2 of `steering-interview`** (see `.claude/skills/steering-interview/SKILL.md`):
+
+- **Derive ≤3 genuine forks from the brief** — each pointing at a specific section (e.g. *"the room
+  split on X vs Y — lead with the tension or pick a side?"*, *"your strongest line is MED-confidence
+  in the quote bank — paraphrase, drop the @-tag, or cut?"*, *"two cuts available: the contrarian
+  one vs the synthesis — which is the post?"*). Never a generic "what's the angle?" — the brief is
+  the prep that earns the specific question (prep-then-ask).
+- **If the brief has no real fork, say so in one line and skip to Step 4** (*"brief is unambiguous —
+  drafting now"*). A manufactured question is worse than none.
+- **Keep the loop open:** incorporate Alex's call/pushback, adjust, confirm, then draft. May use
+  `AskUserQuestion` for genuine either/or forks.
+- **Persist** the forks + Alex's answers into the **Author Steer** block (Sharpen section) on the
+  Event page, and thread them into the Step 4 content-correspondent input.
+- **Skippable**, like all steering — if Alex says "just draft it," proceed.
+
+Touch 1 (Aim) for post-event ran earlier (the "person you want to land well with" / enrichment
+direction, folded around Step 3.6); this is the post-brief Sharpen touch.
+
 ## Step 4 — Invoke content-correspondent with structured Granola input
 
 Pass content-correspondent skill the following structured input (NOT raw transcript paste — leverage Granola's pre-synthesis):
@@ -238,6 +260,11 @@ Granola Note URL: [web_url from Granola]
 
 === Notion Pre-Event Brief (if available — for documentary thesis continuity) ===
 [Pull from Notion: research_brief Content Draft linked to this Event]
+
+=== Author Steer — Sharpen forks + Alex's calls (from Step 3.9) ===
+[The ≤3 forks put to Alex and his decisions/pushback, verbatim. These are binding editorial
+direction — the thesis pick, the quote-safety call, the cut chosen. content-correspondent honors
+them over its defaults. If Step 3.9 was skipped (no real fork / "just draft it"), note the skip.]
 ```
 
 content-correspondent then runs its standard logic per `.claude/skills/content-correspondent/SKILL.md`: bucket-sorts contacts, drafts Tier 1 comment + Tier 2 post + visual carousel brief + bucket A/B outreach DMs. The skill's existing "Granola → structured notes if the session was recorded; use for direct quotes from speakers" line is now operationalized — the structured input is exactly what it asked for.

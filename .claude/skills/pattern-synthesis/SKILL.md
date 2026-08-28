@@ -105,6 +105,16 @@ Run through the "Gating conditions" section in the pattern file:
 If any gate fails, stop and report to Alex with a clear "skill declined to
 generate because X." Do not force a post through a failed gate.
 
+### Step 5.5 — Sharpen steer (steering-interview Touch 2)
+
+The tension extraction (Step 4) has surfaced the two opposing theses — that IS the prep, and it is
+exactly the material for a genuine fork. Before drafting, run **Touch 2 of `steering-interview`**
+(`.claude/skills/steering-interview/SKILL.md`): put the real fork to Alex — *"the tension is [thesis
+A] vs [thesis B]; do you lead with A, B, or hold both in balance?"*, and any quote/attribution call
+the two briefs raise. ≤3 forks, grounded in the extracted tension (never generic); skip cleanly if
+the tension is unambiguous. Keep the loop open, persist to `## Author Steer` (Sharpen), honor below.
+Skippable.
+
 ### Step 6 — Draft the post (2 variants)
 Follow the 6-part shape from the pattern file exactly. Word targets are targets,
 not caps, but stay within 180-295 words total — and a **hard cap of 3,000 characters**
