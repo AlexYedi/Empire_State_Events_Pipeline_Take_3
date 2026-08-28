@@ -119,7 +119,12 @@ Run the `steering-interview` skill for this event **before** `/event-deep-resear
 - The skill persists the answers as an `## Author Steer — [date]` block on the Event page and they later feed `update-voice-and-style`.
 - If Alex says "skip" / "nothing for this one", proceed with zero friction.
 
-See `.claude/skills/steering-interview/SKILL.md` for the protocol, routing table, and persistence.
+This Step-6a.0 interview is **Touch 1 (Aim)** — the pre-research intake that points the fan-out. The
+collaborative **Touch 2 (Sharpen)** — genuine forks derived from the committed brief — runs **inside
+`pre-event-content` (its Step 1.9)** during Step 6b, after `/event-deep-research` produces the brief.
+No separate Sharpen step is needed here; it's covered downstream by the flow this command invokes.
+
+See `.claude/skills/steering-interview/SKILL.md` for the two-touch protocol, routing table, and persistence.
 
 ### 6a. Run /event-deep-research
 
