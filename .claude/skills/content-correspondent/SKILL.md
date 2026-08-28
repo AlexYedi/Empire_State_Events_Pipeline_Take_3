@@ -225,6 +225,17 @@ Always produce the outreach DM and the post in the same session — the post giv
 
 ---
 
+## Sharpen steer before drafting (steering-interview Touch 2)
+
+When invoked via `/post-event-content`, the collaborative **Sharpen** gate runs at the command's
+**Step 3.9** (after the `post_event_brief`, before this skill drafts) — honor the Author-Steer
+Sharpen forks passed in. **When invoked directly** (ad-hoc paste, "write something about last
+night"), run **Touch 2 of `steering-interview`** yourself once the material is conditioned/summarized
+and before drafting: derive ≤3 genuine forks from what the material surfaced (the thesis to lead,
+a MED-confidence quote to paraphrase-or-cut, which documentarian cut is the post), grounded in the
+material — never a generic "what's the angle?" (prep-then-ask). Skip cleanly if there's no real
+fork; keep the loop open; persist to `## Author Steer` (Sharpen). Skippable.
+
 ## What to Produce
 
 When Alex gives you event input, produce:
