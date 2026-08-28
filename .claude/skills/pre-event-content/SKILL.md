@@ -59,6 +59,21 @@ Alex provides one of:
 
 ---
 
+## Step 1.9: Sharpen steer (steering-interview Touch 2) — before any generation
+
+The research brief is now loaded (Step 1) — that's the prep. **Before drafting** the Upcoming Week
+post, the per-event post, notes, or questions, run **Touch 2 of `steering-interview`**
+(`.claude/skills/steering-interview/SKILL.md`): derive **≤3 genuine forks from what the brief
+surfaced** and put them to Alex — e.g. *"the brief found a non-obvious angle on [X] that isn't in
+your usual framing — make it the hook, or keep the event-forward frame?"*, *"two speakers you'd tag
+have opposing takes on [Y] — which do you foreground?"*, *"which segment is this one for — the fork
+changes which variant carries the HM-activation angle?"* Grounded in a brief section, never generic
+(prep-then-ask). **If the brief has no real fork, say so and proceed.** Keep the loop open; persist
+the forks + Alex's calls into the `## Author Steer` (Sharpen) block and honor them below. Skippable.
+
+(Touch 1 / Aim ran earlier — the pre-research intake at Step 1.5 or via `/check-new-events` Step
+6a.0. This is the post-brief Sharpen touch.)
+
 ## Step 2: Generate The Upcoming Week Post (if requested)
 
 **When:** Sunday (or week-open) post covering events for **the coming week only**.
