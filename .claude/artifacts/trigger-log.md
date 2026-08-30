@@ -24,3 +24,4 @@ Triggers:
 - 2026-07-07T14:42:51Z | session: `1a13e614` | skills: check-new-events | trigger: **?**
 - 2026-08-21T23:51:40Z | session: `aecde027` | skills: event-deep-research | trigger: **?**
 - 2026-08-25T18:38:53Z | session: `1c4ae000` | skills: pre-event-content | trigger: **?**
+- 2026-08-30T12:10:39Z | session: `27f48c1c` | skills: event-deep-research | trigger: **?**
