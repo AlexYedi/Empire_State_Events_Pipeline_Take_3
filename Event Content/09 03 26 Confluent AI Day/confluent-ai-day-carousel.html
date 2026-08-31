@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Confluent AI Day — Event-Driven Agents</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b2e; --panel2:#0f1526; --ink:#eef2f8; --muted:#93a1b8;
+    --line:#25304a; --accent:#2f6df0; --accent-soft:#6ea0ff; --ibm:#e0912f; --good:#37c98a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  html,body{background:#000;}
+  .slide{
+    position:relative;width:1080px;height:1350px;overflow:hidden;
+    background:var(--bg);color:var(--ink);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    padding:84px 88px;display:flex;flex-direction:column;
+  }
+  .slide:not(:last-child){break-after:page;}
+  .kicker{font-family:Menlo,monospace;font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-soft);}
+  .rule{height:3px;background:var(--accent);width:120px;margin:22px 0 0;}
+  .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:24px;display:flex;justify-content:space-between;font-family:Menlo,monospace;font-size:22px;color:var(--muted);}
+  .take{font-size:33px;color:var(--muted);line-height:1.38;margin-top:38px;}
+  .take b{color:var(--ink);}
+  .arrow{align-self:center;color:var(--accent);font-size:44px;line-height:1;margin:6px 0;}
+
+  /* Cover */
+  .cover{justify-content:center;}
+  .cover h1{font-family:"Iowan Old Style",Georgia,serif;font-size:112px;line-height:1.0;font-weight:700;letter-spacing:-.015em;margin-top:26px;}
+  .cover .sub{font-size:40px;color:var(--muted);margin-top:34px;line-height:1.34;}
+  .cover .big{font-family:Menlo,monospace;font-size:34px;color:var(--ink);margin-top:52px;font-weight:600;line-height:1.5;}
+  .cover .big b{color:var(--accent-soft);}
+  .cover .host{font-size:26px;color:var(--muted);margin-top:44px;line-height:1.45;}
+
+  h2{font-family:"Iowan Old Style",Georgia,serif;font-size:60px;line-height:1.06;font-weight:700;letter-spacing:-.01em;margin-top:22px;}
+  h2 em{color:var(--accent-soft);font-style:italic;}
+
+  /* Two-panel compare */
+  .cols{display:flex;gap:30px;margin-top:44px;flex:1;}
+  .col{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:40px 36px;display:flex;flex-direction:column;}
+  .col.evt{border-color:var(--accent);}
+  .col .lab{font-family:Menlo,monospace;font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .col.evt .lab{color:var(--accent-soft);}
+  .col .icon{font-size:64px;margin:22px 0 8px;}
+  .col .what{font-size:34px;line-height:1.32;color:var(--ink);margin-top:10px;font-weight:600;}
+  .col .flow{font-family:Menlo,monospace;font-size:25px;color:var(--muted);margin-top:auto;line-height:1.6;}
+  .col.evt .flow{color:var(--accent-soft);}
+
+  /* Stack flow */
+  .stack{margin-top:40px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 34px;display:flex;align-items:baseline;gap:22px;}
+  .box .n{font-family:Menlo,monospace;font-size:34px;color:var(--accent-soft);font-weight:700;min-width:150px;}
+  .box .d{font-size:29px;color:var(--muted);line-height:1.32;}
+  .box .d b{color:var(--ink);}
+  .box.agent{border-color:var(--accent);}
+
+  /* Compare rows (audit) */
+  .rows{margin-top:40px;flex:1;display:flex;flex-direction:column;gap:24px;justify-content:center;}
+  .prow{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 36px;}
+  .prow.good{border-color:var(--good);}
+  .prow .h{font-family:Menlo,monospace;font-size:23px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+  .prow.good .h{color:var(--good);}
+  .prow .b{font-size:31px;line-height:1.34;color:var(--ink);}
+  .prow .q{color:var(--muted);font-style:italic;}
+  .bigline{font-size:37px;line-height:1.3;color:var(--ink);margin-top:36px;font-weight:600;}
+  .bigline b{color:var(--accent-soft);}
+
+  /* Market cards */
+  .cards{display:flex;gap:24px;margin-top:44px;}
+  .mcard{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 28px;}
+  .mcard .co{font-family:"Iowan Old Style",Georgia,serif;font-size:40px;font-weight:700;}
+  .mcard .mv{font-size:26px;color:var(--muted);margin-top:16px;line-height:1.34;}
+  .def{font-family:Menlo,monospace;font-size:24px;color:var(--accent-soft);margin-top:40px;line-height:1.5;}
+
+  /* Timeline */
+  .tl{margin-top:48px;flex:1;display:flex;flex-direction:column;gap:0;justify-content:center;}
+  .tnode{display:flex;gap:28px;align-items:flex-start;}
+  .tnode .dot{width:20px;height:20px;border-radius:50%;background:var(--accent);margin-top:10px;flex:none;box-shadow:0 0 0 6px rgba(47,109,240,.15);}
+  .tnode.ibm .dot{background:var(--ibm);box-shadow:0 0 0 6px rgba(224,145,47,.18);}
+  .tnode .stem{width:2px;background:var(--line);height:40px;margin-left:9px;}
+  .tnode .yr{font-family:Menlo,monospace;font-size:26px;color:var(--accent-soft);min-width:150px;font-weight:600;}
+  .tnode.ibm .yr{color:var(--ibm);}
+  .tnode .ev{font-size:29px;color:var(--ink);line-height:1.3;}
+  .tnode.ibm .ev b{color:var(--ibm);}
+  @page{size:1080px 1350px;margin:0;}
+</style>
+</head>
+<body>
+
+<!-- 1. COVER -->
+<section class="slide cover">
+  <div class="kicker">Confluent AI Day · NYC · Sep 3, 2026</div>
+  <div class="rule"></div>
+  <h1>Two kinds<br>of agent</h1>
+  <div class="sub">The kind you <b>call</b> — and the kind that<br><em>never stops watching the stream.</em></div>
+  <div class="big">A field guide to <b>event-driven AI</b>,<br>the bet under Thursday's keynote.</div>
+  <div class="host">Hosted by Confluent (now IBM) with the AI Collective · Tribeca 360<br>Keynote · hands-on workshop · 3-hour hackathon</div>
+</section>
+
+<!-- 2. REQUEST/RESPONSE VS EVENT-DRIVEN -->
+<section class="slide">
+  <div class="kicker">01 / 05 · The shift</div>
+  <div class="rule"></div>
+  <h2>Same AI, two postures</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="lab">Request / Response</div>
+      <div class="icon">🛎️</div>
+      <div class="what">Waits to be asked. Answers. Stops.</div>
+      <div class="flow">you → ask →<br>answer → done</div>
+    </div>
+    <div class="col evt">
+      <div class="lab">Event-Driven</div>
+      <div class="icon">📹</div>
+      <div class="what">Watches a live feed. Reacts the instant something happens.</div>
+      <div class="flow">event → react →<br>event → react → …</div>
+    </div>
+  </div>
+  <div class="take">The unit changes from a <b>request</b> to an <b>event</b> — a fact that just happened. Receptionist vs. security guard.</div>
+</section>
+
+<!-- 3. THE STACK -->
+<section class="slide">
+  <div class="kicker">02 / 05 · The stack</div>
+  <div class="rule"></div>
+  <h2>Three layers, one live stream</h2>
+  <div class="stack">
+    <div class="box"><div class="n">Kafka</div><div class="d"><b>The log.</b> Every event written down, in order, and never thrown away — durable and replayable.</div></div>
+    <div class="arrow">↓</div>
+    <div class="box"><div class="n">Flink</div><div class="d"><b>The engine.</b> Computes over that stream continuously — not on a nightly timer like a batch job.</div></div>
+    <div class="arrow">↓</div>
+    <div class="box agent"><div class="n">Streaming<br>Agent</div><div class="d"><b>The reflexes.</b> Written in Flink SQL: reason → act → observe, over every new event — not once per API call.</div></div>
+  </div>
+  <div class="foot"><span>Kafka = the log · Flink = the reflexes</span><span>Confluent Cloud</span></div>
+</section>
+
+<!-- 4. THE PAYOFF: REPLAY -->
+<section class="slide">
+  <div class="kicker">03 / 05 · The payoff</div>
+  <div class="rule"></div>
+  <h2>You don't guess <em>why</em>.<br>You replay it.</h2>
+  <div class="rows">
+    <div class="prow">
+      <div class="h">Request-driven agent</div>
+      <div class="b">Called once, then forgets. <span class="q">"Why did it do that?" → a shrug.</span></div>
+    </div>
+    <div class="prow good">
+      <div class="h">Streaming agent</div>
+      <div class="b">Runs on the log. Replay the exact events it saw and watch the reasoning again. <span class="q">"Why?" has an answer.</span></div>
+    </div>
+  </div>
+  <div class="bigline">Because Kafka <b>never throws the stream away</b>, you can rewind the decision — the real argument for event-driven AI isn't speed, it's <b>auditability</b>.</div>
+</section>
+
+<!-- 5. THE MARKET -->
+<section class="slide">
+  <div class="kicker">04 / 05 · The market</div>
+  <div class="rule"></div>
+  <h2>Everyone shipped an <em>MCP layer</em> in ~90 days</h2>
+  <div class="cards">
+    <div class="mcard"><div class="co">Confluent</div><div class="mv">Managed MCP Server — a governed way for agents to reach live data.</div></div>
+    <div class="mcard"><div class="co">Snowflake</div><div class="mv">Bought Natoma (May 2026) for MCP governance.</div></div>
+    <div class="mcard"><div class="co">Databricks</div><div class="mv">LakeFlow + real-time push into the same space.</div></div>
+  </div>
+  <div class="def">MCP = "USB-C for AI tools" — one connector so any agent can call any tool.</div>
+  <div class="take">The fight isn't <b>whether</b> to speak MCP. It's <b>who governs it</b> — access, redaction, and whether a tool's own description can be trusted.</div>
+</section>
+
+<!-- 6. THE SUBPLOT / TIMELINE -->
+<section class="slide">
+  <div class="kicker">05 / 05 · The subplot</div>
+  <div class="rule"></div>
+  <h2>The first AI Day as an <em>IBM company</em></h2>
+  <div class="tl">
+    <div class="tnode"><div class="dot"></div><div class="yr">2011</div><div class="ev">Kafka open-sourced at LinkedIn — the replayable event log.</div></div>
+    <div class="tnode"><div class="stem"></div></div>
+    <div class="tnode"><div class="dot"></div><div class="yr">2014</div><div class="ev">Confluent founded around managed Kafka + Flink.</div></div>
+    <div class="tnode"><div class="stem"></div></div>
+    <div class="tnode"><div class="dot"></div><div class="yr">Aug 2025</div><div class="ev">Streaming Agents on Flink launched.</div></div>
+    <div class="tnode"><div class="stem"></div></div>
+    <div class="tnode ibm"><div class="dot"></div><div class="yr">Mar 2026</div><div class="ev"><b>IBM's $11B acquisition of Confluent closes.</b> Delisted from Nasdaq.</div></div>
+    <div class="tnode"><div class="stem"></div></div>
+    <div class="tnode"><div class="dot"></div><div class="yr">Sep 3 2026</div><div class="ev">This event — the "IBM Session" is the parent demoing what it bought.</div></div>
+  </div>
+  <div class="foot"><span>Sep 3 · Tribeca 360 · workshop + 3-hr hackathon</span><span>Always-on, or on-demand? →</span></div>
+</section>
+
+</body>
+</html>
