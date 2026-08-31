@@ -1,0 +1,37 @@
+{
+  "run_id": "autoresearch-upcoming-week-sep-1-3-20260831",
+  "content_type": "linkedin_post",
+  "source": "Notion Content Draft 3cdd3699-c2db-819a-8c00-d514e65c121a",
+  "min_score_threshold": 80,
+  "personas": ["cmo", "skeptical_founder", "cro", "copywriter", "alex_voice"],
+  "note": "Curated log — top-3 + winners per round. Scoring done in-context by the model (5-persona simulated panel). Roundup 'insight' element = the connective-arc throughline line.",
+  "rounds": [
+    {
+      "round": 1, "element": "hook", "variants_generated": 10,
+      "top_3": [
+        {"id": "H6", "text": "Three very different NYC rooms this week — a voice-agent panel, a 'we-deleted-our-SaaS' teardown, and an IBM-owned streaming conference — turn out to be one story told top to bottom.", "avg_score": 85},
+        {"id": "H5", "text": "Voice on Tuesday, building on Wednesday, infrastructure on Thursday. Three NYC rooms this week, and together they're most of the AI stack.", "avg_score": 84},
+        {"id": "H9", "text": "Three rooms in NYC this week ask three questions: does voice need a big model, build or buy your software, and stream or request for agents?", "avg_score": 84}
+      ]
+    },
+    {
+      "round": 2, "element": "hook", "variants_generated": 3,
+      "winner": {"id": "H12", "text": "A voice-agent panel, a teardown of a company that replaced $40K/month of SaaS by building its own, and Confluent's first AI Day as an IBM company. Three NYC rooms this week — and one throughline.", "scores": {"cmo": 86, "skeptical_founder": 85, "cro": 86, "copywriter": 87, "alex_voice": 86}, "avg_score": 86}
+    },
+    {
+      "round": 1, "element": "arc_insight", "variants_generated": 4,
+      "winner": {"id": "A4", "text": "Three layers, three nights: the part users hear, the part you assemble, and the part that never sleeps.", "scores": {"cmo": 85, "skeptical_founder": 84, "cro": 85, "copywriter": 86, "alex_voice": 86}, "avg_score": 85},
+      "runner_up": {"id": "A3", "text": "How it talks, what you make with it, what holds it up — read together, that's the week.", "avg_score": 85}
+    },
+    {
+      "round": 1, "element": "cta", "variants_generated": 6,
+      "winner": {"id": "C2", "text": "Which layer are you spending your week in — and who else is going?", "scores": {"cmo": 83, "skeptical_founder": 82, "cro": 84, "copywriter": 83, "alex_voice": 83}, "avg_score": 83}
+    }
+  ],
+  "cross_breed": {
+    "combinations_scored": 5,
+    "winner": {"variant": "A · One throughline (connective arc)", "holistic_score": 88, "char_count": 1780},
+    "runner_up": {"variant": "B · 3 rooms, 3 questions", "holistic_score": 86, "char_count": 1500}
+  },
+  "final_winner": {"variant": "A", "holistic_score": 88}
+}

@@ -1,0 +1,54 @@
+{
+  "run_id": "autoresearch-confluent-ai-day-20260831",
+  "content_type": "linkedin_post",
+  "source": "Notion Content Draft 3cdd3699-c2db-8192-b5cf-ca018b2c9550",
+  "min_score_threshold": 80,
+  "personas": ["cmo", "skeptical_founder", "cro", "copywriter", "alex_voice"],
+  "note": "Curated log — top-3 + winners per round shown with scores; full 10-per-round variant sets summarized. Scoring done in-context by the model (5-persona simulated panel).",
+  "rounds": [
+    {
+      "round": 1, "element": "hook", "variants_generated": 10,
+      "top_3": [
+        {"id": "H10", "text": "Read the invite literally and it's a streaming conference. Read it correctly and it's IBM demoing an $11B acquisition. Confluent AI Day, Thursday, NYC.", "avg_score": 84},
+        {"id": "H5", "text": "IBM now owns Confluent. Thursday is the first AI Day where the parent demos the acquisition it paid $11B for.", "avg_score": 83},
+        {"id": "H6", "text": "Two kinds of AI agent: the kind you call, and the kind that never stops watching. Thursday is a full day on the second.", "avg_score": 82}
+      ]
+    },
+    {
+      "round": 2, "element": "hook", "variants_generated": 10,
+      "winner": {"id": "H13", "text": "Two kinds of AI agent: the kind you call, and the kind that never stops watching the stream. Confluent AI Day Thursday is a full hands-on day on the second — now under IBM.", "scores": {"cmo": 86, "skeptical_founder": 85, "cro": 86, "copywriter": 87, "alex_voice": 86}, "avg_score": 86},
+      "runner_up": {"id": "H11", "text": "Read the invite for Confluent AI Day literally and it's a streaming conference. Read the agenda and it's IBM demoing the $11B acquisition it closed in March.", "avg_score": 85}
+    },
+    {
+      "round": 1, "element": "insight", "variants_generated": 10,
+      "top_3": [
+        {"id": "I3", "text": "The interesting part isn't that the agent runs on a stream. It's that you can rewind the stream and watch the agent's reasoning again, event by event.", "avg_score": 85},
+        {"id": "I9", "text": "Replayability is the quiet superpower: when an agent does something wrong, you replay the exact stream and watch it decide.", "avg_score": 85},
+        {"id": "I10", "text": "Three moves: Kafka remembers every event, Flink reacts continuously, the agent reasons over each one — and you can rewind all of it.", "avg_score": 85}
+      ]
+    },
+    {
+      "round": 2, "element": "insight", "variants_generated": 5,
+      "winner": {"id": "I12", "text": "When a streaming agent gets something wrong, you don't guess why. You replay the exact events it saw and watch the reasoning again — because Kafka never throws the stream away.", "scores": {"cmo": 86, "skeptical_founder": 88, "cro": 86, "copywriter": 88, "alex_voice": 87}, "avg_score": 87},
+      "runner_up": {"id": "I15", "text": "The strongest version of 'AI should be event-driven' isn't speed. It's auditability: replay the stream, watch the agent decide, prove why.", "avg_score": 87}
+    },
+    {
+      "round": 1, "element": "cta", "variants_generated": 10,
+      "top_3": [
+        {"id": "C10", "text": "Request/response or event-driven — where do you land for production agents?", "avg_score": 83},
+        {"id": "C8", "text": "Is 'always-on' actually better than 'call it when you need it'? Genuinely curious where you land.", "avg_score": 83},
+        {"id": "C4", "text": "If you had a live data stream and three hours, what agent would you build?", "avg_score": 83}
+      ]
+    },
+    {
+      "round": 2, "element": "cta", "variants_generated": 3,
+      "winner": {"id": "C11", "text": "Genuine question for people shipping agents: always-on and event-driven, or call-it-when-you-need-it? Where do you land?", "scores": {"cmo": 84, "skeptical_founder": 86, "cro": 85, "copywriter": 85, "alex_voice": 85}, "avg_score": 85}
+    }
+  ],
+  "cross_breed": {
+    "combinations_scored": 5,
+    "winner": {"variant": "A · Two kinds of agent (builder decode)", "holistic_score": 88, "char_count": 1760},
+    "runner_up": {"variant": "B · Read it correctly (curator/reframe, skeptic-balanced)", "holistic_score": 86, "char_count": 1500}
+  },
+  "final_winner": {"variant": "A", "holistic_score": 88}
+}
