@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --paper: #F4EFE6;
+    --ink: #17171F;
+    --ink-soft: #4A4A57;
+    --accent: #B4441F;
+    --good: #2F6B4F;
+    --bad: #A63232;
+    --line: #D9D1C2;
+    --panel: #FBF8F2;
+  }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: var(--paper); color: var(--ink); font-family: "Iowan Old Style", "Palatino", serif; }
+  .slide {
+    position: relative; width: 1080px; height: 1350px; overflow: hidden;
+    padding: 88px 90px 96px; display: flex; flex-direction: column; background: var(--paper);
+  }
+  .slide:not(:last-child) { break-after: page; }
+  .mono { font-family: "Menlo", "Consolas", monospace; }
+  .kicker { font-family: "Menlo", monospace; font-size: 21px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--accent); font-weight: 700; }
+  .eyebrow-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .slide-num { font-family: "Menlo", monospace; font-size: 20px; color: var(--ink-soft); letter-spacing: 1px; }
+  h1 { font-size: 72px; line-height: 1.05; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { font-size: 54px; line-height: 1.08; font-weight: 700; letter-spacing: -0.3px; }
+  .lede { font-size: 30px; line-height: 1.42; color: var(--ink-soft); }
+  .footer { position: absolute; left: 90px; right: 90px; bottom: 52px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: "Menlo", monospace; font-size: 19px; color: var(--ink-soft);
+    border-top: 2px solid var(--line); padding-top: 20px; letter-spacing: 0.5px; }
+  .footer b { color: var(--ink); font-weight: 700; }
+  .grow { flex: 1; }
+  .chip { display: inline-block; font-family: "Menlo", monospace; font-size: 20px;
+    padding: 8px 16px; border-radius: 999px; letter-spacing: 0.5px; }
+  .tag-good { background: rgba(47,107,79,.12); color: var(--good); border: 1.5px solid rgba(47,107,79,.4); }
+  .tag-bad { background: rgba(166,50,50,.10); color: var(--bad); border: 1.5px solid rgba(166,50,50,.38); }
+  .panel { background: var(--panel); border: 2px solid var(--line); border-radius: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ===== SLIDE 1 — COVER / THE AMNESIA ===== -->
+<section class="slide">
+  <div class="eyebrow-row">
+    <span class="kicker">AssemblyAI · Universal-3.5 Pro Realtime</span>
+    <span class="slide-num">01 / 05</span>
+  </div>
+  <div style="margin-top:58px">
+    <h1>Speech-to-text<br>had amnesia.</h1>
+    <p class="lede" style="margin-top:26px; max-width:840px">
+      For as long as voice agents have existed, the layer that turns your voice into
+      text has heard a chunk of audio, transcribed it, and instantly forgotten.
+      This release finally gives it memory.
+    </p>
+  </div>
+
+  <div class="grow"></div>
+
+  <div style="display:flex; gap:30px">
+    <!-- stateless -->
+    <div class="panel" style="flex:1; padding:36px 34px; border-color:rgba(166,50,50,.42)">
+      <div class="chip tag-bad">BEFORE — STATELESS</div>
+      <svg viewBox="0 0 380 250" width="100%" style="margin-top:20px; display:block" font-family="Menlo, monospace">
+        <g font-size="17" text-anchor="middle">
+          <rect x="20" y="20" width="150" height="52" rx="10" fill="#FBF8F2" stroke="#A63232" stroke-width="2"/>
+          <text x="95" y="52">turn 1</text>
+          <rect x="20" y="92" width="150" height="52" rx="10" fill="#FBF8F2" stroke="#A63232" stroke-width="2"/>
+          <text x="95" y="124">turn 2</text>
+          <rect x="20" y="164" width="150" height="52" rx="10" fill="#FBF8F2" stroke="#A63232" stroke-width="2"/>
+          <text x="95" y="196">turn 3</text>
+        </g>
+        <g stroke="#A63232" stroke-width="2" stroke-dasharray="5 5" fill="none">
+          <line x1="175" y1="46" x2="300" y2="46"/>
+          <line x1="175" y1="118" x2="300" y2="118"/>
+          <line x1="175" y1="190" x2="300" y2="190"/>
+        </g>
+        <text x="330" y="125" font-family="Menlo, monospace" font-size="46" fill="#A63232" text-anchor="middle">∅</text>
+        <text x="300" y="235" font-family="Menlo, monospace" font-size="16" fill="#A63232" text-anchor="middle">each turn → forgotten</text>
+      </svg>
+    </div>
+    <!-- stateful -->
+    <div class="panel" style="flex:1; padding:36px 34px; border-color:rgba(47,107,79,.45)">
+      <div class="chip tag-good">AFTER — MEMORY</div>
+      <svg viewBox="0 0 380 250" width="100%" style="margin-top:20px; display:block" font-family="Menlo, monospace">
+        <line x1="60" y1="30" x2="60" y2="210" stroke="#2F6B4F" stroke-width="3"/>
+        <g font-size="17" text-anchor="middle">
+          <circle cx="60" cy="46" r="9" fill="#2F6B4F"/>
+          <rect x="90" y="20" width="230" height="52" rx="10" fill="#FBF8F2" stroke="#2F6B4F" stroke-width="2"/>
+          <text x="205" y="52">turn 1  →  remembered</text>
+          <circle cx="60" cy="118" r="9" fill="#2F6B4F"/>
+          <rect x="90" y="92" width="230" height="52" rx="10" fill="#FBF8F2" stroke="#2F6B4F" stroke-width="2"/>
+          <text x="205" y="124">turn 2  →  in context</text>
+          <circle cx="60" cy="190" r="9" fill="#2F6B4F"/>
+          <rect x="90" y="164" width="230" height="52" rx="10" fill="#FBF8F2" stroke="#2F6B4F" stroke-width="2"/>
+          <text x="205" y="196">turn 3  →  heard through it</text>
+        </g>
+        <text x="205" y="235" font-family="Menlo, monospace" font-size="16" fill="#2F6B4F" text-anchor="middle">one rolling thread</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>NYC Voice AI Meetup · Sept 1, 2026</span>
+    <span><b>a tactical unpacking →</b></span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 2 — agent_context VISUALIZED ===== -->
+<section class="slide">
+  <div class="eyebrow-row">
+    <span class="kicker">The mechanism · Context Carryover</span>
+    <span class="slide-num">02 / 05</span>
+  </div>
+  <h2 style="margin-top:40px"><span class="mono" style="font-size:46px;color:var(--accent)">agent_context</span>, visualized</h2>
+  <p class="lede" style="margin-top:20px; max-width:880px">
+    The agent feeds its <i>own last question</i> back into transcription — so your
+    reply is heard through the lens of what was asked. Live, <b>mid-call, no reconnect.</b>
+  </p>
+
+  <div class="panel" style="margin-top:46px; padding:36px 44px; border-color:rgba(166,50,50,.42)">
+    <div class="chip tag-bad">WITHOUT — reply transcribed in isolation</div>
+    <div style="margin-top:24px; font-size:27px; line-height:1.5">
+      <span class="mono" style="color:var(--ink-soft)">agent asks →</span> <i>“What’s your email?”</i><br>
+      <span class="mono" style="color:var(--ink-soft)">caller says →</span> <span class="mono">“user at gmail dot com”</span>
+      <span style="color:var(--bad); font-size:32px">→</span>
+      <span class="mono" style="color:var(--bad); font-weight:700">5 random words · wrong action ✗</span>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:26px; padding:36px 44px; border-color:rgba(47,107,79,.45)">
+    <div class="chip tag-good">WITH agent_context — heard through the question</div>
+    <div style="margin-top:24px; font-size:27px; line-height:1.5">
+      <span class="mono" style="color:var(--ink-soft)">context →</span> <span class="mono" style="color:var(--good)">an email is expected</span><br>
+      <span class="mono" style="color:var(--ink-soft)">caller says →</span> <span class="mono">“user at gmail dot com”</span>
+      <span style="color:var(--good); font-size:32px">→</span>
+      <span class="mono" style="color:var(--good); font-weight:700">user@gmail.com ✓</span>
+    </div>
+  </div>
+
+  <div class="grow"></div>
+  <div class="panel" style="padding:30px 40px; margin-bottom:6px">
+    <p style="font-size:26px; line-height:1.4">
+      The hard part isn’t the idea — it’s doing it <b>without tearing down the session.</b>
+      Most streaming stacks can’t change context without dropping the connection. This one
+      updates over the open socket.
+    </p>
+  </div>
+
+  <div class="footer">
+    <span>STT = speech-to-text</span>
+    <span><b>the fix</b></span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 3 — VENDOR vs INDEPENDENT SCOREBOARD ===== -->
+<section class="slide">
+  <div class="eyebrow-row">
+    <span class="kicker">Does it work? · keep the numbers honest</span>
+    <span class="slide-num">03 / 05</span>
+  </div>
+  <h2 style="margin-top:40px">Vendor number vs.<br>independent number</h2>
+  <p class="lede" style="margin-top:20px; max-width:860px">
+    Two sources, labeled — because a launch claim and a third-party benchmark are not
+    the same evidence. Here, both point the same way.
+  </p>
+
+  <div style="display:flex; gap:30px; margin-top:52px">
+    <div class="panel" style="flex:1; padding:44px 40px">
+      <div class="mono" style="font-size:19px; letter-spacing:1.5px; color:var(--ink-soft); font-weight:700">VENDOR — AssemblyAI</div>
+      <div style="font-size:96px; font-weight:700; line-height:1; margin-top:20px; color:var(--ink)">−10.2%</div>
+      <div style="font-size:24px; color:var(--ink-soft); margin-top:8px">word-error-rate, across 20,000 agent files</div>
+      <div style="margin-top:26px; font-size:24px; line-height:1.6" class="mono">
+        fabrications&nbsp;&nbsp;<b style="color:var(--good)">−18.3%</b><br>
+        hallucinations&nbsp;<b style="color:var(--good)">−17.2%</b><br>
+        place names&nbsp;&nbsp;&nbsp;<b style="color:var(--good)">−15.5%</b>
+      </div>
+    </div>
+    <div class="panel" style="flex:1; padding:44px 40px; border-color:rgba(180,68,31,.5)">
+      <div class="mono" style="font-size:19px; letter-spacing:1.5px; color:var(--accent); font-weight:700">INDEPENDENT — Coval</div>
+      <div style="font-size:96px; font-weight:700; line-height:1; margin-top:20px; color:var(--accent)">3.40%</div>
+      <div style="font-size:24px; color:var(--ink-soft); margin-top:8px">word-error-rate · <b>#1 of 29 models</b></div>
+      <div style="margin-top:26px; font-size:24px; line-height:1.55" class="mono">
+        open Apache-2.0 harness<br>
+        897 messy conversational clips<br>
+        <b style="color:var(--good)">inside the 2–4% human-parity band</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="grow"></div>
+  <div class="panel" style="padding:28px 40px; margin-bottom:6px; text-align:center">
+    <span style="font-size:26px">A model transcribing live, interrupted speech <b>as accurately as a professional human.</b></span>
+  </div>
+
+  <div class="footer">
+    <span>WER = % of words transcribed wrong · lower is better</span>
+    <span><b>the evidence</b></span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 4 — ACCURACY vs LATENCY FRONTIER ===== -->
+<section class="slide">
+  <div class="eyebrow-row">
+    <span class="kicker">The tension the launch posts skip</span>
+    <span class="slide-num">04 / 05</span>
+  </div>
+  <h2 style="margin-top:40px">Accuracy leader — not<br>the speed leader</h2>
+  <p class="lede" style="margin-top:18px; max-width:860px">
+    The accuracy is bought with latency. The tradeoff didn’t dissolve; it got repriced.
+  </p>
+
+  <div style="margin-top:30px">
+    <svg viewBox="0 0 900 500" width="100%" style="display:block" font-family="Menlo, monospace">
+      <!-- axes -->
+      <line x1="120" y1="40" x2="120" y2="430" stroke="#17171F" stroke-width="2.5"/>
+      <line x1="120" y1="430" x2="850" y2="430" stroke="#17171F" stroke-width="2.5"/>
+      <text x="120" y="470" font-size="18" fill="#4A4A57" text-anchor="middle">fast</text>
+      <text x="835" y="470" font-size="18" fill="#4A4A57" text-anchor="middle">slow →</text>
+      <text x="470" y="497" font-size="19" fill="#17171F" text-anchor="middle" font-weight="700">latency after you stop speaking</text>
+      <text x="90" y="235" font-size="19" fill="#17171F" text-anchor="middle" font-weight="700" transform="rotate(-90 90 235)">accuracy →</text>
+
+      <!-- human-parity target zone -->
+      <rect x="150" y="60" width="230" height="120" rx="10" fill="rgba(47,107,79,.12)" stroke="#2F6B4F" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="265" y="90" font-size="17" fill="#2F6B4F" text-anchor="middle" font-weight="700">HUMAN-PARITY ZONE</text>
+      <text x="265" y="115" font-size="15" fill="#2F6B4F" text-anchor="middle">2–4% WER · ~0.2s</text>
+
+      <!-- speed leaders: fast, lower accuracy -->
+      <circle cx="200" cy="330" r="14" fill="#A63232"/>
+      <text x="200" y="372" font-size="17" fill="#A63232" text-anchor="middle">speed leaders</text>
+      <text x="200" y="393" font-size="15" fill="#4A4A57" text-anchor="middle">0.02–0.14s · lower accuracy</text>
+
+      <!-- Universal-3.5: mid latency, top accuracy -->
+      <circle cx="470" cy="120" r="17" fill="#B4441F"/>
+      <text x="470" y="100" font-size="18" fill="#B4441F" text-anchor="middle" font-weight="700">Universal-3.5</text>
+      <text x="470" y="163" font-size="16" fill="#4A4A57" text-anchor="middle">~0.44s · 3.4% WER (max-accuracy)</text>
+
+      <!-- human expectation marker -->
+      <line x1="300" y1="40" x2="300" y2="430" stroke="#4A4A57" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <text x="300" y="30" font-size="15" fill="#4A4A57" text-anchor="middle">humans expect a reply: 500–800ms</text>
+    </svg>
+  </div>
+
+  <div class="grow"></div>
+  <div class="panel" style="padding:28px 40px; margin-bottom:6px">
+    <span style="font-size:25px">And <b>$0.45/hour is the base</b> — contextual prompting, diarization-with-revision, and voice isolation are add-ons that stack on top.</span>
+  </div>
+
+  <div class="footer">
+    <span>positions illustrative — see AssemblyAI + Coval benchmarks</span>
+    <span><b>the tradeoff</b></span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 5 — THE UNSOLVED WALL / THE FORK ===== -->
+<section class="slide">
+  <div class="eyebrow-row">
+    <span class="kicker">The frontier it doesn’t touch</span>
+    <span class="slide-num">05 / 05</span>
+  </div>
+  <h2 style="margin-top:40px">It got better at <i>what</i> it hears —<br>not <i>when a turn ends.</i></h2>
+  <p class="lede" style="margin-top:20px; max-width:880px">
+    Knowing you’re actually done, not just pausing, is <b>turn detection</b> — still the
+    hardest unsolved problem in voice. Two architectures are betting against each other:
+  </p>
+
+  <div style="display:flex; gap:30px; margin-top:46px">
+    <div class="panel" style="flex:1; padding:38px 36px">
+      <div class="mono" style="font-size:19px; letter-spacing:1px; color:var(--ink-soft); font-weight:700">PATH A · pipeline</div>
+      <div style="font-size:30px; font-weight:700; margin-top:14px; line-height:1.25">Context-accurate STT<br>+ a separate turn-detector</div>
+      <div style="font-size:23px; color:var(--ink-soft); margin-top:16px; line-height:1.4">AssemblyAI’s bet: win transcription accuracy, bolt on endpointing.</div>
+    </div>
+    <div class="panel" style="flex:1; padding:38px 36px; border-color:rgba(180,68,31,.5)">
+      <div class="mono" style="font-size:19px; letter-spacing:1px; color:var(--accent); font-weight:700">PATH B · fused</div>
+      <div style="font-size:30px; font-weight:700; margin-top:14px; line-height:1.25">One model that natively<br>knows when you’re done</div>
+      <div style="font-size:23px; color:var(--ink-soft); margin-top:16px; line-height:1.4">Deepgram Flux’s bet: fold turn-detection into the transcript stream.</div>
+    </div>
+  </div>
+
+  <div class="grow"></div>
+
+  <div class="panel" style="padding:34px 44px; background:var(--ink); border-color:var(--ink)">
+    <div class="mono" style="font-size:19px; letter-spacing:1.5px; color:#E7B79B; font-weight:700">THE OPEN QUESTION</div>
+    <div style="font-size:32px; font-weight:700; color:var(--paper); margin-top:12px; line-height:1.3">
+      Nobody’s proven you get both accuracy <i>and</i> native turn-detection yet.
+    </div>
+    <div class="mono" style="font-size:20px; color:#C9C2B5; margin-top:18px">
+      April: network quality → June: small models → Sept: context at human parity → next wall: the turn.
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Thanks to AssemblyAI, LiveKit &amp; Boardy</span>
+    <span><b>which side are you on?</b></span>
+  </div>
+</section>
+
+</body>
+</html>
