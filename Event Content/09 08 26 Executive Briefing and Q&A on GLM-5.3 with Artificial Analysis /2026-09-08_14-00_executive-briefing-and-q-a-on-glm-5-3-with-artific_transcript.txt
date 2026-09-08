@@ -1,0 +1,398 @@
+[19:00:00 - 19:00:02] Philip Kiely: Hey, Declan.
+
+[19:00:02 - 19:00:04] Declan Jackson: Hello, how are you?
+
+[19:00:04 - 19:00:11] Philip Kiely: I'm doing all right, I'm doing all right. You were saying something very complimentary about my photo
+
+[19:00:09 - 19:00:16] Declan Jackson: Oh, I just, I like the Philip in that photo, I was thinking maybe maybe you could bring back that haircut
+
+[19:00:15 - 19:00:37] Philip Kiely: Oh, yeah. That involves a comb, and I'm kind of allergic to those. But We did this photo shoot for some of the folks in the office, and the guy taking the photo, I told him it was an author photo. I think he maybe thought that I wrote, like, poetry or something cool. So he's trying to get this, like, you know, sensitive and thoughtful photo when I'm actually just thinking about Tensor OT L Lm
+
+[19:00:31 - 19:00:43] Declan Jackson: Yeah. Little did he know that inference engineering is way cooler than any poetry.
+
+[19:00:45 - 19:00:52] Philip Kiely: I guess, I guess so you're one of the Australian contingent here in San Francisco, right?
+
+[19:00:50 - 19:00:59] Declan Jackson: Yes, I feel like one one of the many, the more people I bump into here, a lot of Australians seem to be crossing over the water into San Francisco.
+
+[19:00:50 - 19:01:15] Philip Kiely: Yeah. Yeah, and a bunch of people are joining us right now. I'm seeing 137 people online already. As you join in, drop in chat where you're calling in from. Hopefully, we'll get one or two other Australians. And if anyone's here is from Iowa, you know, I'm from Iowa, so represent
+
+[19:01:04 - 19:01:05] Declan Jackson: Oh, nice.
+
+[19:01:15 - 19:01:19] Philip Kiely: Declan, are you an American football fan by any chance?
+
+[19:01:19 - 19:01:35] Declan Jackson: I… not… not yet. I'm trying to get into the American sports. I've been to baseball. Baseball's really fun, but I haven't been to football yet. I went to the stadium, like, the one in the San Francisco to watch the World Cup
+
+[19:01:25 - 19:01:39] Philip Kiely: Okay, baseball's great. Yeah. Oh, that was awesome. It was the team USA one.
+
+[19:01:36 - 19:01:41] Declan Jackson: That was awesome. Yeah, yeah. No, it was actually Australia versus Paraguay
+
+[19:01:40 - 19:01:44] Philip Kiely: Oh, that was a great one too. Yeah.
+
+[19:01:41 - 19:01:55] Declan Jackson: Had to support my native fellow Australians, but it was very fun. Even though it was a nil all draw. So I've been to a World Cup game. I can say that much, but I've never seen a World Cup goal live.
+
+[19:01:46 - 19:02:09] Philip Kiely: Got your gut Yeah. Okay, well, you know, maybe next time in four years. Actually, right now there is a NFL game happening in your home country in a couple days. My team flew all the way over there to hang out
+
+[19:02:09 - 19:02:18] Declan Jackson: Oh, wow. Yeah, I did see that. It was crazy. I was like, I saw something was like, you know, 49ers board the plane to go to Melbourne.
+
+[19:02:09 - 19:02:14] Philip Kiely: You guys Yeah.
+
+[19:02:18 - 19:02:26] Declan Jackson: And I was thinking, okay, so I've come all the way from from from Melbourne to to San Francisco, and now the 49ers have just come back
+
+[19:02:25 - 19:02:39] Philip Kiely: Exactly. And I saw one of your rugby guys teaching Miles Garrett how to tackle even better. So I'm afraid for… I'm afraid for my guys and their spines and ribs
+
+[19:02:39 - 19:02:43] Declan Jackson: Yes, yes, that I'm imagining that would be pretty tough.
+
+[19:02:44 - 19:02:56] Philip Kiely: Yeah, well, we've got a whole bunch of people here with us. Thank you all for coming in. As you come in, say hi in the chat. Let us know what you're calling in from. We're about three minutes past the hour, so Declan, you want to get going?
+
+[19:02:51 - 19:02:57] Declan Jackson: Yeah. Let's kick it off
+
+[19:02:56 - 19:03:17] Philip Kiely: All right, let's do it. So thank you all so much, everybody, for joining us here today. We're going to be talking about GLM 5.3, the new king of open weight models. So just by way of introduction, I'm Philip. I work here at Base10. And joining me is Declan. Declan, would you like to introduce yourself?
+
+[19:03:16 - 19:03:28] Declan Jackson: Hey, thank you, Philip. Yes, I'm Declan. I am a member of technical staff at Artificial analysis. So I do a lot of stuff on language models, benchmarking, APIs and capabilities as well.
+
+[19:03:27 - 19:04:49] Philip Kiely: Awesome. And I mean, I'm a huge fan of your work. I think that you guys have done a ton for the industry to provide sort of neutral and third party comparisons between all these models. What we do at Base10 is we do inference and post-training for open models and for custom models as well We help folks like Akoso and Harvey and Lovable and Notion run these open models in production. And so today, what Declan and I are going to talk about is we're going to talk about this brand new GLM 5.3 model, get a little overview of what it is We're going to We're going to, do some benchmarking work. Declan's going to talk us through that. We're going to talk about some top use cases for the GLM family of models. And then we're going to talk about some inference engineering stuff. As we go, we have an open Q&A thread, an open chat thread. Both of those are being monitored So if you have anything that you want me and Declan to talk about, let us know, and we will put that in the end of the show. Sounds good. All right. Yeah, let's do it. Let's do it. So GLM 5.3. Where did this thing come from? Well, it didn't come out of nowhere. We've been tracking. Declan, how long have you been at AA, by the way?
+
+[19:04:35 - 19:04:55] Declan Jackson: Let's get into it Just over a year, which seems in AI land, that seems like, you know, forever.
+
+[19:04:50 - 19:05:10] Philip Kiely: Over here Oh, that's a long time. We're some old men at this point? So yeah, so you've seen a big part of this journey from 2025 to today of open models kind of coming out and starting to get really good and get really viable
+
+[19:04:58 - 19:05:10] Declan Jackson: Yes. Hmm.
+
+[19:05:09 - 19:06:24] Philip Kiely: So GLM 5.3, you know, it didn't come out of nowhere. It's the latest in a long line of open models. And open models are getting a lot of adoption. What we're seeing is people start out building their products on closed model APIs. They potentially run into some issues around cost and latency or rate limits or governance. So just the sort of operations making an AI product. And then they open source it. They choose an open source model via API. They, you know, potentially move over to dedicated deployments to get even more capacity, more control, predictability and customization. And then eventually moved to fine-tuning. And the first step of this journey is adoption. It's finding a great open model, finding a great use case for it, and getting it up and live in the product. And that's really what we're here to talk about today. So GLM 5.3 was released in August. They first released it as a first party platform and API and then opened up the model weights about two weeks later And actually, GLM 5.3 came a couple days after 5.3 flash. Did you know what LX Alpha was, Declan? Because I did not know.
+
+[19:06:23 - 19:06:51] Declan Jackson: No, like, as soon as we see any new open router model, everyone tries to guess and you know there are a few kind of tests you can do. You can have a look at maybe what their outputs like if they create maybe like PowerPoints or something, there's some different models have a different visual taste, I would say But I didn't actually know, and I think, you know, they… obviously, like, there was a lot of talks of 5.3 at the time, so yeah, I wasn't… I wasn't… I didn't expect a 5.3 flush
+
+[19:06:39 - 19:08:02] Philip Kiely: -H Yeah, I saw people talking about the 5.3 tokenizer. And so I was like, that's some pretty good evidence. But as we'll see later, you can take different pieces of different models and actually blend them together in the open world. So it wasn't quite the perfect evidence that people thought it was So anyway, so we've got these two models and we're going to talk a lot about the difference between these two models, the sort of full size 5.3 and the 5.3 flash. They're both open weight models. The flash model is actually an unrestricted MIT license. GLM 5.3 has some very slight usage restrictions if you're an influence provider with, you know, over $10 billion in revenue. So for the vast majority of folks, you're not going to have to worry about that. They're both really high-quality open-weight models. And a sort of side-by-side technical comparison is You know, the full-size GLM it's more than twice as big, and it scores slightly higher on the benchmarks, which Declan's going to get into. Actually, Declan, I had to update this slide last night because this number used to be 60, and this number used to be 57.
+
+[19:07:56 - 19:07:58] Declan Jackson: Yes.
+
+[19:08:02 - 19:08:07] Philip Kiely: And that the scores went down. Did you make the benchmarks harder?
+
+[19:08:02 - 19:08:25] Declan Jackson: I, Philip, AI moves very quickly. So these numbers, you know, they have to move very quickly as well. So we did, we actually just released an update to our artificial analysis intelligence index. I can go into it in a bit more detail in a bit, but yes, it did get harder. We brought in some new
+
+[19:08:10 - 19:08:11] Philip Kiely: Yeah.
+
+[19:08:25 - 19:08:34] Declan Jackson: benchmarks, more focus on, kind of, private test sets and test sets, which are going to be a little bit less saturated, so that is why the score went down.
+
+[19:08:34 - 19:09:34] Philip Kiely: Awesome. Well, you know, a saturated benchmark is a pretty useless benchmark, so I'm glad to see the test getting harder as these models get smarter. One thing actually that's pretty interesting here is that there's more different between these models than just their size They're actually, like, somewhat different architectures. So the sort of 5.x architecture of GLM 5.1, 5.2, now 5.3 has been like pretty consistent over the past few months, like actually 5.2 to 5.3 was purely a post-training jump But the… the flash architecture is new. It's a somewhat new recipe, and it also has native vision. So that's an interesting piece. It has a built-in vision encoder that's able to map images directly into the latent space that the weights can look at And we're going to talk about the ways in which that changes what you can do with each of these models. So
+
+[19:09:33 - 19:09:47] Declan Jackson: And what do you think, just quickly, Philip, like, do you think that ZAI now going to kind of try to build on both of these architectures? Do you think they're going to move over to the flash architecture and try to scale that up? Like, what do you think their strategy is going to be?
+
+[19:09:35 - 19:10:02] Philip Kiely: Yeah, of course. I mean, just off of my own speculation, I would expect that the flash architecture is where they would focus moving forward, just because it seems to be an overall more efficient architecture. You're looking at a model that's
+
+[19:09:59 - 19:10:01] Declan Jackson: Yeah.
+
+[19:10:01 - 19:10:19] Philip Kiely: You know, maybe a third… a half to a third the size, but 8 times cheaper to operate. So it's a faster, more scalable architecture. It also does have that native multimodality, which once… if you… if you build without it, it's kind of hard to build it in at the end
+
+[19:10:11 - 19:10:12] Declan Jackson: Hmm.
+
+[19:10:19 - 19:11:23] Philip Kiely: And then you also have, like, really, really strong performance. You know, this model is only a couple points behind on all of you guys' benchmarks So if I were looking at this as a researcher, like obviously the GLM 5.3 architecture has a lot of great stuff going for it. It's a very established architecture. It's very stable to run in production GLM models are token efficient. Like they don't take that many tokens to get a great answer. At least 5.2 didn't 5.3 is a little bit less token efficient. But the architecture is solid and proven, and there's really something to be said for that, because sometimes new architectures come out and it can take a while to get really high quality inference support But oddly, I do think that I would be really excited to see what something like a flash architecture looks like if it's scaled to, you know, like a Kimi or a Qwen 3.8 size. That would be a pretty killer model, in my opinion.
+
+[19:11:23 - 19:11:30] Declan Jackson: Yeah, for sure, especially if it can maintain some of its, like, cost efficiencies, like, you know, the flash model is super cost efficient, right?
+
+[19:11:29 - 19:11:31] Philip Kiely: Exactly.
+
+[19:11:30 - 19:11:48] Declan Jackson: you know, if they can keep that as they scale out, I think it would be very, very powerful. I think as well, you know, like, the GLM models were, you know, they really needed that vision, that native vision ability. Like, we found that a lot more people need that visual reasoning, and it's just becoming way, way more important, so it kind of makes sense that they've built this in now.
+
+[19:11:48 - 19:11:58] Philip Kiely: And you just need it for compatibility with a bunch of harnesses as well. Like your coating harness expects you to be able to screenshot your website and pass it back.
+
+[19:11:51 - 19:11:59] Declan Jackson: Yes, sure. Exactly, exactly.
+
+[19:12:00 - 19:12:13] Philip Kiely: Awesome. Well, hey, let's hand it over to you, Declan, to talk a little bit about benchmarking because you've done a lot of really interesting work in this space. So yeah, let me pull up your slides and we can go through it.
+
+[19:12:05 - 19:12:43] Declan Jackson: Awesome. Sure. Sounds great. So, yeah, I'm gonna speak through some benchmarks that we've done on GLM 5.3 and on GLM 5.3 Flash as well and a bit of comparison. And I will note that a lot of the times we talk about the scores of 5.3, we're talking about with like max raising max effort, they're can tune that as well, but for the purpose of some of these testings, we're testing it on Macs. So, just for a bit of context, on artificial analysis, for those that don't know, sort of, who we are, what we do
+
+[19:12:35 - 19:12:37] Philip Kiely: Yeah.
+
+[19:12:43 - 19:13:41] Declan Jackson: Artificial analysis is leading AI benchmarking company. So essentially what we benchmark kind of all up the AI stack. So from down the bottom where we're looking at chips and hardware, so we do benchmarking on different hardware setups and the kind of throughput You can get through there up to cloud. So inference providers like base 10 looking at API speeds, latency, quality, and cost. Then we go to models. Obviously, this is our main area that many people probably know us by looking at intelligence, but sort of past that, a big thing is cost and time efficiency as well. And then we've also got agent benchmarking. So benchmarking, how do models perform in different harnesses, which is also really important, especially when it comes to open weights models, right? Because it's not, you know, an obvious an obvious decision, like, maybe what harness I'm gonna use. So, and that's through our coding agent index.
+
+[19:13:40 - 19:13:49] Philip Kiely: Absolutely, especially with the recent trend towards co-developing the model with the harness. There can be a lot of
+
+[19:13:41 - 19:13:49] Declan Jackson: Sorry. Exactly.
+
+[19:13:50 - 19:13:58] Philip Kiely: discrepancy in how a model performs, sort of like on its own versus when it's driving one of these harnesses.
+
+[19:13:59 - 19:14:22] Declan Jackson: For sure, exactly. And we kind of have have harnesses that we use very unopinionated harnesses for just model benchmarking. And then obviously for coding agents, we'll use harnesses that, you know, the labs are usually used with the model. So it was probably used in training It is really interesting seeing like the difference, even just it's how comfortable it is with different tools and how it works, sort of the difference between the two.
+
+[19:14:21 - 19:14:23] Philip Kiely: Absolutely.
+
+[19:14:23 - 19:16:22] Declan Jackson: So shall we talk sort of GLM 5.3 So, so what we're looking at here is the artificial Analysis Intelligence Index. And on the Artificial Analysis Intelligence Index, GLM 5.3 is the leading open weights model So What is the intelligence index? Essentially, we at Artificial Analysis think that this is basically the sort of single best number. If you had to combine everything that you wanted to about a model's capability and intelligence, we combine it into this single number Based on a bunch of different benchmarks that we think are very important to, kind of, how developers are using AI. And so, in this benchmark, we have 5.3 on max scoring 45 ahead of Kimi K3, so the leading open weights model. And then we also see 5.3 flash doing really, really well third open weights model, which is very impressive. Obviously, it's a new architecture. It's the first time they've They've done this, and it's scoring really, really well And just to come back on something that you said before, Philip, on the scores change, I had to update it. So we have pushed an update recently to the intelligence index to essentially try to try to make sure we're continuing to capture, kind of, what is important in how people are using AI models, and how can we best choose these benchmarks that are, you know, not saturated? How can we use private test sets to avoid benchmarks being gamed This sort of thing. So, so the benchmarks that we use, we have Agentic benchmarks, so we do GDP val, AA Briefcase, which is a proprietary one. These look at like knowledge work, creating PowerPoints, this sort of thing, as well as an automation benchmark. We have coding We have kind of more general sense benchmarks, stuff like knowledge, hallucination, visual reasoning, and then we also have scientific reasoning as well.
+
+[19:16:23 - 19:16:36] Philip Kiely: Gotcha. And so the changes from this is version 4.3 now, right? So it was the update from 4.2 to 4.3 is that you added some new tougher benchmarks. And did you take out any benchmarks that were kind of like saturated everywhere?
+
+[19:16:32 - 19:17:01] Declan Jackson: Hmm. Yeah, so one big one was we upgraded from terminal Bench 2.1 to terminal Bench 4, which was a big one. So Terminal Bench 2.1 was feeling pretty saturated and obviously it doesn't give great signal. So we upgraded to terminal And then we also added automation bench AA. Also, we replaced Tau3 banking with Automation Bench AA.
+
+[19:17:02 - 19:17:20] Philip Kiely: Cool. Awesome. Well, let's look at some more GLM 5.3 things. And yeah, one thing, one thing that I was mentioning earlier is how this is just kind of like the latest in a long line of frontier open models. Like how are you seeing that over time
+
+[19:17:08 - 19:18:00] Declan Jackson: Yeah. Hmm Yeah, a lot of people ask us, you know, okay, so how far are open weights from the proprietary models or from the frontier now? And something really interesting that we have seen is that gap actually hasn't changed a lot over the past sort of year or two. And we say that it's sort of remained at this 3 to 9 month gap, they've kind of kept up pace with this 3-9 month gap of the proprietary frontier, and GLM 5.3 is no exception. So, you know, sort of what was best 3 to 9 months ago, we can now have, you know, hosted and have the weights open source, which is really, really cool.
+
+[19:18:00 - 19:18:16] Philip Kiely: Yeah. One thing that I always think about with this is kind of capability thresholds where, you know, once you pass a threshold, like Opus 405 really unlocked Agentic coding last December. And now we have a bunch of models over that threshold. So
+
+[19:18:13 - 19:18:14] Declan Jackson: Hmm.
+
+[19:18:16 - 19:18:31] Philip Kiely: It's less, in my mind, about a specific gap, like a number of months or something, and more about once a new way of using a model becomes popularized, you know, open models are eventually going to be able to catch up
+
+[19:18:22 - 19:18:23] Declan Jackson: Hmm.
+
+[19:18:31 - 19:18:37] Philip Kiely: And then you can do a lot of really interesting things around speed and cost and all that stuff.
+
+[19:18:36 - 19:19:08] Declan Jackson: For sure. And it's interesting you say that. I think one of the gaps for me personally, which I found is this like you know, we had Agentic coding, and now we have this sense of, like, knowledge work, you know, Claude Co-work, and the like, and I think that one is the recent one that's been unlocked by open weights models. You know, we see open weights models like GLM 5.3, and obviously some others like Kimi do really well on some of these Agentic knowledge work benchmarks, which I'll get to in a second, but I feel like that is kind of the next thing that has been unlocked recently.
+
+[19:19:05 - 19:19:12] Philip Kiely: Yeah. Awesome. Well, yeah, let's keep going. Let's take a look at that stuff.
+
+[19:19:11 - 19:21:16] Declan Jackson: Cool. So, as I mentioned before We look at intelligence at artificial analysis. But something else that we want to look at is beyond just intelligence, what about the cost and also time efficiencies of the model? There's no point, you know. Saying it's the… it's the best model if it's going to be super, super cost inefficient or time inefficient. So, we have a metric called cost per task, which kind of normalizes across two main things Number one, the token price of the model, so how expensive is it per token But then secondly, the token use of that model. So token use is sort of the output tokens, how verbose is it, but also input tokens, which usually is driven by how many turns it's taking on Agentic benchmark. So How hard does it work? How many tokens does it use? And so this cost per task metric kind of gives us an actual realistic view of, well, how much does it cost to run this model Beyond just what the tokens cost. And so something that we see is GLM 5.3 flash is on the cost per task intelligence Pareto frontier. So what that means is for the intelligence level of GLM 5.3 flash, it is the most cost efficient model that you could choose and sort of Philip, you mentioned before these architectures are very efficient, and we can see that here. Sort of, it has a massive price reduction compared to 5.3. You know, a lot of the… most of the inference providers, same as the sort of first-party API are running at that sort of 15 cents, 50 cents out per million tokens and it's a big discount. Now, something that's interesting is just a quick comparison between the two. Obviously, the token cost is much cheaper for 5.3 flash, but we actually see the token use is not super different So, you know, they kind of work similar amounts and the output tokens are quite similar, but a majority of that saving is coming from the cheaper tokens. Yeah
+
+[19:21:16 - 19:21:34] Philip Kiely: Cool, so it's just straight up a cheapo token model with approximately similar cost characteristics on a task basis. One thing I wanted to highlight here is some of the closed models that this flash model could potentially
+
+[19:21:26 - 19:21:27] Declan Jackson: Exactly.
+
+[19:21:34 - 19:21:57] Philip Kiely: be a viable candidate, a viable alternative to. It looks like you also have Luna after that major price cut here on the frontier. And then at around the same intelligence level, you're saving a lot of money versus a Gemini flash or a 5-6 Terra Is that kind of aligned with what you guys are seeing?
+
+[19:21:54 - 19:22:09] Declan Jackson: Yeah. Yes, exactly. So basically, you know, for a similar intelligence level, as you said, to those two models, you could use GLM 5.3 flash and it's going to cost you, you know, a quarter of the price.
+
+[19:22:09 - 19:22:27] Philip Kiely: I mean, those are some pretty substantial savings. And then I know a lot of people tried to move workloads over to Luna after that huge price cut, and some of them stuck and some of them worked really well for the ones that needed potentially a little bit more juice, GLM flashes is close in
+
+[19:22:12 - 19:22:13] Declan Jackson: Yeah.
+
+[19:22:27 - 19:22:32] Philip Kiely: place while offering a pretty meaningful step in intelligence, it looks like
+
+[19:22:31 - 19:22:34] Declan Jackson: Exactly, exactly.
+
+[19:22:34 - 19:22:35] Philip Kiely: Awesome.
+
+[19:22:34 - 19:22:46] Declan Jackson: So, so then we can get to the time that it takes to run these models. So that's kind of the secondary axis, because that can be very important to developers as well. So
+
+[19:22:39 - 19:22:40] Philip Kiely: Yeah.
+
+[19:22:46 - 19:23:18] Declan Jackson: The crazy thing here with time per task is it is very dependent on the provider that you're going to use. And that does, you know, obviously time per task is going to be driven by a how many tokens or turns is it taking, but then B, how fast are those tokens coming what's the kind of output speeds and latencies you're getting. There is a third factor, which is, you know, sometimes how long are the tool calls that it's using taking. If it's running scripts that are taking a long time, we factored that in as well, but it's definitely not much of a driver as those first two
+
+[19:23:12 - 19:23:13] Philip Kiely: Yeah.
+
+[19:23:18 - 19:24:20] Declan Jackson: And so what we can see here is we have sort of on the right-hand side, these two GLM 5.3 sort of time per task metrics. Now, I will note here, we just used the first party API. So what is the speed if you're using it on the ZAI endpoint And sort of as before, Howie said, they have very similar token use characteristics Because their speeds are pretty similar on the ZAI API, their time per task is going to be very similar. But what we can see is, if we kind of follow those arrows, if, for example, you used a different provider, I've just used Base10 for this example, is you can actually cut that time per task down a lot. So, sort of, those top two are Base 10, they have a fast endpoint and I'm sure you'll go into it in a second Philip. And then just like a regular endpoint for 5.3 and then 5.3 flash, sort of getting around that GPT 5.6 terror Area of of time per task
+
+[19:24:21 - 19:25:03] Philip Kiely: Awesome, yeah, I appreciate you highlighting that. It does depend a lot. And one thing I'm going to talk about on the inference engineering side is some of the knobs that are available. If you really want to be latency sensitive and are willing to trade off some throughput and costs, like how can you push that even further? And then also we can look at time per task. We could also look at throughput metric like tasks per hour. If you're doing, for example, a really large scale reinforcement learning You don't particularly care how long each task takes. You care how much it costs to get through your entire corpus of your entire backlog of tasks. So in those cases, we can do a much more, like, throughput optimized setup
+
+[19:25:03 - 19:25:06] Declan Jackson: Exactly, exactly.
+
+[19:25:06 - 19:25:10] Philip Kiely: Cool. Yeah.
+
+[19:25:08 - 19:26:25] Declan Jackson: So, yeah, so we can get into some of now the specific strengths and weaknesses of the GLM 5.3 models, which I think are very interesting. So the big strength that's jumping out is this Agentic capabilities of both models really and sort of This is in AI Agentic knowledge work. So as I mentioned before, stuff like creating PowerPoints and Excels and working with a lot of files. And then B Agentic coding as well. So I've taken out a couple example benchmarks that we have on our site and we can see sort of AA briefcase, which is Agentic knowledge work. We can see GLM 5.3 max is leading in all open weights models. It's only just behind Fable 5 Which is extremely impressive, right? And then terminal bench V4, so this was our updated terminal bench, GLM 5.3 again scoring the best score of any open weights model, even ahead of 5.6 solder, which is seriously impressive. Now, on the flash side, you know, briefcase as well does very, very well. Third best open weights model, so just behind Kimi, and ahead of that, those really big QEN models, and similar on Terminal Bench.
+
+[19:26:26 - 19:26:32] Philip Kiely: What do you think drives that incredible terminal bench performance? Because that's a kind of outlier result.
+
+[19:26:32 - 19:27:11] Declan Jackson: Yeah, it's a good question. And I think the terminal bench, what we see is they're very long and difficult tasks And I think that for in-terminal bench for models that perhaps are thinking way too much, trying to do too many turns, they get stuck, you know, they run out of, you know, like, time, or they get stuck trying to work out a very, very difficult approach. And I think perhaps, like, it's a little bit more token efficient, and it's kind of got its thinking levels pretty dialed in quite well, which I think could help that terminal bench score.
+
+[19:27:11 - 19:27:18] Philip Kiely: That makes sense. So it's not overthinking. It's like, yeah, it seems right. Just send it. Honestly, sounds a lot like me as a software engineer.
+
+[19:27:15 - 19:27:16] Declan Jackson: Yeah.
+
+[19:27:18 - 19:27:21] Philip Kiely: Just let it whip and see what happens.
+
+[19:27:20 - 19:27:49] Declan Jackson: Exactly. If Claude says it's okay, it's fine. Now, one thing I will note is there are some areas obviously that it's not as strong at. So it's had gains in these two Agentic areas, but something that we've seen is some of its like knowledge capabilities isn't as strong. So on, like, AA omniscience, and… and also for visual reasoning, we see GLM 5.3 is… is not as strong. Now.
+
+[19:27:47 - 19:27:49] Philip Kiely: Why that could be
+
+[19:27:49 - 19:28:18] Declan Jackson: Exactly. I mean, obviously it doesn't have that you think it could be a stupid thing to think, well, it doesn't even have native vision, you know? Why are we even measuring vision capabilities, but something which is really interesting that we see in like AA briefcase, for example, where the model kind of has tools and and it can run whatever it wants The model can figure out how to convert images to something it can see
+
+[19:28:17 - 19:28:19] Philip Kiely: Hmm.
+
+[19:28:18 - 19:28:42] Declan Jackson: You know, it will get an image, and it will look at, you know, like, the pixels, and it will try to work out, kind of, how it can understand the image without that native image layer. So that is, like, a super interesting sort of kind of work around that 5.3 has figured out, and a few other models. So even if we go on to the next, the next slide
+
+[19:28:40 - 19:28:43] Philip Kiely: That's wild. I had no idea to do that.
+
+[19:28:43 - 19:29:59] Declan Jackson: It kind of was scary. It was like one of those moments where You know, there are a few moments you have where you're really surprised by the intelligence of models, and 5.3 was one of them where it was doing, like, pretty well on Briefcase, which we know requires models to look through a lot of documents and a lot of it has a visual component And we saw how it was breaking down the visual components via code and, you know, getting it to draw out diagrams based on the pixels and everything. It was very impressive. But But here we see our… our latest visual reasoning benchmark GDP, Pdf, which gives models, you know very large Pdf documents and and ask questions about it And in the case where the model doesn't have native vision capabilities, we just give it the sort of OCR version, you know what it would get in real life, just pure text. And You know, surprise, surprise We say GLM 5.3 flash do much better in this because it has that vision capability. So when it comes to choosing between the two models, obviously if there's going to be any aspect of visual reasoning required, you're going to go for 5.3 flash
+
+[19:29:59 - 19:30:25] Philip Kiely: Yeah, yeah, that makes sense. And one thing we'll talk about at the end here is maybe a new thing for you guys to take a look at and see if we move the needle on GLM 5.3 and the vision component. So I am actually really excited about this. This last thing that you have here is understanding this AA briefcase benchmark a little bit more, because this is a new benchmark that you guys developed yourself, right?
+
+[19:30:14 - 19:32:58] Declan Jackson: Exactly. For sure. And I particularly chose this benchmark to dive into both GLM 5.3 and 5.3 Flash's performance because it's really impressive. And this is a closed benchmark. It's a really, really hard benchmark. And they've both done really well. So, I thought I would jump into it. So AA Briefcase. It's an Agentic knowledge work benchmark and it involves giving models a lot of context. So think something like thousands of files across different scenarios that are based on real world some, sort of knowledge work scenarios, so stuff like, you know, there's a data science, there's strategy, product management, these kinds of things. And what the models are asked to do is carry out tasks that are literally based off real tasks that people have done in these jobs Reasoning across all of these different files and creating real outputs that are then judged based on kind of three different aspects. So we do judging A on kind of rubric based grading. So objective criteria that we say, okay, did you hit these points We then judge on overall analytical quality. So this one is an ELO based metric comparing how does the sort of depth of the analysis that the model has done sort of compare to all other models. And then the third one is the presentation Elo. So another ELO-based metric based on sort of comparison to other models. How well does it present its outputs? Is it clear? Is it… is it visually, you know, appealing? And the reason we broke it down into these three points was We saw that for other benchmarks, sometimes it's very hard to capture you know exactly where the strength and weaknesses of the models are. And so if you're trying to just choose which is a better output left or right, one's better on presentation, the other one has a deeper, you know, analysis and the other one is actually hit more points. We wanted to separate that out so we could get a clear view of where the model was performing well and not so well. So, if we look at GLM 5.3 performance, as I mentioned before, it is the leading open weights model, and a massive gain over 5.2. So it's now, you know, it's in the realm of Fable 5. GLM 5.3 is just under sold Which is really, really impressive, especially it's… I'm guessing, a lot smaller model, right?
+
+[19:32:56 - 19:32:59] Philip Kiely: And much faster, much cheaper
+
+[19:32:59 - 19:33:16] Declan Jackson: Exactly, exactly. So how does this then break down into the strengths and weaknesses of the models, right? If we look at those three those 3 aspects that I outlined before, which was kind of like your objective criteria, and then your analytical quality, and your presentation. So if we go to the next one
+
+[19:33:16 - 19:33:18] Philip Kiely: Yeah.
+
+[19:33:18 - 19:33:37] Declan Jackson: We can kind of see, so on the top here is a breakdown of, like, the analytical quality and the presentation ELO And something that is super I mean, like, maybe not a surprise, but interesting is Gemini 5.3 Flash has a better presentation ELO than 5.3.
+
+[19:33:37 - 19:33:40] Philip Kiely: Oh, is that because of the vision?
+
+[19:33:38 - 19:34:19] Declan Jackson: You know, the Exactly, exactly. So we see the GLM 5.3 is often like visually reviewing its outputs. It kind of looks at them before submitting and can see it and fix any mistakes. Whereas like the presentation rating of 5.3 normal is actually really, really low. So, it's kind of this third one on the left here. It's similar to much sort of lower models On the contrary, the analytical depth of 5.3 is very, very strong. Analytical quality and also those rubric objective checks. So sort of as a comparison, if you need it to hit all the points in the task
+
+[19:34:03 - 19:34:04] Philip Kiely: Right
+
+[19:34:19 - 19:34:39] Declan Jackson: If you're looking for that really, really strong, intelligent, so depth of your task, 5.3 is going to be more of the model that's going to be appropriate, whereas if you're looking for, okay, I need you to fix, you know, how this PowerPoint looks, or this Word document, or PDF 5.3 flash is stronger in that area
+
+[19:34:38 - 19:35:07] Philip Kiely: So it seems like really we shouldn't be talking about this as a one or the other, right? Like the real question is how can we use these two models together? Because they have different capabilities. Can we do GLM 5.3 main agent with flash subagents for certain vision components for generating large amounts of code for doing sort of, like, long-running basic things that, you know, would otherwise burn a lot of tokens, but can be done much more efficiently with this small and fast model.
+
+[19:34:57 - 19:35:25] Declan Jackson: Hmm. Exactly, exactly. And it's exactly how I think a lot of models should be used is in tandem with each other, right? There are going to be a lot of coding tasks that, okay, maybe GLM 5.3 flash isn't the best coding model in the world, but probably a lot of your coding workload doesn't require the best model
+
+[19:35:24 - 19:35:26] Philip Kiely: Yeah.
+
+[19:35:25 - 19:35:38] Declan Jackson: And we did see it was on that kind of cost intelligence Pareto frontier. If you want a really efficient model, you can hand over all of those kind of basic coding tasks to 5.3 Flash and let the 5.3 do all the thinking and the planning
+
+[19:35:38 - 19:35:43] Philip Kiely: Exactly, because that's where it's really good is the long running analytical piece.
+
+[19:35:43 - 19:35:58] Declan Jackson: Exactly, exactly. And so something that is kind of cool is we can actually compare, oh no, yeah, sorry, on that slide, we can compare some of the actual outputs. Now this is on AA Briefcase Lite, so our public version of
+
+[19:35:49 - 19:35:50] Philip Kiely: Yeah.
+
+[19:35:58 - 19:36:19] Declan Jackson: of AA Briefcase, and this is a task that is creating a PowerPoint for a kind of due diligence scenario, something in, you know, a finance company And as we compare across the kind of previous generation 5.2 and then 5.3 flash and 5.3 It's very easy to see the visual difference. You know, 5.
+
+[19:36:17 - 19:36:19] Philip Kiely: Yeah.
+
+[19:36:19 - 19:37:03] Declan Jackson: it was lacking a bit, you know, it wasn't great, and then very stark improvement to the 5.3 models So So the interesting hit thing is 5.3 Flash, I mean personally like from my quick view, it does look a little bit cleaner. You know, the tables are a bit nicer. It probably is I can understand a bit better. 5.3 just normal I think, like, on the right, the… one of the titles is a bit cut off. There's a lot of text on the page Exactly, exactly. So it very much aligns with our thinking around, okay, it's definitely got the analytical piece there. It's got the thinking, but it's probably not going to present things as well
+
+[19:36:51 - 19:37:25] Philip Kiely: It's really crammed in there. Yeah, and it's nice to sort of give a visual cue or some intuition behind these Elo rankings because what we would be doing to generate an ELO is showing two of these side by side blinded without knowing which model they came after and saying, hey, pick which one you think is better. And you do that enough times and you get an Elo
+
+[19:37:25 - 19:37:27] Declan Jackson: Exactly.
+
+[19:37:25 - 19:37:45] Philip Kiely: I actually… I have an embarrassing story to tell you, Declan, which is that the first time someone told me about Elo, I was like, oh, cool. What does that stand for? Because I assumed it was an abbreviation. So maybe folks in chat, drop what you think Elo should stand for if it were actually an abbreviation like I thought it was
+
+[19:37:34 - 19:38:00] Declan Jackson: Haha. Yes. I, yes, whenever I'm talking to someone about it, I usually just say, oh, it's like chess. And some people kind of get it because it kind of was a more maybe like a year or two ago, not a super common thing
+
+[19:37:52 - 19:37:54] Philip Kiely: Yeah.
+
+[19:38:00 - 19:38:24] Declan Jackson: to judge models based on ELOs and pairwise comparisons, although we're finding it now, like, really, really useful for our understanding of, like, where the model's strengths and weaknesses are You know, for example, something like presentation, right? It's going to be very difficult to try to get a model to, you know, rate a… or give, like, a numerical value to the presentation of a given output
+
+[19:38:24 - 19:38:26] Philip Kiely: Yeah.
+
+[19:38:24 - 19:38:48] Declan Jackson: That's… it's gonna be, sort of, maybe not as, consistent or robust Whereas when we look at giving a model sort of these are the presentation criteria that you're looking for, choose which is better, left or right, it's much more robust. It aligns really strongly with human preference and we can even see that You know, we get the results, and will it just make sense?
+
+[19:38:48 - 19:39:03] Philip Kiely: Absolutely. I think we've been seeing Elo a lot in image benchmarking over the last couple years as well as in voice models, because it's fairly difficult to listen to two AI generated voices. And like you said, assign a numerical score
+
+[19:38:56 - 19:38:58] Declan Jackson: Mmm.
+
+[19:39:03 - 19:39:26] Philip Kiely: But you can say which one just sort of instinctively feels better. So, I mean, look, I think we should do Elo everywhere. I mean, you know, you've got we talk I'm an MMA. We talk a lot about MMA math of like, you know, oh, this guy beat this guy, so he should be able to beat this other guy, but it doesn't always work like that. The the sort of circular nature of a lot of these things
+
+[19:39:18 - 19:39:19] Declan Jackson: Hmm.
+
+[19:39:26 - 19:39:39] Philip Kiely: You know, like we've been talking about here, Flash is better than 5-3 at certain vision outputs, but worse at reasoning. All of this stuff actually gets captured super well in ELO scores on NOA benchmarks.
+
+[19:39:38 - 19:39:56] Declan Jackson: Exactly, exactly. Something else that is, you know, a nice little sort of confirmation of stuff we've been saying as well, Philip, is on this task and benchmark, GLM 5.3, for a given task is 87 cents, right? So
+
+[19:39:55 - 19:39:57] Philip Kiely: Yeah.
+
+[19:39:56 - 19:40:07] Declan Jackson: Build me this Excel, build me this PowerPoint, look at all my Slack files. It's going to be 87 cents. GLM 5.3 is nearly $6. So it is pretty stark difference. Exactly.
+
+[19:40:04 - 19:40:22] Philip Kiely: Yeah, that's a crazy path Yeah. Do you think that some of this is because we're looking at these things that are more visual and 5.3 is like really burning through tokens trying to figure out some way of getting an intuition around what it's looking at
+
+[19:40:22 - 19:40:45] Declan Jackson: I think there's a little bit of that. Something that we actually did see though, however, is 5.3 flash is using more turns. So it is, yeah, which is a bit surprising. It is working a little bit harder. I think it, you know the output tokens is a Lower, but this, you know similar to before, it does come down to it is just served at a much cheaper price.
+
+[19:40:44 - 19:40:59] Philip Kiely: But tones are good for price. You know, output tokens are expensive. Cached input tokens are very cheap. So you can take more turns but avoid serving more output tokens. You're probably going to come out ahead on cost and potentially even on speed, depending on your cache hit rates
+
+[19:40:50 - 19:41:01] Declan Jackson: Exactly, yeah. Precisely. Exactly.
+
+[19:41:02 - 19:41:03] Philip Kiely: Awesome.
+
+[19:41:03 - 19:41:37] Declan Jackson: So yeah, if you want to check out sort of we have the full benchmarks on artificial analysis, feel free. There's the QR code on the left. We also have a new tool called Optima, which basically helps users build their own custom benchmarks. So you kind of just describe, hey, this is what I do day to day And it creates a benchmark, or you can even bring your own benchmark that you've built or traces and you can just upload it and create your own benchmark. So on the right, if you want to scan that and jump into Optima and test GLM 5.3 for yourself
+
+[19:41:37 - 19:41:42] Philip Kiely: That is super cool. I want to give that a try once we're done here
+
+[19:41:42 - 19:41:43] Declan Jackson: Nice.
+
+[19:41:43 - 19:42:14] Philip Kiely: Awesome. Well, you know, now that we've seen what the model is good at, what I've been doing over the last couple of weeks is talking to people who actually who are using it outside of benchmarks in the field. And broadly, what I'm seeing lines up really well with everything you just said there, Declan. The number one use case that we're seeing, obviously, is just very easy to get started using these models for coding. So no matter what harness people are using, what's your what's your coding harness of choice?
+
+[19:42:14 - 19:42:19] Declan Jackson: I'm… I do switch. I'm mainly Claude code though
+
+[19:42:19 - 19:42:58] Philip Kiely: Okay, cool. So we actually built something called Switch for Claude Code that allows you to just plug in these different models directly and be able to switch over to the You know, when Claude thinks, like, oh, this is going to be hard, so I should send it to the smartest model I have, the smartest model I have is Fable. You can interpret that smartest model signal and say, like, oh, let's go to 5.2, let's go to 5.3, let's go to Kimi Also, of course, you can run these models in independent harnesses, and like we were talking about before, we want to put these 2 models together for better outcomes.
+
+[19:42:58 - 19:43:00] Declan Jackson: That's really cool.
+
+[19:42:58 - 19:46:00] Philip Kiely: Yeah, another thing we're seeing is, you know, with open models, you get a lot more control. You can post train them, you can fine tune their behavior. And we actually made a benchmark as well. We're trying to inspired by all your work there called PACT, which is about rule following under pressure. So if you're operating in a regulated environment, maybe you have different rules than a generalized sort of a generalized process of alignment. And so this Tests, open models, and GLM 5.3 is the smartest model that has a very high refusal rate to break its It's guidelines within that regulated environment. And then the final piece is just like AI models that are AI products that are operating at scale. Like we've been talking about, these models are very, very efficient. This is a graph of some open router usage. As you can see, we're serving a ton of tokens in green here of these GLM models. So we put a bunch of capacity behind it because it's a known architecture, and it is offering very, very cost effective, very large scale usage. We all coming up on time here. We're at 1145, and I want to get to everyone's questions. So with regard to the influence engineering for 5.3, I will just very briefly say, highlight two things here. The 1st is that GLM 5.3 was created using only post-training versus 5.2, which means we were able to reuse all of the work that we did for 5.2 to 5.3 including a new fast mode API where we go along that efficient frontier and say, like, all right, we're going to trade off some of that latency for some extra or some of that throughput for some improvements in latency And obviously that fast API is going to be a little bit more expensive, but also substantially faster. The other thing, and this is pretty cool that we did, is we built in native vision capabilities into 5.3 by sort of grafting the Kimi vision encoder onto the 5.3 architecture with no change in weights. So there's no There's no steps back anywhere in terms of capabilities that we've talked about. It just adds the vision, because, again, like, the 5.3 and Flash have different architectures. So hopefully this 53 model with the vision encoder in it is going to be more effective at a bunch of those things that we talked about around, you know, instead of having to sort of reconstruct a method for gaining native understanding. It can just use this vision as a tool. So yeah, maybe, Declan, we should take a look at how this new one… we just, we just launched it very recently, but we should take a look at how this does versus Flash and see how
+
+[19:46:00 - 19:46:03] Declan Jackson: Yeah, I think that would be… that would be great.
+
+[19:46:01 - 19:46:03] Philip Kiely: If BLM likes having eyes
+
+[19:46:03 - 19:46:13] Declan Jackson: I'd love to say I was literally just thinking, I wonder how the performance changes if it's not sort of a model that is maybe used to it, does it do very well? That would be kind of cool
+
+[19:46:12 - 19:46:28] Philip Kiely: Yeah, it's not necessarily going to be like Frontier across all vision tasks, but it's really good at the stuff that we trained it for specifically, which is those use cases of screenshot this application that I'm working on and then show what it looks like
+
+[19:46:16 - 19:46:30] Declan Jackson: Hmm. That's awesome.
+
+[19:46:28 - 19:48:41] Philip Kiely: And see, you know, is the div not centered? So Let's get into the Q&A. I see we have a ton of questions in chat. We have some great chat moderators who are going to be feeding us questions. But before everyone asks us a bunch of questions, I do want to ask everyone in the room a question. I feel like that's fair question for question So there's gonna be a poll popping up here. It's only gonna be live for about 30 seconds, and I just want to know where your team is at today in terms of usage of open models, and especially evaluation of GLM 5.3. So I'm hoping to… I'm hoping to see a lot of excitement to adopt the model But let me know where you're at, in terms of open model usage. It's always interesting to see how this changes over time. So we're just going to leave this up for maybe 10 or 20 more seconds. And then, wow, we're seeing a lot of answers coming in. Thank you so much, everyone who's filling out the poll. We already had over 100 answers So just it's a one question poll. Click that button and then Declan and I are going to get into some Q&A. Awesome. I'm a little scared. I'm wondering what the questions are going to be. Awesome. Well, thank you everyone who's filling out the poll. We're at like 125 answers before we close this. We just got a question asking if we can look forward to any new books from me soon This is one skill. This is my least favorite question. I'm trying my best. You'll get one as no one wants me to publish another book more than I do. And I have a lot of new empathy for George R.R. Martin, I will say. It is hard. Are you a big fiction guy, Declan? Do you read a lot of books
+
+[19:48:41 - 19:48:51] Declan Jackson: I, I do like, I do like fiction, I certainly prefer reading fiction over nonfiction. I think, like, at the end of the day, I just want to read something that's, you know, not going to
+
+[19:48:46 - 19:48:48] Philip Kiely: Yeah.
+
+[19:48:51 - 19:48:54] Declan Jackson: Yeah, crumple my brain
+
+[19:48:53 - 19:49:10] Philip Kiely: Exactly. And I was always one of those guys that's like, it's not that hard to write a book. Like, where's my next book? Where's my next book? Why can't every writer be like Brandon Sanderson and publish five times a year? And then I started, you know, publishing for myself, and I gained a lot of empathy for
+
+[19:49:04 - 19:49:10] Declan Jackson: Exactly. Yeah.
+
+[19:49:10 - 19:49:12] Philip Kiely: struggle.
+
+[19:49:11 - 19:49:22] Declan Jackson: So I think we've got a new question here. So can you explain how to interpret the AA Intelligent Index? Sort of what is 1.2 points? How do I use it to choose a model? So
+
+[19:49:13 - 19:49:14] Philip Kiely: Yeah.
+
+[19:49:22 - 19:50:42] Declan Jackson: The AA index, you know, the overall way I would interpret it is just, like, a single number, which is going to tell you, kind of, the overall capabilities of a model. Now, there are sort of two things that I want to build on that. One is We can press it into a single number because it's good to just get an overall signal of how intelligent a model is. However, for a specific use case, it's also useful to supplement this big one number with use case specific numbers. For example. If you are looking at doing a coding task, obviously you can look at the intelligence index, but you can also look at coding specific benchmarks The second thing I will say is, you know, how do I interpret a one-point, you know, difference in something like that? Overall, you know, model use, we know, is… is… it's an interesting one to measure. It's not, like, completely deterministic and everything, and so we usually say, you know, one point, or even on the artificial Analysis Intelligence Index is not going to be a massive difference in, kind of, final use. Obviously, if it gets to a few points, that's going to be very statistically significant and make a big difference. But if something is perhaps even on or one point away, it's not going to be a huge difference in overall. Use a experience.
+
+[19:50:43 - 19:51:01] Philip Kiely: Yeah, that is one question that we got which is really interesting is what a point means really. Is this like a standardized unit of measurement or is the nature of the blended benchmark such that you can't really
+
+[19:50:53 - 19:50:55] Declan Jackson: Yeah.
+
+[19:51:01 - 19:51:06] Philip Kiely: Take too much from the exact number itself.
+
+[19:51:06 - 19:51:18] Declan Jackson: I think more so the latter, you know, one point by itself doesn't mean anything, but sort of in the context when you compare it to all the other models is going to be very helpful in just sort of saying its overall capability compared to everything else.
+
+[19:51:18 - 19:51:20] Philip Kiely: Yeah.
+
+[19:51:18 - 19:51:30] Declan Jackson: So… so I see another… we've got another question about the Pareto frontier. So, maybe, Philip, if you want to go a few arrows back and we'll go on to one of those charts with the dotted lines, and I can quickly explain what that means.
+
+[19:51:30 - 19:51:54] Philip Kiely: Absolutely. Yeah, it's it's well I've got I've got one heel which is kind of we in economics, there's an efficient frontier, which is if you have two resources that you're trading off between, what's your sort of maximum production as a combination of the two Very, very similar concept is a Pareto frontier like this one
+
+[19:51:53 - 19:52:55] Declan Jackson: Perfect. Perfect example. Exactly. So the Pareto frontier is basically saying for a given level of intelligence, what's the most in this example, like cost efficient model. So which model is the best is trading off the best between those two things So, for example, this dotted line essentially tracks the most or most cost efficient model for that level of intelligence. So if you are looking for something like a 60 or 50, whatever Fable is at you know, you're only going to use Fable, because there's nothing that can get to that level of intelligence. But something, you know, maybe an intelligence level around, you know, 45, or 40, okay, well, that's when you're getting to, I can use GLM 5.3 flash compared to something of a similar level of intelligence, like you know, 5.6 tera And it is the same intelligence, but a much cheaper cost
+
+[19:52:56 - 19:53:11] Philip Kiely: Yeah, so you can think of it two ways, right? It's like one way to approach the frontier is I have five bucks. How much smart can I get for it? And then the other way to think of it is I need 50 smart. What's the cheapest I can get it for?
+
+[19:53:10 - 19:53:13] Declan Jackson: Exactly, exactly.
+
+[19:53:14 - 19:53:28] Philip Kiely: So, you know, another question that we got, which I think is interesting, is what are some of the best tasks that we can give to Flash instead of Max to really take advantage of this cost difference?
+
+[19:53:28 - 19:54:04] Declan Jackson: Yeah, I mean, for me it's still a very intelligent model, right? And so for me, the way I would be using it is a lot of the implementation, say for coding or building files would be done with flash I would make sure all of, like, planning and kind of supervision would be done with GLM 5.3, just because it has that intelligence edge and kind of more depth in-house thinking But for sure, any sort of implementation, long running multi-turn tasks that can be handed off, I would be doing to Flash. It's going to save you a lot of money.
+
+[19:54:04 - 19:54:22] Philip Kiely: Exactly. So it's like GLM 5.3 is like your senior engineer and 5.3 flash is like your junior engineer is just like running around throwing up PRs and you know usually it's pretty good and you just need someone with a little bit more long term thinking skills to
+
+[19:54:14 - 19:54:15] Declan Jackson: Exactly.
+
+[19:54:22 - 19:54:46] Philip Kiely: We'll view it and make sure nothing goes off the rails. And then, of course, also, the other place to use flashes is anywhere where you need native vision, where vision is the number one thing that you care about. And then the final thing would be speed. So let's say that you're doing, like, a voice agent, where you are talking on the phone with somebody. You're probably going to want to use a faster model like flash
+
+[19:54:35 - 19:54:37] Declan Jackson: Hmm.
+
+[19:54:46 - 19:55:09] Philip Kiely: To create a more real-time experience. I guess like you know another example would be if you're doing a very sort of like urgent customer service chat, you might want to use a super fast model I don't know, what are some of the… are there any kind of, like, out-there uses for either of these models?
+
+[19:55:11 - 19:55:25] Declan Jackson: I'm trying to think, I've seen a lot of interesting uses of Astra recently on Twitter. A lot of people creating 3D things. I wonder if you could see what GLM 5.3 flash does on it, given its visual capabilities.
+
+[19:55:21 - 19:55:41] Philip Kiely: Actually, yeah. The ZAI folks were posting some of their own sort of like Blender. I saw a really nice kitchen that was made with Blender, like really, really detailed. So it always makes me excited to see these demos from these, you know, brand new sort of state-of-the-art models
+
+[19:55:32 - 19:55:33] Declan Jackson: Yeah.
+
+[19:55:41 - 19:56:20] Philip Kiely: Because it's like, on the one hand, amazing that these frontiers are being broken through, but on the other hand, you know, I can just look at this and be like, well, in three months, I'm going to be able to run something that does this, you know, myself on our infrastructure, and in nine months, I'm going to be able to run it myself on my laptop And that's pretty exciting. All right, we got one more question in here, which is, do the scores or intelligence of the models change based on the harness used? I know you mentioned you have a agent's benchmark situation as well.
+
+[19:56:04 - 19:56:06] Declan Jackson: Yeah.
+
+[19:56:20 - 19:56:26] Philip Kiely: Do you keep the harness fixed on the general intelligence benchmark, or how does that
+
+[19:56:24 - 19:57:24] Declan Jackson: Yeah. So for the general intelligence benchmark, the main thing we're concerned about is what is the model performance. We want to isolate it to the model layer rather than saying, well, how well does it is the harness helping? So for the intelligence benchmarks, we use a very kind of being Agentic. We use very unopinionated, kind of lightweight Agentic harness, and it's open source as well, it's called Stirrup, it's one we built. And then we use Mini Sui Agent as well for Terminal Bench 4, so kind of following what the Terminal Bench folk do over there And then when it goes to the coding agent index, this is where we get into, well, if we keep the model the same, but change the harness, how does that change performance? You know, and that's a super interesting thing that we were sort of mentioning before. So for GLM 5.3, you know, we're running benchmarks all the time Hopefully we'll get a good comparison of, okay, if you vanity in open code versus Cloud code or something like that, how would it compare
+
+[19:57:24 - 19:57:35] Philip Kiely: That makes sense. You know, what is… what is the model and what environment does it live in? Because also all of these labs have their own first party harnesses as well
+
+[19:57:31 - 19:57:57] Declan Jackson: Yeah, and 100% exactly. But like, you know, to answer that question, does it does it change the difference what harness you use Yes, it does. Like, when it comes to coding, you know, models, some models are going to be more used to different harnesses, even kind of how the tools work or the like, so that's why we kind of want to test it for coding purposes across different harnesses.
+
+[19:57:56 - 19:59:05] Philip Kiely: Alright, and then I got one last question. And I think whoever asked this question is trying to become my best friend because they asked, how do I try GLM 5353 flash and how do I fine-tune it? The answer is you head on over to Base10. We have these models up. We have Pro token APIs for GLM 5.3, both a standard and a fast API, as well as a very high performance flash API. And then we have a product called Base10 Loops, which is an API for fine-tuning models, and you can use that on GLM family models We had a ton of questions. Thank you everyone who dropped a question. What we're going to do is post a… I'm going to post a webinar recap on X, on Twitter today. So if you are not following, hit me up at PhilipKiley on Twitter. I'm going to post about it. You can drop your questions in thread there and we'll get them answered Declan, what is the best way to get in touch with you if people have questions about all the awesome benchmark work you're doing?
+
+[19:59:04 - 19:59:17] Declan Jackson: For sure. Probably yes, I'm on LinkedIn. You can just contact me there. I can reply there. Or you can sort of leave it… leave a message on our website as well. We always get back to them
+
+[19:59:12 - 19:59:36] Philip Kiely: Amazing. Yep, and yeah, so hop in the thread, hop on LinkedIn, say hi, ask us your questions. Thank you all so much for coming. This was our incredibly well attended webinar, and I really appreciate all the engagements and questions that people were asking. Declan, thank you so much for joining us. This was so cool.
+
+[19:59:35 - 19:59:42] Declan Jackson: And thank you. Thank you, Philip. This was great. I love diving into the numbers. So it was good to have someone to dive in with me.
+
+[19:59:42 - 19:59:48] Philip Kiely: Yeah, I mean, hey, number go up. And as long as that keeps happening, we're all going to be happy.
+
+[19:59:44 - 19:59:49] Declan Jackson: number go up Exactly.
+
+[19:59:49 - 19:59:51] Philip Kiely: All right, see ya.
+
