@@ -109,7 +109,23 @@ Auth:  Authorization: api-key $PERSONAL_CLARIFY_KEY
 
 ---
 
-## 4 — The write adapter (REST-via-`.env`)
+## 4 — The write adapter (HYBRID: REST create + MCP note/merge/delete)
+
+### §4.0 — PROBE RESULTS (live dry-create, 2026-09-08 — resolves the §3/§4 confidence flags)
+
+**✅ CREATE works via REST (JSON:API wrapper is MANDATORY):**
+- **Company:** `POST /objects/company/resources` with `{"data":{"type":"company","attributes":{"name":"Acme"}}}` → **201**. Flat body → 422. Response carries a native **`__hubspot_id`** field — a clean dedup/link key for the migration.
+- **Person + association:** `POST /objects/person/resources` with `{"data":{"type":"person","attributes":{"name":{"first_name":"Jane","last_name":"Smith"},"job_title":"CTO","company_id":"<company-id>"}}}` → **201**. `name` is an OBJECT (`first_name`/`last_name`); association is a flat **`company_id`** attribute. Also carries `__hubspot_id`.
+
+**⚠️ CORRECTION — notes + delete are NOT REST-accessible (MCP-only):**
+- **Notes/comments:** NO `comment`/`note`/`activity` REST object type (all 404); no `/comments` sub-resource. The **event-association Note — the whole point of Step 5.5 — can only be written via the Clarify MCP `add-comment` tool.**
+- **Delete + merge:** `DELETE .../resources/{id}` is unsupported (404); dedup-merge likewise. `delete-records` / `merge-records` are **MCP-only.**
+
+**→ The write path needs the Clarify MCP.** REST-via-`.env` covers read/search + create person/company (confirmed). But the **Note (`add-comment`) and dedup-**merge** (`merge-records`) require the Clarify MCP** — so the pipeline write path depends on **connecting the Clarify MCP connector + a fresh session** (MCP list is session-frozen), not the REST key alone. §4(d) below is superseded: the Note is an MCP `add-comment` call, not a REST POST.
+
+**Test-record cleanup owed:** the probe left 2 labeled records REST can't delete — **`ZZ Adapter Test Co — DELETE ME`** (company `f0e6fe95-8697-4523-985f-e4df1efa4bbf`) + **`ZZ AdapterTest DELETE`** (person `39b9a5a4-627a-4ad6-a466-3a204ebcd10b`). Delete in the Clarify UI, or via MCP `delete-records` once connected.
+
+### §4.1 — the original REST-only sketch (create/read half — still valid)
 
 **Env (already present in repo `.env` — verified 2026-09-08):**
 ```
@@ -228,7 +244,7 @@ Each item small and doable. Gate items marked 🔴 must pass before the item aft
 6. **[Linear]** Open a Linear issue for the retarget workstream (DoD item 2); link the ADR + this plan. *~5 min.*
 7. **[Adapter]** Build the 4 REST functions (§4a–d) as a small helper; test each against the probe results from step 4. *~45 min.*
 8. **[Retarget]** Edit `/post-event-content` Step 5.5: swap HubSpot MCP calls for the Clarify adapter, preserving the selection bar / dedup / create-once / human-gate / idempotency verbatim (§3). Update `.claude/proposals/post-event-hubspot-step.md` or supersede it with a Clarify note. *~30 min.*
-9. **[Validate end-to-end]** Run `/post-event-content` on the next real event (or a recent one), confirm: candidate bar excludes the roster, dedup catches Clarify's auto-synced people, the confirmation table renders, an approved row writes company→person→note correctly, re-run doesn't note-spam. *The real test.*
+9. **[Validate end-to-end + clear last week's deferred backfill]** Run `/post-event-content` on **last week's NYC Voice AI Meetup (9/1)** as the validation event — this both proves the adapter AND **clears the outstanding deferred post-event contact backfill for last week (Voice AI Meetup 9/1 + Remy Masterclass 9/2), in Clarify not HubSpot** (verified 2026-09-08: zero Sept contacts in HubSpot, so this never ran). Confirm: candidate bar excludes the roster, dedup catches Clarify's auto-synced people, the confirmation table renders, an approved row writes company→person→note correctly, re-run doesn't note-spam. *The real test.* Remy (webinar, lighter) rides right behind it.
 10. **[Backfill]** 🔴 **Migrate the HubSpot book** (245 contacts / 182 companies + Notes) into Clarify — §2 REVISED. **Sequenced AFTER step 9** proves the adapter on a live event (trust the write path before running 245). Script: read HubSpot via MCP (contacts + companies + each contact's Notes) → dedup-search each against Clarify `person`/`company` → classify NEW vs EXISTS → present a **batch summary** (N NEW · M EXISTS-add-note) for Alex's approval + spot-check → on approval, batch-write `company→person→note` via the §4 adapter (**EXISTS → attach the HubSpot Note as a comment only, never field-merge; NEW → create then note**). Record-creates don't burn the AI-credit ceiling; well under the 20K-record cap. Fully reversible (Clarify records deletable; HubSpot + Notion untouched as sources). *~1–2 hrs, batch-gated.*
 11. **[Decommission]** Flip HubSpot to dormant (stop writes) — now that BOTH the live pipeline (step 9) and the historical book (step 10) are in Clarify. Record the §5 retire criteria + the 60-day revisit date in Linear. *~5 min.*
 12. **[DoD close]** Run `/dod-close` for the retarget + backfill build (spec ✅ ADR+this plan, Linear ✅, adversarial pass ✅ §7 pre-mortem + §2 dedup analysis); note any waiver. *~2 min.*
