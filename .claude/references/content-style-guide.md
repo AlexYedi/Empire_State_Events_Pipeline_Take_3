@@ -55,6 +55,15 @@ Default structure for LinkedIn posts (adapted from Hook-Context-Insight-CTA):
 HOOK — First 1-2 lines. Stop the scroll. A surprising stat, a contrarian take,
        or a specific detail that signals "this person was actually paying attention."
 
+TABLE-SET — Immediately after the hook, in one or two plain sentences, say WHAT
+          THIS IS before WHY it matters: the event by name, its format (webinar /
+          panel / briefing / meetup), and the people (host + presenters). The reader
+          should never have to reach the thesis — or the thank-you at the bottom — to
+          learn they're reading about a webinar with named speakers. Order is
+          non-negotiable: the what → the why → the value. The hook still leads and
+          stays a scroll-stopper; the table-set is the compact second beat, not a
+          preamble. (Added 2026-09-09 — Variant C review, below.)
+
 CONTEXT — Why this matters right now. Connect the event/topic to a broader trend,
           a recent development, or a shift the audience should care about.
 
@@ -66,6 +75,8 @@ CTA (varies by content type) — See Content Type CTAs below.
 ```
 
 **Opener rule — never lead with "I" (added 2026-08-07 — the strongest first-line rule we have).** An event post's first line must lead with the *subject*, never Alex. Pick one of five leads: the **topic / core tension**; a **relevant recent headline or stat** (often the strongest hook — e.g., "This stat should make you rethink AI agents: [stat]…"); the **host company** *in service of the event* (never a bare "Company just…" product-ad construction — see the company/product-name row in `content-anti-patterns.md`); the **people** (host/speaker) who make the room worth showing up for; or the **NYC AI ecosystem** framing ("The NYC AI ecosystem is playing host to another … tonight"). **Banned openers:** "Tonight I'm at…", "I wrote…", "One stat reframed how *I* think…" — they center Alex and waste the hook. The curator's "I" may appear *later*, once the subject is established. This is the first-line enforcement of the decenter-self rule. **(Ordering, not erasure:** the curator's / analyst's "I" steps forward *after* the subject leads — see the Audience-First North-Star counterweight.)
+
+**Table-set before you theorize (added 2026-09-09 — Variant C review; Alex: "always want to table-set").** Every event post owes the reader a plain, simple orientation *before* the why and the value: **what this is** (the event, named), **what format** (a webinar / panel / briefing — say the word), and **who** (host + presenters, named). Then the thesis, then the earned insight. The failure this fixes: a post with a strong takeaway that dives straight into content and analysis, so the reader never learns it was a *webinar with named speakers* until the thank-you at the very bottom (if at all) — the insight floats with no scene under it. This is NOT a contradiction of the never-lead-with-"I" or no-long-preamble rules: the hook still leads with the subject, and the table-set is one–two tight sentences, not throat-clearing. Think **context → why → value**, where "context" is the simple *what*, delivered up front. Naming the format + speakers early also does double duty — it's the Receipts floor and the credibility signal ("I was in this specific room") landing where it counts, not buried.
 
 ## Content Type CTAs
 
@@ -336,7 +347,8 @@ Two lanes, and **neither is a constrained app that re-interprets your content** 
 
 ---
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-09*
+*Version: 0.9 — Added the Table-Set rule (from the GLM-5.3 Variant C post review, shipped 2026-09-09). Every event post must table-set — plainly say what this is, that it was a webinar/panel/briefing, and name the host + presenters — BEFORE the why and the value: context (the simple what) → why → value. Added a TABLE-SET beat to Post Architecture, a named rule, and a `content-anti-patterns.md` row. Compatible with (not a contradiction of) the never-lead-with-"I" + no-long-preamble rules — the hook still leads; the table-set is one–two tight sentences. See memory `feedback-table-set-context-first-2026-09-09`.*
 *Version: 0.8 — Codified the Audience-First North-Star (YED-103) into production: mission + embedded-expert-correspondent persona + the ordering-not-erasure counterweight to decenter-self (incl. softening Tone Pillar 5 from "never make it about you" → "never about you at the audience's expense; bring yourself in where it adds value / analysis / unique POV, incl. cross-event convergence"), the three floors (Receipts / HM-Activation / Anti-Goodhart), the Substance/Insight Floor (density via translating the single robust deep-research brief, within the char cap), the Learn-More Set (3–5 citations every post, first comment/carousel), and the close-is-the-self-trap rule. Wires the north-star into the files the skills read. See `audience-north-star.md`.*
 *Version: 0.7 — Gamma REMOVED as visual generator. Claude design (self-contained HTML/SVG via Artifact tool) is now the default for structured/label-dense visuals; Gemini for pictorial imagery; Canva vestigial. Updated the Tool Selection table + Workflow. See CLAUDE.md rule #13 + `content-patterns/visual-briefs.md`. Proof: AI Demo Night consolidation carousel.*
 *Version: 0.6 — Added the Opener rule (never lead an event post with "I"; lead with topic / headline-stat / host-company / people / NYC-AI-ecosystem). First-line enforcement of decenter-self. See memory `feedback-no-i-led-openers-2026-08-07`.*
