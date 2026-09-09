@@ -32,3 +32,19 @@ na2-f81e-cd3a-4dd2-96c7-505f7480973d
 Industry & Market Content/
 *.epub
 supabase/.temp/
+
+# Event media — heavy A/V stays LOCAL (on disk for processing, never committed; GitHub rejects >100MB).
+# Transcripts (.txt/.md) and slide screenshots (.png/.jpg) ARE committed — only the big media is ignored.
+# Video
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mkv
+*.webm
+# Audio recordings (the pipeline persists transcripts, not raw audio)
+*.m4a
+*.wav
+*.mp3
+*.flac
+*.aac
