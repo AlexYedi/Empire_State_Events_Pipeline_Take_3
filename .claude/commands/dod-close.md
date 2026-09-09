@@ -31,6 +31,13 @@ fix, config tweak, doc edit, pure research) auto-waive the gate — skip it.
    It writes `.claude/.state/$CLAUDE_CODE_SESSION_ID.build_meta` (the Stop hook folds the three
    fields into the session's `build_session` row) and appends any waiver reason to
    `.claude/artifacts/dod-waivers.jsonl` (what `/rigor-review` reads for clustering).
+4. **Capture the build-journal prose entry** — run the shared routine in
+   **`.claude/references/journal-entry-prompt.md`**: draft today's ≤3-line what/why/value from the
+   session's shipped facts, ask ≤3 sharpening forks, write `.claude/data/build-journal-prose.json`,
+   regenerate the hub journal, and flag the (manual) hub deploy. This is what stops the prose sidecar
+   lapsing silently: closing a non-trivial build *is* the moment its journal entry gets written, not a
+   thing Alex has to remember later. Skip only if the build genuinely shipped nothing journal-worthy
+   (say so). The standalone `/journal-entry` command runs the same routine for non-DoD break points.
 
 ## Guardrails
 - **Informs, never blocks** (CLAUDE.md is explicit). Waive-with-reason is always the honest fast path.
