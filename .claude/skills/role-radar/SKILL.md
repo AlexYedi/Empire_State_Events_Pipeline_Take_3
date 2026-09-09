@@ -95,7 +95,7 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 | **AI-multiplier differentiator fit** | 0–10 | JD explicitly values building-with-AI / GTM-systems / technical fluency (SDLC, AI/ML) / consumption-model expertise ("you build with AI daily," "use AI creatively") = up to **10** |
 | **Location / culture** | 0–10 | NYC or hybrid (in-person expectation) = **10** · remote-listed but the company has an **NYC office** (in-office optional) = **5** · **fully remote / no office / no in-person culture = 0** (a culture signal, not just a seat) |
 
-**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; sub-$180K; traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
+**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; **sub-$200K OTE** (v2.3 floor); traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
 
 **Tiers:** **A = ≥78** (apply now) · **B = 60–77** (review) · **C = 40–59** (watch) · **drop < 40**.
 
@@ -121,6 +121,11 @@ Three refinements sit on top of the table above. **Every override-by-exemption c
 - **Syntactic tell (raises the question only — the JD's book test answers it):** **"[Function] Manager/Director"** (function as adjective — "Customer Success Manager", "Account Director") = usually IC; **"Manager, [Function]" / "Head of [Function]" / "Director of [Function]" / "VP …" / "Sales Manager"** = usually pure people-management → but confirm against the personal-book test, since a "Manager, X" can occasionally be a player-coach with a book (keep) and a "Lead" can occasionally be pure team-lead (still fine per above).
 
 The JD responsibility pattern is the arbiter. When book-ownership can't be determined from available text, **flag it for review rather than scoring it high.**
+
+### Rubric v2.3 — comp floor & level flexibility (added 2026-09-09 — Alex)
+
+- **Comp gate = $200K OTE floor** (auto-reject below; raised from $180K). Within range: **$300K+ ideal · >$250K strong · $200–300K fully acceptable — do NOT penalize the $200–300K band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a $220K seat at a top-tier rocketship can beat a $320K seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
+- **Level flexibility — Mid-Market is IN at top-tier companies.** Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
 

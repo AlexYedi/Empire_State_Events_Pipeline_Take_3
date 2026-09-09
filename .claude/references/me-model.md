@@ -96,7 +96,16 @@ sit in an office himself. (A culture signal, not just a seat.)
 ("you build with AI daily," "use AI creatively"). This is the edge that makes Alex elite for a *commercial*
 seat — not a pivot to a technical/GTM-engineer seat.
 
-**Comp:** ≥$200K OTE.
+**Comp (v2.3, 2026-09-09).** OTE **floor = $200K (hard gate — below is out).** Ideal **>$250K**, with
+emphasis on finding **$300K+** — but **do NOT discriminate against the $200–300K band.** Weigh comp against
+the company's opportunity + growth: a $220K seat at a top-tier rocketship can beat a $320K seat at a laggard.
+Comp is a **floor + a tiebreaker, not a linear "higher = better."**
+
+**Level flexibility (v2.3, 2026-09-09).** Open to **stepping back to Mid-Market** at high-growth / top-tier /
+more-technical AI-native companies as a deliberate **step-back-to-step-forward** move (land MM, prove value,
+work back to Enterprise). Score **Mid-Market roles at top-tier companies as full fits on MECHANISM** (book /
+expansion / consumption ownership) — do **NOT** down-rank for segment size. Enterprise/Strategic remains ideal,
+but MM at the right company is squarely in; consider this scenario when judging fit.
 
 > Operational scoring of this ICP lives in `role-radar/SKILL.md` Step 3 (rubric v2). This section is the
 > human-readable source of truth; keep the two in sync. Consumed by role-radar, resume/positioning
@@ -120,6 +129,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
 ### Meltwater — Enterprise Accounts Lead, Financial Services | 04/2023–09/2024 `[resume]`
 - Full-cycle enterprise sales for the Consumer Intelligence suite, ~$250K avg ACV.
 - Enabled/supported 80+ sellers via direct selling, enablement, and outbound GTM strategy.
+- **Technical sale — API / data integration** `[Q&A 2026-09-09]`: sold the **Meltwater API** to pull
+  data into *any* system — CRM, mobile apps, BI dashboards (**Tableau, Looker**), **cloud & on-prem
+  databases**, and **data lakes** — so clients could merge Meltwater data with their own and build
+  internal insight solutions/platforms. Ran discovery and scoping with **data engineering, BI/analytics,
+  and developer teams**; translated integration architecture into commercial value.
 - Key accounts — **two accurate client lists, tailored per application** `[Q&A 2026-09-04]`:
   - FinServ (use for Ramp / finance roles): JP Morgan, Citizens Bank, BMO, TD Bank.
   - CPG: Sweegen, Mike's Hard Lemonade, White Claw.
@@ -136,6 +150,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
   under-adversity — maps directly to Ramp's "long-term customer success / complex relationships.")
 - **HERO — Under Armour expansion:** moved from templatized software to a fully custom, on-site API
   integration — materially increasing scope, spend, time, and executive commitment.
+- **Technical sale — custom API implementations** `[Q&A 2026-09-09]`: the largest enterprise expansions
+  were predicated on **graduating clients from templatized software to full custom API implementations**
+  of Curalate's social-commerce solutions across their customer touchpoints — **website, email, mobile
+  app, and in-store digital experiences**. Scoped and landed these with **client engineering, web/mobile
+  dev, and product teams** (the Under Armour hero is the exemplar of this motion).
 - Built repeatable upsell/expansion motions with product & marketing for NLP and computer-vision launches.
 - Key accounts: Target, Under Armour, Walmart, Home Depot, Kohl's.
 
@@ -149,6 +168,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
 ### Bluewolf (acq. IBM) — Enterprise Account Director, Financial Services | 10/2011–02/2013 `[resume]`
 - 117% of a $3M quota (new business, expansion, renewal); 90%+ GRR. Built a systematized multi-channel
   pipe-gen strategy with the BDR team.
+- **Technical sale — staffing + managed services + Salesforce consulting** `[Q&A 2026-09-09]`: translated
+  clients' **technical hiring requirements into high-quality technical talent and vetted resumes**; sold
+  **managed services around on-/near-shore database administration** and a **Salesforce consulting practice
+  focused on custom Salesforce implementations**. Interfaced with **technical hiring managers, DBAs, and
+  Salesforce architects/consultants** to scope requirements and delivery.
 - Key accounts: NYSE, Morgan Stanley, Credit Suisse, BNP Paribas, BlackRock, Axis Capital.
 
 ## 3. Core competencies
@@ -162,6 +186,13 @@ seat — not a pivot to a technical/GTM-engineer seat.
 - **Methodologies:** MEDDPICC, Consultative/Value Selling, Team Selling, Territory & Account Mapping. `[resume]`
 - **Buyers:** exec stakeholder engagement, multi-threading, **CFO/finance sign-off fluency.**
 - **Cross-functional:** CX/CS, marketing, product, ops — GTM strategy, enablement.
+- **Technical selling / technical-buyer fluency** `[Q&A 2026-09-09]`: a through-line, not a one-off —
+  sold **technical products to technical buyers** across three roles: APIs & data integration into
+  CRM/BI/DB/data-lake stacks (Meltwater), custom API implementations into customer touchpoints (Curalate),
+  and technical staffing + managed DBA + custom Salesforce consulting (Bluewolf). Comfortable running
+  discovery with **engineering, data, BI, and solutions-architecture teams** and translating technical
+  capability ↔ commercial value. This is the bridge from AM track record to an **AI-native, technical-product
+  commercial seat** (reinforced by the agentic systems Alex now builds — §4).
 
 ## 4. AI capability
 
