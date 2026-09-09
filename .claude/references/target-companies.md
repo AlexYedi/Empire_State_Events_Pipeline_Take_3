@@ -22,6 +22,7 @@ Lever `https://api.lever.co/v0/postings/{company}?mode=json`.
 | Together AI | greenhouse | `togetherai` |
 | Verkada | greenhouse | `verkada` |
 | Glean | greenhouse | `gleanwork` |
+| Snorkel AI | greenhouse | `snorkelai` |
 | OpenAI | ashby | `openai` |
 | Notion | ashby | `notion` |
 | Ramp | ashby | `ramp` |
@@ -63,6 +64,7 @@ Hugging Face · Intercom · Rippling · Mistral (Lever board returned empty). Re
 | Hugging Face | Open-source AI hub (Nvidia acq. pending) | _tbd_ | — |
 | Cohere | Enterprise LLMs | _tbd_ | — |
 | Mistral | Open-weight frontier (raised €3B) | _tbd_ | — |
+| Snorkel AI | Data-centric AI; sells to frontier labs; Stanford AI Lab origin; DaaS Engagement Manager = book-owning EM exemplar (consumption/rev-rec) | greenhouse `snorkelai` | — |
 
 ## Tier 2 — AI-forward high-growth (rubric AI-native-tier = 20)
 

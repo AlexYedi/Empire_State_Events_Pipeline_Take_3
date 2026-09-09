@@ -60,6 +60,28 @@ marketing / inbound / existing-book support. Keep roles that give leverage; reje
 structural tailwind (the product generates inbound demand — "leverage, not in-spite-of"). Flag pure
 top-down / outbound-only enterprise motions where the seller carries all demand-gen.
 
+**Exemptions & intangibles (v2.1, 2026-09-08).** Three refinements soften the pure-mechanism read:
+(1) A role that *explicitly* carries an existing-business / book / largest-account component **alongside**
+new logo is **hybrid, not a pure hunter** — don't reject it; the existing book is leverage.
+(2) At a **PLG-primary** company, even an **all-new-business** role stays in play (**B/C tier, never dropped**)
+— the product does demand-gen, so the seller isn't owning the funnel alone; position inside B/C slides by
+intangibles. (3) Company **intangibles — growth trajectory/stage, founder & exec pedigree, funding,
+competitive position** — can promote a strong-but-imperfect role to a **top option**, even **overriding the
+remote / no-NYC hard-negative**, when they're exceptional. State the exemption reasoning explicitly (auditable,
+never silent). *Prompted by Sierra: fastest-growing-globally + Bret Taylor → top option despite remote + hybrid-hunter mechanics.*
+
+**IC vs. people-management — the title-disambiguation rule (v2.2, 2026-09-08).** Target = **individual-contributor**
+roles that directly own a book/accounts/quota/relationships. **People-management / team-leadership roles are OUT for
+this search** (grow into them via promotion, don't enter there) — drop to C/reject regardless of company or mechanism.
+Judge this from the **JD responsibilities, never the title**: "Account Manager / Customer Success Manager / Engagement
+Manager / Account Director / IC Sales Director" are ideal IC roles; "Manager, [Function] / Head of [Function] / Director
+of [Function] / [Function] Leader / Sales Manager / VP" are people-management. Syntactic tell (confirm with the JD):
+"[Function] Manager" = IC; "Manager, [Function]" = usually leadership. **The single test: does the role carry a personal
+book/quota/accounts?** Yes → in. **Player-coach / team-lead / senior-IC "Lead" roles that keep a personal book are ALSO
+desirable** — guiding others is fine (it's the direct-impact-then-grow path); the disqualifier is *pure* people-management
+with no book. *Prompted by "Sales Director": an IC senior seller = ideal, "Director of Sales / Sales Manager" running a team
+with no book = not a fit right now, and a "Lead" that carries a book = welcome.*
+
 **Company tier:** top-tier **AI-native** (Anthropic, OpenAI, Clay, Vercel, Notion, Sierra, Perplexity,
 Cursor/Anysphere, …) > **AI-forward high-growth** (Ramp, Intercom, Verkada, Rippling, Zip, Glean, …) >
 AI-heavy SaaS. Traditional / non-AI = out. Full list: `.claude/references/target-companies.md`.
