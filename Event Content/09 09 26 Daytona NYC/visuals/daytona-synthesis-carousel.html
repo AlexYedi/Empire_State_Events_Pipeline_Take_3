@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Own the Stack — Daytona AI Builders carousel</title>
+<style>
+  :root{
+    --ground:#0F172A; --panel:#1E293B; --line:#334155; --panel2:#16233b;
+    --text:#E9EEF5; --muted:#9FB0C3; --dim:#64748B;
+    --model:#3B82F6; --env:#10B981; --harness:#F59E0B; --factory:#8B5CF6;
+    --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --body:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:"Menlo","SF Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:#000}
+  .slide{width:1080px;height:1350px;background:var(--ground);color:var(--text);
+    font-family:var(--body);position:relative;overflow:hidden;
+    padding:84px 82px;display:flex;flex-direction:column;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .slide:not(:last-child){break-after:page}
+  .kicker{font-family:var(--mono);font-size:22px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+  .num{font-family:var(--mono);font-size:23px;letter-spacing:.12em}
+  h1{font-family:var(--display);font-weight:600;line-height:1.02;letter-spacing:-.01em}
+  .cover-title{font-size:190px;line-height:.92}
+  .lead{font-family:var(--body);font-size:47px;line-height:1.3}
+  .layerhead{font-size:78px;margin-top:10px;line-height:1.0}
+  .speaker{font-family:var(--mono);font-size:26px;color:var(--muted);margin-top:16px}
+  .src{font-family:var(--mono);font-size:20px;color:var(--dim);margin-top:22px}
+  .accentbar{position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--acc)}
+  .diagram{flex:1;display:flex;align-items:flex-start;justify-content:center;margin-top:82px}
+  .diagram svg{width:100%;height:auto;max-height:810px}
+  .chiprow{display:flex;gap:16px;margin-top:56px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:23px;padding:13px 24px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .c-model{color:var(--model);border-color:var(--model)} .c-env{color:var(--env);border-color:var(--env)}
+  .c-harness{color:var(--harness);border-color:var(--harness)} .c-factory{color:var(--factory);border-color:var(--factory)}
+  .stack{margin-top:auto;display:flex;flex-direction:column;gap:18px}
+  .layer{display:flex;align-items:center;gap:28px;background:var(--panel);border:1px solid var(--line);border-left:14px solid var(--lc);border-radius:16px;padding:30px 36px}
+  .layer .lname{font-family:var(--display);font-size:48px;color:var(--lc);min-width:320px}
+  .layer .lwho{font-family:var(--mono);font-size:24px;color:var(--muted)}
+  .layer .lown{margin-left:auto;font-family:var(--mono);font-size:22px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:9px 18px}
+  .close{font-family:var(--display);font-size:54px;line-height:1.15;margin-top:44px}
+  .cta{font-family:var(--body);font-size:31px;color:var(--muted);margin-top:24px}
+  .foot{margin-top:auto}
+  .nd{fill:var(--panel);stroke:var(--line);stroke-width:2}
+  .nd.acc{stroke:var(--acc);stroke-width:2.5}
+  .nl{fill:var(--text);font-family:var(--body);font-size:26px;text-anchor:middle}
+  .nl.s{font-size:21px;fill:var(--muted)}
+  .mn{fill:var(--text);font-family:var(--mono);font-size:22px;text-anchor:middle}
+  .mn.s{font-size:20px;fill:var(--muted)}
+  .ml{fill:var(--muted);font-family:var(--mono);font-size:20px;text-anchor:middle}
+  .al{fill:var(--acc);font-family:var(--mono);font-size:20px;text-anchor:middle}
+  .arw{stroke:var(--dim);stroke-width:2.5;fill:none}
+  .arwA{stroke:var(--acc);stroke-width:3;fill:none}
+  .dash{stroke-dasharray:7 7}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 — Cover -->
+<section class="slide">
+  <div class="kicker">Daytona AI Builders · NYC · Sep 2026</div>
+  <div style="margin-top:auto">
+    <h1 class="cover-title">Own the<br>stack.</h1>
+    <p class="lead" style="margin-top:44px;max-width:860px">Four talks. One move: stop <em>renting</em> your AI stack and start <em>owning</em> it — one layer at a time.</p>
+  </div>
+  <div class="chiprow">
+    <span class="chip c-model"><b>01</b> Model</span>
+    <span class="chip c-env"><b>02</b> Environment</span>
+    <span class="chip c-harness"><b>03</b> Harness</span>
+    <span class="chip c-factory"><b>04</b> Factory</span>
+  </div>
+</section>
+
+<!-- Slide 2 — Model / GRPO architecture -->
+<section class="slide" style="--acc:var(--model)">
+  <div class="accentbar"></div>
+  <div class="num" style="color:var(--model)">01 · THE MODEL — how GRPO tunes it</div>
+  <h1 class="layerhead">Own the intelligence.</h1>
+  <div class="speaker">Daniel Graviet · Daytona</div>
+  <div class="diagram">
+    <svg viewBox="0 0 940 620" role="img" aria-label="GRPO training loop: a policy model samples a group of attempts, each is scored, advantages are computed against the group average, and a gradient step up-weights the winners — with no critic network.">
+      <defs>
+        <marker id="mM2" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="#64748B"/></marker>
+        <marker id="mA2" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="var(--model)"/></marker>
+      </defs>
+      <rect class="nd acc" x="40" y="60" width="200" height="112" rx="16"/>
+      <text class="nl" x="140" y="112">Policy model</text><text class="nl s" x="140" y="142">the small LLM</text>
+      <rect class="nd" x="392" y="48" width="196" height="112" rx="14" opacity="0.5"/>
+      <rect class="nd" x="380" y="60" width="196" height="112" rx="14"/>
+      <text class="nl" x="478" y="112">N attempts</text><text class="nl s" x="478" y="142">at one prompt</text>
+      <rect class="nd" x="720" y="60" width="182" height="112" rx="16"/>
+      <text class="nl" x="811" y="108">Score each</text><text class="nl s" x="811" y="138">pass tests?</text>
+      <rect class="nd" x="720" y="300" width="182" height="112" rx="16"/>
+      <text class="nl" x="811" y="348">Advantage</text><text class="nl s" x="811" y="378">vs. group avg</text>
+      <line class="arw" x1="240" y1="116" x2="372" y2="116" marker-end="url(#mM2)"/>
+      <text class="ml" x="306" y="98">sample ×N</text>
+      <line class="arw" x1="588" y1="116" x2="712" y2="116" marker-end="url(#mM2)"/>
+      <text class="ml" x="650" y="98">reward()</text>
+      <line class="arw" x1="811" y1="172" x2="811" y2="292" marker-end="url(#mM2)"/>
+      <text class="ml" x="843" y="238">− mean</text>
+      <polyline class="arwA" points="720,356 140,356 140,180" marker-end="url(#mA2)"/>
+      <text class="al" x="430" y="386">gradient step · up-weight the winners</text>
+      <rect x="40" y="468" width="862" height="120" rx="16" fill="var(--panel2)" stroke="var(--line)"/>
+      <rect x="40" y="468" width="7" height="120" fill="var(--model)"/>
+      <text x="78" y="516" fill="var(--text)" font-family="var(--body)" font-size="29">The trick: <tspan fill="var(--model)" font-weight="700">no critic network.</tspan></text>
+      <text x="78" y="556" fill="var(--muted)" font-family="var(--body)" font-size="26">The group's own average is the baseline — the cost saving vs. PPO.</text>
+    </svg>
+  </div>
+  <div class="src">Source: Daniel Graviet, Daytona · GRPO: DeepSeek, “DeepSeekMath” (2024)</div>
+</section>
+
+<!-- Slide 3 — Environment / Veris architecture -->
+<section class="slide" style="--acc:var(--env)">
+  <div class="accentbar"></div>
+  <div class="num" style="color:var(--env)">02 · THE ENVIRONMENT — a simulated world</div>
+  <h1 class="layerhead">Own the world it learns in.</h1>
+  <div class="speaker">Ritiz Tambi · Veris AI</div>
+  <div class="diagram">
+    <svg viewBox="0 0 940 640" role="img" aria-label="Architecture: an agent's tool calls are intercepted by Veris and answered by simulated API, database, and user services sharing one state store — a stateful twin of production, which is never touched; outcomes feed a reward that tunes the agent.">
+      <defs>
+        <marker id="mM3" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="#64748B"/></marker>
+        <marker id="mA3" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="var(--env)"/></marker>
+      </defs>
+      <text class="al" x="470" y="24">outcomes → reward → tune the agent</text>
+      <rect class="nd acc" x="34" y="238" width="176" height="120" rx="16"/>
+      <text class="nl" x="122" y="292">Agent</text><text class="nl s" x="122" y="322">under test</text>
+      <rect x="286" y="40" width="620" height="446" rx="20" fill="none" stroke="var(--env)" stroke-width="2.5" class="dash"/>
+      <text x="310" y="82" fill="var(--env)" font-family="var(--mono)" font-size="21">Veris — a simulated world (twin of prod)</text>
+      <rect class="nd" x="306" y="238" width="150" height="120" rx="14"/>
+      <text class="nl s" x="381" y="292">tool-call</text><text class="nl s" x="381" y="318">intercept</text>
+      <rect class="nd" x="512" y="112" width="182" height="86" rx="12"/><text class="nl" x="603" y="162">API</text>
+      <rect class="nd" x="512" y="256" width="182" height="86" rx="12"/><text class="nl" x="603" y="306">Database</text>
+      <rect class="nd" x="512" y="400" width="182" height="86" rx="12"/><text class="nl" x="603" y="436">Users</text><text class="nl s" x="603" y="463">personas</text>
+      <rect class="nd" x="740" y="230" width="146" height="146" rx="14" stroke="var(--env)"/>
+      <text class="nl" x="813" y="296">shared</text><text class="nl" x="813" y="326">state</text>
+      <line class="arw" x1="210" y1="286" x2="298" y2="286" marker-end="url(#mM3)"/>
+      <line class="arw" x1="298" y1="318" x2="210" y2="318" marker-end="url(#mM3)"/>
+      <text class="ml" x="258" y="222" font-size="18">tool calls</text>
+      <line class="arw" x1="456" y1="278" x2="504" y2="155" marker-end="url(#mM3)"/>
+      <line class="arw" x1="456" y1="298" x2="504" y2="299" marker-end="url(#mM3)"/>
+      <line class="arw" x1="456" y1="318" x2="504" y2="443" marker-end="url(#mM3)"/>
+      <line class="arw" x1="694" y1="155" x2="738" y2="280" marker-end="url(#mM3)"/>
+      <line class="arw" x1="694" y1="299" x2="738" y2="301" marker-end="url(#mM3)"/>
+      <line class="arw" x1="694" y1="443" x2="738" y2="326" marker-end="url(#mM3)"/>
+      <rect x="286" y="536" width="620" height="66" rx="12" fill="none" stroke="#3a4658" stroke-width="2" class="dash"/>
+      <text x="596" y="576" fill="#6b7a8d" font-family="var(--body)" font-size="24" text-anchor="middle">Production systems — never touched</text>
+      <path class="arwA" d="M300,110 C 168,110 124,172 122,232" marker-end="url(#mA3)"/>
+    </svg>
+  </div>
+  <div class="src">Source: Veris AI (veris.ai) · Talk: Ritiz Tambi</div>
+</section>
+
+<!-- Slide 4 — Harness / behavioral runtime architecture -->
+<section class="slide" style="--acc:var(--harness)">
+  <div class="accentbar"></div>
+  <div class="num" style="color:var(--harness)">03 · THE HARNESS — a behavioral runtime</div>
+  <h1 class="layerhead">Own the loop it runs in.</h1>
+  <div class="speaker">Edward Irby · You.com</div>
+  <div class="diagram">
+    <svg viewBox="0 0 940 650" role="img" aria-label="Architecture: b-threads (request, waitFor, block) bid into a behavioral runtime arbiter; the LLM is just one requested tool; its function calls return as data, are inspected, then dispatched; useTrace captures the trajectory (exhaust) which an autoresearch loop uses to evolve which b-threads run next.">
+      <defs>
+        <marker id="mM4" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="#64748B"/></marker>
+        <marker id="mA4" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="var(--harness)"/></marker>
+      </defs>
+      <text class="ml" x="109" y="130">b-threads</text>
+      <rect class="nd" x="34" y="150" width="150" height="52" rx="10"/><text class="mn s" x="109" y="183">request</text>
+      <rect class="nd" x="34" y="222" width="150" height="52" rx="10"/><text class="mn s" x="109" y="255">waitFor</text>
+      <rect class="nd" x="34" y="294" width="150" height="52" rx="10"/><text class="mn s" x="109" y="327">block</text>
+      <rect class="nd acc" x="330" y="196" width="250" height="120" rx="16"/>
+      <text class="nl" x="455" y="244">Behavioral runtime</text><text class="nl s" x="455" y="278">event arbiter</text>
+      <rect class="nd" x="336" y="40" width="232" height="92" rx="14"/>
+      <text class="nl" x="452" y="80">LLM — a tool</text><text class="mn s" x="452" y="110">model.respond</text>
+      <rect class="nd" x="656" y="150" width="248" height="92" rx="14"/>
+      <text class="nl" x="780" y="188">function calls</text><text class="nl s" x="780" y="216">= data (not run)</text>
+      <rect class="nd" x="656" y="300" width="248" height="92" rx="14"/>
+      <text class="nl" x="780" y="338">inspect → dispatch</text><text class="nl s" x="780" y="366">the tool now runs</text>
+      <rect class="nd" x="330" y="418" width="250" height="92" rx="14"/>
+      <text class="mn" x="455" y="456">useTrace</text><text class="nl s" x="455" y="484">→ trajectory (exhaust)</text>
+      <rect class="nd acc" x="656" y="456" width="248" height="92" rx="14"/>
+      <text class="nl" x="780" y="494">autoresearch loop</text><text class="nl s" x="780" y="522">evolve the b-threads</text>
+      <line class="arw" x1="184" y1="176" x2="322" y2="238" marker-end="url(#mM4)"/>
+      <line class="arw" x1="184" y1="248" x2="322" y2="256" marker-end="url(#mM4)"/>
+      <line class="arw" x1="184" y1="320" x2="322" y2="276" marker-end="url(#mM4)"/>
+      <text class="ml" x="250" y="168">bids</text>
+      <line class="arw" x1="452" y1="132" x2="452" y2="188" marker-end="url(#mM4)"/>
+      <line class="arw" x1="580" y1="226" x2="648" y2="198" marker-end="url(#mM4)"/>
+      <line class="arw" x1="780" y1="242" x2="780" y2="292" marker-end="url(#mM4)"/>
+      <path class="arw" d="M656,344 C 604,326 572,300 584,286" marker-end="url(#mM4)"/>
+      <text class="ml" x="628" y="352">result</text>
+      <line class="arw" x1="455" y1="316" x2="455" y2="410" marker-end="url(#mM4)"/>
+      <line class="arw" x1="580" y1="466" x2="648" y2="494" marker-end="url(#mM4)"/>
+      <polyline class="arwA" points="780,548 780,606 300,606 300,256 322,256" marker-end="url(#mA4)"/>
+      <text class="al" x="520" y="632">evolve which threads run next</text>
+    </svg>
+  </div>
+  <div class="src">Source: plaited/behavioral · Talk: Edward Irby, You.com</div>
+</section>
+
+<!-- Slide 5 — Factory / Obvious software factory architecture -->
+<section class="slide" style="--acc:var(--factory)">
+  <div class="accentbar"></div>
+  <div class="num" style="color:var(--factory)">04 · THE FACTORY — an autonomous build loop</div>
+  <h1 class="layerhead">Own the factory.</h1>
+  <div class="speaker">Daria Shifrina · Obvious</div>
+  <div class="diagram">
+    <svg viewBox="0 0 940 648" role="img" aria-label="Architecture: connect your repos to an orchestrator that plans a DAG of tasks and fans them out to specialized sub-agents, each building and QA-ing in its own isolated Daytona sandbox; work converges into a PR reviewed by QA and security agents, and you review and approve it.">
+      <defs>
+        <marker id="mM5" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="#64748B"/></marker>
+        <marker id="mA5" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8.5,3.2 L0,6.4 z" fill="var(--factory)"/></marker>
+      </defs>
+      <text class="al" x="470" y="24">connect repos → agents build → you approve</text>
+      <rect class="nd" x="24" y="252" width="158" height="100" rx="16"/>
+      <text class="nl" x="103" y="298">Your repos</text><text class="nl s" x="103" y="326">GitHub</text>
+      <rect class="nd acc" x="232" y="242" width="196" height="120" rx="16"/>
+      <text class="nl" x="330" y="294">Orchestrator</text><text class="nl s" x="330" y="324">plans a DAG</text>
+      <rect class="nd" x="486" y="52" width="210" height="84" rx="14"/>
+      <text class="nl" x="591" y="90">Agent</text><text class="nl s" x="591" y="118">isolated sandbox</text>
+      <rect class="nd" x="486" y="258" width="210" height="84" rx="14"/>
+      <text class="nl" x="591" y="296">Agent</text><text class="nl s" x="591" y="324">isolated sandbox</text>
+      <rect class="nd" x="486" y="464" width="210" height="84" rx="14"/>
+      <text class="nl" x="591" y="502">Agent</text><text class="nl s" x="591" y="530">isolated sandbox</text>
+      <rect class="nd acc" x="760" y="242" width="156" height="120" rx="16"/>
+      <text class="nl" x="838" y="288">PR</text><text class="nl s" x="838" y="318">QA + security</text>
+      <rect class="nd" x="520" y="556" width="320" height="72" rx="14"/>
+      <text class="nl" x="680" y="592">You</text><text class="nl s" x="680" y="618">review &amp; approve</text>
+      <line class="arw" x1="182" y1="302" x2="226" y2="302" marker-end="url(#mM5)"/>
+      <line class="arw" x1="428" y1="282" x2="480" y2="98" marker-end="url(#mM5)"/>
+      <line class="arw" x1="428" y1="302" x2="480" y2="300" marker-end="url(#mM5)"/>
+      <line class="arw" x1="428" y1="322" x2="480" y2="504" marker-end="url(#mM5)"/>
+      <line class="arw" x1="696" y1="98" x2="754" y2="278" marker-end="url(#mM5)"/>
+      <line class="arw" x1="696" y1="300" x2="754" y2="300" marker-end="url(#mM5)"/>
+      <line class="arw" x1="696" y1="504" x2="754" y2="336" marker-end="url(#mM5)"/>
+      <path class="arwA" d="M838,362 C 838,480 748,528 690,552" marker-end="url(#mA5)"/>
+    </svg>
+  </div>
+  <div class="src">Source: Obvious (obvious.ai) · Talk: Daria Shifrina</div>
+</section>
+
+<!-- Slide 6 — Synthesis -->
+<section class="slide">
+  <div class="kicker">One move · four layers</div>
+  <div class="stack">
+    <div class="layer" style="--lc:var(--factory)"><span class="lname">Factory</span><span class="lwho">Daria Shifrina · Obvious</span><span class="lown">you own it</span></div>
+    <div class="layer" style="--lc:var(--harness)"><span class="lname">Harness</span><span class="lwho">Edward Irby · You.com</span><span class="lown">you own it</span></div>
+    <div class="layer" style="--lc:var(--env)"><span class="lname">Environment</span><span class="lwho">Ritiz Tambi · Veris AI</span><span class="lown">you own it</span></div>
+    <div class="layer" style="--lc:var(--model)"><span class="lname">Model</span><span class="lwho">Daniel Graviet · Daytona</span><span class="lown">you own it</span></div>
+  </div>
+  <div class="foot">
+    <div class="close">Rent less. Own more.<br>That’s the whole game.</div>
+    <div class="cta">Which layer are you closest to owning?</div>
+    <div class="src">Synthesis of four talks · Daytona AI Builders NYC · Sep 2026</div>
+  </div>
+</section>
+
+</body>
+</html>
