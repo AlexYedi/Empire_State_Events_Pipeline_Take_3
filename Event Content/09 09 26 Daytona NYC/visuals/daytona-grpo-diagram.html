@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How GRPO teaches a model</title>
+<style>
+  :root{--ground:#0F172A;--panel:#1E293B;--line:#334155;--text:#E9EEF5;--muted:#9FB0C3;--dim:#64748B;--acc:#3B82F6;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:"Menlo","SF Mono",monospace;--sans:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:#000}
+  .slide{width:1080px;height:1350px;background:var(--ground);color:var(--text);font-family:var(--sans);
+    padding:78px 84px;display:flex;flex-direction:column;position:relative;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .accentbar{position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--acc)}
+  .kicker{font-family:var(--mono);font-size:21px;letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+  h1{font-family:var(--serif);font-weight:600;font-size:66px;line-height:1.03;margin-top:12px;letter-spacing:-.01em}
+  .flow{margin-top:38px;display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;align-items:center;gap:24px}
+  .n{font-family:var(--mono);font-size:26px;color:var(--acc);width:58px;height:58px;flex:0 0 58px;
+    border:2px solid var(--acc);border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .txt{font-size:32px;line-height:1.2}
+  .txt b{color:var(--acc)}
+  .arrow{margin-left:28px;color:var(--dim);font-family:var(--mono);font-size:24px;height:20px;line-height:20px}
+  .callout{margin-top:34px;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--acc);
+    border-radius:16px;padding:28px 32px;font-size:31px;line-height:1.32}
+  .callout b{color:var(--acc)}
+  .stat{margin-top:auto;font-family:var(--mono);font-size:28px;color:var(--acc);border-top:1px solid var(--line);padding-top:26px}
+  .src{font-family:var(--mono);font-size:19px;color:var(--dim);margin-top:16px}
+</style>
+</head>
+<body>
+<section class="slide">
+  <div class="accentbar"></div>
+  <div class="kicker">Deep dive · The model</div>
+  <h1>How GRPO teaches a model to code</h1>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div class="txt">Give the model a <b>prompt</b> (a task you can score)</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">2</div><div class="txt">Sample a whole <b>group</b> of attempts</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">3</div><div class="txt"><b>Score</b> each one — did the code pass the tests?</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">4</div><div class="txt"><b>Advantage</b> = each attempt vs. the group average</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">5</div><div class="txt"><b>Nudge</b> the model toward the winners → repeat</div></div>
+  </div>
+  <div class="callout">The trick: <b>no critic model.</b> The group’s own average is the baseline — so GRPO drops the second network PPO needs, which is why large-scale RL got affordable.</div>
+  <div class="stat">Live demo: Qwen 2.5 0.5B · 38 → 77 · Daytona GPU sandbox</div>
+  <div class="src">GRPO: DeepSeek, “DeepSeekMath” (2024) · Demo: Daniel Graviet, Daytona · Sep 2026</div>
+</section>
+</body>
+</html>
