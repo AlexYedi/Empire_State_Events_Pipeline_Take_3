@@ -1,0 +1,9 @@
+{
+    "bitrate": 10000,
+    "keyint_sec": 2,
+    "preset": "veryfast",
+    "profile": "high",
+    "rate_control": "CBR",
+    "tune": "",
+    "x264opts": ""
+}
