@@ -80,7 +80,16 @@ as $$
   limit match_count;
 $$;
 
--- 6. Smoke-test helper (optional; run after apply, then delete rows) --
+-- 6. Security: RLS on, service-key-only (no policies) -----------------
+--    The pipeline uses the sb_secret service key, which BYPASSES RLS, so
+--    enabling RLS with no policies locks these tables to the service role
+--    and slams the door on the public anon/publishable key. (YED-81 posture.)
+alter table public.documents  enable row level security;
+alter table public.doc_chunks enable row level security;
+-- pin the RPC's search_path (pre-empts the mutable-search_path advisor lint)
+alter function public.match_doc_chunks(vector, int, uuid) set search_path = public;
+
+-- 7. Smoke-test helper (optional; run after apply, then delete rows) --
 -- insert into public.documents (title, blob_key, sha256, embedding_model)
 --   values ('__smoke__', 'x/x', 'smoke-sha', 'BAAI/bge-small-en-v1.5');
 -- select id, title from public.documents where sha256 = 'smoke-sha';
