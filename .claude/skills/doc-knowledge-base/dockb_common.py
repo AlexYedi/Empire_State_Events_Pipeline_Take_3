@@ -36,6 +36,27 @@ def env() -> dict:
                 e[k.strip()] = v.strip()
     return e
 
+# ---- document library (local staging; R2 is the archive of record) ------
+LIBRARY_SUBDIRS = ("books", "whitepapers", "filings", "other")
+
+def library_dir() -> str:
+    d = (env().get("DOC_LIBRARY_DIR") or os.environ.get("DOC_LIBRARY_DIR")
+         or "~/Documents/Knowledge Library")
+    return os.path.expanduser(d)
+
+def resolve_doc_path(p: str) -> str:
+    """Absolute/relative path as given; else resolve a bare filename against the library."""
+    cand = os.path.abspath(os.path.expanduser(p))
+    if os.path.isfile(cand):
+        return cand
+    lib = library_dir()
+    for sub in ("",) + LIBRARY_SUBDIRS:
+        c = os.path.join(lib, sub, p)
+        if os.path.isfile(c):
+            return c
+    raise SystemExit(f"ERROR: not found: {p}\n  tried: {cand}\n"
+                     f"  and library {lib}/{{{','.join(LIBRARY_SUBDIRS)}}}/")
+
 # ---- embeddings (lazy singleton) -------------------------------------------
 @lru_cache(maxsize=1)
 def _model():
