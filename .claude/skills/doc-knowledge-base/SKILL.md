@@ -34,6 +34,7 @@ Project Ideas `3d6d3699…`. **Milestone:** MI-Engine M3, pillar 2.
 python3 -m venv .venv
 ./.venv/bin/pip install -r .claude/skills/doc-knowledge-base/requirements.txt
 ```
+**Local library:** large docs live in `~/Documents/Knowledge Library/{books,whitepapers,filings,other}/` (outside every repo; NOT iCloud-synced; R2 is the archive of record — pull back from R2 if lost). `/ingest-doc` resolves bare filenames against it; override with `DOC_LIBRARY_DIR` in `.env`.
 (Worktrees also need `.env` symlinked to the main checkout — see [[project_worktree_env_missing_2026-09-08]].)
 
 ## Chunking

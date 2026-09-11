@@ -13,7 +13,7 @@ extract text → chunk → embed locally (bge-small, 384-d) → insert `document
 ## Steps
 
 1. **Intake.** Get the file path from Alex (epub preferred; PDF best-effort). Confirm it
-   exists. Optional overrides: `--title`, `--author`, `--source-type book|whitepaper|filing|pdf`
+   exists. A bare filename resolves against the local library `~/Documents/Knowledge Library/{books,…}/` (`DOC_LIBRARY_DIR`). Optional overrides: `--title`, `--author`, `--source-type book|whitepaper|filing|pdf`
    (title/author auto-read from file metadata if omitted).
 2. **Preflight.** Ensure the repo venv exists (`.venv/bin/python`); if not, run the one-time
    setup from the skill's SKILL.md. Ensure `.env` is present (symlink in worktrees).
