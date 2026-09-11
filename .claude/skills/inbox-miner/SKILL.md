@@ -196,3 +196,24 @@ For allowlisted threads the classifier tags `event` / `job` / `offer`: apply `Pi
 - `docs/adr/ADR-7-inbox-signal-source.md` — the two-stage + write-safety decisions.
 - `.claude/references/inbox-allowlist.md` / `inbox-denylist.md` — the scan boundary.
 - Notion Companies/Topics — `CLAUDE.md` "Notion Database IDs" + `.claude/references/notion-schema.md`.
+
+---
+
+## Gmail label mechanics (VALIDATED 2026-09-10 — read before touching labels)
+
+The connector is read+write as of the 2026-09-10 reauth (`gmail.modify` + `gmail.labels`).
+
+**The asymmetry that will silently break you:**
+- **Writing** a label (`label_thread` / `label_message`) takes the **label ID** (e.g. `Label_7`) — display names are rejected.
+- **Searching** by label (`search_threads`) takes the **full nested DISPLAY path** (e.g. `label:Pipeline/processed`). The
+  **ID form returns EMPTY** (`label:Label_7` → `{}`) even though the tool doc claims it accepts IDs. Leaf-only also fails
+  (`label:processed` → empty), same family as trend-radar's `label:Content/newsletters` gotcha.
+- So: `list_labels` → map display path ↔ ID; write with the ID, query with the path. A silent empty result here would make the
+  miner re-process every thread forever — always read back after labeling.
+
+**Live `Pipeline/*` taxonomy:** `processed` (Label_7, idempotency key) · `company-signal` (8) · `event` (9) · `job` (10) ·
+`review` (11, abstain/low-confidence) · `signal-source` (12, allowlist widening lever) · `unsubscribe-candidate` (13).
+IDs are environment-specific — re-resolve via `list_labels`, never hardcode.
+
+**Idempotency is now three-layered:** `-label:Pipeline/processed` in the Stage-B query (skip re-read) → canonical-URL event
+dedup (skip re-write) → the processed-thread ledger (audit trail). Label only AFTER the DB write confirms.
