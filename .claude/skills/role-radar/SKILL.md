@@ -97,7 +97,9 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 
 **Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; **sub-$200K OTE** (v2.3 floor); traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
 
-**Tiers:** **A = ≥78** (apply now) · **B = 60–77** (review) · **C = 40–59** (watch) · **drop < 40**.
+**Tiers (v2.4, 2026-09-11):** **A = ≥85** (apply now) · **B = 60–84** (review) · **C = 40–59** (watch) · **drop < 40**.
+
+> **Why 85, not 78 (raised 2026-09-11 — Alex).** The registry is pre-filtered to AI-native companies (tier 20–25) and most run PLG (leverage 20), so a supported/book-owning role reaches **75–80 on mechanism + tier + leverage alone**, *before* location — and location (max 10) cannot sink an 82. At ≥78, ~half of everything scanned landed in A, which destroyed A's usefulness as a triage signal. **85 restores discrimination** without distorting the mechanism scoring. Roles scoring 78–84 are still strong — they are B (review), not rejects.
 
 ### Rubric v2.1 — exemptions & intangibles (added 2026-09-08 — Alex)
 
