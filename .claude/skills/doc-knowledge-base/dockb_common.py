@@ -158,8 +158,26 @@ def repair_ligatures(text: str) -> str:
         return left + right                     # "prefi"+"ll" -> technical term
     return LIG_PAT.sub(_sub, text)
 
+# ---- line-wrap hyphenation (PDF only: "Dif-\nfusion") ----------------------
+# A hyphen immediately before a newline is the typesetter wrapping ONE word, so
+# the fragments always rejoin; the only question is whether the hyphen survives.
+# Same dictionary arbiter as the ligature rule: if the closed form is a word, drop
+# the hyphen ("Dif-fusion" -> "Diffusion"); else keep it ("AI-native", "ARM-based").
+# Measured on Inference Engineering: 477 wrap-hyphens, 310 closed, 167 kept.
+HYPHEN_WRAP = re.compile(r"([A-Za-z]{2,})-\n([a-z]{2,})")
+
+def repair_hyphenation(text: str) -> str:
+    words = _dict_words()
+    def _sub(m):
+        a, b = m.group(1), m.group(2)
+        if words and (a + b).lower() in words:
+            return a + b                 # wrapped single word
+        return f"{a}-{b}"                # genuine compound, newline removed
+    return HYPHEN_WRAP.sub(_sub, text)
+
 def _clean(text: str) -> str:
     text = text.replace("\xa0", " ")           # nbsp (epub headings use runs of these)
+    text = repair_hyphenation(text)            # before whitespace collapse eats the \n
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return repair_ligatures(text.strip())
