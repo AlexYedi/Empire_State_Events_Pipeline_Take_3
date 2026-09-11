@@ -122,32 +122,110 @@ def r2_put(key: str, data: bytes):
 def sha256_bytes(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
+# ---- ligature repair --------------------------------------------------------
+# PDF extractors commonly split the fi/fl/ff ligature glyphs, producing
+# "prefi ll" / "confi guration". Repair is dictionary-guided so genuine two-word
+# phrases ("off the", "tradeoff between", "Muenninghoff et al.") are left alone.
+# Measured on Inference Engineering: 175 repairs, 17 correct skips, 0 false joins.
+LIG_PAT = re.compile(r"\b([A-Za-z]*(?:ffi|ffl|fi|fl|ff)) ([a-z]{1,12})\b")
+_BARE_LIG = {"fi", "fl", "ff", "ffi", "ffl"}          # bare remnants: always rejoin
+_RIGHT_STOP = {"et", "al", "etc"}                      # "Muenninghoff et al."
+_COMPOUND_LEFT = {                                     # real words web2 lacks
+    "tradeoff", "cutoff", "handoff", "takeoff", "payoff", "falloff", "standoff",
+    "kickoff", "dropoff", "signoff", "layoff", "backoff", "writeoff", "selloff",
+    "roundoff", "spinoff", "playoff", "runoff", "faceoff", "showoff", "tipoff"}
+
+@lru_cache(maxsize=1)
+def _dict_words() -> frozenset:
+    for path in ("/usr/share/dict/words", "/usr/dict/words"):
+        try:
+            with open(path) as f:
+                return frozenset(w.strip().lower() for w in f)
+        except OSError:
+            continue
+    return frozenset()      # no dictionary -> repair only bare remnants
+
+def repair_ligatures(text: str) -> str:
+    words = _dict_words()
+    def _sub(m):
+        left, right = m.group(1), m.group(2)
+        l, r, j = left.lower(), right.lower(), (left + right).lower()
+        if r in _RIGHT_STOP:                    return m.group(0)
+        if l in _BARE_LIG:                      return left + right
+        if not words:                           return m.group(0)
+        if j in words:                          return left + right
+        if l in words or l in _COMPOUND_LEFT:   return m.group(0)
+        return left + right                     # "prefi"+"ll" -> technical term
+    return LIG_PAT.sub(_sub, text)
+
 def _clean(text: str) -> str:
+    text = text.replace("\xa0", " ")           # nbsp (epub headings use runs of these)
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
+    return repair_ligatures(text.strip())
+
+_HEAD_MARK = "\x00H\x00"
+_NAV_TITLES = {"contents", "sommaire", "table of contents", "index", "toc"}
 
 def extract_epub(path: str) -> tuple[list[dict], dict]:
-    """Return (sections, meta). Each section = {title, index, text}."""
+    """Return (sections, meta), split at h1/h2/h3 so locators are section-precise.
+
+    Chapter-title stub documents (a lone <h1>, e.g. "Chapter 5 Techniques") carry
+    their name forward onto the following content document, giving locators like
+    "Chapter 5 Techniques > 5.3 Caching". Nav/TOC documents are skipped.
+    """
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
     book = epub.read_epub(path)
-    meta = {}
     t = book.get_metadata("DC", "title")
     a = book.get_metadata("DC", "creator")
-    meta["title"] = t[0][0] if t else os.path.basename(path)
-    meta["author"] = a[0][0] if a else None
-    sections = []
-    for i, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
+    meta = {"title": t[0][0] if t else os.path.basename(path),
+            "author": a[0][0] if a else None}
+
+    sections, chapter = [], None
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        props = (item.get_properties() or []) if hasattr(item, "get_properties") else []
         soup = BeautifulSoup(item.get_content(), "html.parser")
-        # section title = first heading, else the spine item name
-        h = soup.find(["h1", "h2", "h3"])
-        title = h.get_text(" ", strip=True) if h else (item.get_name() or f"section-{i}")
-        text = _clean(soup.get_text("\n"))
-        if len(text) > 40:  # skip empty/nav sections
-            sections.append({"title": title[:200], "index": len(sections), "text": text})
+        raw = soup.get_text(" ", strip=True)
+        h1 = soup.find("h1")
+        h1_text = h1.get_text(" ", strip=True).replace("\xa0", " ").strip() if h1 else ""
+        if "nav" in props or h1_text.lower() in _NAV_TITLES:
+            continue                                   # table of contents
+        if h1_text and len(raw) < 80:
+            chapter = h1_text                          # chapter-title stub
+            continue
+        for h in soup.find_all(["h1", "h2", "h3"]):    # mark heading boundaries
+            h.replace_with(_HEAD_MARK + h.get_text(" ", strip=True) + _HEAD_MARK)
+        parts = soup.get_text("\n").split(_HEAD_MARK)
+        blocks = []
+        if parts[0].strip():
+            blocks.append((None, parts[0]))            # text before the first heading
+        for i in range(1, len(parts) - 1, 2):
+            blocks.append((parts[i].strip(), parts[i + 1]))
+        for head, body in blocks:
+            body = _clean(body)
+            if len(body) < 40:
+                continue
+            head = _clean(head) if head else None
+            if head and chapter and head.lower() != chapter.lower():
+                title = f"{chapter} > {head}"
+            else:
+                title = head or chapter or "Front Matter"
+            sections.append({"title": title[:200], "index": len(sections), "text": body})
     return sections, meta
+
+_LEADER = re.compile(r"\.{5,}")
+
+def _is_front_matter(text: str) -> bool:
+    """True for TOC / index pages — dot-leader lines ('Preface......11').
+
+    These chunk into pure navigation noise that ranks in retrieval (a TOC page was
+    the #1 hit for a KV-cache query in Phase A). Measured: flags exactly the 5 TOC
+    pages of Inference Engineering, no content pages.
+    """
+    lines = [l for l in text.split("\n") if l.strip()]
+    return sum(1 for l in lines if _LEADER.search(l)) >= 3
 
 def extract_pdf(path: str) -> tuple[list[dict], dict]:
     """Best-effort PDF: one section per page (locator = page number)."""
@@ -158,8 +236,9 @@ def extract_pdf(path: str) -> tuple[list[dict], dict]:
     sections = []
     for pno in range(doc.page_count):
         text = _clean(doc.load_page(pno).get_text("text"))
-        if len(text) > 40:
-            sections.append({"title": f"p.{pno+1}", "index": pno, "text": text})
+        if len(text) <= 40 or _is_front_matter(text):
+            continue
+        sections.append({"title": f"p.{pno+1}", "index": pno, "text": text})
     return sections, meta
 
 # ---- chunking (continuous token-window packer, cross-section overlap) -------
