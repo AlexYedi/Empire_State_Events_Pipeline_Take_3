@@ -6,9 +6,13 @@ argument-hint: "[discover | extract] [window e.g. 12m | 7d]"
 # /scan-inbox — Inbox Intelligence Miner
 
 Orchestrates the `inbox-miner` skill. Methodology + all invariants live in
-`.claude/skills/inbox-miner/SKILL.md`; this file is the orchestration shape. **Runs in the parent
-thread** — Gmail/Notion/Supabase MCP writes are not available in subagents ([[project_notion_writes_must_be_parent_thread]]);
-subagents only distill text. Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
+`.claude/skills/inbox-miner/SKILL.md`; this file is the orchestration shape.
+Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
+
+**Thread placement — scoped precisely (corrected 2026-09-11 after the build-quality judge flagged an over-extended citation):**
+- **All WRITES run in the parent thread** — Notion/Supabase/Gmail-label writes. ([[project_notion_writes_must_be_parent_thread]] covers Notion/Gamma/HubSpot/Calendar; the Supabase rule is REST-not-MCP per ADR-0; Gmail *writes* are kept in the parent by **this** command's design, for the injection guard in ADR-7 D5 — a subagent that ingests attacker-controlled email text must never hold a write tool.)
+- **Gmail READS may legitimately be delegated.** Contrary to an earlier over-broad claim here, `search_threads`/`get_thread` ARE available to subagents — this repo's `company-researcher` and `person-researcher` already declare them. v1 still fetches in the parent for simplicity.
+- **Known optimization (not yet built):** because Gmail reads *are* subagent-available, the distill subagent could call `get_thread` itself instead of the parent fetching and passing bodies down. That would keep large newsletter bodies out of the parent's context entirely — the exact context-bloat problem hit during the v1 cohort run. Worth doing before the cron goes unattended.
 
 ## 1. Intake & validate (parent thread)
 - Parse args: **stage** (`discover`|`extract`) and **window**. Default stage = `discover` if
