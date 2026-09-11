@@ -1,0 +1,442 @@
+{
+  "doc": "Inference Engineering",
+  "author": "Philip Kiely",
+  "version": "v2",
+  "created": "2026-09-11",
+  "issue": "YED-156 Phase A.5",
+  "reviewed_by_alex": false,
+  "note": "Retrieval acceptance gate for the 3-arm RAG A/B (dense | hybrid_rerank | contextual_hybrid_rerank). 25 practitioner-level cases authored FROM the extracted text (nothing invented). Every `gold` is verbatim from the book and is verified by validate_eval_set.py to occur in BOTH the epub and PDF extractions. Unlike eval_set.json (v1), this set deliberately does NOT avoid former-ligature words: `ligature_target: true` cases contain prefill/specific/configuration, the exact words the v1 set dodged, which hid the extraction defect (PRD Rule-Beating guard). `paraphrase: true` cases have ZERO content-word overlap with their gold phrase -- dense retrieval has to earn those, keyword search cannot.",
+  "metric_note": "hit = a retrieved chunk contains `gold` after whitespace/case normalization AND ligature repair applied to BOTH sides. The ligature repair on the retrieved side is deliberate: it makes the metric measure RETRIEVAL, not the vintage of the extraction that produced the live index. See retrieval_metrics.py.",
+  "cases": [
+    {
+      "id": "ie-001",
+      "q": "What is the business case for moving off closed-model APIs onto self-hosted open models?",
+      "reference_answer": "Switching to open models unlocks three dimensions closed APIs cannot: latency (closed APIs are tuned for throughput, open models can be tuned for real-time), availability (four nines or better on dedicated deployments versus two nines for the GPT and Claude APIs), and cost, where open models are often at least 80 percent less expensive at scale.",
+      "gold": "at least 80 percent less expensive at scale",
+      "locator": {
+        "epub_section": "Preface",
+        "pdf_pages": "p.14"
+      },
+      "tags": [
+        "economics",
+        "open-models",
+        "strategy"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-002",
+      "q": "At what point does it actually make sense to leave pay-per-token APIs for dedicated deployments?",
+      "reference_answer": "Move to dedicated deployments for scale (enough volume that per-GPU beats per-million-tokens), specialization (custom or fine-tuned models, specific latency or uptime requirements), or orchestration (multi-model pipelines where network latency matters). The switch raises your engineering surface area and your monthly spend floor, so only switch once there is a clear and immediate business need.",
+      "gold": "Only switch once there is a clear and immediate business need",
+      "locator": {
+        "epub_section": "Chapter 1 Prerequisites > 1.1 Scale and Specialization",
+        "pdf_pages": "p.29"
+      },
+      "tags": [
+        "economics",
+        "deployment",
+        "strategy"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-003",
+      "q": "Tokens come back fast on the GPU but people still say the product feels sluggish. Where do I dig?",
+      "reference_answer": "Distinguish inference-only time (on-GPU token generation) from end-to-end time, which also includes network latency and queue time. When inference time is fast but end-to-end time is slow, the problem is in infrastructure, not model performance optimization.",
+      "gold": "turn your attention to infrastructure rather than model performance optimization",
+      "locator": {
+        "epub_section": "Chapter 1 Prerequisites > 1.4 Measuring Latency and Throughput",
+        "pdf_pages": "p.39"
+      },
+      "tags": [
+        "metrics",
+        "debugging",
+        "infrastructure"
+      ],
+      "paraphrase": true,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-004",
+      "q": "Why is attention linear rather than quadratic in practice during decode?",
+      "reference_answer": "Attention is quadratic in sequence length because each token relates to every previous token. The KV cache stores the key-value pairs for every previous token, so by looking up this information rather than recomputing it each time, attention runs in linear time. The cache is built during prefill, then used and updated during decode.",
+      "gold": "By looking up this information in the KV cache rather than recomputing it each time",
+      "locator": {
+        "epub_section": "Chapter 2 Models > 2.2 LLM Inference Mechanics",
+        "pdf_pages": "p.55"
+      },
+      "tags": [
+        "attention",
+        "kv-cache",
+        "mechanics"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-005",
+      "q": "An MoE model advertises 22B active out of 235B parameters. Do I get that saving on a production server?",
+      "reference_answer": "No. Low active-parameter counts make MoE models efficient for single-request local inference, but in batched inference on production servers different requests activate different experts, so you should expect almost all of the model parameters to be active at any given time unless sparsity is achieved through large-scale Expert Parallelism.",
+      "gold": "you should expect almost all of the model parameters to be active at any given time",
+      "locator": {
+        "epub_section": "Chapter 2 Models > 2.2 LLM Inference Mechanics",
+        "pdf_pages": "p.56"
+      },
+      "tags": [
+        "moe",
+        "batching",
+        "capacity-planning"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-007",
+      "q": "How do I tell whether a kernel is compute-bound or memory-bound on a specific GPU?",
+      "reference_answer": "Compare the algorithm's arithmetic intensity (work divided by memory traffic) to the GPU's ops:byte ratio. An H100 in FP16 does 989 teraFLOPS against 3.35 TB/s of bandwidth, an ops:byte ratio of about 295, so balanced inference needs 295 floating point operations for every byte of memory it accesses. Higher arithmetic intensity than that is compute bound, lower is memory bound.",
+      "gold": "295 floating point operations for every byte of memory it accesses",
+      "locator": {
+        "epub_section": "Chapter 2 Models > 2.4 Calculating Inference Bottlenecks",
+        "pdf_pages": "p.64"
+      },
+      "tags": [
+        "bottlenecks",
+        "roofline",
+        "hardware"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-008",
+      "q": "Why does FlashAttention need a different implementation for each GPU generation?",
+      "reference_answer": "FlashAttention is an implementation improvement, not a new algorithm: it eliminates excess reads and writes from memory and lays the attention algorithm out to fit the GPU's capabilities exactly. That means tens of thousands of lines of hand-fused kernels built for specific GPUs - the H100 version is different code from the B200 version.",
+      "gold": "hand-fused kernels built for specific GPUs",
+      "locator": {
+        "epub_section": "Chapter 2 Models > 2.5 Optimizing Attention",
+        "pdf_pages": "p.70"
+      },
+      "tags": [
+        "attention",
+        "kernels",
+        "flashattention"
+      ],
+      "paraphrase": false,
+      "ligature_target": true
+    },
+    {
+      "id": "ie-010",
+      "q": "How much VRAM headroom over the model weights should I budget when sizing a GPU?",
+      "reference_answer": "VRAM must hold the model weights plus at least 50 percent headroom for KV cache, and more for long context, high batch sizes, or video generation. Too little VRAM for the weights fails with an OOM at load; too little headroom means inference is slow or crashes with an OOM later.",
+      "gold": "plus at least 50 percent headroom for KV cache",
+      "locator": {
+        "epub_section": "Chapter 3 Hardware > 3.1 GPU Architecture",
+        "pdf_pages": "p.79"
+      },
+      "tags": [
+        "hardware",
+        "capacity-planning",
+        "vram"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-011",
+      "q": "Why are L40 GPUs a bad choice for serving a large LLM?",
+      "reference_answer": "Ada Lovelace GPUs do not support the NVLink interconnect, which is the major limitation: nodes of eight Hopper or Blackwell GPUs rely on those high-bandwidth interconnects for efficient parallelism, so Lovelace parts must be used individually or via inefficient methods like Pipeline Parallelism. For the same memory footprint, multi-instance fractional H100s give much higher compute and bandwidth.",
+      "gold": "Lovelace GPUs do not support NVLink interconnect",
+      "locator": {
+        "epub_section": "Chapter 3 Hardware > 3.2 GPU Architecture Generations",
+        "pdf_pages": "p.82"
+      },
+      "tags": [
+        "hardware",
+        "gpu-selection",
+        "interconnect"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-012",
+      "q": "What is the CPX in the Rubin architecture for?",
+      "reference_answer": "Rubin introduces the CPX as a separate chip built for compute-bound tasks like LLM prefill, and it will be part of NVIDIA's rack-scale systems for high-volume inference. Rubin also moves to HBM4, which helps memory-bandwidth-bound work like decode.",
+      "gold": "built for compute-bound tasks like LLM prefill",
+      "locator": {
+        "epub_section": "Chapter 3 Hardware > 3.2 GPU Architecture Generations",
+        "pdf_pages": "p.84"
+      },
+      "tags": [
+        "hardware",
+        "roadmap",
+        "prefill"
+      ],
+      "paraphrase": false,
+      "ligature_target": true
+    },
+    {
+      "id": "ie-013",
+      "q": "What actually changed between TensorRT-LLM 0.x and 1.x?",
+      "reference_answer": "Only the 0.X.Y major versions are a plugin for NVIDIA TensorRT. TensorRT-LLM V1 (1.X.Y), released in summer 2025, is a standalone package based on PyTorch with no dependency on TensorRT - it bypasses TensorRT's intermediate representation entirely. Deployments of the older major version are still common, so always check which version you are on.",
+      "gold": "a standalone package based on PyTorch with no dependency on TensorRT",
+      "locator": {
+        "epub_section": "Chapter 4 Software > 4.3 Inference Engines",
+        "pdf_pages": "p.111"
+      },
+      "tags": [
+        "inference-engines",
+        "tensorrt-llm",
+        "versioning"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-014",
+      "q": "When is NVIDIA Dynamo the wrong tool?",
+      "reference_answer": "Dynamo is built for big models and big traffic. Unless you are operating with enough volume for disaggregation and KV-aware routing to matter, Dynamo will be unnecessary work and excess overhead, and you should use the inference engines directly.",
+      "gold": "Dynamo will be unnecessary work and excess overhead",
+      "locator": {
+        "epub_section": "Chapter 4 Software > 4.4 NVIDIA Dynamo",
+        "pdf_pages": "p.114"
+      },
+      "tags": [
+        "orchestration",
+        "dynamo",
+        "scoping"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-015",
+      "q": "What is the highest-fidelity way to benchmark an inference deployment?",
+      "reference_answer": "The best benchmark is to shadow real production traffic onto the system under test. Shadowing means copying incoming requests onto the test system so you can benchmark its performance without affecting the original request. If you cannot shadow, simulate - matching sequence lengths, traffic volume and pattern, request contents, and input parameters.",
+      "gold": "copying incoming requests onto the test system",
+      "locator": {
+        "epub_section": "Chapter 4 Software > 4.5 Performance Benchmarking and Load Testing",
+        "pdf_pages": "p.114"
+      },
+      "tags": [
+        "benchmarking",
+        "methodology",
+        "testing"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-016",
+      "q": "What discipline keeps a benchmark comparison honest across a series of optimizations?",
+      "reference_answer": "Start from a solid baseline benchmark before any optimization work, then keep a consistent configuration in your benchmarking setup, testing each optimization individually as well as collectively. Change only one variable at a time - some optimizations work against each other, for example speculative decoding with large batch sizes.",
+      "gold": "keep a consistent configuration in your benchmarking setup",
+      "locator": {
+        "epub_section": "Chapter 4 Software > 4.5 Performance Benchmarking and Load Testing",
+        "pdf_pages": "p.116"
+      },
+      "tags": [
+        "benchmarking",
+        "methodology",
+        "experiment-design"
+      ],
+      "paraphrase": false,
+      "ligature_target": true
+    },
+    {
+      "id": "ie-017",
+      "q": "Which components of a model are riskiest to quantize, and why?",
+      "reference_answer": "From least to most sensitive: weights, activations, KV cache, attention. The attention layers of a model are highly sensitive to quantization, especially equations like softmax, because attention is sensitive to dynamic range and each attention calculation depends on the previous ones, so precision errors compound over thousands of tokens. All but the most aggressive schemes run softmax in original precision.",
+      "gold": "The attention layers of a model are highly sensitive to quantization",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.1 Quantization",
+        "pdf_pages": "p.128"
+      },
+      "tags": [
+        "quantization",
+        "quality",
+        "attention"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-018",
+      "q": "Should a production deployment ever use INT4 or INT8 instead of the floating-point formats?",
+      "reference_answer": "No, for quality-sensitive production work. Floating-point formats carry an exponent, which gives them the dynamic range needed to represent the outlier values that matter in inference; integer formats have only sign and value bits. Dynamic integer quantizations are impressive for local inference, but integer formats are not suitable for quality-sensitive workloads due to their lack of dynamic range. FP8 and MXFP8 are the usual sweet spot.",
+      "gold": "integer formats are not suitable for quality-sensitive workloads due to their lack of dynamic range",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.1 Quantization",
+        "pdf_pages": "p.126"
+      },
+      "tags": [
+        "quantization",
+        "number-formats",
+        "quality"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-019",
+      "q": "How large should the helper network be next to the one it accelerates?",
+      "reference_answer": "As a rule of thumb the draft model should be at least ten times smaller by parameter count than the target model. Draft models are usually smaller members of the same family, since they share tokenizers and behaviors, and fine-tuning or distillation raises their token acceptance rate.",
+      "gold": "at least ten times smaller by parameter count than the target model",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.2 Speculative Decoding",
+        "pdf_pages": "p.133"
+      },
+      "tags": [
+        "speculative-decoding",
+        "sizing",
+        "draft-model"
+      ],
+      "paraphrase": true,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-020",
+      "q": "Why does speculative decoding stop helping as batch size grows?",
+      "reference_answer": "Speculative decoding exploits spare compute that sits idle at low to moderate batch sizes while weights stream from memory. At higher batch sizes, speculative decoding must be dynamically disabled because compute is too saturated to afford the verification step.",
+      "gold": "speculative decoding must be dynamically disabled",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.2 Speculative Decoding",
+        "pdf_pages": "p.133"
+      },
+      "tags": [
+        "speculative-decoding",
+        "batching",
+        "tradeoffs"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-022",
+      "q": "How should I order the pieces of a prompt to maximise cache hits?",
+      "reference_answer": "Prefix caching works from the start of the input sequence until the first non-repeated token, so a single differing first token wipes out all savings even if everything after it matches. To take advantage of prefix caching, ensure that novel tokens are as late in your context as possible.",
+      "gold": "ensure that novel tokens are as late in your context as possible",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.3 Caching",
+        "pdf_pages": "p.140"
+      },
+      "tags": [
+        "prefix-caching",
+        "context-engineering",
+        "ttft"
+      ],
+      "paraphrase": true,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-023",
+      "q": "Which parallelism strategy should I default to for multi-GPU inference, and when do I deviate?",
+      "reference_answer": "Tensor Parallelism should be your default strategy for multi-GPU model inference - it suits both dense and MoE models and improves per-user TPS inside a node with NVLink. Deviate for throughput on MoE models (Expert Parallelism, lower communication overhead, scales across nodes) and for multi-node dense inference (TP within a node, Pipeline Parallelism between them).",
+      "gold": "Tensor Parallelism should be your default strategy for multi-GPU model inference",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.4 Model Parallelism",
+        "pdf_pages": "p.146"
+      },
+      "tags": [
+        "parallelism",
+        "multi-gpu",
+        "defaults"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-024",
+      "q": "What traffic volume justifies disaggregated serving?",
+      "reference_answer": "Reach for disaggregation only when you are serving a large volume of traffic - starting at one hundred million to one billion tokens per day depending on model size - on a model of at least a hundred billion parameters, with prefill-heavy traffic and long input sequences. Miss any of those and you are likely wasting hardware.",
+      "gold": "one hundred million to one billion tokens per day",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.5 Disaggregation",
+        "pdf_pages": "p.151"
+      },
+      "tags": [
+        "disaggregation",
+        "thresholds",
+        "scoping"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-025",
+      "q": "What does a notation like 5P3D describe in a disaggregated deployment?",
+      "reference_answer": "The ratio of engines in a disaggregated deployment, written xPyD: 5P3D means five prefill and three decode engines working together to serve a single model deployment. The ratio does not have to be one-to-one, and with Dynamo it can be reconfigured at runtime as traffic shifts.",
+      "gold": "5P3D means five prefill and three decode engines",
+      "locator": {
+        "epub_section": "Chapter 5 Techniques > 5.5 Disaggregation",
+        "pdf_pages": "p.152"
+      },
+      "tags": [
+        "disaggregation",
+        "notation",
+        "prefill"
+      ],
+      "paraphrase": false,
+      "ligature_target": true
+    },
+    {
+      "id": "ie-026",
+      "q": "How do I verify an embedding model still works after quantizing it?",
+      "reference_answer": "Run the same inputs through the original and the quantized model and compare the cosine similarity of the output vectors. A cosine similarity of one hundred percent means identical vectors; you want at least 99 percent similarity to have confidence in the quantization. FP8 weight quantization generally gives a performance gain with minimal quality loss.",
+      "gold": "at least 99 percent similarity to have confidence in the quantization",
+      "locator": {
+        "epub_section": "Chapter 6 Modalities > 6.2 Embedding Models",
+        "pdf_pages": "p.164"
+      },
+      "tags": [
+        "embeddings",
+        "quantization",
+        "evaluation"
+      ],
+      "paraphrase": false,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-027",
+      "q": "My app gets sporadic traffic and cannot tolerate a slow first response. Is dedicated GPU hosting the wrong call?",
+      "reference_answer": "Probably yes. Scale to zero fits bursty development work and periodic production workloads, but if you are relying on scale to zero to keep costs low in a latency-sensitive application with light, unscheduled traffic, that is a sign the application is not yet ready for dedicated infrastructure and should use pay-per-token APIs until greater scale is reached.",
+      "gold": "should use pay-per-token APIs until greater scale is reached",
+      "locator": {
+        "epub_section": "Chapter 7 Production > 7.2 Autoscaling",
+        "pdf_pages": "p.194"
+      },
+      "tags": [
+        "autoscaling",
+        "scale-to-zero",
+        "strategy"
+      ],
+      "paraphrase": true,
+      "ligature_target": false
+    },
+    {
+      "id": "ie-028",
+      "q": "What is the cheapest way to rent GPUs when losing them on short notice is acceptable?",
+      "reference_answer": "Spot capacity: discounted on-demand instances that can be pre-empted at an agreed-upon notice period, often minutes. Large-scale inference generally blends a baseline of low-cost reserved capacity with on-demand and spot for traffic peaks.",
+      "gold": "Discounted on-demand instances that can be pre-empted",
+      "locator": {
+        "epub_section": "Chapter 7 Production > 7.3 Multi-Cloud Capacity Management",
+        "pdf_pages": "p.197"
+      },
+      "tags": [
+        "procurement",
+        "cost",
+        "capacity"
+      ],
+      "paraphrase": true,
+      "ligature_target": false
+    }
+  ],
+  "dropped_for_size": [
+    "ie-006",
+    "ie-009",
+    "ie-021"
+  ]
+}
