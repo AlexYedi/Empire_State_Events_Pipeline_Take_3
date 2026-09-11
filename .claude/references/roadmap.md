@@ -12,8 +12,8 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124).
 ## Next 3 moves (the runway)
 
 1. **RAG / knowledge base (YED-118) — the M3 kickoff build, PRD-first (decided 2026-08-07).** Greenfield on empire-state (`documents`/`doc_chunks` are 404 today), so it's unblocked by the graph decision and starts first. Write the one-pager (ChatPRD → Notion) before any code.
-2. **Graph consolidation (YED-130) — direction PROVISIONAL, under neutral investigation.** The two MI spines must merge, but *which way* (empire-state→gtm-os or gtm-os→empire-state) is being decided by a **neutral thread rooted at `~/Documents/GitHub/`** (the only vantage that can probe both spines; no repo bias). Brief: `~/Documents/GitHub/mi-consolidation-investigation-brief.md`. It returns a recommendation + PRD-first migration plan. Gates M3 pillar 1 (surface topic-intelligence on empire-state-hub — YED-122 §B / YED-114).
-3. **Drop "provisional" on the build-quality judge** (~13 more held-out runs ≥80%) + scope the third lens (YED-126).
+2. **Graph consolidation (YED-130) — DONE (2026-08-10/13).** Resolved: consolidated onto ONE canonical graph — Empire's Supabase `oicikjyzmxqfomrrqkvf` hosts, the gtm-os `signal.*` model won; the redundant gtm spine was decommissioned (YED-135). No longer a runway item. Decision record: `docs/adr/`.
+3. **Drop "provisional" on the build-quality judge — hold the bar as written (decided 2026-09-08).** At **4/15 acked prospective runs** (100% Gemini-vs-Alex so far); **~11 more** at ≥80% Gemini-vs-Alex needed. Accrues via interactive `/judge-build` acks (autonomous + backfill runs don't count). Watch: every prospective run so far has been a unanimous pass, so the disagreement/tiebreak path is still untested. + scope the second non-content lens (YED-126).
 
 *Sequenced behind these, not dropped:* a second non-content MI lens (M3 pillar 3); the content-quality control system; audience-first content (YED-103); job-search Capstone 2 (YED-59).
 
