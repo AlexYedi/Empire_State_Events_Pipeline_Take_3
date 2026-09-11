@@ -17,8 +17,9 @@ These records govern the **Market-Intelligence graph** (the consolidated single 
 | [ADR-3](ADR-3-capability-layer.md) | Capability → **Extract** spine-agnostic substrate | Shared plumbing to the plugin; product POV stays lens-specific |
 | [ADR-4](ADR-4-increment-2.md) | Increment 2: expand-contract recompute + retire the spine | Never in-place destructive; atomic swap with proven rollback |
 | [ADR-5](ADR-5-event-field-guide.md) | Event research brief = **one** artifact: scannable head + deep prose body | One source of truth; the Deep Read renders **decoupled + additive** (a render failure never blocks the pipeline) and never duplicates the scan head or `pre-event-content`'s outbound outputs |
+| [ADR-6](ADR-6-research-brief-placement.md) | Brief is **canonical as a Content Draft**; the Event page carries the **head/pointer, not a full mirror** | Refines ADR-5 (does not reverse it). Removes the dual-write of the deep body. Discrete wins on graph (multi-Event relations), measurement (Goal/Outcome properties), and RAG provenance |
 
-> **Scope:** ADR-0…4 govern the Market-Intelligence Supabase graph. **ADR-5** governs the **base event pipeline's Notion Content model** — same append-only discipline, different subsystem.
+> **Scope:** ADR-0…4 govern the Market-Intelligence Supabase graph. **ADR-5 / ADR-6** govern the **base event pipeline's Notion Content model** — same append-only discipline, different subsystem.
 
 Supporting evidence (probe findings, pre-mortems — historical provenance, not live guardrails) is in [`evidence/`](evidence/).
 
