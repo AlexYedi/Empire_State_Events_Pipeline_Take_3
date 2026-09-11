@@ -36,10 +36,14 @@ PROSE = os.path.join(TAKE3, ".claude", "data", "build-journal-prose.json")
 DEFAULT_OUT = os.path.join(HUB, "src", "data", "build-journal.json")
 DEFAULT_SINCE = "2026-07-01"
 
-PR_RE = re.compile(r"\(#(\d+)\)\s*$")
+PR_RE = re.compile(r"\(#(\d+)\)\s*$")                          # squash-merge style: "…title (#57)"
+MERGE_RE = re.compile(r"^Merge pull request #(\d+) from \S+?/(\S+)")  # GitHub-Desktop merge-commit style
 YED_RE = re.compile(r"\b(YED-\d+)\b")
 # NB: churn (build-sessions/dod-waivers updates, bare "build session" commits) is excluded from "shipped"
 # for free — those commits carry no "(#N)", so PR_RE never matches them. No explicit churn filter needed.
+# Two ship conventions coexist: squash-merges carry "(#N)" in a --no-merges commit (PR_RE); merge-commits
+# (Alex's GitHub Desktop flow) are "Merge pull request #N from owner/branch" and are DROPPED by --no-merges,
+# so they get their own pass (git_merges) or they'd be invisible to the shipped-detector entirely.
 
 
 def gh_repo(path):
@@ -65,6 +69,33 @@ def git_log(path, since):
             continue
         d, subj = line.split("\t", 1)
         rows.append((d, subj.strip()))
+    return rows
+
+
+def git_merges(path, since):
+    """Detect merge-commit PRs ('Merge pull request #N from owner/branch') that --no-merges hides.
+    Returns [(date, pr_num, title, branch)]. Title = humanized branch slug — deterministic and
+    feature-descriptive; the branch's real feature commits (and their YED- refs) are already picked
+    up by the pass-1 --no-merges walk, so no need to chase the merged tip (which is often churn)."""
+    try:
+        out = subprocess.check_output(
+            ["git", "-C", path, "log", f"--since={since}", "--merges",
+             "--pretty=format:%ad\t%s", "--date=short"],
+            text=True, stderr=subprocess.DEVNULL)
+    except Exception:
+        return []
+    rows = []
+    for line in out.splitlines():
+        parts = line.split("\t", 1)
+        if len(parts) != 2:
+            continue
+        d, subj = parts
+        m = MERGE_RE.match(subj.strip())
+        if not m:
+            continue
+        num, branch = int(m.group(1)), m.group(2)
+        title = branch.split("/")[-1].replace("-", " ").replace("_", " ").strip() or f"PR #{num}"
+        rows.append((d, num, title, branch))
     return rows
 
 
@@ -128,6 +159,9 @@ def main():
     day = {}  # date -> dict
     for repo_name, path in REPOS:
         slug = gh_repo(path) or repo_name
+        repo_label = repo_name.replace("Empire_State_Events_Pipeline_Take_3", "pipeline").replace("empire-state-hub", "hub")
+        seen_prs = set()  # (repo, num) dedup so a PR isn't counted under both conventions
+        # pass 1: non-merge commits — commit count, linear refs, squash-style "(#N)" ships
         for d, subj in git_log(path, since):
             e = day.setdefault(d, {"shipped": [], "commits": 0, "linear": set()})
             e["commits"] += 1
@@ -136,12 +170,26 @@ def main():
             m = PR_RE.search(subj)
             if m:
                 num = int(m.group(1))
+                if (repo_label, num) in seen_prs:
+                    continue
+                seen_prs.add((repo_label, num))
                 title = PR_RE.sub("", subj).strip()
                 e["shipped"].append({
-                    "repo": repo_name.replace("Empire_State_Events_Pipeline_Take_3", "pipeline").replace("empire-state-hub", "hub"),
-                    "num": num, "title": title,
+                    "repo": repo_label, "num": num, "title": title,
                     "url": f"https://github.com/{slug}/pull/{num}",
                 })
+        # pass 2: merge-commit PRs (GitHub Desktop flow) — invisible to pass 1's --no-merges
+        for d, num, title, _branch in git_merges(path, since):
+            if (repo_label, num) in seen_prs:
+                continue
+            seen_prs.add((repo_label, num))
+            e = day.setdefault(d, {"shipped": [], "commits": 0, "linear": set()})
+            for ref in YED_RE.findall(title):
+                e["linear"].add(ref)
+            e["shipped"].append({
+                "repo": repo_label, "num": num, "title": title,
+                "url": f"https://github.com/{slug}/pull/{num}",
+            })
 
     entries = []
     for d in sorted(day.keys(), reverse=True):

@@ -24,3 +24,5 @@
 {"ts":"2026-09-08T17:15:57Z","session_id":"070e1fb1-9d3f-421f-9e5c-5a3d42fb02f2","item":"spec","reason":"approved plan file + Notion PRD serve as spec; ChatPRD origin skipped"}
 {"ts":"2026-09-09T00:02:43Z","session_id":"64ea3d4e-bbde-4e74-8e50-8b054fbe66d4","item":"spec-artifact","reason":"interactive live rubric-tuning from Alex's real-time feedback, not a pre-planned build (no PRD-first)"}
 {"ts":"2026-09-09T00:02:43Z","session_id":"64ea3d4e-bbde-4e74-8e50-8b054fbe66d4","item":"linear","reason":"Job-Search Engine YED-146..152 exists; per-change Linear update deferred for this interactive session"}
+{"ts":"2026-09-09T19:07:54Z","session_id":"8210421d-caf9-489b-95bf-1bc0e165a9ae","item":"spec","reason":"in-repo reference (journal-entry-prompt.md) + PR bodies, not ChatPRD/Notion — self-instrumentation fix"}
+{"ts":"2026-09-09T19:07:54Z","session_id":"8210421d-caf9-489b-95bf-1bc0e165a9ae","item":"linear","reason":"tracked under existing YED-119 (journal system), no new issue opened this session"}
