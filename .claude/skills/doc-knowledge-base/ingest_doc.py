@@ -23,9 +23,7 @@ def main():
                     choices=["book", "whitepaper", "filing", "pdf", "other"])
     args = ap.parse_args()
 
-    path = os.path.abspath(os.path.expanduser(args.path))
-    if not os.path.isfile(path):
-        sys.exit(f"ERROR: file not found: {path}")
+    path = dk.resolve_doc_path(args.path)   # bare filename -> Knowledge Library
     fname = os.path.basename(path)
     ext = os.path.splitext(fname)[1].lower()
 
