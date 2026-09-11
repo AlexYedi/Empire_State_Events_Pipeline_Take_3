@@ -67,7 +67,7 @@ def gemini(prompt: str, model: str) -> dict:
                                           "Content-Type": "application/json"})
     for attempt in range(3):
         try:
-            with urllib.request.urlopen(req, timeout=180) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 payload = json.loads(r.read().decode())
             text = (payload.get("candidates", [{}])[0].get("content", {})
                     .get("parts", [{}])[0].get("text", ""))
@@ -79,6 +79,13 @@ def gemini(prompt: str, model: str) -> dict:
             if e.code in (429, 500, 503) and attempt < 2:
                 time.sleep(4 * (attempt + 1)); continue
             sys.exit(f"ERROR: Gemini HTTP {e.code} — {detail}")
+        except (TimeoutError, urllib.error.URLError, OSError) as e:
+            # a slow/dropped Gemini response must not kill a 55-section run
+            if attempt < 2:
+                time.sleep(6 * (attempt + 1)); continue
+            print(f"    ! network error after 3 tries ({type(e).__name__}) — skipping section",
+                  file=sys.stderr)
+            return {"claims": []}
         except (json.JSONDecodeError, KeyError, IndexError):
             if attempt < 2:
                 time.sleep(2); continue
