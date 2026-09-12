@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The model is a tool, not the loop driver</title>
+<style>
+  :root{--ground:#0F172A;--panel:#1E293B;--line:#334155;--text:#E9EEF5;--muted:#9FB0C3;--dim:#64748B;--acc:#F59E0B;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:"Menlo","SF Mono",monospace;--sans:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:#000}
+  .slide{width:1080px;height:1350px;background:var(--ground);color:var(--text);font-family:var(--sans);
+    padding:92px 88px;display:flex;flex-direction:column;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .accentbar{position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--acc)}
+  .kicker{font-family:var(--mono);font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+  h1{font-family:var(--serif);font-weight:600;font-size:74px;line-height:1.04;margin-top:14px;letter-spacing:-.01em}
+  .idioms{display:flex;gap:16px;margin-top:40px}
+  .idiom{font-family:var(--mono);font-size:26px;padding:14px 24px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+  .idiom b{color:var(--acc)}
+  .flow{margin-top:40px;display:flex;flex-direction:column;gap:16px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 34px;font-size:33px;line-height:1.28}
+  .box b{color:var(--acc)}
+  .box .mono{font-family:var(--mono);font-size:26px;color:var(--muted)}
+  .arrow{margin-left:34px;color:var(--dim);font-family:var(--mono);font-size:28px;line-height:.6}
+  .runtime{border-left:6px solid var(--acc)}
+  .banner{margin-top:auto;font-family:var(--serif);font-size:44px;line-height:1.22;padding-top:40px;color:var(--text)}
+  .banner b{color:var(--acc)}
+  .src{font-family:var(--mono);font-size:20px;color:var(--dim);margin-top:24px}
+</style>
+</head>
+<body>
+<section class="slide">
+  <div class="accentbar"></div>
+  <div class="kicker">Deep dive · The harness</div>
+  <h1>The model is a tool,<br>not the loop driver</h1>
+  <div class="idioms">
+    <span class="idiom"><b>request</b></span>
+    <span class="idiom"><b>waitFor</b></span>
+    <span class="idiom"><b>block</b></span>
+    <span class="idiom" style="color:var(--dim)">b-threads bid; an arbiter picks</span>
+  </div>
+  <div class="flow">
+    <div class="box runtime"><b>Behavioral runtime</b> coordinates events — the model is just one <span class="mono">request model.respond</span></div>
+    <div class="arrow">↓</div>
+    <div class="box">Model returns function calls as <b>data, not actions</b> → inspected <em>before</em> dispatch</div>
+    <div class="arrow">↓</div>
+    <div class="box"><span class="mono">useTrace</span> captures the full trajectory — the <b>“exhaust”</b></div>
+    <div class="arrow">↓</div>
+    <div class="box">An <b>autoresearch loop</b> uses that exhaust to evolve which b-threads run next</div>
+  </div>
+  <div class="banner"><b>Neural proposes · symbolic disposes ·<br>the exhaust is the teacher.</b></div>
+  <div class="src">Source: plaited/behavioral · Talk: Edward Irby (You.com) · Daytona AI Builders NYC · Sep 2026</div>
+</section>
+</body>
+</html>

@@ -41,13 +41,15 @@ ROOT = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 OUT_DIR = os.path.join(ROOT, ".claude", ".state", "system-graph")
 EXTRACTOR_VERSION = "1"
 
-# Artifact roots and exclusions (ADR-8 §Schema → Node types).
+# Artifact roots and exclusions (ADR-8 §Schema → Node types). These are RUN OUTPUT, not build
+# surface: per-run logs, generated artifacts, the cache itself, and sibling worktrees.
+# Written as segments, assembled below, deliberately: spelled as literal paths they read to any
+# path extractor — this one included — as references to files that need not exist, and a directory
+# named here is by definition one we do not expect to find. Same lesson as memory_dir().
 INCLUDE_EXT = {".md", ".sh", ".py", ".sql"}
-EXCLUDE_PARTS = (
-    os.path.join(".claude", "evals", "logs"),
-    os.path.join(".claude", "artifacts"),
-    os.path.join(".claude", ".state"),
-    os.path.join(".claude", "worktrees"),
+EXCLUDE_PARTS = tuple(
+    os.path.join(".claude", *parts)
+    for parts in (("evals", "logs"), ("artifacts",), (".state",), ("worktrees",))
 )
 
 # ---------------------------------------------------------------------------
@@ -111,12 +113,15 @@ def extract_paths(text: str):
 
 def memory_dir() -> str:
     """The auto-memory directory for THIS project, derived from the repo path the same way the
-    harness derives it (absolute path, separators -> '-'). Derived, not hardcoded: a hardcoded
+    harness derives it (absolute path; both '/' and '_' become '-'). Derived, not hardcoded: a hardcoded
     literal here also had to be split across source lines, which the extractor then read as a
     truncated path reference to itself — the graph's first finding was its own source."""
-    main = ROOT.split("/.claude/worktrees/")[0]
+    # Memory is keyed to the MAIN checkout, so strip a worktree suffix if we are in one. Assembled
+    # from segments for the same reason the exclusion list is (see EXCLUDE_PARTS).
+    marker = os.sep + os.path.join(".claude", "worktrees") + os.sep
+    main = ROOT.split(marker)[0]
     return os.path.expanduser(
-        "~/.claude/projects/" + main.replace("/", "-") + "/memory")
+        "~/.claude/projects/" + re.sub(r"[/_]", "-", main) + "/memory")
 
 
 def sentence_around(lines, line_no: int, needle: str) -> str:
