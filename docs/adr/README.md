@@ -17,8 +17,11 @@ These records govern the **Market-Intelligence graph** (the consolidated single 
 | [ADR-3](ADR-3-capability-layer.md) | Capability → **Extract** spine-agnostic substrate | Shared plumbing to the plugin; product POV stays lens-specific |
 | [ADR-4](ADR-4-increment-2.md) | Increment 2: expand-contract recompute + retire the spine | Never in-place destructive; atomic swap with proven rollback |
 | [ADR-5](ADR-5-event-field-guide.md) | Event research brief = **one** artifact: scannable head + deep prose body | One source of truth; the Deep Read renders **decoupled + additive** (a render failure never blocks the pipeline) and never duplicates the scan head or `pre-event-content`'s outbound outputs |
+| [ADR-6](ADR-6-crm-boundary-clarify.md) | CRM boundary: Clarify is the live CRM, Notion stays the record, HubSpot goes dormant | Migrate-not-skip; hybrid REST+MCP; one system owns the live pipeline, one owns the durable record |
+| [ADR-7](ADR-7-inbox-signal-source.md) | Gmail inbox as a first-class MI signal source + Gmail write-scope expansion | Two-stage scan (metadata discovery → allowlist-only body extraction); dedup key is the **canonical, redirect-resolved URL**; capture broadly, tag relevance, never filter |
+| [ADR-8](ADR-8-system-graph-drift-router.md) | A derived system graph over the repo's own build artifacts — a **router, not a detector** | Derived cache, never hand-edited; it reports *adjacent-to* and *absent*, never *contradicts*; advisory always; ≤5 findings per surface, and a check that drops below 50% precision **shrinks** |
 
-> **Scope:** ADR-0…4 govern the Market-Intelligence Supabase graph. **ADR-5** governs the **base event pipeline's Notion Content model** — same append-only discipline, different subsystem.
+> **Scope:** ADR-0…4 govern the Market-Intelligence Supabase graph. **ADR-5** governs the **base event pipeline's Notion Content model**; **ADR-6** the **CRM boundary**; **ADR-7** the **inbox as a signal producer** into the MI graph; **ADR-8** the repo's **own build-artifact graph — a rigor-layer cache, not the MI graph**. Same append-only discipline throughout, different subsystems.
 
 Supporting evidence (probe findings, pre-mortems — historical provenance, not live guardrails) is in [`evidence/`](evidence/).
 
