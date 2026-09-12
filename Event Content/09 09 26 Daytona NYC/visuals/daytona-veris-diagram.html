@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Give your agent a world, not a mock</title>
+<style>
+  :root{--ground:#0F172A;--panel:#1E293B;--line:#334155;--text:#E9EEF5;--muted:#9FB0C3;--dim:#64748B;
+    --acc:#10B981;--rent:#7C8698;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:"Menlo","SF Mono",monospace;--sans:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:#000}
+  .slide{width:1080px;height:1350px;background:var(--ground);color:var(--text);font-family:var(--sans);
+    padding:92px 88px;display:flex;flex-direction:column;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .accentbar{position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--acc)}
+  .kicker{font-family:var(--mono);font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+  h1{font-family:var(--serif);font-weight:600;font-size:78px;line-height:1.03;margin-top:14px;letter-spacing:-.01em}
+  .split{margin-top:54px;display:flex;gap:30px;flex:0 0 auto}
+  .col{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:40px 38px;display:flex;flex-direction:column}
+  .col.world{border-color:var(--acc)}
+  .label{font-family:var(--mono);font-size:30px;letter-spacing:.14em;text-transform:uppercase}
+  .col.mock .label{color:var(--rent)}
+  .col.world .label{color:var(--acc)}
+  .sub{font-family:var(--serif);font-size:40px;margin-top:12px;line-height:1.1}
+  .col.mock .sub{color:var(--muted)}
+  ul{list-style:none;margin-top:28px;display:flex;flex-direction:column;gap:20px}
+  li{font-size:30px;line-height:1.3;padding-left:38px;position:relative;color:var(--text)}
+  li::before{content:"—";position:absolute;left:0;color:var(--dim)}
+  .col.world li::before{content:"+";color:var(--acc)}
+  .col.mock li{color:var(--muted)}
+  .bottom{margin-top:auto;font-family:var(--serif);font-size:50px;line-height:1.2;padding-top:44px}
+  .bottom b{color:var(--acc)}
+  .src{font-family:var(--mono);font-size:20px;color:var(--dim);margin-top:26px}
+</style>
+</head>
+<body>
+<section class="slide">
+  <div class="accentbar"></div>
+  <div class="kicker">Deep dive · The environment</div>
+  <h1>Give your agent<br>a world, not a mock</h1>
+  <div class="split">
+    <div class="col mock">
+      <div class="label">Mock</div>
+      <div class="sub">A canned fake</div>
+      <ul>
+        <li>Same dummy answer every call</li>
+        <li>Stateless — forgets the last step</li>
+        <li>Says nothing about a multi-step job</li>
+      </ul>
+    </div>
+    <div class="col world">
+      <div class="label">A World</div>
+      <div class="sub">A stateful twin of production</div>
+      <ul>
+        <li>Every API, database & human, simulated</li>
+        <li>Holds state across the whole task</li>
+        <li>Rehearse, fail safely, then train</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom">Static evals grade answers.<br>A <b>world</b> tests outcomes.</div>
+  <div class="src">Source: Veris AI (veris.ai) · Talk: Ritiz Tambi · Daytona AI Builders NYC · Sep 2026</div>
+</section>
+</body>
+</html>

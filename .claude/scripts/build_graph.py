@@ -1,0 +1,478 @@
+#!/usr/bin/env python3
+"""
+build_graph.py — builds the derived system graph over the repo's own build artifacts.
+
+Spec: docs/adr/ADR-8-system-graph-drift-router.md
+
+The graph is a ROUTER, not a detector: it answers "adjacent-to" and "absent", never "these
+contradict". It is a DERIVED CACHE of the repo — never hand-edited, rebuilt from scratch on every
+trigger. System of record is the repo itself (working tree + git). Storage is gitignored
+`.claude/.state/system-graph/`; the committed artifact (from Increment 3) is the findings ledger,
+not this cache.
+
+Stdlib only — no dependencies, no env, no network. That is deliberate: it must run in
+Dock-launched sessions that lack `.env` and in fresh worktrees, so the trigger is never
+conditional (ADR-8 D1/D6).
+
+SCOPE — Increment 1 (ADR-8 §Increments). Per ADR-8 D7 ("no node or edge type without a consumer
+query in the same increment"), this builds exactly what the `dangling-ref` check consumes:
+artifact/adr/linear/memory nodes and the text-derived edges. Judge-log ingestion (rebuild step 3),
+the findings ledger (step 4) and `co_changed` (step 5) arrive in Increments 2–3 with their
+consumers — they are omitted here on purpose, not left as stubs.
+
+Usage:
+  build_graph.py                     rebuild the cache (default)
+  build_graph.py --check dangling-ref   rebuild, then print <=5 actionable dangling refs
+  build_graph.py --verify            rebuild, then assert faithfulness vs check-refs.sh
+  build_graph.py --stats             rebuild, then print the baseline counts
+
+Exit 0 always (advisory; consumers read meta.json).
+"""
+import hashlib
+import json
+import os
+import random
+import re
+import subprocess
+import sys
+import time
+
+ROOT = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+OUT_DIR = os.path.join(ROOT, ".claude", ".state", "system-graph")
+EXTRACTOR_VERSION = "1"
+
+# Artifact roots and exclusions (ADR-8 §Schema → Node types). These are RUN OUTPUT, not build
+# surface: per-run logs, generated artifacts, the cache itself, and sibling worktrees.
+# Written as segments, assembled below, deliberately: spelled as literal paths they read to any
+# path extractor — this one included — as references to files that need not exist, and a directory
+# named here is by definition one we do not expect to find. Same lesson as memory_dir().
+INCLUDE_EXT = {".md", ".sh", ".py", ".sql"}
+EXCLUDE_PARTS = tuple(
+    os.path.join(".claude", *parts)
+    for parts in (("evals", "logs"), ("artifacts",), (".state",), ("worktrees",))
+)
+
+# ---------------------------------------------------------------------------
+# check-refs.sh skip rules, inherited VERBATIM (ADR-8 D2: "same conservative skip rules").
+# The whole non-whitespace run around `.claude/` (or `docs/`) is inspected first, so the filters
+# can see special chars a narrow path charset would truncate away. Err toward under-flagging.
+RUN_RE = re.compile(r"[^\s]*(?:\.claude/|docs/)[^\s]*")
+STRICT_PATH_RE = re.compile(r"(?:~/|\./)?(?:\.claude|docs)/[A-Za-z0-9._@/-]+")
+TRAILING_MARKUP_RE = re.compile(r"[.,;:)`\"']+$")
+# Template / regex / alternation: the path charset stops at one of these, leaving a truncated prefix
+# that can never exist (`evolution-log-{slug}.md`, `ADR-\d+`, `keyterms.(json|md)`). The delimiter
+# must sit IMMEDIATELY after the path, so prose like `(see .claude/<file>.md)` is untouched.
+TEMPLATE_RE = re.compile(r"(?:\.claude|docs)/[A-Za-z0-9._@/-]*[{(|\[\\$%]")
+
+HISTORICAL_RE = re.compile(r"retired|former|superseded|tombstoned|vanished|deleted", re.I)
+ADR_TOKEN_RE = re.compile(r"\bADR-(\d+)\b")
+YED_TOKEN_RE = re.compile(r"\bYED-(\d+)\b")
+WIKILINK_RE = re.compile(r"\[\[([^\]|]+)")
+SPEC_HEADER_RE = re.compile(
+    r"^\s*#?\s*(?:Spec|Decision record|Design|Methodology)\s*:\s*(\S+)", re.I
+)
+SUBAGENT_RE = re.compile(r"subagent_type:\s*[\"']?([A-Za-z0-9:_-]+)")
+BACKTICK_AGENT_RE = re.compile(r"`([a-z0-9][a-z0-9-]{2,})`")
+
+
+def should_skip_run(run: str) -> bool:
+    """check-refs.sh Pass-1 filters, verbatim."""
+    if "://" in run or run.startswith("http"):
+        return True  # path embedded in a URL
+    if "*" in run or "<" in run or ">" in run:
+        return True  # glob or <placeholder>
+    if "…" in run or "..." in run:
+        return True  # ellipsis-elided illustrative path
+    if TEMPLATE_RE.search(run):
+        return True  # path template or regex literal, not a reference
+    return False
+
+
+def is_prose_pair(path: str) -> bool:
+    """`docs/` is a real English word, so "optional docs/tools" reads as a path to the charset.
+    Require a `docs/` match to look like a path: an extension, or a deeper directory. Applies ONLY
+    to the root this extractor added beyond check-refs.sh, so the shared rules stay identical."""
+    p = path.lstrip("~./")
+    if not p.startswith("docs/"):
+        return False
+    tail = p[len("docs/"):]
+    return "/" not in tail and "." not in tail
+
+
+def extract_paths(text: str):
+    """Yield (path, line_no) for every clean, path-shaped reference. Mirrors check-refs.sh."""
+    for line_no, line in enumerate(text.splitlines(), 1):
+        for run in RUN_RE.findall(line):
+            if should_skip_run(run):
+                continue
+            for m in STRICT_PATH_RE.findall(run):
+                path = TRAILING_MARKUP_RE.sub("", m)
+                if path and not is_prose_pair(path):
+                    yield path, line_no
+
+
+def memory_dir() -> str:
+    """The auto-memory directory for THIS project, derived from the repo path the same way the
+    harness derives it (absolute path; both '/' and '_' become '-'). Derived, not hardcoded: a hardcoded
+    literal here also had to be split across source lines, which the extractor then read as a
+    truncated path reference to itself — the graph's first finding was its own source."""
+    # Memory is keyed to the MAIN checkout, so strip a worktree suffix if we are in one. Assembled
+    # from segments for the same reason the exclusion list is (see EXCLUDE_PARTS).
+    marker = os.sep + os.path.join(".claude", "worktrees") + os.sep
+    main = ROOT.split(marker)[0]
+    return os.path.expanduser(
+        "~/.claude/projects/" + re.sub(r"[/_]", "-", main) + "/memory")
+
+
+def sentence_around(lines, line_no: int, needle: str) -> str:
+    """The prose context that classifies a reference. Window is the line PLUS its neighbours, not
+    the line alone: markdown hard-wraps mid-sentence, so "…plans that had vanished from disk
+    (`pathA`, `pathB`)" puts the word that excuses pathB two lines above pathB itself. Scoped to the
+    blank-line-delimited paragraph so it never reaches into an unrelated bullet."""
+    i = line_no - 1
+    start = i
+    while start > 0 and lines[start - 1].strip():
+        start -= 1
+        if i - start >= 3:
+            break
+    end = i
+    while end + 1 < len(lines) and lines[end + 1].strip():
+        end += 1
+        if end - i >= 3:
+            break
+    return " ".join(lines[start:end + 1])
+
+
+# ---------------------------------------------------------------------------
+def git(*args):
+    try:
+        return subprocess.run(
+            ["git", *args], cwd=ROOT, capture_output=True, text=True, timeout=30
+        ).stdout.strip()
+    except Exception:
+        return ""
+
+
+def gitignored(paths):
+    """Batch-classify paths as gitignored via `git check-ignore --stdin` (no deps)."""
+    if not paths:
+        return set()
+    try:
+        p = subprocess.run(
+            ["git", "check-ignore", "--stdin"],
+            cwd=ROOT, input="\n".join(paths), capture_output=True, text=True, timeout=30,
+        )
+        return {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+    except Exception:
+        return set()
+
+
+def subtype_for(rel: str) -> str:
+    p = rel.replace(os.sep, "/")
+    if p in ("CLAUDE.md", "WORKFLOWS.md", ".claude/WORKFLOWS.md"):
+        return "policy"
+    if re.match(r"docs/adr/ADR-\d+", p):
+        return "adr"
+    if p.startswith(".claude/skills/"):
+        return "skill" if p.endswith("/SKILL.md") else "skill-ref"
+    if p.startswith(".claude/commands/"):
+        return "command"
+    if p.startswith(".claude/agents/"):
+        return "agent"
+    if p.startswith(".claude/hooks/"):
+        return "hook"
+    if p.startswith(".claude/scripts/"):
+        return "script"
+    if p.startswith(".claude/references/"):
+        return "reference"
+    if p.startswith(".claude/evals/rubrics/"):
+        return "rubric"
+    if p.startswith(".claude/evals/prompts/"):
+        return "prompt"
+    if p.startswith(".claude/notes/"):
+        return "note"
+    if p.startswith(".claude/proposals/"):
+        return "proposal"
+    return "doc"
+
+
+def walk_artifacts():
+    rels = []
+    for base in (".claude", "docs"):
+        base_abs = os.path.join(ROOT, base)
+        if not os.path.isdir(base_abs):
+            continue
+        for dirpath, dirnames, filenames in os.walk(base_abs):
+            rel_dir = os.path.relpath(dirpath, ROOT)
+            if any(rel_dir == x or rel_dir.startswith(x + os.sep) for x in EXCLUDE_PARTS):
+                dirnames[:] = []
+                continue
+            for fn in filenames:
+                if os.path.splitext(fn)[1] in INCLUDE_EXT:
+                    rels.append(os.path.relpath(os.path.join(dirpath, fn), ROOT))
+    if os.path.isfile(os.path.join(ROOT, "CLAUDE.md")):
+        rels.append("CLAUDE.md")
+    return sorted(set(r.replace(os.sep, "/") for r in rels))
+
+
+def parse_frontmatter(text: str):
+    """Minimal YAML-ish frontmatter reader (name/description/tools/model/spec only)."""
+    fm = {}
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return fm
+    for line in lines[1:60]:
+        if line.strip() == "---":
+            break
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$", line)
+        if m and m.group(1) in ("name", "description", "tools", "model", "spec"):
+            fm[m.group(1)] = m.group(2).strip().strip("\"'")
+    return fm
+
+
+def adr_status(text: str):
+    """The whole Status LINE, not its first word. Two reasons, both found the hard way: the first
+    word is often a bold marker (`**Accepted`), which the old word-capture missed entirely; and an
+    ADR can be partially accepted ("Accepted for Increment 1; Increments 2-3 remain Proposed"),
+    so any mention of Proposed still means some paths it names are deliberately unbuilt."""
+    m = re.search(r"^\s*[-*]?\s*\*\*Status:\*\*\s*(.+)$", text, re.M)
+    return m.group(1).strip() if m else None
+
+
+# ---------------------------------------------------------------------------
+def build():
+    rels = walk_artifacts()
+    nodes, edges = {}, []
+    texts = {}
+
+    # --- Step 1: artifact nodes -------------------------------------------------
+    for rel in rels:
+        abs_p = os.path.join(ROOT, rel)
+        try:
+            raw = open(abs_p, "rb").read()
+        except OSError:
+            continue
+        text = raw.decode("utf-8", "replace")
+        texts[rel] = text
+        info = git("log", "-1", "--format=%h,%cs", "--", rel)
+        sha, date = (info.split(",", 1) + ["", ""])[:2] if info else ("", "")
+        st = subtype_for(rel)
+        node = {
+            "id": rel, "type": "artifact", "subtype": st, "exists": True,
+            "content_sha": hashlib.sha1(raw).hexdigest(),
+            "last_commit_sha": sha or None, "last_commit_at": date or None,
+        }
+        fm = parse_frontmatter(text)
+        if fm:
+            node["frontmatter"] = fm
+        nodes[rel] = node
+        # adr alias node so `ADR-N` tokens and path references resolve to ONE node
+        if st == "adr":
+            m = re.search(r"ADR-(\d+)", rel)
+            if m:
+                nodes[f"adr:{m.group(1)}"] = {
+                    "id": f"adr:{m.group(1)}", "type": "adr", "path": rel,
+                    "status": adr_status(text), "exists": True,
+                }
+
+    # --- Step 2: text-derived edges -------------------------------------------
+    # Collect every referenced path first so gitignore classification is one batch call.
+    pending = []  # (src, path, line, sentence)
+    for rel, text in texts.items():
+        lines = text.splitlines()
+        for path, line_no in extract_paths(text):
+            pending.append((rel, path, line_no, sentence_around(lines, line_no, path)))
+
+    probe_rel = sorted({p for _, p, _, _ in pending if not p.startswith("~/")})
+    ignored = gitignored(probe_rel)
+
+    for src, path, line_no, sentence in pending:
+        # A `~/` path outside the repo is classified by the SAME ladder as a repo path. Giving it its
+        # own blanket class was wrong: it hid a live "this plan file is stale, supersede it" TODO
+        # among ten honestly-labelled retirements. What excuses a missing reference is what the
+        # citing sentence SAYS about it, not which filesystem it lives on.
+        if path.startswith("~/"):
+            exists = os.path.exists(os.path.expanduser(path))
+            norm = None
+        else:
+            norm = path[2:] if path.startswith("./") else path
+            exists = os.path.exists(os.path.join(ROOT, norm))
+        src_node = nodes.get(src, {})
+        src_is_proposed = (
+            src_node.get("subtype") == "proposal"
+            or (src_node.get("subtype") == "adr"
+                and "proposed" in (adr_status(texts.get(src, "")) or "").lower())
+        )
+        if norm and norm in ignored:
+            cls = "runtime"          # generated at run time; absence is normal
+        elif src_is_proposed:
+            cls = "proposed"         # a not-yet-built path in a plan is a plan, not a dangling ref
+        elif HISTORICAL_RE.search(sentence):
+            cls = "historical"       # the prose itself says it is retired/superseded
+        elif YED_TOKEN_RE.search(sentence):
+            # The sentence names a Linear issue — the gap is already tracked where "what's open"
+            # lives. Re-surfacing it is the noise the precision budget buys down.
+            cls = "tracked"
+        else:
+            cls = "repo"             # actionable: cited as live, absent from disk, unexplained
+        edges.append({
+            "src": src, "dst": path, "type": "references", "provenance": "derived",
+            "exists": exists, "class": cls,
+            "evidence": {"file": src, "line": line_no},
+        })
+
+    for rel, text in texts.items():
+        st = nodes.get(rel, {}).get("subtype")
+        for line_no, line in enumerate(text.splitlines(), 1):
+            for n in ADR_TOKEN_RE.findall(line):
+                nid = f"adr:{n}"
+                # A cited ADR with no file is itself a signal (orphan citation), so stub it
+                # rather than dropping the edge.
+                nodes.setdefault(nid, {"id": nid, "type": "adr", "stub": True, "exists": False})
+                edges.append({"src": rel, "dst": nid, "type": "cites_adr",
+                              "provenance": "derived",
+                              "evidence": {"file": rel, "line": line_no}})
+            for n in YED_TOKEN_RE.findall(line):
+                nid = f"linear:YED-{n}"
+                nodes.setdefault(nid, {"id": nid, "type": "linear_issue", "stub": True})
+                edges.append({"src": rel, "dst": nid, "type": "tracked_by",
+                              "provenance": "derived",
+                              "evidence": {"file": rel, "line": line_no}})
+            for slug in WIKILINK_RE.findall(line):
+                nid = f"memory:{slug.strip()}"
+                if nid not in nodes:
+                    mp = os.path.join(memory_dir(), slug.strip() + ".md")
+                    nodes[nid] = {"id": nid, "type": "memory", "stub": True,
+                                  "exists": os.path.exists(mp)
+                                  if os.path.isdir(memory_dir()) else "unknown"}
+                edges.append({"src": rel, "dst": nid, "type": "recalls",
+                              "provenance": "derived",
+                              "evidence": {"file": rel, "line": line_no}})
+            if st == "command":
+                for a in SUBAGENT_RE.findall(line):
+                    edges.append({"src": rel, "dst": f"agent:{a}", "type": "dispatches",
+                                  "provenance": "derived",
+                                  "evidence": {"file": rel, "line": line_no}})
+        # spec_for — the ONE declared edge, read in place from the impl's header/frontmatter
+        spec = (nodes.get(rel, {}).get("frontmatter") or {}).get("spec")
+        line_hit = None
+        if not spec:
+            for line_no, line in enumerate(text.splitlines()[:40], 1):
+                m = SPEC_HEADER_RE.match(line)
+                if m:
+                    spec = TRAILING_MARKUP_RE.sub("", m.group(1))
+                    line_hit = line_no
+                    break
+        if spec:
+            edges.append({"src": spec, "dst": rel, "type": "spec_for",
+                          "provenance": "declared-in-place",
+                          "evidence": {"file": rel, "line": line_hit or 1}})
+        # orchestrates — a command naming a skill
+        if st == "command":
+            for path, line_no in extract_paths(text):
+                if path.endswith("/SKILL.md"):
+                    edges.append({"src": rel, "dst": path, "type": "orchestrates",
+                                  "provenance": "derived",
+                                  "evidence": {"file": rel, "line": line_no}})
+
+    meta = {
+        "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "git_sha": git("rev-parse", "--short", "HEAD"),
+        "dirty": bool(git("status", "--porcelain")),
+        "extractor_version": EXTRACTOR_VERSION,
+        "increment": 1,
+        "counts": {
+            "nodes": len(nodes),
+            "artifacts": sum(1 for n in nodes.values() if n.get("type") == "artifact"),
+            "edges": len(edges),
+            "references": sum(1 for e in edges if e["type"] == "references"),
+            "spec_for": sum(1 for e in edges if e["type"] == "spec_for"),
+        },
+    }
+    return nodes, edges, meta
+
+
+def write(nodes, edges, meta):
+    os.makedirs(OUT_DIR, exist_ok=True)
+    for name, payload in (("nodes.jsonl", nodes.values()), ("edges.jsonl", edges)):
+        tmp = os.path.join(OUT_DIR, name + ".tmp")
+        with open(tmp, "w") as f:
+            for row in payload:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        os.replace(tmp, os.path.join(OUT_DIR, name))
+    tmp = os.path.join(OUT_DIR, "meta.json.tmp")
+    with open(tmp, "w") as f:
+        json.dump(meta, f, indent=2)
+    os.replace(tmp, os.path.join(OUT_DIR, "meta.json"))
+
+
+def dangling(edges):
+    """The `dangling-ref` check: only class:repo becomes a finding; others are counts."""
+    find, counts = {}, {}
+    for e in edges:
+        if e["type"] != "references" or e["exists"]:
+            continue
+        counts[e["class"]] = counts.get(e["class"], 0) + 1
+        if e["class"] == "repo":
+            find.setdefault(e["dst"], []).append(e["evidence"])
+    return find, counts
+
+
+def verify(edges):
+    """Faithfulness: check-refs.sh's dangling list must be a SUBSET of ours, per artifact."""
+    sh = os.path.join(ROOT, ".claude", "hooks", "check-refs.sh")
+    if not os.path.exists(sh):
+        print("verify: check-refs.sh absent — skipped", file=sys.stderr)
+        return True
+    mine = {}
+    for e in edges:
+        if e["type"] == "references" and not e["exists"]:
+            mine.setdefault(e["src"], set()).add(e["dst"])
+    srcs = sorted({e["src"] for e in edges if e["type"] == "references"})
+    sample = random.sample(srcs, min(5, len(srcs)))
+    ok = True
+    for s in sample:
+        p = subprocess.run(["bash", sh, "--artifact", s], cwd=ROOT,
+                           capture_output=True, text=True)
+        theirs = {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+        missed = theirs - mine.get(s, set())
+        status = "ok" if not missed else f"MISSED {sorted(missed)}"
+        if missed:
+            ok = False
+        print(f"verify {s}: {status}", file=sys.stderr)
+    print(f"verify: {'PASS' if ok else 'FAIL'} (graph must never see less than check-refs.sh)",
+          file=sys.stderr)
+    return ok
+
+
+def main():
+    args = sys.argv[1:]
+    nodes, edges, meta = build()
+    write(nodes, edges, meta)
+    c = meta["counts"]
+    print(f"graph: {c['artifacts']} artifacts, {c['nodes']} nodes, {c['edges']} edges "
+          f"({c['references']} references, {c['spec_for']} spec_for) "
+          f"@ {meta['git_sha']}{' dirty' if meta['dirty'] else ''}", file=sys.stderr)
+
+    if "--stats" in args:
+        find, counts = dangling(edges)
+        print(json.dumps({"counts": c, "dangling_by_class": counts,
+                          "dangling_repo_targets": sorted(find)}, indent=2))
+    if "--verify" in args:
+        verify(edges)
+    if "--check" in args and "dangling-ref" in args:
+        find, counts = dangling(edges)
+        items = sorted(find.items())
+        for target, ev in items[:5]:
+            where = ", ".join(f"{e['file']}:{e['line']}" for e in ev[:3])
+            print(f"dangling-ref: {target} ← {where}")
+        if len(items) > 5:
+            print(f"dangling-ref: +{len(items) - 5} more actionable targets")
+        skipped = {k: v for k, v in counts.items() if k != "repo"}
+        if skipped:
+            print(f"(not flagged: {skipped})")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

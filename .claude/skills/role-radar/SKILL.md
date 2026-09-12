@@ -45,9 +45,9 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 `.claude/references/target-companies.md` ({ATS vendor, board token/slug} per company).
 
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
-Read the **company→ATS registry** in `.claude/references/target-companies.md` (20 companies confirmed 2026-09-08). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
+Read the **company→ATS registry** in `.claude/references/target-companies.md` (21 companies confirmed 2026-09-08). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
-- **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork`):
+- **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
   → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, posted:.updated_at}'`
 - **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip`):
@@ -56,10 +56,10 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
   → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:.categories.location, posted:.createdAt}'`
 
-- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / Growth / Solutions Consultant/Engineer; drop eng/product/design/recruiting (`grep -iE` on the projected title). The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
+- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / Growth (Strategist) / Solutions Consultant / Solutions Engineer / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
 - **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup); freshness = `posted`.
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a scored TSV so raw JSON never touches parent context).
-- **Coverage = the 20 registry companies. Deferred (skip v1):** Hugging Face, Intercom, Rippling, Mistral (no big-3 API by slug). The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
+- **Coverage = the 21 registry companies. Deferred (skip v1):** Hugging Face, Intercom, Rippling, Mistral (no big-3 API by slug). The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 3 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08.**
 
 ### 1b. RSS.app feeds from saved LinkedIn searches (manual paste — optional)
@@ -95,9 +95,39 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 | **AI-multiplier differentiator fit** | 0–10 | JD explicitly values building-with-AI / GTM-systems / technical fluency (SDLC, AI/ML) / consumption-model expertise ("you build with AI daily," "use AI creatively") = up to **10** |
 | **Location / culture** | 0–10 | NYC or hybrid (in-person expectation) = **10** · remote-listed but the company has an **NYC office** (in-office optional) = **5** · **fully remote / no office / no in-person culture = 0** (a culture signal, not just a seat) |
 
-**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with no support named; pure-quota hunter IC with no systems/AI surface; sub-$180K; traditional/non-AI company — regardless of title.
+**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; **sub-$200K OTE** (v2.3 floor); traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
 
-**Tiers:** **A = ≥78** (apply now) · **B = 60–77** (review) · **C = 40–59** (watch) · **drop < 40**.
+**Tiers (v2.4, 2026-09-11):** **A = ≥85** (apply now) · **B = 60–84** (review) · **C = 40–59** (watch) · **drop < 40**.
+
+> **Why 85, not 78 (raised 2026-09-11 — Alex).** The registry is pre-filtered to AI-native companies (tier 20–25) and most run PLG (leverage 20), so a supported/book-owning role reaches **75–80 on mechanism + tier + leverage alone**, *before* location — and location (max 10) cannot sink an 82. At ≥78, ~half of everything scanned landed in A, which destroyed A's usefulness as a triage signal. **85 restores discrimination** without distorting the mechanism scoring. Roles scoring 78–84 are still strong — they are B (review), not rejects.
+
+### Rubric v2.1 — exemptions & intangibles (added 2026-09-08 — Alex)
+
+Three refinements sit on top of the table above. **Every override-by-exemption call MUST be written and reasoned in the role's `Notes` — a silent bump is not allowed** (keeps the score honest + auditable).
+
+1. **Hybrid new+existing is NOT a hunter.** If a JD *explicitly* names an existing-business / book / largest-account / retention / expansion component **alongside** new logo, the existing book counts as leverage: score leverage **≥10 (floor)**, up to **20** when the existing-book weight is substantial — and the own-the-whole-funnel REJECT does **not** fire. Only a role that owns *every* stage with **no** existing-business component and **no** named support is a pure-hunter reject.
+2. **PLG exemption (primary-motion PLG → never drop an all-new-business role).** When the company's **primary GTM motion is PLG** (the product generates inbound demand), an all-new-business seat is **not** auto-rejected — the seller isn't owning the funnel alone; the product is. Floor it into **B/C tier** and set its position inside B/C by the intangibles read below.
+3. **Intangibles lever.** For PLG-new-business and hybrid roles, weigh company **intangibles — growth trajectory/stage, founder & exec pedigree, funding, competitive position/market, role-specific upside**. Intangibles (a) *slide* position within B/C, and (b) when **exceptional** (e.g. top-decile growth + world-class founder/backing) grant a **TOP-OPTION EXEMPTION** promoting an otherwise-B role to **A**, and may **override the location hard-negative**. Analyze and state the intangibles explicitly.
+
+*Worked example (2026-09-08):* Sierra **Enterprise Sales Director** (US-Remote) = structural **75 (B)** — hybrid new+existing, leverage 15, loc 0. Promoted to **A by intangibles exemption**: one of the fastest-growing companies globally + founder pedigree (Bret Taylor, OpenAI board chair / ex-co-CEO Salesforce; Clay Bavor, ex-Google Labs) + category-defining agents + funding. Rationale written to the role's Notes.
+
+### Rubric v2.2 — IC vs. people-management axis (added 2026-09-08 — Alex; the title-disambiguation rule)
+
+**Alex is targeting individual-contributor (IC) roles** that directly own a book / accounts / quota / relationships. **People-management / team-leadership roles are OUT for this search** — he wants back to direct impact and to grow *into* leadership via promotion, not enter at that level. Score the IC-vs-leadership axis **from the JD's responsibilities, never from the title string** — the title only raises the question.
+
+**The single test: does the role carry a personal book / quota / accounts?** Yes → in (IC or player-coach). No, it's purely running a team → out.
+
+- **IC = ideal (mechanism scored normally), title notwithstanding:** Account Manager, Customer Success Manager, Engagement Manager, Technical Account Manager, Account Director, an IC Sales Director. Here "Manager/Director" modifies the *accounts/book* owned.
+- **Player-coach / team-lead / senior-IC "Lead" = ALSO desirable (keep as IC):** a role that **retains a personal book/quota** while also guiding others ("Account Executive Lead", "Account Manager Lead") is the exact direct-impact-and-grow path Alex wants. Guiding others is fine; the disqualifier is *pure* people-management with **no** book.
+- **Pure people-management = drop to C or REJECT (regardless of other dimensions):** the role's primary job is managing a *team* with **no personal book/quota** — hire / coach / develop reps, own the team's number, carry direct reports as the job. Applies even when company + mechanism otherwise score high.
+- **Syntactic tell (raises the question only — the JD's book test answers it):** **"[Function] Manager/Director"** (function as adjective — "Customer Success Manager", "Account Director") = usually IC; **"Manager, [Function]" / "Head of [Function]" / "Director of [Function]" / "VP …" / "Sales Manager"** = usually pure people-management → but confirm against the personal-book test, since a "Manager, X" can occasionally be a player-coach with a book (keep) and a "Lead" can occasionally be pure team-lead (still fine per above).
+
+The JD responsibility pattern is the arbiter. When book-ownership can't be determined from available text, **flag it for review rather than scoring it high.**
+
+### Rubric v2.3 — comp floor & level flexibility (added 2026-09-09 — Alex)
+
+- **Comp gate = $200K OTE floor** (auto-reject below; raised from $180K). Within range: **$300K+ ideal · >$250K strong · $200–300K fully acceptable — do NOT penalize the $200–300K band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a $220K seat at a top-tier rocketship can beat a $320K seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
+- **Level flexibility — Mid-Market is IN at top-tier companies.** Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
 
@@ -108,14 +138,13 @@ If the Roles DB doesn't exist, present this proposed schema and create it via `n
 **Roles DB schema**
 - `Role Title` (title)
 - `Company` (text)
-- `Source` (select: dice / rssapp_li / apollo / manual)
+- `Source` (select: greenhouse / lever / ashby / rssapp_li / apollo / dice / manual)
 - `Location` (text) · `Workplace` (select: remote / hybrid / onsite)
 - `URL` (url) · `Company URL` (url)
 - `ICP Score` (number) · `ICP Tier` (select: A / B / C / drop)
 - `Status` (select: new / reviewing / applied / interviewing / rejected / offer / archived)
 - `Posted Date` (date — the ATS `posted_at`, for freshness) · `Date Found` (date)
 - `Content Hash` (text — the dedup natural key `{ats_vendor}:{ats_job_id}`, or `title|company` fallback) · `Notes` (text)
-- `Source` select values: greenhouse / lever / ashby / rssapp_li / apollo / dice / manual
 - (later) relations to Companies / People
 
 Then present the ranked roles:
