@@ -138,6 +138,15 @@ CTA:
 **When:** Per-event post, typically a few days before the event.
 **Length:** Mid-form (8-15 lines).
 
+> **This post is the FIRST HALF of a deliberate two-part arc (rule added 2026-09-11 — canonical: `content-style-guide.md` → "The pre→post arc").** Structure it **macro → micro → implications**:
+> 1. **Table-set the topic** — its current state, the trends, the recent developments.
+> 2. **Dig into the specific perspective** the event description and the person presenting bring to it.
+> 3. **Discuss that perspective's implications in the broader context.**
+>
+> Stance-license is **medium — structured, not a hot take.** You have deep Field Guide research, so the post is *substantiated* (not a lightly-held question) — but you were **not in the room**: **open the question, do not resolve it.** The reality-check (what was actually said, where the room agreed, where it argued) belongs to the **post-event post**, which cashes this setup against what actually happened.
+>
+> **Editorial steer overrides these defaults.** Step 1.9 (`steering-interview` Touch 2) and Alex's direction for the specific event/week lead — this format is collaboratively steered by design.
+
 **Before drafting, read both:**
 - `.claude/skills/brand-storytelling/SKILL.md` — for the post's narrative arc. Apply **"Start in the middle of the action"** (Merci Grace) — open inside the tension, not with setup. Apply **"Problems beat successes"** (Jason Feifer) — the post's insight should orbit a real problem in the topic, not a celebration of progress.
 - `.claude/skills/copywriting/message-architecture/SKILL.md` — for hook bank structure. Use the framework's **hook formulas** (question / contrarian / stat / story) to generate variants below. The Hook-Context-Insight-CTA architecture below maps to message-architecture's Audience → Promise → Proof → CTA.

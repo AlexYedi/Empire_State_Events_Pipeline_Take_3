@@ -1,0 +1,860 @@
+[Speaker 1]
+Uh, believe so?
+
+Of.
+
+The life information.
+
+Um, so we're gonna do electron here. See, uh, this work earlier today, so I'm very open, um. I actually was out for the last several weeks on leave.
+
+[Speaker 2]
+I'm sorry, uh, I came back yesterday, um, another product I need is called walls, uh, we want to start a charging port because people are using a lot, uh, and so some folks on our billing team last run up a project to start being automated collection so we can invoice customers.
+
+Um, and uh, so I came back yesterday, uh, I just called about business.
+
+[Speaker 1]
+And it did run a little bit of this. This is all not going to be very fresh looking. Uh, but we're just gonna do that through slide. So here I'm in slack. I already from the primed the Asian. I have to introduce itself. That's a nice review there. Um, let's start to add somewhere else.
+
+Right?
+
+So, I'm just going to ask it.
+
+[Speaker 2]
+Uh, about how Levi okay adoption
+
+[Speaker 1]
+In Olympia,
+
+[Speaker 2]
+Uh, people use walls image in prison case. Also, it doesn't have a very well boring. So, one of the things that they do is allow our customers customer to bring in encryption key into their app to encrypt all the data. Um, and this is one of kind of the high value features of Vault and how we kind of structuring the pricing.
+
+More charging your customer support. Um, and I just actually start to think about kind of how we want to tier the pricing. Let's actually look at how our current customers are using vaults. And what the live adoption vet looks like today?
+
+All right. You got an answer. It's a little too long, um.
+
+[Speaker 1]
+Active teams and malt has grown. Hosted data is also growing. Um, this is not what I thought it was. Great. Uh, this is not BYOK specific. This is actually malt drill, and that's not the wildly unless they behind. Okay, interesting. Well, uh. It's good to see that the overall product growth is, so this is very helpful to me.
+
+That's getting another question. Let's see what's going on on the team? And from the product. It's worth every day.
+
+Um, so what Atlas is connected to through pipes are, um? Many of our internal systems product utilization gets pumped into snowflake. So, this is where we have kind of electric tables vaccines. Stuff like that can understand, like what, how we Define the team, how we Define environments, and different utilization?
+
+Um, and that is all out of our core database systems on a set near real time. It's probably five to ten minutes, but like. Um, and that's just like a really fertile ground. You know, we found that, like, elements are great. They're writing SQL. Atlas. On top of that, let's there is a very kind of thin translation layer.
+
+And then we provide a skill that tells it how to navigate the schema. Maybe some of the complex buildings that it's going to need to make to resolve different entities across different tables.
+
+This is also now looking across, uh, linear. Uh, so it's pulling in tickets. Uh, these are related to my team and the data team. This is a a combined effort for us to get the right information for invoicing system and. It is also connected into a slack. Github. We dumped all of our gong calls in there with some sentiment and entity abstraction, so it gives us like a very, uh, nice surface area to do this kind of analysis and then being able to pull it all in slack makes it very easy for ad hoc parties like that, but you know, I don't just want to do this, uh, query.
+
+You know by copying and pasting a prompt all the time? Um, let's actually create a specialized Asian. Um, so I actually, instead of using Atlas directly, I'm going to ask Atlas. Great. For me, a specific agent or Vault. I'm looking at volky settings and looking at the BYOK as the source of Truth.
+
+Um, and I want to look only at our production customers. Obviously, we use all ourselves internally. I want to exclude work OS music. Shouldn't keep memory files and access workflows or be stateless. I do want this to keep memory and workplace.
+
+So, in some cases, you know, uh, Alice is going to prompt the user Gore input. Uh, when it's building, uh, these uh agents or other applications?
+
+And it's also going to assign a slack handle to each of our agents so that I can.
+
+So you
+
+[Speaker 2]
+Can see the respondent is out my new analyst.
+
+Let's see if it'll tell me about. Yeah, okay.
+
+Uh, you might notice
+
+[Speaker 1]
+That the bulk analyst was actually only granted access to snowflake. So, this is how we, uh, it limited authority to these different agents. Um, you know,
+
+[Speaker 2]
+It's dangerous for agents to access everything all the time. And when we know that specific workflow or function only needs? Limited set of tools. We can give that. Uh, that restriction directly to the agent.
+
+All right. This is looking good, uh, we're getting a few new configurations across a bunch of different team 16s pretty solid for this. Uh, it's pretty sophisticated feature. I'm happy about that. Um, again, and now I can ask a very specific questions just to the this agent anytime I need to, and it has very restrictive access.
+
+[Speaker 1]
+To what it where it's going to find that information?
+
+[Speaker 2]
+Um, but you know, I don't necessarily, um? Want to constantly beeping this event? Uh, what I really need is this information, uh, pushed to me so we can start to actually turn this information this type of query. Instead of using an agent, I'm going to ask that list to create a workflow for me.
+
+And specifically. I
+
+[Speaker 1]
+Wanted to tell me where configurations have failed like, this is a pretty clear sign that a customer. Uh, you have a question. What do you mean by one problem? Uh, I mean, I want this to run a series of steps, uh, on an interval. Sorry, I like, it's great grand job with some Jag or whatever.
+
+Uh, it's uh, is a dag executed on a schedule. Yeah, yeah. So, this is where I'm certainly prompting it. This is going to run.
+
+[Speaker 2]
+If the input could be either a cron, it could also be in response to say like a message in another slack Channel. Like, we have a lot of alerts that get dumped into slack. Maybe those indicate it's an incident or a problem or a bug, so workflows have a couple few different triggers.
+
+In this case, I'm asking it to alert me every single day, and this alert me, uh, midday, um, how about 11:00 a.m.
+
+[Speaker 1]
+Um, and as I was saying, this workflow
+
+[Speaker 2]
+Is actually going to look for configurations have failed. So, I want to know if someone who's actually trying to use this product? Their customer may be running into a problem, and they don't know that yet because the customer hasn't contacted. Um, so I can actually see that on my side with this current status.
+
+Uh, where someone has tried to generate a key that they don't Grant access to to the developer for. All right. Well, I haven't. That's awesome. Um, thank you.
+
+[Speaker 1]
+That's that one.
+
+And here it is.
+
+11 A.M, this is the one I just created, uh, and you can kind of see the prompt that Atlas is creating. Um, it's taking some of the information that is encoded in our skills in our database, referencing specific tables. I asked it to be private here, so it put a lot of information about anonymizing the data for demo purposes.
+
+Normally, I would actually just get the name of the the organization that's struggling to set up a key. And, uh, it's making sure that it's not being too noisy. And, uh.
+
+Okay.
+
+[Speaker 2]
+Uh, but sometimes I actually do my professionally.
+
+[Speaker 1]
+Uh, but since then.
+
+And this is.
+
+Um and Alice is capable of building these kind of applications so. Uh, and I think the the kind of an interesting switch? In his first Incarnation, Atlas hosted the application, um, you found there's just like those just too many different, uh destinations used to go to, um. Probably, so I'm trying to pull that back into this.
+
+I have warm, and now Atlas can create applications on top of that platform.
+
+And uh, these are super useful and actually using. Um.
+
+Flashboard here on the slides. There we go, and we can see here are all of the boards that various teammates have built. For looking at. You know various? Products or? A lot of this is like dealing with customer problems and digging into the state of their configurations inside where glass.
+
+We're kind of replacing retool now with this. Uh, this has been super fun tool for us to have at our disposal, and it can also build sites which I thought was kind of neat. This is actually the first time I use into this life, and it worked out. Um, let's see, did we get our Vault dashboard yet.
+
+No, it's going to take them off all, right? Well, um, that's the demo. And, uh, we. Like, I said, we've turned Atlas into their products, encourage folks who are interested to go to church, try it out. Uh, the power of Atlas, it's the same thing as like rock and.
+
+All these others. Once you connect it into your level your systems, it's super powerful. Obviously, it's built for Enterprise and connecting into company data Systems, not your Gmail. Night. We've got just like an incredible property. Things every day. Maybe December, people have employees, and we're busy every day, and it's just getting more powerful.
+
+It takes me a lot of time in here. Now, and if you love kind of building this kind of things. Thank you very much.
+
+Okay, right?
+
+[Speaker 2]
+Yeah,
+
+[Speaker 1]
+Through just take a year, there's a lot of space up here. Going in the front room and try not to have to get any questions, but? Okay, welcome up here if you don't go back to it.
+
+We just submitted a paper to this imposing of getting some kind of a. You could send you and a lot of the work I do is with. Infrastructure, make sure that we can run blogs and scale, have lively cheap being fast. I do. Once you get to know you guys a little bit better about before we jump into the soft top.
+
+Uh, so I did want to see who is in the room, so we just came from Toronto, and there's a big university there. Lots of students in our last event, but are there any students here? Your student, you'd raise your hand. Okay, you got two. Are you three where you guys go to school?
+
+For you where n, y, u, n, y, u. What about you in the very back? Okay, awesome. Well, as you as you hear it? Hi, something to learn for everyone living students. Let's talk about. Are there any Engineers here? Okay, lots of Engineers, uh, have you in the classes?
+
+Where do you work at? What do you do? Yes, I work in a company much influencer. Okay, cool, so you got some students, some engineers, and one thing is, I know, at Daytona, like, for all the events that we do. We just live with when people are able to connect with other people like teach you about.
+
+So, you guys do things that other people have not done. Put yourself out there, trying to learn new skills.
+
+Advertising. What do you do?
+
+[Speaker 3]
+Absolutely! I'm the founder of produceri and basically do customer Discovery end to end. So we do some research for using the Outreach and for Enterprise teams. We also do.
+
+[Speaker 1]
+Is there anyone I missed? So we got students, Engineers, Founders, anything else? Yes, what are you bro? Okay, any gross people? Dude, great. Okay, we got a lot, but anyway. I hope that there's something that each of us can learn today, and I think it's an important question for all of us is that whether we're studying, we're building we're engineering.
+
+Which part do we? What part of the loop. Do we have and that's what I wanted to talk about? There's a lot of tweets in San Francisco and different Tech circles, but I just pulled a few of these quotes. I think my favorite one is from Harris and Chase.
+
+He does Lane chain, then craft. Uh, it's right here. In this middle one is that if you don't own the harness, don't own the intelligence that can happen. You're starting your own business. This is a little different than if you're a student trying to be your own workflow for studying.
+
+And then I really like that last part. Is that the intelligence Act impacts you don't want to be always using model from with an AG or font or make it shut down and it's really nice out of options that compounds on the preview. And I think that's where the future is going.
+
+And that's part of, like, Daytona submission, we. Cute or a bit of money? So, keeping her diving more into that, it kind of broke it down for students. I thought about learning by building uphold of for projects that you do. Zoom in, yes. You guys, see it. Okay? Okay.
+
+For engineering teams, it's like phoning your own evaluations and failures and your model. Rfine tune, which we're going to be doing today. Um, that's just. The idea is that you own what you build, and I think that's an important concept for Builders after.
+
+So today, it's going to be an exciting demo. It's going to be with reinforcement learnings about how a little bit of expertise, but there's different ways that you can try to own your stack and we'll get to do some interactive stuff. So, hopefully you guys can help me out, uh, but we're gonna focus mainly on fine tuning, so this is what opening eye did to turn your large language model into a helpful assistant, but there's different approaches for different needs.
+
+There's problem engineering, which I'm sure you guys have heard of. It's fast and faster of my idea, but does not. Behavior of the model, who's kind of? For any instructions at it, hoping that it sticks each time. And then there's rag, which is a more precise version of that.
+
+But today, again covering fine tuning with something called G, or we have very research there. And the main idea is that we're shaping Behavior, and I really want the intuition to stick, so we're going to do a live interaction where we do some human grpo behind. Uh, so again.
+
+I think it's interesting that there's so many acronyms in machine learning. It's yes. The trp is another one that's answered group relative policy optimization. What we're going to do this is going to be our group. We're going to try and optimize our policy here. Just a little example, and I'll explain more as we go into.
+
+So, this is some bow tab. If you're interested, I can definitely talk about it after, uh, I don't think it's too important. And that's more about reward groups. A lot of words that you've probably heard on Twitter, uh, on course planning and text circles, and uh, yeah, just ask me more about this later in French, but?
+
+Oh, what we're gonna do is something called Tucson. It's a coding energy problem who has done lead code, or is there infinite code who likes me? Let's say that you have a business and you want to fine-tune a model on lethal problems to help your candidates pass their communities are still is where you can fine, too.
+
+But just to describe this to some past it's, we get a list of numbers and a Target our job we're introduced together is to find the two numbers that add up to that Target. Until so, for this pretty simple toy example, we have the list of 2, 7, 11 at.
+
+Team. Our Target is not so pretty obvious. We want two at seven, and so we will return the position zero and one, and that is the whole pass. We get the return. Um, but today I thought we're going to have a little twist, and instead of. A lot of language models, judging the way we code.
+
+We are going to judge the way that our language models show, and so what happens with root policy optimization? Is that will take a bunch of different attempts? And then we create it. They're good. It's good score. They're bad attempts, and we don't want to do that anymore. And so.
+
+This is what we're gonna do. I have a prompt I had a lot. I create four different attempts to this two cent problem as a group, we're going to rate it if we like the approach, or do we not like the approach and this kind of mimics what grpo does a lot or by Financial.
+
+Now, you want to do more of the things that are good. I'm going to be less of the bad behavior based on your average and based monitors. So, this is the first approach with, uh, fine two numbers out of the Target for this trade off uses. A hash map, and it's fast and compact, but it uses extra memory to remember the number, so you're not technical.
+
+That's okay, I think today's great. A to start being technical, but we have diamond laws, and it's so much easier to start. But just with the razor pads based on Vibes, who likes this solution raise around. If you like this, I got one, two, three. Keep going to the hash map.
+
+We'll like this one, then maybe we'll give it plus three rule, and we'll go to the next one. This is attempt B, which is to check every pair, so this has a nested for Loop. Ah, exactly. Oh good. We don't want the nested for Loop. We're gonna minus that.
+
+Donald's broken. Next, we're going to go sword first. This one is a longer, uh. Attend, but we see the trade-off. It's clever and memory friendly, but longer and sorting makes the explanation harder. So based off The Vibes. If you like this, do we not like it, but we want our model to do this?
+
+Where do you guys get? Yeah, anything down, anyone like it. It depends. Good answer. Always depend. Well, let's say, we'll give it up. We'll give it a plus, one. And then our last one. So this is our 10th, our fourth attempt. So we've gone through three different attempts, and we graded them.
+
+This is what grpo does when people talk about fine tuning. This is usually what happens, but just at a much larger scale again, uh, a little bit more balls and whistles to make things work. This one is a short cut, so this is short and looks plausible, but it can return the same item twice and loses the original impact.
+
+So probably not a good solution. I'd say we don't give any visualized. And so that is what GRP of South. There was two results that have above average. Awards. We want to encourage our model to do more of that. And so, if you try to do the prompts, that would be pretty difficult.
+
+We have to have a long crop and update it, but with fine-tuning, you do this repeatedly. It'll steer the model to guide the behavior. So, you guys can own our sac for whatever task that you guys want to do. Founder, it can be a model specialized to your customers Alpha or the request.
+
+And I think the the main idea here is that it's
+
+[Speaker 2]
+The size level so you can do whatever you want. That's, it's fun to just build with different tools that we have.
+
+[Speaker 1]
+So, I do want to do this live. And talk about it coming out where it fits in the stack. So I'm going to. Near this. This will spit up.
+
+So, now I can explain a little bit more about what Daytona does and where we fit the stack. So, we have GPU sandboxes, and we have Seafoods involved. So, these are core Primitives that you guys have been used for whatever takes for some of our customers. They do cicd, which is dating repos and and making sure that everything is live and tests all pass.
+
+There's a lot of customers that run valuations for testing new models like clock code or Astra CR4 on specific questions. That's a pretty big deal for us, and it all runs in isolated sandbox. Uh, and then also expanding out of just depends the point. I just mentioned that you can train a new model on a GPU, but you can also do lots of other things that evaluate and also run your agents notebooks.
+
+If lots of customers running background agents and just partnered with omniscient to run their debit Outposts. They should definitely try it out if that's interesting to you. And then this is kind of a walk through Canada. So we did years ago.
+
+[Speaker 2]
+Group here. And now, we're going to do it live with the reals. You can do. And I go through the determined app for a local
+
+[Speaker 1]
+Website, so I'll check out this. Okay, it already started. You see, there's tons of sandboxes spun up. These are doing the attacks, and they create kind of like, just read over raise their hands. If you like it, or you don't you see which ones are good or bad? And this is right here.
+
+Okay, so just already finished. I was a little bit too fast. Let me see if I can do it.
+
+[Speaker 2]
+Is this spinning a real GPU, so I wanted to, like, take a risk and do real, like RF on tuning live with the off chance that maybe something crazy, but that's okay. And now, while we're doing this, I'm going to just go through the Daytona dashboard. See if we have our GPU started right here.
+
+It's an Nvidia RTX Pro 6000 group. Those who have the details? Um, this is our kind of our dashboard. You can do snapshots. This is a recent project I was doing research on called go explore. Uh, I think one thing that's important is spending, so you can see here.
+
+I've spent up 17 000 sandboxes and it's 31. And if you want the regrets or something credits, yeah, there's many sandboxes as we left. So, here's what it's doing. So, this is the real model running on plugging page. It's a Quinn 2.5. Sorry. 0.5 V, so a smaller kind of model, the initial policy.
+
+So, the initial attempt only scored 38, treating me you don't want 30, 38 score? Now, it's doing all of these attempts. These are the different coding attempts that it's trying, and then it's being graded by our orientation. So, here you see the word positive or positive. Hope you guys can see it.
+
+We just saw a jump, and we actually just increased to 77. That is our best policy at set three, and so now it's updating the gradient so that it's internalizing that in the model so that the quantity can deploy this model and hopefully ask it at him and him on the solution.
+
+And this is kind of just a breakdown of what we just did in this law and would too. So it was Gwen. Our task was 27 plus using heavy paste. I think this is really interesting that the before base model, we see that it did a sorting. Algorithm, and then it iterates them after with our top two policy, which we now cannot say.
+
+We did fine-tune. It does much better if it passes 77 if that's the problem. So, that's just a little bit about Daytona. This is one simple example of what you can do to my costumes right there. Um.
+
+[Speaker 1]
+Yeah, I,
+
+[Speaker 2]
+I feel like the sandbox is just so fun to mess around. I've I've spent up 17 000 of these and some of the customers we have are crazy. There's been like five million. In like a month, but I definitely think it's fun to just experiment to try new things just.
+
+[Speaker 1]
+Uh, yeah, kind of all. I have my demo if you'd like to connect. Here's my QR code for Twitter, and I can hook you guys up with some credit. Yeah.
+
+Yes, um. Yes.
+
+[Speaker 4]
+How have you been seeing like making fish dinner? Um,
+
+[Speaker 1]
+Yeah, so you can do sft, so I think it's important to distinguish that Daytona just gives you a computer. We're giving you a machine that can do whatever you want with it. So, customers do run supervised fine-tuning. Uh, there's a company called deepsu they just required by our core.
+
+They were doing supervised opportunity as well as great work, so it's kind of. You can do whatever you want. That's what I really like about the sandbox. Do treat it like a computer that runs in the cloud, and they very many faster. You can attach a GPU onto it if you want it, I think it's very useful for an agent to say, oh, I need a GPU.
+
+I need a file, so I need you running all, so it's a really useful corporate, and you can do whatever you want. Maybe, just sorry.
+
+[Speaker 2]
+On gpus on GPU side. So, yeah, gpus were pretty competitive compared to like modal or medius or other neocloud because it's just a Sandbox. But also with, uh, it's usually not a super long. If you need the GP on for months or half a year, then it might be better to go like a closer
+
+[Speaker 1]
+To drive an attractive
+
+[Speaker 2]
+Contract, but with just these quick tasks that are fine-tuning, I think the sandbox fits really well. Maybe just two more questions. Yeah,
+
+[Speaker 3]
+I want to understand more about evaluation. So, how did you actually begin with because the word we use other infrastructure we have?
+
+[Speaker 1]
+When you mean evaluate, what do you mean by how we evaluate if the model passed or not?
+
+[Speaker 4]
+Uh, the results?
+
+[Speaker 1]
+Yes, okay, yeah, that's a great question, so the results that we evalued them with a simple test we have, like similar. With leaco, you go and submit. It'll go run through a suite of tests that you can't really see, and then show you if you pass it or not, and it returns a simple percentage.
+
+If you pass 9 out of 10 tests, you got 90 percent. That's exactly what we did here. With six Fats, you pass four out of six. Your model did. Okay, you passed one out of six at five. And then last question.
+
+How clean does the grading tensor feel if there's if it's not like a simple numeric answer? You know, that feels kind of binary, but if you have more ambiguous tasks in which maybe like the same box, environments like has to be realistic for it to actually be a good kind of test.
+
+How does it go?
+
+[Speaker 2]
+Yeah, that's oh. Like, a million dollar questions. There can people lots and lots of money to do that at the eye traffic or this is one very toy examples, so it's something I could fit from the time constraints with 15 minutes. It's crazy to think they. A reels up in the frontier through experiments running for.
+
+I think months, just constantly eating the GPU, and so those. Definitely a lot more complex with how they use their reward function, but it's still the same principle if you want something that's deterministic. And that's a real challenge because you don't want to have reward hacking where it does bad behavior, but still kind of gamifies.
+
+[Speaker 1]
+How you work. I, I think we're all familiar with, like the hugging face attack. Uh, it escapes sandbox, not a daytime sample, but it escape a Sandbox and then got a poncho. I need it down. Those are some things that want to watch out for, but bad.
+
+[Speaker 2]
+I think there's some great questions you want to talk more. I'd love to speak after, but thanks for having us.
+
+[Speaker 1]
+Hi, I'm Irving Seth software engineering.
+
+Search.
+
+School server.
+
+[Speaker 5]
+The stock actually was inspired by us and the server, and uh, so famous. Let's open this time, uh, it's really good. Um, are used. Furnace, and it actually. The long story is that a piece of treatment can help.
+
+[Speaker 1]
+And
+
+[Speaker 5]
+I'm really interested in this, I say, go to YouTube. I will not be talking about this after I read this. Oh, maybe think about my own personal product all
+
+[Speaker 1]
+The time,
+
+[Speaker 5]
+And also maybe realize pretty big allies designed it, uh, in 1812? That's good.
+
+[Speaker 1]
+All right, cool. The other thing is, like, I said, abilities in these servers. Also, the agent skills. For our company, and this is.
+
+[Speaker 5]
+B1 right here that I presented an email or something that's in free. Then you search a QA data set, and this was, like, start off an auto research project and waiting for one of our skill and obviously server works with the next next to CLI, and so we gave us to that is built like this.
+
+And we, the end result was. I got this really great stuff. Outcome, but when I was working on it, I had a degree a lot, but And in doing his analysis groups, I was able to. Dig in and wait for all traces from the details I did and then.
+
+I'm not going to. You can tell about that.
+
+[Speaker 6]
+My ability to look at the raw traces of what your agents are doing and then thinking about everything happens of being just a plug-in. Help me reframe how I think about Ernest design. So, how's it is? The harness I'm working on, it looks kind. Programming, and the idea is that?
+
+[Speaker 1]
+Agents.
+
+[Speaker 5]
+If they're able to actually understand their own traces, so that's where that whole raw Trace evaluation stuff makes sense. And then, it's, like, well, how do you design them with that, the people programmable?
+
+Um. Right now. Arbitrary agent, you know, can get stuck. Um, it's going to. Have this default. It's like when you think about agents, it's usually just a lot. Wow!
+
+[Speaker 6]
+And that works okay, and you have really smart model. It can even miss a tournament that Terminus agent can do that really well towards local models. It becomes more or that agent, not to just that model to not get stuck. But while not done, part doesn't always work when you have context window limitations.
+
+Thought. Hey, let me use what I do know works. And so there's actually an algorithm that came out back in 2010. I've been playing with since 2018. And it's called label bird. It's from these really amazing professors and the Bakery University. Dave Harrell, a sophomore and girl bites. And they proposed an idea.
+
+An algorithm that is built on top of life sequence charts. If you're and you're glued with that and this
+
+[Speaker 4]
+Area based design, and so the idea was that you have the concept of three idioms, and we're just looking at the end class of what's happening in the system. If we look at um, if we look at what's being requested and we, we can see what that is coming into the system.
+
+We can also wait for one
+
+[Speaker 6]
+Of those events to come into the system, and then we can also block it and how you determine, you know. Doing is by identifiers, so maybe you give your bank and then you've done web design a type. It's a name arbitrate. Click app. Um, and then in my implications out of it, I'm looking at Json spots.
+
+So, every, uh, is looking at incoming requests. Every request carries it's tight. It carries data that data is just a detail and a lot of space, the. Words we use inside of web design or advances. And so the weight we're in blocked idiots here are using a Json schema to valid incoming data off the type.
+
+And then, if it matches or, and then determining where they cure a match or this match, and they're using that this structured bid approach to allow the bits to cloak in resistant. So, if you think about it that way, then you just have to like pay attention to a trace based on someone's information right here, which is selection Frontier deadlock pending bids, meaning what I want to happen, what could happen, and the ability to like interrupt these, like, groups of like bids, and which are all capturing threats and these threads are again just as simple, um, two objects, uh.
+
+Way more and block aliens, along with a new one I introduced called transform. This is where it gets really easy for agents. The agent is only having to generate this Json object, and how does how does it get one event detail to whether it in detail, and I know this is transform video, and that actually works just like the weight board is waiting for an event to happen, but when that event comes to happen and it matches it, it actually.
+
+Um, has two other parameters on its data object, the it's Unique Advance. Now, that is a. Query, which is a JQ software for transforming the Json object into a different Json structure and then a Target, which is the new request type you want to do, and so the way this is designed is that I treat everything and RSSI as a tool, including the model itself.
+
+So, instead of building the harness around the model. I instead think every thread declares the tent he runtime, which is behavioral Behavioral law earlier. Engine selects what's going to be allow our disallow basis, idioms, and then the bridge is a speech called use Trace, which is capturing all those raw traces.
+
+Just like in my eval groups and? There's a listener at the course is designed to how to handle that. How to set things automatics and just doing the data transform and reintroducing it in your requested event or actually sending a request to one of these different tools. And that's all captured inside of that as simple event listener, where all these traces are just pushed onto your screen, and it fires off asynchronous firing.
+
+Forget events. Which which locks everything and then the result is that that can to the system. And so this makes it really easy to think about, like how the models is one more. It's cool in this whole club, and so everything you see here are pretty common tools. And those are Asian furnace design.
+
+The one thing that I like about this is that when I think about everything is just simply being a client or it's pees or my skills, then I get mentally model how I think she might read, right? Maybe create an HTML file, maybe list files, or use my Discovery feature soldiers where I store.
+
+Information inside of a sqlite database. And so the cool thing about this algorithm is that it can actually formally verify. There's a really cool engineer of Israel. To open the impression. It's always good saying that I'm kind of feel bad about it. Uh, yeah, his name is Michael RSI.
+
+We chatted a bit in the past, and I need to update him on approximately here. He actually, he gives me normal verification systems. Yeah, I adopted it, and that allows me to do, um.
+
+[Speaker 5]
+Formally verify the exempter search at prepper.
+
+[Speaker 1]
+Search
+
+[Speaker 5]
+Whether the system will ever end up in a live block or a deck, and that means it can't either get it to get stuck, or it's a it's not like a channel to do, and to make that search a little easier. There's a little bit of Tara closest component, uh, applied to for houses, but once you have that along with the actual runtime hour, you'll use those traces to just verify whether something works or doesn't work, and so.
+
+Cool thing about this. Is that what if I just use them all to help improve my heart? Actually figure out the threads that where I didn't understand. So that was the idea. It's like, well, I can't. I don't. I want to write on this person, I am. I sure as hell.
+
+Don't want to ride a s*** with a jsosky vest? It's just not my thing, but that it is a very well-structured language, and it's something that folks can understand, though. So, the idea was, like, hey. Let's go ahead and use dates on that. Let's speak as like a reinforcement top, but instead of like doing reinforcement part of the year we're going, we're we're doing, actually doing, is letting them all generate the right figure out the right bread, actually iterations and sandbox, and then he'll apply it.
+
+Yeah, like we're doing Auto research. We have unlimitable surface, which is the threads that you have to change and a glow you're trying to accomplish. You can use them all to help you figure out how to get there. And so it uses the frontier analysis tools. To generate a deeper discard.
+
+You want and then right back.
+
+[Speaker 2]
+So, um?
+
+[Speaker 5]
+To be clear, this is what I'm trying to do. I'm kind of getting to like make use of our this discovery feature and workout. It's make sure that there are threads now to help they make use of the discovery tool.
+
+[Speaker 1]
+And so when that happens.
+
+I've set this up so that it should actually run Auto research and. It takes about a few seconds. What this is doing this is going to spin up since 20 minutes.
+
+Wow, this
+
+[Speaker 6]
+Is Brian. It's going to. There's a return to, uh, it's over here, which will makes us experience into eight. There's not a tournament here, which sometimes we'll do eight sometimes go to seven, but them all each time. Why is it halfway hit there as usually sometimes just computers on a way to rearrange a six free structure.
+
+Well, to get us to a? Different. Doesn't always work, but then is, you can help find a bit. So, this is what it's like, I've actually had something to see it a few times in terms of like getting them all to output the right thing, but we would run this all the way you could ride multiple ports inside the down sandbox, and it would generate the Reds based on context of it.
+
+Works and is about me on Disney outlet. The model can get an idea able
+
+[Speaker 1]
+To pass in and when experimenting with these different vehicles.
+
+So again, it
+
+[Speaker 6]
+Just the idea. This is a demo looked into project, we're working. I'll what I'm going to be doing is actually. Looking forward were less sweet into this, but the idea is that I'm going to use this approach and be gonna to create thousands of works of different brands to them your logic.
+
+Or this is software or major price, and then. Use that to actually create a. Default skill and plug-in the other videos to actually create your own plugins to, uh, to make yourself default tools that are built into this and lyrical related to use. Uh, because I think locally, I ask the thing, but to prevent that sort of stuffy, deeper, and live loss and deadlock system yet.
+
+So, as we probably end up, Uber just gets done. You need a way to be able to evaluate and allow and multiplicize yourself, whether using them all itself, or using a smarter mode, generate spreads. And so, that's what it needs us to to use it for the exhaust.
+
+[Speaker 1]
+And so.
+
+[Speaker 6]
+What happens is that this is the before progressive disposition reference six rules after eight years fixes it. I was using like chemic in three days, like, get the right version of this, um, and sometimes using a GL152. Unless it doesn't, well, the idea is. Wanted to satisfy, and because I decided to keep this and the cool thing about this, is that?
+
+I'm just passed out. I don't want a percentage either. Got to go a ticket ago. There's always going to be any other evidence but greater than there, which will be looking at like leveraging more complicated. Accomplish the full tasks, such as using our framework, which I do like. But using this together allows.
+
+[Speaker 5]
+This agent was to read its own exhaust and understand how to improve itself. Now, just that, we're by the means skill. Or if you actually creating structured objects that help guide? And I recognize the island. And so the multiple and the one of the good notes I had were not the model pose.
+
+Um, you
+
+[Speaker 1]
+Know, six rules, and it returned six volts restructure. Sometimes it works. Sometimes it doesn't. Um, but what it does, it's great.
+
+[Speaker 5]
+And so I like when I'm able to get a combination of outcomes that I've been receiving because that allows me to actually. Set objective again. If they tell everyone else works, you see if I can accomplish it while having like structuring outputs and tracing that sit there and analyze the same way that I did for?
+
+Are insecure. Yeah. Um. Yeah, like, I said, uh, this is a risky bit of, like, kind of working on right now. I don't think it's going to work, but. But I've been talking about this. Is that? I really love his dog room and it was really good for Einstein because it does allow you interview to continue the interview with ad, and we'll be or basically added moving these threads.
+
+And by having mixed tool set, the idea is once the core symbolic logic is in place, then it will go out and actually right towards. Um, it'll right, plug it. So, like, just like, unplug it then, uh, these field and spec collage. I like extreme scripts, it'll write files, uh, Exposphere academic, uh, trigger for that assembly call.
+
+We run down itself. Um, and so it's not really an advancing. It's just a interesting approach to rethinking, like our technical harnesses, not building it for another model, but instead building around it's involved where that is structured and logical and visualize. And actually allow allow different models to area on and control n to interact the right path or across the task is, and that does not be fixed.
+
+So self-green's magic. It's pretty much just like. Test. Repeat the trash, but once you have it, it means that can actually locally my small amount to accomplish a task. And given the guidance, and my long demo conventions that I don't know right now was the early mobile major crisis.
+
+And another.
+
+Oh, that doesn't do a change, but? Thanks! We are having a hackathon on Friday. So, that's pretty cool.
+
+[Speaker 6]
+Uh, looking forward to doing the just there. We're going to our topic is actually. So here in August didn't share that, yeah. And then one finally. Whatever and QR code.
+
+[Speaker 1]
+Uh, hello.
+
+[Speaker 2]
+Uh, so one of those I work with the staff, uh, if you not for the class whereas in this situation is f****** happening, uh?
+
+Uh, so quick. Show pass cool hair is actually who is not being any code that your face employer.
+
+[Speaker 1]
+Idol.
+
+[Speaker 2]
+Okay, so I mean, repeating, um?
+
+[Speaker 1]
+Uh, this is happening to work in the Google game of England. I don't know.
+
+[Speaker 2]
+So, I think, though I would like that checking, would you, you take a share? Tomorrow, I would share account against student services. Uh, that's actually this. We're doing the best. Um, you're checking for Behavioral project.
+
+[Speaker 1]
+And it is true because the only is. And creating this on top. Uh, where do you share tasks or Internet, um?
+
+[Speaker 2]
+But the president. These agents are looking like crazy when you're asking about okay, and I think this is not stable, uh, one, because you know the other degrading these assets give up, and I found it possibility she won't lie. Or we land one pancakes and other things aren't gonna die, which we don't reach.
+
+And we think it work and and the Britain. We're asking, because because we're okay with it. I'm not scarable though. Uh, so how would you kind of fix that? Um, I need to hire. You have each age in Pentacles its own good. It's close out of severeign.
+
+And let them each other talk. And by the world, I mean, it's not just to tell. But even though they are inside, it needs to be consistent if this game is not prescribed, saying these are our past indicators or have a user in a database. That's Logan mobile. And in this ideal world.
+
+Your age interview with targets to independently for the. Regions. Uh, indicated with its own path on 2022, right.
+
+So, how, I mean, you can do the film services and address in a lifetime. So, how we are trying to have?
+
+[Speaker 1]
+Uh, client is by giving your Cadence to win services. Well, it's a big service, but we called influence.
+
+[Speaker 2]
+Uh, and these Services, exactly interested by the way, which are honorable to escape board and a skateboard. I mean, like, if you were executing a chain of calls against that service. Of the engages before and after school Services, uh, and these are not stock markets, so you, uh, give your agent these twins.
+
+In an environment. Now, colleges are happy because nothing is pretty big everything everything. And since it's not a real service?
+
+You remember, and everything. Uh, so the agent specifies QRS, what services affiliate, and we spend a lot of services one second. Uh, and we see them. The area can then see it come with the specific data on that task, say it's not open in the new future, or it's trying to fix something so you can just keep them quietly and then the code can run asset.
+
+And as we cannot have this your agentina, don't forget to change uh.com.
+
+Uh, this is Bernard Richard, uh, so they're putting it into, but where I see a lot controls that it would be my friend knows. It's time boxes, um?
+
+And this isn't about, by the way, that you can't get real better.
+
+[Speaker 1]
+You client like these agents can quickly, which easily said, like, okay, I'm just time in the service quickly arm of all quickly. Cry, say you wanna update him, and after the other floor, or you want to add a five or three after the art hasn't ended, you can cry about that.
+
+So, I give this story more. We want each agent to power gets one word.
+
+[Speaker 2]
+Isolated doesn't apply for other tasks, and the advantage is, it's not that they can as quickly. It's also since they keep talking, the screen Services can invite it on code.
+
+[Speaker 1]
+So, that's something we really started and why we wanted to. And it didn't graduate issues that if they're not catch with this month. So before I show you an example, I mean, obvious question, is this trend actually, right? How many foreign?
+
+[Speaker 2]
+How do we not actually rules, so I'll go back pain which we work with our part? It does fit regular and like, rigorously against experimental, large scale vehicles,
+
+[Speaker 1]
+Uh. For example, in this case, if you were drawing it against natural, also drop like a question, therefore, but the promise the? And I get tests which prevented by other things like that by talking to us as well. How many users who? Ruby's best and the Beautiful check. How are the wind services?
+
+Uh, who work against like the excellent the horizontally are stand up?
+
+There are.
+
+There are some issues that we continuously are ideally improve and affected. Also, another Advantage is that it's way quicker with these points because I'm with.
+
+[Speaker 2]
+What happened?
+
+Uh, so we have this case. I found let's give you the regions.
+
+[Speaker 1]
+And what it's going to do is, uh, it's going to install the various plugin the virus CLI, uh, if you already have an account lock a login here or.
+
+[Speaker 2]
+Uh, once that's done. I'm gonna show, um, you can set up your own record to use this one and how you can install correct without.
+
+[Speaker 1]
+Uh, now that it's clocked in, and I think the CLI a little bit is that.
+
+[Speaker 2]
+Right. So now, uh, we only have the best plug, install them. So what that gives you a, uh? Which are just called setup will do is it's going to analyze the record, which is it, and then it helps. You will help set up your environment and write that shift software.
+
+Excellent dependencies for, uh? But since you can also run this way globally, it's an archive locally. Or you can run this NCI or verification environment as in a sandbox, and they argument there. In the setup that for a while, so let's see.
+
+[Speaker 1]
+Uh, so it's going to this repo.
+
+Uh, it's been a doctor and a Services. The Pakistan, uh, isn't it a 10-minute process because of time to sign it or, but it's time to sign? Uh, what kind of post service effect is that?
+
+[Speaker 2]
+So, I only have that up here. Now, what I'm trying to test is this open substrological mode. Uh, is this AI billing platform?
+
+[Speaker 1]
+We're trying to add a new feature. Let's try check out the merchants here. What we're going to do is you also wanted to compliance file checking there. If you add some compliance, you can use an open functions at the event is familiar with that one out of the future.
+
+So, how can I duplicate?
+
+Uh, I already
+
+[Speaker 7]
+Have this set up in the shuttle. Now, before I start that, I also want to show how you can use the CLI for some of the setup. So, uh? I have a setup here. And you can unlock them because check.
+
+[Speaker 2]
+Including the staff office services, like my doctors too, uh. Also, what kind of post office, uh, we go back into videos? I don't know. I can also create.
+
+[Speaker 1]
+Oh, you can study services or.
+
+I'm not think that you can do is if you have stand boxes or this is five. You can reset it privately. You can download and all that, so it's important to use it. You don't have people just set up and everything. Uh, yeah, we also what you can also do is to conclude the workplace well for a sandbox.
+
+So, the classic campground you can really pass the work, uh, and pressing and pressing? Or you can be smart about. I can use.
+
+Uh, so what bill is going to do is, uh, I'm gonna feature a request to teach us about other problems? Understand that. It's gonna it's been up a lot of time work and then, uh, try to see the data and then estimates that, I suppose.
+
+Okay, yeah, the the reason, this time, about?
+
+Oh okay, uh, I'm gonna see, uh, like a big thumbs up and say, uh, but uh, essentially what I want to show here. What happens is that we can see that people start seeing data. So saying, we're just going to do a feature, like, ask, who wants to add?
+
+[Speaker 7]
+So, we actually run this. Google as a factor from the other people, and we write to them one week private offer, uh, we behave an agent just back as well, and I thought we had an excellent service. Every one of the teachers everyone and we wanted to see powerful so it could turn around.
+
+I think stem and breed the dog. And wrote the screen to figure out example pasta sanctions or not, and that's not okay. Private screener, and at that race on creating the dogs, then it might be a day service, and then it should be good. And then I realized, uh, okay, everything was wrong.
+
+So a human body, and then a human does it. And I'm, like, oh yeah, you better go and fix it, she said. Look a lot a lot more time back there. I look better like it created or something about it and ask the question because it has access in like a live Starbucks.
+
+You can ask a question, so ask a good question, uh, how does this program if there are any requests too? So, if I make a request, what kind of response I'm going to get
+
+[Speaker 1]
+Okay,
+
+[Speaker 7]
+And then I put the screen. So, from here, uh, in this case, and then crime again fast, so? Because essentially I finished earlier, but it was public. So the uh, human had to ask around, okay? And it was also cheaper. This is what we kind of wanted to show that, uh, if your agents are obviously this lifetime, is this?
+
+No way they can drive better, though, because they have access information otherwise, like, uh. Uh, time just goes the way work says that your clock.
+
+For the weekend. And going.
+
+[Speaker 1]
+Oh, okay, here we go, uh?
+
+[Speaker 7]
+So, we aren't full of functions. So, in this case, uh, see, you can check scribe and Google like it. Don't describing and take about the Google ID. In this case, check already aren't strive, uh simulators and some other directions. I wanted to check and the Sicilian kind of ideas were being presented, and the good thing is that you can go observer, and you can change these things like.
+
+Once you set up an environment, you can go promote it. You can edit and see if you're in it, uh, do whatever you want to do it and.
+
+Uh, and you can check what kind of request as long as you think you can check the.
+
+At a different time. Uh, essentially, uh, that's the dog that. Blunder against this conference of Kalimatic is.
+
+[Speaker 2]
+Switch um?
+
+Yeah.
+
+[Speaker 1]
+Yeah, this presentation is made with Astrain.
+
+[Speaker 8]
+Gonna have fun at a nation to, uh, you guys grounded.
+
+Okay, um. So, while it's connecting, I am gonna get started. Um, I'm giving a stop on how we've used sandboxes to power
+
+[Speaker 1]
+Our software Factory.
+
+Is there something I need to do to?
+
+Oh my God, okay.
+
+Um,
+
+[Speaker 8]
+Okay, so, uh, I'll I'll get started. While, uh, I guess we may be looking into that, um, so? How do sandbox's power software Factory my name is Daria? I am a member of technical staff at obvious. Obvious is.
+
+Applied AI. Sorry, this is not working. Yeah.
+
+[Speaker 1]
+Oh wait.
+
+Okay, amazing!
+
+[Speaker 8]
+Yes, I just asked her right there. Okay, so how do the sandbox is Powershopper Factory? Um, what is obvious word and apply applied AI research lab based out of Atlanta. We are expanding and growing a presence in York, Gustaf, and Austin, um, as the core of what we do is figuring out how to build collaborative spaces for agents and humans and the latest product that we build is a software of Factory offering, where you can connect any.
+
+And enable your whole organization to build. So, uh, what is a software Factory? It is an inch setup where you have a build Loop that is supposed to run autonomously without any human intervention and part of that Loop is, uh, durable work. You need work that can survive sessions, ending crashes and handoffs, and the compute layer here is super important.
+
+The way that our factory started is back in January. Everybody was using their own AI tools to build obvious the products we were using cursor Cloud code codex. Some of us have started using conductor because conductor was great at managing like the work tree layer, so you could actually paralyze a lot of your work.
+
+So?
+
+So, factory overview, you connect your code basis from GitHub or other git providers, and then after that, you can just start prompting. And your work gets handed off to an orchestrator that then delegated creates like an elaborate plan and. It runs on top of a dag task system that can build long guiding builds over days.
+
+It can build small things, or like an entire product road map that would normally take, you know, 12 weeks. The tasks it assigns can be assigned out to sub agents. Which can be like custom agents that are specialized in parts of your system or to humans. So, for example, what I'm usually doing a build.
+
+The first thing that happens is it creates like a beautiful spec, which I'll show you an example of and then it assigns Google subtest to go and review it and tell me it's good to go. And then it goes ahead and breaks down the work into tasks that different agents own, and once they're done running, I have a task in my, uh, like inbox, to go and review the final PR.
+
+So, under the hood, this is powered by. Of sandboxes, and in each of these sandboxes, agents are building. They're testing each other's work, they're queuing, and like taking screenshots and videos of the things they're doing. They might be running some differential tests. So, for example, if you're asking your agent to build a full product that might include some, like database changes.
+
+It will go ahead and spin up a copy of the local database in a sandbox seated with some data and then show you the performance before and after when it's testing. Like different indices to make a performance. So, step one is you just go ahead and you connect your repositories for every single repository that's connected.
+
+We can figure a Sandbox shout out Daytona. We now are able to support different os's because we have customers that are connecting, like, really old code bases that literally can't run analytics runtime. And then, we also have obvious and other customers that are trying to build like map apps.
+
+So, having that sort of? To support any of those use cases been huge. Once the repository is cloned into the sandbox, we snapshot it to capture a state, and that's the deterministic part of the cycle. The next is like learning the system that is your runtime in your devs tag.
+
+The goal is to get a working runtime of everything that's in your code base that can include asking you for Integrations to something else that you might be using in your dot M environment or any databases or services. You're using externally, and the Asian has one condition it has to QA, and until it can provide like a healthy QA through some screenshots of either you know the full stack running, or if it's just a background server or some logs that show that it actually ran everything.
+
+It is not allowed to finish flirting, um, at the end of this. We capture another snapshot. And okay, quick note in QA. I think it's one of my favorite uses of sandboxes. Every single sandbox we use comes with Asian brows or green skull, which is a headless browser, use the result developed, and it have just added image and video support vs CLI, which means that you don't need to like, you can just open your PR and the agents already attached screenshots and videos of what it's glued before and after, um.
+
+Which is huge. So super excited about that. On subsequent runs after a repository has been like, learn, and configured. Every single Fresh Factory run starts from a latest snapshot, which already comes with a runtime, because so it can just build in QA right away without figuring out how your code waste works.
+
+And, um, every single agent gets its own isolated machine. So, when you're when your orchestrator is breaking down the work, it can assign one or more machines to each agent that's doing. Like, maybe just the backend service bar or the front end, or the first part of a tent feature product.
+
+Um, and then, because we're using sandboxes, we don't need to pay for compute. Outside of age and execution as it's building. There is the continuous learning aspect, so one we deterministically re-snapshot as repo code bases continue to advance. And, um, you know, like the main. There are more changes in the code base.
+
+The second thing we do is agents have a skill to assess and re-snapshot any big runtime changes that occur.
+
+[Speaker 9]
+Um at scale. This looks like our customers are connecting multiple code bases and have hundreds of builds and flights. And as time goes on. Agents grow more opinionated on your systems and can capture not just like the skills, but also the actual runtime of what your servers and applications should look like, uh, development, QA, and research all runs in isolation.
+
+And, um, because your engineers have gone ahead and connected, you know, the code bases you can? The rest of your organization, you know, your voting Market your product?
+
+[Speaker 8]
+Um, your support team to go and just start building with proms without thinking about any of the infrastructure or agent overhead.
+
+[Speaker 1]
+Um,
+
+[Speaker 9]
+Lately, we've been thinking about different workloads. We started with ephemeral sandboxes for agent execution, but um.
+
+[Speaker 8]
+And then we started thinking about different operating systems, and now we have use cases for more durable Horizon work.
+
+[Speaker 1]
+Interesting,
+
+[Speaker 8]
+Um. And then the other part of this is the GPU sandboxes. Some users have come forward asking to do like some bottle training using our platform, so that's something we're looking to support as well. Uh, that looks like creating a Sandbox interface that where sandbox just become Plug and Play for your agents as well as your users and also teaching your agents.
+
+How to optimize for different workloads, and when to reach for a durable sandbox for a federal one, so? Um, I did want to show some examples of what this looks like on our platform. One of them is. Something that I actually started building, like last night, so a lot of people are using our sandboxes for publishing like, really like simple apps, and they should not be living on a sandbox, so I ask obvious to go and build, you know, like a verselle integration, so you can, um, post your apps.
+
+This is kind of
+
+[Speaker 1]
+What a difficult deal looks like. You chatted it, and then
+
+[Speaker 8]
+It develops like a blueprint that breaks down. Um, what? You can go ahead and like, chat with it, asking service, risk finding apps, and then once you're satisfied, you go ahead and you play prints. Um, and then after, I'll show you guys. Is this a high level view of like these?
+
+Are these crap sub chats? Is the stuff agent that works on some part of this release so you can see there was like a research sub-agent that went ahead and investigated our code base. There are a couple of agents working on the migrations of the bag and table. There is a QA agent that had to go ahead and like assess the quality of the output.
+
+There's a security agent that I didn't even see this. There's also a security agent that ran on this. The final output looks like a 17, 000 live VR that I just had to come in and deliver a leg over it. Shows and breakdown to all the subtests. The QA verdicts all of the verge PRS that ran as part of this.
+
+If you keep scrolling, you'll see adversarial views from. Reptile and our own AI reviewer. That sort of keep going back and forth, and then I just get a text on my phone when I have to go and like, review this PR. Another. Cool, um, another really cool project, or example of this is, you can run scheduled tasks, so I have a weekly scheduled task we build way too many features, so we have a ton of feature Flags.
+
+This runs every Monday and then will ping me their like future flights to clean up. And then my favorite. And like other example of a workload is, we gave obvious access to a pessner server in Ohio, and it just manages it, and it runs our self-hosted CI Runner on it because we went from.
+
+We went from waiting CI to run for 10 minutes and spending thousands of dollars on our Sky Runners to just letting it run in this box, uh, obvious has set up its own, like alerts and web hooks, so that it gets notified when there are issues and will go and investigate and push changes full freedom to work in this box.
+
+And this is the UI for it, so?
+
+[Speaker 1]
+Yeah, this is the UI for. This is where I go with my CI. Looks weird. I'll go and check. Like, what is the health of this survey that's running?
+
+[Speaker 8]
+Yeah, this is the artist guys. We have a ton of stuff that's running right now, um. And this is just a fully managed system. RCI cost just the cost of the compute. The server that you've read and? As for the Roselle bill that I was showing you guys that only came out to about 70 dollars because
+
+[Speaker 1]
+We're using open source models?
+
+[Speaker 8]
+In our Bible. Um, yeah. So, in closing, if I could give you any sort of? Uh, thing to take away from this is if you want to empower your organizations to build quickly. Have your engineers invest in what it means to support a software faculty for your organization and really invest in sandboxes to run isolated and student compute.
+
+Thank you! We have a lot of events coming up. There's one in next Thursday in New York City if you're interested. Would love to see you there after you be there Turtle hackathon.
+
+[Speaker 1]
+Okay, thank you,
+
+[Speaker 7]
+Daniel. Next one is, uh, I have a final one final presentation.
+
+[Speaker 1]
+There we
+
+[Speaker 9]
+Go. Okay. Um, yeah, it says 11, but trust me, it's just cold. Okay, so. Hi everyone, I'll start with a question. By raising your hands, who here has huddled a co-worker to show them something.
+
+[Speaker 6]
+You use the AI more than that. Okay, cool. So, what if you were able to do the same, what with your agents? Cool, right? Instead of just calm thinking your way into?
+
+What I think is is like this guy? This is the brilliant in turn. I don't know how many of you have watched this show?
+
+[Speaker 9]
+But a brilliant intern,
+
+[Speaker 1]
+Amazing that his knowledge has a lot of great knowledge from what he learned in the club, like college Years.
+
+[Speaker 6]
+But zero, the main expertise. So, no contact, no judgment, no taste, nothing whatsoever. From his life experience, and this really reminds me of what AI actually is. Yeah, doesn't have a lot of your page. It doesn't have your preferences. It doesn't have the company practices. And how you usually work with AI how you teach them is by sending them a lot of documents and a lot of contacts.
+
+A lot of prompts. A lot of going back and forth not like this more like that. Maybe a screenshot here and there. What if? There is a better way to work with your agents. Um, we have work. We have built this feature. It's launching very, very soon. It's still not live.
+
+Uh, we call it Pelham ambient, and this is basically you getting on a call with your AI agent, uh, and just working together. So, I'm gonna show you two demos. The first one is going to be very simple. Um, I'm gonna ask my agent Luna to change a button on a landing page that I build locally with her, and she's gonna do it right there, and the other one is the opposite way.
+
+Lunar is going to actually my co-workers assistant is going to teach him how he can do certain things on the scene.
+
+[Speaker 1]
+But first them up.
+
+And I'm just going to use this microphone so you can hear it's not working.
+
+[Speaker 6]
+You have access to my online.
+
+[Speaker 1]
+Okay, so you see the button together now? Them.
+
+[Speaker 6]
+Right here next to do back to pixel, that is. I think it's an open account open. Like, I won't be in another path. Okay.
+
+Yeah, okay, do that online. Like, before you go.
+
+Thanks for meeting.
+
+Give you a bit of a call to give you a bit of a compact. Luna is my personal assistant, and I already have talents I set up with her, so I don't have to give her anything she already knows my legs. So she has that in her memory. Okay, can you make this channel now?
+
+[Speaker 1]
+And this is what
+
+[Speaker 6]
+I'm talking about. AI doesn't have a lot of contacts, and they can make a lot of mistakes. But what I'm showing here is me getting on. Look right here. I want to call with Luna and we work on this together and. I'm gonna show you.
+
+[Speaker 1]
+Yeah, I can see it, and you're right, it's washed out, not blue. I'm actually connecting back inside what school transparents sharing whole styles are override. I'm fixing that conflict. So, where there's a solid, move over right now.
+
+[Speaker 6]
+Good job,
+
+[Speaker 1]
+Yeah,
+
+[Speaker 6]
+So it's really cool the way that this interaction works, especially when you're a front-end designer. You can just point to the screen, and it builds it. It knows where it is, well, you can Circle it. And, um, pretty cool, um? Another one that I will show you just get that with this.
+
+This one is.
+
+[Speaker 1]
+Okay, we can see it like this. Uh, so. What hear my colleague Alex? He's the guy that built this teacher is going to show.
+
+[Speaker 10]
+Is how your agents can help you actually learn your tools. Find things on the screen, and let's just see it.
+
+[Speaker 6]
+You change the way you can see this clip.
+
+[Speaker 1]
+Select the click. Click the color balance icon above the preview, then click white balance and choose a neutral white or gray area. Can you point out that one Timmy? Let me point directly at the button.
+
+The arrow is pointing at that. Okay, I expected now, uh, show me. Which, which of these next spots I need to select? I'm pointed white balance now.
+
+Click white balance the third button in that row, then click a neutral white or gray area in the video preview. Can you highlight a portion of the preview that you think would be good for me to click? One behind, like a good neutral spot in the preview for you.
+
+Click the highlighted light gray floor area, then click the blue check mark in the upper right to apply it.
+
+Okay, does that look better? Yeah, that looks better. The plural is more neutral and less yellow, so the white balance adjustment worked.
+
+Sweet, so imagine you learning a new tool, or you are willing to do something in a tool tool, and you cannot find a button. The assistant will just point it. Um, this is also very cool for personal use cases. I've been testing this with finding apartments and slow, and
+
+[Speaker 10]
+I basically had, like, an agent together with me. I was just opening apartment. Oh, I like this one, you know, like when, when? Important hunting in New York, you don't really know what you're in for it. Like, if you don't you, have you gotta see the prices you gotta see, uh, the area, and your system was here to help me, um.
+
+I know I saw an apartment that I liked, and my assistant just went in and did some search Google search for reviews, for there are many views rule and things like
+
+[Speaker 9]
+That. It's like a very collaborative way of you working with your AI agents. And we are launching this. Where is my presentation?
+
+A headache here, right?
+
+[Speaker 1]
+Oh yeah, thank you guys. Oh,
+
+[Speaker 10]
+Every time, yeah, he skipped that part. Um, yes, we have this particle link, um? Feel free to RSVP to support our blonde and also learn about Bellum and get this new cool feature. Thank you.
+
+[Speaker 1]
+Okay, that's it. Thank you for coming tonight, uh, just stick around for like 30 minutes, right? Maybe a little bit more. Um, okay, that's it. Enjoy!
+
+[Speaker 4]
+And you can just say, like, hey.

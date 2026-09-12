@@ -60,10 +60,14 @@ with `notion-fetch` on the data_source URL before any batch create (see
   **v2 (2026-06-27, YED-96):** expanded to the full enhanced brief — adds a content-derived **Speaker Map**
   (diarization is never 1:1), a **whole-quote** Quote Bank (entirety, not snippets), and the **learnings tier**
   (Pro-Tips · Best-Practices · Pitfalls · Hot-Takes · Anecdotes · enriched Concept Glossary · Enrichment
-  Resolutions). The brief is now written **both** as the canonical Content Draft AND appended to the **Event
-  page** body as `## Post-Event Brief` (pre + post side-by-side, mirroring the pre-event research-brief
-  duplication; append-only under its own `##` heading + a `post_event_processed` idempotency marker so re-runs
-  don't double-write). Post-event also writes the **knowledge graph back**: People / Companies / Topics rows
+  Resolutions). The brief is written as the **canonical Content Draft**; the **Event page** gets only the
+  **head / pointer** under `## Post-Event Brief` — **NOT a full mirror of the body (ADR-6, 2026-09-11)**.
+  ⚠️ ADR-6 **supersedes the earlier full dual-write** (the deep body was previously duplicated onto the Event
+  page, mirroring the pre-event research-brief duplication): discrete-canonical wins on graph (Content Drafts
+  support **multi-Event relations**, which a page body cannot), on measurement (Goal/Target/Outcome properties
+  don't exist on body text), and on RAG provenance. Event-page append stays append-only under its own `##`
+  heading + a `post_event_processed` idempotency marker so re-runs don't double-write. No backfill required —
+  existing mirrored bodies stay; the rule binds new runs. Post-event also writes the **knowledge graph back**: People / Companies / Topics rows
   created or enriched with **search-before-create dedup** (rules #10/#11) and relinked to the Event.
   Views (added 2026-04-18): 🎯 Active Kanban (Board, grouped by Content Status, filter:
   Status ≠ archived) — daily workspace. 🗄 Archive (Table, filter: Status = archived) —

@@ -60,6 +60,28 @@ marketing / inbound / existing-book support. Keep roles that give leverage; reje
 structural tailwind (the product generates inbound demand — "leverage, not in-spite-of"). Flag pure
 top-down / outbound-only enterprise motions where the seller carries all demand-gen.
 
+**Exemptions & intangibles (v2.1, 2026-09-08).** Three refinements soften the pure-mechanism read:
+(1) A role that *explicitly* carries an existing-business / book / largest-account component **alongside**
+new logo is **hybrid, not a pure hunter** — don't reject it; the existing book is leverage.
+(2) At a **PLG-primary** company, even an **all-new-business** role stays in play (**B/C tier, never dropped**)
+— the product does demand-gen, so the seller isn't owning the funnel alone; position inside B/C slides by
+intangibles. (3) Company **intangibles — growth trajectory/stage, founder & exec pedigree, funding,
+competitive position** — can promote a strong-but-imperfect role to a **top option**, even **overriding the
+remote / no-NYC hard-negative**, when they're exceptional. State the exemption reasoning explicitly (auditable,
+never silent). *Prompted by Sierra: fastest-growing-globally + Bret Taylor → top option despite remote + hybrid-hunter mechanics.*
+
+**IC vs. people-management — the title-disambiguation rule (v2.2, 2026-09-08).** Target = **individual-contributor**
+roles that directly own a book/accounts/quota/relationships. **People-management / team-leadership roles are OUT for
+this search** (grow into them via promotion, don't enter there) — drop to C/reject regardless of company or mechanism.
+Judge this from the **JD responsibilities, never the title**: "Account Manager / Customer Success Manager / Engagement
+Manager / Account Director / IC Sales Director" are ideal IC roles; "Manager, [Function] / Head of [Function] / Director
+of [Function] / [Function] Leader / Sales Manager / VP" are people-management. Syntactic tell (confirm with the JD):
+"[Function] Manager" = IC; "Manager, [Function]" = usually leadership. **The single test: does the role carry a personal
+book/quota/accounts?** Yes → in. **Player-coach / team-lead / senior-IC "Lead" roles that keep a personal book are ALSO
+desirable** — guiding others is fine (it's the direct-impact-then-grow path); the disqualifier is *pure* people-management
+with no book. *Prompted by "Sales Director": an IC senior seller = ideal, "Director of Sales / Sales Manager" running a team
+with no book = not a fit right now, and a "Lead" that carries a book = welcome.*
+
 **Company tier:** top-tier **AI-native** (Anthropic, OpenAI, Clay, Vercel, Notion, Sierra, Perplexity,
 Cursor/Anysphere, …) > **AI-forward high-growth** (Ramp, Intercom, Verkada, Rippling, Zip, Glean, …) >
 AI-heavy SaaS. Traditional / non-AI = out. Full list: `.claude/references/target-companies.md`.
@@ -74,7 +96,16 @@ sit in an office himself. (A culture signal, not just a seat.)
 ("you build with AI daily," "use AI creatively"). This is the edge that makes Alex elite for a *commercial*
 seat — not a pivot to a technical/GTM-engineer seat.
 
-**Comp:** ≥$200K OTE.
+**Comp (v2.3, 2026-09-09).** OTE **floor = $200K (hard gate — below is out).** Ideal **>$250K**, with
+emphasis on finding **$300K+** — but **do NOT discriminate against the $200–300K band.** Weigh comp against
+the company's opportunity + growth: a $220K seat at a top-tier rocketship can beat a $320K seat at a laggard.
+Comp is a **floor + a tiebreaker, not a linear "higher = better."**
+
+**Level flexibility (v2.3, 2026-09-09).** Open to **stepping back to Mid-Market** at high-growth / top-tier /
+more-technical AI-native companies as a deliberate **step-back-to-step-forward** move (land MM, prove value,
+work back to Enterprise). Score **Mid-Market roles at top-tier companies as full fits on MECHANISM** (book /
+expansion / consumption ownership) — do **NOT** down-rank for segment size. Enterprise/Strategic remains ideal,
+but MM at the right company is squarely in; consider this scenario when judging fit.
 
 > Operational scoring of this ICP lives in `role-radar/SKILL.md` Step 3 (rubric v2). This section is the
 > human-readable source of truth; keep the two in sync. Consumed by role-radar, resume/positioning
@@ -98,6 +129,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
 ### Meltwater — Enterprise Accounts Lead, Financial Services | 04/2023–09/2024 `[resume]`
 - Full-cycle enterprise sales for the Consumer Intelligence suite, ~$250K avg ACV.
 - Enabled/supported 80+ sellers via direct selling, enablement, and outbound GTM strategy.
+- **Technical sale — API / data integration** `[Q&A 2026-09-09]`: sold the **Meltwater API** to pull
+  data into *any* system — CRM, mobile apps, BI dashboards (**Tableau, Looker**), **cloud & on-prem
+  databases**, and **data lakes** — so clients could merge Meltwater data with their own and build
+  internal insight solutions/platforms. Ran discovery and scoping with **data engineering, BI/analytics,
+  and developer teams**; translated integration architecture into commercial value.
 - Key accounts — **two accurate client lists, tailored per application** `[Q&A 2026-09-04]`:
   - FinServ (use for Ramp / finance roles): JP Morgan, Citizens Bank, BMO, TD Bank.
   - CPG: Sweegen, Mike's Hard Lemonade, White Claw.
@@ -114,6 +150,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
   under-adversity — maps directly to Ramp's "long-term customer success / complex relationships.")
 - **HERO — Under Armour expansion:** moved from templatized software to a fully custom, on-site API
   integration — materially increasing scope, spend, time, and executive commitment.
+- **Technical sale — custom API implementations** `[Q&A 2026-09-09]`: the largest enterprise expansions
+  were predicated on **graduating clients from templatized software to full custom API implementations**
+  of Curalate's social-commerce solutions across their customer touchpoints — **website, email, mobile
+  app, and in-store digital experiences**. Scoped and landed these with **client engineering, web/mobile
+  dev, and product teams** (the Under Armour hero is the exemplar of this motion).
 - Built repeatable upsell/expansion motions with product & marketing for NLP and computer-vision launches.
 - Key accounts: Target, Under Armour, Walmart, Home Depot, Kohl's.
 
@@ -127,6 +168,11 @@ seat — not a pivot to a technical/GTM-engineer seat.
 ### Bluewolf (acq. IBM) — Enterprise Account Director, Financial Services | 10/2011–02/2013 `[resume]`
 - 117% of a $3M quota (new business, expansion, renewal); 90%+ GRR. Built a systematized multi-channel
   pipe-gen strategy with the BDR team.
+- **Technical sale — staffing + managed services + Salesforce consulting** `[Q&A 2026-09-09]`: translated
+  clients' **technical hiring requirements into high-quality technical talent and vetted resumes**; sold
+  **managed services around on-/near-shore database administration** and a **Salesforce consulting practice
+  focused on custom Salesforce implementations**. Interfaced with **technical hiring managers, DBAs, and
+  Salesforce architects/consultants** to scope requirements and delivery.
 - Key accounts: NYSE, Morgan Stanley, Credit Suisse, BNP Paribas, BlackRock, Axis Capital.
 
 ## 3. Core competencies
@@ -140,6 +186,13 @@ seat — not a pivot to a technical/GTM-engineer seat.
 - **Methodologies:** MEDDPICC, Consultative/Value Selling, Team Selling, Territory & Account Mapping. `[resume]`
 - **Buyers:** exec stakeholder engagement, multi-threading, **CFO/finance sign-off fluency.**
 - **Cross-functional:** CX/CS, marketing, product, ops — GTM strategy, enablement.
+- **Technical selling / technical-buyer fluency** `[Q&A 2026-09-09]`: a through-line, not a one-off —
+  sold **technical products to technical buyers** across three roles: APIs & data integration into
+  CRM/BI/DB/data-lake stacks (Meltwater), custom API implementations into customer touchpoints (Curalate),
+  and technical staffing + managed DBA + custom Salesforce consulting (Bluewolf). Comfortable running
+  discovery with **engineering, data, BI, and solutions-architecture teams** and translating technical
+  capability ↔ commercial value. This is the bridge from AM track record to an **AI-native, technical-product
+  commercial seat** (reinforced by the agentic systems Alex now builds — §4).
 
 ## 4. AI capability
 
