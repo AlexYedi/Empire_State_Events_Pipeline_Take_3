@@ -138,6 +138,10 @@ Re-engagement triggers reset the cadence clock. The goal is always to land in th
 
 One event generates content at multiple levels. Default: always produce the comment draft and the short post. Everything else on request or when the material clearly earns it.
 
+> **The post-event post is the SECOND HALF of a deliberate two-part arc (rule added 2026-09-11 — canonical: `content-style-guide.md` → "The pre→post arc").** The pre-event post table-set the topic (macro: current state, trends, recent developments) and the specific perspective the event + presenter brought (micro). **This post cashes that setup against reality:** focus on **exactly what was said** — the real implications, the actual impact, where the room **agreed**, where it **argued**, and what proved true versus what was merely set up.
+>
+> Stance-license here is **highest — you were in the room.** Deliver the earned read, with the context and analysis behind it. **Mine the `post_event_brief`'s Pre→Post Gap section**: the gap between the table that was set and the reality found *is itself the content*.
+
 **The Content Ladder:**
 ```
 RAW EXPERIENCE
