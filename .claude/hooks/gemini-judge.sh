@@ -11,7 +11,7 @@
 set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null || true
 
-ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""
+ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
 RUBRIC=".claude/evals/rubrics/build-quality-v4.md"
 SYSTEM=".claude/evals/prompts/judge-system.md"
@@ -22,6 +22,7 @@ while [ $# -gt 0 ]; do
     --artifact-type) ATYPE="$2"; shift 2;;
     --calibration-set) CALSET="$2"; shift 2;;
     --context) CONTEXT="$2"; shift 2;;
+    --spec-file) SPEC_FILES="$SPEC_FILES $2"; shift 2;;
     --model) MODEL="$2"; shift 2;;
     --rubric) RUBRIC="$2"; shift 2;;
     --system) SYSTEM="$2"; shift 2;;
@@ -33,6 +34,36 @@ done
 [ -n "$ARTIFACT" ] && [ -r "$ARTIFACT" ] || { echo "ERROR: --artifact missing/unreadable: $ARTIFACT" >&2; exit 2; }
 [ -r "$RUBRIC" ] || { echo "ERROR: rubric unreadable: $RUBRIC" >&2; exit 2; }
 [ -r "$SYSTEM" ] || { echo "ERROR: system prompt unreadable: $SYSTEM" >&2; exit 2; }
+# --- evidence parity (added 2026-09-11) --------------------------------------------------
+# cross-provider-judge.md ALREADY requires apples-to-apples ("Gemini gets the SAME ... spec/context
+# the Claude judge gets"). The implementation had drifted to artifact-only runs, which silently
+# demotes the independent BIAS-control seat into a weak second variance sample: cross-file defects
+# (spec-vs-code drift, registry/citation errors) are structurally invisible without the spec.
+# Found 2026-09-11 when Sonnet caught 3 defects on inbox-miner and Gemini returned a flat 1.0 —
+# a negative control proved Gemini discriminates fine (0.35/flag on a seeded-bad artifact), so the
+# fault was the harness, not the model. Parity is now recorded so asymmetric runs can be EXCLUDED
+# from the calibration rate that gates dropping "provisional".
+for sf in $SPEC_FILES; do
+  if [ -r "$sf" ]; then
+    CONTEXT="${CONTEXT}
+
+===== SPEC FILE: ${sf} =====
+$(cat "$sf")"
+  else
+    echo "WARNING: --spec-file unreadable, skipped: $sf" >&2
+  fi
+done
+CTX_LEN=$(printf '%s' "$CONTEXT" | wc -c | tr -d ' ')
+if [ "$CTX_LEN" -lt 400 ]; then
+  PARITY="false"
+  echo "  ⚠️  EVIDENCE-PARITY WARNING: context is ${CTX_LEN} chars; no substantive spec supplied." >&2
+  echo "      The Claude seat is briefed with the spec + supporting files; this seat is not." >&2
+  echo "      Cross-file defects are invisible to it, so an 'agree' here is WEAK corroboration." >&2
+  echo "      Pass --spec-file <path> (repeatable). Logging evidence_parity:false — exclude from calibration." >&2
+else
+  PARITY="true"
+fi
+
 # derive the rubric version from the rubric file (never hardcode — it drifts when the default bumps)
 RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
 [ -n "$RUBRIC_VER" ] || RUBRIC_VER="build-quality@unknown"
@@ -122,11 +153,11 @@ OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
 jq -nc \
   --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" \
   --arg jm "gemini:$RESOLVED" --arg sid "$SID" --arg calset "$CALSET" --arg rver "$RUBRIC_VER" \
-  --arg dangling "$DANGLING" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
+  --arg dangling "$DANGLING" --arg parity "$PARITY" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
   '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_type:$atype, rubric:$rver,
     judge_model:$jm, session_id:$sid, criterion_scores:$v.criterion_scores,
     weighted_score:$v.weighted_score, verdict:$v.verdict, alex_ack:null,
     confidence_honesty_violation:($v.confidence_honesty_violation // false),
     dangling_refs:($dangling | if .=="" then [] else split("\n") end),
-    calibration_set:$calset, judge_provider:"google", usage:$usage}' > "$OUT"
+    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage}' > "$OUT"
 echo "  logged → $OUT"
