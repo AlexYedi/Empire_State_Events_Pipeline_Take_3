@@ -11,7 +11,7 @@ narrative spine.** Last re-anchored: 2026-08-07 (YED-124); **facts reconciled 20
 
 ## Next 3 moves (the runway)
 
-1. **RAG / knowledge base (YED-118) — IN PROGRESS, well past kickoff (updated 2026-09-12).** Phase A shipped (`/ingest-doc`, `/ask-library`, doc-kb schema + RLS); **Phase A.5** hardening underway (contextual + hybrid + rerank, Ragas-gated — **YED-156**), plus **YED-157** (doc_claims staging + Gemini claim extractor) and **YED-155** (build-elevating PRD template + Linear convention). All on branch `alex/yed-118-doc-kb-rag` — **14 commits ahead, 22 behind main, still unmerged** (the only outstanding merge debt; an active session owns it). ⚠️ That branch also still carries the dead `ADR-6-crm-boundary-clarify.md` (Clarify was rejected; main's ADR-6 is brief-placement) — **resolve the collision before merging.**
+1. **RAG / knowledge base (YED-118) — IN PROGRESS, well past kickoff (updated 2026-09-12).** Phase A shipped (`/ingest-doc`, `/ask-library`, doc-kb schema + RLS); **Phase A.5** hardening underway (contextual + hybrid + rerank, Ragas-gated — **YED-156**), plus **YED-157** (doc_claims staging + Gemini claim extractor) and **YED-155** (build-elevating PRD template + Linear convention). **Merged to `main` 2026-09-12 (PR #60)** — Phase A + A.5 (YED-156 Done) + YED-155 shipped; YED-157 shipped **B1+B2 only** (inert by design; B3–B6 remain, continuation branch `yed-157-phase-b`). The stray Clarify ADR-6 was dropped in the merge; no merge debt remains on this workstream.
 2. **Graph consolidation (YED-130) — DONE (2026-08-10/13).** Resolved: consolidated onto ONE canonical graph — Empire's Supabase `oicikjyzmxqfomrrqkvf` hosts, the gtm-os `signal.*` model won; the redundant gtm spine was decommissioned (YED-135). No longer a runway item. Decision record: `docs/adr/`.
 3. **Drop "provisional" on the build-quality judge — hold the bar as written (decided 2026-09-08).** At **4/15 acked prospective runs** (100% Gemini-vs-Alex so far); **~11 more** at ≥80% Gemini-vs-Alex needed. Accrues via interactive `/judge-build` acks (autonomous + backfill runs don't count). Watch: every prospective run so far has been a unanimous pass, so the disagreement/tiebreak path is still untested. + scope the second non-content lens (YED-126).
 
@@ -29,6 +29,8 @@ Not previously reflected in this file — all merged to `main` unless noted:
 - **Judge hardening** — check-refs false-positive fix + cross-provider evidence parity.
 
 **Process note (2026-09-12):** two branches independently minted an `ADR-6`. Rule now recorded in `docs/adr/README.md`: **mint ADR numbers from `main`, not from a branch** — a collision is only visible after a merge.
+
+**Git topology (reconciled 2026-09-12):** single source of truth = `main`. Two worktrees (the `main` checkout + `ESP-jobsearch`), both to sit at `main` between sessions; continuation branches cut from `origin/main` per the CLAUDE.md git conventions and `.claude/references/reconciliation-terminal-charter.md`. Linear corrected to git truth the same day (YED-156 Done · YED-157 In Progress · four zombie In-Progress issues and four retired-program Urgents demoted · Build-Rigor project Completed · Job-Search Engine In Progress).
 
 ---
 
