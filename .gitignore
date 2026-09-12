@@ -66,3 +66,4 @@ content-drafts/**/*.jpeg
 content-drafts/**/*.png
 *— Transcript (ElevenLabs).json
 el_scribe_v1_plain.json
+eleven_scribe_v2.json
