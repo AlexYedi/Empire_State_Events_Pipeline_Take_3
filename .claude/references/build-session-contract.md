@@ -3,12 +3,12 @@
 The stable interface for build-session telemetry. **This contract — not any vendor — is the durable layer** ("instrument once" lives here). Tools (the local JSONL record, PostHog, a future OTEL collector + Langfuse) are swappable adapters behind it. Backing: Linear YED-88 · PRD US-2 · plan of record `.claude/references/roadmap.md` (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
 
 ## Principle (build-better-not-faster)
-- **Authoritative record first, projection second.** Every session is written to an append-only local record (`.claude/artifacts/build-sessions.jsonl`) — the source of truth. PostHog is a *derived projection* for dashboards; if PostHog changes/breaks, no data is lost.
+- **Authoritative record first, projection second.** Every session is written to an append-only local record (`.claude/artifacts/build-sessions/<session_id>.jsonl` — one shard per session; the pre-2026-09-12 single file `build-sessions.jsonl` is frozen history and still read) — the source of truth. PostHog is a *derived projection* for dashboards; if PostHog changes/breaks, no data is lost.
 - **Content-gated by construction.** The record carries **metadata + counts only** — never prompt bodies, tool inputs, or outputs. Satisfies the PII guardrail (YED-81) at the source, not after the fact.
 - **Own the contract, rent the platform.** Swapping PostHog for another backend, or adding the deferred OTEL collector + Langfuse, does **not** change this schema or the emitter — it adds an adapter. Non-destructive upgrade path.
 
 ## Schema (v1)
-One JSON object per session, appended to `build-sessions.jsonl`:
+One JSON object per session, appended to that session's shard `build-sessions/<session_id>.jsonl` (**storage sharded 2026-09-12, YED-159** — the shared single file was the one guaranteed merge conflict across worktrees; the schema below is unchanged, `contract_version` stays `"1"`):
 
 | field | type | reliability | meaning |
 |---|---|---|---|

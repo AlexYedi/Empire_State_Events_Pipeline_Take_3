@@ -11,7 +11,7 @@ Run the **rigor-review** methodology. Methodology: `.claude/skills/rigor-review/
 Weekly, or when Alex types `/rigor-review`, says "rigor review", "did the system learn this week". Natural alongside `/weekly-recap`.
 
 ## Shape (single-thread, HITL, ≤10 min)
-1. **Pull** the week's signals — `build-sessions.jsonl`, `.claude/evals/logs/*`, the DoD waiver log, this week's `/tag-outcome` results.
+1. **Pull** the week's signals — `build-sessions/*.jsonl` (+ the frozen `build-sessions.jsonl`), `.claude/evals/logs/*`, the DoD waiver log, this week's `/tag-outcome` results.
 2. **Review against the registry** (`value-action-registry.md`) — judge scores <0.70, corrective-rounds trend, waiver-rate, judge–human agreement, outcome-vs-goal trend. Take the named action for any threshold crossed.
 3. **Correction-recurrence** — same-class corrections across builds; ≥ threshold ⇒ **propose** a codified fix (rubric/DoD/skill/few-shot). **STOP for approval.**
 4. **Apply (on approval, versioned) + log** to `.claude/evals/correction-recurrence.md`; record any threshold tuning back in the registry.
