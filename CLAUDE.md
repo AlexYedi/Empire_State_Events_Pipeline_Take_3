@@ -92,11 +92,9 @@ If explanations are needed during development, I will invoke the explainer skill
 <project_architecture>
 ## Empire State Events Pipeline — Take 3
 
-### 🟠 Open priorities at session start (last updated 2026-05-13 — Linear triage session)
+### 🟠 Priorities: Linear is the source of truth (transitional block retired 2026-09-12)
 
-**Codification rule (live as of 2026-05-13):** Linear is the single source of truth for "what's open." This block is a transitional duplicate until YED-26 ships and replaces it with a live SessionStart hook pull. Edits here are doc maintenance, not new state.
-
-**Triage 2026-05-13 outcome:** Cancelled YED-1, YED-4, YED-15→YED-22 (Linear seed tutorials + superseded eval-harness cycle-1). Closed YED-23 as Done (goal-flip work shipped independently, mechanism fixes folded into v2 proposal). Eval-harness cycle-1 framing replaced by `.claude/proposals/content-pipeline-v2-stage2.md` — re-issue under v2 Component framing only when 2-of-3 v2 triggers fire weekly. Current state: 1-of-3 firing intermittently.
+**Codification rule (live since 2026-05-13):** Linear is the single source of truth for "what's open." The static priorities snapshot that used to sit here was a transitional duplicate until YED-26 shipped the live SessionStart pull; it shipped, so the snapshot is gone. Do not re-add per-issue state to this file — update Linear. When git and Linear disagree, git is the fact and Linear gets corrected (the 2026-09-12 reconciliation found six shipped issues still in Backlog).
 
 **Execution-focus window CLOSED 2026-06-11 — brake lifted, replaced by a steering bias.** The 2026-05-15 "no architecture work, publishing baseline only" rule did its job (publishing increased) and then inverted: at execution volume, the deferral discipline itself became the drag — improvements surfaced in real time were being captured-and-deferred instead of built, leaving friction in the active publishing path. The balancing loop that protected the publishing stock had flipped into the constraint draining it. Verdict (Alex, 2026-06-11): retire the rule; build improvements in real time *while* executing. **The replacement is a steering bias, not a brake: build freely, but each build should remove a named friction on the active publishing path. Friction-remover → build it inline, now. Speculative architecture with no named publishing friction behind it → still skip (that's the original R2 / Shifting-the-Burden trap, and it's the only thing this bias rules out).** The friction-remover vs. R2-trap test (from the 2026-05-21 frictions-log entry) is now applied live, not deferred to a batch. Pipeline v2 / Stage 2 proposal (`.claude/proposals/content-pipeline-v2-stage2.md`) is now buildable under this bias when a real publishing friction motivates a component — no longer gated behind the "kick the can / re-measure first" default.
 
@@ -113,6 +111,15 @@ Larger arc the codification work is part of. Goal: make "build-better-not-faster
 | **C. Workspace** | Project-specific overlays inherit canonical defaults | YED-30 (canonical CLAUDE.md fragment + new-project starter kit) |
 
 **Total program effort:** 1-2 weeks priority mode, or 4-6 weeks background mode. The whole plan is a single architectural arc that ends with: starting any new project = inheriting all of Alex's accumulated discipline + skill conventions automatically.
+
+### Git conventions (codified 2026-09-12 — the shared-checkout hazard, written down)
+
+- **Branch-first for non-trivial builds:** branch → PR → merge. Trivial churn (telemetry, content outputs, typos) may go straight to `main`. A DoD-closed build can still be uncommitted — sweep `git status` when closing.
+- **One worktree per workstream, one live session per worktree.** Branch cut from `origin/main` at session start; symlink `.env` in (worktrees start without it). Two sessions on one checkout is the failure mode that produced every git collision on 2026-09-12.
+- **The `main` checkout stays on `main`.** It is never used for feature work and belongs to the reconciliation terminal only.
+- **Shared namespaces are single-writer:** ADR numbers (mint from `main`), Linear status, `roadmap.md`, and this file are edited in one designated session, never on two branches at once.
+- **Stop point → PR the same hour.** Convergence self-corrects when PRs are cut promptly; it drifts when branches sit.
+- **Reconciliation is a role, not a habit:** when worktrees/branches/status need converging, one session runs `.claude/references/reconciliation-terminal-charter.md` (Rule 0: everyone else quiesced first; merge-and-sync only, no building).
 
 ### Visual brief pattern (added 2026-05-12)
 Every LinkedIn post produced by `pre-event-content`, `pattern-synthesis`, and `content-correspondent` now ships with an accompanying **3-5 slide visual carousel brief** that tells the post's thesis through different perspectives (not the same image redrawn). Canonical spec at `.claude/skills/content-patterns/visual-briefs.md`. Four narrative arcs available — pick by post type. The three content skills import from there as a shared reference; edits to the visual voice go in that file once and propagate. **Core principle (added 2026-05-26): visuals must ADD information — architecture, comparison, progression, a "where-the-value-moves" diagram — and must NEVER re-print quotes or lines already in the post. A quote-card carousel that echoes the copy is text-forward repetition, not visual content, and is an anti-pattern.** See `content-anti-patterns.md`, `content-style-guide.md`, and the Arc-4 guard in `visual-briefs.md`. **Validation:** spec changes need a fresh conversation to test the agents end-to-end (agent registry is session-frozen).
