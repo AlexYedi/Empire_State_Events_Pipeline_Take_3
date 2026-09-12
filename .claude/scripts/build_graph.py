@@ -373,13 +373,18 @@ def verify(edges):
 # check-refs.sh and asserts the two tools agree, which is the only mechanical guard that ADR-8 D2
 # ("shared verbatim") still holds — a comment saying "change both" does not enforce itself.
 EXTRACTOR_CASES = [
+    # (text, expected paths). Every path here RESOLVES ON DISK on purpose: these cases assert
+    # EXTRACTION, not existence, and fixture paths that did not exist showed up in the graph as
+    # real dangling references — the test data polluting the thing under test.
     # (text, expected paths)
     ("plain .claude/references/roadmap.md here", [".claude/references/roadmap.md"]),
-    ("(see .claude/references/x.md)", [".claude/references/x.md"]),
+    ("(see .claude/references/notion-schema.md)", [".claude/references/notion-schema.md"]),
     # real path, delimiter immediately after — must SURVIVE (the D4 regression)
-    (".claude/references/real.md(the new one)", [".claude/references/real.md"]),
+    (".claude/references/notion-schema.md(the new one)",
+     [".claude/references/notion-schema.md"]),
     # real path comma-joined to a template — only the template is dropped (the D4 regression)
-    (".claude/a/b.md,.claude/artifacts/log-{slug}.md", [".claude/a/b.md"]),
+    (".claude/references/roadmap.md,.claude/artifacts/log-{slug}.md",
+     [".claude/references/roadmap.md"]),
     # genuine templates / regex literals — must stay suppressed
     ("`.claude/artifacts/evolution-log-{project-slug}.md`", []),
     ("Writes: .claude/evals/x/keyterms.(json|md)", []),
