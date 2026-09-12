@@ -1,0 +1,13 @@
+# YED-118 Document Knowledge Base — ingest + query deps
+boto3>=1.40            # Cloudflare R2 (S3-compatible) blob store
+sentence-transformers>=3.0   # local embeddings: BAAI/bge-small-en-v1.5 (384-d)
+ebooklib>=0.18         # epub parsing (preferred format)
+beautifulsoup4>=4.12   # strip XHTML from epub chapters
+pymupdf>=1.24          # PDF extraction (best-effort fallback)
+numpy>=1.26
+requests>=2.31         # Supabase REST (documents / doc_chunks / RPC)
+huggingface-hub>=0.24  # rerank.py --bench resolves + measures the pinned snapshot
+# NOTE: the A.5 cross-encoder reranker (BAAI/bge-reranker-base, pinned in rerank.py)
+# needs no extra package — sentence-transformers ships CrossEncoder. Adds ~1.1 GB
+# of weights to the HF cache on first use. Still zero metered API calls.
+# Deliberately NOT taken: ragas (see retrieval_metrics.py for the rationale).
