@@ -27,3 +27,5 @@
 {"ts":"2026-09-09T00:02:43Z","session_id":"64ea3d4e-bbde-4e74-8e50-8b054fbe66d4","item":"linear","reason":"Job-Search Engine YED-146..152 exists; per-change Linear update deferred for this interactive session"}
 {"ts":"2026-09-09T19:07:54Z","session_id":"8210421d-caf9-489b-95bf-1bc0e165a9ae","item":"spec","reason":"in-repo reference (journal-entry-prompt.md) + PR bodies, not ChatPRD/Notion — self-instrumentation fix"}
 {"ts":"2026-09-09T19:07:54Z","session_id":"8210421d-caf9-489b-95bf-1bc0e165a9ae","item":"linear","reason":"tracked under existing YED-119 (journal system), no new issue opened this session"}
+{"ts":"2026-09-12T14:54:59Z","session_id":"50de56ab-95fe-4955-9a25-fa9aba2d4eb6","item":"item1 PRD","reason":"waived — storage-only refactor of the telemetry writer, contract v1 schema unchanged; spec = YED-159 + the amended build-session-contract.md"}
+{"ts":"2026-09-12T14:54:59Z","session_id":"50de56ab-95fe-4955-9a25-fa9aba2d4eb6","item":"item4 judge","reason":"met by measurement-system health (quorum ran today on ADR-8 Increment 1); no per-artifact run on this self-produced change — advisory tier"}
