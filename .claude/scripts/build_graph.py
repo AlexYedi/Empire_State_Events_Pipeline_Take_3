@@ -64,12 +64,18 @@ EXCLUDE_PARTS = tuple(
 # The whole non-whitespace run around `.claude/` (or `docs/`) is inspected first, so the filters
 # can see special chars a narrow path charset would truncate away. Err toward under-flagging.
 RUN_RE = re.compile(r"[^\s]*(?:\.claude/|docs/)[^\s]*")
-STRICT_PATH_RE = re.compile(r"(?:~/|\./)?(?:\.claude|docs)/[A-Za-z0-9._@/-]+")
 TRAILING_MARKUP_RE = re.compile(r"[.,;:)`\"']+$")
-# Template / regex / alternation: the path charset stops at one of these, leaving a truncated prefix
-# that can never exist (`evolution-log-{slug}.md`, `ADR-\d+`, `keyterms.(json|md)`). The delimiter
-# must sit IMMEDIATELY after the path, so prose like `(see .claude/<file>.md)` is untouched.
-TEMPLATE_RE = re.compile(r"(?:\.claude|docs)/[A-Za-z0-9._@/-]*[{(|\[\\$%]")
+# Template / regex / alternation: the path charset stops at `{ ( | [ \ $ %`, leaving a truncated
+# prefix that can never exist (`evolution-log-{slug}.md`, `ADR-\d+`, `keyterms.(json|md)`). The
+# delimiter is captured as PART of the match so it can be judged per match — the first cut dropped
+# the whole whitespace-run, which silently swallowed real references sharing that run (judge D4).
+STRICT_PATH_RE = re.compile(r"(?:~/|\./)?(?:\.claude|docs)/[A-Za-z0-9._@/-]+[{(|\[\\$%]?")
+# The discriminator is whether the charset stopped MID-TOKEN: a template leaves a dangling
+# separator before the delimiter (`keyterms.`+`(`, `skills/`+`{`, `ADR-`+`\`), a complete path does
+# not (`real.md`+`(`). Prose `(see .claude/<file>.md)` is untouched either way — `)` is not a
+# delimiter, it is trailing markup.
+TRUNCATED_RE = re.compile(r"[._/-][{(|\[\\$%]$")
+DELIM_TAIL_RE = re.compile(r"[{(|\[\\$%]$")
 
 HISTORICAL_RE = re.compile(r"retired|former|superseded|tombstoned|vanished|deleted", re.I)
 YED_TOKEN_RE = re.compile(r"\bYED-(\d+)\b")
@@ -83,8 +89,6 @@ def should_skip_run(run: str) -> bool:
         return True  # glob or <placeholder>
     if "…" in run or "..." in run:
         return True  # ellipsis-elided illustrative path
-    if TEMPLATE_RE.search(run):
-        return True  # path template or regex literal, not a reference
     return False
 
 
@@ -106,7 +110,9 @@ def extract_paths(text: str):
             if should_skip_run(run):
                 continue
             for m in STRICT_PATH_RE.findall(run):
-                path = TRAILING_MARKUP_RE.sub("", m)
+                if TRUNCATED_RE.search(m):
+                    continue                  # template/regex literal — drop THIS match only
+                path = TRAILING_MARKUP_RE.sub("", DELIM_TAIL_RE.sub("", m))
                 if path and not is_prose_pair(path):
                     yield path, line_no
 

@@ -39,12 +39,22 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
       esac
       # Template / regex / alternation: the path charset stops at `{`, `\`, `(`, `|`, `[`, `$`, `%`,
       # leaving a truncated prefix that can never exist on disk (`evolution-log-{slug}.md`,
-      # `ADR-\d+`, `keyterms.(json|md)`). Detected by the delimiter sitting IMMEDIATELY after the
-      # path — so an ordinary prose `(see .claude/<file>.md)` is untouched (its `)` is trailing markup).
-      # Added 2026-09-11: these were 4 of the 5 "actionable" dangling refs, i.e. false positives
-      # wrongly capping completeness. Shared verbatim with build_graph.py per ADR-8 D2.
-      printf '%s' "$run" | grep -qE '\.claude/[A-Za-z0-9._@/-]*[{(|[\\$%]' && continue
-      printf '%s' "$run" | grep -oE '(~/|\./)?\.claude/[A-Za-z0-9._@/-]+'
+      # `ADR-\d+`, `keyterms.(json|md)`). Shared verbatim with build_graph.py per ADR-8 D2.
+      #
+      # PER-MATCH, not per-run (fixed 2026-09-12, judge defect D4). The first cut dropped the WHOLE
+      # whitespace-run on a template hit, silently swallowing real references that shared the run:
+      # a path followed immediately by `(`, or a real path comma-joined to a template. Two
+      # genuinely broken references went invisible per fixture.
+      #
+      # The discriminator is whether the charset stopped MID-TOKEN. A template leaves a dangling
+      # separator before the delimiter (`keyterms.`+`(`, `evolution-log-`+`{`, `skills/`+`{`,
+      # `ADR-`+`\`); a complete path does not (`real.md`+`(`). So: capture the optional delimiter,
+      # drop only matches ending SEPARATOR+DELIMITER, then strip any surviving delimiter as
+      # trailing markup. Under-flagging stays the bias, now scoped to the offending token rather
+      # than its neighbours.
+      printf '%s' "$run" | grep -oE '(~/|\./)?\.claude/[A-Za-z0-9._@/-]+[{(|[\$%]?' \
+        | grep -vE '[._/-][{(|[\$%]$' \
+        | sed -E 's/[{(|[\$%]$//'
     done \
   | sed -E 's/[.,;:)`"'"'"']+$//' \
   | sort -u)
