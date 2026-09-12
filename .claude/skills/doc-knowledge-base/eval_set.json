@@ -1,0 +1,14 @@
+{
+  "doc": "Inference Engineering",
+  "note": "Retrieval acceptance gate (YED-118 pre-mortem risk #1). hit = any top-k chunk contains gold (whitespace-normalized, case-insensitive). Gold phrases chosen to avoid ligature-affected words.",
+  "cases": [
+    {"q": "How does the KV cache make attention run in linear time?", "gold": "key-value pairs for each previous token"},
+    {"q": "What is tensor parallelism used for?", "gold": "Tensor Parallelism for Lower Latency"},
+    {"q": "What is expert parallelism used for?", "gold": "Expert Parallelism for Higher Throughput"},
+    {"q": "Which tools support non-prefix KV cache reuse?", "gold": "CacheBlend"},
+    {"q": "How does cache-aware routing work?", "gold": "routed to the same replica"},
+    {"q": "What does quantization do in inference?", "gold": "Lower the precision"},
+    {"q": "What is speculative decoding?", "gold": "draft tokens"},
+    {"q": "What is a Mixture of Experts model?", "gold": "density of a neural network"}
+  ]
+}
