@@ -48,3 +48,22 @@ supabase/.temp/
 *.mp3
 *.flac
 *.aac
+
+# --- Event media archived OUTSIDE git (2026-09-12 hygiene) -------------------
+# Audio        -> Cloudflare R2:  r2://esep-library/media/<repo path>   (9 files, 222 MB, verified)
+# Images + ElevenLabs transcripts -> Google Drive: "My Drive/Empire State Event Media"
+# Rationale: git stores every version forever; the OBS capture lane will add
+# GB-scale recordings per event. Carousels (.pdf) and notes (.md) stay tracked.
+*.m4a
+*.mp3
+*.mp4
+*.wav
+Event Content/**/*.jpg
+Event Content/**/*.jpeg
+Event Content/**/*.png
+content-drafts/**/*.jpg
+content-drafts/**/*.jpeg
+content-drafts/**/*.png
+*— Transcript (ElevenLabs).json
+el_scribe_v1_plain.json
+eleven_scribe_v2.json
