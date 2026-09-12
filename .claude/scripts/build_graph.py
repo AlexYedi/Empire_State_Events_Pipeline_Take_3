@@ -32,6 +32,7 @@ Usage:
   build_graph.py --check dangling-ref   rebuild, then print <=5 actionable dangling refs
   build_graph.py --verify            rebuild, then assert faithfulness vs check-refs.sh
   build_graph.py --stats             rebuild, then print the baseline counts
+  build_graph.py --selftest          extractor regression cases + check-refs.sh agreement
 
 Exit 0 always (advisory; consumers read meta.json).
 """
@@ -364,8 +365,78 @@ def verify(edges):
     return ok
 
 
+# ---------------------------------------------------------------------------
+# Extractor regression cases. These exist because the template rule has been wrong twice: first it
+# under-flagged nothing and capped good artifacts on path TEMPLATES (2026-09-11), then its fix
+# over-corrected and silently swallowed REAL references sharing a whitespace-run (2026-09-12, judge
+# defect D4). Both directions are represented. `--selftest` also re-runs every case through
+# check-refs.sh and asserts the two tools agree, which is the only mechanical guard that ADR-8 D2
+# ("shared verbatim") still holds — a comment saying "change both" does not enforce itself.
+EXTRACTOR_CASES = [
+    # (text, expected paths)
+    ("plain .claude/references/roadmap.md here", [".claude/references/roadmap.md"]),
+    ("(see .claude/references/x.md)", [".claude/references/x.md"]),
+    # real path, delimiter immediately after — must SURVIVE (the D4 regression)
+    (".claude/references/real.md(the new one)", [".claude/references/real.md"]),
+    # real path comma-joined to a template — only the template is dropped (the D4 regression)
+    (".claude/a/b.md,.claude/artifacts/log-{slug}.md", [".claude/a/b.md"]),
+    # genuine templates / regex literals — must stay suppressed
+    ("`.claude/artifacts/evolution-log-{project-slug}.md`", []),
+    ("Writes: .claude/evals/x/keyterms.(json|md)", []),
+    (".claude/skills/{name}/SKILL.md", []),
+    # inherited skip rules
+    ("https://example.com/.claude/x.md", []),
+    ("see .claude/skills/*/SKILL.md", []),
+    ("see .claude/references/<name>.md", []),
+]
+
+
+def selftest():
+    """Assert the extractor's behaviour AND that check-refs.sh agrees with it."""
+    failures = 0
+    for text, expected in EXTRACTOR_CASES:
+        got = [p for p, _ in extract_paths(text)]
+        if got != expected:
+            failures += 1
+            print(f"FAIL  {text!r}\n      expected {expected}\n      got      {got}",
+                  file=sys.stderr)
+
+    # Cross-tool agreement: write the cases to a temp artifact and diff the two extractors.
+    sh = os.path.join(ROOT, ".claude", "hooks", "check-refs.sh")
+    if os.path.exists(sh):
+        import tempfile
+        body = "\n\n".join(text for text, _ in EXTRACTOR_CASES)
+        fd, tmp = tempfile.mkstemp(suffix=".md")
+        with os.fdopen(fd, "w") as f:
+            f.write(body + "\n")
+        try:
+            p = subprocess.run(["bash", sh, "--artifact", tmp],
+                               capture_output=True, text=True, cwd=ROOT)
+            theirs = {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+            # check-refs.sh reports only MISSING paths and only `.claude/` ones, so compare on
+            # that subset: anything it reports the graph must also have extracted.
+            ours = {p2 for text, _ in EXTRACTOR_CASES for p2, _ in extract_paths(text)
+                    if p2.startswith(".claude/")}
+            gap = theirs - ours
+            if gap:
+                failures += 1
+                print(f"FAIL  check-refs.sh saw paths the graph did not: {sorted(gap)}",
+                      file=sys.stderr)
+        finally:
+            os.unlink(tmp)
+    else:
+        print("note: check-refs.sh absent — cross-tool agreement not checked", file=sys.stderr)
+
+    n = len(EXTRACTOR_CASES)
+    print(f"selftest: {n - failures}/{n} extractor cases pass"
+          f"{' + cross-tool agreement OK' if not failures else ''}", file=sys.stderr)
+    return failures == 0
+
+
 def main():
     args = sys.argv[1:]
+    if "--selftest" in args:
+        sys.exit(0 if selftest() else 1)
     nodes, edges, meta = build()
     write(nodes, edges, meta)
     c = meta["counts"]
