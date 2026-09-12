@@ -318,12 +318,24 @@ of them) — fields which, being unconsumed, D7 should have excluded in the firs
 target. The performance miss and the scope violation were one defect wearing two hats. They return
 in Increment 2 with `judge-stale`, batched into a single git call.
 
-### D4 — over-suppression paths (high, partially open)
+### D4 — over-suppression paths (high) — ✅ **(1) CLOSED 2026-09-12**, (2) accepted
 
-Two ways a genuinely broken reference can be silently excused:
-1. `TEMPLATE_RE` skips the **whole whitespace-run**, so a real path immediately followed by `(` —
-   `SKILL.md(now` — is dropped before extraction. **Still open**; the rule should drop only the
-   offending match, and must change in both tools together.
+Two ways a genuinely broken reference could be silently excused:
+1. The template rule skipped the **whole whitespace-run**, so any real reference sharing that run
+   went with it. Reproduced against a fixture: `.claude/references/<name>.md(the new one)` and a real
+   path comma-joined to a template both vanished — two genuinely broken references made invisible
+   by the check whose job is finding them. **Fixed** by judging the rule **per match**. The
+   discriminator is whether the charset stopped MID-TOKEN: a template leaves a dangling separator
+   before the delimiter (`keyterms.`+`(`, `skills/`+`{`, `ADR-`+`\`), a complete path does not
+   (`real.md`+`(`). Applied to both tools in one change per D2. The repo gained 2 reference edges
+   (603 → 605) — references that were being swallowed — with `class:repo` still 0.
+
+   Pinned by `build_graph.py --selftest`: ten cases covering **both** failure directions (the
+   original under-flagging and this over-correction), each also run through `check-refs.sh` so the
+   two tools are asserted to agree. That second assertion is the more valuable one — D2's "shared
+   verbatim, change both" was enforced only by a comment, which cannot enforce itself and is the
+   very drift class this ADR exists to catch. Negative control: reintroducing the per-run skip
+   fails 2 of 10 cases **and** trips the cross-tool assertion (7/10, exit 1).
 2. `historical` / `tracked` key off a keyword anywhere in the surrounding **paragraph**, so an
    unrelated "deleted" or an unrelated `YED-N` can excuse a live broken reference. The window is a
    paragraph because markdown hard-wraps mid-sentence. **Accepted deliberately** and now recorded
@@ -340,6 +352,7 @@ helpers that existed only to feed the removed edge types.
 - `dangling-ref{class:repo}` = **0**; 20 dangling references, all classified (2 runtime · 2 tracked
   · 8 historical · 8 proposed).
 - Faithfulness vs current `check-refs.sh`: **PASS, 0 missed across all 126 referencing artifacts.**
+- Extractor self-test: **10/10, plus cross-tool agreement with `check-refs.sh`** (`--selftest`).
 - Independent validation vs pre-change `check-refs.sh`: **3 suppressions, all inspected, all
   template/regex false positives.**
 - Rebuild **0.19s**.
