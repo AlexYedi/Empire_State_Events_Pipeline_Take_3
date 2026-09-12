@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The software factory</title>
+<style>
+  :root{--ground:#0F172A;--panel:#1E293B;--line:#334155;--text:#E9EEF5;--muted:#9FB0C3;--dim:#64748B;--acc:#8B5CF6;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:"Menlo","SF Mono",monospace;--sans:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:#000}
+  .slide{width:1080px;height:1350px;background:var(--ground);color:var(--text);font-family:var(--sans);
+    padding:78px 84px;display:flex;flex-direction:column;position:relative;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .accentbar{position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--acc)}
+  .kicker{font-family:var(--mono);font-size:21px;letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+  h1{font-family:var(--serif);font-weight:600;font-size:64px;line-height:1.04;margin-top:12px;letter-spacing:-.01em}
+  .flow{margin-top:36px;display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;align-items:center;gap:24px}
+  .n{font-family:var(--mono);font-size:26px;color:var(--acc);width:58px;height:58px;flex:0 0 58px;
+    border:2px solid var(--acc);border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .txt{font-size:31px;line-height:1.22}
+  .txt b{color:var(--acc)}
+  .arrow{margin-left:28px;color:var(--dim);font-family:var(--mono);font-size:24px;height:20px;line-height:20px}
+  .callout{margin-top:32px;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--acc);
+    border-radius:16px;padding:26px 32px;font-size:30px;line-height:1.34}
+  .callout b{color:var(--acc)}
+  .stat{margin-top:auto;font-family:var(--mono);font-size:26px;color:var(--acc);border-top:1px solid var(--line);padding-top:26px;line-height:1.4}
+  .src{font-family:var(--mono);font-size:19px;color:var(--dim);margin-top:16px}
+</style>
+</head>
+<body>
+<section class="slide">
+  <div class="accentbar"></div>
+  <div class="kicker">Deep dive · The factory</div>
+  <h1>Your org's build line, run by agents</h1>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div class="txt"><b>Connect your repos</b> → prompt what you want built</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">2</div><div class="txt">An <b>orchestrator</b> plans a DAG of tasks (it runs over days)</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">3</div><div class="txt">Each task → a specialized <b>agent in its own isolated sandbox</b></div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">4</div><div class="txt">Inside: clone → <b>snapshot</b> → build → must pass QA to finish</div></div>
+    <div class="arrow">↓</div>
+    <div class="step"><div class="n">5</div><div class="txt">Work converges into a <b>PR</b> — QA · security · adversarial review → you approve</div></div>
+  </div>
+  <div class="callout">Every sandbox is <b>isolated and snapshotted</b> — so runs are reproducible, and you pay for compute only while agents are actually building.</div>
+  <div class="stat">One PR she showed ran ~17,000 lines — already reviewed by QA + security agents before it reached her inbox.</div>
+  <div class="src">Source: Obvious (obvious.ai) · Talk: Daria Shifrina · Daytona AI Builders NYC · Sep 2026</div>
+</section>
+</body>
+</html>

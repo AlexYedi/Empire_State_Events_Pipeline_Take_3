@@ -17,7 +17,7 @@ Single-thread skill run. Execute `.claude/skills/role-radar/SKILL.md` end-to-end
 1. **Setup (first run):** create the Notion Roles DB (HITL — approve schema once). Note RSS.app feed setup.
 2. **Step 1 — Pull (parallel):** ATS boards APIs (Greenhouse/Lever/Ashby via `curl`+`jq`, PRIMARY — company→ATS registry in `target-companies.md`; subagent-distilled) · RSS.app feeds (`WebFetch`) · Apollo-at-targets (credit-gated) · Dice (`search_jobs`, secondary keyword sweep).
 3. **Step 2 — Dedupe** by natural key `{ats_vendor}:{ats_job_id}` (content_hash `title|company` fallback for non-ATS); `notion-search`-scoped dedup vs. Roles DB (NOT `notion-query-data-sources`).
-4. **Step 3 — Score** each role 0–100 against the Target-Role ICP rubric v2 — **by role mechanism, not title** (role-mechanism · AI-native-tier · **leverage/support** incl. PLG · AI-multiplier fit · location/culture). Tier **A≥78 / B 60–77 / C 40–59 / drop<40**.
+4. **Step 3 — Score** each role 0–100 against the Target-Role ICP rubric v2 — **by role mechanism, not title** (role-mechanism · AI-native-tier · **leverage/support** incl. PLG · AI-multiplier fit · location/culture). Tier **A≥85 / B 60–84 / C 40–59 / drop<40** (v2.4 — raised from 78 on 2026-09-11; see SKILL Step 3).
 5. **Step 4 — Present ranked roles. STOP for approval.**
 6. **Step 5 — Write approved** roles to Roles DB (`Status = new`).
 7. **Step 6 — Close out** + offer A-tier contact pull (`voice-radar`).

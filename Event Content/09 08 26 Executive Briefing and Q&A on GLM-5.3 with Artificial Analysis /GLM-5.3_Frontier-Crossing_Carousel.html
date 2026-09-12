@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GLM-5.3 — The Frontier Crossing</title>
+<style>
+  :root{
+    --ground:#0e0f13;
+    --surface:#171a21;
+    --surface-2:#1e222b;
+    --ink:#f3f0e9;
+    --muted:#9aa0ab;
+    --faint:#6b7280;
+    --hair:rgba(255,255,255,0.09);
+    --accent:#e2a13c;      /* GLM-5.3 — the subject / meaning-bearing accent */
+    --accent-soft:rgba(226,161,60,0.16);
+    --closed:#7d97b6;      /* closed-frontier reference */
+    --open:#48505e;        /* other open models, muted */
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:Menlo,"SF Mono",monospace;
+    --sans:-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  @page{size:1080px 1350px;margin:0}
+  .slide{
+    position:relative;
+    width:1080px;height:1350px;
+    background:var(--ground);
+    color:var(--ink);
+    padding:92px 96px 78px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .slide:not(:last-child){break-after:page}
+  .eyebrow{
+    font-family:var(--mono);font-size:20px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--accent);
+  }
+  .eyebrow.muted{color:var(--faint)}
+  h1{font-family:var(--serif);font-weight:600;line-height:1.03;letter-spacing:-.01em}
+  .display{font-size:96px;margin-top:38px}
+  .h-lg{font-size:74px;line-height:1.05;margin-top:30px}
+  .h-md{font-size:60px;line-height:1.06;margin-top:26px}
+  .sub{font-family:var(--sans);font-size:34px;line-height:1.4;color:var(--muted);margin-top:34px;max-width:760px}
+  .spacer{flex:1}
+  .footer{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:19px;color:var(--faint);
+    border-top:1px solid var(--hair);padding-top:26px;
+  }
+  .footer .r{color:var(--accent)}
+  .caption{font-family:var(--sans);font-size:30px;line-height:1.42;color:var(--muted);margin-top:38px;max-width:840px}
+  .caption b{color:var(--ink);font-weight:600}
+
+  /* bar chart */
+  .chart{margin-top:44px;display:flex;flex-direction:column;gap:22px}
+  .row{display:grid;grid-template-columns:290px 1fr 96px;align-items:center;gap:22px}
+  .row .name{font-family:var(--sans);font-size:26px;color:var(--muted);text-align:right;line-height:1.15}
+  .row .name.hi{color:var(--ink);font-weight:700}
+  .row .name .tag{display:block;font-family:var(--mono);font-size:15px;letter-spacing:.12em;color:var(--faint);margin-top:3px}
+  .track{height:34px;background:var(--surface);border-radius:4px;overflow:hidden}
+  .bar{height:100%;border-radius:4px}
+  .bar.open{background:var(--open)}
+  .bar.closed{background:var(--closed)}
+  .bar.hero{background:var(--accent)}
+  .val{font-family:var(--mono);font-size:28px;color:var(--muted);text-align:left}
+  .val.hi{color:var(--accent);font-weight:600}
+
+  /* panels (slide 3) */
+  .panels{margin-top:40px;display:flex;flex-direction:column;gap:30px}
+  .panel{background:var(--surface);border:1px solid var(--hair);border-radius:14px;padding:34px 38px}
+  .panel .plabel{font-family:var(--mono);font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .panel .prow{display:grid;grid-template-columns:210px 1fr 150px;align-items:center;gap:20px;margin-top:20px}
+  .panel .pname{font-family:var(--sans);font-size:25px;color:var(--muted);text-align:right}
+  .panel .pname.hi{color:var(--ink);font-weight:700}
+  .ptrack{height:30px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+  .pbar{height:100%;border-radius:4px}
+  .pval{font-family:var(--mono);font-size:26px;text-align:left;color:var(--muted)}
+  .pval.hi{color:var(--accent);font-weight:600}
+  .annot{font-family:var(--sans);font-size:24px;line-height:1.35;color:var(--ink);margin-top:24px;padding-left:20px;border-left:3px solid var(--accent)}
+
+  /* mechanism (slide 4) */
+  .mech{margin-top:46px;display:flex;flex-direction:column;gap:24px}
+  .lane{display:flex;align-items:center;gap:26px;background:var(--surface);border-radius:14px;padding:30px 34px;border:1px solid var(--hair)}
+  .lane.hero{border-color:rgba(226,161,60,0.4);background:linear-gradient(90deg,var(--accent-soft),var(--surface) 60%)}
+  .lane .who{font-family:var(--mono);font-size:22px;letter-spacing:.06em;min-width:210px}
+  .lane.dim .who{color:var(--faint)}
+  .lane.hero .who{color:var(--accent);font-weight:600}
+  .lane .flow{font-family:var(--sans);font-size:27px;line-height:1.3;color:var(--ink)}
+  .lane.dim .flow{color:var(--muted)}
+  .arrow{color:var(--faint);font-family:var(--mono)}
+  .quote{font-family:var(--serif);font-size:37px;line-height:1.34;color:var(--ink);margin-top:44px;font-style:italic}
+  .quote .src{display:block;font-family:var(--mono);font-style:normal;font-size:21px;color:var(--faint);margin-top:20px;letter-spacing:.04em}
+  .note{font-family:var(--sans);font-size:25px;line-height:1.4;color:var(--muted);margin-top:30px}
+  .note b{color:var(--ink);font-weight:600}
+
+  /* takeaway (slide 5) */
+  .pull{font-family:var(--serif);font-size:70px;line-height:1.08;letter-spacing:-.01em;margin-top:36px}
+  .conseq{background:var(--surface);border:1px solid var(--hair);border-radius:16px;padding:40px 42px;margin-top:52px}
+  .conseq .lead{font-family:var(--sans);font-size:30px;line-height:1.42;color:var(--ink)}
+  .conseq .lead b{color:var(--accent);font-weight:700}
+  .statrow{display:flex;gap:28px;margin-top:30px;flex-wrap:wrap}
+  .stat{flex:1;min-width:300px;background:var(--surface-2);border-radius:12px;padding:26px 28px}
+  .stat .big{font-family:var(--mono);font-size:38px;color:var(--accent)}
+  .stat .lbl{font-family:var(--sans);font-size:23px;color:var(--muted);margin-top:8px;line-height:1.3}
+  .thanks{font-family:var(--sans);font-size:26px;color:var(--muted);margin-top:44px}
+  .thanks b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — HOOK -->
+<section class="slide">
+  <div class="eyebrow">Field notes · NYC AI</div>
+  <h1 class="display">The average<br>hides the<br>crossover.</h1>
+  <div class="sub">GLM-5.3 is the #1 open-weight model — and that's the least interesting thing about it.</div>
+  <div class="spacer"></div>
+  <div class="footer">
+    <span>GLM-5.3 · Baseten × Artificial Analysis · Sep 8 2026</span>
+    <span class="r">01 / 05</span>
+  </div>
+</section>
+
+<!-- SLIDE 2 — THE AGGREGATE -->
+<section class="slide">
+  <div class="eyebrow">The single number</div>
+  <h1 class="h-lg">One score says:<br>still a tier back.</h1>
+  <div class="chart">
+    <div class="row"><div class="name">Claude Fable 5.1<span class="tag">closed</span></div><div class="track"><div class="bar closed" style="width:88.3%"></div></div><div class="val">53</div></div>
+    <div class="row"><div class="name">GPT-6 Astra<span class="tag">closed</span></div><div class="track"><div class="bar closed" style="width:88.3%"></div></div><div class="val">53</div></div>
+    <div class="row"><div class="name">Claude Opus 5<span class="tag">closed</span></div><div class="track"><div class="bar closed" style="width:85%"></div></div><div class="val">51</div></div>
+    <div class="row"><div class="name hi">GLM-5.3<span class="tag">open · #1 open</span></div><div class="track"><div class="bar hero" style="width:75%"></div></div><div class="val hi">45</div></div>
+    <div class="row"><div class="name">Kimi K3<span class="tag">open</span></div><div class="track"><div class="bar open" style="width:73.3%"></div></div><div class="val">44</div></div>
+    <div class="row"><div class="name">GLM-5.3 Flash<span class="tag">open</span></div><div class="track"><div class="bar open" style="width:70%"></div></div><div class="val">42</div></div>
+  </div>
+  <div class="caption"><b>#1 open-weight, ~8 points behind the closed frontier.</b> Read the blended "how-smart" index alone, and open weights look a step behind.</div>
+  <div class="spacer"></div>
+  <div class="footer">
+    <span>AA Intelligence Index v4.3 · blended across ~10 evals · max reasoning</span>
+    <span class="r">02 / 05</span>
+  </div>
+</section>
+
+<!-- SLIDE 3 — THE FLIP (payload) -->
+<section class="slide">
+  <div class="eyebrow">Split the average</div>
+  <h1 class="h-md">On the work that ships agents, it crosses in.</h1>
+  <div class="panels">
+    <div class="panel">
+      <div class="plabel">Long-horizon coding · Terminal-Bench v4</div>
+      <div class="prow"><div class="pname hi">GLM-5.3</div><div class="ptrack"><div class="pbar hero" style="width:83.8%"></div></div><div class="pval hi">41.9%</div></div>
+      <div class="prow"><div class="pname">GLM-5.3 Flash</div><div class="ptrack"><div class="pbar open" style="width:65.6%"></div></div><div class="pval">32.8%</div></div>
+      <div class="annot">Top open-weight — and <b>ahead of a closed frontier coder</b> (GPT-5.6 Sol), per Artificial Analysis.</div>
+    </div>
+    <div class="panel">
+      <div class="plabel">Agentic knowledge work · AA-Briefcase (Elo)</div>
+      <div class="prow"><div class="pname">GLM-5.2</div><div class="ptrack"><div class="pbar open" style="width:42%"></div></div><div class="pval">1234</div></div>
+      <div class="prow"><div class="pname hi">GLM-5.3</div><div class="ptrack"><div class="pbar hero" style="width:95%"></div></div><div class="pval hi">1515</div></div>
+      <div class="prow"><div class="pname">GLM-5.3 Flash</div><div class="ptrack"><div class="pbar open" style="width:76%"></div></div><div class="pval">1455</div></div>
+      <div class="annot"><b>+281 Elo over 5.2</b> in one release — shoulder-to-shoulder with the closed leaders.</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="footer">
+    <span>the two hardest axes = long, multi-step tasks — not one-shot trivia</span>
+    <span class="r">03 / 05</span>
+  </div>
+</section>
+
+<!-- SLIDE 4 — MECHANISM -->
+<section class="slide">
+  <div class="eyebrow">Why it's real, not a fluke</div>
+  <h1 class="h-lg">It wins by<br>not overthinking.</h1>
+  <div class="mech">
+    <div class="lane dim">
+      <div class="who">Overthinking model</div>
+      <div class="flow">too many turns <span class="arrow">→</span> burns the budget <span class="arrow">→</span> gets stuck</div>
+    </div>
+    <div class="lane hero">
+      <div class="who">GLM-5.3</div>
+      <div class="flow">token-efficient · thinking dialed in <span class="arrow">→</span> stays on task <span class="arrow">→</span> finishes</div>
+    </div>
+  </div>
+  <div class="quote">"For models thinking way too much, trying to do too many turns — they get stuck… it's more token-efficient, its thinking levels are dialed in."
+    <span class="src">— Declan Jackson, Artificial Analysis</span>
+  </div>
+  <div class="note">Sustained execution over a long horizon is a <b>different skill</b> than one-shot test IQ. And Flash rides the same strength to 3rd open-weight on both — so it's the pattern, not the flagship.</div>
+  <div class="spacer"></div>
+  <div class="footer">
+    <span>long-horizon work punishes the model that spins</span>
+    <span class="r">04 / 05</span>
+  </div>
+</section>
+
+<!-- SLIDE 5 — TAKEAWAY -->
+<section class="slide">
+  <div class="eyebrow">The takeaway</div>
+  <h1 class="pull">When someone hands you one number for a model, ask what it's the average of.</h1>
+  <div class="conseq">
+    <div class="lead">On agentic coding + knowledge work, the open, self-hostable, fine-tunable model is <b>already at the frontier</b> — at open-weight economics.</div>
+    <div class="statrow">
+      <div class="stat"><div class="big">$0.87 vs ~$6</div><div class="lbl">same "build the deck from my files" task — Flash vs flagship</div></div>
+      <div class="stat"><div class="big">MIT · self-host · tune</div><div class="lbl">Flash is MIT-licensed; both run on your own infra</div></div>
+    </div>
+  </div>
+  <div class="thanks">Thanks to <b>Philip Kiely</b> (Baseten) & <b>Declan Jackson</b> (Artificial Analysis).</div>
+  <div class="spacer"></div>
+  <div class="footer">
+    <span>Alex Yedi · full breakdown + sources in the post</span>
+    <span class="r">05 / 05</span>
+  </div>
+</section>
+
+</body>
+</html>
