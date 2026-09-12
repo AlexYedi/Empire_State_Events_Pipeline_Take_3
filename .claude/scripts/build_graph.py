@@ -15,16 +15,24 @@ Dock-launched sessions that lack `.env` and in fresh worktrees, so the trigger i
 conditional (ADR-8 D1/D6).
 
 SCOPE — Increment 1 (ADR-8 §Increments). Per ADR-8 D7 ("no node or edge type without a consumer
-query in the same increment"), this builds exactly what the `dangling-ref` check consumes:
-artifact/adr/linear/memory nodes and the text-derived edges. Judge-log ingestion (rebuild step 3),
-the findings ledger (step 4) and `co_changed` (step 5) arrive in Increments 2–3 with their
-consumers — they are omitted here on purpose, not left as stubs.
+query in the same increment"), this builds `artifact` nodes and `references` edges — and NOTHING
+else, because `dangling-ref` is the only check in this increment and `references` is the only
+thing it reads. Judge-log ingestion, the findings ledger and `co_changed` arrive in Increments 2-3
+with their consumers; they are omitted on purpose, not left as stubs.
+
+This claim was FALSE when first written (2026-09-11) and is corrected here (2026-09-12). The first
+cut also emitted `cites_adr`, `tracked_by`, `recalls`, `dispatches`, `orchestrates` and `spec_for`
+edges plus `adr`/`linear_issue`/`memory` stub nodes, none of which anything read — a D7 violation
+shipped underneath a docstring asserting D7 compliance. The build-quality judge caught it
+unprompted; see ADR-8 §Amendment 2. If you add an edge type here, add its consumer in the same
+change or do not add it.
 
 Usage:
   build_graph.py                     rebuild the cache (default)
   build_graph.py --check dangling-ref   rebuild, then print <=5 actionable dangling refs
   build_graph.py --verify            rebuild, then assert faithfulness vs check-refs.sh
   build_graph.py --stats             rebuild, then print the baseline counts
+  build_graph.py --selftest          extractor regression cases + check-refs.sh agreement
 
 Exit 0 always (advisory; consumers read meta.json).
 """
@@ -45,7 +53,7 @@ EXTRACTOR_VERSION = "1"
 # surface: per-run logs, generated artifacts, the cache itself, and sibling worktrees.
 # Written as segments, assembled below, deliberately: spelled as literal paths they read to any
 # path extractor — this one included — as references to files that need not exist, and a directory
-# named here is by definition one we do not expect to find. Same lesson as memory_dir().
+# named here is by definition one we do not expect to find.
 INCLUDE_EXT = {".md", ".sh", ".py", ".sql"}
 EXCLUDE_PARTS = tuple(
     os.path.join(".claude", *parts)
@@ -57,22 +65,21 @@ EXCLUDE_PARTS = tuple(
 # The whole non-whitespace run around `.claude/` (or `docs/`) is inspected first, so the filters
 # can see special chars a narrow path charset would truncate away. Err toward under-flagging.
 RUN_RE = re.compile(r"[^\s]*(?:\.claude/|docs/)[^\s]*")
-STRICT_PATH_RE = re.compile(r"(?:~/|\./)?(?:\.claude|docs)/[A-Za-z0-9._@/-]+")
 TRAILING_MARKUP_RE = re.compile(r"[.,;:)`\"']+$")
-# Template / regex / alternation: the path charset stops at one of these, leaving a truncated prefix
-# that can never exist (`evolution-log-{slug}.md`, `ADR-\d+`, `keyterms.(json|md)`). The delimiter
-# must sit IMMEDIATELY after the path, so prose like `(see .claude/<file>.md)` is untouched.
-TEMPLATE_RE = re.compile(r"(?:\.claude|docs)/[A-Za-z0-9._@/-]*[{(|\[\\$%]")
+# Template / regex / alternation: the path charset stops at `{ ( | [ \ $ %`, leaving a truncated
+# prefix that can never exist (`evolution-log-{slug}.md`, `ADR-\d+`, `keyterms.(json|md)`). The
+# delimiter is captured as PART of the match so it can be judged per match — the first cut dropped
+# the whole whitespace-run, which silently swallowed real references sharing that run (judge D4).
+STRICT_PATH_RE = re.compile(r"(?:~/|\./)?(?:\.claude|docs)/[A-Za-z0-9._@/-]+[{(|\[\\$%]?")
+# The discriminator is whether the charset stopped MID-TOKEN: a template leaves a dangling
+# separator before the delimiter (`keyterms.`+`(`, `skills/`+`{`, `ADR-`+`\`), a complete path does
+# not (`real.md`+`(`). Prose `(see .claude/<file>.md)` is untouched either way — `)` is not a
+# delimiter, it is trailing markup.
+TRUNCATED_RE = re.compile(r"[._/-][{(|\[\\$%]$")
+DELIM_TAIL_RE = re.compile(r"[{(|\[\\$%]$")
 
 HISTORICAL_RE = re.compile(r"retired|former|superseded|tombstoned|vanished|deleted", re.I)
-ADR_TOKEN_RE = re.compile(r"\bADR-(\d+)\b")
 YED_TOKEN_RE = re.compile(r"\bYED-(\d+)\b")
-WIKILINK_RE = re.compile(r"\[\[([^\]|]+)")
-SPEC_HEADER_RE = re.compile(
-    r"^\s*#?\s*(?:Spec|Decision record|Design|Methodology)\s*:\s*(\S+)", re.I
-)
-SUBAGENT_RE = re.compile(r"subagent_type:\s*[\"']?([A-Za-z0-9:_-]+)")
-BACKTICK_AGENT_RE = re.compile(r"`([a-z0-9][a-z0-9-]{2,})`")
 
 
 def should_skip_run(run: str) -> bool:
@@ -83,8 +90,6 @@ def should_skip_run(run: str) -> bool:
         return True  # glob or <placeholder>
     if "…" in run or "..." in run:
         return True  # ellipsis-elided illustrative path
-    if TEMPLATE_RE.search(run):
-        return True  # path template or regex literal, not a reference
     return False
 
 
@@ -106,22 +111,11 @@ def extract_paths(text: str):
             if should_skip_run(run):
                 continue
             for m in STRICT_PATH_RE.findall(run):
-                path = TRAILING_MARKUP_RE.sub("", m)
+                if TRUNCATED_RE.search(m):
+                    continue                  # template/regex literal — drop THIS match only
+                path = TRAILING_MARKUP_RE.sub("", DELIM_TAIL_RE.sub("", m))
                 if path and not is_prose_pair(path):
                     yield path, line_no
-
-
-def memory_dir() -> str:
-    """The auto-memory directory for THIS project, derived from the repo path the same way the
-    harness derives it (absolute path; both '/' and '_' become '-'). Derived, not hardcoded: a hardcoded
-    literal here also had to be split across source lines, which the extractor then read as a
-    truncated path reference to itself — the graph's first finding was its own source."""
-    # Memory is keyed to the MAIN checkout, so strip a worktree suffix if we are in one. Assembled
-    # from segments for the same reason the exclusion list is (see EXCLUDE_PARTS).
-    marker = os.sep + os.path.join(".claude", "worktrees") + os.sep
-    main = ROOT.split(marker)[0]
-    return os.path.expanduser(
-        "~/.claude/projects/" + re.sub(r"[/_]", "-", main) + "/memory")
 
 
 def sentence_around(lines, line_no: int, needle: str) -> str:
@@ -213,23 +207,6 @@ def walk_artifacts():
     if os.path.isfile(os.path.join(ROOT, "CLAUDE.md")):
         rels.append("CLAUDE.md")
     return sorted(set(r.replace(os.sep, "/") for r in rels))
-
-
-def parse_frontmatter(text: str):
-    """Minimal YAML-ish frontmatter reader (name/description/tools/model/spec only)."""
-    fm = {}
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        return fm
-    for line in lines[1:60]:
-        if line.strip() == "---":
-            break
-        m = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$", line)
-        if m and m.group(1) in ("name", "description", "tools", "model", "spec"):
-            fm[m.group(1)] = m.group(2).strip().strip("\"'")
-    return fm
-
-
 def adr_status(text: str):
     """The whole Status LINE, not its first word. Two reasons, both found the hard way: the first
     word is often a bold marker (`**Accepted`), which the old word-capture missed entirely; and an
@@ -246,38 +223,30 @@ def build():
     texts = {}
 
     # --- Step 1: artifact nodes -------------------------------------------------
+    # Fields are limited to what Increment 1 CONSUMES (ADR-8 D7). `last_commit_sha`/`last_commit_at`
+    # were removed after the judge flagged them: nothing in this increment read them, and producing
+    # them spawned one `git log` subprocess PER ARTIFACT (244 of them), which is what put the
+    # rebuild at ~4-5s against the ADR's <2s target. They return in Increment 2 with `judge-stale`,
+    # the check that actually needs them — batched into a single git call.
     for rel in rels:
         abs_p = os.path.join(ROOT, rel)
         try:
             raw = open(abs_p, "rb").read()
         except OSError:
             continue
-        text = raw.decode("utf-8", "replace")
-        texts[rel] = text
-        info = git("log", "-1", "--format=%h,%cs", "--", rel)
-        sha, date = (info.split(",", 1) + ["", ""])[:2] if info else ("", "")
-        st = subtype_for(rel)
-        node = {
-            "id": rel, "type": "artifact", "subtype": st, "exists": True,
+        texts[rel] = raw.decode("utf-8", "replace")
+        nodes[rel] = {
+            "id": rel, "type": "artifact", "subtype": subtype_for(rel), "exists": True,
             "content_sha": hashlib.sha1(raw).hexdigest(),
-            "last_commit_sha": sha or None, "last_commit_at": date or None,
         }
-        fm = parse_frontmatter(text)
-        if fm:
-            node["frontmatter"] = fm
-        nodes[rel] = node
-        # adr alias node so `ADR-N` tokens and path references resolve to ONE node
-        if st == "adr":
-            m = re.search(r"ADR-(\d+)", rel)
-            if m:
-                nodes[f"adr:{m.group(1)}"] = {
-                    "id": f"adr:{m.group(1)}", "type": "adr", "path": rel,
-                    "status": adr_status(text), "exists": True,
-                }
 
-    # --- Step 2: text-derived edges -------------------------------------------
-    # Collect every referenced path first so gitignore classification is one batch call.
-    pending = []  # (src, path, line, sentence)
+    # --- Step 2: reference edges + their classification --------------------------
+    # `references` is the ONLY edge type built, because `dangling-ref` is the only check in this
+    # increment and the only thing that reads it. cites_adr / tracked_by / recalls / dispatches /
+    # orchestrates / spec_for, and the adr/linear/memory stub nodes, were all built here and
+    # consumed by NOTHING — a D7 violation shipped while this docstring claimed D7 was honored.
+    # Deleted rather than commented out: they belong to Increments 2-3 beside their queries.
+    pending = []  # (src, path, line_no, classification-context)
     for rel, text in texts.items():
         lines = text.splitlines()
         for path, line_no in extract_paths(text):
@@ -285,34 +254,39 @@ def build():
 
     probe_rel = sorted({p for _, p, _, _ in pending if not p.startswith("~/")})
     ignored = gitignored(probe_rel)
+    # ADR status is read once per ADR (for the `proposed` class), not re-parsed per reference.
+    adr_proposed = {
+        rel: "proposed" in (adr_status(t) or "").lower()
+        for rel, t in texts.items() if nodes.get(rel, {}).get("subtype") == "adr"
+    }
 
-    for src, path, line_no, sentence in pending:
-        # A `~/` path outside the repo is classified by the SAME ladder as a repo path. Giving it its
-        # own blanket class was wrong: it hid a live "this plan file is stale, supersede it" TODO
-        # among ten honestly-labelled retirements. What excuses a missing reference is what the
-        # citing sentence SAYS about it, not which filesystem it lives on.
+    for src, path, line_no, context in pending:
+        # A `~/` path outside the repo runs the SAME ladder as a repo path. Giving it its own
+        # blanket class was wrong: it hid a live "this plan is stale, supersede it" TODO among ten
+        # honestly-labelled retirements. What excuses a missing reference is what the citing prose
+        # SAYS about it, not which filesystem it lives on.
         if path.startswith("~/"):
-            exists = os.path.exists(os.path.expanduser(path))
-            norm = None
+            exists, norm = os.path.exists(os.path.expanduser(path)), None
         else:
             norm = path[2:] if path.startswith("./") else path
             exists = os.path.exists(os.path.join(ROOT, norm))
-        src_node = nodes.get(src, {})
-        src_is_proposed = (
-            src_node.get("subtype") == "proposal"
-            or (src_node.get("subtype") == "adr"
-                and "proposed" in (adr_status(texts.get(src, "")) or "").lower())
-        )
+        subtype = nodes.get(src, {}).get("subtype")
+        src_is_proposed = subtype == "proposal" or adr_proposed.get(src, False)
+
+        # KNOWN LIMITATION (judged 2026-09-12, recorded not hidden): `historical` and `tracked` key
+        # off a keyword anywhere in the surrounding paragraph, so an unrelated "deleted" or an
+        # unrelated YED-N in the same paragraph CAN suppress a genuinely broken reference. The
+        # window is a paragraph because markdown hard-wraps mid-sentence. This trades false
+        # negatives for precision deliberately; D4's precision budget measures the other axis, so
+        # the recall side is watched by the Increment 3 ledger's `false-positive` acks, not here.
         if norm and norm in ignored:
             cls = "runtime"          # generated at run time; absence is normal
         elif src_is_proposed:
-            cls = "proposed"         # a not-yet-built path in a plan is a plan, not a dangling ref
-        elif HISTORICAL_RE.search(sentence):
+            cls = "proposed"         # a not-yet-built path in a plan is a plan, not a broken link
+        elif HISTORICAL_RE.search(context):
             cls = "historical"       # the prose itself says it is retired/superseded
-        elif YED_TOKEN_RE.search(sentence):
-            # The sentence names a Linear issue — the gap is already tracked where "what's open"
-            # lives. Re-surfacing it is the noise the precision budget buys down.
-            cls = "tracked"
+        elif YED_TOKEN_RE.search(context):
+            cls = "tracked"          # already recorded where "what's open" lives
         else:
             cls = "repo"             # actionable: cited as live, absent from disk, unexplained
         edges.append({
@@ -320,60 +294,6 @@ def build():
             "exists": exists, "class": cls,
             "evidence": {"file": src, "line": line_no},
         })
-
-    for rel, text in texts.items():
-        st = nodes.get(rel, {}).get("subtype")
-        for line_no, line in enumerate(text.splitlines(), 1):
-            for n in ADR_TOKEN_RE.findall(line):
-                nid = f"adr:{n}"
-                # A cited ADR with no file is itself a signal (orphan citation), so stub it
-                # rather than dropping the edge.
-                nodes.setdefault(nid, {"id": nid, "type": "adr", "stub": True, "exists": False})
-                edges.append({"src": rel, "dst": nid, "type": "cites_adr",
-                              "provenance": "derived",
-                              "evidence": {"file": rel, "line": line_no}})
-            for n in YED_TOKEN_RE.findall(line):
-                nid = f"linear:YED-{n}"
-                nodes.setdefault(nid, {"id": nid, "type": "linear_issue", "stub": True})
-                edges.append({"src": rel, "dst": nid, "type": "tracked_by",
-                              "provenance": "derived",
-                              "evidence": {"file": rel, "line": line_no}})
-            for slug in WIKILINK_RE.findall(line):
-                nid = f"memory:{slug.strip()}"
-                if nid not in nodes:
-                    mp = os.path.join(memory_dir(), slug.strip() + ".md")
-                    nodes[nid] = {"id": nid, "type": "memory", "stub": True,
-                                  "exists": os.path.exists(mp)
-                                  if os.path.isdir(memory_dir()) else "unknown"}
-                edges.append({"src": rel, "dst": nid, "type": "recalls",
-                              "provenance": "derived",
-                              "evidence": {"file": rel, "line": line_no}})
-            if st == "command":
-                for a in SUBAGENT_RE.findall(line):
-                    edges.append({"src": rel, "dst": f"agent:{a}", "type": "dispatches",
-                                  "provenance": "derived",
-                                  "evidence": {"file": rel, "line": line_no}})
-        # spec_for — the ONE declared edge, read in place from the impl's header/frontmatter
-        spec = (nodes.get(rel, {}).get("frontmatter") or {}).get("spec")
-        line_hit = None
-        if not spec:
-            for line_no, line in enumerate(text.splitlines()[:40], 1):
-                m = SPEC_HEADER_RE.match(line)
-                if m:
-                    spec = TRAILING_MARKUP_RE.sub("", m.group(1))
-                    line_hit = line_no
-                    break
-        if spec:
-            edges.append({"src": spec, "dst": rel, "type": "spec_for",
-                          "provenance": "declared-in-place",
-                          "evidence": {"file": rel, "line": line_hit or 1}})
-        # orchestrates — a command naming a skill
-        if st == "command":
-            for path, line_no in extract_paths(text):
-                if path.endswith("/SKILL.md"):
-                    edges.append({"src": rel, "dst": path, "type": "orchestrates",
-                                  "provenance": "derived",
-                                  "evidence": {"file": rel, "line": line_no}})
 
     meta = {
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -383,10 +303,10 @@ def build():
         "increment": 1,
         "counts": {
             "nodes": len(nodes),
-            "artifacts": sum(1 for n in nodes.values() if n.get("type") == "artifact"),
+            "artifacts": len(nodes),
             "edges": len(edges),
-            "references": sum(1 for e in edges if e["type"] == "references"),
-            "spec_for": sum(1 for e in edges if e["type"] == "spec_for"),
+            "references": len(edges),
+            "dangling": sum(1 for e in edges if not e["exists"]),
         },
     }
     return nodes, edges, meta
@@ -445,13 +365,88 @@ def verify(edges):
     return ok
 
 
+# ---------------------------------------------------------------------------
+# Extractor regression cases. These exist because the template rule has been wrong twice: first it
+# under-flagged nothing and capped good artifacts on path TEMPLATES (2026-09-11), then its fix
+# over-corrected and silently swallowed REAL references sharing a whitespace-run (2026-09-12, judge
+# defect D4). Both directions are represented. `--selftest` also re-runs every case through
+# check-refs.sh and asserts the two tools agree, which is the only mechanical guard that ADR-8 D2
+# ("shared verbatim") still holds — a comment saying "change both" does not enforce itself.
+EXTRACTOR_CASES = [
+    # (text, expected paths). Every path here RESOLVES ON DISK on purpose: these cases assert
+    # EXTRACTION, not existence, and fixture paths that did not exist showed up in the graph as
+    # real dangling references — the test data polluting the thing under test.
+    # (text, expected paths)
+    ("plain .claude/references/roadmap.md here", [".claude/references/roadmap.md"]),
+    ("(see .claude/references/notion-schema.md)", [".claude/references/notion-schema.md"]),
+    # real path, delimiter immediately after — must SURVIVE (the D4 regression)
+    (".claude/references/notion-schema.md(the new one)",
+     [".claude/references/notion-schema.md"]),
+    # real path comma-joined to a template — only the template is dropped (the D4 regression)
+    (".claude/references/roadmap.md,.claude/artifacts/log-{slug}.md",
+     [".claude/references/roadmap.md"]),
+    # genuine templates / regex literals — must stay suppressed
+    ("`.claude/artifacts/evolution-log-{project-slug}.md`", []),
+    ("Writes: .claude/evals/x/keyterms.(json|md)", []),
+    (".claude/skills/{name}/SKILL.md", []),
+    # inherited skip rules
+    ("https://example.com/.claude/x.md", []),
+    ("see .claude/skills/*/SKILL.md", []),
+    ("see .claude/references/<name>.md", []),
+]
+
+
+def selftest():
+    """Assert the extractor's behaviour AND that check-refs.sh agrees with it."""
+    failures = 0
+    for text, expected in EXTRACTOR_CASES:
+        got = [p for p, _ in extract_paths(text)]
+        if got != expected:
+            failures += 1
+            print(f"FAIL  {text!r}\n      expected {expected}\n      got      {got}",
+                  file=sys.stderr)
+
+    # Cross-tool agreement: write the cases to a temp artifact and diff the two extractors.
+    sh = os.path.join(ROOT, ".claude", "hooks", "check-refs.sh")
+    if os.path.exists(sh):
+        import tempfile
+        body = "\n\n".join(text for text, _ in EXTRACTOR_CASES)
+        fd, tmp = tempfile.mkstemp(suffix=".md")
+        with os.fdopen(fd, "w") as f:
+            f.write(body + "\n")
+        try:
+            p = subprocess.run(["bash", sh, "--artifact", tmp],
+                               capture_output=True, text=True, cwd=ROOT)
+            theirs = {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+            # check-refs.sh reports only MISSING paths and only `.claude/` ones, so compare on
+            # that subset: anything it reports the graph must also have extracted.
+            ours = {p2 for text, _ in EXTRACTOR_CASES for p2, _ in extract_paths(text)
+                    if p2.startswith(".claude/")}
+            gap = theirs - ours
+            if gap:
+                failures += 1
+                print(f"FAIL  check-refs.sh saw paths the graph did not: {sorted(gap)}",
+                      file=sys.stderr)
+        finally:
+            os.unlink(tmp)
+    else:
+        print("note: check-refs.sh absent — cross-tool agreement not checked", file=sys.stderr)
+
+    n = len(EXTRACTOR_CASES)
+    print(f"selftest: {n - failures}/{n} extractor cases pass"
+          f"{' + cross-tool agreement OK' if not failures else ''}", file=sys.stderr)
+    return failures == 0
+
+
 def main():
     args = sys.argv[1:]
+    if "--selftest" in args:
+        sys.exit(0 if selftest() else 1)
     nodes, edges, meta = build()
     write(nodes, edges, meta)
     c = meta["counts"]
-    print(f"graph: {c['artifacts']} artifacts, {c['nodes']} nodes, {c['edges']} edges "
-          f"({c['references']} references, {c['spec_for']} spec_for) "
+    print(f"graph: {c['artifacts']} artifacts, {c['references']} reference edges "
+          f"({c['dangling']} dangling, classified) "
           f"@ {meta['git_sha']}{' dirty' if meta['dirty'] else ''}", file=sys.stderr)
 
     if "--stats" in args:

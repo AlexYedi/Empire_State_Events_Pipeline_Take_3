@@ -1,6 +1,6 @@
 # ADR-8 — A derived system graph over the repo's own build artifacts, as the substrate for drift detection (a router, not a detector)
 
-- **Status:** **Accepted for Increment 1** (2026-09-12); Increments 2–3 remain **Proposed**. Increment 1 is built, wired and proven (see §Amendment 1): the extractor is faithful to `check-refs.sh` across all 124 referencing artifacts (0 missed), `dangling-ref{class:repo}` = 0, and a plain `git mv` surfaces a finding at the next SessionStart with no one invoking anything. The §Baseline's *count* columns did not reproduce and were retired as targets — the recipe that produced them differed from the tool they were meant to validate; the two load-bearing figures (4 actionable, 17 unspecced) matched exactly. Increment 2 waits on Alex seeing a finding fire usefully in a real session. **Linear:** to open on the "Empire State — Build-Rigor & Measurement Layer" project (this is a rigor-layer component, NOT a Market-Intelligence one). **PRD:** ChatPRD one-pager + Notion mirror pending — this ADR is the interim spec artifact, written *before* code per the PRD-first rule ([[feedback_rigor_backfill_pattern_2026-08-07]]). **Spec:** §Schema + §Increments below (no separate plan file — machine-local plans are retired). **Adversarial pass:** the §Drafting-note stress-test of the framing Alex and the parent agent converged on (four corrections argued in writing) + the §Consequences risk table. An `alex:cto-principal-architect` pre-mortem is recommended before Increment 3 — the only increment that adds a write path (the findings ledger).
+- **Status:** **Accepted for Increment 1** (2026-09-12); Increments 2–3 remain **Proposed**. Increment 1 is built, wired, **judged, found defective, and fixed** — read §Amendment 2 BEFORE §Amendment 1, which contains a claim struck as false. Post-fix: faithful to `check-refs.sh` across all 126 referencing artifacts (0 missed) **and** independently validated against the pre-change `check-refs.sh` (3 suppressions, all inspected, all template/regex false positives); `dangling-ref{class:repo}` = 0; rebuild 0.19s; a plain `git mv` surfaces a finding at the next SessionStart with no one invoking anything. The §Baseline's *count* columns did not reproduce and were retired as targets — the recipe that produced them differed from the tool they were meant to validate; the two load-bearing figures (4 actionable, 17 unspecced) matched exactly. Increment 2 waits on Alex seeing a finding fire usefully in a real session. **Linear:** YED-158 on the "Empire State — Build-Rigor & Measurement Layer" project (this is a rigor-layer component, NOT a Market-Intelligence one). **PRD:** ChatPRD one-pager + Notion mirror pending — this ADR is the interim spec artifact, written *before* code per the PRD-first rule ([[feedback_rigor_backfill_pattern_2026-08-07]]). **Spec:** §Schema + §Increments below (no separate plan file — machine-local plans are retired). **Adversarial pass:** the §Drafting-note stress-test of the framing Alex and the parent agent converged on (four corrections argued in writing) + the §Consequences risk table. An `alex:cto-principal-architect` pre-mortem is recommended before Increment 3 — the only increment that adds a write path (the findings ledger).
 - **Decider:** Alex.
 - **Scope note:** Governs a **derived, local, rebuildable cache** describing the repo's *own build artifacts* (`.claude/**`, `docs/**`, `CLAUDE.md`) and the checks that traverse it. It is a build-rigor concern, sitting beside the judge (`cross-provider-judge.md`), the DoD gate, and the value-action registry. It is **distinct from ADR-0…4** (the Market-Intelligence Supabase graph on `oicikjyzmxqfomrrqkvf`) and touches neither that account nor that schema — the hyperedge *idea* from `market-intel-spine.md` is reused, its storage is not. Distinct from ADR-5/6/7 (content model, CRM boundary, inbox source). Extends the append-only ADR practice — reversing this = writing ADR-9, not editing ADR-8.
 - **Drafting note (honesty — a stress-test of the converged framing, with four corrections):**
@@ -234,11 +234,16 @@ where "what's open" lives. Re-surfacing it is exactly the noise the D4 precision
   sites, with line numbers. Renames restored; tree clean.
 - ✅ **Stop hook names what the session broke**, once, at the moment it is cheapest to fix.
 
-### Scope held
+### ~~Scope held~~ — ❌ **THIS CLAIM WAS FALSE. See §Amendment 2.**
 
-Per D7 (no node or edge type without a consumer in the same increment), judge-log ingestion, the
+~~Per D7 (no node or edge type without a consumer in the same increment), judge-log ingestion, the
 findings ledger and `co_changed` are **absent, not stubbed** — they arrive in Increments 2–3 with the
-queries that consume them.
+queries that consume them.~~
+
+Struck 2026-09-12, one day after it was written. The sentence was true about the three things it
+*named* and false about the increment as a whole: six other edge types and three node types shipped
+with no consumer. Left visible rather than rewritten — a decision record that quietly edits its own
+false claims is worth less than one that shows them.
 
 ### Carried forward
 
@@ -252,3 +257,118 @@ queries that consume them.
   the doc is clearer for admitting it is a placeholder).
 - Open questions from the drafting note are unchanged: multi-spec `spec_for` precedence; whether
   `tracked` acks auto-expire on Linear Done (HITL for now); Hub projection (deferred).
+
+---
+
+## Amendment 2 — the judge flagged Increment 1, and it was right (2026-09-12)
+
+Appended, not edited. §Amendment 1's "Scope held" is struck above rather than rewritten.
+
+### What happened
+
+`/judge-build` was run on `build_graph.py` + both hooks, as the §Build note requires. The quorum
+**split**:
+
+| Seat | Score | Verdict |
+|---|---|---|
+| Gemini `gemini-3.1-pro-preview` — cross-provider, **with evidence parity** (this ADR attached as spec) | **1.00** | pass |
+| Claude/Sonnet — house-aware, judge-circularity caution applied aggressively | **0.55** | **flag**, `confidence_honesty_violation: true` |
+
+The 1.00 is **not** corroboration. Per `cross-provider-judge.md`, a split in `interactive` mode
+escalates, and on inspection the flagging seat was correct on every count. Recorded here rather
+than re-run until the number improved.
+
+### D1 — the D7 violation (high)
+
+The shipped extractor emitted and persisted `cites_adr`, `tracked_by`, `recalls`, `dispatches`,
+`orchestrates` and `spec_for` edges, plus `adr` / `linear_issue` / `memory` stub nodes. The only
+consumer in the file filtered strictly on `type == "references"`. **Nothing read the rest** — a
+direct violation of **D7**, and the exact materialization of risk **R8** ("scope creep to a
+platform"), shipped underneath a docstring and an amendment that both asserted compliance.
+
+This is the sharpest finding in the record, and not because of the edges. The author wrote the
+rule, wrote code violating it, wrote a self-audit certifying compliance, and published both. **The
+failure was in the self-assessment, not the reasoning** — the rule was understood and stated
+correctly the whole time.
+
+**Fixed:** every unconsumed node and edge type deleted (not commented out — they return in
+Increments 2–3 beside their queries). The docstring now records the false claim instead of
+repeating it.
+
+### D2 — `--verify` was self-certifying (high)
+
+Faithfulness was measured against `check-refs.sh`, whose skip rules were widened **in the same
+session, by the same author**, and are now shared verbatim (D2). A suppression bug added to the
+shared rule would have passed `--verify` by construction. The invariant was real; the proof of it
+was circular.
+
+**Fixed:** validation now runs against the **pre-change** script from git (`ccc08aa~1`), which
+enumerates precisely what the rule change suppressed instead of assuming it was safe. Result: **3
+references suppressed, all three path templates or regex literals** —
+`keyterms.(json|md)`, `evolution-log-{project-slug}.md`, `orchestration-log-{project-slug}-cycle-{n}.md`
+— and nothing else. That is an inspectable list, not a trusted one.
+
+### D3 — the `<2s` target was asserted, never measured (medium)
+
+§Consequences claimed `<2s` per rebuild and `~2s` per hook. Measured: **~4–5s each, ~8s/session**,
+because `last_commit_sha`/`last_commit_at` spawned one `git log` subprocess **per artifact** (244
+of them) — fields which, being unconsumed, D7 should have excluded in the first place.
+
+**Fixed by the same deletion.** Rebuild is now **0.19s** (~25× faster), comfortably inside the
+target. The performance miss and the scope violation were one defect wearing two hats. They return
+in Increment 2 with `judge-stale`, batched into a single git call.
+
+### D4 — over-suppression paths (high) — ✅ **(1) CLOSED 2026-09-12**, (2) accepted
+
+Two ways a genuinely broken reference could be silently excused:
+1. The template rule skipped the **whole whitespace-run**, so any real reference sharing that run
+   went with it. Reproduced against a fixture: `.claude/references/<name>.md(the new one)` and a real
+   path comma-joined to a template both vanished — two genuinely broken references made invisible
+   by the check whose job is finding them. **Fixed** by judging the rule **per match**. The
+   discriminator is whether the charset stopped MID-TOKEN: a template leaves a dangling separator
+   before the delimiter (`keyterms.`+`(`, `skills/`+`{`, `ADR-`+`\`), a complete path does not
+   (`real.md`+`(`). Applied to both tools in one change per D2. The repo gained 2 reference edges
+   (603 → 605) — references that were being swallowed — with `class:repo` still 0.
+
+   Pinned by `build_graph.py --selftest`: ten cases covering **both** failure directions (the
+   original under-flagging and this over-correction), each also run through `check-refs.sh` so the
+   two tools are asserted to agree. That second assertion is the more valuable one — D2's "shared
+   verbatim, change both" was enforced only by a comment, which cannot enforce itself and is the
+   very drift class this ADR exists to catch. Negative control: reintroducing the per-run skip
+   fails 2 of 10 cases **and** trips the cross-tool assertion (7/10, exit 1).
+2. `historical` / `tracked` key off a keyword anywhere in the surrounding **paragraph**, so an
+   unrelated "deleted" or an unrelated `YED-N` can excuse a live broken reference. The window is a
+   paragraph because markdown hard-wraps mid-sentence. **Accepted deliberately** and now recorded
+   in-code as a KNOWN LIMITATION: this trades false negatives for precision, D4's budget measures
+   only the precision axis, so the recall side is watched by Increment 3's `false-positive` acks.
+
+### D5 — dead code (low)
+
+`BACKTICK_AGENT_RE` was defined and never referenced. **Deleted**, along with the regexes and
+helpers that existed only to feed the removed edge types.
+
+### Post-fix state
+
+- `dangling-ref{class:repo}` = **0**; 20 dangling references, all classified (2 runtime · 2 tracked
+  · 8 historical · 8 proposed).
+- Faithfulness vs current `check-refs.sh`: **PASS, 0 missed across all 126 referencing artifacts.**
+- Extractor self-test: **10/10, plus cross-tool agreement with `check-refs.sh`** (`--selftest`).
+- Independent validation vs pre-change `check-refs.sh`: **3 suppressions, all inspected, all
+  template/regex false positives.**
+- Rebuild **0.19s**.
+
+### What this says about the increment
+
+Increment 1's purpose was to prove the rigor layer can **watch** rather than only **record** — that
+a defect surfaces without Alex's intuition firing first. That proof arrived in a form nobody
+designed: **the measurement layer caught a false claim in its own foundation, unprompted, on the
+first artifact it was pointed at.**
+
+The uncomfortable half is equally load-bearing and belongs in the record: **the self-audit passed
+it.** Every proof line in §Amendment 1 held; the one claim that required judging my own scope
+discipline was the one that was wrong. That is the argument for the judge existing, stated by the
+failure rather than by the design doc — and it is why Increment 2 (neighborhood as judge context)
+matters more than Increment 3's automation.
+
+**Increment 2 remains gated** on Alex seeing a finding fire usefully in a session he did not
+instrument. This amendment is not that; it is the judge working, which is a different control.
