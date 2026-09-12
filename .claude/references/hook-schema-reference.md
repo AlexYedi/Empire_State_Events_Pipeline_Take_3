@@ -109,12 +109,12 @@ When a hook misbehaves:
 1. **Read the schema validation error verbatim.** It lists the expected schema and shows your actual output. The diff is usually obvious once you compare.
 2. **Run the hook script manually** with sample input piped in:
    ```bash
-   echo '{"session_id":"test","prompt":"test"}' | bash ~/.claude/hooks/your-hook.sh
+   echo '{"session_id":"test","prompt":"test"}' | bash ~/.claude/hooks/<your-hook>.sh
    ```
    Check stdout (the JSON output) and stderr (any errors).
 3. **Validate the JSON** with `jq`:
    ```bash
-   bash ~/.claude/hooks/your-hook.sh | jq .
+   bash ~/.claude/hooks/<your-hook>.sh | jq .
    ```
    If `jq` errors, your JSON is malformed.
 4. **Check for `set -e` traps.** If the script has `set -e` or `set -euo pipefail`, a partial failure mid-script can exit before emitting JSON, leaving the harness with empty stdout (which is also a schema error).

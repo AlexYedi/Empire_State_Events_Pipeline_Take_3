@@ -3,10 +3,12 @@
 # Extracts load-bearing repo-relative file references from a build artifact and reports which do NOT exist.
 # Mechanizes the build-quality@4 dangling-reference cap (models under-apply it — bf17). CONSERVATIVE by design:
 # only flags clearly path-shaped `.claude/…` (and `~/.claude/…`) tokens, and SKIPS any reference whose surrounding
-# non-whitespace run contains a glob (`*`), an angle-bracket `<placeholder>`, an ellipsis (`...`/`…`), or a URL
-# (`://`) — so a false "dangling" never wrongly caps a good artifact. It errs toward under-flagging (safe): if a
-# run is ambiguous it is skipped, never guessed.
+# non-whitespace run contains a glob (`*`), an angle-bracket `<placeholder>`, an ellipsis (`...`/`…`), a URL
+# (`://`), or a template/regex delimiter immediately after the path (`{slug}`, `\d+`, `.(json|md)`) — so a false
+# "dangling" never wrongly caps a good artifact. It errs toward under-flagging (safe): if a run is ambiguous it is
+# skipped, never guessed.
 # Spec: .claude/references/cross-provider-judge.md.
+# The extraction rules here are shared VERBATIM with .claude/scripts/build_graph.py (ADR-8 D2) — change both.
 #
 # Usage: check-refs.sh --artifact <path>
 #   stdout: one missing referenced path per line (empty = none missing)
@@ -35,6 +37,13 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
         *'*'*|*'<'*|*'>'*)          continue;;  # glob or <placeholder>
         *'…'*|*'...'*)              continue;;  # ellipsis-elided illustrative path
       esac
+      # Template / regex / alternation: the path charset stops at `{`, `\`, `(`, `|`, `[`, `$`, `%`,
+      # leaving a truncated prefix that can never exist on disk (`evolution-log-{slug}.md`,
+      # `ADR-\d+`, `keyterms.(json|md)`). Detected by the delimiter sitting IMMEDIATELY after the
+      # path — so an ordinary prose `(see .claude/<file>.md)` is untouched (its `)` is trailing markup).
+      # Added 2026-09-11: these were 4 of the 5 "actionable" dangling refs, i.e. false positives
+      # wrongly capping completeness. Shared verbatim with build_graph.py per ADR-8 D2.
+      printf '%s' "$run" | grep -qE '\.claude/[A-Za-z0-9._@/-]*[{(|[\\$%]' && continue
       printf '%s' "$run" | grep -oE '(~/|\./)?\.claude/[A-Za-z0-9._@/-]+'
     done \
   | sed -E 's/[.,;:)`"'"'"']+$//' \
