@@ -13,7 +13,7 @@ This is the **learning loop** — the step that turns feedback into improvement,
 - **(Optional) Window** — default the last 7 days.
 
 ## Step 1 — Pull the week's signals
-- **Telemetry:** `.claude/artifacts/build-sessions.jsonl` — build sessions, `user_prompts` (feedback rounds), `build_dir_touched`, output/peak tokens.
+- **Telemetry:** `.claude/artifacts/build-sessions/*.jsonl` (per-session shards; plus the frozen pre-2026-09-12 `build-sessions.jsonl`) — build sessions, `user_prompts` (feedback rounds), `build_dir_touched`, output/peak tokens.
 - **Judge:** `.claude/evals/logs/*.jsonl` — scores + `alex_ack` (for the agreement rate).
 - **DoD waivers:** the waiver log (US-1).
 - **Outcomes:** Content Drafts tagged this week (`/tag-outcome` results) — Outcome vs Goal.

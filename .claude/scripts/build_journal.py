@@ -10,7 +10,7 @@ every structured field is git/telemetry-derived; the only prose is what a human 
       - shipped    = PR-squash/merge commits (title matches "(#N)") across BOTH repos  → the durable "what"
       - commits    = total commits that day (churn like build-sessions.jsonl updates included in the count only)
       - linear     = YED-\\d+ refs parsed from commit titles
-      - rigor      = from build-sessions.jsonl: sessions, dod_met (any), dod_waived (any), correction_rounds (sum)
+      - rigor      = from build-sessions.jsonl + build-sessions/*.jsonl: sessions, dod_met (any), dod_waived (any), correction_rounds (sum)
       - headline   + summary = from the curated prose sidecar (build-journal-prose.json), keyed by date
                      (fallback headline = the day's top PR title; summary = "" so the entry is still honest)
 
@@ -31,7 +31,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TAKE3 = os.path.abspath(os.path.join(HERE, "..", ".."))                 # Empire_State_Events_Pipeline_Take_3
 HUB = os.path.abspath(os.path.join(TAKE3, "..", "empire-state-hub"))
 REPOS = [("Empire_State_Events_Pipeline_Take_3", TAKE3), ("empire-state-hub", HUB)]
-TELEMETRY = os.path.join(TAKE3, ".claude", "artifacts", "build-sessions.jsonl")
+TELEMETRY = os.path.join(TAKE3, ".claude", "artifacts", "build-sessions.jsonl")   # frozen pre-2026-09-12 history
+TELEMETRY_SHARDS = os.path.join(TAKE3, ".claude", "artifacts", "build-sessions")     # one <session_id>.jsonl per session (YED-159)
 PROSE = os.path.join(TAKE3, ".claude", "data", "build-journal-prose.json")
 DEFAULT_OUT = os.path.join(HUB, "src", "data", "build-journal.json")
 DEFAULT_SINCE = "2026-07-01"
@@ -108,11 +109,24 @@ def load_prose():
         return {}
 
 
+def telemetry_files():
+    """Legacy single ledger (if present) + every per-session shard, in a stable order."""
+    files = [TELEMETRY] if os.path.exists(TELEMETRY) else []
+    if os.path.isdir(TELEMETRY_SHARDS):
+        files += sorted(os.path.join(TELEMETRY_SHARDS, f) for f in os.listdir(TELEMETRY_SHARDS) if f.endswith(".jsonl"))
+    return files
+
+
+def telemetry_lines():
+    for path in telemetry_files():
+        with open(path) as fh:
+            for line in fh:
+                yield line
+
+
 def load_telemetry_by_day(since):
     days = {}
-    if not os.path.exists(TELEMETRY):
-        return days
-    for line in open(TELEMETRY):
+    for line in telemetry_lines():
         line = line.strip()
         if not line:
             continue
