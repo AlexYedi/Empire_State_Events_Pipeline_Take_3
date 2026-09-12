@@ -2,8 +2,9 @@
 # Stop hook — build-session telemetry emitter (YED-88 · PRD US-2)
 #
 # Contract-first, lean foundation (decided 2026-06-26: defer the OTEL collector + Langfuse platform):
-#   1. ALWAYS append an authoritative `build_session` record to .claude/artifacts/build-sessions.jsonl
-#      (source of truth; survives any backend change).
+#   1. ALWAYS append an authoritative `build_session` record to .claude/artifacts/build-sessions/<session_id>.jsonl
+#      (source of truth; survives any backend change). Sharded per session 2026-09-12 (YED-159);
+#      the pre-shard single file build-sessions.jsonl is frozen history.
 #   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_TOKEN is set (derived, swappable adapter).
 #
 # Content-gated by construction: emits metadata + counts ONLY — never prompt/tool-input/output bodies (YED-81).
@@ -97,8 +98,13 @@ RECORD=$(jq -nc \
 [ -z "$RECORD" ] && exit 0
 
 # --- 1. authoritative append-only record (always) ---
-mkdir -p .claude/artifacts
-printf '%s\n' "$RECORD" >> .claude/artifacts/build-sessions.jsonl
+# Sharded per session since 2026-09-12 (YED-159): one file per session_id under build-sessions/.
+# The old single file (build-sessions.jsonl) is frozen history — every session in every worktree
+# appending to one tracked file was the one guaranteed merge conflict and 14 churn commits/month.
+# New files never conflict; a merge is a union of shards. Readers read legacy + shards.
+SHARD_ID=$(printf '%s' "$SESSION_ID" | tr -c 'A-Za-z0-9._-' '_')
+mkdir -p .claude/artifacts/build-sessions
+printf '%s\n' "$RECORD" >> ".claude/artifacts/build-sessions/${SHARD_ID}.jsonl"
 
 # consumed the build_meta into this row — remove it so .state/ stays clean and a stale
 # meta never bleeds into the next session's row (parallels v2-trigger-log's rm of .relevant_skills)
