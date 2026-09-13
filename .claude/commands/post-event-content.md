@@ -211,7 +211,7 @@ Persist what the event added to the **People / Companies / Topics** graph so it 
 1. **Build the delta:** from the Step 3.6 enrichment + the Speaker Map, list every People/Companies/Topics entity the event touched.
 2. **Dedup:** for each, `notion-search` the relevant DB first → classify **MATCH (existing row)** vs **NEW** ("net-new" is defined relative to the live DB index, not a guess).
 3. **Write (parent / main-thread only — the Notion MCP does NOT work from a subagent):**
-   - **NEW** → create the row (People: Name · Current Title · Role Context · Known POV/Bio · LinkedIn · `Events` relation · Last Researched; Companies: Company Name · Description · Industry/Space · Website · `Events` relation; Topics per schema).
+   - **NEW** → create the row (People: Name · Current Title · Role Context · Known POV/Bio · LinkedIn · `Events` relation · Last Researched — **never Email/Phone from a transcript or roster (ADR-9 tier 1)**; Companies: Company Name · Description · Industry/Space · Website · `Events` relation; Topics per schema).
    - **MATCH** → enrich the existing row (append POV/bio, bump Last Researched) + add the `Events` relation to this event — do NOT create a second node.
 4. **Relink** all touched rows to the Event (bidirectional — the Event's People/Companies/Topics auto-populate).
 

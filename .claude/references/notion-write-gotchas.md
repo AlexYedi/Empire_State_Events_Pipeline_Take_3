@@ -60,3 +60,12 @@ l. **`update_content` `old_str` must match the STORED markdown, not the markdown
 m. **`notion-update-page` `insert_content`/`update_content` mangles `\n` escapes into a literal "n" (2026-06-01).**
    Author multi-line update payloads with REAL newlines, not `\n` escape sequences. `create-pages` is unaffected —
    it handles `\n` correctly. (Tracked in user memory `project_notion_updatepage_newline_gotcha.md`.)
+
+## (n) PII convention — ADR-9 tier 1 (2026-09-13, YED-81)
+Notion is the **private review surface**. It may hold contact PII on People — `Email`, `Phone Number`,
+`Notes` — **only when Alex provided it** (a card, an intro, a reply). **Never write research- or
+scrape-derived Email/Phone** from a brief, a roster, a transcript, or an inbox distill; the write-back skills
+(`notion-writer`, `/post-event-content` Step 3.8, `inbox-miner`) map `Name · Current Title · Role Context ·
+Known POV/Bio · LinkedIn URL · Events` and leave Email/Phone/Notes untouched. `Notes` is never mirrored to the
+spine or the hub. Contact detail for a real relationship belongs in **HubSpot** via the gated post-event step
+(YED-142), which is one-way — nothing reads HubSpot back into the graph.

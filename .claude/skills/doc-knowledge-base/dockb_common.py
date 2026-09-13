@@ -79,23 +79,20 @@ def count_tokens(text: str) -> int:
     return len(_model().tokenizer.encode(text, add_special_tokens=False))
 
 # ---- Supabase REST ----------------------------------------------------------
-def _supa_headers(extra: dict | None = None) -> dict:
-    k = env()["SUPABASE_API_KEY"]
-    h = {"apikey": k, "Authorization": f"Bearer {k}", "Content-Type": "application/json"}
-    if extra:
-        h.update(extra)
-    return h
+# --- ADR-9 (YED-81): every write goes through the spine_client guard; semantics preserved
+# (raise on HTTPError, 60s timeout, extra headers such as Prefer pass through). ---------------
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts"))
+from spine_client import req as _spine_req, PIIViolation  # noqa: E402
+
 
 def supa(method: str, path: str, body=None, headers=None):
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(SUPABASE_BASE + path, data=data,
-                                 headers=_supa_headers(headers), method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            raw = r.read().decode()
-            return r.status, (json.loads(raw) if raw else None)
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {e.read().decode()[:500]}")
+    """(status, json) — guarded REST call to the MI spine. Raises RuntimeError on HTTP error,
+    PIIViolation on an ADR-9 violation (nothing is written in that case)."""
+    hdrs = dict(headers or {})
+    prefer = hdrs.pop("Prefer", None)
+    return _spine_req(method, path, body, prefer=prefer, timeout=60, raise_on_error=True,
+                      extra_headers=hdrs or None)
+
 
 def vec_literal(v: list[float]) -> str:
     """pgvector text input for INSERT via PostgREST: '[0.1,0.2,...]'."""

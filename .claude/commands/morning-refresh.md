@@ -57,13 +57,14 @@ links so raw content stays out of context (see the `/scan-trends` 2026-08-06 pat
    the graph — the automated embedding version is the YED-115 upgrade, not needed here.)
 
 ## Step 4 — AUTO-WRITE to the graph (no approval gate; Step 5.5 REST pattern)
-For each matched/new topic, write via REST (`.claude/references/market-intel-spine.md`):
+**ADR-9 (2026-09-13):** every write below runs through `python3 .claude/scripts/spine_write.py <table> …` — the guarded chokepoint (contact PII and non-allowlisted columns are refused with exit 2; nothing is written on a refusal). Never hand-roll `curl` for a write. Reads stay plain `GET`.
+For each matched/new topic, write via the CLI (shapes per `.claude/references/market-intel-spine.md`):
 1. **Upsert topic** — matched → `PATCH` (`engagement_count`+1, `last_engaged_at`=now); new → `POST`
    (`source:'trend_radar'`, `engagement_count:1`). Capture `topic_id`.
-2. **Insert the signal event** — `POST /event` `kind='market'`, MANDATORY provenance
+2. **Insert the signal event** — `spine_write.py event` `kind='market'`, MANDATORY provenance
    (`source`, `url`, `metadata.sources`), normalized `confidence`. Dedup on (title, event_date::date, kind) —
    skip identical same-day signals. Capture `event_id`.
-3. **Insert the hyperedge** — `POST /event_entity` (event→topic, role='subject').
+3. **Insert the hyperedge** — `spine_write.py event_entity` (event→topic, role='subject').
 Track counts as you go for the report. If a write fails, log it and continue (additive, not a gate).
 
 ## Step 4.5 — Recompute relevance (the evolving-viewpoint step)

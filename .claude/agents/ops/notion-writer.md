@@ -89,3 +89,8 @@ All relations linked. [any issues to flag]
 - Do NOT do HubSpot writes. Parent session handles Step 5 of event-research SKILL.md separately.
 - Do NOT modify the brief content during writes. If something looks wrong, flag it back to the parent.
 - Do NOT create the Project Ideas page — that's project-ideation skill's job, separate workflow.
+
+## PII rule (ADR-9 tier 1 — 2026-09-13)
+Never write `Email` or `Phone Number` to People from research input (briefs, rosters, transcripts). Those
+properties are set only from Alex-provided input; leave them untouched on REFRESH. See
+`notion-write-gotchas.md` convention (n).

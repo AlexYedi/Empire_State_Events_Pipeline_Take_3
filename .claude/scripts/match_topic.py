@@ -21,15 +21,10 @@ Usage:
 Reads SUPABASE_API_KEY from .env (never printed). Read-only — never writes.
 """
 import json, os, re, sys, urllib.request, urllib.error
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ADR-9: the one write path
+from spine_client import req, q  # guarded REST client (YED-81)
 
-BASE = "https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1"
 STOP = {"the", "a", "an", "of", "for", "in", "and", "to", "with", "on", "&", "ai", "-"}
-
-def load_key():
-    for line in open(os.path.join(os.path.dirname(__file__), "..", "..", ".env")):
-        if line.startswith("SUPABASE_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip()
-    sys.exit("SUPABASE_API_KEY not found in .env")
 
 def tokens(name):
     # lowercase, strip parentheticals, split on non-alphanumerics, drop stopwords
@@ -62,13 +57,9 @@ def main():
         sys.exit('usage: match_topic.py "Candidate Topic Name" [--top N] [--threshold X]')
     query = args[0]
 
-    key = load_key()
-    h = {"apikey": key, "Authorization": f"Bearer {key}"}
-    try:
-        rows = json.load(urllib.request.urlopen(
-            urllib.request.Request(BASE + "/topic?select=name&limit=2000", headers=h)))
-    except urllib.error.HTTPError as e:
-        sys.exit(f"graph read failed: {e.code} {e.read().decode()[:120]}")
+    st, rows = req("GET", "/topic?select=name&limit=2000")  # ADR-9: reads go through the same client
+    if st != 200 or not isinstance(rows, list):
+        sys.exit(f"graph read failed: {st} {str(rows)[:120]}")
 
     q_tokens = tokens(query)
     scored = sorted(((score(q_tokens, query, r["name"]), r["name"]) for r in rows),

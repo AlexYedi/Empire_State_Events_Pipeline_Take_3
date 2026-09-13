@@ -165,9 +165,12 @@ graph (the system of record) — this makes trend-radar the first **Event produc
 dashboard. **REST only — NEVER the Supabase MCP** (removed; it was on the wrong account). Full contract:
 `.claude/references/market-intel-spine.md`. Plain HTTPS (PostgREST), so safe to run inline in this thread.
 
-**Setup (once per run):** read `SUPABASE_API_KEY` (an `sb_secret_…` key) from `.env` — never print it. Base:
-`https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`. Headers on every call: `apikey: <key>`,
-`Authorization: Bearer <key>`, `Content-Type: application/json`, `Prefer: return=representation`.
+**Write path (ADR-9, 2026-09-13) — every write in this step runs through the guarded CLI, never raw curl:**
+`python3 .claude/scripts/spine_write.py <table> --json '<row>'` (insert) or
+`… <table> --patch '<filter>' --json '<row>'` (update). The guard refuses contact PII and non-allowlisted
+columns with exit 2 and names the fix; nothing is written on a refusal. Reads stay plain `GET` over REST
+(`SUPABASE_API_KEY` from `.env`, never printed; base `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`).
+Spec: `.claude/references/market-intel-spine.md` → "Write path".
 
 **Pre-flight (do FIRST, before any REST call):** confirm `SUPABASE_API_KEY` is set in `.env`. If it is
 absent/empty, **skip this entire step** and print `graph-spine write skipped: SUPABASE_API_KEY not set`
@@ -177,11 +180,11 @@ Do NOT fall back to the Supabase MCP (wrong account). Do NOT invent or hardcode 
 For each **approved** topic (read-before-write dedup):
 
 1. **Upsert the topic.** `GET /topic?name=eq.{canonical}&select=id,engagement_count`.
-   - Found → `PATCH /topic?id=eq.{id}` with `{"last_engaged_at":"{nowISO}","engagement_count":{existing+1}}`. Capture `id`.
-   - Not found → `POST /topic` with `{"name":"{canonical}","source":"trend_radar","last_engaged_at":"{nowISO}","engagement_count":1}`. Capture `id`.
+   - Found → update `topic` (`spine_write.py topic --patch id=eq.{id} --json`) with `{"last_engaged_at":"{nowISO}","engagement_count":{existing+1}}`. Capture `id`.
+   - Not found → insert into `topic` (`spine_write.py topic --json`) with `{"name":"{canonical}","source":"trend_radar","last_engaged_at":"{nowISO}","engagement_count":1}`. Capture `id`.
    - Leave `relevance_score` at 0 — it is a *computed* output owned by the deferred recompute producer; producers write only the raw inputs (`engagement_count`, `last_engaged_at`). The V1 dashboard sorts by signal activity/recency and labels it honestly.
 
-2. **Insert the signal Event** (a signal IS a `market`-kind event). `POST /event`:
+2. **Insert the signal Event** (a signal IS a `market`-kind event) — `spine_write.py event --json`:
    ```json
    {
      "title": "{canonical topic} — rising",
@@ -199,7 +202,7 @@ For each **approved** topic (read-before-write dedup):
    `confidence` + `source_count` are what the dashboard shows inline, labeled `trend_radar`. Dedup on
    (title, event_date::date, kind) — GET before POST if re-running the same day; skip identical signals.
 
-3. **Link the hyperedge.** `POST /event_entity` with
+3. **Link the hyperedge.** `spine_write.py event_entity --prefer resolution=ignore-duplicates,return=minimal --json` with
    `{"event_id":"{event_id}","entity_type":"topic","entity_id":"{topic_id}","role":"subject"}`.
 
 **Idempotency:** same-day re-runs are safe — topic upsert is read-before-write; the Event dedup prevents
