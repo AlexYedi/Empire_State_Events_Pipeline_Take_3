@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset="utf-8"><title>LeadDev NY — Cheap to build, expensive to trust</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.mono{font-family:Menlo,"SF Mono",monospace}
+.kicker{font-family:Menlo,monospace;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h1{font-size:104px;line-height:1.02;margin:40px 0 0 0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:78px;line-height:1.06;margin:34px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}
+.body{font-size:38px;line-height:1.35;color:#d7deea;margin-top:36px;max-width:900px}
+.foot{position:absolute;left:88px;right:88px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:22px;color:#7f8fab}
+.foot .src{max-width:760px;line-height:1.35}
+.stat{display:flex;gap:40px;margin-top:56px}
+.card{flex:1;background:#121c31;border:2px solid #223154;border-radius:18px;padding:44px 40px}
+.card .n{font-family:Menlo,monospace;font-size:150px;line-height:1;color:#4f7cff;font-weight:700}
+.card .l{font-size:34px;line-height:1.3;color:#d7deea;margin-top:18px}
+.rule{height:4px;background:#4f7cff;width:160px;margin-top:40px}
+svg text{font-family:Menlo,monospace}
+</style></head><body>
+
+<section class="slide">
+  <div class="kicker">LeadDev New York · LDX3 eXpress · Mon Sept 14</div>
+  <h1>Cheap to <span class="accent">build.</span><br>Expensive to <span class="accent">trust.</span></h1>
+  <div class="rule"></div>
+  <div class="body">Why "Build, Buy, …Vibe?" is really a question about who reviews the code, not who writes it.</div>
+  <div class="foot"><div class="src">Two talks + one panel · New York Times Building · hosted by LeadDev, sponsored by Datadog</div><div>1 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Evidence · what changed</div>
+  <h2>Generation got cheap.<br>Verification did not.</h2>
+  <div class="stat">
+    <div class="card"><div class="n">4.6×</div><div class="l">longer wait in code review for AI-authored pull requests</div></div>
+    <div class="card"><div class="n">2.74×</div><div class="l">the vulnerability rate of human-written code (upper bound)</div></div>
+  </div>
+  <div class="body">Routine tasks got 46% faster. High-complexity work: under 10%. The queue didn't disappear; it moved downstream.</div>
+  <div class="foot"><div class="src">Source: McKinsey study of 4,500 developers across 150 enterprises, 2026 (via ValueAdd VC synthesis)</div><div>2 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Mechanism · where the bottleneck moved</div>
+  <h2>The review gate is the new constraint</h2>
+  <svg viewBox="0 0 904 640" width="904" height="640" style="margin-top:40px" role="img" aria-label="Flow diagram: writing code, once the bottleneck, now flows fast into a review queue that is the new bottleneck before production">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <!-- stage boxes -->
+    <rect x="20" y="60" width="250" height="150" rx="16" fill="#121c31" stroke="#223154" stroke-width="3"/>
+    <text x="145" y="120" text-anchor="middle" font-size="30" fill="#f5f7fa" font-weight="700">WRITE</text>
+    <text x="145" y="162" text-anchor="middle" font-size="20" fill="#93a4c3">humans + agents</text>
+    <rect x="327" y="60" width="250" height="150" rx="16" fill="#121c31" stroke="#4f7cff" stroke-width="5"/>
+    <text x="452" y="120" text-anchor="middle" font-size="30" fill="#f5f7fa" font-weight="700">REVIEW</text>
+    <text x="452" y="162" text-anchor="middle" font-size="20" fill="#4f7cff">senior humans only</text>
+    <rect x="634" y="60" width="250" height="150" rx="16" fill="#121c31" stroke="#223154" stroke-width="3"/>
+    <text x="759" y="120" text-anchor="middle" font-size="30" fill="#f5f7fa" font-weight="700">PRODUCTION</text>
+    <text x="759" y="162" text-anchor="middle" font-size="20" fill="#93a4c3">incidents, rollbacks</text>
+    <line x1="270" y1="135" x2="320" y2="135" stroke="#93a4c3" stroke-width="4" marker-end="url(#a)"/>
+    <line x1="577" y1="135" x2="627" y2="135" stroke="#93a4c3" stroke-width="4" marker-end="url(#a)"/>
+    <!-- throughput bars: before vs after -->
+    <text x="20" y="300" font-size="26" fill="#93a4c3">Volume entering each stage</text>
+    <text x="20" y="360" font-size="24" fill="#d7deea">2021</text>
+    <rect x="110" y="338" width="160" height="30" fill="#3b4c72"/>
+    <rect x="327" y="338" width="150" height="30" fill="#3b4c72"/>
+    <rect x="634" y="338" width="140" height="30" fill="#3b4c72"/>
+    <text x="20" y="430" font-size="24" fill="#d7deea">2026</text>
+    <rect x="110" y="408" width="250" height="30" fill="#4f7cff"/>
+    <rect x="327" y="408" width="250" height="30" fill="#4f7cff"/>
+    <rect x="577" y="408" width="14" height="30" fill="#e0693d"/>
+    <rect x="634" y="408" width="150" height="30" fill="#3b4c72"/>
+    <text x="452" y="480" text-anchor="middle" font-size="26" fill="#e0693d">pile-up: 4.6× longer wait</text>
+    <!-- takeaway -->
+    <text x="20" y="560" font-size="27" fill="#f5f7fa">Raw throughput = PRs opened.</text>
+    <text x="20" y="605" font-size="27" fill="#4f7cff">Validated = merged, shipped, no rollback.</text>
+  </svg>
+  <div class="foot"><div class="src">Source: McKinsey 2026 (review lag); GitHub Octoverse 2025 (PR volume +23% YoY). Diagram schematic, not to scale.</div><div>3 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The question for the room</div>
+  <h2>When building stops being expensive, does the case for buying become <span class="accent">"we can't afford to review it"?</span></h2>
+  <div class="body">Build · Buy · Vibe. Three lanes, one gate. Monday's panel decides which lane survives the review queue.</div>
+  <div class="body" style="font-size:32px;color:#93a4c3;margin-top:60px">Pranay Prabhat (The New York Times) · Bradley Holt (Datadog) · Brian Takashi Hooper (MDLinx / M3 USA) · Divya Ramanarayanan · Ivan Milanov · Maylin Leal</div>
+  <div class="foot"><div class="src">I'll share what the room lands on. Sources in the first comment.</div><div>4 / 4</div></div>
+</section>
+</body></html>

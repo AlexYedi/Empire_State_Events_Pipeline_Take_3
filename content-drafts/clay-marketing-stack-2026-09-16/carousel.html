@@ -1,0 +1,132 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Clay livestream — Who owns the pantry</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font-family:Menlo,monospace;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h2{font-size:72px;line-height:1.06;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}.warm{color:#e0693d}
+.foot{position:absolute;left:88px;right:88px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:20px;color:#7f8fab;gap:30px}
+.foot .src{max-width:800px;line-height:1.4}
+.lab{font-family:Menlo,monospace;font-size:21px;letter-spacing:.1em;text-transform:uppercase;color:#93a4c3}
+/* slide 1 */
+.split{display:flex;gap:28px;margin-top:52px;align-items:stretch}
+.col{flex:1;background:#121c31;border:2px solid #223154;border-radius:18px;padding:30px 28px}
+.suite{border:3px dashed #3b4c72;border-radius:14px;padding:18px;margin-top:20px}
+.appl{background:#1a2640;border-radius:10px;padding:14px 16px;font-size:28px;margin-bottom:12px;color:#d7deea}
+.appl:last-child{margin-bottom:0}
+.cap{font-size:25px;line-height:1.3;color:#93a4c3;margin-top:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:20px}
+.st{background:#1a2640;border-radius:10px;height:118px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;color:#d7deea;padding:4px}
+.pantry{background:#0b1220;border:4px solid #4f7cff;color:#f5f7fa;font-size:20px;line-height:1.2}
+.pantry b{display:block;font-family:Menlo,monospace;font-size:20px;color:#4f7cff;margin-bottom:4px}
+.statline{margin-top:34px;display:flex;align-items:baseline;gap:26px;border-top:2px solid #223154;padding-top:28px}
+.statline .n{font-family:Menlo,monospace;font-size:64px;font-weight:700;color:#e0693d;white-space:nowrap}
+.statline .t{font-size:28px;line-height:1.3;color:#d7deea}
+/* slide 2 */
+.row{display:flex;gap:26px;background:#121c31;border:2px solid #223154;border-radius:18px;padding:26px 32px;margin-top:22px}
+.row .step{width:230px;flex:none;font-family:Menlo,monospace;font-weight:700;font-size:34px;color:#4f7cff;padding-top:4px}
+.row .step small{display:block;font-size:19px;color:#93a4c3;font-weight:400;margin-top:8px;letter-spacing:.06em}
+.row .does{font-size:29px;line-height:1.3;color:#f5f7fa}
+.row .ret{font-size:25px;line-height:1.3;color:#d7deea;margin-top:14px;border-left:4px solid #e0693d;padding-left:14px}
+.row .ret span{font-family:Menlo,monospace;font-size:18px;letter-spacing:.1em;color:#e0693d;display:block;margin-bottom:4px}
+.data{margin-top:26px;text-align:center;font-family:Menlo,monospace;font-size:22px;color:#93a4c3;border:2px dashed #3b4c72;border-radius:14px;padding:16px}
+/* slide 3 */
+.claim{display:grid;grid-template-columns:290px 1fr;gap:24px;border-top:2px solid #223154;padding:26px 0}
+.claim:last-of-type{border-bottom:2px solid #223154}
+.claim .who{font-family:Menlo,monospace;font-weight:700;font-size:28px;color:#f5f7fa;line-height:1.25}
+.claim .who small{display:block;font-weight:400;font-size:19px;color:#93a4c3;margin-top:8px}
+.claim .where{font-family:Menlo,monospace;font-size:20px;letter-spacing:.08em;text-transform:uppercase;color:#4f7cff}
+.claim .q{font-size:30px;line-height:1.3;color:#d7deea;margin-top:8px}
+/* slide 4 */
+.tl{position:relative;margin-top:40px;padding-left:44px}
+.tl:before{content:"";position:absolute;left:11px;top:14px;bottom:14px;width:4px;background:#223154}
+.ev{position:relative;margin-bottom:20px}
+.ev:before{content:"";position:absolute;left:-44px;top:9px;width:26px;height:26px;border-radius:50%;background:#0b1220;border:4px solid #4f7cff}
+.ev.aeo:before{border-color:#e0693d}
+.ev .d{font-family:Menlo,monospace;font-size:21px;color:#93a4c3;letter-spacing:.06em}
+.ev .w{font-size:29px;line-height:1.25;color:#f5f7fa;margin-top:2px}
+.ev .w i{font-style:normal;color:#93a4c3}
+.ask{margin-top:30px;font-size:44px;line-height:1.15;font-weight:700}
+.meta{font-family:Menlo,monospace;font-size:21px;color:#93a4c3;margin-top:18px}
+</style></head><body>
+
+<section class="slide">
+  <div class="kicker">Clay livestream · Wed Sept 16 · 12–1pm ET</div>
+  <h2>From one-brand kitchen to <span class="accent">shared pantry</span></h2>
+  <div class="split">
+    <div class="col" style="flex:0 0 350px">
+      <div class="lab">Then · the suite</div>
+      <div class="suite">
+        <div class="appl">Email</div>
+        <div class="appl">Forms</div>
+        <div class="appl">Rule-based scoring</div>
+        <div class="appl">CRM sync</div>
+      </div>
+      <div class="cap">Every appliance from one vendor. Integrated, but only with itself.</div>
+    </div>
+    <div class="col">
+      <div class="lab">Now · composable</div>
+      <div class="grid">
+        <div class="st">Enrichment</div><div class="st">Scoring</div><div class="st">Orchestration</div>
+        <div class="st">Paid ads</div><div class="st pantry"><div><b>PANTRY</b>CRM or<br>warehouse</div></div><div class="st">Email</div>
+        <div class="st">Events</div><div class="st">Direct mail</div><div class="st">AEO</div>
+      </div>
+      <div class="cap">Stations around one pantry, the source of truth. Agents are line cooks: any station works, if the pantry is labeled.</div>
+    </div>
+  </div>
+  <div class="statline"><div class="n">26.9%→17.4%</div><div class="t">CDPs as the center of B2C stacks, as functions moved into the warehouse or engagement platforms</div></div>
+  <div class="foot"><div class="src">Source: eMarketer, "FAQ on martech," Feb 2026. Kitchen framing is illustrative.</div><div>1 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The agenda · what each step retires</div>
+  <h2>Three steps, three old habits</h2>
+  <div class="row">
+    <div class="step">FIND<small>WHO</small></div>
+    <div><div class="does">Buying committees at target accounts; inbound leads enriched on arrival</div>
+    <div class="ret"><span>Retires</span>Bought static lists + a separate enrichment vendor + manual lookups</div></div>
+  </div>
+  <div class="row">
+    <div class="step">PRIORITIZE<small>WHO FIRST</small></div>
+    <div><div class="does">Account and lead scores written in plain language; personas update as data changes</div>
+    <div class="ret"><span>Retires</span>Point rules: +10 for a VP title, +5 per pricing-page visit</div></div>
+  </div>
+  <div class="row">
+    <div class="step">ACTIVATE<small>DO SOMETHING</small></div>
+    <div><div class="does">One list to paid ads, outbound email, events, direct mail and landing pages, synced to the CRM</div>
+    <div class="ret"><span>Retires</span>A CSV export and re-upload for every channel</div></div>
+  </div>
+  <div class="data">all three sit on one shared data layer</div>
+  <div class="foot"><div class="src">Agenda: clay.com livestream page. "Retires" column is an illustrative category mapping; which tools Verkada, Pendo and ElevenLabs actually cut is an open Q&amp;A question.</div><div>2 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Who claims the context layer</div>
+  <h2>Four bids for <span class="accent">the same layer</span></h2>
+  <div style="margin-top:40px">
+    <div class="claim"><div class="who">HubSpot<small>Agent Hub · Jul 23</small></div><div><div class="where">Lives in: the CRM</div><div class="q">"One place to see agent performance, all working together and using shared context"</div></div></div>
+    <div class="claim"><div class="who">Profound<small>Context Manager · Sep 1</small></div><div><div class="where">Lives in: its own layer</div><div class="q">"The layer where your business knowledge lives"</div></div></div>
+    <div class="claim"><div class="who">Braze + Databricks<small>Partnership · Jul</small></div><div><div class="where">Lives in: the warehouse</div><div class="q">Warehouse-native customer data feeding the engagement platform</div></div></div>
+    <div class="claim"><div class="who">Clay<small>Livestream · Sep 16</small></div><div><div class="where">Lives in: a shared data layer</div><div class="q">"A shared data layer to launch efficient campaigns and build pipeline"</div></div></div>
+  </div>
+  <div class="foot"><div class="src">Sources: hubspot.com/company-news (2026-07-23); tryprofound.com/blog (2026-09-01); braze.com/company/news (2026-07); clay.com livestream page. Quotes are each company's own words.</div><div>3 / 4</div></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Meanwhile, at the stations</div>
+  <h2>Eight weeks: channels <span class="accent">opened to agents</span></h2>
+  <div class="tl">
+    <div class="ev"><div class="d">JUL 14 · CLAY</div><div class="w">MCP for Reps <i>· Clay functions usable inside AI tools</i></div></div>
+    <div class="ev"><div class="d">JUL 16 · META</div><div class="w">Ads MCP server <i>· outside agents create and manage campaigns</i></div></div>
+    <div class="ev"><div class="d">JUL 23 · HUBSPOT</div><div class="w">Agent Hub + Agent Builder <i>· public beta</i></div></div>
+    <div class="ev"><div class="d">SEP 8 · MAGNITE</div><div class="w">First agentic CTV campaign in EMEA <i>· with Amnet France</i></div></div>
+    <div class="ev aeo"><div class="d">SEP 9 · PROFOUND</div><div class="w">Answer engines personalize by who's asking <i>· 71,147 responses studied</i></div></div>
+  </div>
+  <div class="ask">If any agent can work the station, what stays scarce: <span class="warm">the pantry, or knowing what to cook?</span></div>
+  <div class="meta">Hosted by Talia Schleifer · Clay</div>
+  <div class="foot"><div class="src">Sources: clay.com/blog; developers.facebook.com (2026-07-16); hubspot.com/company-news; GlobeNewswire (2026-09-08); tryprofound.com/blog (vendor research).</div><div>4 / 4</div></div>
+</section>
+</body></html>

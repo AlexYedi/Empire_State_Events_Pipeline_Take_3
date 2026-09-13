@@ -1,0 +1,188 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Signal Rich, Action Poor — who gets to act</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font-family:Menlo,monospace;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h1{font-size:96px;line-height:1.02;margin:36px 0 0 0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:74px;line-height:1.06;margin:32px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}.warn{color:#e0693d}
+.foot{position:absolute;left:88px;right:88px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:22px;color:#7f8fab;gap:40px}
+.foot .src{max-width:780px;line-height:1.35}
+svg text{font-family:Menlo,monospace}
+.rows{margin-top:30px}
+.row{display:flex;gap:28px;padding:16px 0;border-top:2px solid #223154}
+.row:last-child{border-bottom:2px solid #223154}
+.row .num{font-family:Menlo,monospace;font-size:52px;line-height:1;color:#4f7cff;font-weight:700;width:56px;flex:none}
+.row .t{font-size:38px;font-weight:700;line-height:1.1}
+.row .d{font-size:27px;line-height:1.25;color:#d7deea;margin-top:6px}
+.row .tag{font-family:Menlo,monospace;font-size:21px;margin-top:10px;color:#93a4c3}
+.row .tag b{color:#e0693d;font-weight:700}
+.names{font-size:30px;line-height:1.45;color:#d7deea;margin-top:34px}
+.names b{color:#f5f7fa}
+</style></head><body>
+
+<!-- SLIDE 1: the map -->
+<section class="slide">
+  <div class="kicker">RevGenius webinar · Thu Sept 17</div>
+  <h1>Signal rich.<br><span class="accent">Action poor.</span></h1>
+  <svg viewBox="0 0 904 760" width="904" height="760" style="margin-top:34px" role="img" aria-label="Layer map: Airspeed starts in intelligence, HubSpot in record, Clay and Apollo in data and outreach; all four have arrows reaching up into the action layer">
+    <defs><marker id="up" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4f7cff"/></marker></defs>
+    <!-- bands -->
+    <rect x="0" y="0" width="904" height="150" rx="14" fill="#131f3a" stroke="#4f7cff" stroke-width="4"/>
+    <rect x="0" y="175" width="904" height="130" rx="14" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <rect x="0" y="330" width="904" height="130" rx="14" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <rect x="0" y="485" width="904" height="130" rx="14" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <!-- layer labels -->
+    <text x="24" y="66" font-size="27" font-weight="700" fill="#4f7cff">ACTION</text>
+    <text x="24" y="100" font-size="19" fill="#d7deea">does the</text>
+    <text x="24" y="124" font-size="19" fill="#d7deea">next step</text>
+    <text x="24" y="232" font-size="24" font-weight="700" fill="#f5f7fa">INTELLIGENCE</text>
+    <text x="24" y="264" font-size="19" fill="#93a4c3">explains what</text>
+    <text x="24" y="288" font-size="19" fill="#93a4c3">happened</text>
+    <text x="24" y="387" font-size="24" font-weight="700" fill="#f5f7fa">RECORD</text>
+    <text x="24" y="419" font-size="19" fill="#93a4c3">stores what</text>
+    <text x="24" y="443" font-size="19" fill="#93a4c3">happened</text>
+    <text x="24" y="542" font-size="24" font-weight="700" fill="#f5f7fa">DATA +</text>
+    <text x="24" y="570" font-size="24" font-weight="700" fill="#f5f7fa">OUTREACH</text>
+    <text x="24" y="598" font-size="19" fill="#93a4c3">lists, sends</text>
+    <!-- move labels inside action band -->
+    <g font-size="18" fill="#f5f7fa" text-anchor="middle">
+      <text x="314" y="52">two-way</text><text x="314" y="76">CRM sync</text>
+      <text x="482" y="52">Agent Hub</text><text x="482" y="76">+ Builder</text>
+      <text x="650" y="52">Account</text><text x="650" y="76">Agents</text>
+      <text x="818" y="52">Assistant</text><text x="818" y="76">w/ memory</text>
+    </g>
+    <!-- arrows: origin dot -> action band -->
+    <g stroke="#4f7cff" stroke-width="5" fill="none">
+      <line x1="314" y1="226" x2="314" y2="112" marker-end="url(#up)"/>
+      <line x1="482" y1="381" x2="482" y2="112" marker-end="url(#up)"/>
+      <line x1="650" y1="536" x2="650" y2="112" marker-end="url(#up)"/>
+      <line x1="818" y1="536" x2="818" y2="112" marker-end="url(#up)"/>
+    </g>
+    <g fill="#0b1220" stroke="#f5f7fa" stroke-width="4">
+      <circle cx="314" cy="240" r="14"/>
+      <circle cx="482" cy="395" r="14"/>
+      <circle cx="650" cy="550" r="14"/>
+      <circle cx="818" cy="550" r="14"/>
+    </g>
+    <g font-size="17" fill="#93a4c3" text-anchor="middle">
+      <text x="314" y="288">starts here</text>
+      <text x="482" y="443">starts here</text>
+      <text x="650" y="598">starts here</text>
+      <text x="818" y="598">starts here</text>
+    </g>
+    <!-- vendor names -->
+    <g font-size="25" font-weight="700" fill="#f5f7fa" text-anchor="middle">
+      <text x="314" y="668">Airspeed</text>
+      <text x="482" y="668">HubSpot</text>
+      <text x="650" y="668">Clay</text>
+      <text x="818" y="668">Apollo.io</text>
+    </g>
+    <text x="566" y="730" font-size="22" fill="#e0693d" text-anchor="middle">Four starting points. One layer.</text>
+  </svg>
+  <div class="foot"><div class="src">Layer names: Airspeed's framing (goairspeed.com). Moves: Airspeed site; HubSpot news Jul 23; Clay blog Aug 25; Apollo release notes Jul 2026.</div><div>1 / 4</div></div>
+</section>
+
+<!-- SLIDE 2: five checks -->
+<section class="slide">
+  <div class="kicker">Before an agent gets edit rights</div>
+  <h2 style="font-size:66px">Five checks for <span class="accent">trusted execution</span></h2>
+  <div class="rows">
+    <div class="row"><div class="num">1</div><div><div class="t">Scoped write access</div><div class="d">A valet key: starts the car, won't open the trunk. Named objects and fields only.</div><div class="tag"><b>SHIPPED</b> · Apollo: Salesforce custom objects sync read-only</div></div></div>
+    <div class="row"><div class="num">2</div><div><div class="t">Its own identity</div><div class="d">A service account, not the rep's login, so every change traces to the agent.</div><div class="tag">LISTEN FOR · who the log says made the change</div></div></div>
+    <div class="row"><div class="num">3</div><div><div class="t">Blast-radius limits</div><div class="d">Cap the batch size; stop the job when something looks wrong.</div><div class="tag"><b>SHIPPED</b> · Apollo: sequences auto-pause on high bounce rates</div></div></div>
+    <div class="row"><div class="num">4</div><div><div class="t">Audit trail with undo</div><div class="d">Before-and-after values, so a bad run reverses field by field.</div><div class="tag">LISTEN FOR · undo path, not a backup restore</div></div></div>
+    <div class="row"><div class="num">5</div><div><div class="t">Sign-off scaled to reversibility</div><div class="d">The harder an action is to undo, the more it needs a human first.</div><div class="tag">LISTEN FOR · where the line sits (slide 4)</div></div></div>
+  </div>
+  <div class="foot"><div class="src">Checklist is analysis, not an industry standard. Shipped examples: Apollo Release Notes, Jul–Aug 2026.</div><div>2 / 4</div></div>
+</section>
+
+<!-- SLIDE 3: single-writer conflict -->
+<section class="slide">
+  <div class="kicker">The unsolved conflict</div>
+  <h2>Two agents. One field. <span class="warn">No referee.</span></h2>
+  <svg viewBox="0 0 904 800" width="904" height="800" style="margin-top:36px" role="img" aria-label="Diagram: without a single writer, two agents overwrite the same Deal Stage field and one update is silently lost; with a single writer, agents propose changes to one authority that writes the field and logs it">
+    <defs>
+      <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker>
+      <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e0693d"/></marker>
+      <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4f7cff"/></marker>
+    </defs>
+    <!-- TOP: last write wins -->
+    <text x="0" y="28" font-size="26" font-weight="700" fill="#e0693d">WITHOUT: LAST WRITE WINS</text>
+    <rect x="0" y="56" width="300" height="100" rx="12" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="20" y="96" font-size="22" font-weight="700" fill="#f5f7fa">Agent A · 2:00am</text>
+    <text x="20" y="130" font-size="20" fill="#d7deea">Stage → Negotiation</text>
+    <rect x="0" y="186" width="300" height="100" rx="12" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="20" y="226" font-size="22" font-weight="700" fill="#f5f7fa">Agent B · 2:01am</text>
+    <text x="20" y="260" font-size="20" fill="#d7deea">Stage → Discovery</text>
+    <line x1="300" y1="106" x2="540" y2="160" stroke="#93a4c3" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#g)"/>
+    <line x1="300" y1="236" x2="540" y2="186" stroke="#e0693d" stroke-width="4" marker-end="url(#o)"/>
+    <rect x="550" y="116" width="354" height="116" rx="12" fill="#121c31" stroke="#e0693d" stroke-width="4"/>
+    <text x="572" y="158" font-size="20" fill="#93a4c3">CRM · Deal Stage</text>
+    <text x="572" y="202" font-size="30" font-weight="700" fill="#f5f7fa">Discovery</text>
+    <text x="550" y="272" font-size="21" fill="#e0693d">A's update silently lost.</text>
+    <text x="550" y="300" font-size="21" fill="#e0693d">Nobody is told.</text>
+    <line x1="0" y1="360" x2="904" y2="360" stroke="#223154" stroke-width="2"/>
+    <!-- BOTTOM: single writer -->
+    <text x="0" y="418" font-size="26" font-weight="700" fill="#4f7cff">WITH: ONE SINGLE WRITER</text>
+    <rect x="0" y="446" width="220" height="90" rx="12" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="20" y="500" font-size="22" font-weight="700" fill="#f5f7fa">Agent A</text>
+    <rect x="0" y="566" width="220" height="90" rx="12" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="20" y="620" font-size="22" font-weight="700" fill="#f5f7fa">Agent B</text>
+    <line x1="220" y1="491" x2="330" y2="540" stroke="#93a4c3" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#g)"/>
+    <line x1="220" y1="611" x2="330" y2="572" stroke="#93a4c3" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#g)"/>
+    <text x="226" y="690" font-size="19" fill="#93a4c3">propose</text>
+    <rect x="340" y="496" width="226" height="120" rx="12" fill="#131f3a" stroke="#4f7cff" stroke-width="4"/>
+    <text x="453" y="544" font-size="22" font-weight="700" fill="#f5f7fa" text-anchor="middle">Authority</text>
+    <text x="453" y="576" font-size="19" fill="#d7deea" text-anchor="middle">for Deal Stage</text>
+    <text x="453" y="600" font-size="19" fill="#d7deea" text-anchor="middle">accepts / rejects</text>
+    <line x1="566" y1="556" x2="664" y2="556" stroke="#4f7cff" stroke-width="5" marker-end="url(#b)"/>
+    <text x="613" y="538" font-size="17" fill="#4f7cff" text-anchor="middle">writes</text>
+    <rect x="674" y="496" width="230" height="120" rx="12" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="694" y="540" font-size="20" fill="#93a4c3">CRM · Deal Stage</text>
+    <text x="694" y="586" font-size="28" font-weight="700" fill="#f5f7fa">one value</text>
+    <line x1="789" y1="616" x2="789" y2="676" stroke="#4f7cff" stroke-width="4" marker-end="url(#b)"/>
+    <rect x="494" y="686" width="410" height="92" rx="12" fill="#121c31" stroke="#4f7cff" stroke-width="2"/>
+    <text x="514" y="722" font-size="20" fill="#f5f7fa" font-weight="700">Audit log</text>
+    <text x="514" y="754" font-size="18" fill="#d7deea">who · what · when · before/after</text>
+  </svg>
+  <div class="foot"><div class="src">Schematic. Single-writer is a data-engineering pattern; no cross-vendor arbitration standard found as of Sept 2026.</div><div>3 / 4</div></div>
+</section>
+
+<!-- SLIDE 4: where the sign-off line goes -->
+<section class="slide">
+  <div class="kicker">The question for Thursday</div>
+  <h2>Where does the <span class="accent">sign-off line</span> go?</h2>
+  <svg viewBox="0 0 904 470" width="904" height="470" style="margin-top:50px" role="img" aria-label="Scale of agent actions from easy to undo to impossible to recall: add a CRM note, update next step, change deal stage, bulk-edit 4,000 deals, email a prospect, with a dashed line asking where human sign-off should begin">
+    <defs><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <!-- dashed candidate line -->
+    <line x1="540" y1="80" x2="540" y2="400" stroke="#e0693d" stroke-width="4" stroke-dasharray="12 10"/>
+    <text x="540" y="40" font-size="24" font-weight="700" fill="#e0693d" text-anchor="middle">human sign-off starts here?</text>
+    <text x="540" y="68" font-size="22" fill="#e0693d" text-anchor="middle">←  or here  →</text>
+    <!-- axis -->
+    <line x1="20" y1="250" x2="884" y2="250" stroke="#93a4c3" stroke-width="4" marker-end="url(#r)"/>
+    <!-- points -->
+    <g stroke="#0b1220" stroke-width="4">
+      <circle cx="100" cy="250" r="16" fill="#4f7cff"/>
+      <circle cx="276" cy="250" r="16" fill="#4f7cff"/>
+      <circle cx="452" cy="250" r="16" fill="#93a4c3"/>
+      <circle cx="628" cy="250" r="16" fill="#e0693d"/>
+      <circle cx="804" cy="250" r="16" fill="#e0693d"/>
+    </g>
+    <g font-size="24" fill="#f5f7fa" text-anchor="middle">
+      <text x="100" y="170">Add a</text><text x="100" y="200">CRM note</text>
+      <text x="276" y="310">Update</text><text x="276" y="340">Next Step</text>
+      <text x="452" y="170">Change</text><text x="452" y="200">Deal Stage</text>
+      <text x="628" y="310">Bulk-edit</text><text x="628" y="340">4,000 deals</text>
+      <text x="804" y="170">Email a</text><text x="804" y="200">prospect</text>
+    </g>
+    <text x="20" y="440" font-size="22" font-weight="700" fill="#4f7cff">EASY TO UNDO</text>
+    <text x="884" y="440" font-size="22" font-weight="700" fill="#e0693d" text-anchor="end">CAN'T RECALL</text>
+  </svg>
+  <div class="names">Four panelists, four answers to listen for:<br><b>Devang Agrawal</b> (Airspeed) · <b>Alex Lindahl</b> (Clay) · <b>Mintis Sow</b> (HubSpot) · <b>Tyler Phillips</b> (Apollo.io)<br>Hosted by <b>Jared Robin</b> (RevGenius)</div>
+  <div class="foot"><div class="src">Illustrative actions; placement is a schematic, not any vendor's spec. Sources in the first comment.</div><div>4 / 4</div></div>
+</section>
+</body></html>
