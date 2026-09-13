@@ -1,6 +1,6 @@
 # SEC — the PII boundary contract + write-path enforcement
 
-> **Linear:** YED-81 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** draft — awaiting 3 decisions (§10)
+> **Linear:** YED-81 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** approved 2026-09-13 (decisions 1–3 ratified) — in build
 > · **Appetite:** 3–7d · **Backfilled?** no · **Mirrors:** ChatPRD (project Empire State) · Notion Project Ideas · ADR-9 (Proposed)
 
 ## 1. Problem & why now
@@ -83,3 +83,5 @@ CLAUDE.md: Supabase via REST, never the MCP · Notion writes parent-thread · Hu
 - `2026-09-13` — three-tier PII boundary proposed (ADR-9); email/phone never in the spine — no consumer reads them — supersedes the implicit "store whatever research finds" behavior of `backfill_people.py`.
 - `2026-09-13` — hard-fail guard, not advisory — PII is the one place a warning is the wrong design.
 - `2026-09-13` — chokepoint before constraints — Postgres CHECK deferred to Phase 2 (needs DDL; doesn't cover Notion/denylist).
+- `2026-09-13` — **Ratified by Alex:** (1) A — email/phone never in the spine; *contact detail lives in HubSpot*; (2) hard-fail; (3) chokepoint now, DB constraint Phase 2. ADR-9 → Accepted.
+- `2026-09-13` — build-time decisions: `req()` auto-guards every POST/PATCH (guard is automatic, not opt-in); *nulling any column is always allowed, setting requires the allowlist* (the migration runs through the guard); phone patterns require separators or `+`/`(` so 10-digit ids/timestamps never false-positive; unknown tables fail closed; specs/notes exempt from the prose writer-scan.

@@ -16,39 +16,8 @@ downstream). Notion Companies + Gmail labels are handled by the caller (parent-t
 Usage:  python3 inbox_signal_write.py <manifest.json> [--dry]
 """
 import json, os, sys, time, urllib.request, urllib.parse, urllib.error
-
-BASE = "https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1"
-ENV = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
-
-
-def load_key():
-    with open(ENV) as f:
-        for line in f:
-            if line.startswith("SUPABASE_API_KEY="):
-                return line.split("=", 1)[1].strip()
-    sys.exit("FATAL: SUPABASE_API_KEY not in .env — refusing to proceed (no silent no-op).")
-
-
-KEY = load_key()
-H = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json"}
-
-
-def req(method, path, body=None, prefer=None):
-    url = BASE + path
-    data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(url, data=data, method=method, headers=dict(H))
-    if prefer:
-        r.add_header("Prefer", prefer)
-    try:
-        with urllib.request.urlopen(r, timeout=30) as resp:
-            txt = resp.read().decode()
-            return resp.status, (json.loads(txt) if txt else None)
-    except urllib.error.HTTPError as e:
-        return e.code, e.read().decode()
-
-
-def q(v):
-    return urllib.parse.quote(v, safe="")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ADR-9: the one write path
+from spine_client import req, q  # guarded REST client (YED-81)
 
 
 def upsert_company(name, source):
