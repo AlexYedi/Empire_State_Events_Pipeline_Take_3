@@ -1,6 +1,6 @@
 # ADR-9 — The PII boundary: three tiers, one guard
 
-**Status:** Proposed (2026-09-13) — becomes Accepted when Alex ratifies decisions 1–3 in `.claude/proposals/yed-81-sec-pii-guardrails.md` (YED-81).
+**Status:** Accepted 2026-09-13 — Alex ratified decisions 1–3 in `.claude/proposals/yed-81-sec-pii-guardrails.md` (YED-81): email/phone never in the spine (contact detail lives in HubSpot) · hard-fail guard · code chokepoint now, Postgres constraint in Phase 2.
 **Governs:** what personal data may exist where, across the base pipeline (Notion), the Market-Intelligence spine (Supabase), the public hub, and HubSpot.
 
 ## Context

@@ -23,30 +23,9 @@ already gone, it reports "already merged" and skips. Run a relevance recompute a
 """
 import json, os, sys, urllib.request, urllib.error
 from urllib.parse import quote
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ADR-9: the one write path
+from spine_client import req, q  # guarded REST client (YED-81)
 
-BASE = "https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1"
-
-def load_key():
-    for line in open(os.path.join(os.path.dirname(__file__), "..", "..", ".env")):
-        if line.startswith("SUPABASE_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip()
-    sys.exit("SUPABASE_API_KEY not found in .env")
-
-KEY = load_key()
-H = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json"}
-
-def req(method, path, body=None, prefer=None):
-    hdrs = dict(H)
-    if prefer:
-        hdrs["Prefer"] = prefer
-    data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(BASE + path, data=data, headers=hdrs, method=method)
-    try:
-        resp = urllib.request.urlopen(r)
-        raw = resp.read().decode()
-        return resp.status, (json.loads(raw) if raw.strip() else None)
-    except urllib.error.HTTPError as e:
-        return e.code, e.read().decode()[:200]
 
 def get_topic(name):
     _, rows = req("GET", f"/topic?name=eq.{quote(name)}&select=id,name,engagement_count,last_engaged_at,notion_page_id")

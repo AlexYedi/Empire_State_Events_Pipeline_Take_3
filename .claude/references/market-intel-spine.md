@@ -70,3 +70,14 @@ Each row's `notion_page_id` links to the human-readable Notion view. Notion rema
 Reintroducing Supabase reverses the earlier measurement-layer tombstone. Ratified by Alex 2026-06-28 and
 re-scoped in CLAUDE.md `<measurement_rigor_layer>`: the ban applies to the *measurement/eval* layer only;
 Supabase is the sanctioned **market-intelligence system of record**.
+
+## Write path (ADR-9 — accepted 2026-09-13, YED-81)
+**There is exactly one way to write to this graph:** `.claude/scripts/spine_client.py` (`req()` / `write()`),
+or its CLI `.claude/scripts/spine_write.py <table> --json '…' [--patch <filter>]`. Every POST/PATCH body is
+guarded before it leaves the machine: per-table column allowlists (`ALLOW`), **email/phone forbidden on every
+table**, a recursive email/phone pattern scan through `metadata` JSON, and a tier-0 backstop for inbox rows
+(`metadata.sender_domain` vs `inbox-denylist.md`). **Any column may be nulled; only allowlisted columns may be
+set.** A violation is hard-fail (exit 2) and names *field · tier rule · fix*; nothing is written. Reads (`GET`)
+and `/rpc/` calls are unguarded. `spine_client.py --selftest` is the living acceptance test;
+`--check-writers` fails if any script defines another REST writer. Decision record: `docs/adr/ADR-9-pii-boundary.md`.
+`person.email` is null for every row and is never written again (2026-09-13).
