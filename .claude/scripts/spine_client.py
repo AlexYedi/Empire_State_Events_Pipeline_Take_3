@@ -18,7 +18,7 @@ Reads (GET) and `/rpc/` calls pass through unguarded — they write nothing.
 
 Usage from scripts:      from spine_client import req, write, q, PIIViolation
 CLI (see spine_write.py) python3 .claude/scripts/spine_write.py <table> --json '{...}'
-Self-test:               python3 .claude/scripts/spine_client.py --selftest
+Self-test:               python3 .claude/scripts/spine_client.py --selftest   (21 cases)
 Repo check (AC2):        python3 .claude/scripts/spine_client.py --check-writers
 
 Conventions preserved from the six writers this replaced: (status, parsed_json) return shape;
@@ -210,10 +210,11 @@ def q(v) -> str:
 
 
 def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout: int = 30,
-        raise_on_error: bool = False, extra_headers: dict | None = None, guard_writes: bool = True):
-    """(status, parsed_json_or_text). POST/PATCH/PUT bodies are guarded unless the path is /rpc/."""
+        raise_on_error: bool = False, extra_headers: dict | None = None):
+    """(status, parsed_json_or_text). Every POST/PATCH/PUT body is guarded (except /rpc/ paths).
+    There is deliberately NO parameter that disables the guard — judge finding 2026-09-13."""
     method = method.upper()
-    if guard_writes and method in ("POST", "PATCH", "PUT") and body is not None:
+    if method in ("POST", "PATCH", "PUT") and body is not None:
         guard_body(path, body)
     key = load_key()
     headers = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
@@ -241,12 +242,19 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
     guard_body(path, rows)
     if dry_run:
         return 0, {"dry_run": True, "path": path, "rows": rows if isinstance(rows, list) else [rows]}
-    return req("PATCH" if patch_filter else "POST", path, rows, prefer=prefer, guard_writes=False, **kw)
+    return req("PATCH" if patch_filter else "POST", path, rows, prefer=prefer, **kw)  # guards again: pure + cheap
 
 
 # ---------------------------------------------------------------------------
 # AC2 — repo check: no other REST writer may exist. Scripts fail; prose warns.
 # ---------------------------------------------------------------------------
+# Detection patterns for check_writers() — module-level so --selftest can pin them (judge findings 2026-09-13).
+_SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
+_WRITE_TABLES = r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims)"
+_PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
+_PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
+
+
 def check_writers() -> tuple[list[str], list[str]]:
     offenders, prose = [], []
     exempt = {SELF, os.path.join(os.path.dirname(SELF), "spine_write.py")}
@@ -263,12 +271,11 @@ def check_writers() -> tuple[list[str], list[str]]:
                 continue
             if "rest/v1" not in s:
                 continue
-            if fn.endswith((".py", ".sh", ".mjs", ".js")):
-                if re.search(r"urlopen|requests\.(post|patch|put)|curl\b", s):
+            if fn.endswith((".py", ".sh", ".mjs", ".js", ".ts")):
+                if _SCRIPT_WRITE_RE.search(s):
                     offenders.append(os.path.relpath(p, ROOT))
             elif fn.endswith(".md"):
-                if re.search(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)", s) or \
-                   re.search(r"`(POST|PATCH) /(topic|event|company|person|event_entity)", s):
+                if _PROSE_CURL_RE.search(s) or _PROSE_VERB_RE.search(s):
                     prose.append(os.path.relpath(p, ROOT))
     return sorted(offenders), sorted(prose)
 
@@ -312,6 +319,14 @@ def selftest() -> bool:
         lambda: guard_body("/person", [{"name": "ok"}, {"name": "bad", "email": "x@y.io"}]), True)
     add("rpc path passes through", lambda: guard_body("/rpc/match_doc_chunks", {"query_embedding": [0.1]}), False)
     add("denylist: subdomain suffix + glob", lambda: (_ for _ in ()).throw(PIIViolation("x")) if (domain_denylisted("alerts.bank.example", deny) and domain_denylisted("portal.irs.gov", deny) and domain_denylisted("myhealthplus.com", deny) and not domain_denylisted("veris.ai", deny)) else None, True)
+
+    import inspect
+    add("req() exposes NO guard-bypass parameter (judge finding 2026-09-13)",
+        lambda: (_ for _ in ()).throw(PIIViolation("bypass param present")) if any("guard" in k for k in inspect.signature(req).parameters) else None, False)
+    add("writer scan catches a JS fetch() POST to rest/v1",
+        lambda: None if _SCRIPT_WRITE_RE.search('fetch("https://x.supabase.co/rest/v1/person", {method: "POST"})') else (_ for _ in ()).throw(PIIViolation("miss")), False)
+    add("prose scan catches `POST /doc_claims`",
+        lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
     failures = 0
     for name, fn, expect in cases:
