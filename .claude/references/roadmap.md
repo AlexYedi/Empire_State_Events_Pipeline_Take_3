@@ -50,14 +50,14 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 | Item | Appetite | Why first |
 |---|---|---|
 | **YED-81 SEC & PII** — re-raised to High; scoped as a *guardrail contract + write-path enforcement*, not a security program | 3–7d | Gates post-event ingestion, whole-inbox scan, and anything unattended. Scoped small it's a week; unscoped it's a quarter. |
-| Denylist v1 review → **enforced in `/scan-inbox` code** (NEW-DENYLIST) | <3d | v1 was "convention, not mechanism" — a rule that cannot enforce itself |
+| Denylist v1 review → **enforced in `/scan-inbox` code** (YED-161) | <3d | v1 was "convention, not mechanism" — a rule that cannot enforce itself |
 | Linear reconciled to this plan (§7) | <1d | The plan can't be true while zombie programs compete with it |
 | OBS live GUI pass + first real smoke test (YED-154 follow-through) | <1d | "Done" on paper only |
 
 ### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
 | Item | Appetite | Why now |
 |---|---|---|
-| **Post-event → MI producer** (NEW-POSTEVENT): `/post-event-content` Step 3.9 emits attended-event claims as **staged** signals (candidate→approved, reusing the `doc_claims` pattern) with transcript provenance | 1–2wk | Highest-leverage build on the list: first-hand, Alex-only signal. Today the event *row* reaches the spine (YED-108); the *learnings* never do. Depends on YED-81. |
+| **Post-event → MI producer** (YED-160): `/post-event-content` Step 3.9 emits attended-event claims as **staged** signals (candidate→approved, reusing the `doc_claims` pattern) with transcript provenance | 1–2wk | Highest-leverage build on the list: first-hand, Alex-only signal. Today the event *row* reaches the spine (YED-108); the *learnings* never do. Depends on YED-81. |
 | **YED-157 B3–B5** — `/doc-digest` (4 lanes, HITL, 25-word check), consumer wiring (the two filter lines), extraction eval; YED-107 folded into lane D | 1–2wk | B1+B2 are inert until this exists; this is where doc-KB earns its keep |
 | YED-149 roles → spine producer | 3–7d | Third producer; the job-search lens becomes graph-native |
 | YED-131 nightly topic recompute (pg_cron, no LLM tokens) | <3d | Cheap; unblocks the P2 hub panels |
@@ -74,8 +74,8 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 | Item | Appetite | Why last |
 |---|---|---|
 | **YED-48** eval harness for event-research (10 golden + judge) | 1–2wk | You can't learn without a score |
-| **Behavioral-exhaust loop v1 / Rigor v2** (NEW-LOOP): correction-recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
-| **ADR-8 Increment 2** (NEW-ADR8-INC2): extend the system graph to skills ↔ agents ↔ commands ↔ *outcomes* — the skills/agents graph | 3–7d | Watching → learning needs outcomes on the graph |
+| **Behavioral-exhaust loop v1 / Rigor v2** (YED-162): correction-recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
+| **ADR-8 Increment 2** (YED-163): extend the system graph to skills ↔ agents ↔ commands ↔ *outcomes* — the skills/agents graph | 3–7d | Watching → learning needs outcomes on the graph |
 | Measurement → `alex` plugin promotion | <3d | Only after the loop has produced ≥1 merged fix — the proof it's load-bearing |
 | YED-82 craft + honesty + launch (its security-audit half moves to Phase 0 with YED-81) | 3–7d | The hub as the interview artifact, polished after the quarter's proof exists |
 
