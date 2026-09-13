@@ -161,9 +161,9 @@ End with: **"Approve which signals to write? (all / numbers / none)"**. This gat
 
 For each approved signal:
 1. **Upsert company** on the slug (`GET` then `PATCH` `engagement_count`+1/`last_engaged_at`, or `POST` `{name, source:"inbox_miner", last_engaged_at, engagement_count:1}`). Leave `relevance_score` 0. Capture `id`.
-2. **Insert the signal `event`:** `POST /event` with `{title:"{company} — {kind}", kind, event_date, description, source:"inbox_miner:{kind}", confidence, url:primary_url, metadata:{sender_domain, message_id, received_date, sources:["inbox"]}}`. Dedup on (title, event_date::date, kind) as a backstop. Capture `id`.
+2. **Insert the signal `event`:** `spine_write.py event` with `{title:"{company} — {kind}", kind, event_date, description, source:"inbox_miner:{kind}", confidence, url:primary_url, metadata:{sender_domain, message_id, received_date, sources:["inbox"]}}`. Dedup on (title, event_date::date, kind) as a backstop. Capture `id`.
 3. **Topic edge — explicit trigger rule (not a judgment call).** Upsert a `topic` (canonical slug via `signal-taxonomy.md`) and link a `role:"topic"` edge **only when** the signal's substance maps to an existing canonical topic in that file **AND** `kind ∈ {launch, market}` (product/capability/market events carry topical content). **Do NOT** add a topic edge for `funding` or `exec_move` — those are corporate-finance/personnel events whose topic is "funding", which would pollute the topic graph with a meaningless high-degree node. If the substance implies a genuinely new canonical topic, append it to `signal-taxonomy.md` in the same run (that file's own growth rule) rather than inventing an ad-hoc slug. No match and no new canonical entry warranted → **skip the topic edge** (the company edge alone is a complete signal).
-4. **Link the hyperedge:** `POST /event_entity` `{event_id, entity_type:"company", entity_id:company_id, role:"subject"}`.
+4. **Link the hyperedge:** `spine_write.py event_entity` `{event_id, entity_type:"company", entity_id:company_id, role:"subject"}`.
 5. **Notion Companies** (parent-thread MCP): dedup-search (`notion-search` scoped to Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`); if the company row EXISTS → `notion-update-page` append a dated note to **`Recent Developments`** (real newlines — gotcha m); if net-new → confirm then `notion-create-pages`.
 6. **Confirm writes succeeded, THEN label** the thread `Pipeline/processed` + `Pipeline/company-signal` (label only after the DB write confirms — R3). Any signal whose company was **created this run** stays flagged for source-check before it may surface in content (rule #12).
 
@@ -217,3 +217,12 @@ IDs are environment-specific — re-resolve via `list_labels`, never hardcode.
 
 **Idempotency is now three-layered:** `-label:Pipeline/processed` in the Stage-B query (skip re-read) → canonical-URL event
 dedup (skip re-write) → the processed-thread ledger (audit trail). Label only AFTER the DB write confirms.
+
+## Write path (ADR-9, 2026-09-13)
+
+`inbox_signal_write.py` — and any manual write this skill instructs — goes through `spine_client` /
+`spine_write.py`, the single guarded write path to the spine. Two consequences for this producer:
+(1) an inbox signal row must carry `metadata.sender_domain` (never a sender address) so the tier-0
+backstop can re-check the denylist at write time; (2) any email or phone that survives distillation into
+`description`/`metadata` is refused with exit 2 — fix the distiller, never the guard. Denylist enforcement
+at scan time is YED-161; this is the write-side backstop.

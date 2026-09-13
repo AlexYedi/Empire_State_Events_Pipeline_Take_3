@@ -7,7 +7,7 @@ company's `notion_page_id`, flags unresolved/incomplete names, and BULK-inserts 
 POST, not 240). Search-before-insert dedup (people share names) on (name, company_id). Idempotent: existing
 persons are skipped, so re-runs are safe.
 
-    person fields written: name, title, linkedin_url, email, bio, role_context (comma-joined), company_id,
+    person fields written: name, title, linkedin_url, bio, role_context (email is NEVER written — ADR-9 tier 2; contact detail lives in HubSpot) (comma-joined), company_id,
     notion_page_id, source='notion_backfill', metadata (unresolved_name flag). relevance_score/engagement=0.
 
 Usage:
@@ -19,32 +19,12 @@ Reads SUPABASE_API_KEY from .env (never printed).
 """
 import json, os, re, sys, urllib.request, urllib.error
 from urllib.parse import quote
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ADR-9: the one write path
+from spine_client import req, q  # guarded REST client (YED-81)
 
-BASE = "https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1"
 SCRATCH = "/private/tmp/claude-501/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/141aa1f6-c2bf-45a8-8ad8-c0636ed44272/scratchpad"
 UNRESOLVED = re.compile(r"\(|unresolved|\bTBC\b|surname|last name|\bTBD\b", re.I)
 
-def load_key():
-    for line in open(os.path.join(os.path.dirname(__file__), "..", "..", ".env")):
-        if line.startswith("SUPABASE_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip()
-    sys.exit("SUPABASE_API_KEY not found in .env")
-
-KEY = load_key()
-H = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json"}
-
-def req(method, path, body=None, prefer=None):
-    hdrs = dict(H)
-    if prefer:
-        hdrs["Prefer"] = prefer
-    data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(BASE + path, data=data, headers=hdrs, method=method)
-    try:
-        resp = urllib.request.urlopen(r)
-        raw = resp.read().decode()
-        return resp.status, (json.loads(raw) if raw.strip() else None)
-    except urllib.error.HTTPError as e:
-        return e.code, e.read().decode()[:300]
 
 def norm(x):
     return (x or "").replace("-", "").lower().strip()
@@ -94,7 +74,6 @@ def main():
             "name": name,
             "title": title,
             "linkedin_url": p.get("linkedin") or None,
-            "email": p.get("email") or None,
             "bio": p.get("bio") or None,
             "role_context": ",".join(p.get("role_context") or []) or None,
             "company_id": cid,

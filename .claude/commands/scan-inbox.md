@@ -37,7 +37,7 @@ Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
 ## 4. Synthesize (inline, parent)
 - **Stage A:** build the sender histogram and the three worksheets (SKILL A2–A3).
 - **Stage B:** resolve entities (deterministic slug; `GET /company`, `GET /event`) into the
-  resolved-target write-gate digest (SKILL B3–B4).
+  resolved-target write-gate digest (SKILL B3–B4). Writes execute via `inbox_signal_write.py` → `spine_client` (ADR-9 guard; a refusal is a producer bug, never a bypass).
 
 ## 5. Judge gate
 - N/A — this command's output is signal data through a human write gate, not a quality-graded artifact.
