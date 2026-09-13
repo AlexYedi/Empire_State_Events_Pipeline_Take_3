@@ -1,0 +1,164 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Postgres Tuning in the Age of AI — What the agent sees</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.mono{font-family:Menlo,"SF Mono",monospace}
+.kicker{font-family:Menlo,monospace;font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h2{font-size:76px;line-height:1.05;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}.warm{color:#e0693d}
+.foot{position:absolute;left:88px;right:88px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:Menlo,monospace;font-size:19px;color:#7f8fab}
+.foot .src{max-width:800px;line-height:1.4}
+.foot .pg{font-size:22px;white-space:nowrap}
+/* slide 1 */
+.code{margin-top:44px;background:#121c31;border:2px solid #223154;border-radius:14px;padding:26px 32px;font-family:Menlo,monospace;font-size:30px;color:#f5f7fa}
+.code .dim{color:#93a4c3}
+.split{display:flex;gap:32px;margin-top:32px}
+.col{flex:1;border-radius:18px;padding:34px 32px;background:#121c31;border:2px solid #223154;display:flex;flex-direction:column}
+.col.ctx{border:4px solid #4f7cff}
+.col h3{font-family:Menlo,monospace;font-size:26px;letter-spacing:.12em;margin:0 0 22px 0;color:#93a4c3}
+.col.ctx h3{color:#4f7cff}
+.sees{font-family:Menlo,monospace;font-size:20px;color:#7f8fab;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.item{font-size:29px;line-height:1.3;color:#d7deea;padding:14px 0;border-top:1px solid #223154}
+.item b{font-family:Menlo,monospace;font-size:21px;letter-spacing:.06em;color:#93a4c3;display:block;font-weight:400;margin-bottom:4px}
+.verdict{margin-top:auto;padding-top:24px}
+.verdict .tag{font-family:Menlo,monospace;font-size:20px;letter-spacing:.1em;text-transform:uppercase}
+.verdict .v{font-size:34px;line-height:1.22;font-weight:700;margin-top:8px}
+.blank{font-size:29px;line-height:1.35;color:#5d6d8c;font-style:italic;padding:14px 0;border-top:1px solid #223154}
+/* slide 2 */
+.matrix{margin-top:48px;border-top:2px solid #223154}
+.mrow{display:grid;grid-template-columns:250px 1fr 290px;gap:28px;padding:26px 0;border-bottom:2px solid #223154;align-items:start}
+.mhead{padding:0 0 14px 0;margin-top:0;border-bottom:2px solid #223154;display:grid;grid-template-columns:250px 1fr 290px;gap:28px;font-family:Menlo,monospace;font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:#93a4c3}
+.vend{font-size:34px;font-weight:700;line-height:1.1}
+.vend span{display:block;font-family:Menlo,monospace;font-size:19px;font-weight:400;color:#93a4c3;margin-top:8px;letter-spacing:.04em}
+.gets{font-size:28px;line-height:1.3;color:#d7deea}
+.gate{font-size:28px;line-height:1.28;color:#f5f7fa;border-left:5px solid #e0693d;padding-left:18px}
+.gate code{font-family:Menlo,monospace;font-size:22px;color:#e0693d}
+.note{font-size:32px;line-height:1.3;color:#d7deea;margin-top:34px}
+/* slide 3 */
+.ladder{margin-top:44px;display:flex;flex-direction:column;gap:18px}
+.rung{display:grid;grid-template-columns:84px 1fr;gap:26px;align-items:center;background:#121c31;border:2px solid #223154;border-radius:16px;padding:22px 28px}
+.rung .num{font-family:Menlo,monospace;font-size:54px;font-weight:700;color:#3b4c72;text-align:center}
+.rung .t{font-size:33px;font-weight:700;line-height:1.15}
+.rung .e{font-size:25px;line-height:1.3;color:#93a4c3;margin-top:6px}
+.rung.arch{border-color:#e0693d}
+.rung.arch .num{color:#e0693d}
+.rung.now{border:4px solid #4f7cff}
+.rung.now .num{color:#4f7cff}
+.pill{display:inline-block;font-family:Menlo,monospace;font-size:18px;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-left:12px;vertical-align:middle}
+.pill.w{border:2px solid #e0693d;color:#e0693d}.pill.b{border:2px solid #4f7cff;color:#4f7cff}
+.caption{font-family:Menlo,monospace;font-size:21px;color:#7f8fab;margin-top:20px}
+/* slide 4 */
+svg text{font-family:Menlo,monospace}
+.q{font-size:56px;line-height:1.12;font-weight:700;margin-top:34px}
+.opts{display:flex;gap:20px;margin-top:26px}
+.opt{flex:1;border:2px solid #223154;border-radius:14px;padding:22px 22px;font-size:31px;line-height:1.25;color:#d7deea;background:#121c31}
+.opt b{display:block;font-family:Menlo,monospace;font-size:19px;color:#4f7cff;letter-spacing:.08em;font-weight:400;margin-bottom:6px}
+</style></head><body>
+
+<!-- SLIDE 1 — Hook: what the agent sees -->
+<section class="slide">
+  <div class="kicker">Postgres Tuning in the Age of AI · Wed Sept 16</div>
+  <h2>Same slow query.<br>Two different <span class="accent">agents.</span></h2>
+  <div class="code"><span class="dim">SELECT</span> * <span class="dim">FROM</span> orders <span class="dim">WHERE</span> status = 'shipped';</div>
+  <div class="split">
+    <div class="col">
+      <h3>SQL ONLY</h3>
+      <div class="sees">The agent sees</div>
+      <div class="item"><b>QUERY TEXT</b>The line above. Nothing else.</div>
+      <div class="blank">Data distribution: unknown</div>
+      <div class="blank">Actual plan: unknown</div>
+      <div class="blank">Write load: unknown</div>
+      <div class="verdict"><div class="tag warm">Sounds right</div><div class="v">"Add an index on status."</div></div>
+    </div>
+    <div class="col ctx">
+      <h3>WITH CONTEXT</h3>
+      <div class="sees">The agent sees</div>
+      <div class="item"><b>STATISTICS</b>95% of rows are 'shipped'</div>
+      <div class="item"><b>EXPLAIN ANALYZE</b>A full scan is already the cheaper route</div>
+      <div class="item"><b>WORKLOAD</b>Heavy inserts; an index taxes every one</div>
+      <div class="verdict"><div class="tag accent">Grounded</div><div class="v">"Skip the index. The planner is right."</div></div>
+    </div>
+  </div>
+  <div class="foot"><div class="src">Illustrative example. Mechanism: the Postgres query planner picks the cheapest route from its statistics.</div><div class="pg">1 / 4</div></div>
+</section>
+
+<!-- SLIDE 2 — Evidence: the read-first matrix -->
+<section class="slide">
+  <div class="kicker">Evidence · how four tools draw the line</div>
+  <h2>The agent reads.<br>Changes stay <span class="warm">gated.</span></h2>
+  <div class="matrix">
+    <div class="mhead" style="padding-top:18px"><div>Tool</div><div>What the agent gets</div><div>How a change happens</div></div>
+    <div class="mrow">
+      <div class="vend">pganalyze<span>MCP server · preview</span></div>
+      <div class="gets">Curated stats, schema, plans. No database connection, no raw parameters.</div>
+      <div class="gate">Read-only. The agent recommends; a person applies.</div>
+    </div>
+    <div class="mrow">
+      <div class="vend">Xata<span>MCP Server 2.0</span></div>
+      <div class="gets">A copy-on-write branch. Read-only SQL by default. Never a credential.</div>
+      <div class="gate">Only with <code>write=true</code> AND <code>confirm=true</code></div>
+    </div>
+    <div class="mrow">
+      <div class="vend">Supabase<span>Database advisors</span></div>
+      <div class="gets">30 checks: unindexed keys, unused indexes, bloat. Also via MCP.</div>
+      <div class="gate">"A finding is not a fix."</div>
+    </div>
+    <div class="mrow">
+      <div class="vend">Azure<span>"Autonomous tuning"</span></div>
+      <div class="gets">Query history plus hypothetical-index cost tests.</div>
+      <div class="gate">Modes: OFF or REPORT. You run the script.</div>
+    </div>
+  </div>
+  <div class="foot"><div class="src">Sources: pganalyze MCP docs + preview post, 2026-04-30 · Xata, "Introducing the Xata MCP Server," 2026 · Supabase Database Advisors docs · Microsoft Learn, Azure PostgreSQL autonomous tuning</div><div class="pg">2 / 4</div></div>
+</section>
+
+<!-- SLIDE 3 — Mechanism: five generations -->
+<section class="slide">
+  <div class="kicker">Mechanism · how the field got here</div>
+  <h2>From the agent<br>to the <span class="accent">context</span></h2>
+  <div class="ladder">
+    <div class="rung"><div class="num">1</div><div><div class="t">Hypothetical-index advisors</div><div class="e">"What would this query cost if the index existed?" (hypopg)</div></div></div>
+    <div class="rung"><div class="num">2</div><div><div class="t">Managed-cloud recommenders</div><div class="e">Azure: named "autonomous," switched OFF or REPORT</div></div></div>
+    <div class="rung"><div class="num">3</div><div><div class="t">Fixed-logic advisors on real telemetry</div><div class="e">pganalyze Query Advisor · Jul 16, 2026</div></div></div>
+    <div class="rung arch"><div class="num">4</div><div><div class="t">Stand-alone "AI DBA" agents<span class="pill w">archived</span></div><div class="e">Xata Agent · archived on GitHub Jun 15, 2026</div></div></div>
+    <div class="rung now"><div class="num">5</div><div><div class="t">Context for the agent you already use<span class="pill b">now</span></div><div class="e">pganalyze MCP (Apr 30, 2026) · Supabase get_advisors · Xata MCP 2.0</div></div></div>
+  </div>
+  <div class="caption">Generations overlap. A lineage of approaches, not a strict timeline.</div>
+  <div class="foot"><div class="src">Sources: Microsoft Learn (Azure autonomous tuning) · pganalyze blog (Query Advisor; MCP preview) · github.com/xataio/agent · Supabase docs · Xata blog</div><div class="pg">3 / 4</div></div>
+</section>
+
+<!-- SLIDE 4 — The open design choice -->
+<section class="slide">
+  <div class="kicker">The question for the room</div>
+  <h2>One hidden value<br>can flip the <span class="accent">plan</span></h2>
+  <svg viewBox="0 0 904 500" width="904" height="500" style="margin-top:34px;display:block" role="img" aria-label="Diagram: the same parameterized query takes an index scan for a small tenant and a full table scan for the largest tenant">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <rect x="202" y="4" width="500" height="84" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/>
+    <text x="452" y="58" text-anchor="middle" font-size="31" fill="#f5f7fa">WHERE tenant_id = <tspan fill="#e0693d" font-weight="700">$1</tspan></text>
+    <line x1="360" y1="88" x2="200" y2="170" stroke="#93a4c3" stroke-width="4" marker-end="url(#ar)"/>
+    <line x1="544" y1="88" x2="704" y2="170" stroke="#93a4c3" stroke-width="4" marker-end="url(#ar)"/>
+    <rect x="0" y="178" width="420" height="190" rx="16" fill="#121c31" stroke="#4f7cff" stroke-width="4"/>
+    <text x="210" y="226" text-anchor="middle" font-size="25" fill="#93a4c3">$1 = a small tenant</text>
+    <text x="210" y="258" text-anchor="middle" font-size="25" fill="#93a4c3">(a few hundred rows)</text>
+    <text x="210" y="312" text-anchor="middle" font-size="31" fill="#f5f7fa" font-weight="700">INDEX SCAN</text>
+    <text x="210" y="346" text-anchor="middle" font-size="21" fill="#4f7cff">jump straight to the rows</text>
+    <rect x="484" y="178" width="420" height="190" rx="16" fill="#121c31" stroke="#e0693d" stroke-width="4"/>
+    <text x="694" y="226" text-anchor="middle" font-size="25" fill="#93a4c3">$1 = your biggest tenant</text>
+    <text x="694" y="258" text-anchor="middle" font-size="25" fill="#93a4c3">(40% of the table)</text>
+    <text x="694" y="312" text-anchor="middle" font-size="31" fill="#f5f7fa" font-weight="700">FULL TABLE SCAN</text>
+    <text x="694" y="346" text-anchor="middle" font-size="21" fill="#e0693d">cheaper to read it all</text>
+    <text x="0" y="432" font-size="26" fill="#d7deea">pganalyze MCP: never sees the raw value (privacy)</text>
+    <text x="0" y="478" font-size="26" fill="#d7deea">Azure's tuner: needs captured parameter samples</text>
+  </svg>
+  <div class="q">What should an agent get?</div>
+  <div class="opts">
+    <div class="opt"><b>OPTION 1</b>The raw value</div>
+    <div class="opt"><b>OPTION 2</b>A captured sample</div>
+    <div class="opt"><b>OPTION 3</b>Only the shape: $1</div>
+  </div>
+  <div class="foot"><div class="src">Ryan Booz (pganalyze) · hosted by Mila Zhou (AWS) · <span style="white-space:nowrap">Wed Sept 16, 6–8pm</span>, NYC. Tenant sizes illustrative. Sources: pganalyze MCP docs; Microsoft Learn (capture_first_sample).</div><div class="pg">4 / 4</div></div>
+</section>
+</body></html>

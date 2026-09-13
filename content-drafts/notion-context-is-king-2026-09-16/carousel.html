@@ -1,0 +1,165 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Notion Context is King — What an agent actually sees</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:92px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font-family:Menlo,monospace;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#93a4c3}
+h1{font-size:92px;line-height:1.03;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:72px;line-height:1.06;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}.warm{color:#e0693d}
+.body{font-size:34px;line-height:1.35;color:#d7deea;margin-top:28px;max-width:900px}
+.foot{position:absolute;left:88px;right:88px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:20px;color:#7f8fab;gap:30px}
+.foot .src{max-width:800px;line-height:1.4}
+svg text{font-family:Menlo,monospace}
+table{border-collapse:separate;border-spacing:0 10px;width:100%;margin-top:14px}
+td{background:#121c31;border-top:2px solid #223154;border-bottom:2px solid #223154;padding:18px 22px;vertical-align:top;font-size:27px;line-height:1.28;color:#d7deea}
+td:first-child{border-left:2px solid #223154;border-radius:16px 0 0 16px;width:250px;font-family:Menlo,monospace;font-size:27px;color:#f5f7fa;font-weight:700}
+td:last-child{border-right:2px solid #223154;border-radius:0 16px 16px 0}
+td .tag{display:block;font-family:Menlo,monospace;font-size:21px;color:#4f7cff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.chips{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+.chip{font-family:Menlo,monospace;font-size:24px;padding:12px 20px;border:2px solid #4f7cff;border-radius:40px;color:#f5f7fa}
+.zoom{margin-top:34px;display:flex;flex-direction:column;gap:22px}
+.z{display:flex;gap:26px;align-items:stretch}
+.z .lv{font-family:Menlo,monospace;font-size:24px;color:#0b1220;background:#4f7cff;border-radius:14px;padding:22px 0;width:210px;text-align:center;font-weight:700;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.z .lv small{font-size:19px;font-weight:400;margin-top:6px}
+.z .tx{flex:1;background:#121c31;border:2px solid #223154;border-radius:14px;padding:22px 28px}
+.z .tx b{display:block;font-size:32px;color:#f5f7fa;margin-bottom:6px}
+.z .tx span{font-size:27px;line-height:1.32;color:#d7deea}
+.z .tx em{display:block;font-style:normal;font-family:Menlo,monospace;font-size:20px;color:#93a4c3;margin-top:8px}
+</style></head><body>
+
+<!-- SLIDE 1 — the desk / filing-clerk architecture -->
+<section class="slide">
+  <div class="kicker">Notion webinar · Context is King · Sept 16</div>
+  <h1>What an AI agent <span class="accent">actually sees</span></h1>
+  <svg viewBox="0 0 904 800" width="904" height="800" style="margin-top:34px" role="img" aria-label="Diagram: company knowledge in filing rooms passes through connector doors, a permissions gate and a retrieval clerk before a few folders land on the context window desk; a schematic curve shows recall dropping as the desk fills">
+    <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <!-- filing rooms -->
+    <text x="0" y="24" font-size="22" fill="#93a4c3">FILING ROOMS</text>
+    <rect x="0" y="44" width="200" height="62" rx="10" fill="#121c31" stroke="#223154" stroke-width="2"/><text x="100" y="84" text-anchor="middle" font-size="22" fill="#f5f7fa">Wiki pages</text>
+    <rect x="0" y="118" width="200" height="62" rx="10" fill="#121c31" stroke="#223154" stroke-width="2"/><text x="100" y="158" text-anchor="middle" font-size="22" fill="#f5f7fa">Slack</text>
+    <rect x="0" y="192" width="200" height="62" rx="10" fill="#121c31" stroke="#223154" stroke-width="2"/><text x="100" y="232" text-anchor="middle" font-size="22" fill="#f5f7fa">Drive</text>
+    <rect x="0" y="266" width="200" height="62" rx="10" fill="#121c31" stroke="#223154" stroke-width="2"/><text x="100" y="306" text-anchor="middle" font-size="22" fill="#f5f7fa">Warehouse</text>
+    <!-- doors -->
+    <rect x="236" y="44" width="16" height="284" rx="4" fill="#3b4c72"/>
+    <text x="244" y="360" text-anchor="middle" font-size="20" fill="#93a4c3">connectors</text>
+    <text x="244" y="386" text-anchor="middle" font-size="20" fill="#93a4c3">/ MCP doors</text>
+    <line x1="200" y1="186" x2="232" y2="186" stroke="#93a4c3" stroke-width="3" marker-end="url(#a1)"/>
+    <!-- permissions gate -->
+    <line x1="252" y1="186" x2="296" y2="186" stroke="#93a4c3" stroke-width="3" marker-end="url(#a1)"/>
+    <rect x="300" y="116" width="170" height="140" rx="12" fill="#121c31" stroke="#4f7cff" stroke-width="3"/>
+    <text x="385" y="160" text-anchor="middle" font-size="22" fill="#f5f7fa" font-weight="700">PERMISSION</text>
+    <text x="385" y="188" text-anchor="middle" font-size="22" fill="#f5f7fa" font-weight="700">GATE</text>
+    <text x="385" y="220" text-anchor="middle" font-size="18" fill="#93a4c3">only what the</text>
+    <text x="385" y="244" text-anchor="middle" font-size="18" fill="#93a4c3">asker may open</text>
+    <!-- clerk -->
+    <line x1="470" y1="186" x2="514" y2="186" stroke="#93a4c3" stroke-width="3" marker-end="url(#a1)"/>
+    <rect x="518" y="116" width="170" height="140" rx="12" fill="#121c31" stroke="#4f7cff" stroke-width="3"/>
+    <text x="603" y="172" text-anchor="middle" font-size="22" fill="#f5f7fa" font-weight="700">RETRIEVAL</text>
+    <text x="603" y="200" text-anchor="middle" font-size="22" fill="#f5f7fa" font-weight="700">CLERK</text>
+    <text x="603" y="232" text-anchor="middle" font-size="18" fill="#93a4c3">ranks + picks</text>
+    <!-- desk -->
+    <line x1="688" y1="186" x2="732" y2="186" stroke="#93a4c3" stroke-width="3" marker-end="url(#a1)"/>
+    <rect x="736" y="96" width="168" height="180" rx="12" fill="#121c31" stroke="#f5f7fa" stroke-width="3"/>
+    <text x="820" y="138" text-anchor="middle" font-size="22" fill="#f5f7fa" font-weight="700">DESK</text>
+    <text x="820" y="164" text-anchor="middle" font-size="17" fill="#93a4c3">context window</text>
+    <rect x="760" y="186" width="120" height="16" rx="3" fill="#4f7cff"/>
+    <rect x="760" y="212" width="120" height="16" rx="3" fill="#4f7cff"/>
+    <rect x="760" y="238" width="120" height="16" rx="3" fill="#3b4c72"/>
+    <text x="820" y="310" text-anchor="middle" font-size="18" fill="#93a4c3">→ answer</text>
+    <!-- rot curve -->
+    <text x="0" y="470" font-size="24" fill="#f5f7fa" font-weight="700">Context rot: a fuller desk is not a better desk</text>
+    <line x1="60" y1="520" x2="60" y2="740" stroke="#3b4c72" stroke-width="3"/>
+    <line x1="60" y1="740" x2="880" y2="740" stroke="#3b4c72" stroke-width="3"/>
+    <text x="30" y="630" font-size="19" fill="#93a4c3" transform="rotate(-90 30 630)" text-anchor="middle">recall of any one item</text>
+    <text x="870" y="775" font-size="19" fill="#93a4c3" text-anchor="end">tokens on the desk →</text>
+    <path d="M60,540 C 300,548 460,590 600,650 S 800,715 880,722" fill="none" stroke="#e0693d" stroke-width="5"/>
+    <circle cx="200" cy="542" r="9" fill="#4f7cff"/><text x="222" y="522" font-size="20" fill="#d7deea">few, high-signal folders</text>
+    <circle cx="760" cy="700" r="9" fill="#e0693d"/><text x="738" y="728" font-size="20" fill="#e0693d" text-anchor="end">whole wiki dumped on the desk</text>
+  </svg>
+  <div class="foot"><div class="src">Context rot + "attention budget": Anthropic, Effective context engineering for AI agents, 2025. Curve is schematic, not measured data.</div><div>1 / 4</div></div>
+</section>
+
+<!-- SLIDE 2 — where the source of truth lives -->
+<section class="slide">
+  <div class="kicker">The field · Sept 2026</div>
+  <h2>Same four parts. <span class="accent">Different source of truth.</span></h2>
+  <div class="chips"><span class="chip">index / graph</span><span class="chip">connectors</span><span class="chip">permissions</span><span class="chip">agents</span></div>
+  <table>
+    <tr><td>Notion</td><td><span class="tag">Truth lives in</span>The workspace where people author pages, plus Enterprise Search across Slack, Drive, GitHub</td></tr>
+    <tr><td>Glean</td><td><span class="tag">Truth lives in</span>A knowledge-graph layer over other systems; agents with their own identity + permissions (Aug 2026)</td></tr>
+    <tr><td>Atlassian Rovo</td><td><span class="tag">Truth lives in</span>Work objects: issues, wiki, code, design, in a Teamwork Graph opened to outside agents over MCP</td></tr>
+    <tr><td>Microsoft · Google</td><td><span class="tag">Truth lives in</span>The productivity suite itself: mail, calendar, files, chat</td></tr>
+  </table>
+  <div class="foot"><div class="src">Sources: notion.com/product/ai; The Letter Two on Glean:GO (2026-08-30) and Atlassian Teamwork Graph (2026-05-06). Microsoft/Google row: general positioning, not re-checked this cycle.</div><div>2 / 4</div></div>
+</section>
+
+<!-- SLIDE 3 — the audit chain -->
+<section class="slide">
+  <div class="kicker">The trust chain · one agent run</div>
+  <h2>Where an agent run needs <span class="warm">a receipt</span></h2>
+  <svg viewBox="0 0 904 860" width="904" height="860" style="margin-top:30px" role="img" aria-label="Vertical chain of an agent run: trigger, permissions, retrieval, context window, action; blue labels mark governance controls Notion shipped between August and September 2026, orange labels mark the three open questions of whose permissions, which page is canonical, and what the agent read">
+    <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <!-- chain boxes -->
+    <g font-size="25" font-weight="700" fill="#f5f7fa">
+      <rect x="0" y="0" width="330" height="96" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/><text x="165" y="44" text-anchor="middle">1 · TRIGGER</text>
+      <rect x="0" y="176" width="330" height="96" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/><text x="165" y="220" text-anchor="middle">2 · PERMISSIONS</text>
+      <rect x="0" y="352" width="330" height="96" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/><text x="165" y="396" text-anchor="middle">3 · RETRIEVAL</text>
+      <rect x="0" y="528" width="330" height="96" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/><text x="165" y="572" text-anchor="middle">4 · CONTEXT WINDOW</text>
+      <rect x="0" y="704" width="330" height="96" rx="14" fill="#121c31" stroke="#223154" stroke-width="3"/><text x="165" y="748" text-anchor="middle">5 · ACTION</text>
+    </g>
+    <g font-size="19" fill="#93a4c3" text-anchor="middle">
+      <text x="165" y="76">meeting notes, schedule</text>
+      <text x="165" y="252">whose access?</text>
+      <text x="165" y="428">which pages come back</text>
+      <text x="165" y="604">what the model reads</text>
+      <text x="165" y="780">status update, ticket, edit</text>
+    </g>
+    <g stroke="#93a4c3" stroke-width="3">
+      <line x1="165" y1="96" x2="165" y2="170" marker-end="url(#a3)"/>
+      <line x1="165" y1="272" x2="165" y2="346" marker-end="url(#a3)"/>
+      <line x1="165" y1="448" x2="165" y2="522" marker-end="url(#a3)"/>
+      <line x1="165" y1="624" x2="165" y2="698" marker-end="url(#a3)"/>
+    </g>
+    <!-- shipped controls (blue) -->
+    <g font-size="21">
+      <line x1="336" y1="48" x2="400" y2="48" stroke="#4f7cff" stroke-width="3"/>
+      <text x="412" y="40" fill="#4f7cff" font-weight="700">SHIPPED · Jul 31</text>
+      <text x="412" y="70" fill="#d7deea">meeting notes can trigger an agent</text>
+      <line x1="336" y1="206" x2="400" y2="206" stroke="#4f7cff" stroke-width="3"/>
+      <text x="412" y="198" fill="#4f7cff" font-weight="700">SHIPPED · Aug 7</text>
+      <text x="412" y="228" fill="#d7deea">share pages to an agent via Share menu</text>
+      <line x1="336" y1="752" x2="400" y2="752" stroke="#4f7cff" stroke-width="3"/>
+      <text x="412" y="744" fill="#4f7cff" font-weight="700">SHIPPED · Aug 28</text>
+      <text x="412" y="774" fill="#d7deea">agent suggests edits, human approves</text>
+    </g>
+    <!-- open questions (orange) -->
+    <g font-size="21">
+      <line x1="336" y1="250" x2="400" y2="250" stroke="#e0693d" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="412" y="262" fill="#e0693d" font-weight="700">OPEN · creator's, trigger's, or shared?</text>
+      <line x1="336" y1="400" x2="400" y2="400" stroke="#e0693d" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="412" y="392" fill="#e0693d" font-weight="700">OPEN · which version is canonical?</text>
+      <text x="412" y="422" fill="#d7deea">stale + duplicate pages compete</text>
+      <line x1="336" y1="576" x2="400" y2="576" stroke="#e0693d" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="412" y="568" fill="#e0693d" font-weight="700">OPEN · can an admin see what</text>
+      <text x="412" y="598" fill="#e0693d" font-weight="700">was read, not just connected?</text>
+    </g>
+  </svg>
+  <div class="foot"><div class="src">Shipped dates: notion.com/releases (Jul–Sep 2026). "Open" = questions for the panel, not claims about any product.</div><div>3 / 4</div></div>
+</section>
+
+<!-- SLIDE 4 — three zoom levels of "context" -->
+<section class="slide">
+  <div class="kicker">One word · three zoom levels · this week</div>
+  <h2>"Context" means <span class="accent">three different things</span></h2>
+  <div class="zoom">
+    <div class="z"><div class="lv">MODEL<small>tokens</small></div><div class="tx"><b>What sits in the window</b><span>Curating the set of tokens a model sees at each step of its work.</span><em>Anthropic engineering guide, 2025</em></div></div>
+    <div class="z"><div class="lv">DATABASE<small>telemetry</small></div><div class="tx"><b>What an assistant sees of Postgres</b><span>Which query stats and settings reach the model before it suggests a tuning change.</span><em>pganalyze · "Context Is Everything" · Wed Sept 16, evening, Midtown</em></div></div>
+    <div class="z"><div class="lv">ORG<small>knowledge</small></div><div class="tx"><b>What a company can hand an agent</b><span>Data, docs, workflows, permissions and tribal knowledge, joined up.</span><em>Notion · "Context is King" · Wed Sept 16, 1pm ET</em></div></div>
+  </div>
+  <div class="body" style="font-size:40px;color:#f5f7fa;margin-top:40px">One discipline at three altitudes, or three fields sharing a word?</div>
+  <div class="foot"><div class="src">Org-level list from the Notion webinar abstract. Sources in the first comment.</div><div>4 / 4</div></div>
+</section>
+</body></html>

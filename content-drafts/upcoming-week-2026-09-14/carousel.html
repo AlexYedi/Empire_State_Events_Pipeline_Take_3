@@ -1,0 +1,143 @@
+<!doctype html><html><head><meta charset="utf-8"><title>The Upcoming Week — NYC AI, Sept 14–17</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.mono{font-family:Menlo,"SF Mono",monospace}
+.kicker{font-family:Menlo,monospace;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h2{font-size:74px;line-height:1.06;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}.sec{color:#e0693d}
+.foot{position:absolute;left:88px;right:88px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:20px;color:#7f8fab}
+.foot .src{max-width:780px;line-height:1.35}
+
+/* slide 1: week map */
+.map{display:grid;grid-template-columns:120px 1fr 1fr;gap:14px;margin-top:48px}
+.map .hd{font-family:Menlo,monospace;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#93a4c3;padding:0 0 4px 6px}
+.map .day{font-family:Menlo,monospace;font-size:34px;font-weight:700;color:#4f7cff;padding-top:22px}
+.cell{background:#121c31;border:2px solid #223154;border-radius:14px;padding:16px 20px;min-height:150px}
+.cell.empty{background:transparent;border:2px dashed #223154}
+.ev{margin-bottom:14px}.ev:last-child{margin-bottom:0}
+.ev .t{font-family:Menlo,monospace;font-size:21px;color:#93a4c3}
+.ev .n{font-size:29px;line-height:1.18;color:#f5f7fa;margin-top:4px}
+.ev .w{font-size:22px;color:#93a4c3;margin-top:2px}
+.tag{display:inline-block;font-family:Menlo,monospace;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:#e0693d;border:2px solid #e0693d;border-radius:8px;padding:1px 8px;margin-left:8px;vertical-align:3px}
+.legend{margin-top:26px;font-family:Menlo,monospace;font-size:22px;color:#93a4c3}
+
+/* slide 2: matrix */
+table.mx{width:904px;border-collapse:separate;border-spacing:0 10px;margin-top:30px;table-layout:fixed}
+.mx th{font-family:Menlo,monospace;font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:#93a4c3;text-align:left;padding:0 14px 2px 14px;font-weight:400}
+.mx td{background:#121c31;vertical-align:top;padding:16px 14px;font-size:23px;line-height:1.24;color:#d7deea;border-top:2px solid #223154;border-bottom:2px solid #223154}
+.mx td:first-child{border-left:2px solid #223154;border-radius:14px 0 0 14px}
+.mx td:last-child{border-right:2px solid #4f7cff;border-radius:0 14px 14px 0}
+.mx td.room{font-size:26px;font-weight:700;color:#f5f7fa}
+.mx td.room span{display:block;font-family:Menlo,monospace;font-size:18px;font-weight:400;color:#4f7cff;margin-top:6px}
+.mx td.open{color:#e0693d}
+
+/* slide 3: context thread */
+.thread{position:relative;margin-top:44px;padding-left:64px}
+.thread:before{content:"";position:absolute;left:18px;top:14px;bottom:14px;width:4px;background:#e0693d}
+.node{position:relative;margin-bottom:30px}
+.node:before{content:"";position:absolute;left:-58px;top:10px;width:24px;height:24px;border-radius:50%;background:#0b1220;border:4px solid #e0693d}
+.node .t{font-family:Menlo,monospace;font-size:22px;color:#93a4c3}
+.node .n{font-size:34px;line-height:1.15;font-weight:700;margin-top:4px}
+.node .l{font-family:Menlo,monospace;font-size:21px;color:#e0693d;margin-top:6px;letter-spacing:.04em}
+.defs{margin-top:10px;background:#121c31;border:2px solid #223154;border-radius:16px;padding:26px 30px}
+.defs .h{font-family:Menlo,monospace;font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:#4f7cff}
+.defs .row{display:grid;grid-template-columns:300px 1fr;gap:18px;margin-top:16px;font-size:25px;line-height:1.26}
+.defs .k{font-family:Menlo,monospace;font-size:21px;color:#f5f7fa;padding-top:3px}
+.defs .v{color:#d7deea}
+
+/* slide 4: timeline */
+.tl{margin-top:40px}
+.tr{display:grid;grid-template-columns:170px 1fr 170px;gap:18px;align-items:start;padding:17px 0;border-top:2px solid #223154}
+.tr:last-child{border-bottom:2px solid #223154}
+.tr .d{font-family:Menlo,monospace;font-size:26px;color:#4f7cff;font-weight:700;padding-top:2px}
+.tr .e{font-size:27px;line-height:1.24;color:#f5f7fa}
+.tr .r{font-family:Menlo,monospace;font-size:18px;color:#e0693d;text-align:right;text-transform:uppercase;letter-spacing:.06em;padding-top:6px}
+svg text{font-family:Menlo,monospace}
+</style></head><body>
+
+<!-- SLIDE 1 — week map -->
+<section class="slide">
+  <div class="kicker">The Upcoming Week · NYC AI · Sept 14–17</div>
+  <h2>Nine sessions, four days, <span class="accent">two formats</span></h2>
+  <div class="map">
+    <div></div><div class="hd">In person</div><div class="hd">Online</div>
+
+    <div class="day">MON</div>
+    <div class="cell"><div class="ev"><div class="t">6:00pm</div><div class="n">LeadDev New York Meetup</div><div class="w">New York Times Building</div></div></div>
+    <div class="cell empty"></div>
+
+    <div class="day">TUE</div>
+    <div class="cell"><div class="ev"><div class="t">6:00pm</div><div class="n">The New AI Computer: An Evening with Zo</div><div class="w">Zo Computer, Brooklyn</div></div></div>
+    <div class="cell"><div class="ev"><div class="t">10:30am</div><div class="n">How Attio uses Attio</div></div><div class="ev"><div class="t">11:00am</div><div class="n">Beyond Integration Licensing Cost</div></div></div>
+
+    <div class="day">WED</div>
+    <div class="cell"><div class="ev"><div class="t">6:00pm <span class="tag">context</span></div><div class="n">Postgres Tuning in the Age of AI</div><div class="w">Midtown</div></div></div>
+    <div class="cell"><div class="ev"><div class="t">12:00pm <span class="tag">context</span></div><div class="n">Clay: Rebuilding the Marketing Tech Stack</div></div><div class="ev"><div class="t">1:00pm <span class="tag">context</span></div><div class="n">Context is King</div></div></div>
+
+    <div class="day">THU</div>
+    <div class="cell"><div class="ev"><div class="t">10:00am–8:00pm</div><div class="n">Frontier Build NYC</div><div class="w">Microsoft Research lab</div></div></div>
+    <div class="cell"><div class="ev"><div class="t">12:00pm</div><div class="n">Signal Rich, Action Poor</div><div class="w">RevGenius panel</div></div></div>
+  </div>
+  <div class="legend">4 in person · 5 online · all times ET · <span class="sec">context</span> = the Wednesday context thread</div>
+  <div class="foot"><div class="src">Event pages linked in the first comment.</div><div>1 / 4</div></div>
+
+</section>
+
+<!-- SLIDE 2 — see / do / who checks matrix -->
+<section class="slide">
+  <div class="kicker">One question · five rooms</div>
+  <h2>See. Do. <span class="accent">Who checks?</span></h2>
+  <table class="mx">
+    <colgroup><col style="width:190px"><col><col><col></colgroup>
+    <thead><tr><th>Room</th><th>What the agent sees</th><th>What it may do</th><th>Who checks</th></tr></thead>
+    <tbody>
+      <tr><td class="room">LeadDev<span>MON · ENG LEADERS</span></td><td>The codebase</td><td>Write code at speed; build, buy or "vibe" internal tools</td><td>Human reviewers, where AI pull requests wait longest</td></tr>
+      <tr><td class="room">Zo<span>TUE · CONSUMER</span></td><td>Files, email, calendar on an always-on cloud computer</td><td>Run code, read mail, edit files between visits</td><td class="open">Open: sandboxing and prompt injection</td></tr>
+      <tr><td class="room">Postgres<span>WED · DATABASES</span></td><td>Curated stats, schema, stored query plans; no direct database connection</td><td>Recommend; read-only</td><td>A human applies the change</td></tr>
+      <tr><td class="room">Frontier Build<span>THU · SOFTWARE</span></td><td>Context a human supplies (Level 1)</td><td>Code in sandboxes, from tickets or schedules (Level 2)</td><td>Human (Level 1) → agentic reviewer + CI (Level 2)</td></tr>
+      <tr><td class="room">Signal Rich<span>THU · REVENUE</span></td><td>CRM plus calls and emails ("system of intelligence")</td><td>Edit CRM records ("system of action")</td><td>Read-only syncs, auto-pause, a forward-deployed human analyst</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><div class="src">Sources: LeadDev + McKinsey (review lag); Zo pricing, OpenClaw via The Register; pganalyze MCP docs; Obvious event invite; Airspeed, Apollo release notes. Prompt injection = hidden text an agent treats as an instruction.</div><div>2 / 4</div></div>
+</section>
+
+<!-- SLIDE 3 — the context thread -->
+<section class="slide">
+  <div class="kicker">The context thread · Wednesday</div>
+  <h2>"Context," three ways, <span class="sec">one Wednesday</span></h2>
+  <div class="thread">
+    <div class="node"><div class="t">12:00pm · online · Clay</div><div class="n">Rebuilding the Marketing Tech Stack for the AI Era</div><div class="l">LAYER: THE TOOL STACK</div></div>
+    <div class="node"><div class="t">1:00pm · online</div><div class="n">Context is King: How to build a system of context for AI</div><div class="l">LAYER: A SYSTEM OF CONTEXT</div></div>
+    <div class="node"><div class="t">6:00pm · Midtown · Ryan Booz (pganalyze)</div><div class="n">Postgres Tuning in the Age of AI: Context Is Everything</div><div class="l">LAYER: DATABASE TELEMETRY</div></div>
+  </div>
+  <div class="defs">
+    <div class="h">What "context" means at the database layer</div>
+    <div class="row"><div class="k">Planner statistics</div><div class="v">The map Postgres's query planner routes by, like a GPS.</div></div>
+    <div class="row"><div class="k">EXPLAIN vs.<br>EXPLAIN ANALYZE</div><div class="v">The route it plans vs. the route it actually drove.</div></div>
+    <div class="row"><div class="k">pg_stat_statements</div><div class="v">A running tally of the most frequent and slowest queries.</div></div>
+    <div class="row"><div class="k">Indexes</div><div class="v">Faster lookups; every write updates the index too.</div></div>
+  </div>
+  <div class="foot"><div class="src">Clay and "Context is King" described from session titles only. Definitions: PostgreSQL docs; pganalyze blog.</div><div>3 / 4</div></div>
+</section>
+
+<!-- SLIDE 4 — the summer behind the week -->
+<section class="slide">
+  <div class="kicker">Why now · dated moves</div>
+  <h2>The summer that <span class="accent">set this table</span></h2>
+  <div class="tl">
+    <div class="tr"><div class="d">APR 30</div><div class="e">pganalyze opens its MCP server: curated stats only, no direct database connection</div><div class="r">Postgres</div></div>
+    <div class="tr"><div class="d">MAY 20</div><div class="e">Glyphic renames to Airspeed, pitching a "system of action"</div><div class="r">Signal Rich</div></div>
+    <div class="tr"><div class="d">JUN 15</div><div class="e">Xata archives its standalone AI database agent</div><div class="r">Postgres</div></div>
+    <div class="tr"><div class="d">JUL 23</div><div class="e">HubSpot opens Agent Hub and Agent Builder in public beta</div><div class="r">Signal Rich</div></div>
+    <div class="tr"><div class="d">AUG 9</div><div class="e">OpenAI discontinues ChatGPT Atlas as a standalone browser</div><div class="r">Zo</div></div>
+    <div class="tr"><div class="d">AUG 30</div><div class="e">OpenClaw, the self-hosted personal agent, ships 2.0</div><div class="r">Zo</div></div>
+    <div class="tr"><div class="d">SEP 1</div><div class="e">GitHub lets Copilot code-review approvals count toward required reviews</div><div class="r">Frontier</div></div>
+    <div class="tr"><div class="d">SEP 8–9</div><div class="e">GitHub adds managed sandboxes and admin-set agent permissions to Copilot</div><div class="r">Frontier</div></div>
+  </div>
+  <div class="foot"><div class="src">Sources: pganalyze blog; BusinessWire; xataio/agent (GitHub); HubSpot news; Wikipedia (ChatGPT Atlas, OpenClaw); GitHub changelog. MCP = a standard plug linking AI assistants to tools.</div><div>4 / 4</div></div>
+</section>
+</body></html>
