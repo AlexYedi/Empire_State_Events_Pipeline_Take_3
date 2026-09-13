@@ -18,9 +18,11 @@ Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
 - Parse args: **stage** (`discover`|`extract`) and **window**. Default stage = `discover` if
   `.claude/references/inbox-allowlist.md` has no curated senders yet, else `extract`. Default window:
   discover = 12 months, extract = since last run (else 7d).
-- **Load the boundary files first:** `inbox-denylist.md` (required — refuse to scan if missing) and,
-  for `extract`, `inbox-allowlist.md` (refuse to extract if it has no curated entries — run `discover`
-  first). Read `SKILL.md` for the methodology.
+- **Run the boundary gate first (mechanism, YED-161):** `python3 .claude/scripts/inbox_boundary.py gate --stage <discover|extract>`.
+  Exit 0 = proceed. Exit 2 = a boundary file is missing → stop. Exit 3 = gate closed → stop and say why:
+  `discover` refuses while `inbox-denylist.md` is `v1 DRAFT` (ADR-7 D3 — Alex's review flips it to
+  `ACCEPTED`); `extract` refuses on an uncurated allowlist (run `discover` first). Read `SKILL.md` for the
+  methodology; `inbox_boundary.py report` shows what the two files parse to.
 - **Pre-flight for `extract`:** confirm `SUPABASE_API_KEY` is in `.env`; if absent, **hard-fail loudly**
   and stop (do not proceed to any write or label — ADR-7 R4).
 
@@ -29,6 +31,13 @@ Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
   fetched, hand raw thread text to a **distill subagent** (`general-purpose`) — text in, schema-valid
   structured signals out, **NO write tools** (injection guard, ADR-7 D5). Multiple threads → batch the
   distill calls in one message. Stage A does no body dispatch (metadata only).
+- **Boundary filter — BEFORE any aggregation or `get_thread`:** normalize each `search_threads` hit to
+  `{thread_id, message_id, from, subject, date, labels, has_list_unsubscribe}` (map label IDs → names via
+  `list_labels` first), then pipe the array through `python3 .claude/scripts/inbox_boundary.py filter --stage A`
+  (discover) or `--stage B` (extract). Only `kept` rows continue; Stage A rows carry metadata only (no
+  snippet/body); Stage B rows are allowlisted-and-not-denylisted. Carry `counts` into the worksheet /
+  digest header (`skipped by boundary: deny:domain n · deny:sender n · deny:label n · not-allowlisted n`).
+  A denylisted identity never appears in any output — the filter emits reason classes only.
 
 ## 3. Collect & handle thin returns
 - Aggregate distill returns. If a batch returns thin/garbled, re-invoke just that batch with the raw
@@ -53,7 +62,9 @@ Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
   **only after the DB write confirms**.
 
 ## 7. Failure modes
-- **Denylist/allowlist file missing** → refuse to scan (Step 1).
+- **Denylist/allowlist file missing** → `gate` exits 2 → refuse to scan (Step 1).
+- **Denylist still `v1 DRAFT`** → `gate --stage discover` exits 3 → the whole-inbox pass does not run; Stage B is unaffected.
+- **A denylisted sender appears in a worksheet/digest** → stop the run; that is a parser/filter defect, not a data issue.
 - **`SUPABASE_API_KEY` absent (extract)** → hard-fail, write nothing, do not label.
 - **Gmail label/spam write scope not granted** → probe first; fall back to a processed-message-id ledger
   (idempotency) + manual unsubscribe worksheet; never assume the write worked.
