@@ -1,0 +1,150 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Miracle Software Systems webinar: the integration bill</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.mono{font-family:Menlo,"SF Mono",monospace}
+.kicker{font-family:Menlo,monospace;font-size:25px;letter-spacing:.12em;text-transform:uppercase;color:#93a4c3}
+h2{font-size:76px;line-height:1.06;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#4f7cff}
+.warm{color:#e0693d}
+.foot{position:absolute;left:88px;right:88px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:21px;color:#7f8fab}
+.foot .src{max-width:780px;line-height:1.4}
+/* slide 1 meters */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:48px}
+.meter{background:#121c31;border:2px solid #223154;border-radius:18px;padding:30px 30px 28px}
+.meter .k{font-family:Menlo,monospace;font-size:28px;font-weight:700;color:#4f7cff;letter-spacing:.06em}
+.meter .c{font-size:30px;line-height:1.28;color:#f5f7fa;margin-top:14px}
+.meter .u{font-size:25px;line-height:1.3;color:#93a4c3;margin-top:14px;border-top:1px solid #223154;padding-top:12px}
+.meter .u b{color:#e0693d;font-weight:600}
+/* slide 2 phases */
+.legend{display:flex;gap:26px;margin-top:34px;font-family:Menlo,monospace;font-size:20px;color:#93a4c3;align-items:center}
+.pill{display:inline-block;font-family:Menlo,monospace;font-size:19px;font-weight:700;letter-spacing:.05em;padding:8px 14px;border-radius:999px;white-space:nowrap}
+.p-ai{background:#4f7cff;color:#0b1220;border:2px solid #4f7cff}
+.p-part{color:#4f7cff;border:2px solid #4f7cff}
+.p-hum{color:#e0693d;border:2px solid #e0693d}
+.rows{margin-top:20px;border-top:2px solid #223154}
+.row{display:grid;grid-template-columns:52px 1fr 190px;align-items:center;gap:16px;padding:13px 0;border-bottom:2px solid #1a2542}
+.row .n{font-family:Menlo,monospace;font-size:26px;color:#7f8fab}
+.row .t{font-size:31px;line-height:1.15;color:#f5f7fa}
+.row .e{font-family:Menlo,monospace;font-size:19px;line-height:1.3;color:#93a4c3;margin-top:5px}
+.row.hl{background:#121c31;box-shadow:inset 6px 0 0 #4f7cff;margin-left:-24px;padding-left:24px}
+.row .pc{text-align:right}
+.clock{font-size:31px;line-height:1.3;margin-top:24px;color:#d7deea}
+/* slide 3 map */
+.estate{margin:40px auto 0;width:640px;background:#121c31;border:2px solid #3b4c72;border-radius:16px;padding:22px 28px;text-align:center}
+.estate .k{font-family:Menlo,monospace;font-size:24px;font-weight:700;letter-spacing:.08em;color:#f5f7fa}
+.estate .s{font-size:25px;color:#93a4c3;margin-top:6px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.colh{font-family:Menlo,monospace;font-size:25px;font-weight:700;letter-spacing:.08em;text-align:center;padding:12px 0;border-radius:12px;margin-bottom:18px}
+.colh.stay{color:#4f7cff;border:2px solid #4f7cff}
+.colh.go{color:#e0693d;border:2px solid #e0693d}
+.vcard{background:#121c31;border:2px solid #223154;border-radius:16px;padding:22px 24px;margin-bottom:18px}
+.vcard .v{font-family:Menlo,monospace;font-size:22px;font-weight:700;color:#f5f7fa;letter-spacing:.04em}
+.vcard ul{margin:10px 0 0 0;padding-left:24px;font-size:25px;line-height:1.3;color:#d7deea}
+.vcard li{margin-top:4px}
+.vcard .d{font-family:Menlo,monospace;font-size:19px;margin-top:12px}
+.note{font-size:29px;line-height:1.3;color:#d7deea;margin-top:6px}
+/* slide 4 ledger */
+.sub{font-size:28px;line-height:1.3;color:#93a4c3;margin-top:20px}
+.onslide{margin-top:30px;border:2px solid #4f7cff;border-radius:16px;padding:20px 26px;display:flex;align-items:center;gap:22px}
+.onslide .lab{font-family:Menlo,monospace;font-size:21px;font-weight:700;color:#4f7cff;letter-spacing:.06em;white-space:nowrap}
+.onslide .it{font-size:30px;color:#f5f7fa}
+.offh{font-family:Menlo,monospace;font-size:21px;font-weight:700;color:#e0693d;letter-spacing:.06em;margin-top:28px}
+.phase{display:grid;grid-template-columns:230px 1fr;gap:20px;padding:24px 0;border-bottom:2px solid #1a2542;align-items:start}
+.phase .w{font-family:Menlo,monospace;font-size:20px;color:#93a4c3;letter-spacing:.04em;padding-top:8px}
+.phase .x{font-size:32px;line-height:1.32;color:#f5f7fa}
+.phase .x span{color:#93a4c3}
+.who{font-size:24px;color:#93a4c3;margin-top:22px}
+</style></head><body>
+
+<!-- 1 / 4 -->
+<section class="slide">
+  <div class="kicker">Miracle Software Systems · Webinar · Sept 15</div>
+  <h2>The integration bill that <span class="accent">grows on its own</span></h2>
+  <div class="grid">
+    <div class="meter">
+      <div class="k">CORES</div>
+      <div class="c">The size of the servers running the platform</div>
+      <div class="u"><b>Climbs when</b> volume forces bigger hardware</div>
+    </div>
+    <div class="meter">
+      <div class="k">CONNECTORS</div>
+      <div class="c">Each SAP or Salesforce adapter can be its own line item</div>
+      <div class="u"><b>Climbs when</b> another system gets plugged in</div>
+    </div>
+    <div class="meter">
+      <div class="k">TRANSACTIONS</div>
+      <div class="c">Messages moved between systems</div>
+      <div class="u"><b>Climbs when</b> the business simply does more</div>
+    </div>
+    <div class="meter">
+      <div class="k">ENVIRONMENTS</div>
+      <div class="c">Dev, test and production each licensed</div>
+      <div class="u"><b>Climbs when</b> one flow needs three copies</div>
+    </div>
+  </div>
+  <div class="foot"><div class="src">How legacy middleware is commonly metered. Illustrative: the mix varies by vendor and contract.</div><div>1 / 4</div></div>
+</section>
+
+<!-- 2 / 4 -->
+<section class="slide">
+  <div class="kicker">Evidence · the migration calendar</div>
+  <h2>Which phases does AI <span class="accent">actually shorten?</span></h2>
+  <div class="legend"><span class="pill p-ai">AI-ASSISTED</span><span class="pill p-part">PARTLY</span><span class="pill p-hum">HUMAN-LED</span></div>
+  <div class="rows">
+    <div class="row"><div class="n">1</div><div><div class="t">Discovery and inventory</div><div class="e">tooling drafts a gap-analysis report</div></div><div class="pc"><span class="pill p-part">PARTLY</span></div></div>
+    <div class="row"><div class="n">2</div><div><div class="t">Business-rule validation</div><div class="e">process owners confirm what old flows really do</div></div><div class="pc"><span class="pill p-hum">HUMAN-LED</span></div></div>
+    <div class="row hl"><div class="n">3</div><div><div class="t">Code conversion</div><div class="e">reads legacy exports, writes API spec + new code</div></div><div class="pc"><span class="pill p-ai">AI-ASSISTED</span></div></div>
+    <div class="row"><div class="n">4</div><div><div class="t">Testing</div><div class="e">IBM positions Flow Pilot to help test</div></div><div class="pc"><span class="pill p-part">PARTLY</span></div></div>
+    <div class="row"><div class="n">5</div><div><div class="t">Security and compliance review</div><div class="e">sign-off stays with people</div></div><div class="pc"><span class="pill p-hum">HUMAN-LED</span></div></div>
+    <div class="row"><div class="n">6</div><div><div class="t">Parallel run + partner re-certification</div><div class="e">both platforms live; EDI partners re-test</div></div><div class="pc"><span class="pill p-hum">HUMAN-LED</span></div></div>
+    <div class="row"><div class="n">7</div><div><div class="t">Decommission the legacy platform</div><div class="e">the date the old license can actually end</div></div><div class="pc"><span class="pill p-hum">HUMAN-LED</span></div></div>
+  </div>
+  <div class="clock">"Multiple years to under six months," per Miracle's page. <span class="accent">Does that clock stop at row 3, or row 7?</span></div>
+  <div class="foot"><div class="src">Sources: CurieTech AI Migration Agents docs; IBM Integration SaaS page; Miracle webinar page (vendor claim). Phase mapping is analysis.</div><div>2 / 4</div></div>
+</section>
+
+<!-- 3 / 4 -->
+<section class="slide">
+  <div class="kicker">Mechanism · two scripts at the renewal</div>
+  <h2>Every pitch has a <span class="accent">destination</span></h2>
+  <div class="estate"><div class="k">YOUR LEGACY INTEGRATION ESTATE</div><div class="s">flows built in TIBCO, webMethods, BizTalk, Boomi</div></div>
+  <svg width="904" height="70" viewBox="0 0 904 70" aria-hidden="true" style="display:block">
+    <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93a4c3"/></marker></defs>
+    <path d="M452,2 L452,24 L217,24 L217,62" fill="none" stroke="#93a4c3" stroke-width="3" marker-end="url(#m)"/>
+    <path d="M452,24 L687,24 L687,62" fill="none" stroke="#93a4c3" stroke-width="3" marker-end="url(#m)"/>
+  </svg>
+  <div class="cols">
+    <div>
+      <div class="colh stay">STAY + GOVERN AGENTS</div>
+      <div class="vcard"><div class="v">BOOMI · Q3 2026</div><ul><li>Agent Control Plane</li><li>MCP gateway (Boomi Connect)</li><li>AI Gateway for cost + usage</li></ul><div class="d accent">destination: where you are</div></div>
+      <div class="vcard"><div class="v">IBM INTEGRATION SaaS</div><ul><li>formerly webMethods Hybrid Integration</li><li>gateway for agents, models, tools</li></ul><div class="d accent">destination: modernize inside IBM</div></div>
+    </div>
+    <div>
+      <div class="colh go">MIGRATE AWAY</div>
+      <div class="vcard"><div class="v">CURIETECH AI</div><ul><li>ingests TIBCO, BizTalk, webMethods, Boomi</li><li>generates Mule 4 code</li></ul><div class="d warm">destination: MuleSoft</div></div>
+      <div class="vcard"><div class="v">MIRACLE SOFTWARE SYSTEMS</div><ul><li>systems integrator</li><li>AI + serverless modernization</li></ul><div class="d warm">destination: cloud-native services</div></div>
+    </div>
+  </div>
+  <div class="note">Each script is sold by someone who owns the destination.</div>
+  <div class="foot"><div class="src">Sources: Boomi "What's New Q3 2026"; IBM Integration SaaS page; CurieTech docs; Miracle webinar page, 2026.</div><div>3 / 4</div></div>
+</section>
+
+<!-- 4 / 4 -->
+<section class="slide">
+  <div class="kicker">The question for Tuesday's Q&amp;A</div>
+  <h2>What does the <span class="accent">TCO slide</span> count?</h2>
+  <div class="sub">Total cost of ownership: everything paid over a system's life, sorted by when each cost lands.</div>
+  <div class="onslide"><div class="lab">ON THE SLIDE</div><div class="it">License retired <span class="accent">&rarr;</span> cloud bill added</div></div>
+  <div class="offh">OFTEN OFF THE SLIDE</div>
+  <div class="phase"><div class="w">DURING MIGRATION</div><div class="x">Re-platforming labor <span>·</span> flows nobody knew existed</div></div>
+  <div class="phase"><div class="w">PARALLEL RUN</div><div class="x">Two bills at once <span>·</span> partner and EDI re-certification</div></div>
+  <div class="phase"><div class="w">AFTER CUTOVER</div><div class="x">Monitoring + on-call <span>·</span> data egress fees <span>·</span> per-call pricing at high volume</div></div>
+  <div class="phase"><div class="w">NEXT RENEWAL</div><div class="x">Lock-in that may move to a cloud provider <span>·</span> the incumbent's retention discount <span>(cuts the other way)</span></div></div>
+  <div class="who">Maruti Kampli, Miracle Software Systems · Tue Sept 15, 11am ET · online</div>
+  <div class="foot"><div class="src">Framework from pre-event research, not Miracle's model. Sources in the first comment.</div><div>4 / 4</div></div>
+</section>
+</body></html>
