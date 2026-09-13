@@ -1,105 +1,138 @@
-# Empire State — Roadmap & Plan of Record
+# Empire State — Roadmap & Plan of Record (v2 · adopted 2026-09-12)
 
-**This file is the single, version-controlled plan of record.** It replaces two machine-local plans
-that were cited everywhere but had vanished from disk (`~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`
-= build-rigor program; `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` = MI-Engine framing). Root
-cause of their loss: plans-of-record lived only in un-versioned `~/.claude/plans/`. This one lives in the
-repo so it can't silently disappear. **Linear is the live "what's open" source of truth; this file is the
-narrative spine.** Last re-anchored: 2026-08-07 (YED-124); **facts reconciled 2026-09-12** (see "Shipped since" below).
-
----
-
-## Next 3 moves (the runway)
-
-1. **RAG / knowledge base (YED-118) — IN PROGRESS, well past kickoff (updated 2026-09-12).** Phase A shipped (`/ingest-doc`, `/ask-library`, doc-kb schema + RLS); **Phase A.5** hardening underway (contextual + hybrid + rerank, Ragas-gated — **YED-156**), plus **YED-157** (doc_claims staging + Gemini claim extractor) and **YED-155** (build-elevating PRD template + Linear convention). **Merged to `main` 2026-09-12 (PR #60)** — Phase A + A.5 (YED-156 Done) + YED-155 shipped; YED-157 shipped **B1+B2 only** (inert by design; B3–B6 remain, continuation branch `yed-157-phase-b`). The stray Clarify ADR-6 was dropped in the merge; no merge debt remains on this workstream.
-2. **Graph consolidation (YED-130) — DONE (2026-08-10/13).** Resolved: consolidated onto ONE canonical graph — Empire's Supabase `oicikjyzmxqfomrrqkvf` hosts, the gtm-os `signal.*` model won; the redundant gtm spine was decommissioned (YED-135). No longer a runway item. Decision record: `docs/adr/`.
-3. **Drop "provisional" on the build-quality judge — hold the bar as written (decided 2026-09-08).** At **4/15 acked prospective runs** (100% Gemini-vs-Alex so far); **~11 more** at ≥80% Gemini-vs-Alex needed. Accrues via interactive `/judge-build` acks (autonomous + backfill runs don't count). Watch: every prospective run so far has been a unanimous pass, so the disagreement/tiebreak path is still untested. + scope the second non-content lens (YED-126).
-
-*Sequenced behind these, not dropped:* a second non-content MI lens (M3 pillar 3); audience-first content (YED-103); job-search Capstone 2 (YED-59).
-
-### Shipped since the 2026-08-07 re-anchor (reconciled 2026-09-12)
-
-Not previously reflected in this file — all merged to `main` unless noted:
-
-- **Job-Search Engine v1** (YED-146 · 147 · 148 · 150 — all Done): me-model **Target-Role ICP §1.5**, `target-companies.md` registry (21 companies → ATS), **role-radar rubric v2 → v2.4**, Notion **Roles DB** (~172 roles scored), warm-path map. Rubric evolution: **v2.1** exemptions/intangibles · **v2.2** IC-vs-people-management gate · **v2.3** $200K OTE floor + Mid-Market level flexibility · **v2.4** A-tier threshold 78→85. *Still open in this project: YED-149 (graph producer, deferred v1.1), YED-151 (resume tailor), YED-152 (interview-prep ICP wiring).*
-- **Inbox Intelligence Miner v1** (YED-153, Done; PR #61) — Gmail as a first-class MI producer; **ADR-7 Accepted 2026-09-12**. Gmail `modify`+`labels` scope went **GREEN 2026-09-10** — in-Gmail labeling is live (`Pipeline/*`), so that is no longer a gate. ⚠️ Two gates remain: the **denylist v1 review** (Alex) blocks the first whole-inbox scan (the shipped scan is allowlist-anchored), and the **morning cron** stays off until the manual shakedown proves the classifier.
-- **OBS capture lane** (YED-154, Done; PR #63) — recording SOP + ingest ETL; the Granola/Clarify replacement. Live GUI pass + first real smoke test still outstanding.
-- **ADR-8 system-graph drift router** (YED-158) — a derived graph over the repo's own build artifacts; a **router, not a detector**. Note: unrelated to the MI graph despite both being called "the graph."
-- **Content-quality decision backlog cleared** (2026-09-11, 5 of 5): variants **3** · visual brief **mandatory** · **ADR-6** brief placement (discrete Content Draft canonical; Event page carries head/pointer, dual-write removed) · stance **advisory, not a gate** · A-tier **≥85**. Plus the **pre→post arc** (style guide **v1.0**): pre-event = table-set macro→micro→implications; post-event = the reality check, mining the `post_event_brief` **Pre→Post Gap**.
-- **Judge hardening** — check-refs false-positive fix + cross-provider evidence parity.
-
-**Process note (2026-09-12):** two branches independently minted an `ADR-6`. Rule now recorded in `docs/adr/README.md`: **mint ADR numbers from `main`, not from a branch** — a collision is only visible after a merge.
-
-**Git topology (reconciled 2026-09-12):** single source of truth = `main`. Two worktrees (the `main` checkout + `ESP-jobsearch`), both to sit at `main` between sessions; continuation branches cut from `origin/main` per the CLAUDE.md git conventions and `.claude/references/reconciliation-terminal-charter.md`. Linear corrected to git truth the same day (YED-156 Done · YED-157 In Progress · four zombie In-Progress issues and four retired-program Urgents demoted · Build-Rigor project Completed · Job-Search Engine In Progress).
+**This file is the single, version-controlled plan of record.** Linear is the live "what's open"
+(`linear-convention.md`); this file is the narrative spine and the *sequencing*. Two rules keep it a
+plan and not a ledger: **the runway never carries Done items** (shipped work drops to §10), and
+**every runway item names its dependency, appetite band, and why-now**. v1 (2026-08-07 → 2026-09-12)
+is preserved in git history; its load-bearing decisions are carried in §9.
 
 ---
 
-## Shared mission (empire-state + gtm-os) — the top frame
+## 1. The arc — from a pipeline that records to an engine that learns
 
-Build a cohesive, lens-agnostic **intelligence + GTM-engineering + content body of work** that
-*demonstrates* full-stack-GTM capability. **Employment is a first-class, genuinely-pursued outcome of
-that work — one balanced component carried in equal measure by both projects — never an "at all costs"
-imperative that narrows or distorts the build.** The engine serves many lenses; job-search is one of
-them, weighted like the others. (Recalibrated 2026-08-07: gtm-os had over-indexed on employment as its
-telos; both repos now share it as a balanced component. gtm-os CLAUDE.md carries the same statement.)
+The system is already good at **recording** (research briefs, `post_event_brief`s, the Notion KG,
+telemetry, the build journal) and newly good at **watching** (ADR-8's drift router, the trust strip,
+relevance recompute). The next horizon is **learning**: every attended event, ingested book, inbox
+signal, and build session becomes exhaust that (a) feeds **one graph**, (b) organized by an explicit
+**reference architecture of applied-AI systems** — so the engine knows *what* to keep an ear to the
+ground on — and (c) improves the pipeline's own skills through a **judged, human-approved loop**.
+It is the software-factory thesis applied to our own system, and the most credible technical-buyer
+story the work can tell: *a self-improving market-intelligence engine, with its exhaust on display.*
 
-## North stars (three nested under the shared mission)
+## 2. North stars (unchanged from v1)
 
-- **Program:** "build better, not faster" as the default for every project; the measurement layer's operational north-star is **acted-on value** (outcome vs. each artifact's assigned goal, trended).
-- **Career/product:** the **Market-Intelligence Engine** — a lens-agnostic research engine (Job-Search + Content cores today) that is the differentiator and the job-search asset.
-- **Content:** audience-first documentarian authority (`.claude/references/audience-north-star.md`) feeding the job search.
+- **Program:** build better, not faster; operational north-star = **acted-on value** (`value-action-registry.md`).
+- **Career / product:** the **Market-Intelligence Engine** as the differentiator and the job-search asset.
+- **Content:** audience-first documentarian authority (`audience-north-star.md`).
+- **Shared mission (empire-state + gtm-os):** employment is a balanced, first-class outcome of the work — never an at-all-costs imperative that narrows the build.
 
----
+## 3. Programs and lanes
 
-## Program map (workstreams + state — 2026-08-07, reconciled 2026-09-12)
-
-| Workstream | State | Home |
+| | What it is | State (2026-09-12) |
 |---|---|---|
-| **Market-Intelligence Engine** | M1 ✅ · M2 ✅ · **M3 scoped (next)** | Linear project "Market-Intelligence Engine"; Supabase `empire state ai` (`oicikjyzmxqfomrrqkvf`, REST) |
-| **empire-state-hub** (canonical portfolio + cockpit) | live; Phase 3 content shipped; Phase 4 (session replay) backlog | repo `AlexYedi/empire-state-hub` |
-| **Build-Rigor & Measurement Layer** | ✅ closed (DoD gate, telemetry→PostHog 524367, cross-provider judge); one open thread = drop-provisional | this repo `.claude/` + hub `/ops` |
-| **Content & Voice Engine** | shipped (event research + pre/post content + living voice); **content-quality control system UNBLOCKED 2026-09-11** — all 4 rulings made, invariants contract now buildable | this repo `.claude/skills/` |
-| **Three-layer distribution (`alex` plugin)** | Layer A/B shipped; Layer C partial; measurement layer **deliberately NOT promoted** (pending proof it's load-bearing) | `AlexYedi/alex-agents-skills` |
+| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB ½ (B1+B2 inert) · **post-event ✗** · roles ✗ |
+| **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
+| **P3 · The Loop** — learn from exhaust | Rigor layer v2: correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8 + the registry's existing "system proposes a fix" row + `/rigor-review`, not beside them | watching ✅ (ADR-8, YED-158) · learning ✗ |
+| **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65), headline test, event deep-dives + the theme→prior-post index. Every anchor throws off a build-in-public artifact via the journal | in flight |
+| **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, OBS smoke test, YED-141, YED-137, Linear-to-git-truth | ongoing |
 
----
+## 4. The dependency chain
 
-## Market-Intelligence Engine — milestones
+`SEC contract (YED-81)` → `P1 producers` → `P2 map` → `P3 loop` → `unattended scheduling (Q1)`
 
-- **M1 — Interview-Prep Dossier (Job-Search lens) ✅** (YED-105). `/interview-prep`; proves the graph + specialists serve a non-content lens.
-- **M2 — Content-lens dashboard + veracity V1 ✅** (YED-106). `/ops/market-intel` on the hub: signal feed, trust strip, **evolving-viewpoint relevance panel** (YED-121). Fed by the progressive engine (YED-115: `/morning-refresh` YED-117 + relevance recompute YED-121) and the topic-intelligence substrate (YED-120).
-- **M3 — "The engine as differentiator" (scoped, next).** Deepen the product. Target ~2026-09-15 (re-dated honestly; the old ~Aug-17 anchor was hollow). Pillars:
-  1. **Topic-intelligence layer** — already built (YED-110 & YED-120 **Done**, in the gtm-os ecosystem). M3 work = reconcile the graph (gtm-os vs empire-state — see Open threads) + surface on empire-state-hub (YED-122 §B, YED-114). Not a from-scratch build.
-  2. **Knowledge/RAG layer** — YED-118 document knowledge base as an MI producer (PRD-first).
-  3. **A second non-content lens** — beyond job-search + content (new issue to scope; e.g. company/deal or market-landscape intelligence).
-  4. **Quality gate:** drop-provisional on the judge.
-- **Future:** unattended scheduling of producers (the one piece that spends metered API tokens — deliberately last); learned relevance weights; embedding-based dedup.
+Producers before organizers before learners: a graph can't be organized before it's filled, and
+nothing learns from exhaust it doesn't emit. SEC sits first because the richest data (people named in
+transcripts) and both scale steps (whole-inbox scan, anything unattended) are gated on it.
 
----
+## 5. The quarter — Sep 15 → Dec 12 (2-week cycles as circuit breakers; appetite bands, never estimates)
 
-## Structural decisions (recorded 2026-08-07)
+### Phase 0 — Gates & cleanup (→ ~Sep 19)
+| Item | Appetite | Why first |
+|---|---|---|
+| **YED-81 SEC & PII** — re-raised to High; scoped as a *guardrail contract + write-path enforcement*, not a security program | 3–7d | Gates post-event ingestion, whole-inbox scan, and anything unattended. Scoped small it's a week; unscoped it's a quarter. |
+| Denylist v1 review → **enforced in `/scan-inbox` code** (NEW-DENYLIST) | <3d | v1 was "convention, not mechanism" — a rule that cannot enforce itself |
+| Linear reconciled to this plan (§7) | <1d | The plan can't be true while zombie programs compete with it |
+| OBS live GUI pass + first real smoke test (YED-154 follow-through) | <1d | "Done" on paper only |
 
-- **Canonical Hub = `empire-state-hub`.** The recent work (build-arcs, journal, `/ops/market-intel`) lives here. The `gtm-os-hub` **plans** (`expressive-dreaming-spark.md`, `PHASE_1_BUILD_SPEC.md`) are superseded.
-  - ⚠️ **Correction (2026-09-12).** This line previously also called the Linear project **"Empire State Hub" legacy/superseded and said to fold its issues elsewhere. That was wrong** — and acting on it would have archived live work. That project *is* this hub's tracker (its own summary: *"Next.js site that runs the Empire State pipeline — private `/ops` dashboard + public surface"*; initiative: Empire State), and the program-map row above depends on it: **7 issues Done**, **4 open** — **YED-76** (M3 Auth) · **YED-81** (SEC & PII guardrails) · **YED-82** (M7 craft + honesty + security audit + launch) · **YED-113** (Phase 4 session replay). **Do not archive it or move its issues.** Two numbering schemes coexist inside it for historical reasons — the June **M1–M7** milestones and the August **Phase 3/4** series — which is cosmetic, not two projects.
-  - **The other Linear hub project — "gtm-OS Hub — Dashboard-as-Portfolio" — is separate by design** (YED-130: the gtm-os-hub learning plane stays GTM-owned): GTM University, the Orchid re-tone, `/signal`, `/system`. ⚠️ **One unresolved home:** **YED-114** (wire Hub → spine) sits in that project, but M3 pillar 1 above cites it as *empire-state-hub* surfacing work. Settle which hub owns it before starting it.
-- **Supabase is the MI Engine system-of-record** (REST, `SUPABASE_API_KEY`, never the Supabase MCP — different account). The old "no Supabase" architecture-philosophy line is **superseded** for the MI engine; "no n8n / no middleware" still holds. The Supabase *ban* survives only for the measurement/eval layer.
-- **`/morning-refresh` auto-logs signals with no approval gate** — this is an accepted Tier-2 design exception (append-only, every write reported after the fact), NOT a silent divergence from the HITL default. Documented in `.claude/commands/morning-refresh.md`.
-- **Topic-intelligence — cross-repo entanglement RESOLVED 2026-08-10 (YED-130).** It was built in the **gtm-os / gtm-os-hub** ecosystem (YED-110/120/122 Done); the consolidation settled it as **one graph, not two** — carried forward onto Empire's canonical Supabase `oicikjyzmxqfomrrqkvf` (gtm `signal.*` model won). The gtm spine is now redundant (decommission tracked YED-135). Canonical surface is empire-state-hub. Decision record: `docs/adr/`.
+### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
+| Item | Appetite | Why now |
+|---|---|---|
+| **Post-event → MI producer** (NEW-POSTEVENT): `/post-event-content` Step 3.9 emits attended-event claims as **staged** signals (candidate→approved, reusing the `doc_claims` pattern) with transcript provenance | 1–2wk | Highest-leverage build on the list: first-hand, Alex-only signal. Today the event *row* reaches the spine (YED-108); the *learnings* never do. Depends on YED-81. |
+| **YED-157 B3–B5** — `/doc-digest` (4 lanes, HITL, 25-word check), consumer wiring (the two filter lines), extraction eval; YED-107 folded into lane D | 1–2wk | B1+B2 are inert until this exists; this is where doc-KB earns its keep |
+| YED-149 roles → spine producer | 3–7d | Third producer; the job-search lens becomes graph-native |
+| YED-131 nightly topic recompute (pg_cron, no LLM tokens) | <3d | Cheap; unblocks the P2 hub panels |
 
----
+### Phase 2 — The map · P2 (Cycles 3–4, ~Oct 20 → Nov 14) → **A2**
+| Item | Appetite | Why here |
+|---|---|---|
+| **YED-126 — the architecture lens:** Applied-AI Reference Architecture v1 (PRD-first, Fable-drafted) — layers/components of agentic + enterprise AI systems (model → environment → harness → factory, plus data/retrieval, evals, identity/governance, GTM). **Ships only as** `signal-taxonomy` v2 + topic remap + hub surface + the lens's query shape — never as prose alone | 1–2wk | Needs signal density to be grounded; before P1 it's a whitepaper (the R2 trap). Closes M3 pillar 3. |
+| YED-114 hub topic-intelligence panels — home settled: **empire-state-hub** | 3–7d | The map needs a face |
+| YED-104 T1 audience/conversation intelligence at draft time | 3–7d | Content becomes the graph's first *reader* at draft time (accumulating awareness) |
+| **YED-47 hygiene tier-1 in code** — identity + provenance + dedup | 1–2wk | Duplicate entities are the symptom; the graph must be trustworthy before the loop learns from it |
 
-## Open threads / debt
+### Phase 3 — The loop · P3 (Cycles 5–6, ~Nov 17 → Dec 12) → **A3**
+| Item | Appetite | Why last |
+|---|---|---|
+| **YED-48** eval harness for event-research (10 golden + judge) | 1–2wk | You can't learn without a score |
+| **Behavioral-exhaust loop v1 / Rigor v2** (NEW-LOOP): correction-recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
+| **ADR-8 Increment 2** (NEW-ADR8-INC2): extend the system graph to skills ↔ agents ↔ commands ↔ *outcomes* — the skills/agents graph | 3–7d | Watching → learning needs outcomes on the graph |
+| Measurement → `alex` plugin promotion | <3d | Only after the loop has produced ≥1 merged fix — the proof it's load-bearing |
+| YED-82 craft + honesty + launch (its security-audit half moves to Phase 0 with YED-81) | 3–7d | The hub as the interview artifact, polished after the quarter's proof exists |
 
-- **MI graph reconciliation — RESOLVED 2026-08-10 (YED-130, Done).** Decided and shipped: consolidated onto ONE canonical graph — Empire's Supabase `oicikjyzmxqfomrrqkvf` **hosts**, the gtm-os `signal.*` **model won** (three-layer split: Data→consolidate, Surface→coexist, Capability→separate). The separate gtm spine (`abkvgihlbwfloentugtd`) is now redundant — a coherent static snapshot carried forward. Its **decommission is deferred, gated cleanup tracked as YED-135** (gated behind an N-night watch + the YED-131 crosswalk question — NOT blocked by YED-131). Decision record: `docs/adr/` (ADR-0→ADR-4); investigation brief: `~/Documents/GitHub/mi-consolidation-investigation-brief.md`.
-- Drop-provisional on the judge (calibration continuation).
-- Content-quality control system: **all 4 blocking rulings made 2026-09-11** (variants=3 · visual brief=mandatory · brief placement=ADR-6 discrete-canonical · stance=advisory-not-a-gate). **Unblocked** — the canonical invariants contract is now buildable; only the falsifiable rules bind as gates.
-- CLAUDE.md `<project_architecture>` refreshed 2026-08-07; keep it current as M3 ships.
+**Deliberately deferred to Q1 2027:** unattended producer scheduling (the only step that spends
+metered tokens *and* runs without Alex — also blocked on the ANTHROPIC-key decision); learned relevance
+weights; embedding-based dedup; hub Phase 4 session replay (YED-113); X/Twitter ingestion (small — slot
+when voice-radar next moves).
 
----
+## 6. Anchors (Linear milestones M4–M6 on the MI Engine) — and what each proves
 
-## Pointers
+| Anchor | Target | Proof |
+|---|---|---|
+| **A1 · One graph, three producers** (M4) | 2026-10-17 | Post-event, doc-digest, roles all writing to the spine; trust strip shows them; first digest approved |
+| **A2 · The map** (M5) | 2026-11-14 | Reference architecture live as taxonomy v2 + hub panels; the architecture lens answers "what's moving in layer X" |
+| **A3 · The loop closes** (M6) | 2026-12-12 | First judge-gated, exhaust-derived fix merged; event-research eval live; judge de-provisional |
+| **Career** (continuous) | monthly | ≥1 hiring-manager activation traceable to a post or hub artifact (`audience-north-star.md` floor) |
 
-- **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Full-Stack GTM Roadmap · Empire State — Build-Rigor & Measurement · Empire State Events.
-- **MI spine contract:** `.claude/references/market-intel-spine.md` · **schema:** `market-intel-schema.sql`.
-- **Rigor:** `build-session-contract.md` · `value-action-registry.md` · `cross-provider-judge.md` · DoD in `CLAUDE.md`.
+## 7. Kill / re-home / defer (ratified by Alex 2026-09-12)
+
+- **Canceled:** YED-67 + 68/69/70/71/72/73 (NY Tech Week single-vs-swarm harness — superseded by the cross-provider judge) · YED-41/42/46/57 (Full-Stack-GTM relics) · YED-55/56/59 (Capstone 2 — absorbed conceptually by the MI Engine; the CRM write already exists in YED-142; re-issue as an MI lens when a real outreach friction motivates it) · YED-107 (folded into YED-157 lane D).
+- **Programs closed:** "Full-Stack GTM Roadmap (24-week half)" and "GTM-oS" — milestones at 0%, live ideas already inside the MI Engine + Job-Search Engine. Keeping two programs was the source-of-truth failure at the planning layer.
+- **Re-homed:** YED-47, YED-128, YED-131 → MI Engine · YED-65 → Job-Search Engine · YED-114 → Empire State Hub · YED-129 → Build-Rigor · YED-141 → Empire State Events.
+- **Parked (unchanged):** GTM University / Orchid re-tone (YED-98/100/101/125 — gtm-OS Hub is GTM-owned by design, ADR-2) · visual-selection marker · Clarify stays dead.
+- **Corrected to git truth:** YED-155 → Done (shipped in #60) · YED-66 → Done (the manual-upload path *is* `/post-event-content`) · YED-81 → High.
+
+## 8. Pre-mortem (the adversarial pass)
+
+- *The reference architecture becomes a whitepaper nobody reads* → it ships only as taxonomy v2 + panels + lens code.
+- *Post-event floods the graph with low-confidence claims* → staged candidate→approved with a confidence cap, as doc-KB does.
+- *Auto-fixes rot the skills* → proposals only, judge-gated, Alex merges; registry threshold governs.
+- *Sessions collide once three programs run in parallel* → one worktree per program; `reconciliation-terminal-charter.md`.
+- *Job search crowds out builds, or vice versa* → the career lane is *outputs of the programs*, plus one explicit weekly slot.
+
+**Confidence:** ~75% on the ordering (producers → map → loop; SEC-first is non-negotiable). ~50% on dates — they are appetite, and cycles will re-shape items; that is the point.
+
+## 9. Decision log (dated; append, never edit)
+
+- **2026-09-12 — v2 adopted.** §7 ratified; YED-81 re-raised to High and scoped as contract + write-path; the third MI lens = the architecture lens (YED-126). M3 closed honestly; M4–M6 opened as A1–A3. Build-Rigor project reopened to house P3.
+- 2026-09-12 — Git conventions + `reconciliation-terminal-charter.md` (PR #67); ADR numbers are minted from `main`; per-workstream worktrees created on demand, never parked detached.
+- 2026-09-12 — Do **not** archive the Linear project "Empire State Hub" — it is the canonical hub tracker (YED-76/81/82/113 live there). ADR-7 Accepted (#69).
+- 2026-09-11 — Content-quality rulings: variants = 3 · visual brief mandatory · ADR-6 brief placement · stance advisory-not-a-gate · A-tier ≥ 85; style guide v1.0 (pre→post arc).
+- 2026-09-08 — Judge stays provisional until ~15 independent-first-look acks ≥ 80%; hold the bar as written.
+- 2026-08-10 — One MI graph (YED-130): Empire's Supabase `oicikjyzmxqfomrrqkvf` hosts; gtm `signal.*` model won; gtm spine decommissioned (YED-135). ADR-0…4.
+- 2026-08-07 — Canonical hub = `empire-state-hub`; Supabase is the MI system of record (REST, never the MCP; the ban survives only for the measurement layer); `/morning-refresh` auto-logs as an accepted Tier-2 exception.
+- 2026-06-28 — Audience-first content north-star adopted (YED-103).
+
+## 10. Shipped log (condensed; full history in git + the hub `/journal`)
+
+- **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · OBS capture lane (YED-154) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
+- **2026-09-04 → 09-11** — Job-Search Engine v1 (YED-146/147/148/150): me-model ICP, `target-companies.md`, role-radar rubric v2.4, Notion Roles DB; content-quality decision backlog cleared.
+- **2026-08** — MI consolidation (YED-130) · topic-intelligence layer (YED-110/120/122) · progressive engine (YED-115/117/121) · Deep Read brief v2 (YED-136) · build journal (YED-119).
+- **2026-06 → 07** — Build-Rigor & Measurement layer (YED-87…94, project Completed 2026-09-12) · cross-provider judge (YED-109) · M1 interview-prep (YED-105) · M2 dashboard (YED-106) · Empire State Hub M1–M6.
+
+## 11. Pointers
+
+- **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Job-Search Engine · Empire State Hub · Empire State Events · Build-Rigor & Measurement.
+- **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `signal-taxonomy.md` (→ v2 in P2).
+- **Rigor:** `value-action-registry.md` · `cross-provider-judge.md` · `build-session-contract.md` · DoD in `CLAUDE.md` · `prd-template.md` · `linear-convention.md`.
 - **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
-- **Workflows manual:** `.claude/WORKFLOWS.md`.
+- **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md "Git conventions" · **Workflows:** `.claude/WORKFLOWS.md`.
