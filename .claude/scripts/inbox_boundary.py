@@ -54,6 +54,7 @@ class Denylist:
     status: str = "MISSING"
     version: int = 0
     ignored: list = field(default_factory=list)   # bare words like `docusign` — too broad to match on
+    prose_skipped: list = field(default_factory=list)  # backticked tokens found in prose/blockquotes — never entries
     path: str = DENYLIST_PATH
 
     @property
@@ -74,6 +75,27 @@ class Allowlist:
         return bool(self.domains or self.senders)
 
 
+_ITEM_RE = re.compile(r"^\s*(?:[-*\u2022]|\d+\.)\s+")
+
+
+def _entry_lines(body: str) -> tuple[list[str], list[str]]:
+    """Split a section body into (entry lines, prose lines). An ENTRY is a markdown list item plus its
+    indented continuation lines. Blockquotes (`>`), headings, and bare paragraphs are PROSE — a question
+    or a guidance sentence must never become an executed rule (judge finding 2026-09-13)."""
+    entries, prose, in_item = [], [], False
+    for line in body.splitlines():
+        if line.lstrip().startswith(">"):
+            in_item = False; prose.append(line); continue
+        if _ITEM_RE.match(line):
+            in_item = True; entries.append(line); continue
+        if in_item and line.startswith((" ", "\t")) and line.strip():
+            entries.append(line); continue                       # wrapped continuation of the item
+        in_item = False
+        if line.strip():
+            prose.append(line)
+    return entries, prose
+
+
 def _sections(text: str) -> list[tuple[str, str]]:
     parts = _SECTION_RE.split(text)
     out = [("_head", parts[0])]
@@ -89,7 +111,10 @@ def _shape(tok: str) -> tuple[str, str] | None:
     if t.lower().startswith("label:"):
         return ("label", t[6:].strip())
     if "@" in t:
-        return ("sender", t.lower().lstrip("@"))
+        local, _, dom = t.lower().lstrip("@").partition("@")
+        if not local or "." not in dom:
+            return ("word", t)                                   # `product@` — a guidance prefix, not an address
+        return ("sender", f"{local}@{dom}")
     if "*" in t:
         return ("glob", t.lower())
     if "." in t and " " not in t:
@@ -105,13 +130,17 @@ def parse_denylist_text(text: str, path: str = DENYLIST_PATH) -> Denylist:
     else:
         d.status = "UNKNOWN"
     for title, body in _sections(text):
+        entry_lines, prose_lines = _entry_lines(body)
+        if any(k in title for k in ("denylisted gmail labels", "denylisted domains", "denylisted senders", "spam / noise")):
+            d.prose_skipped += [t.strip() for t in _TOKEN_RE.findall("\n".join(prose_lines))]
+        entries = "\n".join(entry_lines)
         if "denylisted gmail labels" in title:
-            for tok in _TOKEN_RE.findall(body):
-                s = _shape(tok)
-                if s and s[0] in ("word", "label", "domain") and not tok.startswith("#"):
-                    d.labels.append(tok.strip())                       # everything in this section is a label path
+            for tok in _TOKEN_RE.findall(entries):
+                t = tok.strip()
+                if t and not t.startswith("#"):
+                    d.labels.append(t)                                 # every LIST-ITEM token here is a label path
         elif "denylisted domains" in title or "denylisted senders" in title or "spam / noise" in title:
-            for tok in _TOKEN_RE.findall(body):
+            for tok in _TOKEN_RE.findall(entries):
                 s = _shape(tok)
                 if not s:
                     continue
@@ -140,7 +169,8 @@ def parse_allowlist_text(text: str, path: str = ALLOWLIST_PATH) -> Allowlist:
     a.status = m.group(2).upper() if m else "UNKNOWN"
     for title, body in _sections(text):
         if "allowed senders" in title:
-            for tok in _TOKEN_RE.findall(body):
+            entry_lines, _ = _entry_lines(body)
+            for tok in _TOKEN_RE.findall("\n".join(entry_lines)):
                 s = _shape(tok)
                 if not s:
                     continue
@@ -268,6 +298,8 @@ _DENY_FIXTURE = """# Inbox denylist — test
 ## Denylisted Gmail labels (POPULATED)
 - `Me` and every child: `Me/Health`, `Me/Personal Finance`
 - `Job Hunting`
+
+> Confirm: is any `Companies/*` label actually personal (e.g. `Companies/Ramp`, `Companies/Mercury`)? Flag any to move here.
 ## Denylisted senders — specific addresses
 - `hello@alerts.hims.com` — Hims
 - `# (Alex to add personal contacts)`
@@ -281,6 +313,9 @@ _ALLOW_FIXTURE = """# Inbox allowlist
 ## Matching rules
 - Match on domain, sender, or label (`Content/Newsletters`, `Pipeline/signal-source`); the Gmail query form is `label:Content/Newsletters`.
 ## Allowed senders / domains
+
+*(A few seeds below — confirm/prune. Prefer `product@` / `updates@` / `changelog@` style senders.)*
+
 - `ship@info.vercel.com` — Vercel
 - `lancedb.com` — LanceDB
 """
@@ -313,6 +348,11 @@ def selftest() -> bool:
     ck("parser: rules/review-log sections contribute NO entries", "not-an-entry.example" not in deny.domains and "2026-09-08" not in deny.senders)
     ck("parser: allowlist senders/domains + default labels", allow.senders == {"ship@info.vercel.com"} and allow.domains == {"lancedb.com"} and {"Content/Newsletters", "Pipeline/signal-source"} <= allow.labels)
     ck("parser: `label:` prefix stripped (no raw query tokens as labels)", not any(l.lower().startswith("label:") for l in allow.labels))
+    ck("parser: a blockquote QUESTION never becomes an entry (Companies/Ramp not denylisted)",
+       not any(l.startswith("Companies/") for l in deny.labels) and "Companies/Ramp" in deny.prose_skipped)
+    ck("parser: guidance prefixes (`product@`, `updates@`) are not senders", not any(x in allow.senders for x in ("product@", "updates@", "changelog@")) and "@" not in "".join(s for s in allow.senders if s.endswith("@")))
+    ck("check: an unrelated sender carrying Companies/Ramp is NOT skipped",
+       classify({"from": "x@unrelated.ai", "labels": ["Companies/Ramp"]}, deny, allow, "A")["skip"] is False)
     a = filter_threads(_INBOX_FIXTURE, "A", deny, allow)
     kept_ids = {t["thread_id"] for t in a["kept"]}
     ck("Stage A: zero denylisted rows retained", kept_ids == {"t7", "t8", "t9", "t10", "t11"})
@@ -336,9 +376,13 @@ def selftest() -> bool:
     code, _ = gate("extract", deny, Allowlist(status="SCAFFOLD")); ck("gate: extract CLOSED with an uncurated allowlist (exit 3)", code == 3)
     code, _ = gate("discover", Denylist(status="MISSING"), allow); ck("gate: missing denylist REFUSED (exit 2)", code == 2)
     ck("parse_from handles 'Name <addr>' and bare", parse_from("X Y <A@B.Com>") == ("a@b.com", "b.com") and parse_from("a@b.com") == ("a@b.com", "b.com"))
-    live = load_denylist()
-    ck(f"live denylist parses (v{live.version} {live.status}: {len(live.domains)} domains, {len(live.globs)} globs, {len(live.senders)} senders, {len(live.labels)} labels)",
+    live = load_denylist(); live_allow = load_allowlist()
+    ck(f"live denylist parses (v{live.version} {live.status}: {len(live.domains)} domains, {len(live.globs)} globs, {len(live.senders)} senders, {len(live.labels)} labels; {len(live.prose_skipped)} prose tokens skipped)",
        live.status in ("DRAFT", "ACCEPTED") and len(live.domains) >= 10 and len(live.labels) >= 5 and len(live.senders) >= 2)
+    ck("live SEMANTICS: every live label is under a reviewed root (Me/Experiences/Job Hunting), none from the Companies/* question",
+       all(l.split("/")[0] in ("Me", "Experiences", "Job Hunting") for l in live.labels))
+    ck("live SEMANTICS: every live sender (deny + allow) is a real address with a dotted domain",
+       all("@" in x and "." in x.split("@")[1] for x in live.senders | live_allow.senders))
     fails = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'✓' if ok else '✗'} {n}")
@@ -371,7 +415,7 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"skip": r["skip"], "reason": r["reason"]})); return 0
     if a.cmd == "report":
         code, msg = gate("discover", deny, allow)
-        print(f"denylist: v{deny.version} {deny.status} — {len(deny.domains)} domains, {len(deny.globs)} globs, {len(deny.senders)} senders, {len(deny.labels)} labels; non-entries (bare words in prose, never matched): {deny.ignored}")
+        print(f"denylist: v{deny.version} {deny.status} — {len(deny.domains)} domains, {len(deny.globs)} globs, {len(deny.senders)} senders, {len(deny.labels)} labels; non-entries (bare words, never matched): {deny.ignored}; prose/blockquote tokens skipped (questions, guidance — never entries): {deny.prose_skipped}")
         print(f"allowlist: {allow.status} — {len(allow.senders)} senders, {len(allow.domains)} domains, labels {sorted(allow.labels)}")
         print(f"discover gate: {'OPEN' if code == 0 else 'CLOSED — ' + msg}")
         return 0
