@@ -1,0 +1,308 @@
+[Speaker 1]
+So agenda, so tonight agenda covers two whole teams that carry through to other legal events, organizational leadership, and making technical choices. We learn how to plan our keys and for ourselves and have our favorite engineering debate. Fit online. Does it sound familiar? Please hear from our first two speakers and then take a quick five minute fire break, then rejoin for our final segment of evening with our panel on till versus five in the age of AI.
+
+There are no q a for these talks at the moment. I will have some networking time after our last session for about an hour. Our speakers will be available than for any question, so feel free to have a chat with them.
+
+[Speaker 2]
+And keep the conversation going.
+
+If you are loving what you hear tonight. And I hope everything you will be. Uh, make sure you tap the, uh, if you post on LinkedIn.
+
+[Speaker 1]
+Time, plan there, and lead them or hashtag leader.
+
+And of course, none of this would be possible without our sponsors stated up and hand it over to area from datadog, who will go to some Logistics before our first speaker. Take the stage. I think she's not around, but if you are to take any biobreaker or something, restrooms are on that side.
+
+So, we'll get to this for everyone's information. So, our first speaker, please, welcome pranif. Vpr engineering or gain stacking of times when he leads teams for building experience across web and mobile. For millions of players, please join me in welcoming planet.
+
+Okay, hey everyone, uh, it's great to be here.
+
+[Speaker 3]
+Uh, thank you Plum, and thank you detective for giving me this opportunity to speak. I'm glad to be here. Uh, so, yeah, I'll meet you attentioning at the New York Times. I was on the seventh floor. I commuted to the 47th floor here, but it's a much nicer view.
+
+Like, for me, the view is Port Authority Buster, you know, so?
+
+[Speaker 2]
+Um, so, yeah, I have been running the game stream for the last four years. I don't know if I have crosswords Wordle fans here. Okay, nice, nice. So? So, the topic for today is. The band is being planning for growth and Technical Excellence. So, how do you balance? Charlotte velocity and evidence stabilities.
+
+I'm assuming this is a very familiar topic. Um, so?
+
+So the challenge, uh. So I have been running this great stream for the last four years, and uh, the experience hasn't been different from a high growth environment, so you're like as a kind of engineering. I came to this team. There was a lot of business special. A lot of business expectations, and uh.
+
+You have some systems which you want to change, but there's not enough time to do it, and then your team is. The team wants to spend more time on capital excellence. So, how do you balance all of that is really challenging, um? Or one thing which I realized. Really works and does help with.
+
+This is the planning process. So, like whether you have a six month starting process, quarterly planning process, uh, continuous planning, some rigor and some due diligence with the planning does help in. Providing this balance, um, which will be always a battle, but at least it will help in providing the right violence.
+
+[Speaker 1]
+So, what's the starting point, um?
+
+[Speaker 2]
+To me, a plan which I have seen before. Is that okay, Outland? And then those objectives. There are some key results placed. So, and then, and the one line of objectives are. Growth of business or grow the audience. Like, you know, something which is, like, really vague and not clear.
+
+What does that even mean? Um. So the the questions we should be asking when you look at a plan like that is, who made that man? What kind of technical inputs were provided in that plan? Did we make commitments to our company CEO or external partners with this plan?
+
+Like, okay, you said that? Okay, I'm gonna grow the business like 20 percent or something, which really makes a commitment. Um, who were born in that process, um? And. If there isn't too much of ethical or engineering input provided in that plan, you will end up in a very reactive environment, meaning when the plan gets executed.
+
+You will land into unknowns, but the commitments already made. So, what do you do now like, you know, so you will. You will end up being reactive and that really stresses the team up, um. And then you do have a risk of maybe a technical Excellence work getting de-prioritized because there is.
+
+So, the point I'm trying to make is? The plan and the planning process is so crucial. From an energetic point of view that we need to think a little bit hard and can proactive.
+
+So, what did we work on to make some changes to how we do planning, uh, in games? At any updates is so. Like, after VP of engineering, I have a. Vpf product as my counterparty. As general manager, we have head of editorial head of data. What we do is we come together with all the planning cycle begins, and we talk a lot about our state of our business.
+
+What are the biggest goals? What are the headwinds tails wins? Uh, what's working? What's not working? How did the last climbing cycle go, or did we learn from the last class session? And then, as this leadership team, we come up with a planning guidance document, which is actually very comprehensive.
+
+It is not one-liner objective. This is, like, you're really estimating the team what we are trying to do in the next practice cycle. And. That one contains all your top level business goals and objectives, big rocks everything. So, once we have that document. So?
+
+So, once we have this planning document, we are expecting all the. Highest priority Business Schools, highest priority technical goals. Uh, later in this room.
+
+And then that phase one is over. We go to phase two, where we take this planning document, and we review it with our teams. So we bring in a lot of people, like all the engineering managers, directors, product managers, designers, and we talk about what exactly we mean by this planning document, um.
+
+So, they ask a lot of questions, which is great. That's exactly what you want from our team, and they take this planning guidance document, and they go within their teams. So, if you have a group where there are like multiple teams and more, um, each of those teams are brainstorming.
+
+What can their teams do to support the goals which we are laying out in the planet guidance? And as they do it. And this is the part, which is important, is that as the teams think about their their next six months or whatever time frame it is? They are bringing in the engineering ICS into the conversation, and that's where this process comes more like.
+
+Inclusive and open is that you are bringing in engineering ICS early in the conversation for them to think about. Okay, yeah, this is the whole context. This is what the business goals are. This is what we are trying to achieve, and then they talk about. What are the risk involved?
+
+What are the dependencies on other teams or other external Partners? So, you know, whosoever we work with? And then we enter the brainstorm like they do a lot of whiteboarding, and this is not like they're spending days on this. This is like a matter of hours, but those hours are so good and so beneficial for the gene.
+
+So, what they do is that they populate this spreadsheet, you know? It's a spreadsheet of okay. This XYZ team is going to work on maybe these 12 items, which are what they believe is the right things to do to support the overall goals of the mission. And, uh, it's.
+
+It's fairly comprehensive that spreadsheet, like, you know, they're talking about doing t-shirt sizing. So, there is like a lot of. Upfront work happening on the complexity of that work.
+
+And then, once these spreadsheets are populated by each team, we all come back again. So, this is, like, another round of video happening that okay, there is a planning guidance with all the details. There are spreadsheets which are listing down higher Fidelity initiatives. Each team will be working on and they are providing capacity.
+
+They are providing the dependencies they are providing the risk. Uh, which has been, and those those inputs have been incorporated from the engineering ICS as well. So, we we talk about this and and the good part here is because there is some sense of capacity being, uh. Put in those spreadsheets.
+
+We are now getting an idea whether whatever we are committing or whether we are thinking at a broader level, can the things actually do it or not? So this is like the best judgment call we made based on what the information will have at that point of time before the the planning, like before the planning period it ends.
+
+And then. This whole process is what is telling all of us, including me, including? The general manager or your CEO, like, depending on their company size. Is, what can we really commit and what we should not be committing to our higher ups or through our external Partners? So that is where there is like a clear-cut demarcation of what goes above the line and what goes below the line.
+
+Anything which is above the line from the teams. Is that now we have heard from the teams as well that they are ready to make commitment that, yes, we're gonna do this. Obviously, nothing is set in stone. Things can still happen, but there is that death's judgment happening to say that.
+
+Yeah, we will be able to deliver this work, and we should be fine. Making commitments wherever we want. So that's the above the light part, and then the bigger the line is. We will try. I mean, these are like, again, at the end of the day. Porque Argos, right?
+
+So, these are stretch goals, so there is. There will be always few things below the line, which, uh, are like, you know, we can pull them in if? We can do it, but there's no guarantee for that.
+
+And then. You know, once this entire process goes through, and uh, you know, we got a chance to explain what really matters to the whole business, which is like games for us at the ring of times. And the teams got a chance to voice their opinion on what they could do.
+
+The teams also got a chance to lay down all the technical details all the dependencies. So, overall, this entire process felt inclusive. So, everybody had a say everybody had an opportunity. There was a lot of clarity and expectations. And then there is alignment. Ultimately, because when we were? Uh, discussing the capacity or the initiatives.
+
+There were a bunch of initiatives which were about features and product, but there were a bunch of initiatives, which were purely about technical accidents purely about what we need to do to maintain our systems. And that was a very healthy debate, you know, because everything was out in the open.
+
+So there was a very healthy delay between all of us, which are working cross-functionally to talk about what matters and what not matters. And I think? For me as an engineering leader, and I'm assuming most of you are here. Is that level of clarity is so important when you are representing your engineering team in front of everyone, which is like, how are you?
+
+Specify how are you the size about the things you need? How are you able to sell it? What is the storytelling like a lot of those things do matter, and I think the planning process is when to me, uh, has been the most effective way of doing that.
+
+So? What are the final takeaways? From whatever I'm sharing today. It's like partnership, like when you are working on planning, it is very important for you to be a really good partner with your transformational Partners. So whether it's product design, whosoever you work with, you need to work with with them in a very close partnership.
+
+Hear
+
+[Speaker 4]
+Them
+
+[Speaker 2]
+Out and express your thoughts and be the, uh. As clear emphasize about what really matters to the engineer or engineering functioning. And then, as I said, be the technical voice. So, now, you, you got a lot of information from the team you had your own perspective as an engineering leader, so be the technical voice in those repetitions.
+
+It's really important that when you are talking to? Anybody like, who's not an engineer, like a CEO, or or a big decision maker or a stakeholder, you're not talking about? Uh, we want to do this thing because this will make the developer happy, or this will make the the developer experience better.
+
+You are trying to talk to them in the things which matters. To the meaning that if you do these XYZ things, they're going to be. 100 hours per month of developer type saved because they were out of it. So, like, how do you escape that is really important in these conversations?
+
+Um, priority and impact. Yeah, I mean, I should not be talking for 10 minutes without talking about AI. So, I, I, I'll just say that. Um, with AI, there are generally a lot of Buzz that, oh yeah, six months is a very long time. Three months is a very long time, but practice speaking from my experience if you are running complex systems for millions of users.
+
+It's really critical. Actually, AI is making this event more important that you are very poor about what exactly or systems need for them to be. Agentic development ready or? Uh, like, you know, what kind of validation framework you have, like, you know, when these agents start working, you need to have a lot of Foundations right in your systems and in your code to make that work.
+
+So I will just say that the the onboarding of AI is actually amplifying the need for you to be more thorough and more upfront about what exactly the planetic courses should end there. Um, risk mitigation. As I said that we did, we did involve the all the teams, including the engineering IC, so that did help with the risk mitigation in the sense that, um, so if if you have some work which requires, say, a different team to work with us in the next line, so we were able to call that out up front because we got that input from our engineering ICS, so that does help with this communication that we are not like in a reactive mode.
+
+As the very cycle locals so? And then the visibility. And I'll just say the leadership advocacy is that? You need to be a really good Advocate in front of everybody for the work which you are doing, and for the agent Network, which is happening in your team. So, the ability to connect the engineering work with the business with what it matters for the business just help you with advocacy in front of a lot of cross-functional, non-engineering stakeholders you talk to, and this entire the number of steps which you are following here is giving you that full comprehensive picture.
+
+So, I hope these tips were helpful. Uh, I'm happy to answer any question, but yeah, that's all I have.
+
+Thank you partner.
+
+[Speaker 1]
+All right.
+
+[Speaker 2]
+Our next speaker is Bradley, please. Welcome, Bradley manager of technical advocacy at the adult, where he leads developer advocacy, focused on application development and performance. He's also a long time open source, I said. Okay, technical speaker and published. Um, so okay.
+
+Thank you everyone for coming out tonight.
+
+[Speaker 5]
+So as far as actually here at data dog about three and a half months ago. Unfortunately, dead dog is really great about downloading, so we are hired by the way we'll see it both at the end. Um, so one of the things I got early on was in 30 60 day onboarding plan, so this was really helpful.
+
+But even with this, I had a flood of incoming information in just my first week.
+
+[Speaker 3]
+And I knew I needed a better way to keep track of everything, uh, something that was more than a more than a task list, but more organized than just a bunch of Google docs as well. Um, so?
+
+Yeah, great, okay, excellent? Um, so? Uh, so I didn't haven't had time to spend on setting everything up. What I did was built a um, I don't know if anyone else has done this, but a second brain with obsidian and pod code kind of a kind of a popular topic now.
+
+Uh, so this is why I put together a TV organized, but what happened with is within the first 60 days I had it generated over 300 cash rate? There are due dates. I had never set actually. I'm based on assumptions that weren't true. Uh, reminders about Thanksgiving, actually matter, and uh, obviously, I needed something better than this so.
+
+Uh, so you're probably wondering how I got here. Um, so a little bit about myself, uh, I was at IBM for 11 and a half years before joining data dog. Uh, I was working in Quantic Republic and now working in observability, so changed Fields quite quite a bit there significant pivot.
+
+Um, ironically, I move from a field where you literally cannot observe what's happening into the field of observability.
+
+It has. I spent about ten years in management in at IBM. About a year and a half ago, I pivoted into an individual contributer role and now back into management at the end of Dog. Uh, I have a background in developer advocacy, open source Community Building. I, uh, many, many years ago before child TV.
+
+I was leading open source DNA AI developer advocacy for IBM. Uh, post Java gbt. I was kind of a AI skeptic for for quite a while, still, and to some extent, uh, but more recently over the last eight months to a year became a sort of a power user.
+
+Um, actually, one of AI hackathon in my last month at IBM. So, I'd like you to step back and think a bit about how you, as an engineering manager, allocate your time throughout the day and throughout the week. So, how much time do you spend on the meeting? Um, and what is it?
+
+To me, lady means, so I think each of you probably has a different definition of what leaning means. Uh, to me, leading means establishing Clarity on what matters and why? And then, how much time do you spend on managing? And to me, this means translating Clarity into Direction.
+
+[Speaker 1]
+And how much time do you spend on Simply X spinning tasks?
+
+[Speaker 3]
+I would say, probably most badgers might be able to relate to this, uh, probably find yourself spending the majority of your time doing and the next trunk of your time managing and then finally meeting, which I think is the inverse of how you you should be spending your time.
+
+This leader. So, as I was feeding my second brain, all relevant contexts I put in mating notes, stock messages, emails, it's go to structure over time, became a task list. And. Unfortunately, though, I start talking about the more completing a team is not task shaped. So, I found myself wrestling for control over my personal knowledge base.
+
+As my agent fabricated work plans, due dates, and priorities that didn't map to how I add value as a leader. So, I started simple. I let Claude code build out a structure organically that made sense at first. Uh, so this is just a representational prompt of something I might have created early on.
+
+I finished my alarm with my manager, gave it a bunch of notes. It had it created some structure for me, uh, based on that right. So, some notes on my 30, 60, 90 onboardings. Some notes about my various few members, my colleagues, so this was sort of an organic structure of the group.
+
+And then, from here, I regularly fed a meeting, though slack messages, emails, anything with relevant comments. And it continued to grow from there. So? What went wrong specifically, so a few few ways this went wrong, right? So specifically, like processing raw meeting notes. This was a common, uh, source of task.
+
+What I call task explosion, right? So every incoming bit of information became an action item. Someone raised a concern that would say that would become follow-up on that. It's by by discussing, we discussed a particular topic. That would become schedule a review. Uh, so what I found was the agent couldn't accept simply holding a truth without turning it into a task?
+
+[Speaker 1]
+And
+
+[Speaker 3]
+Then trying to prepare a meeting agenda. I found the agent was helpful at pulling together a list of past topics they could pull forward for discussion, but they couldn't tell me what really mattered and what was important for us to discuss. It couldn't really connect the dots where timelines conflicted where Gap might present an opportunity.
+
+And how to best discuss priorities arrive this year and understanding. In the meeting agendas, these look great at first glance, but fell apart in our first contact with an actual human. Um, so there was no deaths, no real relevance, nothing being able to discuss. So, of course. In many examples, I would find these early on, right, with a beating agenda, would preview that ahead of the meeting and see the problem with it.
+
+And now, try to fix that with further prompting right. And that helps somewhat, I make some changes to claude.md to skills, um, it got explicit instructions for students expenses, and this definitely helped. Um, there were contacts where the agent did produce more strategic output, but these failure modes, by and large, continue and I see this contingent pattern of task extraction, flat prep, Hollow agendas, and that's strategic synthesis I was looking forward was missing.
+
+And further prompting yielded marginal improvements. So, I want to zoom out a little bit and talk about some of the pressures we're seeing on our possible's engineering leaders within the field at large. Um. Same. By seeing this new book from Corey doctoro through centaur's guide to life after AI.
+
+If you don't, not familiar, the concept a reverse entire comes from automation Theory. And it describes this area which a human is controlled and directed by a machine versus a centaur where a human controls a machine.
+
+[Speaker 1]
+So?
+
+[Speaker 3]
+Essentially, a centaur is when you choose the shape and the agent serves it. A reverse entire is when the agent chooses the shape, then you process it. So, as engineering leaders, I think we're at risk of letting AI do the thinking and us humans doing the medial work.
+
+So, I think one of the bigger Trends I'm seeing in the industry at large is with AI, uh, bladder orgs, wider spans and control engineering engineer managers are being pushed to do more. You're probably seeing this either directly yourself or with your with your peers. Um, fortunately, datadog has not been following this trend of squeezing.
+
+Borah demanders, so, um, that's great. I'm very happy about that for myself, but even at an organization where I'm well supported as a manager and where I'm empowered to choose how I engage with AI AI. Jim was still trying to turn me into it for Centaur. So, now I can imagine adding AI mandates or AI policies, lack of autonomy, limited manager support structures overall, the team size.
+
+And imagine what that would look like.
+
+[Speaker 4]
+So, the lead dev engineering leaders report report backs us up. Engineering leaders are spending more time on technical tasks, taking on more Hands-On technical responsibility and more, considering returning to individual contributor roles. Uh, this is in 2026, compared to 2025. And interestingly, another major trend is that the happiest people in Tech are the ones with the most autonomy over how AI enters their work.
+
+Uh, ladies losers. This is an annual Workforce survey of nearly 6, 000 Tech workers. Uh, chose this trend right. Burnout is up significantly year over year. Optimism is down. Uh, one really interesting piece of this is the fear of job loss from AI is near the bottom of concerns.
+
+[Speaker 1]
+The fear
+
+[Speaker 4]
+Isn't really about a replacement from AI. It's really, um. About the this why the strongest predictors of queer happiness that we see in the survey is, is it role isn't level isn't company size. It's whether AI makes you feel Amplified or whether it makes you feel diminished. And in the survey, Amplified workers are optimistic and engaged, whereas diminished workers are burned out anxious.
+
+And toggers the group with the most autonomy over how AI enters their work. They are the happiest and the least worried about layoffs of anyone in the survey, and they enjoy their work more than any other role in the survey. So, I want to talk about some of the specific failure models about the specific anti-patterns.
+
+Um, I was, I was seeing here. So one of the patterns or anti-patterns was agents optimizing for closure where users need cognition. Uh, there's a recent Microsoft and CMU studies showed it involved. 319 knowledge workers showed the higher confidence in genai is associated with less critical, thinking essentially users shift from critical problem solving to verifying AI output.
+
+So, what I experienced repeatedly and found many references to others experienced in this as well are what I call these closure behaviors for my agent. So, if I would say something like, help me think this through. Uh, it would produce a confident recommendation, I say. What are the tensions here really collapse?
+
+Those that into the decision Matrix, and if I'd say I'm not sure what I believe, I'm just trying to talk something through. It's going to infer a position for me. So, without AI, you're forced to reread doubt, reframe, sit with unresolved questions. But with an AI agent, I would get.
+
+Here's a summary here are the implications. Here are the next steps. So, essentially, reflection. Instead, becomes throughput.
+
+[Speaker 1]
+Um, Agents will build their own structure and then not follow it. So?
+
+[Speaker 4]
+Research on long-winding agents shows a loss of adherence to instructions from tasks, goals, and the agents build their own structure that diverges from what they're asked to do. So, this is what I experienced my agent, you know, creating organic structure for stored notes and then just started creating a whole bunch of tasks for me.
+
+And, like, not really, you following its instructor.
+
+Uh, agent silently transfer mental load to users through cognitive wondering. So, this is essentially polished. Looking output has the appearance of intellectual rigor, but upon closer inspection, the thinking may have been largely fabricated. So, essentially, you think the work has been done, but you still need to do the work of making meaning out of whether we presented to you?
+
+So, this is a bit different than work slop or claw to table. This is Mark's office. Maybe since, uh, when you send it to somebody else, this is happening to you directly from your area engine. Like, you think it's doing work for you? You think it's thinking for? It hasn't actually done that work.
+
+So, this is what I was getting right, uh?
+
+[Speaker 1]
+I was trying to have my agent take meaning of the context I gave it, and it was just turning around and putting that work of being making back on me. So, what I need to do is take back control over the process of meeting making? Uh, but the way the work for me, how my brain works, and the realities of my dad.
+
+[Speaker 3]
+So, this is what I built at a super high level. If anybody wants to see more of it, I can. I can walk through afterwards. Um, so essentially, and this is again a specific to me. It's a specific structure right now. Uh, so essentially at a high level, there are priorities.
+
+It gives me like a high level focus, and then within a priority, there's multiple initiatives. So right now, I have about. Uh, probably fewer than 10 priorities, but I've got over 30 initiatives, right? So, it ties to one, one only one priority.
+
+[Speaker 4]
+With any tradition of this. What's called a bearing? This is just a paragraph that describes my current understanding of the initiative.
+
+[Speaker 3]
+Um, I will let my agent draft a new bearing for me, but I will not let it just write it without me reviewing it, right? That's something I have to. I have to go look at it and make sure it makes sense, right? This is not something I'm just going to hit approve on.
+
+I need to review it. I need to actually represent to me what what these new developments mean. Um, and then new developments. These are there are multiple developments on initiative. These are logged quickly as they come in. So this could be any new information from my slack message or meeting an email.
+
+And nice thing about development is, I don't have to make meaning out of it right away, right? This is just, um, something that comes in. I quickly log it, and so an agent is really helpful here, because this is just a quick, quick task to get it to get it into the into the system.
+
+Um, and a new development doesn't apply a task itself, right? It's just a, um, it's just something that happened. And then, when I have time later, I can run a review. Uh, so there are multiple reviews on initiative. So when I run a review that accounts for any new developments folds those into an updated bearing on the initiative, and essentially, this leaves me in control of my attention.
+
+And I built this for myself because I get overloaded with too much information in front of me all at once, and this helps me keep just the right amount of information. On my priorities of my initiatives in my head at any given moment.
+
+So? Uh, how's this help me, right? How's this going back to leading managing doing? Um, priorities, initiatives, bearings. These all help me understand and decide what matters right now. Um, I haven't talked about this, but sitting above all, this is what I call a fix. This is a periodic periodic process that reviews where review all the bearings on all of my current positions, uh, starting all the current issues, and then produce a new position way plane and track.
+
+Um, sort of a higher level of focus concept.
+
+[Speaker 2]
+I'm also building up a stakeholder mapping tools that I can track exactly where each initiative stands with various stakeholders. Um, I'm actually find myself quite good at building relationship stakeholders, but I, you might surprise you to know that I'm actually an introvert. So that works like, enjoy doing it.
+
+I'm good at it. It fills out to my energy, so the idea of the stakeholder map is, it helps reduce the friction of be getting started and going and talking to somebody and figuring out who the right person is and talk to next.
+
+[Speaker 3]
+And then day to day, uh, helps me manage my team to know what I need to talk about, with whom. So, like translating priorities? And finding meeting agendas, coaching towards better outcomes. And then, um. I still have tasks, right? But not everything is a task anymore. It's too soon to say if this system will continue to work for me, but so far it seems to be giving me a much clearer Focus.
+
+Okay, so, uh, some lessons learned from this? Um, when you need to think, don't let your agent push you into closing. Uh, if anyone's ever seen the movie. Glenn, Gary Glenn Ross, always be closing. That's what James is trying to do. No, don't want to do that. Tell it, you're in thinking mode.
+
+Um. Actually, uh, interestingly enough, I earlier today. I fed this presentation as I had the final version of this presentation into my second brain and said. Improve yourself based on all the learnings from the stock. So, um? Um, so we'll see if this it actually did. Update, uh, some instructions on this very Point here.
+
+Uh, so I now have a thinking mode in there. We'll see if that works. Um. With my design, I started like I started talking about before I started with very little up front design, uh, but I kept a close eye on things were working for me, and they built more structure when things started to fall apart.
+
+So again, you do? You want to give your agents some structure to operate over before it goes too far in building its own structure that drifts from something useful to you?
+
+[Speaker 4]
+And make the province provenance of information in all is structurally visible. So, basically, is this something? That's truly your understanding, or is it something that your agent has come to us. Understanding
+
+[Speaker 3]
+And separating the two is important. Um, so I think having a personal knowledge this thing can be very valuable, and I certainly encourage you to build one yourself. Um, it doesn't take a lot of work up front. But, like I said, let it evolve, but stay in control of the shape of it.
+
+And in short BSMR, not a reverse center.
+
+Regularly. All right.
+
+So, we are going to take a quick five minute break.
+
+[Speaker 1]
+Grab snacks, come back, and have you also settled in. After that, we will move over to the panel discussion, so five minute break, and let's come back to this. And in the meantime, if you are interested in speaking at an event, you know, please use QR code and you can.
+
+I'm the one who scanned this QR code last year, so I'm here so. I'm an example here. So, let's do this. Take a five minute break, and our discussion will be after this.
+
+[Speaker 3]
+Yeah, he's, uh.
+
+[Speaker 6]
+Yeah, yeah.
+
+[Speaker 1]
+The beginning. Yeah, but
+
+[Speaker 2]
+Make sure I was like, I don't like it.
+
+[Speaker 1]
+No, all of them so much. I really, really nice. Yeah, but it's good, it's nice. Yeah, yeah.
+
+Just like this job right now, and and.
+
+[Speaker 6]
+Now this?
