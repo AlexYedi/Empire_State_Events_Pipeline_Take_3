@@ -135,6 +135,7 @@
 
 ### ADR-8 / system graph
 - Multi-spec `spec_for` precedence · do `tracked` acks auto-expire on Linear Done? · hub projection of the graph.
+- **"Increment 2" means two different things.** ADR-8's own §Increments define Increment 2 as *neighborhood-as-judge-context* (evidence parity, `context_nodes[]`) and Increment 3 as the findings ledger. Linear YED-163 and roadmap Phase 3 call Increment 2 *the skills ↔ agents ↔ commands ↔ outcomes graph* (invocation edges from telemetry + outcome nodes from judge/DoD/`/tag-outcome`). That scope is not in ADR-8 at all. Needs a ruling: is the skills/agents graph a new Increment 4, a re-scope of Increment 2, or an amendment to ADR-8? (added 2026-09-15)
 
 ### Pipeline design, never ratified
 - What happens when invite metadata changes after research ran (speaker swap, venue move) — re-research / diff / skip? Deferred to first real edge case.
