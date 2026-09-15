@@ -4,7 +4,7 @@
 
 ## Approvals (Alex, 2026-09-15)
 - **Allowlist:** +29 senders (13 candidate rows / 14 senders + 15 unclear) → `inbox-allowlist.md` (PR #76).
-- **Spam batch:** all 6 → denylist spam section + Gmail mark-spam.
+- **Spam batch:** all 6 → denylist spam section + Gmail mark-spam. **Applied 2026-09-15:** 42 threads (all-time, not just the window) marked spam; scope verified on thread 1 first; post-check `from:` search for all 6 senders returns 0 threads. Reversible (Spam → Not spam).
 - **Unsubscribe worksheet:** approved list below (manual — no MCP unsubscribe tool).
 
 ## Unsubscribe worksheet — approved (for Alex to action)
