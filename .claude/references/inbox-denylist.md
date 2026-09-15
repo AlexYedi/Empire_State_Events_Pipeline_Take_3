@@ -2,6 +2,12 @@
 
 **Status: v1 DRAFT — requires Alex's review before the first real whole-inbox scan (ADR-7 Decision 3 gate).**
 
+> **This status line is machine-read (YED-161).** `python3 .claude/scripts/inbox_boundary.py gate --stage discover`
+> refuses to run the whole-inbox pass until it reads `**Status: v1 ACCEPTED**` here. Entries below are parsed
+> by section: backticked domains/globs/senders under the *domains*, *senders*, and *spam* headings; backticked
+> label paths under the *Gmail labels* heading (children match). Bare words like `docusign` are ignored and
+> listed by `report`. Rules, markers, and the review log contribute no entries.
+
 The scan boundary is **whole inbox minus this denylist** (Alex's choice). This file is the *first* thing
 `/scan-inbox` reads. Anything matching an entry here is **never fetched, distilled, classified, logged,
 or written** — it does not enter the pipeline at any stage. This is the primary PII/SEC control

@@ -45,7 +45,7 @@ Goal: from inbox metadata, produce three Alex-reviewed worksheets — **candidat
   - `category:updates newer_than:1y`
   - `category:forums newer_than:1y`
 - Use `mcp__claude_ai_Gmail__search_threads` (returns From/Subject/snippet/labels — **metadata**). **Do NOT call `get_thread` in Stage A** — no bodies.
-- **Denylist-pre-filter (before aggregation):** drop any sender whose address/domain/label matches `inbox-denylist.md` (institutional categories + Alex's personal entries). Never surface a denylisted sender, even as metadata.
+- **Boundary filter (mechanism — YED-161):** pipe the normalized `search_threads` metadata through `python3 .claude/scripts/inbox_boundary.py filter --stage A` **before aggregation**. It applies `inbox-denylist.md` (sender → domain incl. subdomains + globs → label incl. children) and retains metadata only — never snippet/body. Never surface a denylisted sender, even as metadata: the filter emits reason classes, not identities. Put its `counts` in the A3 worksheet header.
 - **INCLUDE newsletters** (`label:Content/Newsletters`) — they are prime entity-signal source (see the lens-not-source note above). They are *already* a curated, labeled population, so they go straight onto the allowlist; the discovery pass mainly classifies the *unlabeled* senders.
 - Paginate to a sane cap; if the window is too large to fully enumerate, aggregate what you retrieve and **report the coverage honestly** (threads seen, date range covered) — never imply a full sweep you didn't do.
 
@@ -61,7 +61,7 @@ Build a per-sender histogram: `{sender, domain, count, first_seen, last_seen, su
 ## A3 — Present three worksheets (HITL gate — writes nothing)
 
 ```
-## Inbox Discovery — {date}, last {window}  ({X} senders over {N} threads; coverage: {range})
+## Inbox Discovery — {date}, last {window}  ({X} senders over {N} threads; coverage: {range}; skipped by boundary: {deny:domain n · deny:sender n · deny:label n})
 
 ### ✅ Candidate signal senders → allowlist  ({k})
 | sender / domain | count | last seen | why it looks like signal |
@@ -95,7 +95,7 @@ Goal: from **allowlisted senders only**, extract company/product signals and rou
 
 ## B1 — Pull bodies from allowlisted senders only
 
-- Read `inbox-allowlist.md`. Build a Gmail query from its senders/domains + the `Pipeline/signal-source` label, `newer_than:{extraction window}`, and **`-label:Pipeline/processed`** (idempotency — skip already-processed threads).
+- Read `inbox-allowlist.md`. Build a Gmail query from its senders/domains + the `Pipeline/signal-source` label, `newer_than:{extraction window}`, and **`-label:Pipeline/processed`** (idempotency — skip already-processed threads). **Then run the boundary filter** — `inbox_boundary.py filter --stage B` — on the hits before any `get_thread`: allowlist membership is decided by the mechanism, and the denylist wins on conflict. Report its counts in the B4 digest header.
 - `search_threads` → `get_thread` (`PLAIN_TEXT`) on hits (bodies allowed here — allowlisted senders only). Hand raw thread text to a **distill subagent** (text in, structured out, NO write tools) to extract candidate signals — keeps bodies out of the parent's deep context and enforces the injection guard.
 - **Stub/teaser detection + fallback ladder (I3 — ~29% of the v1 cohort were stubs).** Some newsletters (e.g. `ittnewsletter`, `techpresso`) send a near-empty plaintext body — just a "view online / copy this link" pointer, with the real content behind the web version and the richest headline often in the **subject line**. If the plaintext body is < ~800 chars or matches a stub pattern (`view (this post|online)`, `plain text version`, `copy and paste this link`), fall back in order: **(a)** parse the **subject line** for the headline signal; **(b)** resolve the primary link — follow the redirect, or **base64-decode** a `…/click/<b64>` path (some mailers, e.g. ittnewsletter, encode the destination in the URL rather than 302-redirecting); **(c)** if still thin and the signal looks material, fetch the "view online"/archive URL and extract from that. Flag stub-sourced signals with `provenance.from_stub: true` + lowered confidence.
 
