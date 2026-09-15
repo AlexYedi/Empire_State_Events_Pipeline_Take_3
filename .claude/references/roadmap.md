@@ -98,7 +98,7 @@ when voice-radar next moves).
 - **Canceled:** YED-67 + 68/69/70/71/72/73 (NY Tech Week single-vs-swarm harness — superseded by the cross-provider judge) · YED-41/42/46/57 (Full-Stack-GTM relics) · YED-55/56/59 (Capstone 2 — absorbed conceptually by the MI Engine; the CRM write already exists in YED-142; re-issue as an MI lens when a real outreach friction motivates it) · YED-107 (folded into YED-157 lane D).
 - **Programs closed:** "Full-Stack GTM Roadmap (24-week half)" and "GTM-oS" — milestones at 0%, live ideas already inside the MI Engine + Job-Search Engine. Keeping two programs was the source-of-truth failure at the planning layer.
 - **Re-homed:** YED-47, YED-128, YED-131 → MI Engine · YED-65 → Job-Search Engine · YED-114 → Empire State Hub · YED-129 → Build-Rigor · YED-141 → Empire State Events.
-- **Parked (unchanged):** GTM University / Orchid re-tone (YED-98/100/101/125 — gtm-OS Hub is GTM-owned by design, ADR-2) · visual-selection marker · Clarify stays dead.
+- **Parked (unchanged):** Orchid re-tone (YED-125 — gtm-OS Hub is GTM-owned by design, ADR-2) · visual-selection marker · Clarify stays dead. *GTM University (YED-98/100/101) un-parked 2026-09-13 → §9.*
 - **Corrected to git truth:** YED-155 → Done (shipped in #60) · YED-66 → Done (the manual-upload path *is* `/post-event-content`) · YED-81 → High.
 
 ## 8. Pre-mortem (the adversarial pass)
@@ -113,6 +113,7 @@ when voice-radar next moves).
 
 ## 9. Decision log (dated; append, never edit)
 
+- **2026-09-13 — GTM University un-parked (YED-164; reverses the §7 park, Alex's call).** Re-aimed against Anthropic's *Staff AI Engineer, GTM Claudification* JD as a **north-star benchmark, not a pivot** — me-model §1.5 (commercial IC search) stays primary. v2 is add-only (v1 unit ids kept: +28 sub-tasks for oversight design, transcript-analysis evals, observability/ROI, Agent SDK + governed MCP, production engineering, inner-source, experimentation, explainable scoring) plus a sequenced 10-stage path; lives in gtm-os-hub. Overlap with P3 (YED-48 eval harness, YED-109 judge, YED-162 loop) is intentional — those builds count in both places.
 - **2026-09-12 — v2 adopted.** §7 ratified; YED-81 re-raised to High and scoped as contract + write-path; the third MI lens = the architecture lens (YED-126). M3 closed honestly; M4–M6 opened as A1–A3. Build-Rigor project reopened to house P3.
 - 2026-09-12 — Git conventions + `reconciliation-terminal-charter.md` (PR #67); ADR numbers are minted from `main`; per-workstream worktrees created on demand, never parked detached.
 - 2026-09-12 — Do **not** archive the Linear project "Empire State Hub" — it is the canonical hub tracker (YED-76/81/82/113 live there). ADR-7 Accepted (#69).
