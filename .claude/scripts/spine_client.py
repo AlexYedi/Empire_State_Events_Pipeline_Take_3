@@ -83,6 +83,15 @@ EMAIL_ALLOWLIST_RE = re.compile(r"^(?:noreply|no-reply|donotreply)@|@users\.nore
 # boundary stays a single, auditable file. Exact domains, subdomain suffixes, and `*` globs.
 # ---------------------------------------------------------------------------
 def load_denylist(path: str = DENYLIST_PATH) -> tuple[set[str], list[str]]:
+    """(domains, globs) for the tier-0 backstop. Delegates to inbox_boundary — the ONE parser of
+    inbox-denylist.md (YED-161) — and falls back to the inline parser only if that module is absent."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from inbox_boundary import load_denylist as _full
+        d = _full(path)
+        return set(d.domains), list(d.globs)
+    except ImportError:
+        pass
     exact: set[str] = set()
     globs: list[str] = []
     if not os.path.exists(path):
