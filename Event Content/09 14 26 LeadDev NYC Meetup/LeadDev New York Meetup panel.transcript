@@ -1,0 +1,279 @@
+[Speaker 1]
+Hello! Hello, Hello friends! Happy Monday!
+
+[Speaker 2]
+I'm Plum. I'm a senior director of engineering at row Telehealth, based out of New York City. But tonight, I am your panel moderator to talk about build by. So, from the dawn of this first SAS company, Engineers have been faced with that classifier decision when we use new capability.
+
+Do we do, or do we buy? Do we invest weeks to months in our homegrown solution, or do we throw hundreds to thousands of dollars per month if something someone else has already built? Well, as many of you may have encountered, we now have this third option. We kick off an AI agent and hope for the best.
+
+We can have the capability built in a day to your specification, probably maybe. You can buy, put yourself a CMS and analytics platform HR platform. The sky is really the limit, but once the catch is SAS dead as all the agents writing the LinkedIn post right now are telling us.
+
+Some people have been on LinkedIn recently. I like it. Tonight, we've got four humans here humans. Uh, who are the Bill versus buy versus Vive decision makers and influencers in their organizations to discuss what they have seen in the wild. So, if you just want to run down the line real quick and introduce yourselves with your name, company, and channel.
+
+That's wrong. This one's awesome. I have to say.
+
+[Speaker 3]
+The way you did it. Ladies and gentlemen, I haven't even started yet. Yeah, all right. Okay, yeah, my name is, uh, Ivan, I'm based in Berlin, Germany. Um.
+
+[Speaker 4]
+Yeah, I work. I'm an engineering leader, uh, working for a company in healthcare? Yeah, that's it sure, and we decided to keep it short.
+
+[Speaker 5]
+Yeah, that's a that's a great transition for me. Uh, my name is Maylene. I'm original from Cuba, but actually, I live in Berlin. Funny enough, with the Nazi, we just talk about this panel, uh, when we go. I work as a head of engineering for a company called Bona.
+
+We were pretty much in digital marketing, and yes, I work mostly on content creation and Company management, so I will hopefully have some stories for you from from the Tango.
+
+[Speaker 6]
+You. Hi all, I'm Vivya. I'm a group principal engineer for REI division, a jogger so jobber is in a company which helps home service based companies run and Google their business end to end, so I'm very excited to be here, especially with the topic, because I'm one of the person who makes the decision within our organization when it comes to AI, whether to buy or build.
+
+[Speaker 4]
+Hi, I'm Brian, uh, I'm CTO at M3 USA, which is the U.S subsidiary of M3, which is a healthcare company based in Tokyo, Japan. Um, I've faced this build versus five versus five decision as well. So, uh, I'd like to, uh, you know, decided to talk
+
+[Speaker 3]
+About
+
+[Speaker 2]
+That. Buying has two mics now, too. So, oh, okay. Now, we got all right. So, kicking off the panel, first off, what types of vendors have started to come into question your organization as potential candidates to be replaced, uh, Brian, I'll served you?
+
+[Speaker 4]
+Sure. So, I think, um, maybe one of the, you know, main areas is, is internal workflows? Um, and, you know, possibly, as far as a type of vendor, or, you know, it would be, um, you know, bin vendors where the software doesn't exactly fit what you need. And so
+
+[Speaker 5]
+I think that the appeal of being able to five five code solution is that you can potentially get something that fits what you need much better, and maybe you might not need to pay pay. For a lot of features that you don't use, I think.
+
+Uh,
+
+[Speaker 4]
+Maybe I can just add on to that. So, we are also, you know, uh, this is a heavily debated topic. Like, you know, your tendency with AI is like, you know, just throw it in Claw Ridge, and then you know, build it yourself. Um, but you know, the more and more you do it, and you know you make your hands dirty with AI that you know that you deny it all the time that the claude gives you the greatest output.
+
+So, uh, you know, if you wanted to build something reliable, uh, which you have to put it in front of your customers, maybe not right. It has to go through a lot of iteration. So, I I, we are also leaning more towards for anything internal. And you know, what is your risk tolerance?
+
+And then you have five it, and you know, build it based on, you know, what is the outcome you are expecting?
+
+[Speaker 5]
+I can add
+
+[Speaker 4]
+Just one note of that, because the same time you ask which kind of vendors might be good candidates. I think we'll briefly talk about that a while ago, like vendors where you have to pay licenses, and you're getting more than what you actually use, so you were actually mentioning that in the past.
+
+And I'm gonna just call one example by name because we are here for real examples, I believe, uh. We recently faced that with abando, for example, uh, we have like lessons that cover a lot, and we have been in touch with advantages to see if there's any chance to get something else, but it's like, hey, there is one package this this.
+
+But you get there you go. We're actually using a small portion of that. Now, this might not be a good example for replacement because I think it's going to be heavy. Very likely to just invest on that. We are going to get to those questions, but those can be candidates where you know there is one portion, and then you can just remove a whole bunch of things that you have in your license, and maybe you're paying them.
+
+So, of course, the one thing you don't want a Vibe coat is dated on, right, right? You can wait for the empanadas, so if you hate a dog.
+
+[Speaker 2]
+All right, so our build and Vibe still actually distinct choices. Or are those starting to come together? And doesn't that change the map and I'll start with a moment?
+
+[Speaker 4]
+Hmm, that that's a long answer, but I will try to keep it very short. Um, so build and Vibe. Honestly, I know that we have this, uh, title in this panel, but it's more still like, build, uh, versus by, and the vibing aspect is just a part of the build, right, as most of us might be thinking already, is the decision on how do you want to build it, right?
+
+How far do you want to go? Do you want to buy coders you want to go full agency? Do you want to use AI assistant engineering, uh, for, like, some parts? Like, how much do you want to do? At the end, it's the same question about our building. And the real question.
+
+There is not so much how much is going to cost to build it, but how much it's gonna cost to maintain it afterwards. So, what is the actual cost of ownership? So that's basically the topic we are entering, and we are going to be having. But at the end, vibing is just or whatever way you want to do it.
+
+You have to own it afterwards. So, to me, is it still the very old classic buy versus build with some changes in the Paradigm?
+
+[Speaker 3]
+Exactly, um, I'd like to. If you don't mind to put some not definition because there is no real definition about live coding is, but? To the guy who actually made up though or first introduced this term. I just wanted quickly to continue it. So actually, um, his name was, is Andre carpathy, and he first introduced this term by coding on on X on the platform X x x Twitter.
+
+On February 2nd, 2025, and he described it, like, um. Um, and why is it called lifeco? It may be interesting, because does foodie give give it, giving it to The Vibes, whatever, like, lose workflow, um? Forget, the code even exists. Uh, like, yeah, everything, except all changes from from that.
+
+You can forget a code exist. Keep iterating, uh, that. That's how you got. He defined it. Base error, errors back, and so on, um. And he mentioned it back then. So once again, it was February 2025, it mostly works. That's how he he described it. But to be honest.
+
+To be honest, he also mentioned that for mostly for weekend projects. So, so? Like side gig at least back time. So I, I thought, uh, because we, we also talked the brand, what is actually difference between build? Uh, Vibe to be actually build anything anymore. All schools, so I thought that that would be just just interesting and and just just one more thing from the same guy Andrei calpati back in 2023, uh, wrote also.
+
+Next, the hottest new program in language is English. So, um? Just I, I hope you see where I'm going. And the last fun fact, but yeah, by calling Collins dictionary. This was the word of the Year 2025 white code. So, just to have some some platforms, some some basic basic knowledge I want, that would be interesting.
+
+I love it.
+
+[Speaker 2]
+What's actually interesting? I know this fun fact, since we're doing fun facts. Apparently, polish is the most token efficient language because of how it is written. Just don't ask me why I know that's what you earned today. Um, do you want to go to the next question, or does anyone have anything to add to that one?
+
+[Speaker 1]
+Uh, I just probably will add. One thing, I think, the vibing also sort of changing in different ways, because you know, I can give an example. So, in the past that, you know, if you wanted to actually do an, uh, architecture upgrade, right? So, this is with a recent example, so we actually built our agentic Foundation, which is powering our products.
+
+Um, probably two years back, we started, and then we started adding in more and more stuffs in there right. And now, you know, that the AI is moving so rapidly, and you know, you wanted to probably even upgrade to your agentic platform as well. I wish you would internally, so I think, uh, where I see this vibing is working better is like, you know, now, actually, I can actually throw my agent and do some vibes to check that whether my, my, you know whatever upgrade that I'm thinking of, you know?
+
+Let's say that I come. Put the 20 architectural principles that you know. How do I take from my current architecture to that right and quickly build an example out of it, and then you know, actually, I can make sure that my gut feels are right before even I can present it to my team, and then you know, I can.
+
+I can form an opinion, so in that aspect, I think I find why very useful.
+
+[Speaker 2]
+Maybe Brian, we were talking a little bit before, about, like, who has actually attempted the Vive coded SAS replacement that maybe gets edges closer to production, or maybe not. And I know you had some insight there. So, tell me a little bit more, so
+
+[Speaker 4]
+I, I've my company has done, you know, I'm I'm not actually after the the previous, um, discussion. I'm not so sure whether it should be called Vibe, called coding, or just building with AI. Um, but uh, but we have replaced two SAS solutions with a total of 100K a year.
+
+Um, and you know, so they had these characteristics characteristics that I mentioned where their internal only systems. Maybe you know, we, we had to do user acceptance testing with two or three, you know, principal users. And you know, like, uh? Also, you know, we did parity testing to make sure that it was producing the same output.
+
+The previous system was. Um, but I think you know with that level of rigor, uh, I think that it's really realistic to replace some kinds of internal systems, um, so you know, I think one of them was an order management system. And you know, we were using only a very small sliver of the functionality.
+
+So, for somebody that was a super valuable system, but for our our company, it was not very valuable system, and so that was, you know, 72k, a year that we got rid of with? Essentially, one month and one FTE working on it, you know, from start to finish so?
+
+Yeah, that's that's sort of how it works out, so this can be done if you identify a good use case. Um, it's, uh, it's, you know, a really, actually, viable path now.
+
+[Speaker 1]
+My sister add a slight flavor to it, and I think it also depends, like, you know, uh, we all have different SAS products, you know, uh, as your company measures right, so I wouldn't actually apply for an, uh, you know where you need and very domain expertise. As an example, twilio, or you know, strike, or you know some some of the communication or the payment system, right?
+
+So I don't think those are great for, you know, to build it internally, right? Because you need a domain expertise and? Whether you want your engineers to actually focus on that right, probably your company's core focus is not that. So, that's an angle that sometimes in the debate. That, and I use, like, you know, do we really wanted to put in our efforts in there?
+
+Another great example that I can share is like, you know, then it comes to AI. How do you measure the impact, right? So evaluation systems are, you know, is what you need. So, as a person that, you know, I have developed our evaluation strategies. And you know, started building tools, so I felt like, you know, you see a lot of tools out in the market like, you know, hey, we do the evals.
+
+And you know, bunch of these things, so usually that you know, these sort of tools are probably best for y coding, and we have built certain tools for the develop Revals and the production evals. Um, you know, and then there is a different type of way valves, which is a simulation eval.
+
+If you have telephony products, right? And then, for that, we actually went with a platform called secure AI, which was actually giving us value. But, you know, the other eval platforms that you know we can pretty much build
+
+[Speaker 2]
+Ourselves, so I'm hearing no vibe coding Banks yet, but soon, okay. Anything else to add on that one is,
+
+[Speaker 1]
+Uh, maybe it's a photo app or a quick note, I think, on the point of replacing right when you have, um, like an external event, or you have a contract, and then you, you want to go on something. Like this example, there might be great use cases, and we also have to be very, very careful on.
+
+When is the right time to do that? Um, classic example, right? Like, you touch base on this one coming from DDD domain driven design. I think the majority of us here know about is what is a good candidate to be on a third party and a buy, and where it's a good candidate to be owned everything.
+
+What is called domain should be on, of course. It is what is generic? Very likely a good candidate to buy, and then if you want to reply something that you have external to something internal, the question is, how much are you willing to pay for that? How much are you willing to pay, for example, for the on-call, uh?
+
+For this, for the maintenance later on. How critical this is going to be like? Do you really want to invest have? I don't know my team or a half a team, like how many people are going to maintain this, and how big is it gonna be. Is it one FTE one month?
+
+Okay, sounds good, very likely. The maintenance, it's not going to be huge, needs to be checked in any case, right? But if it's gonna be like a huge amount of systems with a lot of connection, bringing complexity in. Okay, then we can start thinking and then is where the comparation can get, uh, hard, because then you are comparing directly a contract with 72 or 100K a year with something that you need to actually guess how much it's gonna cost.
+
+Now, I know that we have someone here who's more on the buy side of things. So, I love to hear some more insights, exactly. I was waiting for this one. Um, but the small disclaimer first, I'm so I'm working in Europe.
+
+[Speaker 3]
+More specifically in Germany, AKA we are crazy about the privacy and. Sometimes we exaggerate in a healthcare company
+
+[Speaker 2]
+And dealing with an Erp system so. To Vibe in this in this place to buy is not really an option, so. Um, we're joking aside, um, I think this. This applies to not only to to this very specific case, but in general, the core. The core. So, in my case, once again, we are dealing with finance with payroll with things that Auditors has have to approve.
+
+And so on, of course. I'm not gonna buy that one, right? Uh, tell it to my CFO. But so, the core, the core, uh, there is no, no, too much space to to, uh. And then, once again, maintenance and ownership, and everything is always on the table. Um, and so on, so I would just um.
+
+Say core, definitely not. It's more about edges, some smaller workflows on, or in our case reporting add-on or something. Yeah, I'll I'll do it there, but the core is still is still by at least a decimal. Okay, so we have to think about compliance, upgrading, maintaining, and so on.
+
+So, yeah, these are the the. The facts, the data that I'm in the basement lights. Yeah, this is
+
+[Speaker 1]
+The first time I've heard like five coding gdpr and Healthcare on the same sentence, and as someone who has previously implemented gdpr and works in healthcare. Now, I feel slightly scared for kind of all of us. In any case, so we see now that we're taught, you know, we talked a little bit about, like, is it wonderful time one month?
+
+Is it, you know, multiple people. How are you seeing team sizes? Respond in your organizations to these sort of decisions and how we're thinking about the future, uh, to be. I'll start with you, yeah.
+
+[Speaker 3]
+So, I think this is also a highly experimental inside jobber, so we are trying like, you know, two to three teams. I mean, the size teams. And, you know, sometimes with five people. So, what I have noticed is like, you know, there is not really a perfect answer that you know.
+
+This is a perfect team size, or you know, this is so, it totally depends on the project, so we, I can actually give an example. So, we were actually building. But, you know, we were actually building something internally. This was an experiment, uh, for selected customers. So, where we had lot of Leverage for experimentation, and you know, these customers, which we were choosing were actually, you know, incentivized for using the new experimental product, which was, like, you know, Cutting Edge AI, right?
+
+So in that we were having like three members, and um, you won't believe that, you know, we had a production ready. Mobile application. I think we built in seven days, which has a connectivity to multiple platforms, which are service providers use, and then you know, they can pretty much automate their business through that.
+
+But the problem was that, you know, when you're actually building, um? Or, you know, of course, like, you know, two to three members and hundreds of PRS coming in a single day? It's all those agents who's going to give you that, right? So, that's a, that's a question. So, what we actually did is that, you know, we started using openstack workflows, and I'm pretty sure that some of you would have heard about the open source, uh, open spec flows, so we started using it, and you know, we automated bunch of our workflows, and then, uh, in our, uh?
+
+You know, GitHub that, uh, if the engineer is not coding it, you have a label called engineering review required. Otherwise, you know, pretty much all the PRS, uh, will have some deterministic steps and checks in our GitHub actions, which will, which will, you know, as long as that, the CI says salary, we were just merging it, and then we we had the systems in place that you know, you can quickly revert it, so that actually helped us move really quicker on that.
+
+But again, when we come back to the normal? Core application. This is not possible because it's a legacy coordination.
+
+[Speaker 1]
+I
+
+[Speaker 4]
+Haven't seen there be any changes on team size, and you know, need for engineering? Um, I think that that's still something that I mean, the nature of engineering work is changing, but I don't think that there's, uh, you know, for most of us, I don't think that a decreasing work.
+
+Yeah, I mean, that matches up with what we saw in the last talk of only 22 of us are worried about losing our jobs because we've seen how good and how bad AIS I think.
+
+[Speaker 3]
+I cannot briefly something there. I've seen a different type of discussion, and it goes from the financial perspective and angle in terms of budgeting. How did you justify the price for the tooling that you have for AI, but many different tools that might be out there versus the productivity you're supposed to be gaining from that, and how does that reflect those personal cost?
+
+That discussion I've seen a couple of times this year, at least, and I think a lot of companies are actually leaning towards that, like, how can I have more of the AI tooling and get more out of the same amount of people or even less in some cases. And I think that the thinking should be different because it's true.
+
+Of work is moving somewhere else, like reviews. For example, it's a pain point that a lot of people know has been outing thousands of reports already by now, uh, a different angle is, how can you then experiment more with the same amount of people because, you know, like Innovation, really comes.
+
+When you're experimenting a lot, you need to have a lot of things in Spain. And so, at the end of the day, maybe the outcome is gonna be like the same amount of things that go out there, but the quality of the outcome should be way higher, and then you can find your experiment more so you can do more with the same amount of people with the tooling.
+
+The outcome is going to be the same same amount that actually the. It's going to be way higher. So indeed, actually, the outcome should be higher in that case. So that is actually an invitation for for just thinking, right, like, not really introducing people, not really trying to get more out of that.
+
+But how can you experiment and do more things that actually fail to prove the point? Yeah, do we have time, um?
+
+[Speaker 1]
+Yeah, um, I mean, coding was never, never a bottleneck, uh. Now, he just pushed it. Down the line, and I was. I remember some numbers from another great conference. We are developers in Berlin, they they. So, so the real numbers, um, if I remember correctly, like? To be reproducing seven to 17, this time more code.
+
+Whatever, I think they become lines or whatever, but when you look in the other numbers. Um, how long PR stayed for reviews? How I don't know quality and and outcomes, and so on? It wasn't that great. It was somewhere, so when you compare seven to seven times more. Versus just?
+
+I don't know, 30 percent of the outcome better. That's, that's. That's really good. That's that's not. That's waste. That's pure waste. So, I think we are not there yet. It doesn't mean that, uh, very soon. In the future, it will. It will change, but uh, we still, uh, as Engineers have to figure it out.
+
+[Speaker 2]
+Quick audience survey, who has a PR that is down for review right now, that hasn't been reviewed yet. Close your hand. Okay, who now who has a PR that they should be reviewing, but they are not right now? Raise your hand. Here's the problem. All right. So sorry, I love you all.
+
+All right, last question, and I want to hear from everyone on this. I will start with Ireland, run down the line. So, based on your experiences, what is going to be the most important factor to consider in the next six months when making this build versified decision?
+
+Yeah, all right, um? Ai generated the answer for me, Tom Seekers, two words ownership and exit, uh, ownership is, is clear, I think, uh, somebody has loan it, and so on. And by exit, I mean, how easy is it to to get rid of it? Uh, if you have a bite coated monster solution, uh?
+
+[Speaker 1]
+Build. As someone who left the company and you have to deal with it, uh, because you have a
+
+[Speaker 3]
+Dependency for what whatsoever reason you're in trouble, so towards ownership and exit meaning. How? How easy can you get rid of it?
+
+[Speaker 4]
+And later than just to clarify, because we might have a similar word on the on the answer ownership, you mean owning the solution that is created, right? Great, great, great,
+
+[Speaker 3]
+Great.
+
+[Speaker 4]
+Um, I have a different, uh, takeaway. Like, what I do believe is really important in the next, not only six months, but um, like, coming to the Future in this topic is. The cost of ownership. This is where the world comes out again. I just mentioned that at the very beginning and I think there is a danger that we are just trapped there and saying, hey look, let's just not buy this.
+
+Let's build it, because look how fast we can create that. This is why we have the all the whole setup. The whole tooling is not about that. Actually, we need to pack in. We need to factor in the whole cost of ownership later on. How critical is this component?
+
+How long it is supposed to leave? Like, what kind of service do we need to provide there for the whole on-call? How do we operate the system as well? I'm how big a massive is it going to be? It's not only about the time it's gonna take us to just create it, but the whole cost of ownership later on, so that will be my.
+
+That will be my take. Definitely agree with the what both of you said? So I, I just, uh, think it this way that, you know, as long as your decision is a two-way door that, you know, probably it's fine. And also, you know, in this fast moving AI era, I think it's even hard to make a decision, which, uh, to think that, you know, it's not gonna change in a week's time because that fast, this, uh, stuff is moving on.
+
+So, I think, uh, my advice, or, you know, one of, uh, if if you want one, take away from this panel. This is how I would say that, you know? Don't think that you know the decision you made today is gonna stay whatever. And you know, the change is the only constant thing, right?
+
+So be willing to make that change and also build your system. And you know, architect your system in a way that you know that's easy to change. And um. Uh, so one tip that I'll provide I learned from my own lessons that, you know, we built a foundation, which was, like, you know, a little hard to change.
+
+So, uh, I would keep the inference layer. And you know, all the model choices and all all of that outside of your product so that that part is easy to change. When these vendors are changing and then your product and your customer experience is something that which you own where you can control the context and all of that, and then you keep those two things separate, so that is going to help you.
+
+In the long run.
+
+[Speaker 1]
+I don't know if this is a controversial Viewpoint, but I think that. Well, six months is probably too short, but I think that build and buy are going to converge significantly. Um, you know, we're already talking about harness engineering. And, you know, like? In the past six, six to 12 months, there have been like some pretty massive changes in even just what we might even mean by by saying by coding like, you know, so I think for many of us here, building may mean significantly like using AI.
+
+Um, you know, or agentic agentic AI to build software, and so, um, I think that? Um, you know, vibing in the sense that carpathy used it, where it's very informal, and there's no validation of verification, uh, probably we won't, uh, you know, we won't ever be using that to to build critical systems, but I think that's what we, what we all mean by build is, uh, is, is changing, uh, quite a bit.
+
+And so, you know, in six months, maybe that's too soon. But, like, you know, a year or two? Uh, we may very well be, you know, considering? Um, considered just build versus buy again, but build means, you know, like, build the software, and then and then, you have agents automatically maintaining it, and you have everything going through.
+
+A strict validation processes so that you know the the pejorative meaning of Vive coding, um, doesn't really apply. Like, maybe we'll be achieving software systems that have that level of rigor that we would expect in build systems.
+
+[Speaker 4]
+Solving the
+
+[Speaker 2]
+Ownership problem by making the agents also own it, except
+
+[Speaker 3]
+You
+
+[Speaker 2]
+Don't vibecode datadog because they bought the empanadas right. Okay. Anyway, thank you all you've been a wonderful panel. Let's get around for possibilities, folks.
+
+All, right. Well, I landed over to Abby, who bought this song. Thank you! Thank you.
+
+[Speaker 4]
+So?
+
+[Speaker 5]
+I would like to thank our sponsors data and the next slide is. They are hiring, so it takes to their career page. So scanning, uh, take it out for in a minute, uh, because we can open the floor for networking and all, but before that, I would like to thank all the panelists for the wonderful discussion.
+
+Thank you again for coming here and coming.
+
+[Speaker 1]
+All right, so
+
+[Speaker 5]
+The room is here until 8, 30, so please make sure you talk your network. Ask more questions. And yeah, you have to help you out. Okay, thank you.
+
+[Speaker 1]
+Okay. Again again.
+
+Something else.
+
+What's your, what's your reason?
