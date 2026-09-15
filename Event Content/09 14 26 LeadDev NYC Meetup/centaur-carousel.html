@@ -1,0 +1,238 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Be a Centaur</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+:root{--ground:#0c1322;--plate:#131c30;--rule:#27334f;--ink:#efe9dc;--ink2:#aab2c3;--ink3:#7c869c;--you:#5b83ff;--you-dim:#223a7a;--agent:#7f8aa3;--agent-dim:#1c263b}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:var(--ground)}
+.slide{width:1080px;height:1350px;position:relative;background:var(--ground);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;padding:84px 88px 0 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font-family:Menlo,"SF Mono",monospace;font-size:23px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.kicker b{color:var(--ink2);font-weight:400}
+h1{font-size:100px;line-height:1.0;margin:26px 0 0;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
+h1 em{font-style:italic;font-weight:400;color:var(--ink2)}
+h2{font-size:80px;line-height:1.04;margin:26px 0 0;font-weight:700;letter-spacing:-.012em;text-wrap:balance}
+.you{color:var(--you)}
+.foot{position:absolute;left:88px;right:88px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:Menlo,monospace;font-size:20px;line-height:1.4;color:var(--ink3)}
+.foot .pg{color:var(--ink2);white-space:nowrap}
+svg text{font-family:Menlo,"SF Mono",monospace}
+svg .serif{font-family:"Iowan Old Style",Palatino,Georgia,serif}
+/* slide 2 */
+.big{display:flex;align-items:center;gap:34px;margin-top:34px;padding-bottom:30px;border-bottom:2px solid var(--rule)}
+.big .n{font-family:Menlo,monospace;font-size:132px;line-height:.9;font-weight:700;color:var(--ink);letter-spacing:-.04em}
+.big .l{font-size:30px;line-height:1.28;color:var(--ink2);max-width:560px}
+.ledger{margin-top:26px;display:grid;grid-template-columns:1fr 56px 1fr;row-gap:0}
+.ledger .h{font-family:Menlo,monospace;font-size:20px;letter-spacing:.16em;text-transform:uppercase;padding-bottom:14px}
+.ledger .h.a{color:var(--you)} .ledger .h.b{color:var(--agent)}
+.ledger .c{font-size:31px;line-height:1.22;padding:17px 0;border-top:1px solid var(--rule)}
+.ledger .c.ask{color:var(--ink);font-style:italic}
+.ledger .c.ret{color:var(--ink2)}
+.ledger .arr{border-top:1px solid var(--rule);display:flex;align-items:center;justify-content:center;color:var(--agent);font-family:Menlo,monospace;font-size:30px}
+.named{margin-top:26px;padding-top:24px;border-top:2px solid var(--rule);font-size:33px;line-height:1.25;color:var(--ink)}
+.named span{font-family:Menlo,monospace;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:10px}
+/* slide 5 */
+.rules{margin-top:46px;display:grid;gap:0}
+.rule-row{display:grid;grid-template-columns:250px 1fr;gap:30px;padding:30px 0;border-top:1px solid var(--rule)}
+.rule-row .tag{font-family:Menlo,monospace;font-size:21px;letter-spacing:.14em;text-transform:uppercase;color:var(--you);padding-top:8px}
+.rule-row .txt{font-size:37px;line-height:1.26}
+.plan{margin-top:26px;border-top:2px solid var(--rule);padding-top:30px}
+.plan .who{font-family:Menlo,monospace;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+</style></head><body>
+
+<!-- 1 · COVER -->
+<section class="slide">
+  <div class="kicker">LeadDev New York <b>·</b> Sept 14, 2026</div>
+  <h1>Be a <span class="you">centaur,</span><br><em>not a reverse centaur.</em></h1>
+  <svg viewBox="0 0 904 800" width="904" height="800" style="margin-top:34px" role="img" aria-label="Two specimen plates. Plate one, centaur: a human head and torso in blue mounted on a four-legged machine body in grey; the human chooses the shape, the agent serves it. Plate two, reverse centaur: a grey machine head on a blue human body; the agent chooses the shape, the human processes it.">
+    <!-- PLATE I -->
+    <rect x="1" y="1" width="436" height="798" fill="#131c30" stroke="#27334f" stroke-width="2"/>
+    <text x="28" y="48" font-size="19" fill="#7c869c" letter-spacing="3">PLATE I</text>
+    <text x="28" y="96" class="serif" font-size="44" fill="#efe9dc" font-style="italic">Centaur</text>
+    <!-- human bust (you) -->
+    <circle cx="219" cy="188" r="38" fill="#5b83ff"/>
+    <path d="M152 318 L152 282 Q152 236 219 236 Q286 236 286 282 L286 318 Z" fill="#5b83ff"/>
+    <!-- machine body (agent) -->
+    <rect x="86" y="318" width="266" height="126" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/>
+    <g stroke="#7f8aa3" stroke-width="3"><line x1="128" y1="344" x2="128" y2="418"/><line x1="160" y1="344" x2="160" y2="418"/><line x1="192" y1="344" x2="192" y2="418"/><line x1="224" y1="344" x2="224" y2="418"/><line x1="256" y1="344" x2="256" y2="418"/><line x1="288" y1="344" x2="288" y2="418"/><line x1="320" y1="344" x2="320" y2="418"/></g>
+    <g fill="#7f8aa3"><rect x="104" y="444" width="16" height="120"/><rect x="150" y="444" width="16" height="120"/><rect x="272" y="444" width="16" height="120"/><rect x="318" y="444" width="16" height="120"/>
+    <rect x="96" y="564" width="32" height="10"/><rect x="142" y="564" width="32" height="10"/><rect x="264" y="564" width="32" height="10"/><rect x="310" y="564" width="32" height="10"/></g>
+    <line x1="28" y1="612" x2="410" y2="612" stroke="#27334f" stroke-width="2"/>
+    <rect x="28" y="642" width="18" height="18" fill="#5b83ff"/>
+    <text x="60" y="658" font-size="19" fill="#7c869c" letter-spacing="2">HEAD · YOU</text>
+    <text x="60" y="690" class="serif" font-size="30" fill="#efe9dc">choose the shape</text>
+    <rect x="28" y="722" width="18" height="18" fill="none" stroke="#7f8aa3" stroke-width="3"/>
+    <text x="60" y="738" font-size="19" fill="#7c869c" letter-spacing="2">BODY · THE AGENT</text>
+    <text x="60" y="770" class="serif" font-size="30" fill="#efe9dc">serves it</text>
+
+    <!-- PLATE II -->
+    <rect x="467" y="1" width="436" height="798" fill="#131c30" stroke="#27334f" stroke-width="2"/>
+    <text x="494" y="48" font-size="19" fill="#7c869c" letter-spacing="3">PLATE II</text>
+    <text x="494" y="96" class="serif" font-size="44" fill="#efe9dc" font-style="italic">Reverse centaur</text>
+    <!-- machine head (agent) -->
+    <line x1="685" y1="128" x2="685" y2="150" stroke="#7f8aa3" stroke-width="3"/>
+    <circle cx="685" cy="124" r="6" fill="#7f8aa3"/>
+    <rect x="637" y="150" width="96" height="84" rx="4" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/>
+    <circle cx="685" cy="192" r="20" fill="none" stroke="#7f8aa3" stroke-width="3"/>
+    <circle cx="685" cy="192" r="7" fill="#7f8aa3"/>
+    <!-- human body (you) -->
+    <rect x="673" y="234" width="24" height="18" fill="#5b83ff"/>
+    <path d="M622 400 L622 290 Q622 252 685 252 Q748 252 748 290 L748 400 Z" fill="#5b83ff"/>
+    <g stroke="#5b83ff" stroke-width="22" stroke-linecap="round"><line x1="610" y1="282" x2="596" y2="398"/><line x1="760" y1="282" x2="774" y2="398"/><line x1="660" y1="404" x2="650" y2="560"/><line x1="710" y1="404" x2="720" y2="560"/></g>
+    <line x1="494" y1="612" x2="876" y2="612" stroke="#27334f" stroke-width="2"/>
+    <rect x="494" y="722" width="18" height="18" fill="#5b83ff"/>
+    <text x="526" y="738" font-size="19" fill="#7c869c" letter-spacing="2">BODY · YOU</text>
+    <text x="526" y="770" class="serif" font-size="30" fill="#efe9dc">process it</text>
+    <rect x="494" y="642" width="18" height="18" fill="none" stroke="#7f8aa3" stroke-width="3"/>
+    <text x="526" y="658" font-size="19" fill="#7c869c" letter-spacing="2">HEAD · THE AGENT</text>
+    <text x="526" y="690" class="serif" font-size="30" fill="#efe9dc">chooses the shape</text>
+  </svg>
+  <div class="foot"><div>“Reverse centaur” popularized by Cory Doctorow · applied to engineering leaders by Bradley Holt, Datadog</div><div class="pg">1 / 5</div></div>
+</section>
+
+<!-- 2 · THE FAILURE -->
+<section class="slide">
+  <div class="kicker">The failure mode <b>·</b> an AI “second brain”</div>
+  <h2>The agent kept choosing the shape</h2>
+  <div class="big"><div class="n">300+</div><div class="l">tasks generated in the first 60 days. Due dates never set. Action items built on assumptions that weren’t true.</div></div>
+  <div class="ledger">
+    <div class="h a">You asked</div><div class="h"></div><div class="h b">It returned</div>
+    <div class="c ask">“Help me think this through”</div><div class="arr">→</div><div class="c ret">A confident recommendation</div>
+    <div class="c ask">“What are the tensions here?”</div><div class="arr">→</div><div class="c ret">A decision matrix</div>
+    <div class="c ask">“I’m not sure what I believe yet”</div><div class="arr">→</div><div class="c ret">A position, inferred for you</div>
+    <div class="c ask">Raw meeting notes</div><div class="arr">→</div><div class="c ret">A follow-up task for every concern</div>
+  </div>
+  <div class="named"><span>The pattern, named on stage</span>Agents optimizing for <em>closure</em> when users need <em class="you">cognition.</em></div>
+  <div class="foot"><div>Source: Bradley Holt (Datadog), “Leading Without a Task List,” LeadDev New York, Sept 14, 2026</div><div class="pg">2 / 5</div></div>
+</section>
+
+<!-- 3 · MECHANISM -->
+<section class="slide">
+  <div class="kicker">Why it happens</div>
+  <h2>Reflection becomes throughput</h2>
+  <svg viewBox="0 0 904 860" width="904" height="860" style="margin-top:40px" role="img" aria-label="Two lanes. Thinking on your own loops: reread, doubt, reframe, sit with the open question, then back. With a closure-seeking agent the path runs straight: summary, implications, next steps, done — and a dashed arrow shows the work of making meaning handed back to you.">
+    <defs>
+      <marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b83ff"/></marker>
+      <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7f8aa3"/></marker>
+    </defs>
+    <!-- lane A -->
+    <text x="0" y="24" font-size="20" fill="#5b83ff" letter-spacing="3">THINKING ON YOUR OWN</text>
+    <g font-size="25" fill="#efe9dc" text-anchor="middle">
+      <rect x="0" y="52" width="190" height="78" rx="39" fill="#131c30" stroke="#5b83ff" stroke-width="3"/><text x="95" y="99">reread</text>
+      <rect x="238" y="52" width="190" height="78" rx="39" fill="#131c30" stroke="#5b83ff" stroke-width="3"/><text x="333" y="99">doubt</text>
+      <rect x="476" y="52" width="190" height="78" rx="39" fill="#131c30" stroke="#5b83ff" stroke-width="3"/><text x="571" y="99">reframe</text>
+      <rect x="714" y="52" width="190" height="78" rx="39" fill="#131c30" stroke="#5b83ff" stroke-width="3"/><text x="809" y="89" font-size="21">sit with the</text><text x="809" y="115" font-size="21">open question</text>
+    </g>
+    <g stroke="#5b83ff" stroke-width="3" fill="none">
+      <line x1="192" y1="91" x2="232" y2="91" marker-end="url(#ay)"/>
+      <line x1="430" y1="91" x2="470" y2="91" marker-end="url(#ay)"/>
+      <line x1="668" y1="91" x2="708" y2="91" marker-end="url(#ay)"/>
+      <path d="M809 132 L809 176 Q809 196 789 196 L115 196 Q95 196 95 176 L95 138" marker-end="url(#ay)"/>
+    </g>
+    <text x="452" y="238" font-size="21" fill="#aab2c3" text-anchor="middle">loops until it means something</text>
+
+    <line x1="0" y1="300" x2="904" y2="300" stroke="#27334f" stroke-width="2"/>
+
+    <!-- lane B -->
+    <text x="0" y="360" font-size="20" fill="#7f8aa3" letter-spacing="3">WITH A CLOSURE-SEEKING AGENT</text>
+    <g font-size="25" fill="#efe9dc" text-anchor="middle">
+      <rect x="0" y="388" width="190" height="78" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/><text x="95" y="435">summary</text>
+      <rect x="238" y="388" width="190" height="78" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/><text x="333" y="435">implications</text>
+      <rect x="476" y="388" width="190" height="78" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/><text x="571" y="435">next steps</text>
+      <rect x="714" y="388" width="190" height="78" rx="6" fill="#7f8aa3"/><text x="809" y="435" fill="#0c1322" font-weight="700">“done”</text>
+    </g>
+    <g stroke="#7f8aa3" stroke-width="3" fill="none">
+      <line x1="192" y1="427" x2="232" y2="427" marker-end="url(#ag)"/>
+      <line x1="430" y1="427" x2="470" y2="427" marker-end="url(#ag)"/>
+      <line x1="668" y1="427" x2="708" y2="427" marker-end="url(#ag)"/>
+    </g>
+    <path d="M809 468 L809 540 Q809 560 789 560 L218 560" stroke="#5b83ff" stroke-width="3" stroke-dasharray="10 8" fill="none" marker-end="url(#ay)"/>
+    <rect x="0" y="524" width="210" height="72" fill="#5b83ff"/>
+    <text x="105" y="570" font-size="25" fill="#0c1322" text-anchor="middle" font-weight="700">you, still</text>
+    <text x="500" y="604" font-size="21" fill="#aab2c3" text-anchor="middle">the meaning-making lands back on you</text>
+
+    <line x1="0" y1="668" x2="904" y2="668" stroke="#27334f" stroke-width="2"/>
+    <text x="0" y="748" font-size="64" fill="#efe9dc" font-weight="700">319</text>
+    <text x="150" y="722" class="serif" font-size="29" fill="#efe9dc">knowledge workers surveyed: more confidence in GenAI</text>
+    <text x="150" y="760" class="serif" font-size="29" fill="#efe9dc">went with less critical thinking, as effort shifted</text>
+    <text x="150" y="798" class="serif" font-size="29" fill="#efe9dc">from solving problems to verifying output.</text>
+  </svg>
+  <div class="foot"><div>Source: Lee et al., Microsoft Research + Carnegie Mellon, CHI 2025 (self-reported survey, correlational) · lanes adapted from Holt’s talk</div><div class="pg">3 / 5</div></div>
+</section>
+
+<!-- 4 · THE FIX -->
+<section class="slide">
+  <div class="kicker">The fix <b>·</b> structure the human owns</div>
+  <h2>Let it evolve. <span class="you">Keep the shape.</span></h2>
+  <svg viewBox="0 0 904 860" width="904" height="860" style="margin-top:44px" role="img" aria-label="System diagram. A periodic fix reviews every bearing. Priorities, fewer than ten, lead to initiatives, more than thirty, each tied to one priority, which each carry a bearing: one paragraph of your current understanding. Developments are logged quickly against an initiative and are not tasks; a review folds them into the bearing, which the agent may draft but you approve.">
+    <defs>
+      <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#aab2c3"/></marker>
+      <marker id="ky" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b83ff"/></marker>
+    </defs>
+    <!-- FIX -->
+    <rect x="0" y="0" width="904" height="104" fill="#131c30" stroke="#5b83ff" stroke-width="3"/>
+    <text x="30" y="44" font-size="21" fill="#5b83ff" letter-spacing="3">FIX · PERIODIC</text>
+    <text x="30" y="82" class="serif" font-size="31" fill="#efe9dc">Review every bearing, then set a new focus</text>
+    <line x1="769" y1="106" x2="769" y2="196" stroke="#5b83ff" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#ky)"/>
+    <text x="755" y="160" font-size="19" fill="#aab2c3" text-anchor="end">reads all bearings</text>
+    <!-- row 1 -->
+    <rect x="0" y="204" width="270" height="176" fill="#131c30" stroke="#5b83ff" stroke-width="3"/>
+    <text x="24" y="246" font-size="20" fill="#5b83ff" letter-spacing="3">PRIORITIES</text>
+    <text x="24" y="302" class="serif" font-size="46" fill="#efe9dc" font-weight="700">&lt; 10</text>
+    <text x="24" y="346" class="serif" font-size="25" fill="#aab2c3">high-level focus</text>
+    <rect x="317" y="204" width="270" height="176" fill="#131c30" stroke="#5b83ff" stroke-width="3"/>
+    <text x="341" y="246" font-size="20" fill="#5b83ff" letter-spacing="3">INITIATIVES</text>
+    <text x="341" y="302" class="serif" font-size="46" fill="#efe9dc" font-weight="700">30+</text>
+    <text x="341" y="346" class="serif" font-size="25" fill="#aab2c3">each tied to one priority</text>
+    <rect x="634" y="204" width="270" height="176" fill="#5b83ff"/>
+    <text x="658" y="246" font-size="20" fill="#0c1322" letter-spacing="3" font-weight="700">BEARING</text>
+    <text x="658" y="296" class="serif" font-size="27" fill="#0c1322" font-weight="700">one paragraph:</text>
+    <text x="658" y="330" class="serif" font-size="27" fill="#0c1322">your current</text>
+    <text x="658" y="362" class="serif" font-size="27" fill="#0c1322">understanding</text>
+    <line x1="272" y1="292" x2="311" y2="292" stroke="#aab2c3" stroke-width="3" marker-end="url(#k)"/>
+    <line x1="589" y1="292" x2="628" y2="292" stroke="#aab2c3" stroke-width="3" marker-end="url(#k)"/>
+    <!-- row 2 -->
+    <rect x="0" y="530" width="560" height="176" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/>
+    <text x="24" y="572" font-size="20" fill="#7f8aa3" letter-spacing="3">DEVELOPMENTS</text>
+    <text x="24" y="624" class="serif" font-size="29" fill="#efe9dc">Logged fast from Slack, meetings, email.</text>
+    <text x="24" y="664" class="serif" font-size="29" fill="#efe9dc" font-style="italic">Not a task. No meaning required yet.</text>
+    <rect x="634" y="530" width="270" height="176" rx="6" fill="#1c263b" stroke="#7f8aa3" stroke-width="3"/>
+    <text x="658" y="572" font-size="20" fill="#7f8aa3" letter-spacing="3">REVIEW</text>
+    <text x="658" y="624" class="serif" font-size="27" fill="#efe9dc">folds new</text>
+    <text x="658" y="658" class="serif" font-size="27" fill="#efe9dc">developments in</text>
+    <line x1="562" y1="618" x2="628" y2="618" stroke="#7f8aa3" stroke-width="3" marker-end="url(#k)"/>
+    <line x1="769" y1="526" x2="769" y2="386" stroke="#5b83ff" stroke-width="3" marker-end="url(#ky)"/>
+    <text x="755" y="470" font-size="19" fill="#5b83ff" text-anchor="end">agent drafts · you approve</text>
+    <line x1="452" y1="526" x2="452" y2="386" stroke="#7f8aa3" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#k)"/>
+    <text x="438" y="430" font-size="19" fill="#aab2c3" text-anchor="end">logged against one initiative</text>
+    <!-- legend -->
+    <line x1="0" y1="770" x2="904" y2="770" stroke="#27334f" stroke-width="2"/>
+    <rect x="0" y="806" width="22" height="22" fill="#5b83ff"/>
+    <text x="36" y="825" font-size="21" fill="#aab2c3">you own it</text>
+    <rect x="240" y="806" width="22" height="22" fill="none" stroke="#7f8aa3" stroke-width="3"/>
+    <text x="276" y="825" font-size="21" fill="#aab2c3">the agent can help</text>
+  </svg>
+  <div class="foot"><div>Source: Bradley Holt (Datadog), personal knowledge system shown at LeadDev New York, Sept 14, 2026 · “Specific to me; may or may not work for you.”</div><div class="pg">4 / 5</div></div>
+</section>
+
+<!-- 5 · CLOSE -->
+<section class="slide">
+  <div class="kicker">Lessons from the stage</div>
+  <h2>How to stay the centaur</h2>
+  <div class="rules">
+    <div class="rule-row"><div class="tag">When thinking</div><div class="txt">Tell the agent you’re in thinking mode. Don’t let it push you into closing.</div></div>
+    <div class="rule-row"><div class="tag">When building</div><div class="txt">Start with little structure. Add it where things break, before the agent invents its own.</div></div>
+    <div class="rule-row"><div class="tag">When storing</div><div class="txt">Make provenance visible: <span class="you">your understanding</span> vs. the agent’s.</div></div>
+  </div>
+  <div class="plan">
+    <div class="who">Same idea, planning side · Pranay Prabhat, NYT Games</div>
+    <svg viewBox="0 0 904 250" width="904" height="250" style="margin-top:18px" role="img" aria-label="A planning line: above it, commitments the teams sized with engineering ICs; below it, stretch goals pulled in only if there is room.">
+      <text x="0" y="52" class="serif" font-size="34" fill="#efe9dc" font-weight="700">Above the line: commitments</text>
+      <text x="0" y="92" class="serif" font-size="27" fill="#aab2c3">sized by the teams, risks flagged by engineering ICs</text>
+      <line x1="0" y1="130" x2="904" y2="130" stroke="#5b83ff" stroke-width="5"/>
+      <text x="904" y="120" font-size="19" fill="#5b83ff" text-anchor="end" letter-spacing="3">THE LINE</text>
+      <text x="0" y="182" class="serif" font-size="34" fill="#aab2c3" font-weight="700">Below the line: stretch</text>
+      <text x="0" y="222" class="serif" font-size="27" fill="#7c869c">pulled in only if there’s room</text>
+    </svg>
+  </div>
+  <div class="foot"><div>With thanks to Pranay Prabhat, Bradley Holt, Plum Ertz, Abhinav Singhal, LeadDev and Datadog · sources in the first comment</div><div class="pg">5 / 5</div></div>
+</section>
+</body></html>

@@ -1,0 +1,54 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Build Buy Vibe Map</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+:root{--ground:#0c1322;--plate:#131c30;--rule:#27334f;--ink:#efe9dc;--ink2:#aab2c3;--ink3:#7c869c;--amber:#e0a23c}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:var(--ground)}
+.slide{width:1080px;height:1350px;position:relative;background:var(--ground);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;padding:80px 88px 0;overflow:hidden}
+.kicker{font-family:Menlo,monospace;font-size:21px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+h1{font-size:72px;line-height:1.02;margin:18px 0 0;font-weight:700;letter-spacing:-.012em;text-wrap:balance}
+h1 em{color:var(--amber);font-style:italic;font-weight:400}
+.flow{margin-top:32px;display:grid;gap:8px}
+.step{display:grid;grid-template-columns:1fr 300px;border:2px solid var(--rule);background:var(--plate)}
+.q{padding:16px 26px;border-right:2px solid var(--rule)}
+.q .t{font-family:Menlo,monospace;font-size:18px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase}
+.q .s{font-size:31px;line-height:1.18;margin-top:6px}
+.a{padding:16px 24px;display:flex;flex-direction:column;justify-content:center}
+.a .v{font-family:Menlo,monospace;font-size:25px;font-weight:700;letter-spacing:.05em}
+.a .w{font-size:21px;line-height:1.28;color:var(--ink2);margin-top:6px}
+.no{font-family:Menlo,monospace;font-size:17px;color:var(--ink3);padding-left:28px;letter-spacing:.1em}
+.gate{margin-top:22px;border:3px solid var(--amber);padding:20px 26px 22px}
+.gate .t{font-family:Menlo,monospace;font-size:19px;letter-spacing:.16em;color:var(--amber);text-transform:uppercase}
+.gate .h{font-size:38px;font-weight:700;margin-top:4px}
+.gate ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.gate li{font-size:25px;line-height:1.22;color:var(--ink)}
+.gate li span{color:var(--ink3);font-family:Menlo,monospace;font-size:19px;letter-spacing:.08em;margin-left:8px}
+.foot{position:absolute;left:88px;right:88px;bottom:44px;font-family:Menlo,monospace;font-size:17px;line-height:1.45;color:var(--ink3)}
+.foot b{color:var(--ink2);font-weight:400}
+</style></head><body>
+<section class="slide">
+  <div class="kicker">“Build, Buy, …Vibe?” · LeadDev NY · Sept 14, 2026</div>
+  <h1>Cheap to build is <em>not</em> cheap to own</h1>
+  <div class="flow">
+    <div class="step"><div class="q"><div class="t">Ask first</div><div class="s">Is it your core domain, the thing that differentiates you?</div></div>
+      <div class="a"><div class="v">OWN IT</div><div class="w">Maylin Leal, via domain-driven design</div></div></div>
+    <div class="no">no ↓</div>
+    <div class="step"><div class="q"><div class="t">Then</div><div class="s">Does it need deep domain expertise, or an auditor’s sign-off?</div></div>
+      <div class="a"><div class="v">BUY IT</div><div class="w">Divya: Twilio, Stripe · Ivan: finance &amp; payroll ERP</div></div></div>
+    <div class="no">no ↓</div>
+    <div class="step"><div class="q"><div class="t">Then</div><div class="s">Is it internal, and do you use only a sliver of what you pay for?</div></div>
+      <div class="a"><div class="v" style="color:var(--amber)">BUILD CANDIDATE</div><div class="w">Hooper, M3 USA: $72K/yr system, 1 engineer, 1 month</div></div></div>
+  </div>
+  <div class="gate">
+    <div class="t">Before you build · the gate</div>
+    <div class="h">Ownership and exit</div>
+    <ul>
+      <li>Who is on call, and how long will it live?<span>MAYLIN</span></li>
+      <li>Can you get rid of it after its builder leaves?<span>IVAN</span></li>
+      <li>Proven like the vendor: user acceptance + parity tests<span>BRIAN</span></li>
+      <li>Two-way door; model and inference layer kept swappable<span>DIVYA</span></li>
+    </ul>
+  </div>
+  <div class="foot">“Vibe” is how you build, not a third option (the panel, mostly agreed).<br><b>Plum Ertz (Ro), moderator · Brian Takashi Hooper (M3 USA) · Divya Ramanarayanan (Jobber) · Maylin Leal (Bonial) · Ivan Milanov (PubliCare)</b></div>
+</section>
+</body></html>
