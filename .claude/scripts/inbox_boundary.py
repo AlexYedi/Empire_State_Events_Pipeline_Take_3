@@ -379,8 +379,20 @@ def selftest() -> bool:
     live = load_denylist(); live_allow = load_allowlist()
     ck(f"live denylist parses (v{live.version} {live.status}: {len(live.domains)} domains, {len(live.globs)} globs, {len(live.senders)} senders, {len(live.labels)} labels; {len(live.prose_skipped)} prose tokens skipped)",
        live.status in ("DRAFT", "ACCEPTED") and len(live.domains) >= 10 and len(live.labels) >= 5 and len(live.senders) >= 2)
-    ck("live SEMANTICS: every live label is under a reviewed root (Me/Experiences/Job Hunting), none from the Companies/* question",
-       all(l.split("/")[0] in ("Me", "Experiences", "Job Hunting") for l in live.labels))
+    # Companies/* labels are allowed only as the specific paths Alex reviewed (2026-09-15) — a new
+    # Companies/* denylist entry must be reviewed and added here, never slip in silently.
+    reviewed_companies = {"Companies/New York Life", "Companies/Macbook", "Companies/Square Space",
+                          "Companies/TopResume", "Companies/Resumeble", "Companies/Jobscan",
+                          "Companies/Network(ing)/Gianna Scorsone"}
+    ck("live SEMANTICS: every live label is under a reviewed root (Me/Experiences/Job Hunting) or an Alex-reviewed Companies/* path",
+       all(l.split("/")[0] in ("Me", "Experiences", "Job Hunting") or l in reviewed_companies for l in live.labels))
+    # Protected senders (expert networks) must never be denied — parsed from the file's own Protected section.
+    live_text = open(live.path, encoding="utf-8").read() if os.path.exists(live.path) else ""
+    protected = {t.lower() for title, body in _sections(live_text) if "protected senders" in title
+                 for t in _TOKEN_RE.findall(body) if "." in t}
+    denied_domains = set(live.domains) | {s.split("@", 1)[1] for s in live.senders}
+    ck(f"live SEMANTICS: no Protected sender domain ({len(protected)}) is denylisted",
+       bool(protected) and not any(d == p or d.endswith("." + p) for d in denied_domains for p in protected))
     ck("live SEMANTICS: every live sender (deny + allow) is a real address with a dotted domain",
        all("@" in x and "." in x.split("@")[1] for x in live.senders | live_allow.senders))
     fails = [n for n, ok in checks if not ok]
