@@ -114,6 +114,12 @@ presented as a worksheet; **on Alex's explicit en-masse approval**, each approve
 Never marked spam without the batch approval, and never a Protected sender. Entries land below once approved:
 
 - `# --- approved spam/deny+block senders (appended after each Stage-A review) ---`
+- `matteo@mail.genesysgrowth.com` — Genesys Growth (AI-GTM course promos) — approved 2026-09-15
+- `manick@go.searchatlas.com` — Search Atlas (webinar blasts) — approved 2026-09-15
+- `contact@sprintto.ai` — SprintTo (paid session promos) — approved 2026-09-15
+- `david.rosendahl@mindfireinc.com` — MindFire (cold webinar invites) — approved 2026-09-15
+- `cofounders@mail.goodword.com` — Goodword (cold sales content) — approved 2026-09-15
+- `anwarenterprises@mail.beehiiv.com` — creator-dinner offers — approved 2026-09-15
 
 ## Review log
 
@@ -128,3 +134,4 @@ Never marked spam without the batch approval, and never a Protected sender. Entr
   property managers, KeyMe, DocuSign, a law firm, NYS DMV booking). `docusign` bare word replaced by
   `docusign.net`; duplicate `Me/Personal Info` removed. Personal correspondents intentionally not listed by
   address. Expert networks recorded as Protected senders. The whole-inbox `discover` gate is now open.
+- 2026-09-15 — First Stage-A discovery reviewed: **spam batch approved (6 senders)** → added to the spam section above and their threads marked spam in Gmail (reversible). Unsubscribe worksheet approved separately (`.claude/artifacts/inbox-discovery-2026-09-15.md`).
