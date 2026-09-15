@@ -1,6 +1,6 @@
 # Inbox allowlist — the senders `inbox-miner` reads at BODY level (Stage B)
 
-**Status: v1 SCAFFOLD — populated by the Stage-A discovery pass, then Alex-curated before Stage B's first run (ADR-7 Decision 3).**
+**Status: v1 ACCEPTED — curated by Alex 2026-09-15 from the first Stage-A discovery pass (ADR-7 Decision 3).**
 
 This is the boundary for the **expensive/risky** stage: `/scan-inbox` reads email **bodies** and extracts
 company/product signals **only** from senders/domains/labels listed here. Everything else is never
@@ -51,6 +51,35 @@ body-read. This bounds PII exposure, cost, and prompt-injection surface *by cons
 - `googleaistudio-noreply@google.com` — Google AI Studio — approved 2026-09-10
 - `teams@intercom.com` — Intercom — approved 2026-09-10
 - `newsletter@mobbin.com` — Mobbin (design/product) — approved 2026-09-10
+- `a16z@substack.com` — a16z (market theses, company/infra analysis) — approved 2026-09-15 (Stage-A discovery)
+- `semianalysis@substack.com` — SemiAnalysis (chips / inference economics) — approved 2026-09-15
+- `techpresso@dupple.com` — Techpresso (daily AI/company news) — approved 2026-09-15
+- `superhumancode@news.codenewsletter.ai` — The Code (AI/dev news) — approved 2026-09-15
+- `newsletter@ittnewsletter.com` — AI Business (enterprise AI + funding) — approved 2026-09-15
+- `newsletter@aicollective.com` — AI Collective (AI lab/industry news) — approved 2026-09-15
+- `postround@substack.com` — Postround (weekly Series A activity — funding signal) — approved 2026-09-15
+- `info@technyc.org` — Tech:NYC Digest (NYC ecosystem) — approved 2026-09-15
+- `please-reply@langflow.org` — Langflow AI++ (open stack / RAG) — approved 2026-09-15
+- `neweconomies@substack.com` — New Economies (single-company deep dives) — approved 2026-09-15
+- `update@digital.metamail.com` — Meta (product launches) — approved 2026-09-15
+- `news@news.openhands.dev` — OpenHands (product changes) — approved 2026-09-15
+- `team@send.intercom.com` — Intercom (product launches) — approved 2026-09-15
+- `jai@deepline.com` — Deepline (release notes) — approved 2026-09-15
+- `hello@mail.apollo.io` — Apollo.io (product + GTM; mixed with marketing) — approved 2026-09-15
+- `hello@mail.attio.com` — Attio (product; mixed with marketing) — approved 2026-09-15
+- `community@mail.attio.com` — Attio community (workshops) — approved 2026-09-15
+- `success@mail.attio.com` — Attio success (workshops) — approved 2026-09-15
+- `will-leatherman@courses.maven.com` — Will Leatherman / Maven (GTM + agent builds) — approved 2026-09-15
+- `demand@mail.datacamp.com` — DataCamp (data/AI stack content) — approved 2026-09-15
+- `hello@email.cohley.com` — Cohley (UGC/creator market) — approved 2026-09-15
+- `lenny@substack.com` — Lenny's Newsletter (product/growth essays) — approved 2026-09-15
+- `elenaverna@substack.com` — Elena Verna (PLG/growth essays) — approved 2026-09-15
+- `notboring@substack.com` — Not Boring (company strategy essays) — approved 2026-09-15
+- `chinatalk@substack.com` — ChinaTalk (AI/tech policy; expect many off-domain tags) — approved 2026-09-15
+- `newsletter@garysguide.com` — Gary's Guide (NYC tech events + ecosystem) — approved 2026-09-15
+- `foundersbay@newsletter.foundersbay.com` — Founders Bay (NYC AI/tech roundups) — approved 2026-09-15
+- `matthewyglesias@substack.com` — Matt Yglesias (policy/politics; expect off-domain tags) — approved 2026-09-15
+- `withallduerespectpodcast@substack.com` — With All Due Respect (politics; expect off-domain tags) — approved 2026-09-15
 - `# GitHub OMITTED 2026-09-10 — verified 100% own-repo CI/PR-bot + account-security + marketing (self-exhaust, not market signal). See "NOT allowed" below.`
 - `# --- widen from Companies/* labels as needed; add via Pipeline/signal-source label ---`
 
@@ -69,3 +98,4 @@ Excluded by principle (verified against samples, 2026-09-10): **your own-repo CI
 ## Review log
 
 - 2026-09-08 — v1 scaffold created. **Awaiting Stage-A discovery output + Alex curation** before Stage B runs.
+- 2026-09-15 — **v1 ACCEPTED.** First Stage-A discovery (metadata only; 824 boundary-filtered threads, 311 senders; Forums full year, Promotions ~4 weeks and Updates ~9 days — page-capped). Alex approved all 13 candidate rows (14 senders) plus every sender marked unclear (15). Relevance stays tagged, not filtered: the policy/politics newsletters will mostly tag off-domain. Spam batch and unsubscribe worksheet reviewed separately.
