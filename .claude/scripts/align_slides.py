@@ -240,7 +240,11 @@ def selftest():
     _, _, c3, _ = resolve_start(ct, dur, times + [ct + dt.timedelta(seconds=5)], "auto", is_android=True)
     assert c3 == "MED", c3
     assert resolve_start(ct, dur, times, "start")[0] == ct
-    print("selftest OK — 2026-09-16 offsets reproduced; tz, duplicates, out-of-window, tie handling pass")
+    # ffprobe missing → probe_audio degrades to (None, None, False) instead of raising
+    import unittest.mock as um
+    with um.patch.object(subprocess, "run", side_effect=FileNotFoundError("ffprobe")):
+        assert probe_audio("/nonexistent.m4a") == (None, None, False)
+    print("selftest OK — 2026-09-16 offsets reproduced; tz, duplicates, out-of-window, tie, ffprobe-missing pass")
 
 
 def main():
@@ -279,6 +283,9 @@ def main():
     dur, ct, is_android = probe_audio(args.audio) if args.audio else (None, None, False)
     if dur is None:
         dur = max((w.get("end") or 0) for w in words) if words else 0.0
+    if not dur:
+        sys.exit("[align] recording duration unknown (no ffprobe duration, no word timestamps) — "
+                 "pass --audio with ffprobe installed, or a transcript JSON with word timestamps")
     times = [p["time"] for p in photos]
 
     if args.recording_start:
