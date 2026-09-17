@@ -29,3 +29,4 @@
 {"ts":"2026-09-09T19:07:54Z","session_id":"8210421d-caf9-489b-95bf-1bc0e165a9ae","item":"linear","reason":"tracked under existing YED-119 (journal system), no new issue opened this session"}
 {"ts":"2026-09-12T14:54:59Z","session_id":"50de56ab-95fe-4955-9a25-fa9aba2d4eb6","item":"item1 PRD","reason":"waived — storage-only refactor of the telemetry writer, contract v1 schema unchanged; spec = YED-159 + the amended build-session-contract.md"}
 {"ts":"2026-09-12T14:54:59Z","session_id":"50de56ab-95fe-4955-9a25-fa9aba2d4eb6","item":"item4 judge","reason":"met by measurement-system health (quorum ran today on ADR-8 Increment 1); no per-artifact run on this self-produced change — advisory tier"}
+{"ts":"2026-09-17T16:19:51Z","session_id":"749fe83d-9cab-4de9-be30-e8aaa296103a","item":"prd","reason":"YED-167 is report + knowledge content only (no pipeline component changed); follow-on builds get their own PRD"}
