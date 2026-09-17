@@ -1,0 +1,558 @@
+
+Is the first time coming?
+
+[Speaker 1]
+While the majority hopefully next time he was there, join us
+
+[Speaker 2]
+Okay, come back. Yeah, hopefully you come back, I'm sure. Like, Ryan will definitely impress you that, like, you feel like, next time I need to bring my family and my co-worker. Um, yeah. So, uh, we have it every other month, so it's basically around the first one of the year is.
+
+January, and then we feed every other month, so we are very lucky and honored to have Ryan and our faced speaker in this year.
+
+[Speaker 1]
+Yeah, uh, so.
+
+[Speaker 2]
+If you feel like a beat up is not enough for you to learn more about postgracy public, do you have post-grassing quotes you as coming in end of September. There will be, uh, in Learning Heaven and.
+
+[Speaker 3]
+Don't miss the 15 discount from the Meetup, and it's going to be so very soon. And if you want to like, just leave my own business perspective. You can go to the prospical, uh, summary to website. There are like halfway that you can follow to make it easier. And also, if you're interested in volunteer for conspiracy
+
+[Speaker 2]
+Code, uh Summit, uh, you can send an email to the contact at postgres Summit.us.
+
+The other person right is going to leave a clock there, and very special is that. I think this is the first time we have a workshop for beginner level. We, myself, actually is super excited about that. Yeah. Uh, and there's any homework. Make sure that I will make sure that I repost it and then people are prepared to come.
+
+Uh, together talk, yeah, and then Comfort Action. We are always looking for, like speakers, sponsors, people, help us to coordinate and share the world on social so that our events can continuously to grow. We have people to come together to share their expertise and enroll the community. Yeah, appreciate AWS for sponsor us hostess today and here comes Ryan.
+
+All right.
+
+[Speaker 3]
+I guess this is on. Is it helping at all good? I'm a pretty loud voice anyway, uh. Thanks.
+
+[Speaker 1]
+All right, let's switch over here. Uh, so thank you. I got to my hotel, which charged my laptop in my travel charger, died since the last time I used it. It was, like, thank you again, borrow a charger. Um. So this is a perfect way to start any talk you give, especially when you're at a first location in your son.
+
+[Speaker 2]
+So all the disclaimers of
+
+[Speaker 3]
+I have no idea when this is going to work, and this could be a total bus. But hey, we'll learn together and see what happens. Um, what I realized in that? I've been focusing so hard and getting me this depth together over the last two weeks, and I
+
+[Speaker 2]
+Don't. I often work on
+
+[Speaker 3]
+A deck for two weeks ahead of time, like this is actually fun to really do, uh, cuz it's new. I realized I forgot my like, hey, my name's Ryan here, if you can contact me slide totally forgotten until five minutes ago, so I don't have that I I. Oops, um, you can find me pretty much anywhere at Ryan booze.
+
+I actually still have an X account. I haven't been posting there a lot, but I have some friends that are kind of getting back on, and so you might find me there at some point, um, softwareboost.com.
+
+[Speaker 2]
+I work pgli's. You find me a LinkedIn.
+
+[Speaker 3]
+Thank you so much, Mila and Jay, and everyone who's been doing this. It's really good to see use groups coming alive again. Um, I've had the fortune being able to go to Chicago and a couple other places with friends that are doing these kinds of events. And honestly, this might be the second biggest User Group in the US right now.
+
+We're here tonight, and that's awesome. So thank you for coming. Very, very cool! I work for PG, analyze some of you may have heard of that tool is a postgres performance. Uh, monitoring optimization tool mostly focused throughout query optimization. I've been at a few companies in the postgres space because of postgres, and I love it one day, so I was time to go for a little bit.
+
+Some of you may know about time CEO I've been was there for a few years, most recently red gate. They have some tools if you come from the SQL server space, you know, red gate, and they have tools like PG now and ready to monitor and then pgnizes is our tool that does a lot of that same work in.
+
+In some ways look better just because it's been focused on doing this for 15 years. Believe it or not, um? So, that is, who we are. So, the title of this is, like, great tuning in the age of AI, who wins? I'm just going to tell you up front, like, don't bury the lead, right?
+
+Eight night's great. Like, it's all good. It's gonna win most of the time, but I think there's some things that we can learn. And that was honestly my goal in trying to figure out. You know this talk, I give this next month, um? In Europe, and it's like it's going
+
+[Speaker 2]
+To be a totally different top. There's going to
+
+[Speaker 3]
+Be eight new models by the time that happens, and the reality is what I'm finding is the model itself. You know, after about a year and a half ago, the model doesn't matter that much for most of the basic things that we're going to talk about. Great tuning. It is about how quickly it gets there, how much work it takes to get there, and whether or not you have the environment to actually be able to test along the way, and I think that becomes the churn, and if we're not careful one another.
+
+Ai becomes. We churn way too much, right? We just say, like, yeah, it's probably going to figure it out. So, let's return it for an hour, and you have no idea what's really happening between. And I think that hopefully we'll be able to show that we can do something so.
+
+Uh, this is a slow query purposefully contrived to some degree with a small hits realism of actually trying to query some data. Now, if I were to ask you what you think this low part of this query is, does anyone want to take a first guess? And there's, this is like school, no wrong answer.
+
+There's at least four or five things I would probably initially point to Russian in the steps. Maybe? Three, two, one, okay, um? Think about it. We're going to come back to this.
+
+[Speaker 2]
+Now, I spent the free text to an llm. I just started with this, I said. Hey.
+
+[Speaker 3]
+Here's this query that's running slowly. It was, you know, quote unquote's a new query in our application is trying to find this kind of data, and something about it is slow, and I'm not sure what's slow. I just gave the query text and immediately what a lot of us tend to do, and I do the same thing is immediately jump to what you have the square cause.
+
+If you notice that that has some wild cards on both sides and that might be slow, if you don't have the right kind of index, and so rather than just one index.
+
+[Speaker 1]
+It immediately dreamed, like, let's create 1800 indexes and see if one of them happens to help. Not
+
+[Speaker 2]
+Quite that bad,
+
+[Speaker 1]
+But I was a little bit surprised, like, hey, let's try and try Graham. Let's go ahead and do the thing on the lower thing, because you might do the take thing because it has no idea they didn't know what my scheme was. Yet, it just was, hey, this is slow.
+
+What can you tell you about how the Spurs were? And I see that a lot, believe it or not. A lot of people don't even have that first step of. Well, the L1 doesn't. Doesn't build my database. It doesn't always schema. It just thinks something about this must be obvious, right?
+
+And if you're not careful, you're going to jump to this.
+
+[Speaker 3]
+And what's the first problems anyone want to venture against? The first problem is if you even take, particularly if you don't know your database, at least the second recommendation that triggerm index and anyone want to take a guess what could be your first problem? And there's no wrong answers.
+
+[Speaker 4]
+Uh, you'll I mean. Eventually, you'll have a bunch of tables like trying to measure stuff, and they're not reading anything at all. There's a couple
+
+[Speaker 3]
+Problems. That's one of them, right? So one is, you get too many, so you have long indexes that are used. You're not sure. Honestly, though, what what I see a lot, even in my current role with PG analyze, is, um. Notice when it's not here. There's not enough because, honestly, it doesn't work with.
+
+Particularly well, we can, but no create concurrently in any of this. So?
+
+So, what this talk is not going to be about? In the approximately 50 years. Uh, is not going to be about configuration altitude, right? That is a huge area in the last two years, with postgres actually. It's been about four years and never heard of Auto autotune. I was gonna say Auto team, but it's autotune.
+
+No longer exists coming around in a different forms of, as usual, of course. And then, right now, there's another company like DBT, which has been some really interesting work in this area as well. Watch my workload. Hey, there's probably you can probably fix some of this
+
+[Speaker 1]
+With basically phasia, like statistical analysis, to update simply configuration of the server, right? Don't touch the queries.
+
+[Speaker 3]
+The server settings are probably not good, and we can probably fix some of your work just by changing setters. That's not all right. Really helpful. Without this job, this is not going to be. Are we all doomed because we like data, and we're all going to be out in the streets in about a year.
+
+Not this talk, either, because I don't think that's true. I think this talk is about the changing nature of the art of our work. And it's not going to be about MCP security. I'm going to show you an mCP server it is. It was in the show notes. Okay, this is not a surprise.
+
+I work for PG analyze. We happen to have one, of course. All of my demo stuff is in our app, and this is a good way to show you how context helps. So, I'm going to show you an mCP server, not concerning that online. Exactly what's going on behind the cameras again?
+
+A lot of work. A lot of good stuff there. There are some good talks online already. All right. Let's set the station up.
+
+[Speaker 1]
+By keeping you awake enough. Sorry, I've been up since 4 30 this morning, so I am Jack and ready to go. Part one context is essential.
+
+I wonder if this does not look like the yellow I was expecting?
+
+[Speaker 3]
+Anyway,
+
+[Speaker 1]
+So front text is essential. There are, believe it or not, if you install pushfs 18 Docker just default out of the repo, you know, the the docker? The lead is provided by the docker post, uh, there's round about 400 settings that you can change in postgres at this point.
+
+It's probably slightly high because I was using my image that might have one or two extensions in it that have some goats, but otherwise gooks is the global unified configurations of guc. When you ever hear someone say goat, that's what that is. It's all the settings that postgres has been changed.
+
+Um, so somewhere around that? So, making postgres do something one way or the other has never been about not having the ability, right? There's lots of things you can change 30 years of work, and everyone has an opinion. And so, for everything you do, you have to make a lot of things so that everyone with an opinion can change it to what they want.
+
+That's just how we've exposures. When I, when I'm extremely at least briefly talk about. So I have a whole talk that I give that I, I really am happy about and I can talk to small flowers about is how just a basic configuration from postgres so that you can observe it as well as possible when you are trying to make them work.
+
+So, these are three slides condensing a 45 minute talk. Number one. If you're not careful, even right now 2026, every installation of postgres doesn't matter if it's an AWS and community housing. Does it matter if it's an Azure Google, uh, you know, Docker image doesn't matter? Most of these things have to be configured in some way.
+
+They are not considering it for you, so if you're not careful, you'll be under instrumentation. So, the whole point of this talk is AI can help us do things better if it has context. But if you don't change these things, it doesn't have any context. And so, you are going to hinder.
+
+Both yourself and the ability of of whatever tool you're using to do that. So, I give you a list of a few things stuff like Auto explain is not enabled. If you're not getting explained plans at the moment that query runs, I'm going to show you later, you're just putting yourself, you know?
+
+Uh, what's the saying, we have? You're behind the eight ball, right, and not have all the context of what was going on in that moment? Even this morning, I had to call the customer. Got on my early flight, got to the airport, got on the call, and this whole thing was blowing up.
+
+I said, great. Let's look at these flame thing. Hey, it ran for four or five seconds or a minute. Hey, let's run that query again right now at ran for, like half a second. Right, this moment doesn't explain what happened last night when the thing was blowing up. If you don't have Auto explained, you can't understand what was going on in that moment.
+
+Uh, PT. Stat statements, believe it or not, is not installed in most environments AWS as of right now. As far as I know, I don't know about people actually. As far as I know, AWS is the only provider that automatically enables pgsf statements still. Now, there's probably some other Edge, you know, providers.
+
+I'll get your own. If you're in Azure, you have the name, what I think, if you're in gcp, you still have to enable it right. So just because you're using them, it's not unable, and you are really. Going to be hurting if you can't pull stats out of PG stat statements and then some others.
+
+So, here's what happens. You don't have history. You don't have plans when something goes wrong. You don't know whether or not the query is really bad because it's i o bound. Right, something's going on with disk it's writing or reading a lot of information. Or no, all the information is there.
+
+It's just CPU about too much is going on. Excuse me if you don't have a party tax, you don't even know how to switch it.
+
+[Speaker 3]
+But then the problem is a lot of people start to hear this. And so the longer talk tries to guide you through not going too far to your progression.
+
+[Speaker 1]
+All right. So the other end is, we'll find it. I'm going to log everything. I'm going to set log event duration statement like zero. So every single statement or to 50 milliseconds. Every single statement is 50 milliseconds or greater. No to Stone. It's not helpful, like it's too much noise, and you can't find the stuff that really you need to.
+
+Everything is blurry, all right. A couple others in there, like, yeah, moderation PG audit. I see lots of, you know, people just include lots of things and logs, get really big. Are they really feel PG set statements with lots and lots and lots of query texts? They don't know why it's so hard to query, and it locks so often.
+
+So, I think that stuff through. These are for the purpose of this talk, and considering how to tune a query and ultimately how to help AI do better, it is good you really do need. Make sure you have ggstat statements enabled. Um, I don't think I'm linked to it here, and I'll call again.
+
+I've
+
+[Speaker 3]
+Said
+
+[Speaker 1]
+I've been working on the deck, and I will update it before I post it. I just finished. Have been posted tomorrow. A seven part series on PG SAS tables. So you can go look at pgls's website. There's so much that I didn't understand about it over these last few years has become my like, weird passion of postgres is to understand and be angry about PG staff statements at the same time.
+
+Um. Love it and eat it! Auto explain if you do not have it enabled every single person I ask, what doesn't add overhead? Absolutely! That's overhead. Do you know how many customers I've ever had a problem where that's actually the issue zero? Right, we have this thing. Like, well, if it, you know, if it crossed the threshold, it's going to cause the explains.
+
+And it's like. It's never been the issue that's not been the problem, and instead you're withholding information to help you later, uh, tracking timing. Consider it, uh, then log in duration statement. So, a lot of times again, you can look at these slides later and go look these things up.
+
+Logmen, duration, statement, and um. Similarly, Auto explain has a another setting log main duration. Both of them are the threshold, right? So when a query runs slower than that, whatever that threshold is in milliseconds, it will long. So this will log the query text to the log. Over here log bin duration.
+
+The setting will log the explain point of the law. Is that well, why would you do both? Maybe you don't need to? Or maybe you want to know hey, and and print this over, like a second. We want to know about so we can get a hint of what's slow, but we really want to know about anything that's slower than three or four times, right?
+
+That's where I really want to spend my time and explain this. That's when you might use them together. Make your choice figure out. All right, so there are two kinds of History when it comes to groups. As I said, PG staff statements go watch the. Put it on that two speed.
+
+Although I talked pretty fast, sorry. I have like five cups of coffee and then go watch on two speed. We'll all be totally great. Pretty good. So, PG staff savings is sampled over time, right? So, this is part of the cumulative statistics system in postgres. We have many different views, PG stats, something over and over and over.
+
+This just records the execution metrics of every group to some direction. Um, this helps you find at some degree. Hey, what has used the most X over since it started, right? And you can reset these. There's different ways to use it. It is most helpful when you use a tool.
+
+I honestly don't care if you use an open source tool like PG watch or you come pay less money and use PG analyze. I think there's great aspects of both of that. You need to use a tool because otherwise, you're going to have to build a sampler, and no one wants to do that.
+
+And we've all figured this out for you, and you can. Get a lot of value out of it because the cumulative you have no idea when you query it right now. Is all that work now, or did it happen? Eight days ago, you have no idea, right? You have to say, able, and so after these tools will do for you, so that is, like, the um.
+
+You know, that's the hey, just help me find the thing that comes to the car. Once I found that thing and I want to see instances of it? That's what Auto explains more. That actually captures the plan to the log. You then go look at it, so we're going to look at.
+
+In part two, we're going to look across a few sentences, a few statements, and how that works with the.
+
+All right.
+
+[Speaker 3]
+So, the last two slides here. Before we go to part two, one of the questions I often get, then, is okay, great.
+
+[Speaker 1]
+I want to set up Auto explain to capture my plans, or I want to set up logmen duration statement to log your texts of my solar queries. What should I set it to? Like, I have no idea. Have fun with that. We it's just become like this thing. I feel like everybody everywhere.
+
+The narrow company says start at one second. Most of us want to know our prayers be faster than that. Like, maybe it's a
+
+[Speaker 3]
+Good way to start. I would not start it at 10 milliseconds or 50 milliseconds, because honestly worth this at that point. Um, what I? This is like one of 100 different queries. You can come up with. Basically a way of saying as long as PG step statements has been running for some period of time.
+
+Right, at least you can get a general idea of maybe where to start. So, for instance, I happen to be running a version of. My demo database, which if you click up to the training in New York, you'll see more of it. Um, this is called blue box. I have a vlog post about it, it's just open source.
+
+It can create data blood. I have this running. This one happens to be an RDS. I have.
+
+A handful of pretty slow queries above that. And that's where I want to start. Maybe later, I tune it down to two seconds once I've taken care of the soapers. That's the purpose of that statement. It's just trying to get a value for you. All right. Once you have that value, here's some other things that again, you know.
+
+I think these are reasonable settings, uh, again. Tool dependent there. You can do Json or text, which yes and other things, um. I would recommend most tools prefer Json because it's just easier Parts. It is more verbose, so you'll all go a little bit bigger, but at least you'll be able to see the explained plans later.
+
+And some other stuff. Here, you can look at. All right, so that's all of the concepts, right? So, um. Essentially, we're saying, hey, we can see that something is slow at a particular period of time, but we don't know what is slow unless we have that plan, so you really need to work towards finding.
+
+A way to get those plants into a place again. Many tools will do this so you can see over time. Is it a one-time thing. Is there a certain time of day thing does this same query have multiple versions of a plan? Maybe some parameters create plan a and some parameters create plan B?
+
+And plan B is really slow, but if you don't know, that's why it's slow. You're just guessing I don't know. I'll get slow every every couple of days or every couple of hours. It'll get slow because something happens. We are looking at a date of days, an hour of data, but I didn't know that because someone's running a process.
+
+Makes sense. All right. So, what is it? What is the plan? I'm going to show you a plan in just a minute, so once you look at that. If you have questions, let me know. Does that work? All right, so. Again, the bill of sale for this talk. What I was going to face off with the AI?
+
+But I totally beginning that the AI like figured out in the very first try. So it doesn't really matter that much now. It does, um, I think what you'll find. I hope what you'll find. Is? That there's value and confirmation, and it's also value in being able to realize that what AI found is not that hard to spot on your own, right?
+
+If you know where to at least start looking, and so that's that's really what I wanted to at least understand for myself, and again, I'm sure, if I give this talk in six months, it's going to be a whole different ball game depending on what's going on out there.
+
+All right. So, uh, we talked about a few things, and I just realized I didn't bring the updated query down here. That's my fault. So the updated query because I was trying to make this apples for apples is, you know, the point. This query is supposed to be it.
+
+We're trying to find, you know, if someone added this feature to the app they want to find, uh? Uh, you know, people that look for specific kinds of films like, you know, love films, romance films, um, how? Um. How much money they spend over a period of time compared to the the rest of the sort that might look for some of the things, and so this isn't 100 the same period they had above, but.
+
+[Speaker 2]
+Um, so what I'll basically point out is that it's obviously pretty hard for me to see this, too. I would have said, yeah, this could be a problem. The I like is probably not the most efficient way. There's other ways in both stress, like a tri-gram index. Other things that might make that more efficient.
+
+It could be the lower rental period. I happen to know that there is an index on that, so that's not it. That's not going to. Get me now. I recognize there's a lot of joints here, and so any one of these could have some kind of partisan product that I've not seen, even though they're all at this point inner joined.
+
+So, like something couldn't happen there, I might try and look at some of those. But again, I'm really guessing without being able to see, oh, there's a bunch of, you know, just order buys, so there's a couple different rows if there's a lot of data that might spit out to
+
+[Speaker 3]
+Because it's going to be churned, so I've already named three or four things it could be. And then there's this big subselect, which we call.
+
+Oh my goodness! I've been up since 4, 30. Um, yes. So then there's the correlated Sudbury.
+
+[Speaker 1]
+So, it becomes really easy to determine once receive the plan. So, the player? Well, I'll go through this, so I have a screen slope. One of the first things I want to make sure of, and this is one of the first things I ask AI to do once it had contacts.
+
+Does this query actually matter? I see that it's low, and that might be really annoying to me, right? This query takes 10 seconds or 50 seconds. But doesn't actually matter right now. Is that the actual problem? And so you can't really know, unless you get again something that PG stat statements over time to see where this sits within a specific range.
+
+So, because I was sampling this. Yes, this happened to come out of the yellow, and we're sampling that data I could see over 24-hour period, which I don't think I actually told you here in 20 minutes, but it is 24 hours. Um. This is this query was called 256 times.
+
+Um, and it's number three already, right? I just added this to the system, and for that period of time, it's already 22 of my total, uh, run time. Yeah, you know what that might be worth actually doing something about, especially since it is by far the slowest query. I have right, that probably is going to take some load off the system.
+
+Now, if this was, you know, we have other examples where you know, this one's called almost 12 000 times in that period. And if you're not careful, you say like, well, hey, the thing is called, the most you must be doing a lot of work. Turns out, it's not too much work at all.
+
+Right in total. It's comparatively it's not doing a lot, and so I think that's the one thing I we talk about a lot when it comes to PG stress statements, something I want to make sure we talk about whenever we see it. You need to make sure that, first of all, is it actually doing something about right?
+
+We can easily get really focused on. I thought a query, and it's really slow, and it turns out it runs four times a day. And half of those are like between 8 pm and 4 AM, because someone's running their report. Maybe that's not the thing you need to focus on.
+
+It might be fun, but.
+
+Second, is it consistently slow? Is this a periodic problem, right? Can you correlate it to something else that's going on within your heart, right? And this is what I was talking about earlier, even this morning with a customer. They absolutely have a problem. We could absolutely identify a crew that was running slowly and actually did block some of the queries.
+
+But when we ran analyzed at that moment at 9am Eastern, it ran at like 50 milliseconds or something. It's, like, well, I can't tell you what happened last night because you didn't have this set up. They did. Don't get me wrong, but if you don't, you can't. I can't tell you what happened last night, right?
+
+So? In. In the case of this specific query, I can see that O to that same 24-hour period. I had four different explain plans over that month. Right? Again, if you're not sampling it. You will never know that that plane is flipping and not just flipping, but I mean, we're going from estimated costs of.
+
+Um. The cost estimate is this like 15 million, you know, in this case, happens to be Millions, uh, these are just like, uh, the numbers I was, you know, it's a cost value based on other stuff. So, we have run times anywhere from one second to 173 seconds. Um, there's another plan that seems to have, you know, it's a little bit more contained within the range.
+
+Um, and it turns out a lot of that's because of the words that are being searched for because I mean, that's part of it, right? How many stores this is a believe it or not? At DVD rental, uh? Movie database, but it's a lot cooler than DVD rental database.
+
+Go check it out, um?
+
+Um, so anyway, so that's what's going on here. The really interesting thing here. I don't know if anyone else can see it. I don't know if I put it down here. I don't think I did. I didn't want to give it away. You notice notice something about these two plants I have lately.
+
+If you look at the numbers up here.
+
+In most cases, if you had something that was really expensive.
+
+21, almost 22 million. Versus 10 million. You would expect the 22 million thing to be slower, right? But it's not. Right. So, again, being able to identify this, there's something going on. There is a helpful another helpful metric, right, just to pull in and understand what might be happening.
+
+This is what the query looks like over time and again, if if you're not able to monitor this, it becomes really hard to see that this is like swinging between zero seconds, and actually that slide was from two days ago, and so over the last day, it swung up as high as like 250 seconds in some cases, so.
+
+Yeah, this is where a lot of changes. And so awfully. This is really the issue it is to start the the major issue in this specific query right now. Is that subplant, right? And I don't know it unless I go and look at the sling point. So, so I asked earlier, what is an explain, like?
+
+So, I'm not gonna run that period right now, because it actually takes most of the time over 150 seconds to run. I don't want to take that. I'm already wearing a little slow, so this is an explained plan of post stress. This tells you exactly what the query the the engine did to get the data and give you the result.
+
+So, SQL is a declarative language. I want this. I don't tell post where it's how to get it. It determines okay. You want data from here here. In this column from this table, roll it up like this average like that. What have you? It says, well, I think the best way to go about.
+
+It is first to grab this data and then iterate over the data over here, whatever that might be. And that is what the explain plan does. The biggest things that we care about initially, and this is what I would have done giving a little bit more time. Is, uh, first and foremost.
+
+I think, let me show you over here. Uh, we always run this with. Explain the Eliza buffers. So, as a postgres team, if you say, explain, analyze you get buffers by default. Finally, after 30 years. Up until then, you have to actually say buffers as well, and
+
+[Speaker 4]
+What
+
+[Speaker 1]
+Buffers means it is a measure of the. And I hate to say physical, but I'm going to say physical because I don't know any other way to say it of the actual in CPU, reading data, work being done. Like, if this were printed Pages, it would be that meant buffers is like a page if I had to read all those pages as a human.
+
+Would be millions of pages of data Pages I have to read to get the information. That's what buffers is analogous, dude, right? I have to open a file, read the rows, open up the next file. That buffer is each individual page or file on this your data, so you can see.
+
+In this example, I read. 193 million pages to satisfy this one query. Folks, that's a lot. I think, what is that? That is, um? It's like 100 games a day. It's crazy. It's a crazy amount of in-memory work going on right, and it turns out the way this all works.
+
+Um is, as you go further down, you'll notice that here is 193 million. But there's a lot smaller. It's only like one doing. Well, this dog cumulative, and it turns out that most that work is in a sub query, so that's where it would have just by going to the explain plan.
+
+The very first thing you can see is where is the work happening? Notice that the time doesn't look like, it's that much 700 milliseconds, except every one of them that's per Loop. So, I ask for a limit of 200 rows, so for each row, it took almost a second.
+
+There's. Almost 200 seconds. 98 of the economy work with them like that, and so I at least know exactly where to book is right. So. Now, this is a pretty simple thing. I'm not going to lie to you. Get postgres. The planner is is. The code's there. We can go see it.
+
+There's actually, really cool, interesting notes in the source code. You can go read. The planner code is, like, it's like a book at the beginning of the player. Source code tells you each Droid it consists kind of drawing, why it prefers this joint over that drawing, you know, there's more rows here.
+
+And the statistics thing, it's that it's actually pretty cool. You can read all this stuff. There's a finite handful of tricks that you can almost always start with. And so, in this case, one is, well, it obviously is getting the same data over and over again because of how this query got written, right?
+
+And I'm not going to lie. This has been tried free, but I have seen something this often. Yes, I want X, so the thing I need? I needed to compare to something similar, so I'm just going to take that. Where Clause for that part of the crib and move it here so I can hit this part of date.
+
+I'm going to draw them together right or have forbid. I went down orm and come up with something really, really similar to that, and you would never even know, you know, exactly, and so. Um, that's going to be the first thing that I would try as I was trying to pull out that subquery and see if I can just get all the data once and then join it to address some stuff that I need that we when the person was ever do.
+
+Um, you know, I asked this, because again. I have said this for years and years and years. One of the reasons I prefer to show you. Do I have on this printout? I do so up here. Are you gonna work for me today? No, you're not sorry.
+
+Anyway, that was from the first test, not from your current. Um.
+
+[Speaker 3]
+The the buffers up here and normally the same point on the screen. It's not doing it, uh, so there's buffers. Um, I was going to say. Uh, oh, s***, um. I've said, for, for years and years and years, you know, knowing the actual work that's being done really helps to identify.
+
+I know my data. I know there is nowhere near. That number of Records in this database. There's there's not that much information in the entire server. Like, I don't have that kind. I don't have in some case like terabyte data. I have some fans of like hundreds of gigs of internal memory work.
+
+Like, I don't have that much information, so that is a very quick initial hit to say, wait, a second, I know my data. I know that this table that it's querying from doesn't have. As you know, 50 million, what is going on there? There's a filter. There's something that's being looped over.
+
+That's not happening, and so that is the you know? That's the first clue in the shape of the query, whether or not it's doing this type. No then, of course. Like, oh, there we go. Uh, now we already talked over the time is going Rose, loose buffer spills. Um, so again, you can look for things like Loops.
+
+Oftentimes, you don't see it. I don't know if anyone noticed in one of the sub plans again, I didn't. I don't have a lot of time doing all of it, but in this case, just the way this one plant shape, there's four different plant shapes one of them. Uh, when it got too many films back to the term.
+
+It, for some reason, decided, oh well, let me go find all the rentals, which are tied to inventory that happen to be that film first. And then I'll go see who and what actually did all that so I can get the names, and so I ended up looping over this table to index.
+
+2.5 million times like? Index is fast, but that's not going to help anybody, right? So, there's lots of things you can look at. And then again, is it the wrong estimate? I'm talking first time through this step, right? So I keep forgetting what's coming? Um, send you. Is this what I expect it to be, right?
+
+I know my information is this actually happening or not? Um, you know, I showed you that earlier, these are the same data. The queries that had a cost of, you know, Millions 10 million versus the 22 million. They were a couple hours apart. It's not like I loaded, you know, 50 million records.
+
+It was just the way the database works. There's this new DVD rentals every couple minutes. Like it, just it's just adding data. But something about the stats seem to be off. And so, just whatever career program is using really seems like.
+
+All right. So, um? I'm going to show you a one version of the fixed spray that I honestly did get to is again. I did have contrived query. I knew where I wanted to go, and I was hoping I would get the same result. I did have to fix it a little bit.
+
+Let me show you what that is, so here's a um, right. I can see that this data is just way too much. Then I can try to do something else with it, right? So we have this correlated subquery. And the correlation means that this C value is referring to the outer.
+
+Customer, right? So, I'm looking for the customers that have rented the most. Films based on the search term and then seeing how much money they've spent over that period compared to what else that's the whole point of great. Um, and so that's the correlation. And that overlap can be really investing at times, and so instead, we have this little thing we do called.
+
+Materialized the CTE, so CTE, there's a couple different ways you can do this in postgres. One is with the CTE, right? So CTE stands for common table expression. It is a nice way to just make it sometimes a little bit more readable, right? So now, I can see the first query is hey, any customers that have rented different films, right?
+
+So the film has a title, and it has an overview, so I'm looking for any fill that has the word love in the overview, but Um, you know, a customer that's actually rented something. And so, that's going to give me a list of all those customers, and I can then use that later, rather than getting it every iteration I gave it once, and you do this by what we call materialized.
+
+Little quick history lesson in postgres. We have four or five major Jewish and athletes in the world. There's a thousand others I get, but SQL Server Oracle, um. My sequel. Thank you, oh my SQL. I forgot about that, uh, not on for everyone else. Uh, most of them ctes are what we call inline right, the planner says.
+
+Oh, you want that thing you want that query if I can, I basically where I say matched right here. It says, oh, we'll just take that almost as the correlated sub query and put it in place of match, right? Postgres didn't do that until version 12. Invert, so up until version 12, everything was always materialized.
+
+It ran each one of those became an in-memory, a set of data that it could reuse, which can be really beneficial. And then, version 12 came out and materialized. They become became unmaterialized, and you had to add the term, and 12 was like this apocalypse, where everyone's queries just went.
+
+Know to craft, because all these things inlining all the plans were changing, and no one knew that so you can force the materialized view. This is a hack as it were. It's a very reputable and good act if you know what you're doing now. Again, one of the things you'll have to recognize this can become a really large table, and then right, if you're not careful.
+
+Uh, but on metaphorses, I would say he materialize this. I didn't necessarily have to materialize some of these things down here because they get smaller and smaller, but they did. And essentially, now we're saying, hey, take that first set. I get the amounts so I can sum up the amounts.
+
+I think if the average also the amount. And essentially get the exact same data. So this is what the? Um, this is what the data comes back as. And just show you now. Again, this is somewhere off the world, so it's got to open my connection every time. This is essentially the information that I'm getting back, you know, the user, the store ID, their current Revenue over that whole period, and then the average revenue for other people.
+
+All right now that also ended up running. I don't know if you noticed. A whole lot faster than, say, 150 seconds. And so that correlated subquery. We went from what was it 193 million buffers? What is that? What is that one really? One million numbers right now. You'll notice if I run this a couple times.
+
+Oh no, that's right, I forgot. Now, the other thing let me take a point straight, um, here we go. So, we have.
+
+Yep, so shared hit. That is, the pages that were in memory. Red is the page that had to be read off of this. In written means that something had to be written to this. Generally, if you have stuff being written to disk and that probably ends up being a bad thing.
+
+And it turns out that became the next problem, and so I'm not going to get into it, but later down here somewhere. You see this, which means? I gotta stand back. Yeah, there you go. Ah, no. Come on there. We are. Um. You'll see that. So, disk usage. So, it means that to make this new query work, even though it's hundreds of times faster.
+
+It actually still had to spit up to this because there wasn't enough memory in the process to do the sorting. In this case, uh, the partitioning of the data, but it's the sources. All right, so that's another potential optimization. Um, so that's what I came up with. I said, hey, I knew that I had the sub query I surmised by doing that correlation.
+
+I was probably going to get a bad joint, and then, yes, it's a great. I got it back, joined by. It's not bad enough. And I said Claude make this worse, and so make it worse into CTE. So that is the process. I would have gone through.
+
+[Speaker 2]
+And because I have all the information I needed, this is a query that's even worth spending my time on. Do I have examples of when this is really slow, and when it wasn't slow, can I make any rationalization around change that might serve both? It turns out. Um, when I did that right, I think one of the terms was love.
+
+Um, another one was.
+
+I think school was one of the like six seven terms I, I tried.
+
+[Speaker 3]
+I forget what Bill is looking for. It turns out they all end up kind of being pretty even kill at this point because I'm getting that information one time and then centering over else. So it's not just that it, you know, it's faster. It's actually consistently faster for almost any term, because there's a limited number of films, even though there's a large number of inventory.
+
+All right. So? Uh, you know, think about it, so I knew what I thought it should change, is I expected it to not do all of that, looping, uh, to get. I expect my buffers to go down dramatically. That was, like, the first set. I think what I materialize this, and I joined it to the other information I'm looking for.
+
+My buffers are going to go down significantly, and that was an outcome, and I expected that. And that was good, right? And so if you can identify some of those things, it could be. Hey, this absolutely happens in postgres. It does a a nested loop joint because it's a bad statistic, or you happen to hit the one phrase that thinks there aren't that many rows, and it turns out that someone did a date mode last night.
+
+Now there's more rows, and so it says, oh, there's only going to be a couple hundred of these. I'm going to do nested blue and suddenly there's a million of those, and the query ends up taking an hour, and so, you know, to those kinds of things. Oh, I see a nest of blue.
+
+By doing this change, I expect that to turn into a hash story. Does that happen, right? So, talk about the stuff now.
+
+All right. Talk to all that. I talked through that all right. So, any questions? This one that's a lot, about 10 minutes, until you get to see. Hey, I do all of this way faster.
+
+Excellent question. Um, cost is a relative value of work. Um, and it's really only. Uh, how do I say this? It's really only, um? It's valuable in a query, as it were so multiple runs of a specific query. If the swings in costs or the change in cost varies widely that it's something about the table and the way that's written.
+
+Then, the specific production is searching for. The planner says, oh, I expect this because you want information from these tables, and you want it to be joined up in this way. There's specific formulas for, like, hey, when it's a? It's a nested Loop. It's going to add this much work and all of that's determined.
+
+And the way that postgres, postgres, SQL Server, others are cost-based planners. They basically, you say, get me this as fast as it can. It starts to try and iterate from all the possible ways it could go get that information. It very quickly says I found the I think this is the fastest one, and that's its cost.
+
+It just it does it. Based on this value of cost. And so it's not like. A thousand costs versus 10 million costs for a digital query means that it's going to be a thousand times slower, right, or 100 times lower, it's going. It's, it's. Uh, it's kind of relative within the amount of data and worth that equators do.
+
+Just a number. It's a it's a artificial unit. I don't know anyone whether to say it. So, um. It's based on statistics. So, hey, the the column has this much distribution of a specific value, and so it takes all of that various information it says, I think, is going to be this many rows with this width of data, and that's going to take this much memory, blah blah, blah, blah, blah, that becomes a value of work for that Branch, right?
+
+And then, all of the work is, uh, brought up. There's some really good talks by the community, you know, Bruce mom, Jim. Others have talked to your public player, who can help you find some of those online. So, here's what I decided to do. Um, I'm just going to talk through this, and I'm going to show you the mCP server because that's the more fun thing.
+
+I hope it was running behind the scenes. I don't know if it works or not. So, this is going to be really cool to see what happens, um. So, I first thought, and I did this. I thought in a reasonable way. I took this query. I ran it by hand to get some of the information I needed.
+
+I did end up putting it into a database so I could get some PTS payments for it. And I basically added that into a little script that said, hey. Run this against Claude. Uh, 10 times for each of these. Right, so? First, sorry, six total iterations. First, here's the query.
+
+Why is it slow? Give me some recommendations, and as I said, the very first thing, uh, seven out of ten times. And this way. So, because I was doing that clear all memory, there's no memory for every iteration. And I said, hey, why is it slow, and so with just the query.
+
+Uh, it gave me indexes seven out of ten times, right? That's the number one thing you should try is, and my thing is, they weren't the same every time. So, I thought that was really cool, too. And then I said, great. Here's an explain plan, right? So do it 10 times.
+
+Here's the explain plan 10 times, and for the most part. Once I got there, it immediately said. Hey, the subquiry is bad because they explain, play it. Now, what it told me afterwards. Sometimes it was indexes. Sometimes it was actually a tuning.
+
+[Speaker 2]
+Parallel looks like it's not been parallel, and so that was another one. Then I gave it schema indexes once I gave the indexes. It's still recommended in indexes within the top three things to do. It did not tell me to do a trigram because I had to try. I mean, the lower on the date and then PG test statement and so forth.
+
+So, uh, the funny thing is, as I went through this. Um, yeah, he. Like, I said, here's I showed you, that earlier, this is the very first iteration. This is what it suggested I do is the number one thing seven out of ten times. I thought that was kind of fun, right?
+
+You're not careful. Um, went through, right? So, as I gave an explain plan, I just need to think so. This is good. I'm working on this, and you remember that I have all this coming in the slide deck. Um, it found the correlated subquery as the number one thing.
+
+Um, 10 out of 10 times as soon as it had an explained plans with. It makes complete sense what it told me to do. After that kept flipping back and forth, sometimes it was indexes. Sometimes it was a tuning on server something else. Then you know what it makes.
+
+This really only becomes helpful if it can actually see what's going on right now, right? In that case. I'm still handing it a few bits of information. I didn't. I think I actually have to go back and look. I think I used. I had, like, three different explain plans, so it's not like I was standing at different plans, you know, with very really super wide swings and so forth.
+
+Um. But, if you can then say, hey. I'm having a problem. Here's the query. Go search, whatever the heck you want and give me some suggestions. Um, can it find that correlates separating the specifications and they've had it proven for it. Can it do something? And so this is something that um also made me think is what really, where we need to go?
+
+Now, because let's see, I don't know where this is at. This is going to be really interesting to see. Um. Oh, no. Oh, this is interesting. So this is the problem with the live demo. Um, and I knew this was going to be a potential issue, and it is an issue, uh, let's see what happens here.
+
+Um, I don't know. This is gonna work. Um, so essentially with depend on the tools you have, right? The nice thing to be able to do and this is something that I've been a huge proponent of long before. Is the PGA allies? Is being able to actually just go back to school server days if I can?
+
+Huh? As is always the case, this normally works. Uh, when I'm doing it, except in front of an audience, um, okay. And I deleted the old one because I really thought I was going to work in the background where I was talking. So good, okay, um? Ultimately, what you need to be able to do is, say, hey, I found this example.
+
+And so, when we do something, uh, like this. In workbooks, we say, you know, you need to run the Baseline, your current query at the time. Does something happen, right? So that is what your Baseline is because you can't really identify. Apples to Apples, unless you can rerun your new version with the same query parameters and a similar environment, right?
+
+So, if I take that query on prod and I run into my red database, number one they're like, don't have any explain plan. I don't even know if this is the same plan. Number two. I probably have nearly so much data or traffic. It was really sad, okay, um?
+
+Yes, this was so much. There's so much better way back. Glenn, um? And. Well, we know how slow goes, so I'm going to talk about this. Let's just show you what happened here. Um, I've had access to all the information away. I've been tracking this query for the better part of a few days.
+
+And so, what I essentially said was, hey, I found this query I happen to use to be generalized, since we have a concern that has all the history boards. And the offset value in what we are saying for again, regardless of which means we date a dog. It can be, um.
+
+In the red gate, I know they're doing stuff. Yes, almost everyone's doing something like this. Now, as long as you can see. Go find the worst and the best explained plans. See if they're similar. Um, look at the total run time over the last 24 hours. Find if it's a time-based issue.
+
+Try a couple different query parameters. See what the worst things are. And then let's go ahead and try and rewrite. Give me give me a thought of it is, and so, um, again, it pointed right to that formulated sub query. Um, that's important efficiency, and then I did point out other things right inventory.
+
+It turns out I did not know this on this database. This was nice. It. I apparently have something not set up with vacuums that was interesting. Inventory was one of my problems on this database, so it's good to see that through the stats. It also recognized that I am doing this thing on overview, but I have no in-depths, so you can't use an index appropriately.
+
+And then, again, in this case, that specific column is covered by Bryn index. It might recommend, uh, you know, a feature or something like that major, uh, to what I need to do unfortunately. Then it looks like my. Not going to be the case. Now, if I do say, go ahead and try some variants anyway.
+
+Um, the value, then, is being able to print this out into something, like, whether it's art door or something else, just being able to say, hey, I have these things side by side, and I can compare the work that they're doing. I can actually see. Um. I don't know if I have another good example.
+
+Uh, these are bass lines. Well, these are two different plans, so I could take a. The team players actually see when I do the two together, right? I had plan a that took 200 seconds, and then I have plan B that takes two seconds. What actually was the change, and if I do another iteration, maybe I say, hey, the CTE was good, but now I recognize that I don't want that.
+
+It turns out they're doing it by overview is back. I have a genre column, so why don't I do this by genre instead? That's really what I was going for. Find films that are like romance. Five films are like quarter. But anyway, educational documentary? Um, and see what, what the hell, the pain changes that way?
+
+The value is that the AI very quickly was able to do that. Baseline came through, oh hey! All right. It did. Oh, okay, um, the cost got set, but the, so he did get an actual thing. On the two. So, the the ultimate value is being able to iterate.
+
+I think that what again over 60 iterations? Um, the major stuff with any model I was actually at that point using. I think sauna, like four or five or something, it wasn't even using the newest, the newest model. Um, I don't think the models are going to change the outcome that much in the next year or two, I think.
+
+Ultimately, it's not getting one second, ultimately, um, the the shape as long as it has information is generized to the top. Well, you then have to get is take those recommendations and be able to identify in a systematic way that it really is the correct outcome for your environment and before you go through in production.
+
+And Claude didn't know that. It turns out the database you were writing it against that you gave it access to. Anything like fraud, and it would have never given you that remediability if it annoyment, right? So you need to be able to know that you have some kind of validation method that you're going to do.
+
+I am. The thing about done, uh, talk about where it did well if I'll do rewrite the one thing I didn't show here. Now, I have Claude just right now on automatic, and so if you're not careful, this is the other reason we would say. I really don't care.
+
+What for the only thing I wouldn't tell me to use is anthropics postgres MCP tool against your problem. Because it won't be relentless, right? It will, oh, I think I found another thing. Oh, look at that. I ran the plan, and now it's a memory thing. Let me try this.
+
+Oh, what do you know now? I've got another thing, and it will go. I actually the very first time I did this. I let it goes six ingredients. It found six different possible ways to rewrite it with plans because it was just having a good time. Okay, that's fine.
+
+Thank you. I mean, stop you now. And so you do have to be careful about that. So if you're doing this against an actual server, that's probably the worst way to make this app find a tool that's going to be able to get this plane plan metrics all that stuff that you can have access to.
+
+Um. And then the other thing I do love about it is, I don't, you know, I have to say, I really do love this. The longer I can do more with AI. Like, I don't even have to tell it anymore. Give me a nice summary idea. It's just as happy to do it for you.
+
+Hey, let me tell you. Let me read you a story about how, and so it's, uh, I do appreciate that. That's definitely not careful. It can churn. It doesn't always know what the definition of done is, unless you're really good about getting it to it, right? That's the other problem, like, tune this.
+
+Everything's slow right now. Fix it. What? I'll just keep going. I'm gonna keep fixing. It's really fun. Um, there you go, um. I think the last thing I wanted to say. Yes, so. Is, is this this recognition, right? I'm doing all this stuff on a demo database that is currently creating load because I've just been doing that for for demos and stuff, but again, if you're not careful, like, just a really, truly say this out loud.
+
+Ai is awesome, except it has no idea what's really happening outside of itself in Vermont right now. If you could actually end up causing water for problem. Trying to fix the problem because you don't have a bounded environment to work to work with this in. So, figure out what that looks like.
+
+The models are pretty good. If you set your settings right, and you get the information, you're going to get a pretty good outcome pretty quickly. Not a lot of effort, but if you let it do whatever it wants, you could end up putting a string on your server. You don't realize until that becomes a problem.
+
+And again, I were just seeing this naturally in a lot of current alarms, so. All right. Okay, the first one. We think I'm going to change in this, and that's good, including making sure I have the first part of the demo done. In in July, but anyway, any questions or thoughts or contributions?
+
+Yes, at what point would you consider a model better than Sonic, like Opus or even Fable?
+
+[Speaker 1]
+Uh, it's a really question. I obviously chose not to use stable at all because I was like.
+
+[Speaker 2]
+So, here's a really interesting statistic that I think I can't point to a source, but I'm pretty sure I've seen. I think it's true, I'm going to say it, like, that's the best part. Um, the reason why AI is so good at postgres? Anybody? It's open source. It's been reading the source for the last five years, right it.
+
+It has all this comments, and so, uh, to be really honest. I tried, um. Uh, Opus saw it. I tried chat to PT, I forget which model would be really Frank. I didn't try Gemini, they all, uh, with the explain plan, got, um. Got the sub plan immediately, right?
+
+And so I don't think that the models themselves are going to hit all that much better in specific area for postgres at this moment. Um, I've been used Fable because I was like, I don't want to always go with that. Okay, that was it. Thank you.
+
+[Speaker 1]
+Push back your experience. A joke.
+
+[Speaker 3]
+So, um, so you get your explain plan, uh, back, and this is something I I ran into, just like what you described. I can't run the query against Prague because prod's already stressed. That's the problem that we're dealing with. We have limited resources to deal with that, um, the only way that I have to test my Improvement get back before the AI wrote.
+
+It is to either get some copy or get some, um, you know, and usually we have to like, depersonalize. Like, it's a big process. Uh, do you is there? Concept of a product that could take that explain, plan, and say, oh, well, if you
+
+[Speaker 2]
+Make a distribution of the data, like so.
+
+[Speaker 3]
+If we simulate because I could set it up, or I could even have the eight. Better yet, I could have AI set it up to give me a simulation of Prague. And if it doesn't have access to the data? Just, you know, I don't care. Generate random names. That's fine.
+
+Is that a thing is that? Is that completely impractical? Oh, that's a great question, and I
+
+[Speaker 2]
+Honestly I feel like that could be a another good, longer special, but as a quick start this. Um, number one yeah, consistent problem everywhere. There are a number of products that are doing something like that, specifically in postgres space, uh, to leave out of, uh, I think they have PGA normalizer, and they have product analysis doing some math steps, so that's one way to take a copier, prod.
+
+Do it on a time basis so that, um, there's some samples where you'll take copy and every night. It's mobilizing things, so you get a relative same distributions. Things like that Reggie has the product other people, so you can find things like that. Distribution is the bigger one, right?
+
+So if I can take a smaller copy with similar distribution? That's where AI is actually, really fun right now. I think AI, just in general, uh, you can work with any of the models, have it basically. Look at your statistics and get a quick map, and it will often copy over a subset of that data and make a similar distribution.
+
+Yeah, that's exactly what I'm hoping, and there's a couple of companies that do stuff like that, too. Because the
+
+[Speaker 3]
+Explain plan has the names of tables you know has it has a lot of information. I should be able to personally go through that. So then the other thing I would say is this there's a number of of um? Right now, number of platforms.
+
+[Speaker 2]
+Atps is what right? You can pretty quickly depending on your setup. You can do like a clone of Norway cluster, so that is, it will do the snapshot and store the Clone, so you actually have something in an environment still in your VPC, so you can run that test, and it's fairly fast, right?
+
+You can do that something we're actually working right now, because we recognize the value of that, so we could say the FCP server if this customer has permission. Spin up a clone of their database. Run the query against that, so we're not touching Pride. I think that'd be cool.
+
+Things like neon data bricks. Um, postgres AI. They allow you to do branching at a moment in time so that you're not yet to actually end up becoming a separate. You can run that in a separate instance, a branch of the data so that you can test it there.
+
+So, I love what some of those folks are doing. Just thinking back on that, if you actually look at the schedule of people's just compost coming up. There's a contact data that I'm doing something we have similar, right? Yeah,
+
+[Speaker 3]
+Just
+
+[Speaker 2]
+Look for a speaker from data dog and look at that description. And then there's another company called tonic, uh, yeah. There's a spin up on volunteer. Yeah, and you can take care. Synthetic generator pointed to a database and create a subset that's fully. It's funny I met, like? So, four years ago, at some conference Colorado, and like, what do you guys do?
+
+I wore this three-person startup called tonic, like I've excluded them because their first project was an open source post-customers. Great questions. There's like that is the Commerce rubbing man, right, person, whatever, like that. Is it, like all of us, have these databases, and we know that what we're doing isn't exactly what's actually going on.
+
+We never know how to do that. I think we're getting to this age, but there's a lot of opportunity for going to end up in the background.
+
+[Speaker 3]
+You know, incorporate those times. So, I mean, you know, if you gotta speed up a query, you have maybe a few days or a week. Yeah, you're going to be in lunch before you get anything good look.
+
+[Speaker 2]
+I have one customer right now. Who's, uh, you know, they're in fantasy football. That kind of stuff, like all the sports things, and it's like every, every Monday morning. And when you hear what the problems were right now. Uh, any other questions all right? Thanks so much. This is not here yet.
+
+I need to add some links I recognize in a couple slides up in the next day or two. I'll have it in this folder. And then again, I'll be, uh. Um, I've just come to postgres Summit in two weeks. If all of you are not there, I'm going to be really upset.
+
+Um, I always, I think having this conference for five, six years now, and I'm always shocked when we're in the middle of excuse me freaking New York, and we have 120 people sometimes like. Should we have like a thousand people here? And there is 10 000 postgres users in the city.
+
+I can tell you I can hit them all from this window. Yeah.
