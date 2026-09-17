@@ -15,6 +15,8 @@ Outputs (next to the audio, or --out):
   2. '<stem> — Transcript (ElevenLabs).json' -> full word-level data (timestamps + logprob)
   3. '<stem> — REVIEW (low-confidence spots).md' -> words below --confidence-threshold with
      timestamps, so the content step can verify before quoting verbatim (R1 quote-safety guard).
+  4. (with --slides-dir) 'slide-recording-alignment.md/.json' -> each slide photo mapped to its
+     recording offset + the words spoken around it (YED-166; runs align_slides.py, no extra API cost).
 
 Usage:
   source <repo>/.env   # ELEVENLABS_API_KEY
@@ -22,8 +24,9 @@ Usage:
       --audio "/path/to/recording.m4a" \
       --keyterms "Arklex,Arielle,Datadog,..."   # or --keyterms-file path (one per line)
       [--num-speakers 5] [--confidence-threshold -1.0]
+      [--slides-dir "<event folder>"]   # add `--with pillow` to uv run for EXIF photo times
 """
-import argparse, json, math, os, sys
+import argparse, json, math, os, subprocess, sys
 
 def fmt_ts(s):
     if s is None: return "??:??"
@@ -40,6 +43,8 @@ def main():
                     help="also seed first/last tokens of multi-word names (Arielle/Donohue/Curran lesson)")
     ap.add_argument("--confidence-threshold", type=float, default=-1.0,
                     help="flag words with logprob below this for review (default -1.0 ~= p<0.37)")
+    ap.add_argument("--slides-dir", default=None,
+                    help="after transcribing, align slide photos in this folder to the recording (YED-166)")
     args = ap.parse_args()
 
     key = os.environ.get("ELEVENLABS_API_KEY", "")
@@ -115,6 +120,14 @@ def main():
 
     print(f"[ingest] DONE  words={len([w for w in words if w.get('type')!='spacing'])}  "
           f"flagged_low_conf={len(flags)}\n  -> {md_path}\n  -> {json_path}\n  -> review list", flush=True)
+
+    # 4. slide ↔ recording alignment (optional; separate script so re-runs never re-bill ElevenLabs)
+    if args.slides_dir:
+        aligner = os.path.join(os.path.dirname(os.path.abspath(__file__)), "align_slides.py")
+        rc = subprocess.run([sys.executable, aligner, "--transcript", json_path, "--audio", args.audio,
+                             "--slides-dir", args.slides_dir, "--out", outdir]).returncode
+        if rc:
+            print(f"[ingest] slide alignment failed (exit {rc}) — transcript is fine; re-run align_slides.py", flush=True)
 
 if __name__ == "__main__":
     main()
