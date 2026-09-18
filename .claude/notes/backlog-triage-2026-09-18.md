@@ -4,7 +4,7 @@
 
 **Verbs.** `KILL` close/delete with reason · `MERGE` duplicate of an existing ID (comment there) · `FILE` new Linear issue (lane · label · appetite) or Notion Project Idea · `ANSWER` a decision → `decision` issue (Todo, assigned, due) or answered inline · `RECORD` an environmental constraint → `platform-constraints.md` · `DONE` already resolved by events since 09-13 (listed so it isn't re-asked).
 
-**Scope.** Empire State projects only. gtm-OS items (now GTM-1…GTM-10 + YED-101) are out of scope.
+**Scope.** Empire State projects only. gtm-OS items (migrated 2026-09-18 to the GTM-OS team: YED-164→GTM-1 · 165→GTM-2 · 98→GTM-3 · 125→GTM-4 · 79→GTM-5 · 83→GTM-6 · 84→GTM-7 · 85→GTM-8 · 99→GTM-9 · 100→GTM-10 · 101→GTM-11) are out of scope.
 
 **Confirmation legend.** `[ ]` pending · `[x]` confirmed · `[~]` overridden (note the override inline).
 
@@ -37,7 +37,7 @@
 | 1.21 | YED-48 eval harness | KEEP | Phase 3; note YED-172 pulls its core question forward |
 | 1.22 | YED-162 exhaust loop | KEEP | blockedBy YED-170 (done) + YED-163 |
 | 1.23 | YED-135 gtm spine decommission | DONE | Linear says Done. CLAUDE.md ("pending a dated decommission") and roadmap §9 are stale → EDIT in the drain pass |
-| 1.24 | YED-101 (gtm-OS, still on EMPIRE-STATE) | OUT OF SCOPE | Alex moves it (peer's move was permission-denied) |
+| 1.24 | gtm-OS migration | DONE | all 11 issues on GTM-OS (GTM-1…11); project lead team = GTM-OS. Canceled projects "Full-Stack GTM Roadmap" + "GTM-oS" stay on EMPIRE-STATE (canceled stays canceled) |
 
 ## Batch 2 — Roadmap v2
 
