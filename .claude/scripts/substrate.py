@@ -53,12 +53,12 @@ ROLE_MAP = {  # manifest role -> the graph's existing vocabulary
 # briefs 2026-09-18: Postgres Sep-16 · Agents Behaving Badly Jun-25 · Shortlist Aug-24), so each
 # kind has aliases. A heading matches when it STARTS WITH an alias.
 SECTIONS = [
-    (("the thesis", "thesis"), "thesis"),
-    (("pro-tips", "pro tips"), "practice"),
-    (("best practices",), "practice"),
+    (("the thesis", "thesis", "headline insight"), "thesis"),
+    (("pro-tips", "pro tips", "gotchas"), "practice"),
+    (("best practices", "best-practices"), "practice"),
     (("pitfalls",), "pitfall"),
-    (("hot takes",), "hot_take"),
-    (("substantive insights", "top insights", "insights"), "learning"),
+    (("hot takes", "hot-takes"), "hot_take"),
+    (("substantive insights", "top insights", "key insight", "ranked insights", "insights", "top takeaways", "takeaways"), "learning"),
     (("stat bank",), "statistic"),
 ]
 # Sections that are NEVER staged, whatever they contain (a promise made in the room outranks the graph).
@@ -198,14 +198,35 @@ def _table_rows(block: str) -> list[list[str]]:
     return rows
 
 
+# Non-claim sections a bold-only sub-label can also open — they END the claim section above them.
+BOUNDARY_SECTIONS = ("anecdotes", "concept glossary", "quote bank", "full quote bank", "speaker map",
+                     "documentarian", "open loops", "verification flags", "tools", "slides", "conditioning")
+
+
+def _known_section(title: str) -> bool:
+    """For bold sub-labels only (## headings open a section unconditionally). Stricter than
+    startswith: the name must end the label or be followed by punctuation — so '**Pitfalls / anti-patterns**'
+    opens a section but '**Thesis evolution across the three rooms:**' (about OTHER events) does not."""
+    names = [a for aliases, _ in SECTIONS for a in aliases] + list(BOUNDARY_SECTIONS)
+    return any(re.match(re.escape(n) + r"(?:\s*[^\w\s]|\s*$)", title) for n in names)
+
+
 def split_sections(md: str) -> dict[str, str]:
+    """'## Heading' -> body. Also: '## 6. Pro-Tips' (numbered headings) and a bold-only line like
+    '**Pro-Tips (if X → do Y)**' nested under a catch-all heading, when it names a known section."""
     out, cur, buf = {}, None, []
     for line in md.splitlines():
-        m = re.match(r"^##\s+(.+?)\s*$", line)
-        if m:
+        m = re.match(r"^##\s+(?:\d{1,2}\s*[.·]\s+)?(.+?)\s*$", line)
+        b = re.match(r"^\*\*([^*]+)\*\*\s*$", line)
+        # '**Pro-Tips (if X → do Y)** — a · b · c': an inline label opening a section on its own line
+        il = None if (m or b) else re.match(r"^\*\*([^*]+)\*\*\s*[—–:-]\s*(.+)$", line)
+        title = (m or b or il).group(1).strip().lower() if (m or b or il) else None
+        if title:
+            title = re.sub(r"^(?:the\s+)?(?:\d{1,2}\s+)?", "", title)   # 'the 5 top takeaways' -> 'top takeaways'
+        if m or ((b or il) and _known_section(title)):
             if cur is not None:
                 out[cur] = "\n".join(buf)
-            cur, buf = m.group(1).strip().lower(), []
+            cur, buf = title, ([il.group(2)] if il else [])
         elif cur is not None:
             buf.append(line)
     if cur is not None:
@@ -213,13 +234,33 @@ def split_sections(md: str) -> dict[str, str]:
     return out
 
 
+# Where older briefs keep the roster when there is no "Speaker Map" (fallback, in order of preference).
+ROSTER_SECTIONS = ("speakers", "presenter map", "people & outreach")
+NAME_RE = re.compile(r"^[A-Z][\w'.-]+(?: [A-Z][\w'.-]+)+$")
+
+
+def _person_from_cell(cell: str) -> str | None:
+    """'Jared Robin — Co-founder & CEO' / 'Alex Lindahl (transcript: …)' / 'Ryan Booz' -> the name."""
+    head = re.split(r"\s+[—–-]\s+|\s+·\s+|\s*\(", clean_md(cell))[0].strip(" *")
+    return head if NAME_RE.match(head) else None
+
+
 def speaker_names(sections: dict[str, str]) -> list[str]:
-    body = next((v for k, v in sections.items() if k.startswith("speaker map")), "")
-    rows = _table_rows(body)
+    """Names from the Speaker Map — tables (any number) or '- **Name** — role' bullets."""
+    body = next((v for k, v in sections.items() if k.startswith("speaker map")), "") \
+        or next((v for k, v in sections.items() if k.startswith(ROSTER_SECTIONS)), "")
     names = []
-    for r in rows[1:] if rows else []:
-        if len(r) >= 2 and re.match(r"^[A-Z][\w'.-]+(?: [A-Z][\w'.-]+)+$", r[1]):
-            names.append(r[1])
+    rows = _table_rows(body)
+    for r in rows[1:]:                                   # row 0 is the header
+        for cell in r[:3]:                               # the person column varies between briefs
+            n = _person_from_cell(cell)
+            if n and n not in names:
+                names.append(n)
+                break
+    for m in re.finditer(r"^[-*]\s+\*\*([^*]+)\*\*", body, re.M):
+        n = _person_from_cell(m.group(1))
+        if n and n not in names:
+            names.append(n)
     return names
 
 
@@ -244,9 +285,17 @@ def clean_title(t: str | None) -> str | None:
     return re.sub(r"\s*\([^)]*\)\s*$", "", t).strip() or None if t else None
 
 
+OWNER_FIRST = "Alex"
+
+
 def attribute(text: str, names: list[str]) -> str | None:
-    """'(Ryan, HIGH)' / '(Ryan)' / 'Ryan Booz said' -> 'Ryan Booz' when unambiguous."""
-    hits = [n for n in names if re.search(r"\b" + re.escape(n.split()[0]) + r"\b", text)]
+    """'(Ryan, HIGH)' / '(Sow)' / 'Ryan Booz said' -> 'Ryan Booz' when exactly one speaker matches.
+    Briefs cite by first name OR surname. The brief owner's first name ('Alex') is never a tell —
+    'Alex's pipeline' is Alex, not a same-named speaker; such a speaker still matches by surname."""
+    def tells(n: str) -> list[str]:
+        t = n.split()
+        return [x for x in {t[0], t[-1]} if x != OWNER_FIRST]
+    hits = [n for n in names if any(re.search(r"\b" + re.escape(x) + r"\b", text) for x in tells(n))]
     return hits[0] if len(hits) == 1 else None
 
 
@@ -263,7 +312,9 @@ def _body_items(body: str) -> list[str]:
         bullets += [p for p in parts if p.strip()]
     if bullets:
         return bullets
-    para = " ".join(l.strip() for l in body.splitlines() if l.strip() and not l.lstrip().startswith(("<", ">", "|")))
+    # a '> **quote**' blockquote INSIDE a section is content (theses are often set this way) -> unwrap it
+    lines = [re.sub(r"^\s*>\s?", "", l) for l in body.splitlines()]
+    para = " ".join(l.strip() for l in lines if l.strip() and not l.lstrip().startswith(("<", "|")))
     if not para:
         return []
     if para.count(" · ") >= 2:
@@ -581,7 +632,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     # speakers -> claim_entity(asserted_by). Resolved ONLY against persons already linked to THIS
     # event (the roster ensure-event wrote), by name-token containment: 'Mila Zhou' matches
     # 'Miaolai (Mila) Zhou'. Scoping to the roster is what makes the fuzzy match safe.
-    speakers = {it["speaker"] for it in new if it["speaker"]}
+    speakers = {it["speaker"] for it in items if it["speaker"]}
     if speakers and not g.dry:
         ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         roster_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.person&select=entity_id")]
@@ -592,13 +643,13 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                 g.stats.bump("claim_entity", "speaker_unresolved")
                 continue
             links = [{"claim_id": ids[it["claim_key"]], "entity_type": "person", "entity_id": prows[0]["id"],
-                      "role": "asserted_by"} for it in new if it["speaker"] == name and it["claim_key"] in ids]
+                      "role": "asserted_by"} for it in items if it["speaker"] == name and it["claim_key"] in ids]
             if links:
                 g.stats.bump("claim_entity", "created", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
                        on_conflict="claim_id,entity_type,entity_id,role")
     # founder-showcase claims -> claim_entity(company, about), resolved against THIS event's roster
-    about = {it["about_company"] for it in new if it.get("about_company")}
+    about = {it["about_company"] for it in items if it.get("about_company")}
     if about and not g.dry:
         ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         co_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.company&select=entity_id")]
@@ -609,7 +660,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                 g.stats.bump("claim_entity", "company_unresolved")
                 continue
             links = [{"claim_id": ids[it["claim_key"]], "entity_type": "company", "entity_id": match[0]["id"],
-                      "role": "about"} for it in new if it.get("about_company") == name and it["claim_key"] in ids]
+                      "role": "about"} for it in items if it.get("about_company") == name and it["claim_key"] in ids]
             if links:
                 g.stats.bump("claim_entity", "created", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
@@ -724,6 +775,40 @@ def selftest() -> bool:
     ok("june: pitfalls paragraph split on ' · ' -> 4", sum(i["claim_type"] == "pitfall" for i in jn) == 4)
     ok("june: 'Top Insights' alias + inline numbering -> 3", sum(i["claim_type"] == "learning" for i in jn) == 3)
     ok("june: prose stat bank -> 1 statistic", sum(i["claim_type"] == "statistic" for i in jn) == 1)
+    sm_table = split_sections("## Speaker Map\n<table>\n<tr><td>ID</td><td>Person · role</td></tr>\n"
+                              "<tr><td>spk_3</td><td>**Jared Robin** — Co-founder & CEO, RevGenius (host)</td></tr>\n"
+                              "<tr><td>spk_4</td><td>**Alex Lindahl** — Clay (transcript: \"Lindell\")</td></tr>\n</table>")
+    ok("speaker map: names inside role cells", speaker_names(sm_table) == ["Jared Robin", "Alex Lindahl"])
+    ok("sections: numbered heading '## 6. Pro-Tips (if X, do Y)'",
+       [i["claim_type"] for i in parse_brief("## 6. Pro-Tips (if X, do Y)\n- Automate the 90%. (Eric)")] == ["practice"])
+    nested = parse_brief("## Learnings tier\n**Pro-Tips (if X → do Y)**\n- RL-fine-tune a small model with GRPO against a verifiable reward.\n**Pitfalls / anti-patterns**\n"
+                         "- Mocks tell you nothing.\n**Anecdotes**\n- Live RL on stage.")
+    ok("sections: bold sub-labels split a catch-all heading; anecdotes stay out",
+       [i["claim_type"] for i in nested] == ["practice", "pitfall"])
+    inline = parse_brief("## Learnings Tier\n**Pro-Tips (if X → do Y)** — build one agent for the most painful step · "
+                         "route cheap steps to Haiku, reserve Opus for reasoning · set noindex on paid-ad landing pages\n**Anecdotes** — spent $300 on a site redesign")
+    ok("sections: inline '**Label** — a · b' opens a section and splits the list",
+       [i["claim_type"] for i in inline] == ["practice", "practice", "practice"])
+    ok("sections: 'The 5 Top Takeaways' + 'Gotchas' aliases",
+       [i["claim_type"] for i in parse_brief("## 4. The 5 Top Takeaways\n1. **A new compute unit for agents is forming.**\n"
+                                             "## 6. Gotchas & Practitioner Playbook\n- Flatten your tool arguments into few params.")]
+       == ["learning", "practice"])
+    ok("sections: '## 2 · The Thesis' numbering",
+       [i["claim_type"] for i in parse_brief("## 2 · The Thesis\n**Five funds, one bet each: agents doing real work.**")] == ["thesis"])
+    ok("sections: '**Thesis evolution across…:**' (other events) does NOT open a thesis",
+       parse_brief("## 7. Cross-Event Overlap\n**Thesis evolution across the three rooms:**\n- GTM Eng NYC said centralize the data.") == [])
+    ok("speakers: roster fallback to 'People & Outreach' table",
+       speaker_names(split_sections("## People & Outreach State\n<table>\n<tr><td>Person</td><td>Role</td></tr>\n"
+                                    "<tr><td>**Sangram Vajre** (GTM Partners)</td><td>Speaker</td></tr>\n</table>")) == ["Sangram Vajre"])
+    rg = ["Jared Robin", "Alex Lindahl", "Mintis Sow", "Tyler Phillips"]
+    ok("attribute: surname tell '(Sow)'", attribute("Run a click study (Sow). HIGH.", rg) == "Mintis Sow")
+    ok("attribute: owner's first name is not a tell", attribute("Alex's own pipeline gates output", rg) is None)
+    ok("attribute: two speakers -> unattributed", attribute("(Phillips, Lindahl)", rg) is None)
+    sm_bullets = split_sections("## Speaker Map (clean — 2 named speakers)\n- **Philip Kiely** — Head of AI Education, "
+                                "**Baseten**.\n- **Declan Jackson** — Member of Technical Staff.")
+    ok("speaker map: bullet form", speaker_names(sm_bullets) == ["Philip Kiely", "Declan Jackson"])
+    ok("alias: 'Key Insight 6 — …' staged as learning",
+       parse_brief("## Key Insight 6 — the frontier crossing\n- Terminal-Bench v4.0: GLM-5.3 = 41.9%, top open-weight.")[0]["claim_type"] == "learning")
     ok("company: 'North' ~ 'North.Cloud'", same_company("North", "North.Cloud"))
     ok("speaker: 'Mila Zhou' ~ 'Miaolai (Mila) Zhou'", same_person("Mila Zhou", "Miaolai (Mila) Zhou"))
     ok("speaker: first name alone never matches", not same_person("Mila", "Miaolai (Mila) Zhou"))
