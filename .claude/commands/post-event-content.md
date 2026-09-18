@@ -249,7 +249,7 @@ Save the Step 3.7 `post_event_brief` body to a local file (the same text written
 - Parses **only** The Thesis · Pro-Tips · Best Practices · Pitfalls · Hot Takes · Substantive Insights · Stat Bank. No inference: the brief is already written, so this is parsing plus a local embedding (bge-small, no metered API).
 - Each claim points at this event (`claim.event_id`), carries `provenance_tier = first_hand`, `asserted_at` = the event date, confidence from the brief's HIGH/MED tags (0.8 / 0.6; 0.7 untagged), and a speaker link when the bullet names someone on this event's roster.
 - Rule-12 lines ("unsourced", "don't publish") are staged with `metadata.do_not_publish = true`, confidence ≤ 0.5, and are **never** auto-approved.
-- `--approve` (inherited approval: the brief is already Alex-reviewed) lands claims as `approved`; without it they land as `candidate`. **Default: omit `--approve`** until Alex rules on inherited approval (decision queue item 10).
+- **Always pass `--approve`** — inherited approval, **ratified by Alex 2026-09-18**: claims parsed from a brief he has reviewed land `approved`. Rule-12 / do-not-publish claims never do; they stay `candidate`. To promote claims staged before this ruling: `substrate.py approve-claims --manifest <m.json>`.
 - **0 claims parsed = loud failure (exit 3)**, not a silent pass — it means the brief's headings drifted.
 - Success flips the gate row to STAGED. If there is genuinely no brief (e.g. a walk-in with no transcript), acknowledge it instead — logged, not silent:
   `.venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> --reason "<why>"`
