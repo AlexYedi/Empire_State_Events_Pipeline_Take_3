@@ -49,17 +49,31 @@ ROLE_MAP = {  # manifest role -> the graph's existing vocabulary
     "company": {"host": "subject", "sponsor": "subject", "subject": "subject", "mentioned": "subject"},
 }
 
-# post_event_brief section -> claim_type. Order matters only for reporting.
+# post_event_brief section -> claim_type. Briefs drifted across sessions (verified against real
+# briefs 2026-09-18: Postgres Sep-16 · Agents Behaving Badly Jun-25 · Shortlist Aug-24), so each
+# kind has aliases. A heading matches when it STARTS WITH an alias.
 SECTIONS = [
-    ("the thesis", "thesis"),
-    ("pro-tips", "practice"),
-    ("best practices", "practice"),
-    ("pitfalls", "pitfall"),
-    ("hot takes", "hot_take"),
-    ("substantive insights", "learning"),
-    ("stat bank", "statistic"),
+    (("the thesis", "thesis"), "thesis"),
+    (("pro-tips", "pro tips"), "practice"),
+    (("best practices",), "practice"),
+    (("pitfalls",), "pitfall"),
+    (("hot takes",), "hot_take"),
+    (("substantive insights", "top insights", "insights"), "learning"),
+    (("stat bank",), "statistic"),
 ]
+# Sections that are NEVER staged, whatever they contain (a promise made in the room outranks the graph).
+EXCLUDED_SECTIONS = ("confidentiality", "⛔")
+# Founder-showcase format (content-patterns/founder-showcase.md): per-company `### N. Name — url`
+# blocks with **Label:** bullets. Label -> (claim_type, provenance_tier); None = not a claim.
+SHOWCASE_SECTION = "company breakdowns"
+SHOWCASE_LABELS = {
+    "problem": ("thesis", "first_hand"), "unique": ("learning", "first_hand"),
+    "culture": ("learning", "first_hand"), "hiring": ("learning", "first_hand"),
+    "recent (public)": ("statistic", "web_verified"), "recent": ("statistic", "first_hand"),
+    "who": None,                                       # roster, not a claim (people are entities)
+}
 DO_NOT_PUBLISH_RE = re.compile(r"rule\s*12|unsourced|do(?:n'?t| not) publish|never publish|never repeat", re.I)
+CONFIDENTIAL_RE = re.compile(r"stays in the room|confidential|⛔|off the record", re.I)
 CONF_RE = re.compile(r"\b(HIGH|MED)\b")
 
 
@@ -219,6 +233,12 @@ def same_person(brief_name: str, graph_name: str) -> bool:
     return len(a) >= 2 and len(b) >= 2 and (a <= b or b <= a)
 
 
+def same_company(brief_name: str, graph_name: str) -> bool:
+    """'North' ~ 'North.Cloud', 'Arist' ~ 'Arist': token containment, >=1 token (roster-scoped only)."""
+    a, b = name_tokens(brief_name), name_tokens(graph_name)
+    return bool(a) and bool(b) and (a <= b or b <= a)
+
+
 def clean_title(t: str | None) -> str | None:
     """Drop trailing annotations: 'Sr. TPM, AWS (confirmed by Alex …)' -> 'Sr. TPM, AWS'."""
     return re.sub(r"\s*\([^)]*\)\s*$", "", t).strip() or None if t else None
@@ -230,39 +250,82 @@ def attribute(text: str, names: list[str]) -> str | None:
     return hits[0] if len(hits) == 1 else None
 
 
+def _body_items(body: str) -> list[str]:
+    """Items from a section body: top-level bullets; else an inline list split on ' · ' or on
+    inline '1. … 2. …' numbering; else the paragraph itself (a one-line thesis or stat)."""
+    bullets = []
+    for line in body.splitlines():
+        m = re.match(r"^(?:[-*]|(\d+)\.)\s+(.*\S)", line)
+        if not m:
+            continue
+        # '1. first … 2. second … 3. third' on ONE line: split on inline 'N. ' (decimals like 173.6 survive)
+        parts = re.split(r"\s\d{1,2}\.\s+", m.group(2)) if m.group(1) else [m.group(2)]
+        bullets += [p for p in parts if p.strip()]
+    if bullets:
+        return bullets
+    para = " ".join(l.strip() for l in body.splitlines() if l.strip() and not l.lstrip().startswith(("<", ">", "|")))
+    if not para:
+        return []
+    if para.count(" · ") >= 2:
+        return [p for p in para.split(" · ") if p.strip()]
+    numbered = re.split(r"(?:^|\s)\d{1,2}\.\s+", para)
+    if len([p for p in numbered if p.strip()]) >= 2:
+        return [p for p in numbered if p.strip()]
+    return [para]
+
+
+def _showcase_items(body: str) -> list[dict]:
+    """Founder-showcase `### N. Company — url` blocks -> company-attributed claims."""
+    out = []
+    for block in re.split(r"^###\s+", body, flags=re.M)[1:]:
+        head, _, rest = block.partition("\n")
+        company = clean_md(re.sub(r"^\d+\.\s*", "", head).split(" — ")[0].split(" - ")[0])
+        for m in re.finditer(r"^[-*]\s+\*\*([^*:]+):?\*\*:?\s*(.+)$", rest, re.M):
+            label = clean_md(m.group(1)).lower()
+            spec = SHOWCASE_LABELS.get(label, SHOWCASE_LABELS.get(label.split(" (")[0]))
+            if not spec:
+                continue
+            ctype, tier = spec
+            out.append({"section": f"{SHOWCASE_SECTION}/{company}", "claim_type": ctype, "tier": tier,
+                        "about_company": company, "raw": m.group(2),
+                        "text": f"{company} — {label.split(' (')[0]}: {clean_md(m.group(2))}"})
+    return out
+
+
 def parse_brief(md: str) -> list[dict]:
     """post_event_brief markdown -> claim candidates. Parsing only — zero inference."""
     sections = split_sections(md)
     names = speaker_names(sections)
     items: list[dict] = []
-    for key, ctype in SECTIONS:
-        body = next((v for k, v in sections.items() if k.startswith(key)), None)
-        if body is None:
+    for title, body in sections.items():
+        if any(x in title for x in EXCLUDED_SECTIONS):
+            continue                                   # confidential sections are never staged
+        if title.startswith(SHOWCASE_SECTION):
+            items += _showcase_items(body)
             continue
-        if ctype == "statistic":
-            rows = _table_rows(body)
-            for r in rows[1:]:
+        ctype = next((t for aliases, t in SECTIONS if title.startswith(aliases)), None)
+        if not ctype:
+            continue
+        if ctype == "statistic" and _table_rows(body):
+            for r in _table_rows(body)[1:]:
                 if len(r) >= 2 and r[0] and r[1]:
-                    items.append({"section": key, "claim_type": ctype,
-                                  "raw": " — ".join(x for x in r if x),
+                    items.append({"section": title, "claim_type": ctype, "raw": " — ".join(x for x in r if x),
                                   "text": f"{r[0]}: {r[1]}" + (f" ({r[2]})" if len(r) > 2 and r[2] else "")})
             continue
-        for line in body.splitlines():
-            m = re.match(r"^(?:[-*]|\d+\.)\s+(.*\S)", line)          # top-level bullets only
-            if m:
-                items.append({"section": key, "claim_type": ctype, "raw": m.group(1), "text": clean_md(m.group(1))})
-            elif ctype == "thesis" and line.strip() and not line.startswith(("<", ">")):
-                items.append({"section": key, "claim_type": ctype, "raw": line, "text": clean_md(line)})
+        for raw in _body_items(body):
+            items.append({"section": title, "claim_type": ctype, "raw": raw, "text": clean_md(raw)})
     out = []
     for it in items:
         if len(it["text"]) < 12:
             continue
+        if CONFIDENTIAL_RE.search(it["raw"]):
+            continue                                   # a confidential line is dropped, not flagged
         cm = CONF_RE.search(it["raw"])
         conf = 0.8 if (cm and cm.group(1) == "HIGH") else 0.6 if cm else 0.7
         dnp = bool(DO_NOT_PUBLISH_RE.search(it["raw"]))
         if dnp:
             conf = min(conf, 0.5)
-        out.append({**it, "confidence": conf, "do_not_publish": dnp,
+        out.append({**it, "confidence": conf, "do_not_publish": dnp, "tier": it.get("tier", "first_hand"),
                     "speaker": attribute(it["raw"], names), "claim_key": claim_key(it["text"])})
     seen, uniq = set(), []
     for it in out:                                                    # same text twice in one brief = one claim
@@ -475,8 +538,9 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     ev = manifest["event"]
     items = parse_brief(md)
     if not items:
-        sys.stderr.write("LOUD FAILURE: 0 claims parsed from the brief. Headings changed? Expected "
-                         + ", ".join(k for k, _ in SECTIONS) + "\n")
+        sys.stderr.write("LOUD FAILURE: 0 claims parsed from the brief. Headings changed? Expected one of: "
+                         + ", ".join(a for aliases, _ in SECTIONS for a in aliases)
+                         + f", or '{SHOWCASE_SECTION}' (founder showcase)\n")
         return 3
     event = g.find_event(ev)
     if not event:
@@ -504,7 +568,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         rows.append({
             "source_key": skey, "claim_key": it["claim_key"], "claim_text": it["text"], "claim_type": it["claim_type"],
             "locator": {"section": it["section"], "speaker": it["speaker"]}, "document_id": doc_id, "event_id": eid,
-            "provenance_tier": "first_hand", "confidence": it["confidence"], "asserted_at": when,
+            "provenance_tier": it["tier"], "confidence": it["confidence"], "asserted_at": when,
             "status": "approved" if (approve and not it["do_not_publish"]) else "candidate",
             "extractor": "parse", "extractor_model": None, "lane": "A",
             "embedding": vec, "embedding_model": EMBED_MODEL,
@@ -529,6 +593,23 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                 continue
             links = [{"claim_id": ids[it["claim_key"]], "entity_type": "person", "entity_id": prows[0]["id"],
                       "role": "asserted_by"} for it in new if it["speaker"] == name and it["claim_key"] in ids]
+            if links:
+                g.stats.bump("claim_entity", "created", len(links))
+                g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+                       on_conflict="claim_id,entity_type,entity_id,role")
+    # founder-showcase claims -> claim_entity(company, about), resolved against THIS event's roster
+    about = {it["about_company"] for it in new if it.get("about_company")}
+    if about and not g.dry:
+        ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
+        co_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.company&select=entity_id")]
+        roster = g.get(f"/company?id=in.({','.join(co_ids)})&select=id,name") if co_ids else []
+        for name in about:
+            match = [c for c in roster if same_company(name, c["name"])]
+            if len(match) != 1:
+                g.stats.bump("claim_entity", "company_unresolved")
+                continue
+            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "company", "entity_id": match[0]["id"],
+                      "role": "about"} for it in new if it.get("about_company") == name and it["claim_key"] in ids]
             if links:
                 g.stats.bump("claim_entity", "created", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
@@ -574,6 +655,34 @@ SAMPLE_BRIEF = """
 """
 
 
+# Excerpts of two REAL brief formats (2026-09-18 drift check) — the parser must handle both.
+SHOWCASE_SAMPLE = """
+## ⛔ Confidentiality flag (read first)
+North's founder disclosed a just-closed Series B on stage and said "this stays in the room." Do NOT publish it.
+## The night in one line
+Six early-stage NYC founders pitched back-to-back to hire.
+## Company breakdowns (6 dimensions)
+### 1. North — [north.cloud](http://north.cloud) (Cloud & AI FinOps)
+- **Who:** Matt Biringer (CEO), Yassine Açoine (CTO, presented).
+- **Problem:** Engineers create cloud/AI spend; finance is accountable — nobody owns the seam.
+- **Recent (PUBLIC):** North v3 launched Aug 20 2026. Series A $5M. ⛔ Series B confidential — excluded.
+### 2. Arist — [arist.co](http://arist.co) (Consulting automation)
+- **Problem:** Execs don't know their org's real problems; McKinsey costs $5M to find out.
+- **Recent (PUBLIC):** Series B $22.5M (SEC Form D, Aug 4 2026); ~$39M total.
+- **Hiring:** Ownership-hungry generalists.
+"""
+JUNE_SAMPLE = """
+## Hot Takes
+1. **Single agents are usually fine; multi-agent gains are mostly illusory** given million-token context. (Kilian)
+## Pitfalls / Anti-Patterns
+Agents cheating the eval · benchmark contamination via data vendors · over-constraining a strong model with legacy scaffolding · too many metrics
+## Top Insights (ranked)
+1. Production is a precondition for evaluation, not its reward. 2. Cheating + contamination are the structural enemies of agent benchmarks. 3. Keep scenarios model-agnostic so evals survive model churn.
+## Stat Bank
+**$100K** Datadog startup credits (Series A & earlier, yr 1) — the only hard number on stage.
+"""
+
+
 def selftest() -> bool:
     checks = []
 
@@ -601,6 +710,21 @@ def selftest() -> bool:
     untagged = next(i for i in items if "CONCURRENTLY" in i["text"])
     ok("parse: untagged confidence = 0.7", untagged["confidence"] == 0.7)
     ok("parse: 0 claims from an unrelated doc", parse_brief("## Intro\n- hello world here") == [])
+    sc = parse_brief(SHOWCASE_SAMPLE)
+    blob = " ".join(i["text"] for i in sc).lower()
+    ok("showcase: confidential section never staged", "stays in the room" not in blob and "series b on stage" not in blob)
+    ok("showcase: a line carrying ⛔ is dropped whole", not any(i["about_company"] == "North" and i["claim_type"] == "statistic" for i in sc))
+    ok("showcase: 'Who' roster lines are not claims", not any("Biringer" in i["text"] for i in sc))
+    ok("showcase: claims attributed to their company",
+       {i["about_company"] for i in sc} == {"North", "Arist"} and all(i["text"].startswith(i["about_company"]) for i in sc))
+    ok("showcase: Recent (PUBLIC) -> web_verified",
+       any(i["about_company"] == "Arist" and i["claim_type"] == "statistic" and i["tier"] == "web_verified" for i in sc))
+    ok("showcase: 4 claims total (North problem; Arist problem, recent, hiring)", len(sc) == 4)
+    jn = parse_brief(JUNE_SAMPLE)
+    ok("june: pitfalls paragraph split on ' · ' -> 4", sum(i["claim_type"] == "pitfall" for i in jn) == 4)
+    ok("june: 'Top Insights' alias + inline numbering -> 3", sum(i["claim_type"] == "learning" for i in jn) == 3)
+    ok("june: prose stat bank -> 1 statistic", sum(i["claim_type"] == "statistic" for i in jn) == 1)
+    ok("company: 'North' ~ 'North.Cloud'", same_company("North", "North.Cloud"))
     ok("speaker: 'Mila Zhou' ~ 'Miaolai (Mila) Zhou'", same_person("Mila Zhou", "Miaolai (Mila) Zhou"))
     ok("speaker: first name alone never matches", not same_person("Mila", "Miaolai (Mila) Zhou"))
     ok("speaker: different surname never matches", not same_person("Mila Chen", "Miaolai (Mila) Zhou"))
@@ -660,7 +784,7 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
-                                     "backfill"])
+                                     "backfill", "preview-claims"])
     ap.add_argument("--manifest", help="one manifest (all verbs except backfill)")
     ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
                                            "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
@@ -676,6 +800,17 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
+    if a.verb == "preview-claims":                 # offline: what would stage-claims stage? (review surface)
+        if not a.brief:
+            ap.error("preview-claims needs --brief")
+        items = parse_brief(open(a.brief, encoding="utf-8").read())
+        for it in items:
+            flags = " ⚠do-not-publish" if it["do_not_publish"] else ""
+            who = f" · {it['speaker']}" if it.get("speaker") else ""
+            co = f" · about {it['about_company']}" if it.get("about_company") else ""
+            print(f"  [{it['claim_type']:9s} {it['tier']:12s} {it['confidence']:.1f}{who}{co}{flags}] {it['text'][:150]}")
+        print(f"preview: {len(items)} claims" + ("" if items else "  <- LOUD: 0 claims; stage-claims would exit 3"))
+        return 0 if items else 3
     stats = Stats()
     g = Graph(a.dry_run, stats)
     if a.verb == "backfill":
