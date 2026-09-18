@@ -63,6 +63,62 @@ DO_NOT_PUBLISH_RE = re.compile(r"rule\s*12|unsourced|do(?:n'?t| not) publish|nev
 CONF_RE = re.compile(r"\b(HIGH|MED)\b")
 
 
+# ---------------------------------------------------------------------------------------------
+# Substrate gate ledger (the Step-4.5 lesson: a skipped step must FAIL the run, not close green).
+# /post-event-content 3.8b calls `ensure-event --expect-claims` -> a PENDING row; 3.8c
+# `stage-claims` success flips it to STAGED. .claude/hooks/substrate-gate.sh (Stop hook) fails
+# the run while any row is PENDING. Backfill calls ensure-event WITHOUT --expect-claims (most
+# backfilled events have no brief), so it never creates gate rows.
+# Same JSONL shape + _pending session fallback as deep-read-ledger.sh.
+# ---------------------------------------------------------------------------------------------
+STATE_DIR = os.path.join(ROOT, ".claude", ".state")
+GATE_FAIL_LOG = os.path.join(ROOT, ".claude", "artifacts", "substrate-gate-failures.jsonl")
+
+
+def _ledger_path() -> str:
+    sid = os.environ.get("CLAUDE_CODE_SESSION_ID") or "_pending"
+    return os.path.join(STATE_DIR, f"{sid}.substrate_gate.jsonl")
+
+
+def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *, keep_if: tuple = ()) -> None:
+    """Upsert one row by key. keep_if: markers that must not be downgraded (idempotent add)."""
+    import datetime
+    path = _ledger_path()
+    os.makedirs(STATE_DIR, exist_ok=True)
+    rows, kept = [], None
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8"):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except ValueError:
+                rows.append(line)                     # preserve corrupt lines verbatim (gate counts them)
+                continue
+            if isinstance(r, dict) and r.get("key") == key:
+                kept = r
+                continue
+            rows.append(line)
+    if kept and kept.get("marker") in keep_if:
+        rows.append(json.dumps(kept))
+    else:
+        row = {"key": key, "event": title, "marker": marker,
+               "ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+        if reason:
+            row["reason"] = reason
+        rows.append(json.dumps(row))
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write("\n".join(rows) + "\n")
+    os.replace(tmp, path)
+    if marker == "waived":
+        os.makedirs(os.path.dirname(GATE_FAIL_LOG), exist_ok=True)
+        with open(GATE_FAIL_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"event": "substrate_gate_waived", "key": key, "title": title,
+                                "reason": reason, "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending")}) + "\n")
+
+
 class Stats:
     def __init__(self):
         self.c: dict[str, dict[str, int]] = {}
@@ -557,6 +613,33 @@ def selftest() -> bool:
         ok("guard still accepts person.bio (substrate simply never sends it)", True)
     except PIIViolation:
         ok("guard still accepts person.bio (substrate simply never sends it)", False)
+    # gate ledger + Stop hook, end to end, in a throwaway session (no network)
+    import subprocess
+    hook_path = os.path.join(ROOT, ".claude", "hooks", "substrate-gate.sh")
+    saved = os.environ.get("CLAUDE_CODE_SESSION_ID")
+    os.environ["CLAUDE_CODE_SESSION_ID"] = "substrate-selftest"
+    try:
+        def run_hook() -> str:
+            env = dict(os.environ, CLAUDE_PROJECT_DIR=ROOT)
+            p = subprocess.run([hook_path], input=json.dumps({"session_id": "substrate-selftest", "stop_hook_active": False}),
+                               text=True, capture_output=True, env=env)
+            return p.stdout.strip()
+        k, t = "0" * 32, "gate selftest event"
+        ledger_mark(k, t, "pending")
+        ok("gate: PENDING row blocks the stop", '"decision":"block"' in run_hook())
+        ledger_mark(k, t, "staged")
+        ledger_mark(k, t, "pending", keep_if=("staged", "waived"))
+        ok("gate: re-running ensure-event never downgrades STAGED", run_hook() == "")
+        with open(_ledger_path(), "a", encoding="utf-8") as f:
+            f.write("{not json\n")
+        ok("gate: corrupt ledger line blocks (fail-closed)", '"decision":"block"' in run_hook())
+    finally:
+        if os.path.exists(_ledger_path()):
+            os.remove(_ledger_path())
+        if saved is None:
+            os.environ.pop("CLAUDE_CODE_SESSION_ID", None)
+        else:
+            os.environ["CLAUDE_CODE_SESSION_ID"] = saved
     fail = 0
     for name, good in checks:
         fail += 0 if good else 1
@@ -570,8 +653,12 @@ def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims"])
+    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive"])
     ap.add_argument("--manifest", required=True)
+    ap.add_argument("--expect-claims", action="store_true",
+                    help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
+                         "stage-claims must close — the Stop hook fails the run otherwise")
+    ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged")
     ap.add_argument("--brief")
     ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
     ap.add_argument("--approve", action="store_true",
@@ -583,11 +670,21 @@ def main(argv: list[str]) -> int:
     stats = Stats()
     g = Graph(a.dry_run, stats)
     rc = 0
+    ev = m.get("event") or {}
+    gate_key = (pid_variants(ev.get("notion_page_id")) or [None])[0]
     if a.verb == "ensure-entity":
         for e in m.get("entities", []):
             g.ensure_entity(e)
+    elif a.verb == "waive":
+        if not (gate_key and a.reason):
+            ap.error("waive needs a manifest with event.notion_page_id and --reason")
+        ledger_mark(gate_key, ev.get("title", ""), "waived", a.reason)
+        print(f"waived: {ev.get('title')} — {a.reason} (logged to substrate-gate-failures.jsonl)")
+        return 0
     elif a.verb == "ensure-event":
         g.ensure_event(m)
+        if a.expect_claims and not a.dry_run and gate_key:
+            ledger_mark(gate_key, ev.get("title", ""), "pending", keep_if=("staged", "waived"))
     elif a.verb == "ensure-document":
         eid = None
         if m.get("event"):
@@ -604,6 +701,8 @@ def main(argv: list[str]) -> int:
         if not a.brief:
             ap.error("stage-claims needs --brief")
         rc = stage_claims(g, open(a.brief, encoding="utf-8").read(), m, brief_ref=a.brief_ref, approve=a.approve)
+        if rc == 0 and not a.dry_run and gate_key:
+            ledger_mark(gate_key, ev.get("title", ""), "staged")
     print(("DRY-RUN " if a.dry_run else "") + f"{a.verb}: created={stats.created()}")
     print(stats.report())
     if a.json:
