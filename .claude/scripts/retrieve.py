@@ -182,20 +182,35 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
 
     # ---- claims under the token budget ------------------------------------------------------------
     used = sum(tokens("\n".join(s)) for s in (ledger, cards, tcards))
-    kept, cut = [], []
-    per_doc: dict[str, int] = {}
-    for c in ranked:
-        doc = c.get("document_id") or c.get("event_id") or "none"
+    def render(c: dict) -> str:
         flag = " ⚠ do-not-publish" if (c.get("metadata") or {}).get("do_not_publish") else ""
         ev = ev_by_id.get(c.get("event_id"))
         where = f" — {ev['title'][:40]}" if ev else ""
-        line = (f"- {c['claim_text']}{where} [{c.get('provenance_tier')} · "
+        return (f"- {c['claim_text']}{where} [{c.get('provenance_tier')} · "
                 f"{'unreviewed' if c.get('status') == 'candidate' else c.get('status')} · "
                 f"{str(c.get('asserted_at') or '')[:10]}]{flag} c:{str(c['id'])[:8]}")
-        if per_doc.get(doc, 0) >= 3 or used + tokens(line) > budget:   # diversity: <=3 per source
+
+    # Two-pass fill. Pass 1: <=3 claims per source so one long brief cannot crowd out other sources.
+    # Pass 2: spend the remaining budget in score order. (Acceptance run 2026-09-18: a one-source
+    # neighborhood kept 3/46 claims at 352/6000 tokens under a hard cap — diversity must not starve depth.)
+    kept, deferred, cut = [], [], []
+    per_src: dict[str, int] = {}
+    for c in ranked:
+        src = c.get("document_id") or c.get("event_id") or "none"
+        line = render(c)
+        if per_src.get(src, 0) >= 3:
+            deferred.append((c, line))
+            continue
+        if used + tokens(line) > budget:
             cut.append(c)
             continue
-        per_doc[doc] = per_doc.get(doc, 0) + 1
+        per_src[src] = per_src.get(src, 0) + 1
+        used += tokens(line)
+        kept.append(line)
+    for c, line in deferred:
+        if used + tokens(line) > budget:
+            cut.append(c)
+            continue
         used += tokens(line)
         kept.append(line)
     cl = ["## Claims (scored)", ""] + (kept or ["- (none)"])
