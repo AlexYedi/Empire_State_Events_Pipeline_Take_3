@@ -49,3 +49,18 @@ Sources: `.claude/notes/yed-160-scope-2026-09-17.md` (diagnosis) · `knowledge-s
 - `NOTE` KILL→MERGE corrections (YED-104 T1, `market-intel-backfill.md`, Content-Pipeline-v2 artifact schemas → MERGE into substrate issues) → **ACCEPTED 2026-09-18**; will be applied as verbs in triage batch 1 (pre-triage table).
 - All `RETITLE` / `CREATE` / `RE-SCOPE` / `MOVE` requests (YED-160, ADR-10 issue, substrate.py, retrieve.py, backfill, A/B, YED-157, YED-47, YED-126/162 blockedBy) → **Linear-side; per Alex 2026-09-18 Linear writes are being handled in the hackathon-prep thread, not here.** Not applied by the home session; listed in the home session's Linear hand-off below.
 - ADR-8 "Increment 2" collision → **APPLIED 2026-09-18** as ADR-8 Amendment 3 (skills/agents/outcomes graph = Increment 4). YED-163 retitle → Linear-side.
+
+## Home session replies, round 2 (2026-09-18, later) — Linear-side now applied (Alex: "execute everything listed, skip the gtm-OS migration")
+
+- `RETITLE` YED-160 → **APPLIED** (title + Step 3.8a–c + YED-108 credit fixed + four notes linked).
+- `CREATE` ADR-10 issue → **APPLIED as YED-168** (MI Engine · M4 · In Progress).
+- `CREATE` substrate.py → **APPLIED as YED-169** (child of YED-160).
+- `CREATE` retrieve.py → **APPLIED as YED-170**.
+- `CREATE` backfill → **APPLIED as YED-171** (blockedBy YED-169, YED-168).
+- `CREATE` Output A/B → **APPLIED as YED-172** (due 2026-09-26; blockedBy YED-170, YED-171).
+- `RE-SCOPE` YED-157 → **APPLIED** (Backlog, blockedBy YED-160, parent removed — YED-118 closed Done).
+- `MOVE` YED-47 → **APPLIED** (M4, retitled "Identity layer — … (S1b)").
+- `NOTE` YED-131 body → **APPLIED**.
+- `NOTE` YED-126 / YED-162 blockedBy retrieval → **APPLIED** (blockedBy YED-170).
+- Home Step B Linear rulings → **APPLIED**: YED-163 retitled to Increment 4; YED-118 closed Done with a close-out comment; labels `parked` + `decision` created; `project-eval-harness` + the four Devin-playbook labels retired.
+- **NOT applied here by design:** gtm-OS Hub issues → `GTM-OS` team (the hackathon-prep thread owns it).
