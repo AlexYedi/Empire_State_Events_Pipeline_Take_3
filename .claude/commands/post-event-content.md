@@ -14,7 +14,7 @@ Takes a transcript Alex uploads/pastes from his own recording of an attended eve
 
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
-- **Knowledge-graph write-back** (Step 3.8) — People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event.
+- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are gate-enforced (`substrate-gate.sh`).
 - **LinkedIn post(s) + visual carousel brief → Gamma** (Step 4). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
 - **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `.claude/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
@@ -206,7 +206,11 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 After writing the brief, capture its URL and pass it to Step 4 (content-correspondent uses it as `=== Post-Event Brief ===` input alongside the conditioned quote bank).
 
-## Step 3.8 — Knowledge-graph write-back (dedup-mandatory)
+## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c)
+
+Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`.claude/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory**; 3.8b/3.8c are enforced by the `substrate-gate.sh` Stop hook, so a skipped graph write fails the run instead of closing green (ADR-10; YED-160).
+
+### Step 3.8a — Notion People / Companies / Topics (unchanged)
 
 Persist what the event added to the **People / Companies / Topics** graph so it compounds across events. **Search-before-create dedup is mandatory** (pipeline rules #10/#11) — duplicate "Hebbia" / "Hermes Frangoudis" nodes rot the graph (YED-96 R4).
 
@@ -218,6 +222,39 @@ Persist what the event added to the **People / Companies / Topics** graph so it 
 4. **Relink** all touched rows to the Event (bidirectional — the Event's People/Companies/Topics auto-populate).
 
 Schema + property formats: `.claude/references/notion-schema.md`. If Alex prefers a review gate over auto-write, surface the NEW-vs-MATCH delta for confirmation first.
+
+### Step 3.8b — The event, its roster and topics → the MI graph (`substrate.py ensure-event`)
+
+After 3.8a, the Notion Event row's People / Companies / Topics relations are the roster. Build a manifest from them (parent thread — the Notion connector does not work in subagents) and hand it to the producer. `substrate.py` is the ONE producer path; every write goes through `spine_client` (ADR-9 guard).
+
+1. **Build the manifest** (`/tmp` or the scratchpad — never commit it; it names people):
+   - Event: `notion_page_id`, `title`, `kind: "attended"`, `event_date`, `location`, `google_calendar_event_id`.
+   - Entities: one single-database SQL query per DB (People · Companies · Topics) — `notion-query-data-sources` in SQL mode, `WHERE url IN (…)`. **Gotcha:** the SQL `url` column is `https://app.notion.com/<id>` (no `/p/`), while relation values are `https://app.notion.com/p/<id>` — strip `/p/` before the `IN` list or the query silently returns 0 rows. Multi-database queries need a Business plan; three single-database queries do not.
+   - Roles: People → `speaker` | `host` | `attendee` (from Role Context), Companies → `subject` (host / sponsor / mentioned), Topics → `tagged_topic`. These are the graph's existing role values.
+   - People carry **professional fields only**: name · title · company · linkedin_url. Never email, phone, bio, or text from the transcript (ADR-9).
+2. **Dry-run, then write:**
+   ```
+   .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json> --dry-run
+   .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json> --expect-claims
+   ```
+   `--expect-claims` opens the gate row that 3.8c must close. Re-running is safe: a second run reports `created=0`.
+
+### Step 3.8c — The brief's learnings → first-hand claims (`substrate.py stage-claims`)
+
+Save the Step 3.7 `post_event_brief` body to a local file (the same text written to Notion), then:
+```
+.venv/bin/python .claude/scripts/substrate.py stage-claims --manifest <m.json> --brief <brief.md> \
+    --brief-ref notion:<post_event_brief page id>
+```
+- Parses **only** The Thesis · Pro-Tips · Best Practices · Pitfalls · Hot Takes · Substantive Insights · Stat Bank. No inference: the brief is already written, so this is parsing plus a local embedding (bge-small, no metered API).
+- Each claim points at this event (`claim.event_id`), carries `provenance_tier = first_hand`, `asserted_at` = the event date, confidence from the brief's HIGH/MED tags (0.8 / 0.6; 0.7 untagged), and a speaker link when the bullet names someone on this event's roster.
+- Rule-12 lines ("unsourced", "don't publish") are staged with `metadata.do_not_publish = true`, confidence ≤ 0.5, and are **never** auto-approved.
+- `--approve` (inherited approval: the brief is already Alex-reviewed) lands claims as `approved`; without it they land as `candidate`. **Default: omit `--approve`** until Alex rules on inherited approval (decision queue item 10).
+- **0 claims parsed = loud failure (exit 3)**, not a silent pass — it means the brief's headings drifted.
+- Success flips the gate row to STAGED. If there is genuinely no brief (e.g. a walk-in with no transcript), acknowledge it instead — logged, not silent:
+  `.venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> --reason "<why>"`
+
+**Prerequisite:** migration `supabase/migrations/0009_substrate_s1a_additive.sql` applied to prod (rehearsed on the twin via `supabase/scripts/rehearse_s1a.py`). Until it is, 3.8c fails with a 404 on `claim` — do not waive around it; say so in the Step 6 summary.
 
 ## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
 
