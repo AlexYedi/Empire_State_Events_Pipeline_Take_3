@@ -1,6 +1,6 @@
 # Spec — Gated post-event HubSpot step (`/post-event-content` Step 5.5)
 
-**Status:** approved (Alex, 2026-08-25) · **Linear:** YED-142 · **Written before code** (DoD item 1)
+**Status:** SHIPPED · **Linear:** YED-142 (Done) · **Pre-event HubSpot writes:** manual-only by rule — one hand-picked create, never in `/post-event-content` (ruled 2026-09-18) · **Written before code** (DoD item 1)
 
 ## Problem
 `/post-event-content` persists the Notion knowledge-graph (People/Companies/Topics, Step 3.8) but has no formal HubSpot CRM step. The founder-showcase branch references "→ CRM" informally; pre-event HubSpot writes were parked in the 2026-08-25 restore loop. We need one deliberate, safe pattern for when CRM writes happen and for whom.

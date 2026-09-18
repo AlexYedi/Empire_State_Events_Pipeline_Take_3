@@ -82,4 +82,4 @@ DoD gate: this ADR is the decision-before-code artifact for the inbox-miner buil
 **Open follow-ups carried by this ADR (not blockers on its status):**
 1. ~~**Denylist v1 review** (Alex) → unblocks the whole-inbox scan.~~ **Closed 2026-09-15** — reviewed and `v1 ACCEPTED` (PR #75); enforced in code by `inbox_boundary.py` (YED-161, PR #74). Remaining follow-up: a machine check that refuses to deny or spam-mark a Protected sender at write time (today enforced by selftest + the HITL spam-batch review).
 2. **Morning cron** stays disabled until the manual shakedown proves the classifier (Decision 4 / §Build note) — unchanged.
-3. **PRD** (ChatPRD one-pager + Notion mirror) still pending; this ADR plus `evidence/plans/scalable-dazzling-micali.md` remain the interim spec artifact.
+3. **PRD** (ChatPRD one-pager: none owed — this ADR is the spec artifact (infra = spec, YED-129 ruled 2026-09-18).md` remain the interim spec artifact.

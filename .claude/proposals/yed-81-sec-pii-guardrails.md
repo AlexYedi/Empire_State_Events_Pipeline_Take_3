@@ -1,6 +1,6 @@
 # SEC — the PII boundary contract + write-path enforcement
 
-> **Linear:** YED-81 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** approved 2026-09-13 (decisions 1–3 ratified) — in build
+> **Linear:** YED-81 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** SHIPPED (#73, ADR-9) · §8 build-time details + Phase 2 → **YED-183** (parked, 2026-09-18)
 > · **Appetite:** 3–7d · **Backfilled?** no · **Mirrors:** ChatPRD (project Empire State) · Notion Project Ideas · ADR-9 (Proposed)
 
 ## 1. Problem & why now

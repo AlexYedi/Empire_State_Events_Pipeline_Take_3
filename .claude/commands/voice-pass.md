@@ -1,5 +1,5 @@
 ---
-description: "Workflow D (SCAFFOLD — not yet wired) — runs voice-editor agent over Content Drafts in needs_review status, outputs voice deltas + before/after suggestions. Polish layer for any drafts produced by Workflow A/B/C."
+description: "Workflow D (SCAFFOLD — not yet wired; parked YED-198) — runs voice-editor agent over Content Drafts in needs_review status, outputs voice deltas + before/after suggestions. Polish layer for any drafts produced by Workflow A/B/C."
 argument-hint: "[optional: specific Content Draft ID or 'all' to process the entire needs_review queue]"
 ---
 
@@ -23,7 +23,7 @@ Run when Alex:
 - **(Optional) Specific Content Draft URL or ID** — to run on just one
 - **(Optional) Scope filter** — by Content Type (e.g., "voice-pass on all linkedin_post_pre drafts this week")
 
-## Planned agent flow (NOT YET BUILT)
+## Planned agent flow (NOT YET BUILT — YED-198)
 
 ```
 1. Query Notion Content Drafts (this conversation):
