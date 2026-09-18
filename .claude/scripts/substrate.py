@@ -351,7 +351,11 @@ class Graph:
         return self._remember("company", e["name"],
                               self.post("company", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
 
-    def ensure_topic(self, e: dict) -> str:
+    def ensure_topic(self, e: dict) -> str | None:
+        if not e.get("name"):                        # id-only topic (name not yet pulled from Notion)
+            row = self.by_pid("topic", e.get("notion_page_id"))
+            self.stats.bump("topic", "matched" if row else "skipped_no_name")
+            return row["id"] if row else None
         fields = {"name": e["name"], "description": e.get("description"),
                   "notion_page_id": (pid_variants(e.get("notion_page_id")) or [None])[-1]}
         row = self.by_pid("topic", e.get("notion_page_id")) or self.by_name("topic", e["name"])
@@ -427,7 +431,9 @@ class Graph:
                         for r in self.get(f"/event_entity?event_id=eq.{eid}&select=entity_type,entity_id,role")}
         for e in m.get("entities", []):
             t, iid = self.ensure_entity(e)
-            role = ROLE_MAP[t].get((e.get("role") or "").lower(), ROLE_MAP[t].get("subject", "subject")
+            if iid is None:                          # deferred (e.g. id-only topic); a re-run links it
+                continue
+            role =ROLE_MAP[t].get((e.get("role") or "").lower(), ROLE_MAP[t].get("subject", "subject")
                                    if t != "person" else "attendee")
             if (t, iid, role) in existing:
                 self.stats.bump("event_entity", "matched")
@@ -653,8 +659,12 @@ def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive"])
-    ap.add_argument("--manifest", required=True)
+    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
+                                     "backfill"])
+    ap.add_argument("--manifest", help="one manifest (all verbs except backfill)")
+    ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
+                                           "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
+                                           "ensure-entity code, run over a list (there is no separate backfill path)")
     ap.add_argument("--expect-claims", action="store_true",
                     help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
                          "stage-claims must close — the Stop hook fails the run otherwise")
@@ -666,9 +676,29 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
-    m = json.load(open(a.manifest, encoding="utf-8"))
     stats = Stats()
     g = Graph(a.dry_run, stats)
+    if a.verb == "backfill":
+        if not a.manifest_dir:
+            ap.error("backfill needs --manifest-dir")
+        files = sorted(f for f in os.listdir(a.manifest_dir) if f.endswith((".event.json", ".entities.json")))
+        for fn in files:
+            before = stats.created()
+            mm = json.load(open(os.path.join(a.manifest_dir, fn), encoding="utf-8"))
+            if fn.endswith(".event.json"):
+                g.ensure_event(mm)                       # no --expect-claims: backfill opens no gate rows
+            else:
+                for e in mm.get("entities", []):
+                    g.ensure_entity(e)
+            print(f"  {'dry ' if a.dry_run else ''}{fn:78s} created={stats.created() - before}")
+        print(("DRY-RUN " if a.dry_run else "") + f"backfill: {len(files)} manifests · created={stats.created()}")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": "backfill", "dry_run": a.dry_run, "created": stats.created(), "stats": stats.c}))
+        return 0
+    if not a.manifest:
+        ap.error(f"{a.verb} needs --manifest")
+    m = json.load(open(a.manifest, encoding="utf-8"))
     rc = 0
     ev = m.get("event") or {}
     gate_key = (pid_variants(ev.get("notion_page_id")) or [None])[0]
