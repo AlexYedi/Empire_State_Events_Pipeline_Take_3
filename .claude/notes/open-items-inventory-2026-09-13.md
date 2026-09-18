@@ -1,5 +1,7 @@
 # Open-items inventory — everything in flight, open, or unresolved (2026-09-13)
 
+> **SNAPSHOT — superseded by Linear as of 2026-09-18. Do not update.** Every item here was triaged in `backlog-triage-2026-09-18.md`; live state is Linear (team EMPIRE-STATE, labels `parked` / `decision`) and `platform-constraints.md`.
+
 **Purpose:** step 1 of a re-plan. A flat read-out of every parked build, roadmap item, open question, blocker, and dangling follow-up, so the totality can be reviewed before it is pulled into a coherent plan. This is an inventory, not a decision; nothing here is prioritized.
 
 **Sources swept:** `roadmap.md` v2 · Linear (Backlog / In Progress / recent Done) · `.claude/notes/*` · `.claude/proposals/*` · `docs/adr/*` · `dod-waivers.jsonl` · `correction-recurrence.md` · `WORKFLOWS.md` · references (spine, denylist, registry, obs) · the hub repo (data files, env, docs) · all 50 memory files · git branch/worktree state.
