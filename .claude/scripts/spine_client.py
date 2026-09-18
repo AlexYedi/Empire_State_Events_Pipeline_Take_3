@@ -18,7 +18,7 @@ Reads (GET) and `/rpc/` calls pass through unguarded — they write nothing.
 
 Usage from scripts:      from spine_client import req, write, q, PIIViolation
 CLI (see spine_write.py) python3 .claude/scripts/spine_write.py <table> --json '{...}'
-Self-test:               python3 .claude/scripts/spine_client.py --selftest   (21 cases)
+Self-test:               python3 .claude/scripts/spine_client.py --selftest   (27 cases)
 Repo check (AC2):        python3 .claude/scripts/spine_client.py --check-writers
 
 Conventions preserved from the six writers this replaced: (status, parsed_json) return shape;
@@ -57,12 +57,29 @@ ALLOW: dict[str, set[str]] = {
               "notion_page_id", "metadata", "created_at", "updated_at"},
     "event_entity": {"id", "event_id", "entity_type", "entity_id", "role", "created_at"},
     "documents": {"id", "title", "author", "source_type", "blob_key", "sha256", "word_count",
-                  "embedding_model", "notion_page_id", "ingested_at"},
+                  "embedding_model", "notion_page_id", "ingested_at",
+                  # ADR-10 S1a (0009): documents generalized to every artifact with a body
+                  "event_id", "external_ref", "doc_date", "version", "supersedes_id", "is_current",
+                  "produced_by", "visibility", "metadata"},
     "doc_chunks": {"id", "document_id", "chunk_index", "content", "embedding", "token_count",
                    "locator", "created_at"},
     "doc_claims": {"id", "document_sha256", "claim_key", "claim_text", "claim_type", "locator", "quote",
                    "proposed_entities", "confidence", "extractor", "extractor_model", "lane", "status",
                    "promoted_event_id", "created_at", "reviewed_at"},
+    # --- ADR-10 S1a (0009) — the Knowledge Substrate claim layer ---------------------------------
+    # claim: utility_score / use_count / last_used_at are deliberately ABSENT. ADR-10 decision 5:
+    # nothing ranks on usage until >=20 outcome rows exist, so no producer may set those columns.
+    # The rule is enforced here, in code, not left to prose. `tsv` is generated (never written).
+    "claim": {"id", "source_key", "claim_key", "claim_text", "claim_type", "quote", "locator",
+              "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
+              "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
+              "embedding_model", "metadata", "created_at", "reviewed_at"},
+    "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
+    "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
+    "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
+    "artifact_outcome": {"document_id", "goal", "target", "outcome", "outcome_value", "outcome_date",
+                         "source", "updated_at"},
+    "claim_usage": {"id", "claim_id", "document_id", "consumer", "used_at"},
 }
 # Forbidden on EVERY table, regardless of allowlist — contact PII never enters the spine.
 FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "telephone"}
@@ -259,7 +276,8 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
 # ---------------------------------------------------------------------------
 # Detection patterns for check_writers() — module-level so --selftest can pin them (judge findings 2026-09-13).
 _SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
-_WRITE_TABLES = r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims)"
+_WRITE_TABLES = (r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims|claim|"
+                 r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage)")
 _PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
 _PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
 
@@ -324,6 +342,24 @@ def selftest() -> bool:
         lambda: guard("event", {"title": "t", "kind": "market", "description": "Co-Authored-By: bot <noreply@anthropic.com>"}), False)
     add("doc_claims clean row → pass",
         lambda: guard("doc_claims", {"document_sha256": "abc", "claim_key": "k", "claim_text": "Static evals grade answers.", "status": "candidate"}), False)
+    # ADR-10 S1a — the claim layer
+    add("claim clean first-hand row (dates + stats) → pass",
+        lambda: guard("claim", {"source_key": "s", "claim_key": "k", "provenance_tier": "first_hand",
+                                "claim_text": "Plans flipped between 4 shapes, 1.0 to 173.6 s, on 2026-09-16.",
+                                "asserted_at": "2026-09-16T22:00:00Z", "confidence": 0.8,
+                                "locator": {"speaker": "Ryan Booz", "timestamp": "00:41:12"}}), False)
+    add("claim.utility_score set → refuse (ADR-10 decision 5: no ranking on usage yet)",
+        lambda: guard("claim", {"source_key": "s", "claim_key": "k", "claim_text": "x", "utility_score": 0.9}), True)
+    add("claim.quote carrying a speaker's email → refuse",
+        lambda: guard("claim", {"source_key": "s", "claim_key": "k", "claim_text": "x",
+                                "quote": "ping me at ryan@example.com"}), True)
+    add("claim_relation clean row → pass",
+        lambda: guard("claim_relation", {"from_claim_id": "a", "to_claim_id": "b", "relation": "contradicts"}), False)
+    add("documents our-artifact row (no blob) → pass",
+        lambda: guard("documents", {"title": "Brief", "source_type": "research_brief", "sha256": "h",
+                                    "external_ref": "notion:3ded3699", "version": 1, "is_current": True}), False)
+    add("prose scan catches `POST /claim`",
+        lambda: None if _PROSE_VERB_RE.search("then `POST /claim` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
     add("batch body guards every row → refuse on 2nd",
         lambda: guard_body("/person", [{"name": "ok"}, {"name": "bad", "email": "x@y.io"}]), True)
     add("rpc path passes through", lambda: guard_body("/rpc/match_doc_chunks", {"query_embedding": [0.1]}), False)
