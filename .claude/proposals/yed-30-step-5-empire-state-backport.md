@@ -1,6 +1,6 @@
 # YED-30 Step 5 — Empire State CLAUDE.md backport
 
-**Status:** DECISION FILED 2026-09-18 → **YED-174** (due 2026-10-02; recommendation: approve after PR #79 lands, execute in a fresh session)
+**Status:** APPROVED 2026-09-18 (Alex) → execute as **YED-174** in a fresh session after PR #79 merges
 **Authored:** 2026-05-20 (end of YED-30 Steps 1-4 shipping session)
 **Decision needed:** ruled in YED-174, not here
 **Reviewer:** Alex
