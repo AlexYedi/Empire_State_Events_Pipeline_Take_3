@@ -44,7 +44,7 @@
 | PostHog query API rejects project-secret `phs_` keys | API scoping | read with a `phx_` personal key scoped to project 524367 + `query:read` | 2026-07-30 |
 | Gemini judge seat false-flags convention/anti-pattern criteria without house context | cross-provider blind spot | Gemini's `convention_adherence` / `anti_pattern` votes stay advisory (`cross-provider-judge.md`) | 2026-07-17 |
 | Chrome lives at `/Applications/Tech Stack/Google Chrome.app` | non-standard install | `mdfind` it; don't assume `/Applications/Google Chrome.app` | 2026-08-12 |
-| Metered Claude: no `ANTHROPIC_API_KEY` in Empire `.env` | decision pending → YED-176 | Gemini-first for scripted LLM steps; build two-backend interfaces | 2026-09-10 |
+| Metered Claude: no `ANTHROPIC_API_KEY` in Empire `.env` | RULED 2026-09-18 (YED-176): Gemini fallback is the default | Gemini-first for scripted LLM steps behind a two-backend interface; add a Claude key only when a scripted Claude call is on the runway (YED-179 re-asks) | 2026-09-18 |
 | OTEL collector / Langfuse / deep-beta traces | "rent the platform" only on a named trigger; traces need an Anthropic allowlist | today only `output_tokens` + `peak_context_tokens` are honest (`build-session-contract.md`) | 2026-06-26 |
 
 ## Git / repo
