@@ -129,17 +129,17 @@ earlier = more time for project ideation and building.
 
 ---
 
-### Phase 5: Post-Event (Future — skill not yet built)
+### Phase 5: Post-Event (LIVE since 2026-05-21 — `/post-event-content`; this section refreshed 2026-09-18)
 
 | Step | Type | What You Do | What Happens | Timing |
 |------|------|-------------|--------------|--------|
-| 5.1 | **Manual** | Upload photos/notes/audio to post-event form (future) | — | Within 24 hrs of event |
-| 5.2 | **Manual** | Invoke post-event-content skill (future) | Recap post, follow-up DMs, documentarian content | Within 48 hrs |
-| 5.3 | **Manual** | Post recap content to LinkedIn | — | 1-3 days after event |
-| 5.4 | **Manual** | Update project with event feedback/conversations | — | Within a week |
+| 5.1 | **Manual** | Drop the recording (.m4a) + slide photos in the event folder; run `/ingest-recording` | ElevenLabs scribe_v2 diarized transcript + slide↔recording alignment | Within 24 hrs of event |
+| 5.2 | **Manual** | Run `/post-event-content <event>` | Resolves the Notion Event row → Step 3.5 transcript conditioning → Step 3.7 `post_event_brief` → content-correspondent drafts → Notion Content Drafts; gated HubSpot step (YED-142) | Within 48 hrs |
+| 5.3 | **Manual** | Review drafts via Notion comments; post to LinkedIn | comment → edit → reply loop | 1-3 days after event |
+| 5.4 | **Manual** | `/tag-outcome` once the post has performed | Outcome / Outcome Value written back | Within a week |
 
 **Trigger:** You returning from the event with raw material
-**Status:** Skill not yet built (Phase 2 roadmap)
+**Canonical spec:** `.claude/commands/post-event-content.md` (Granola auto-fetch is DISABLED — manual-upload anchored)
 
 ---
 

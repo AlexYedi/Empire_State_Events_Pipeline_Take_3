@@ -39,8 +39,34 @@ without ceremony that a solo builder doesn't need. Distilled from the Linear Met
 | Projects as PRD home; issues as build steps | Initiatives (until >3 projects connect) |
 | 2-week cycles as circuit breakers (auto-roll-forward) | Estimates / story points (use appetite bands) |
 | Triage = the open-work source of truth | Heavy label taxonomies |
-| PRD↔issue links + `blockedBy` from "Depends on" | Multi-team workflows, SLAs, custom states |
+| PRD↔issue links + `blockedBy` from "Depends on" | Multi-team *workflows*, SLAs, custom states — **two teams for two programs is fine** (Empire State + `GTM-OS`, ratified 2026-09-18; each repo sets `LINEAR_TEAM_ID` so the SessionStart pull is program-scoped) |
 | Close-out comment with decision record + PR | Ticket theater / status-only progress |
+
+## Container rule — one home per kind (ratified 2026-09-18)
+
+Why this exists: the 2026-09-13 inventory found ~170 open/parked/undecided items across eleven
+containers, and ten places where two artifacts disagreed about the same thing. Only "open work"
+(Linear) and "sequencing" (`roadmap.md`) had a defined home; every other kind landed wherever it was
+discovered. This table assigns the rest. Full record: `.claude/notes/open-items-inventory-2026-09-13.md`.
+
+| Kind | Home | Shape |
+|---|---|---|
+| Open work | Linear issue in a project; milestone only if on the roadmap runway | `roadmap.md` references IDs only and never carries Done items |
+| Parked idea **with** a revisit trigger | Linear Backlog, label `parked`, first body line `Revisit trigger: …` | trigger fires → move to Todo |
+| Parked idea **without** a trigger | Notion Project Ideas DB (`collection://0956e6ed-8555-4d8f-8856-388966dedaab`) | not in Linear |
+| Decision needed | Linear **Todo**, label `decision`, assigned to Alex, **due-dated**; body = options + recommendation | outcome → `roadmap.md` §9 (or an ADR if architectural); close Done |
+| Environmental constraint (platform, SDK, MCP, env) | `.claude/references/platform-constraints.md` (extends `sdk-runtime-constraints.md`) | symptom · cause · workaround; memory files hold one-line pointers |
+| Work dependency | Linear `blockedBy` relation | never a list in a doc |
+| Debt | Linear Backlog issue if it will ever be paid; otherwise delete the text | no third "tombstone" state |
+| Hub repo state (`build-arcs.json` futures, journal gaps) | Linear, project Empire State Hub | hub data files describe the present, never the future |
+
+**The load-bearing rule:** a parked / deferred / decision thought is filed to its home **in the same turn**
+it is written anywhere else, and the file carries the Linear ID or Notion link. The weekly
+`/rigor-review` grep (`awaiting decision|revisit (after|when)|deferred|parked` outside lines carrying
+`YED-`/`GTM-`/a Notion link) is the audit; this sentence is the fix.
+
+**Labels under this rule:** `parked`, `decision` added; the unused Devin-playbook group and
+`project-eval-harness` retired (a project is a project). Total stays ≤5 live labels + `cycle-<n>`.
 
 ## Sources
 Linear Method (linear.app/method) · Linear conceptual model (linear.app/docs) · "How Linear builds
