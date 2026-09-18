@@ -372,3 +372,14 @@ matters more than Increment 3's automation.
 
 **Increment 2 remains gated** on Alex seeing a finding fire usefully in a session he did not
 instrument. This amendment is not that; it is the judge working, which is a different control.
+
+---
+
+## Amendment 3 — "Increment 2" named two things; the skills/agents graph is Increment 4 (2026-09-18)
+
+**What drifted.** §Increments defines **Increment 2** as *neighborhood-as-judge-context* (evidence parity by construction, `context_nodes[]`) and **Increment 3** as the findings ledger. Linear **YED-163** and roadmap v2 Phase 3 were titled "ADR-8 Increment 2" but describe a different build: **invocation edges from telemetry** (which skill / agent / command produced which artifact) and **outcome nodes** (judge score, DoD result, `/tag-outcome`). That scope is not in §Increments. Surfaced by the 2026-09-13 backlog inventory.
+
+**Ruling.** The ADR is the spec; a Linear title cannot re-scope it. The skills ↔ agents ↔ commands ↔ outcomes graph is **Increment 4**, appended below. Increments 2 and 3 keep their definitions, order, and gates. YED-163 is to be retitled "ADR-8 Increment 4 — …" (Linear-side, reconciliation session).
+
+**Increment 4 — the skills/agents/outcomes graph (learning needs outcomes on the graph).**
+*Friction removed:* the exhaust loop (YED-162) cannot answer "what did the last fix change" because the graph has artifacts and references but no *invocations* and no *outcomes*. *Build:* invocation edges (`invoked_by` skill/agent/command → artifact) derived from the build-session telemetry shards; outcome nodes (`judge_run` already exists; add `dod_result` from `build_meta`, `outcome` from `/tag-outcome`) linked to the artifact they grade; `build_graph.py --stats` reports both edge counts; one check, `stale-skill` (a skill with ≥N invocations and a falling judge score). Same constraints as every increment: derived cache, never hand-edited, advisory, ≤5 findings per surface, a check below 50% precision shrinks. *Gate:* not before Increment 2's proof line has been observed (the "N+1 waits on N" rule stands) — Increment 4 does not depend on Increment 3's ledger and may be built before it if the exhaust loop is the named friction. *Proof it worked:* after one merged loop-produced fix, `--check stale-skill` names the skill the fix touched and its score trend; rebuild stays <1s.

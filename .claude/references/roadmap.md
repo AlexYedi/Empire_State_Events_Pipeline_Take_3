@@ -49,9 +49,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 ### Phase 0 — Gates & cleanup (→ ~Sep 19)
 | Item | Appetite | Why first |
 |---|---|---|
-| **YED-81 SEC & PII** — re-raised to High; scoped as a *guardrail contract + write-path enforcement*, not a security program | 3–7d | Gates post-event ingestion, whole-inbox scan, and anything unattended. Scoped small it's a week; unscoped it's a quarter. |
-| Denylist v1 review → **enforced in `/scan-inbox` code** (YED-161) | <3d | v1 was "convention, not mechanism" — a rule that cannot enforce itself |
-| Linear reconciled to this plan (§7) | <1d | The plan can't be true while zombie programs compete with it |
+| Linear reconciled to this plan (§7) — now the **backlog reconciliation** (`.claude/notes/open-items-inventory-2026-09-13.md`, container rule in `linear-convention.md`) | <1wk | The plan can't be true while zombie programs compete with it; YED-81 + YED-161 shipped (#73/#74/#75) and dropped to §10 |
 | OBS live GUI pass + first real smoke test (YED-154 follow-through) | <1d | "Done" on paper only |
 
 ### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
@@ -98,7 +96,7 @@ when voice-radar next moves).
 - **Canceled:** YED-67 + 68/69/70/71/72/73 (NY Tech Week single-vs-swarm harness — superseded by the cross-provider judge) · YED-41/42/46/57 (Full-Stack-GTM relics) · YED-55/56/59 (Capstone 2 — absorbed conceptually by the MI Engine; the CRM write already exists in YED-142; re-issue as an MI lens when a real outreach friction motivates it) · YED-107 (folded into YED-157 lane D).
 - **Programs closed:** "Full-Stack GTM Roadmap (24-week half)" and "GTM-oS" — milestones at 0%, live ideas already inside the MI Engine + Job-Search Engine. Keeping two programs was the source-of-truth failure at the planning layer.
 - **Re-homed:** YED-47, YED-128, YED-131 → MI Engine · YED-65 → Job-Search Engine · YED-114 → Empire State Hub · YED-129 → Build-Rigor · YED-141 → Empire State Events.
-- **Parked (unchanged):** Orchid re-tone (YED-125 — gtm-OS Hub is GTM-owned by design, ADR-2) · visual-selection marker · Clarify stays dead. *GTM University (YED-98/100/101) un-parked 2026-09-13 → §9.*
+- **Parked:** this file no longer lists parked items. They live in Linear under label `parked` (with a revisit trigger) or in Notion Project Ideas (without one) — `linear-convention.md` §Container rule, 2026-09-18. Clarify stays dead (a ruling, not a park). *GTM University (YED-98/100/101) un-parked 2026-09-13 → §9; gtm-OS items now live in the `GTM-OS` team.*
 - **Corrected to git truth:** YED-155 → Done (shipped in #60) · YED-66 → Done (the manual-upload path *is* `/post-event-content`) · YED-81 → High.
 
 ## 8. Pre-mortem (the adversarial pass)
@@ -125,6 +123,7 @@ when voice-radar next moves).
 
 ## 10. Shipped log (condensed; full history in git + the hub `/journal`)
 
+- **2026-09-13 → 09-18** — YED-81 SEC & PII guardrail contract + `spine_client.py` write path (ADR-9, #73) · YED-161 inbox boundary mechanism (#74) + denylist v1 accepted (#75) · YED-166 slide↔recording alignment (#77) · YED-167 Postgres glossary + health review (#78) · ADR-10 Knowledge Substrate stub minted.
 - **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · OBS capture lane (YED-154) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
 - **2026-09-04 → 09-11** — Job-Search Engine v1 (YED-146/147/148/150): me-model ICP, `target-companies.md`, role-radar rubric v2.4, Notion Roles DB; content-quality decision backlog cleared.
 - **2026-08** — MI consolidation (YED-130) · topic-intelligence layer (YED-110/120/122) · progressive engine (YED-115/117/121) · Deep Read brief v2 (YED-136) · build journal (YED-119).

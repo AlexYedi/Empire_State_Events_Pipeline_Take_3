@@ -234,12 +234,15 @@ Ran the post-event pipeline end-to-end, live, as a deliberate full-system test o
 ### Findings (the point of the test)
 
 1. **Mode A is unusable for walk-up / pasted-transcript events.** `/post-event-content` is hard-wired to Granola; with a pasted transcript the only path was invoking content-correspondent directly in Mode B. **TODO:** thin `/post-event-content-manual` wrapper, or a `--paste` branch on the existing command, so Mode B has a front door instead of riding the skill bare.
+   → **SUPERSEDED 2026-09-18:** `/post-event-content` is manual-upload anchored since 2026-05-27 (Granola disabled); the pasted transcript IS the front door. No wrapper needed.
 
 2. **Transcript conditioning is real work that wasn't a formal stage.** Speaker resolution + entity normalization + a confidence-scored quote bank materially de-risked the quotes (raw ASR mangled Vercel→"Purcell", Salehi→"vahan", MCP→"FCP", agentic→"genetic"; diarized "Speaker N" labels smeared identity). Codified as a v1 skill stub: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md`. NOT yet wired as an automatic upstream step. Distinct from `transcript-analysis` (that's N≥10 sales-call mining; this is single-event content conditioning).
+   → **RESOLVED 2026-09-18:** wired as `/post-event-content` Step 3.5 (`transcript-conditioning`).
 
 3. **New Notion gotcha (now logged as CLAUDE.md update-page gotcha "l").** `notion-update-page` `update_content` `old_str` must match the STORED markdown — Notion normalizes `_italics_` → `*italics*` on write, so a match against the authored underscore form failed with "No matches found." Fetch-then-match, or author the match with asterisks. (Hit live wiring the Gamma carousel URLs into the two post drafts.)
 
 4. **Gamma:** `numCards` is silently ignored when `cardSplit: "inputTextBreaks"` — card count = number of `---` delimiters. Control count with delimiters, not `numCards`. Minor note worth adding to `visual-briefs.md`.
+   → **MOOT 2026-09-18:** Gamma removed 2026-08-07 (CLAUDE.md rule 13); nothing to add.
 
 5. **Source-flag (Rule 12) carried correctly.** Speaker lines treated as primary (transcript); the "847 deployments / 76% failed / 94% named owner" stat on the carousels came from the brief's cited sources — flagged to Alex to spot-check that citation before either post goes public. No firm/person *thesis* claim asserted unsourced.
 

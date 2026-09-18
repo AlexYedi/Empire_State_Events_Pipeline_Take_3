@@ -45,8 +45,10 @@ Plan of record: `.claude/references/roadmap.md` (the former `~/.claude/plans/whe
 
 ## Relevance lifecycle (decay + reinforcement)
 Every entity carries `relevance_score`, `last_engaged_at`, `engagement_count`. **Stored now, computed
-later** — the weekly recompute (decay by recency, reinforce by re-engagement + upcoming-event proximity)
-is a deferred producer. Do not build the recompute until a named friction calls for it.
+later** — the recompute (decay by recency, reinforce by re-engagement + upcoming-event proximity) is
+**YED-131, the v1 nightly recompute** (pg_cron, no LLM tokens; named friction = the P2 hub panels, YED-114).
+Ruled 2026-09-18 (roadmap wins over the earlier "do not build" line here). v2 extensions — `outcome_boost`,
+`coverage_penalty`, utility decay — stay deferred until ≥20 `artifact_outcome` rows exist (substrate decision 4).
 
 ## Dedup-before-create (mirror of Notion rules #10/#11)
 `company` and `topic` have a `lower(name)` unique index — upsert on lower(name). For `person`, search by
