@@ -57,10 +57,12 @@ If Alex has the audio recording (`.m4a`/`.mp3`/`.wav`):
 2. **Run the locked recipe** (`.claude/scripts/ingest_recording.py` — scribe_v2 + keyterms + word timestamps; see `/ingest-recording`):
    ```bash
    set -a; source ./.env; set +a
-   uv run --with elevenlabs python .claude/scripts/ingest_recording.py \
-     --audio "<recording>" --keyterms-file "<roster keyterms>" --expand-names [--num-speakers N]
+   uv run --with elevenlabs --with pillow python .claude/scripts/ingest_recording.py \
+     --audio "<recording>" --keyterms-file "<roster keyterms>" --expand-names [--num-speakers N] \
+     [--slides-dir "<event folder>"]   # include whenever the event folder has slide photos
    ```
-3. Outputs (next to the audio): `… — Transcript (ElevenLabs).md` (the transcript) · `… .json` (word-level timestamps + confidence) · `… — REVIEW (low-confidence spots).md` (the quote-safety list → **carried into Step 3.5**).
+3. Outputs (next to the audio): `… — Transcript (ElevenLabs).md` (the transcript) · `… .json` (word-level timestamps + confidence) · `… — REVIEW (low-confidence spots).md` (the quote-safety list → **carried into Step 3.5**) · `slide-recording-alignment.md/.json` (slide photo → recording offset + ±45 s context → **carried into Step 3.7's Slides Catalog**).
+   - **Confirm pass (YED-166):** view each aligned photo next to its context and mark matched/mismatched. Any mismatch → re-run `align_slides.py` alone with `--recording-start` (free, no re-transcription). Full rules: `/ingest-recording` step 5.
 4. **Persist** the EL transcript to `event-transcripts/YYYY-MM-DD_<Event>.md`. This is now the verbatim quote source.
 
 ### 2B — Manual paste (FALLBACK — recorder-app / other transcript)
@@ -157,7 +159,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 - Conditioned quote bank + speaker resolution table + entity glossary (from Step 3.5)
 - The pre-event `research_brief` linked to this Event (for pre→post comparison)
 - Notion roster (People + Companies + Topics relations from the Event row)
-- Slides/photos uploaded by Alex (catalog them, don't re-OCR)
+- Slides/photos uploaded by Alex (catalog them, don't re-OCR). When `slide-recording-alignment.json` exists, the Slides Catalog is **time-aligned**: one row per slide with recording offset · capture time · slide title · confirm-pass result, and quotes/stats cite the slide they were spoken over. Unaligned photos keep a row with no offset.
 - Alex's own freeform recap / observations if provided
 
 **Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
@@ -182,7 +184,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 17. **Open Loops & Verification Flags** — follow-ups to close (touch-1 sends, comment/synthesis windows) + what cannot be asserted publicly without independent source (Rule 12 items)
 18. **Enrichment Resolutions** — what the Step 3.6 pass resolved/corrected (net-new speakers identified, concepts confirmed, errors fixed — e.g. the ABB "Kilian = Meta not Amazon" catch), each with a source
 
-**Operational sub-sections (pipeline plumbing — keep these alongside the 18):** **Slides Catalog** (one line per slide) · **People & Outreach State** (person · role · bucket A/B/C/D · spoke? · next action) · **Content Assets Produced** (links to comment/posts/visual — fill after Step 5) · **Conditioning Notes** (speaker resolution + entity glossary + ⚠️ excluded-garble + conditioning confidence score).
+**Operational sub-sections (pipeline plumbing — keep these alongside the 18):** **Slides Catalog** (one line per slide; time-aligned with recording offsets when Step 2A ran with `--slides-dir`) · **People & Outreach State** (person · role · bucket A/B/C/D · spoke? · next action) · **Content Assets Produced** (links to comment/posts/visual — fill after Step 5) · **Conditioning Notes** (speaker resolution + entity glossary + ⚠️ excluded-garble + conditioning confidence score).
 
 **Notion properties:**
 - `Title`: `Post-Event Brief — [Event Name] ([Event Date short])`
