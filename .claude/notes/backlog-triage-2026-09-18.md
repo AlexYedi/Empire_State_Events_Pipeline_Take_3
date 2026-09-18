@@ -224,7 +224,7 @@
 | 10.9 | Signal Stream / Confluent stretch | KILL | evidence plan only |
 
 ## Rulings (2026-09-18, Alex)
-YED-129 infra = spec (3 PRD mirrors closed) · YED-173 killed · YED-174 approved → work item · YED-176 Gemini default. Remaining decisions: YED-128, YED-34, YED-175 (due 2026-10-09).
+YED-129 infra = spec (3 PRD mirrors closed) · YED-173 killed · YED-174 approved → work item · YED-176 Gemini default. Oct-9 set ruled the same day: YED-128 folded into YED-168 (Duplicate) · YED-175 dropped · YED-34 re-scoped to audit-and-place (the delete recommendation was withdrawn after inspection — 108 agents + 102 commands of real content). **All nine decisions closed 2026-09-18.**
 
 ## Drain record (2026-09-18)
 Applied: decisions YED-128/129/34 (converted) + YED-173–176 (new) · new issues YED-177–197 + the Batch-10 parked issue · keep-edits on YED-104/141/65/145/152/151/149/113/76/82/48/162 · merge comments on YED-171/157/114/47/126/81 · `platform-constraints.md` created · 9 proposal headers · deletions (HANDOFF_V2, MOVED.md, YED-96 note, future-state-register, trigger-log, PROJECT_BRIEF open sections) · roadmap / CLAUDE.md / ADR-8 / charter / rigor-review / check-new-events / frictions / allowlist edits · memory pointers · hub build-arcs futures → pointers + `/changelog` nav link (hub PR).
