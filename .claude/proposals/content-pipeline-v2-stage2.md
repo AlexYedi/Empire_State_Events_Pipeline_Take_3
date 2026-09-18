@@ -1,8 +1,8 @@
 # Content Pipeline v2 — Stage 2 Proposal
 
-**Status:** Awaiting decision — review at next session start
+**Status:** DECISION FILED 2026-09-18 → **YED-173** (due 2026-10-02; recommendation: kill as a unit — parts absorbed by YED-168 substrate, YED-48/judge, and the deferred YED-23 goal flip)
 **Authored:** 2026-05-12 (end of Empire State week #1 with 4 events shipped)
-**Decision needed:** build all / build subset / kick the can
+**Decision needed:** ruled in YED-173, not here
 **Reviewer:** Alex
 
 ---

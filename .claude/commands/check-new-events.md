@@ -77,6 +77,8 @@ For each parsed event, query the Notion Events DB to check whether a row already
 - Compare by event title + start date (both must match)
 - If a match exists: classify as DUPE (skip — do not re-process)
 
+**Invite changed after research ran (ruled 2026-09-18):** if the Notion Event already exists but the invite's speaker list or venue differs from the stored row → re-run `/event-deep-research` in REFRESH-light for the changed entities only; a time-only change updates the date silently; anything else is a no-op. (Closes the 2026-05-20 open design decision in `execution-week-frictions.md`.)
+
 **Failure mode:** if Notion search fails, fail open — proceed to Step 5 and let `/event-deep-research`'s own Step 1.5 dedup logic catch the duplicate (slightly more work, but no data risk).
 
 ## Step 5 — Present detection summary to Alex

@@ -208,7 +208,7 @@ Turns post-event raw material into structured intel + content drafts.
 2. **Event name** (so the original brief can be pulled from Notion)
 3. **(Optional) Contact list** — names Alex met that should get DMs
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Pull research brief from Notion (main conversation)
@@ -248,7 +248,7 @@ Sunday-cadence synthesis across the week's events, content, and outreach.
 - **None** — all inputs come from Notion queries
 - **(Optional) Date range override** — for backfilling
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Query Notion: Events in upcoming 7 days + Content Drafts from past 7 days (status ≠ archived)
@@ -289,7 +289,7 @@ Polish layer over Content Drafts in `needs_review` status.
 - **None** — defaults to scanning all `needs_review` drafts
 - **(Optional) Specific Content Draft URL** or scope filter (by Content Type / date range)
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Query Notion: Content Drafts where Status = needs_review (+ optional filters)
@@ -399,7 +399,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 
 ---
 
-## What's NOT here (intentionally — Tier 2 deferred)
+## What's NOT here (intentionally — Tier 2 deferred) — RECORD: bring in when a use case warrants; no issue (2026-09-18)
 
 Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 - `positioning-messaging`, `launch-marketing`, `media-relations` (GTM Marketing)
@@ -410,9 +410,9 @@ Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 
 Bring in later when use cases warrant.
 
-## What's NOT here (intentionally — automation deferred)
+## What's NOT here (intentionally — automation deferred) — parked as YED-198 (2026-09-18)
 
-Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until commands are working. Future automation candidates:
+Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until commands are working (parked → YED-198, 2026-09-18). Future automation candidates:
 - SessionStart hook → check Events with status=intake, surface count to Alex
 - Stop hook on content-creating skills → auto-run /voice-pass on the just-created draft
 - UserPromptSubmit hook matching "just got back from" → suggest /post-event-synthesis

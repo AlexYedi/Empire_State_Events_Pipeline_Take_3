@@ -29,4 +29,4 @@ Steering-interview v2 **works in a fresh session**: both touches auto-fire at th
 
 ## Known non-blockers (not steering-related)
 - Deep Read (prose layer) left `pending` — decoupled/non-blocking; skipped to keep the run on the validation spine.
-- HubSpot writes deferred (standing rule — CRM is a follow-up).
+- HubSpot writes deferred (standing rule — CRM is a follow-up; the gated step is YED-142).

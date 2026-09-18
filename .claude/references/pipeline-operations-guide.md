@@ -220,5 +220,5 @@ is the second priority.
 | Project Ideation | "invoke project ideation skill for [event]" | Research brief in Notion |
 | Update Voice & Style | "invoke update voice and style" + feedback | Observed content issues |
 | Update Anti-Patterns | "invoke update anti-patterns" + items | Observed pattern issues |
-| Post-Event Content | *Not yet built* | Event attended, raw materials |
-| Project Complete | *Not yet built* | Project shipped |
+| Post-Event Content | ✅ Live (`/post-event-content`) | Event attended, raw materials |
+| Project Complete | Parked → YED-198 | Project shipped |
