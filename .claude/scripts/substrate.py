@@ -784,7 +784,7 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
-                                     "backfill", "preview-claims"])
+                                     "backfill", "preview-claims", "approve-claims"])
     ap.add_argument("--manifest", help="one manifest (all verbs except backfill)")
     ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
                                            "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
@@ -862,6 +862,19 @@ def main(argv: list[str]) -> int:
                                        "role": e.get("role", "about")},
                    prefer="resolution=ignore-duplicates,return=minimal",
                    on_conflict="document_id,entity_type,entity_id,role")
+    elif a.verb == "approve-claims":
+        # Inherited approval (Alex, 2026-09-18): claims parsed from a brief he has reviewed are approved.
+        # do_not_publish claims are NEVER approved by this path.
+        skey = source_key_for_event(ev["notion_page_id"])
+        rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate&select=id,metadata")
+        ids = [r["id"] for r in rows if not (r.get("metadata") or {}).get("do_not_publish")]
+        held = len(rows) - len(ids)
+        for i in range(0, len(ids), 50):
+            g.patch("claim", f"id=in.({','.join(ids[i:i + 50])})",
+                    {"status": "approved", "reviewed_at": __import__("datetime").datetime.now(
+                        __import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
+        stats.bump("claim", "approved", len(ids))
+        stats.bump("claim", "held_do_not_publish", held)
     elif a.verb == "stage-claims":
         if not a.brief:
             ap.error("stage-claims needs --brief")
