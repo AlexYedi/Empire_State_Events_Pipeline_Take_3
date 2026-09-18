@@ -175,8 +175,15 @@ def main():
     ap.add_argument("--prepare-twin", action="store_true",
                     help="apply doc-KB prerequisites (doc-kb-schema, a5, b1) to the twin if missing")
     ap.add_argument("--leave-applied", action="store_true")
+    ap.add_argument("--reset-first", action="store_true",
+                    help="run staging/s1a_rollback.sql before snapshot A (after an interrupted rehearsal); "
+                         "idempotent — every statement is 'if exists'")
     a = ap.parse_args()
     refuse_prod()
+    if a.reset_first:
+        print("[-] reset: rolling back any partial S1a/S2 state first")
+        if not run_file(ROLLBACK, "s1a_rollback.sql (reset)")[0]:
+            sys.exit("reset failed")
 
     print(f"TARGET twin: {TWIN_HOST}")
     print("\n[0] preflight")

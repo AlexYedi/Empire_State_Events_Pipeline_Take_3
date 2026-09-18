@@ -164,11 +164,13 @@ begin
   values (probe_doc2, 'company', gen_random_uuid(), 'about');
   n := n + 1;
 
-  insert into public.artifact_outcome (document_id, goal, outcome) values (probe_doc2, 'engagement', 'pending')
-  returning updated_at into ts1;
-  perform pg_sleep(0.01);
+  -- now() is constant inside one transaction (this DO block), so "updated_at later than before" can
+  -- never be observed here. Instead: plant an ancient updated_at, update, and require it was replaced.
+  insert into public.artifact_outcome (document_id, goal, outcome, updated_at)
+  values (probe_doc2, 'engagement', 'pending', '2000-01-01T00:00:00Z');
   update public.artifact_outcome set outcome = 'hit' where document_id = probe_doc2;
-  select count(*) into c from public.artifact_outcome where document_id = probe_doc2 and updated_at > ts1;
+  select count(*) into c from public.artifact_outcome
+   where document_id = probe_doc2 and updated_at > '2000-01-01T00:00:00Z'::timestamptz;
   if c <> 1 then raise exception 'FAIL: updated_at trigger did not fire'; end if;
   n := n + 1;
 
