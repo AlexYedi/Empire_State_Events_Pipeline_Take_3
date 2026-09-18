@@ -64,6 +64,8 @@ Friction lands at the moment of acceptance (when intent is high) rather than at 
 - **Total: ~half-day**
 
 ### Open design decisions
+
+→ **RESOLVED 2026-09-18:** invite-metadata-change rule written into `check-new-events.md` Step 4; the format/auto-run/chain defaults held for 4 months and are treated as ratified.
 - **Auto-run `/event-deep-research` or stage in `intake` status for manual trigger?** Auto = less friction but loses the "approve to research" gate. Stage = preserves gate but reintroduces a manual step. Default recommendation: auto, since the PIPELINE block presence IS the approval signal.
 - **Chain `pre-event-content` in the same routine or wait for separate trigger?** Chaining = content drafts ready Day 1 after acceptance. Separate = lets brief settle before content gets written against it. Default recommendation: chain — that's the whole point of the design.
 - **PIPELINE block format — markdown, YAML, JSON?** Markdown headers feel most natural for a calendar invite description. YAML is more parser-friendly but uglier in GCal UI. Recommendation: markdown with regex extraction (defensible against minor formatting drift).
@@ -119,7 +121,7 @@ Decision: build Option B (full chain) immediately, breaking the 21-day execution
 - `/event-deep-research` ran the full chain (entity confirm → triage approval → 4-agent parallel fan-out → synthesizer brief → 5 Notion DB writes)
 - `pre-event-content` produced LinkedIn post + 4-slide visual carousel + 5 A/B connection notes (1 B-variant skipped per fallback rule for thin adjacent-work signal) + 11 prepared questions
 
-**Deferred to fresh session:**
+**Deferred to fresh session (historical — all since resolved):**
 - HubSpot writes for Ray Dev Day (mechanical CRM creates, not validation-critical)
 - Notion writes for 7 pre-event-content drafts pages (content generated in-conversation, batch-write via notion-writer pending)
 - Full chain on AI Demo Night + 3 other 5/26-5/28 PIPELINE-block events Alex added today (Scaling Enterprise AI Agents, Evolution of Commerce, Building Agentic Marketing)
@@ -217,6 +219,8 @@ The rule that was set 2026-05-15 was "resist architecture work that delays publi
 
 ### Open questions for end-of-window review
 
+→ **CLOSED 2026-09-18 (KILL):** window ended 2026-06-11; the one live thread — a real publish-rate number — is now the post-performance backfill (`a2de692`, 2026-09-14). Instrument LinkedIn reality, not the Notion status field.
+
 - Did Granola's AI summary produce content Alex's voice survived (vs. summary-flattened mush)?
 - Did the dual-path resolution actually catch a title-match edge case in practice, or was the GCal ID always present?
 - Did `notion-writer` need any schema gotcha fixes for the new property? (Should be plain text — easiest possible property type.)
@@ -249,6 +253,8 @@ Ran the post-event pipeline end-to-end, live, as a deliberate full-system test o
 6. **Positive signal:** notion-writer generalized cleanly from its event-research design to standalone Content-Draft creation + relation resolution, despite its SKILL reference being event-research-centric. The agent set is more reusable than its docs imply.
 
 ### Decisions deferred to Alex
+
+→ **CLOSED 2026-09-18 (KILL):** stale content decisions (Path A/B post, Gamma carousels — Gamma removed 2026-08-07).
 - Pick a post to ship (or stagger A and B across the week — they don't compete; A is contrarian, B is data-backed).
 - Refine carousels in the Gamma editor (no MCP edit), export PDF for the LinkedIn document post.
 - Wire-ups (TODO 1 + finding-2 upstream wiring + finding-4 visual-briefs note) batched here, not actioned, pending green-light. Note: skill/command/agent changes are session-frozen — any wire-up needs a FRESH conversation to validate.

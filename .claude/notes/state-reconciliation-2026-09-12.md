@@ -79,6 +79,9 @@ is a convention, not a mechanism.
 
 ## 7. What the diagnostic should return
 
+> **2026-09-18:** whether to run this diagnostic at all is **YED-175** (decision, due 2026-10-09; recommendation: drop — the backlog reconciliation is the intervention).
+
+
 1. Bound the system; stocks/flows; the reinforcing/balancing loops actually at work.
 2. Archetype identification **with explicit rule-outs** (per house discipline: name what was considered
    and rejected, with evidence).

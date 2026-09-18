@@ -208,3 +208,20 @@
 | KEEP (already an issue, minor body edit) | 14 |
 
 **The nine `decision` issues are the whole judgment load.** Everything else is confirm-by-skim. Recommended due dates: 2026-10-02 for the four that gate other items (1.11 ChatPRD role, 3.1 pipeline-v2, 3.9 YED-30, 7.14 metered key), 2026-10-09 for the rest.
+
+## Batch 10 — inventory "Parked" items the table missed (added in the drain, 2026-09-18)
+
+| # | Item | Verb | Target / reason |
+|---|---|---|---|
+| 10.1 | Scaffolded commands `/post-event-synthesis`, `/weekly-recap`, `/voice-pass` | FILE (parked) | one issue, trigger `a weekly-recap or voice-pass friction named in a rigor-review` |
+| 10.2 | Deferred hooks + scheduled tasks (WORKFLOWS.md) | MERGE | → 10.1 |
+| 10.3 | `project-complete` companion skill / portfolio-tracker | MERGE | → 10.1 |
+| 10.4 | Tier-2 skill imports | RECORD | "bring in when a use case warrants" — WORKFLOWS.md already says so |
+| 10.5 | Warm-outreach variant + custom messaging skill | MERGE | → YED-65 (parked; same trigger) |
+| 10.6 | Notion `Select → Status` migration | KILL | lived only in PROJECT_BRIEF (section deleted) |
+| 10.7 | Phase 3 intake form (Vercel/Lovable) | RECORD | CLAUDE.md Phase 3 "when volume demands it" — no issue until it does |
+| 10.8 | Backfill `Google Calendar Event ID` on pre-May Notion rows | KILL | dual-path title+date resolution covers it |
+| 10.9 | Signal Stream / Confluent stretch | KILL | evidence plan only |
+
+## Drain record (2026-09-18)
+Applied: decisions YED-128/129/34 (converted) + YED-173–176 (new) · new issues YED-177–197 + the Batch-10 parked issue · keep-edits on YED-104/141/65/145/152/151/149/113/76/82/48/162 · merge comments on YED-171/157/114/47/126/81 · `platform-constraints.md` created · 9 proposal headers · deletions (HANDOFF_V2, MOVED.md, YED-96 note, future-state-register, trigger-log, PROJECT_BRIEF open sections) · roadmap / CLAUDE.md / ADR-8 / charter / rigor-review / check-new-events / frictions / allowlist edits · memory pointers · hub build-arcs futures → pointers + `/changelog` nav link (hub PR).

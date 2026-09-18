@@ -1,8 +1,8 @@
 # YED-30 Step 5 — Empire State CLAUDE.md backport
 
-**Status:** Ready to execute — pick up in fresh session
+**Status:** DECISION FILED 2026-09-18 → **YED-174** (due 2026-10-02; recommendation: approve after PR #79 lands, execute in a fresh session)
 **Authored:** 2026-05-20 (end of YED-30 Steps 1-4 shipping session)
-**Decision needed:** approve refactor plan, then execute
+**Decision needed:** ruled in YED-174, not here
 **Reviewer:** Alex
 **Linear:** [YED-30](https://linear.app/yedibalian/issue/YED-30/layer-c-canonical-claudemd-fragment-new-project-starter-kit-build) (In Progress)
 

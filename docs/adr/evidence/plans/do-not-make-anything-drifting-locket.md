@@ -77,3 +77,6 @@ Spot-check known anchors: NeueHouse Madison event post (5/12), GTM single-vs-mul
 YED-67 theme), The Shortlist Founder Showcase carousel (8/25). Confirm dedupe kept 50 distinct
 posts. Confirm the match report's confident matches align with those known events, and that the
 manual-confirm tail is small.
+
+---
+**Status (recorded 2026-09-18):** SHIPPED — post-performance graded outcome backfill, 40 published posts, commit `a2de692` (2026-09-14). `.claude/artifacts/post-performance/` holds the matched dataset.

@@ -256,7 +256,8 @@ false claims is worth less than one that shows them.
   (`~/.claude/hooks/<your-hook>.sh` — the angle brackets were already an intentional skip rule, and
   the doc is clearer for admitting it is a placeholder).
 - Open questions from the drafting note are unchanged: multi-spec `spec_for` precedence; whether
-  `tracked` acks auto-expire on Linear Done (HITL for now); Hub projection (deferred).
+  `tracked` acks auto-expire on Linear Done (HITL for now); Hub projection (deferred). **Resolve them at
+  Increment 3 build time** (they only bite once the ledger exists) — recorded 2026-09-18; Increment 2 = YED-185, Increment 4 = YED-163.
 
 ---
 
