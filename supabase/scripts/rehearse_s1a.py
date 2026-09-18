@@ -45,6 +45,9 @@ TWIN_CONN = (f"host={TWIN_HOST} port={os.environ.get('TWIN_DB_PORT', '5432')} "
              "sslmode=require connect_timeout=30")
 
 MIGRATION = os.path.join(SUPA, "migrations", "0009_substrate_s1a_additive.sql")
+MIGRATION_S2 = os.path.join(SUPA, "migrations", "0010_substrate_s2_retrieval.sql")
+S2_SMOKE = ("select jsonb_typeof(public.entity_neighborhood(array[(select id from public.company limit 1)])) "
+            "= 'object' as neighborhood_ok;")
 VERIFY    = os.path.join(SUPA, "staging", "s1a_verify.sql")
 ROLLBACK  = os.path.join(SUPA, "staging", "s1a_rollback.sql")
 PREREQS   = [os.path.join(REPO, ".claude", "references", f)
@@ -72,6 +75,8 @@ select 'triggers', md5(coalesce(string_agg(tgrelid::regclass::text||'.'||tgname,
          order by tgrelid::regclass::text, tgname), ''))
   from pg_trigger where not tgisinternal
    and tgrelid in (select oid from pg_class where relnamespace='public'::regnamespace);
+select 'functions', md5(coalesce(string_agg(p.oid::regprocedure::text, '|' order by p.oid::regprocedure::text), ''))
+  from pg_proc p where p.pronamespace = 'public'::regnamespace;
 select 'tables', string_agg(table_name, ',' order by table_name)
   from information_schema.tables where table_schema='public' and table_type='BASE TABLE';
 """ + "\n".join(f"select 'count.{t}', count(*)::text from public.{t};" for t in COUNT_TABLES) + """
@@ -239,7 +244,17 @@ def main():
     if not verify()[0]:
         sys.exit("GATE FAIL at step 5 — re-apply did not restore a passing state")
 
-    print("\n[6] rollback")
+    print("\n[5b] apply 0010 (S2 retrieval RPCs) + smoke")
+    if not run_file(MIGRATION_S2, "0010_substrate_s2_retrieval.sql")[0]:
+        sys.exit("GATE FAIL at step 5b — S2 did not apply")
+    if not run_file(MIGRATION_S2, "0010 second paste")[0]:
+        sys.exit("GATE FAIL at step 5b — S2 is not re-runnable")
+    smoke = psql(["-tA", "-c", S2_SMOKE]).stdout.strip()
+    if smoke != "t":
+        sys.exit(f"GATE FAIL at step 5b — entity_neighborhood smoke returned {smoke!r}")
+    print("  OK  entity_neighborhood returns an object")
+
+    print("\n[6] rollback (S2 functions + S1a)")
     if not run_file(ROLLBACK, "s1a_rollback.sql")[0]:
         sys.exit("GATE FAIL at step 6")
 
@@ -255,10 +270,11 @@ def main():
     if a.leave_applied:
         print("\n[8] re-apply for development (--leave-applied)")
         run_file(MIGRATION, "0009")
+        run_file(MIGRATION_S2, "0010")
         if not verify()[0]:
             sys.exit("re-apply verify failed")
 
-    print("\nS1a REHEARSAL: GREEN — safe for Alex to paste 0009 into prod (The-Prod-Brain) "
+    print("\nS1a + S2 REHEARSAL: GREEN — safe for Alex to paste 0009 then 0010 into prod (The-Prod-Brain) "
           "and then run staging/s1a_verify.sql there.")
 
 

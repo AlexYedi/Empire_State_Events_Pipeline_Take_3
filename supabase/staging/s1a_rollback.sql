@@ -18,6 +18,10 @@
 -- =====================================================================
 begin;
 
+-- S2 (0010) functions first — they read the S1a tables.
+drop function if exists public.match_claims_hybrid(vector, text, int, int, int, uuid[], text[], text[]);
+drop function if exists public.entity_neighborhood(uuid[], timestamptz, int, int, int);
+
 drop table if exists public.claim_usage;
 drop table if exists public.artifact_outcome;
 drop table if exists public.claim_relation;
