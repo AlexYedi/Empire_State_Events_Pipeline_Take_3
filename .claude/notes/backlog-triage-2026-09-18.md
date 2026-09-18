@@ -36,7 +36,7 @@
 | 1.20 | YED-82 hub craft + launch | KEEP | Phase 3; body gains the PII Phase-2 client-bundle scan line (ADR-9) |
 | 1.21 | YED-48 eval harness | KEEP | Phase 3; note YED-172 pulls its core question forward |
 | 1.22 | YED-162 exhaust loop | KEEP | blockedBy YED-170 (done) + YED-163 |
-| 1.23 | YED-135 gtm spine decommission (dated) | FILE | it is referenced everywhere but let me verify it exists as an issue; if not, FILE: MI Engine · `<3d` · "decommission `abkvgihlbwfloentugtd` on <date>" |
+| 1.23 | YED-135 gtm spine decommission | DONE | Linear says Done. CLAUDE.md ("pending a dated decommission") and roadmap §9 are stale → EDIT in the drain pass |
 | 1.24 | YED-101 (gtm-OS, still on EMPIRE-STATE) | OUT OF SCOPE | Alex moves it (peer's move was permission-denied) |
 
 ## Batch 2 — Roadmap v2
