@@ -4,12 +4,12 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 
 | Metric | Source | Threshold | Action | Surface |
 |---|---|---|---|---|
-| build-quality judge score | US-3 judge (`build-quality@3` live 2026-07-17; cross-provider Sonnet+Gemini quorum) | < 0.70 | **gate** a new/independent build's "done" (flag for rework); **advisory** on self-produced/re-judged work — see status note below | in-session (judge verdict / DoD) |
+| build-quality judge score | US-3 judge (`build-quality@4` live 2026-08-21; cross-provider Sonnet+Gemini quorum) | < 0.70 | **gate** a new/independent build's "done" (flag for rework); **advisory** on self-produced/re-judged work — see status note below | in-session (judge verdict / DoD) |
 | judge–human agreement | US-3 calibration (`alex_ack`) | < 80% | judge reverts to **advisory**; tighten rubric, don't trust the score | weekly review |
 | judge last-ran | US-1 DoD meta-item | > N hrs on a build | DoD item FAILS (anti-silent-rot) | in-session DoD boundary |
 | DoD waiver-rate on builds | US-1 waiver log | climbing wk/wk | revisit the scope test / enforcement | weekly review |
 | corrective-rounds ÷ acted-on value | US-2 `user_prompts` + US-5 | up 2+ consecutive wks | find where the agent keeps missing; tighten the skill/rubric | weekly review |
-| correction-recurrence (same class) | US-7 recurrence log | ≥ N across builds | system **proposes** a codified fix (rubric/DoD/skill/few-shot) → Alex approves | weekly review |
+| correction-recurrence (same class) | US-7 recurrence log | ≥ 3 across builds (N set 2026-09-18) | system **proposes** a codified fix (rubric/DoD/skill/few-shot) → Alex approves | weekly review |
 | acted-on outcome vs goal | US-4 + US-5 | trending down | kill / retune the build or the distribution play | Hub dashboard + weekly |
 | owned-asset engagement | US-5 / US-6 | below goal target | revise the asset / distribution strategy | Hub dashboard + weekly |
 | telemetry ingestion health | US-2 hook | 0 `build_session` events / 48h on active days | investigate hook/exporter (observability-of-observability) | weekly / PostHog alert (US-6) |
@@ -21,6 +21,9 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 
 ## Judge status (versioned — never change silently)
 - **2026-07-17 — build-quality judge → PROVISIONAL-TRUSTED.** Crossed the calibration gate (22 acked runs @ 86.4% agreement ≥ the ≥20-@-≥80% bar). Scope of trust: it **gates** the DoD "done" on *genuinely new, independent builds* (a `< 0.70` verdict flags before shipping). It stays **advisory** on self-produced / re-judged work — ~7 of the 22 acked runs are re-judges of same-session fixes (correlated), so the sample isn't fully independent. **Drop "provisional"** once independent-first-look agreement holds ≥80% across ~15+ runs (revisit each `/rigor-review`). The 3 disagrees (trend-radar leniency · gcc judge-variance · multi-agent unverified-as-verified) are logged calibration signals, not noise. Judge runs on the cheap model (Haiku); `build-quality@2` is the live rubric.
+
+- **2026-09-18 — first `/rigor-review` since 07-17 (YED-189). Status: PROVISIONAL-TRUSTED, unchanged.** Correction to the line above: the live rubric is `build-quality@4` (08-21) and the seats are Sonnet + Gemini (not Haiku) since 07-17. Acked quorums 07-18→09-19: 12 of 18, **12/12 agree** at the quorum level (incl. the three YED-190 escalations Alex broke on 09-19, all toward flag). Independent first-look acks ≈12, still short of the ~15 bar, so "provisional" stays. **New caveat:** the Gemini seat returned 1.0 on 17 of 18 prospective non-control runs (the 18th: 0.98) and missed both real flags this window (`spine_client`, `inbox_boundary` — Sonnet caught them). Its concurrence is near-ceiling, so a quorum "agree" is mostly the Sonnet seat's signal. Nuance from 09-19: Gemini *did* catch one real defect Sonnet missed (inbox-miner L99), so the seats are complementary on some defects, not redundant. The problem is calibration (it scores almost everything 1.0), not zero signal. Watch-listed in `correction-recurrence.md`; not re-tuned yet.
+- **Thresholds re-affirmed 2026-09-18:** `< 0.70` gate · `< 80%` agreement · waiver-rate "climbing wk/wk" · corrective-rounds "up 2+ wks" · outcome "trending down" · 48h ingestion · 7d/14d/80% trust-strip values. None moved: each either never fired or fired once and was correct. **One seed filled:** correction-recurrence `N = 3` (the only two acted-on classes fired at 5 and 1; 3 is the smallest count that separates a pattern from a one-off). **Still unset:** DoD item 4's "judge ran within N hours" — a fix is *proposed* (not applied): decision YED-201, due 2026-09-25.
 
 ## Rules
 - **Adding a metric?** It does not ship without a row here (threshold + action + surface). Can't fill the row ⇒ don't collect the metric.

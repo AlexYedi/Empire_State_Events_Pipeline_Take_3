@@ -260,8 +260,8 @@ Return to Alex:
 ## When NOT to trigger this skill
 
 - Single-event posts — use `pre-event-content` or `post-event-content` instead.
-- Synthesis across 3+ events — use a different format ("pattern across 5 events,"
-  not yet built). This skill is strictly 2-thesis.
+- Synthesis across 3+ events — out of scope; this skill is strictly 2-thesis and no
+  N-event format exists (none is planned).
 - Pure recap posts — no opposing theses needed = use post-event recap format.
 - When Alex asks for a "hot take" or a "reaction" — those are one-thesis posts
   with an edge. Different format, not this one.
