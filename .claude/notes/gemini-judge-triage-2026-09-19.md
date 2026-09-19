@@ -60,6 +60,18 @@ recall = 0.20, flat-1.0 rate = 0.82** (`.claude/evals/calibration_stats.py`).
 but `spine_client.ALLOW` permits `bio` (it refuses only email/phone, including *inside* bio). The producer never sends
 `bio` — the *docstring* overclaimed. Fixed in this branch.
 
+## Follow-up finding, same day: the fixes CONTAIN the behaviour, they do not cure it
+
+Judging the fixed `gemini-judge.sh` itself (spec = this note + `@5`), the Gemini seat returned **1.0 on all five
+criteria with zero defects again** — under the defects-first schema, the earned-1.0 scale and harness-side scoring.
+So the ordering is now clear and worth stating plainly: **(C) model behaviour is the cause, and (E) the quorum
+containment is the fix.** `@5` + the schema moved it on one artifact (`substrate.py`: 1.0 → 0.88 with the d9
+contradiction found) and not on another. What held in both cases is the harness: the run printed
+`⚠️ FLAT CEILING … the quorum will escalate instead of auto-accepting` and the quorum escalated to Alex.
+
+Caveat on this particular run: the artifact is the seat's *own* harness, so self-preference may be in play on top of
+the halo effect. Either way the operating rule stands — **Gemini is advisory; a flat 1.0 never auto-accepts.**
+
 ## Still open
 - `claim_relation` has no producer (in S1a scope, empty table) and `claim.quote` is never populated — tracked on YED-169.
 - Haiku sits just under the κ/recall bars; it is not currently a quorum seat, so no action beyond the record.
