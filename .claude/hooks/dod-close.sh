@@ -26,6 +26,8 @@
 #   --correction-rounds  count of corrective rounds this session (int; optional -> null if omitted)
 #   --reason             a waiver reason (repeatable; each appended to the waiver log). Required when
 #                        --dod-waived true. Format "item: why" is encouraged but free-text is fine.
+#                        A judge/item-4 waiver must contain "no gradable artifact" or a YED-/GTM- issue ID
+#                        (YED-201 Fix 1A) or the whole call is rejected with exit 2.
 #
 # Content-gated: writes only booleans/ints + Alex's own short reason strings — never artifact bodies.
 # MUST run in the MAIN conversation (where the Stop hook fires for this same session id), not a subagent.
@@ -58,6 +60,36 @@ if [ "$DOD_WAIVED" = "true" ] && [ ${#REASONS[@]} -eq 0 ]; then
   echo "dod-close: --dod-waived true requires at least one --reason \"<one-liner>\"" >&2
   exit 2
 fi
+
+# --- judge-waiver rule (YED-201 Fix 1A, ruled 2026-09-19) ---
+# "Advisory" means the judge's verdict doesn't GATE, not that running it is optional. 8 judge waivers
+# accumulated 07-15 -> 09-18 under "advisory / next session" and the promised runs never happened.
+# A waiver of DoD item 4 must name EITHER that there is no gradable artifact, OR the Linear issue that
+# holds the make-up run (the container rule, applied to waivers). Rejected before anything is written.
+# Limit (by design): this checks the FORMAT, not that the named issue is the real make-up run; /rigor-review
+# recounts the class weekly. Judge-reviewed twice 2026-09-19 (Sonnet reproduced 7 bypasses; all closed).
+for r in "${REASONS[@]}"; do
+  # Split "label: reason" on the first colon OUTSIDE parentheses, so a colon inside the label
+  # ("judge (context: YED-999 …): out of time") can't smuggle an ID into the reason.
+  r=$(printf '%s' "$r" | sed 's/：/:/g; s/﹕/:/g')   # full-width / small colons count as the separator
+  cut_at=$(printf '%s' "$r" | awk '{d=0; for(i=1;i<=length($0);i++){c=substr($0,i,1); if(c ~ /[([{]/)d++; else if(c ~ /[])}]/&&d>0)d--; else if(c==":"&&d==0){print i; exit}}}')
+  if [ -n "$cut_at" ]; then
+    item_part="${r:0:$((cut_at-1))}"; why_part="${r:$cut_at}"
+  else
+    item_part="$r"; why_part=""            # no label: an item-4 waiver MUST use "judge: <reason>" (below)
+  fi
+  # Trigger on any label that means DoD item 4: "judge", "item 4", "item4", or a bare "4".
+  if printf '%s' "$item_part" | grep -qiE 'judge|item ?(4|four)|^[[:space:]]*(4|four)[[:space:]]*$'; then
+    # The make-up pointer must be in the REASON (after the label), not anywhere in the string.
+    if ! printf '%s' "$why_part" | grep -qiE 'no gradable artifact|(YED|GTM)-[0-9]+'; then
+      echo "dod-close: judge waiver rejected: \"$r\"" >&2
+      echo "  A DoD item-4 (judge) waiver must be written 'judge: <reason>', and the reason must say" >&2
+      echo "  'no gradable artifact' OR name the Linear" >&2
+      echo "  issue that holds the make-up run (e.g. 'judge: run in fresh session, YED-123'). YED-201 Fix 1A." >&2
+      exit 2
+    fi
+  fi
+done
 
 SID="${CLAUDE_CODE_SESSION_ID:-_pending}"
 STATE_DIR=".claude/.state"

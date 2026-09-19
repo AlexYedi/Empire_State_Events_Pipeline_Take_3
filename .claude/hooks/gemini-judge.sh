@@ -78,6 +78,12 @@ if [ -x .claude/hooks/check-refs.sh ]; then
   DANGLING=$(.claude/hooks/check-refs.sh --artifact "$ARTIFACT" 2>/dev/null)
 fi
 
+# --- deterministic tombstone pre-pass (YED-201 Fix 2A): live references to removed tools/decisions ---
+TOMBS=""
+if [ -x .claude/hooks/check-tombstones.py ]; then
+  TOMBS=$(python3 .claude/hooks/check-tombstones.py --artifact "$ARTIFACT" 2>/dev/null)
+fi
+
 # --- density pre-pass (deep_read only; supplies the number-side of the @4 density cap — NOT a deterministic cap:
 #     padding vs. legitimate novice on-ramp is a judgment call, so the script flags and the judge decides) ---
 DENSITY=""
@@ -97,12 +103,13 @@ Compute raw = correctness*0.30 + completeness*0.20 + convention_adherence*0.20 +
 # --- build request body safely with jq (no manual escaping) ---
 REQ=$(jq -n \
   --rawfile sys "$SYSTEM" --rawfile rubric "$RUBRIC" --rawfile art "$ARTIFACT" \
-  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" \
+  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" --arg tombs "$TOMBS" \
   '{contents:[{parts:[{text:(
       $sys + "\n\n===== RUBRIC (version is stated in the rubric text below) =====\n" + $rubric
       + "\n\n===== ARTIFACT TYPE =====\n" + $atype
       + "\n\n===== PER-ARTIFACT CONTEXT/SPEC =====\n" + (if $ctx=="" then "(none supplied — score correctness/completeness against the artifact'\''s own stated purpose; note reduced confidence)" else $ctx end)
       + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per build-quality@4, a load-bearing reference that does not exist caps completeness ≤0.60.") end)
+      + "\n\n===== LIVE REFERENCES TO REMOVED TOOLS/DECISIONS (deterministic tombstone check vs platform-constraints.md — each hit is ground truth that the line names a removed thing with no removal marker within 40 chars; the list is a LOWER BOUND, so still read the artifact; YOU judge whether each hit is load-bearing) =====\n" + (if $tombs=="" then "(none)" else ($tombs + "\n→ a load-bearing step that relies on a removed tool is a correctness + anti_pattern_avoidance defect (resurrecting a superseded decision).") end)
       + "\n\n===== DENSITY SIGNAL (deep_read only; words÷citations — a FLAG, not a verdict; you decide padding vs. legitimate on-ramp) =====\n" + (if $density=="" then "(not a deep_read artifact, or density-check unavailable — density cap N/A)" else $density end)
       + "\n\n===== ARTIFACT PATH =====\n" + $path
       + "\n\n===== ARTIFACT CONTENT =====\n" + $art
