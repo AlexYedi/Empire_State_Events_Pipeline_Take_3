@@ -48,6 +48,20 @@
 | Metered Claude: no `ANTHROPIC_API_KEY` in Empire `.env` | RULED 2026-09-18 (YED-176): Gemini fallback is the default | Gemini-first for scripted LLM steps behind a two-backend interface; add a Claude key only when a scripted Claude call is on the runway (YED-179 re-asks) | 2026-09-18 |
 | OTEL collector / Langfuse / deep-beta traces | "rent the platform" only on a named trigger; traces need an Anthropic allowlist | today only `output_tokens` + `peak_context_tokens` are honest (`build-session-contract.md`) | 2026-06-26 |
 
+## Tombstones (removed tools/decisions — mechanically checked, YED-201 Fix 2A, 2026-09-19)
+A removal only sticks if it reaches every file that *uses* the removed thing. `.claude/hooks/check-tombstones.py` flags any line in `.claude/**` / `docs/**` (docs + code/config files) that names a term below **without** a removal marker within 40 characters (removed · retired · ripped · deprecated · tombstone · vestigial · killed · rejected · disabled · superseded · replaced · no longer · do not · never · legacy · historical). The judge runs it in Step 0 (both seats see the hits as fact), and `/rigor-review` runs it repo-wide. **Add a row the same turn you remove something.** Patterns are Python regex, case-sensitive; write a regex alternation `|` as `\|` (GitHub's table escape; the checker unescapes it).
+
+| Term | Pattern | Removed | Use instead |
+|---|---|---|---|
+| Gamma | `\bGamma\b` | 2026-08-07 | Claude HTML/SVG → Artifact → PDF; Gemini for pictorial (`visual-briefs.md`) |
+| Gamma MCP | `mcp__claude_ai_Gamma` | 2026-08-07 | same |
+| Canva as a generator | `Canva(\'s)? (MCP\|fallback\|account\|editor\|auto-render)` | 2026-08-07 (vestigial) | same (Canva the *company* is not tombstoned) |
+| Canva MCP | `mcp__claude_ai_Canva\|generate-design` | 2026-08-07 | same |
+| Langfuse | `Langfuse` | 2026-06-26 | the lean stack: Notion + PostHog + Hub (CLAUDE.md measurement layer) |
+| gtm-os as the measurement layer | `gtm-os(?!-hub)[^.\n]{0,40}(measure\|telemetry\|observab\|eval\|trace)` | 2026-06-26 | same (bare "gtm-os" is the live GTM-OS program / Linear team; gtm-os-hub is live too) |
+| Granola auto-fetch | `Granola[^.\n]{0,40}(fetch\b\|API\|MCP\|get_meeting)` | 2026-05-27 | manual transcript paste; OBS + ElevenLabs Scribe |
+| Clarify | `mcp__claude_ai_Clarify` | 2026-09-09 | HubSpot stays the CRM; OBS + Scribe for capture |
+
 ## Git / repo
 | Constraint | Cause | Workaround | Since |
 |---|---|---|---|
