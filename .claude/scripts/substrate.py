@@ -203,6 +203,22 @@ BOUNDARY_SECTIONS = ("anecdotes", "concept glossary", "quote bank", "full quote 
                      "documentarian", "open loops", "verification flags", "tools", "slides", "conditioning")
 
 
+def redact_body(md: str) -> str:
+    """Brief text handed to ensure_document obeys the SAME confidentiality rules as claim parsing: excluded
+    sections (e.g. '## ⛔ Confidentiality flag') dropped whole, CONFIDENTIAL_RE lines dropped. Today the
+    documents row stores only a hash + word_count (never the text), so this is a guard for any future
+    text/chunk storage, not a fix for a live leak."""
+    out, skip = [], False
+    for line in md.splitlines():
+        h = re.match(r"^##\s+(.+)", line)
+        if h:
+            skip = any(x in h.group(1).lower() for x in EXCLUDED_SECTIONS)
+        if skip or CONFIDENTIAL_RE.search(line):
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
 def _known_section(title: str) -> bool:
     """For bold sub-labels only (## headings open a section unconditionally). Stricter than
     startswith: the name must end the label or be followed by punctuation — so '**Pitfalls / anti-patterns**'
@@ -532,9 +548,12 @@ class Graph:
             self.stats.bump("event", "matched")
             eid = row["id"]
         else:
+            if not ev.get("kind"):   # ADR-10 decision 9: attendance is never inferred — the caller must say so
+                raise SystemExit(f"ensure-event: manifest for {ev.get('title')!r} has no 'kind'; refusing to "
+                                 "create an event without explicit attendance evidence (ADR-10 decision 9)")
             self.stats.bump("event", "created")
             eid = self.post("event", {k: v for k, v in {
-                "title": ev["title"], "kind": ev.get("kind", "attended"), "event_date": ev.get("event_date"),
+                "title": ev["title"], "kind": ev["kind"], "event_date": ev.get("event_date"),
                 "description": ev.get("description"), "url": ev.get("url"), "source": SOURCE,
                 "notion_page_id": (pid_variants(ev.get("notion_page_id")) or [None])[-1],
                 "metadata": {k2: ev[k2] for k2 in ("location", "google_calendar_event_id") if ev.get(k2)},
@@ -601,9 +620,11 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     doc_id = None
     if brief_ref:
         doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Post-event brief — {ev['title']}",
-                                    "source_type": "post_event_brief", "body_text": md, "doc_date": when,
+                                    "source_type": "post_event_brief", "body_text": redact_body(md), "doc_date": when,
                                     "produced_by": "/post-event-content"}, event_id=eid)
     skey = source_key_for_event(ev["notion_page_id"])
+    if doc_id and not g.dry:   # claims staged before the brief had a document row get linked, never re-pointed
+        g.patch("claim", f"source_key=eq.{skey}&document_id=is.null", {"document_id": doc_id})
     have = {r["claim_key"] for r in g.get(f"/claim?source_key=eq.{skey}&select=claim_key")}   # reads are safe in dry-run
     new = [it for it in items if it["claim_key"] not in have]
     g.stats.bump("claim", "matched", len(items) - len(new))
@@ -645,7 +666,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
             links = [{"claim_id": ids[it["claim_key"]], "entity_type": "person", "entity_id": prows[0]["id"],
                       "role": "asserted_by"} for it in items if it["speaker"] == name and it["claim_key"] in ids]
             if links:
-                g.stats.bump("claim_entity", "created", len(links))
+                g.stats.bump("claim_entity", "linked (idempotent)", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
                        on_conflict="claim_id,entity_type,entity_id,role")
     # founder-showcase claims -> claim_entity(company, about), resolved against THIS event's roster
@@ -662,7 +683,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
             links = [{"claim_id": ids[it["claim_key"]], "entity_type": "company", "entity_id": match[0]["id"],
                       "role": "about"} for it in items if it.get("about_company") == name and it["claim_key"] in ids]
             if links:
-                g.stats.bump("claim_entity", "created", len(links))
+                g.stats.bump("claim_entity", "linked (idempotent)", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
                        on_conflict="claim_id,entity_type,entity_id,role")
     by_type: dict[str, int] = {}
@@ -800,6 +821,10 @@ def selftest() -> bool:
     ok("speakers: roster fallback to 'People & Outreach' table",
        speaker_names(split_sections("## People & Outreach State\n<table>\n<tr><td>Person</td><td>Role</td></tr>\n"
                                     "<tr><td>**Sangram Vajre** (GTM Partners)</td><td>Speaker</td></tr>\n</table>")) == ["Sangram Vajre"])
+    red = redact_body("## ⛔ Confidentiality flag (read first)\nSeries B $X — stays in the room.\n## Thesis\nPublic line.\n"
+                      "- North raised a round (confidential).\n- Antimetal $24.3M.")
+    ok("redact_body: excluded section + confidential lines never stored",
+       "Series B" not in red and "confidential" not in red and "Public line." in red and "Antimetal" in red)
     rg = ["Jared Robin", "Alex Lindahl", "Mintis Sow", "Tyler Phillips"]
     ok("attribute: surname tell '(Sow)'", attribute("Run a click study (Sow). HIGH.", rg) == "Mintis Sow")
     ok("attribute: owner's first name is not a tell", attribute("Alex's own pipeline gates output", rg) is None)
@@ -943,6 +968,7 @@ def main(argv: list[str]) -> int:
         did = g.ensure_document(m["document"], event_id=eid)
         for e in m.get("entities", []):
             t, iid = g.ensure_entity(e)
+            g.stats.bump("document_entity", "linked")
             g.post("document_entity", {"document_id": did, "entity_type": t, "entity_id": iid,
                                        "role": e.get("role", "about")},
                    prefer="resolution=ignore-duplicates,return=minimal",
