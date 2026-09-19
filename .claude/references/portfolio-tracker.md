@@ -47,7 +47,7 @@ Used by project-ideation to calculate tool coverage scores.
 - PostHog (analytics)
 - HubSpot (CRM, MCP writes)
 - Canva (design, visual content)
-- Gamma (presentations, slide decks)
+- Gamma (presentations and slide decks, removed from the Empire State pipeline 2026-08-07, where Claude design replaced it)
 - Replit (rapid prototyping)
 - Bolt (rapid prototyping)
 - Lovable (rapid prototyping)
