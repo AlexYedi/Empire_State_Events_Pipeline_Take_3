@@ -66,5 +66,5 @@ A removal only sticks if it reaches every file that *uses* the removed thing. `.
 | Constraint | Cause | Workaround | Since |
 |---|---|---|---|
 | `.git/hooks/pre-commit` is local-only (blocks build-surface on `main`) | hooks aren't versioned | re-install on other clones; branch-first is the real rule (CLAUDE.md Git conventions) | 2026-07-18 |
-| The pipeline repo must never be public | holds `.env`, personal CLAUDE.md, private notes | hub repo is the public surface; `npm run check` there | 2026-09-04 |
+| Both repos are PUBLIC by design: build in public (ruled by Alex 2026-09-19; supersedes the 2026-09-04 "never public" row) | transparency, engagement, and a portfolio hiring managers can read | follow `build-in-public.md`: secrets stay in `.env`; personal refs stay gitignored; third-party confidences get redacted before commit. **Open:** GitHub still serves pre-purge commits via `refs/pull/*` (#56–#76), which only GitHub Support can remove (YED-204) | 2026-09-19 |
 | `build-sessions/<session>.jsonl` churns untracked | Stop hook | never chase it | 2026-09-12 |
