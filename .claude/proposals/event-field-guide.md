@@ -1,6 +1,6 @@
 # Event Research Brief v2 — one artifact: scannable head + deep prose body
 
-**Status:** Approved to build (merged design) · **Owner:** Alex · **Date:** 2026-08-21
+**Status:** SHIPPED — ADR-5 / YED-136 (header updated 2026-09-18) · **Owner:** Alex · **Date:** 2026-08-21
 **Linear:** YED-136 · **PRD:** ChatPRD (Empire State) + Notion mirror · **ADR:** `docs/adr/ADR-5-event-field-guide.md`
 **Validated by:** the Daytona render spike — `.claude/proposals/field-guide-spike-daytona.md`
 

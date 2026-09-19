@@ -64,6 +64,8 @@ Friction lands at the moment of acceptance (when intent is high) rather than at 
 - **Total: ~half-day**
 
 ### Open design decisions
+
+→ **RESOLVED 2026-09-18:** invite-metadata-change rule written into `check-new-events.md` Step 4; the format/auto-run/chain defaults held for 4 months and are treated as ratified.
 - **Auto-run `/event-deep-research` or stage in `intake` status for manual trigger?** Auto = less friction but loses the "approve to research" gate. Stage = preserves gate but reintroduces a manual step. Default recommendation: auto, since the PIPELINE block presence IS the approval signal.
 - **Chain `pre-event-content` in the same routine or wait for separate trigger?** Chaining = content drafts ready Day 1 after acceptance. Separate = lets brief settle before content gets written against it. Default recommendation: chain — that's the whole point of the design.
 - **PIPELINE block format — markdown, YAML, JSON?** Markdown headers feel most natural for a calendar invite description. YAML is more parser-friendly but uglier in GCal UI. Recommendation: markdown with regex extraction (defensible against minor formatting drift).
@@ -119,7 +121,7 @@ Decision: build Option B (full chain) immediately, breaking the 21-day execution
 - `/event-deep-research` ran the full chain (entity confirm → triage approval → 4-agent parallel fan-out → synthesizer brief → 5 Notion DB writes)
 - `pre-event-content` produced LinkedIn post + 4-slide visual carousel + 5 A/B connection notes (1 B-variant skipped per fallback rule for thin adjacent-work signal) + 11 prepared questions
 
-**Deferred to fresh session:**
+**Deferred to fresh session (historical — all since resolved):**
 - HubSpot writes for Ray Dev Day (mechanical CRM creates, not validation-critical)
 - Notion writes for 7 pre-event-content drafts pages (content generated in-conversation, batch-write via notion-writer pending)
 - Full chain on AI Demo Night + 3 other 5/26-5/28 PIPELINE-block events Alex added today (Scaling Enterprise AI Agents, Evolution of Commerce, Building Agentic Marketing)
@@ -217,6 +219,8 @@ The rule that was set 2026-05-15 was "resist architecture work that delays publi
 
 ### Open questions for end-of-window review
 
+→ **CLOSED 2026-09-18 (KILL):** window ended 2026-06-11; the one live thread — a real publish-rate number — is now the post-performance backfill (`a2de692`, 2026-09-14). Instrument LinkedIn reality, not the Notion status field.
+
 - Did Granola's AI summary produce content Alex's voice survived (vs. summary-flattened mush)?
 - Did the dual-path resolution actually catch a title-match edge case in practice, or was the GCal ID always present?
 - Did `notion-writer` need any schema gotcha fixes for the new property? (Should be plain text — easiest possible property type.)
@@ -234,18 +238,23 @@ Ran the post-event pipeline end-to-end, live, as a deliberate full-system test o
 ### Findings (the point of the test)
 
 1. **Mode A is unusable for walk-up / pasted-transcript events.** `/post-event-content` is hard-wired to Granola; with a pasted transcript the only path was invoking content-correspondent directly in Mode B. **TODO:** thin `/post-event-content-manual` wrapper, or a `--paste` branch on the existing command, so Mode B has a front door instead of riding the skill bare.
+   → **SUPERSEDED 2026-09-18:** `/post-event-content` is manual-upload anchored since 2026-05-27 (Granola disabled); the pasted transcript IS the front door. No wrapper needed.
 
 2. **Transcript conditioning is real work that wasn't a formal stage.** Speaker resolution + entity normalization + a confidence-scored quote bank materially de-risked the quotes (raw ASR mangled Vercel→"Purcell", Salehi→"vahan", MCP→"FCP", agentic→"genetic"; diarized "Speaker N" labels smeared identity). Codified as a v1 skill stub: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md`. NOT yet wired as an automatic upstream step. Distinct from `transcript-analysis` (that's N≥10 sales-call mining; this is single-event content conditioning).
+   → **RESOLVED 2026-09-18:** wired as `/post-event-content` Step 3.5 (`transcript-conditioning`).
 
 3. **New Notion gotcha (now logged as CLAUDE.md update-page gotcha "l").** `notion-update-page` `update_content` `old_str` must match the STORED markdown — Notion normalizes `_italics_` → `*italics*` on write, so a match against the authored underscore form failed with "No matches found." Fetch-then-match, or author the match with asterisks. (Hit live wiring the Gamma carousel URLs into the two post drafts.)
 
 4. **Gamma:** `numCards` is silently ignored when `cardSplit: "inputTextBreaks"` — card count = number of `---` delimiters. Control count with delimiters, not `numCards`. Minor note worth adding to `visual-briefs.md`.
+   → **MOOT 2026-09-18:** Gamma removed 2026-08-07 (CLAUDE.md rule 13); nothing to add.
 
 5. **Source-flag (Rule 12) carried correctly.** Speaker lines treated as primary (transcript); the "847 deployments / 76% failed / 94% named owner" stat on the carousels came from the brief's cited sources — flagged to Alex to spot-check that citation before either post goes public. No firm/person *thesis* claim asserted unsourced.
 
 6. **Positive signal:** notion-writer generalized cleanly from its event-research design to standalone Content-Draft creation + relation resolution, despite its SKILL reference being event-research-centric. The agent set is more reusable than its docs imply.
 
 ### Decisions deferred to Alex
+
+→ **CLOSED 2026-09-18 (KILL):** stale content decisions (Path A/B post, Gamma carousels — Gamma removed 2026-08-07).
 - Pick a post to ship (or stagger A and B across the week — they don't compete; A is contrarian, B is data-backed).
 - Refine carousels in the Gamma editor (no MCP edit), export PDF for the LinkedIn document post.
 - Wire-ups (TODO 1 + finding-2 upstream wiring + finding-4 visual-briefs note) batched here, not actioned, pending green-light. Note: skill/command/agent changes are session-frozen — any wire-up needs a FRESH conversation to validate.

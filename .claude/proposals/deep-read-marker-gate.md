@@ -1,6 +1,6 @@
 # Spec: Deep Read marker-enforcement gate (YED-139)
 
-**Date:** 2026-08-25 · **Type:** durable guardrail (spec-before-code) · **Branch:** `alex/yed-139-deep-read-gate` · **Linear:** YED-139 · **Builds on:** YED-138 (prompt-level Step 4.5 wiring + fail-loud, merged PR #49)
+**Status:** SHIPPED (PR #51) · follow-ups → **YED-141** (2026-09-18) · **Date:** 2026-08-25 · **Type:** durable guardrail (spec-before-code) · **Branch:** `alex/yed-139-deep-read-gate` · **Linear:** YED-139 · **Builds on:** YED-138 (prompt-level Step 4.5 wiring + fail-loud, merged PR #49)
 
 ## Problem
 

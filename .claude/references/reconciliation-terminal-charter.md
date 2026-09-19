@@ -31,3 +31,6 @@ git network is blocked by the default Bash sandbox (`curl` works, `git fetch/pus
 
 ## Rule 6 — Attribution
 End commit messages + PR descriptions with the session's required Co-Authored-By / generated-with lines.
+
+## Amendment 1 — when Rule 0 cannot be met (learned 2026-09-12, recorded here 2026-09-18)
+If a live session owns the shared checkout, the charter is not blocked: do all git work in a **scratch worktree under the session scratchpad** (`git worktree add --detach`) plus **server-side PRs** (`gh pr create` / `gh pr merge`), and never touch the shared working trees. That path completed a full reconciliation with three other sessions live. Never park any worktree at detached HEAD afterwards (GitHub Desktop commit-loss trap).

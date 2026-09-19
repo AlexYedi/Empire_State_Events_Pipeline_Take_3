@@ -1,6 +1,6 @@
 # Spec — Steering Interview v2: Collaborative Creation (two-touch)
 
-**Status:** proposed → building (branch `alex/steering-v2-collaborative`)
+**Status:** SHIPPED 2026-08-29 (PR #54; smoke test `notes/steering-v2-smoke-test-2026-08-29.md`)
 **Linear:** YED-143 (this workstream)
 **Owner:** Alex · **Date:** 2026-08-28
 

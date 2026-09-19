@@ -186,7 +186,7 @@ For allowlisted threads the classifier tags `event` / `job` / `offer`: apply `Pi
 
 - **What this does well:** turns direct-from-company mail into structured, provenance-carrying company signals, and cuts inbox noise — legitimately, from Alex's own data.
 - **What it cannot do:** dedup email events as cleanly as ATS/GCal-keyed sources (email has weak natural keys — hence the resolved-target gate + weekly sweep). It does not read Primary/personal mail (category-scoped + allowlist-bounded by design).
-- **Boundary:** company/product signals only; allowlist-only bodies; manual trigger; cron deferred until false-merge is measured low.
+- **Boundary:** company/product signals only; allowlist-only bodies; manual trigger; cron deferred (→ YED-179 unattended slate) until false-merge is measured low.
 
 ## Reuses / references
 

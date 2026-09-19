@@ -31,7 +31,7 @@ python3 .claude/scripts/recompute_relevance.py --top 25   # show N in the report
 ```
 Reports: topics scanned · changed · written · upcoming-event boosts · the Top-N ranked · active-vs-dormant count.
 
-## Deliberately deferred (fast-follows, not in this V1)
+## Deliberately deferred (fast-follows, not in this V1 — v1 recompute = YED-131; v2 extensions → YED-179)
 - **`coverage_penalty` ("uncovered")** — down-rank topics already posted about recently (needs the
   Content-Drafts join). The "uncovered" leg of *rising × relevant × uncovered*.
 - **Confidence-weighting** — weight `engagement` by each signal's `confidence`/`source_count`, not just

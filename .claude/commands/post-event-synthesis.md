@@ -1,11 +1,11 @@
 ---
-description: "Workflow B (SCAFFOLD — not yet wired) — turns raw post-event material (Granola transcripts, voice notes, observations) into structured intel + content drafts. Chains transcript-analysis → objection-mining → commercial-insight-generator → content-correspondent → pattern-synthesis → voice-pass."
+description: "Workflow B (SCAFFOLD — not yet wired; parked YED-198) — turns raw post-event material (Granola transcripts, voice notes, observations) into structured intel + content drafts. Chains transcript-analysis → objection-mining → commercial-insight-generator → content-correspondent → pattern-synthesis → voice-pass."
 argument-hint: "[paste transcript or notes, or reference event name to pull from Notion]"
 ---
 
 # /post-event-synthesis — Workflow B (SCAFFOLD)
 
-> **Status:** Skeleton only. Triggers, inputs, and agent flow are documented. Not yet wired for end-to-end execution.
+> **Status:** Skeleton only. Triggers, inputs, and agent flow are documented. Not yet wired for end-to-end execution — parked as YED-198 (2026-09-18).
 > **Why scaffolded:** Alex doesn't yet have a Granola transcript queued for the current week's content sprint. Wiring + first run happens after Workflow A produces briefs and an event has been attended.
 
 ---
@@ -24,7 +24,7 @@ Run when Alex:
 2. **Event name** — to pull the original research brief from Notion Content Drafts (filter: Content Type = research_brief, Event Name = X)
 3. **(Optional) Contact list** — names Alex met / talked to that should get DMs
 
-## Planned agent flow (NOT YET BUILT — do not invoke today)
+## Planned agent flow (NOT YET BUILT — do not invoke today; YED-198)
 
 ```
 1. Pull research brief from Notion (this conversation)

@@ -157,32 +157,9 @@ writes to Notion and HubSpot.
 | Buffer | 2-3 hours | — | — |
 | **Total** | **9-13 hours** | | |
 
-## Open Questions
+## Open Questions · Tech Debt Log · Next Steps
 
-1. Apollo credit refresh: Do free plan credits refresh monthly? Monitor at next billing cycle.
-2. Notion text property length limits: Will Calendar Description or other text fields
-   truncate long invite text? Test with a real invite.
-3. HubSpot custom property: `event_associations` text field discussed but not yet created.
-   Notes approach may be sufficient — decide after first test.
-
-## Tech Debt Log
-
-- None yet (greenfield)
-
-## Gotchas (from CTO review)
-
-- Notion relation writes require exact page URLs, not IDs
-- Notion has no dedup — skill must search before creating
-- HubSpot dedupes on email — creating contacts without email then enriching later risks duplicates
-- Apollo People Match needs name + company minimum for reliable matching
-- WebSearch in rapid succession may feel slow — research should be presented incrementally
-
-## Next Steps
-
-1. Alex adds Calendar Description property back to Notion Events database
-2. Test skill on a real upcoming event (paste invite, run full workflow)
-3. Iterate on research quality based on first test
-4. Verify Notion write orchestration works end-to-end (relations especially)
+Removed 2026-09-18 (backlog reconciliation): open items live in Linear (team EMPIRE-STATE), not in this brief. Git history holds the April-2026 lists.
 
 ## Handoff Summary
 

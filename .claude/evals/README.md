@@ -22,5 +22,5 @@ LLM-as-judge has **self-preference bias** — here it's judging work produced by
 - Re-check agreement on a rolling basis; <80% ⇒ tighten the rubric, don't trust the score.
 - The judge **scores + flags; it never auto-rewrites and never hard-blocks.**
 
-## Deferred (non-destructive, do NOT build now)
+## Deferred (non-destructive, do NOT build now) — now YED-188 (parked slate) + `platform-constraints.md` (2026-09-18)
 A separate-model / cross-judge quorum (independence) and a Notion/PostHog projection of scores — per the lean-foundation decision (2026-06-26). The run-log contract above stays stable when added.

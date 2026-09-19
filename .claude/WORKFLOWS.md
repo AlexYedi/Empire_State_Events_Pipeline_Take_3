@@ -208,7 +208,7 @@ Turns post-event raw material into structured intel + content drafts.
 2. **Event name** (so the original brief can be pulled from Notion)
 3. **(Optional) Contact list** — names Alex met that should get DMs
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Pull research brief from Notion (main conversation)
@@ -248,7 +248,7 @@ Sunday-cadence synthesis across the week's events, content, and outreach.
 - **None** — all inputs come from Notion queries
 - **(Optional) Date range override** — for backfilling
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Query Notion: Events in upcoming 7 days + Content Drafts from past 7 days (status ≠ archived)
@@ -289,7 +289,7 @@ Polish layer over Content Drafts in `needs_review` status.
 - **None** — defaults to scanning all `needs_review` drafts
 - **(Optional) Specific Content Draft URL** or scope filter (by Content Type / date range)
 
-### Planned flow (not yet wired end-to-end)
+### Planned flow (not yet wired end-to-end — parked, YED-198)
 
 ```
 1. Query Notion: Content Drafts where Status = needs_review (+ optional filters)
@@ -399,7 +399,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 
 ---
 
-## What's NOT here (intentionally — Tier 2 deferred)
+## What's NOT here (intentionally — Tier 2 deferred) — RECORD: bring in when a use case warrants; no issue (2026-09-18)
 
 Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 - `positioning-messaging`, `launch-marketing`, `media-relations` (GTM Marketing)
@@ -410,9 +410,9 @@ Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 
 Bring in later when use cases warrant.
 
-## What's NOT here (intentionally — automation deferred)
+## What's NOT here (intentionally — automation deferred) — parked as YED-198 (2026-09-18)
 
-Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until commands are working. Future automation candidates:
+Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until commands are working (parked → YED-198, 2026-09-18). Future automation candidates:
 - SessionStart hook → check Events with status=intake, surface count to Alex
 - Stop hook on content-creating skills → auto-run /voice-pass on the just-created draft
 - UserPromptSubmit hook matching "just got back from" → suggest /post-event-synthesis
@@ -423,4 +423,4 @@ Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until comma
 
 *Partial refresh 2026-07-11 — added the "Commands added since" table (the doc had drifted ~2 months behind; the MI Engine, signal scanners, judge/rigor layer, and market-research suite were all missing). The four-workflow body below is unchanged and still accurate.*
 
-*Last updated: 2026-05-07 — orchestrator → synthesizer pivot landed ON DISK. Anthropic SDK constraint (subagents cannot spawn subagents) confirmed via official docs + 6-agent layer-by-layer test. Fan-out moved to parent thread; synthesizer is text-in/brief-out. `notion-writer` updated to `model: sonnet` + scoped `tools:` frontmatter. All 4 specialists got `tools: WebSearch, WebFetch, Read` for hygiene. **VALIDATION PENDING:** all changes were made mid-session, but the harness loads the agent registry at session start and freezes it — meaning none of these changes are visible in the current conversation's registry (confirmed when `notion-writer-v2` test failed with "Agent type not found" while the deleted `event-research-orchestrator` was still listed as available). End-to-end validation requires a FRESH conversation. Workflow A status: 🟠 → ✅ on disk; pending fresh-conversation validation.*
+*Status note (2026-09-18): the 2026-05-07 orchestrator→synthesizer pivot and its "VALIDATION PENDING" caveat are SUPERSEDED — Workflow A has run end-to-end in fresh sessions dozens of times since (e.g. the 2026-08-25 and 2026-09-12 batches). The four-workflow body above is the rerun manual; per-command specs in `.claude/commands/` are authoritative where they differ. Registry-freeze constraint is recorded in `sdk-runtime-constraints.md`.*

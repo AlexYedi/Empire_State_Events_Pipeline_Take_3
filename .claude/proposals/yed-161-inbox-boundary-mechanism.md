@@ -1,6 +1,6 @@
 # The inbox scan boundary as a mechanism (denylist v1 → enforced in code)
 
-> **Linear:** YED-161 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** in build (design determined by ADR-7 + YED-81; one human step remains — the denylist v1 review) · **Appetite:** <3d · **Backfilled?** no · **Depends on:** YED-81 (ADR-9, shipped #73)
+> **Linear:** YED-161 · **Date:** 2026-09-13 · **Owner:** Alex · **Status:** SHIPPED (#74 mechanism, #75 denylist v1 accepted) · **Appetite:** <3d · **Backfilled?** no · **Depends on:** YED-81 (ADR-9, shipped #73)
 
 **1. Problem & why now.** `inbox-denylist.md` calls itself *"the primary PII/SEC control"* and ADR-7 carries *"the first whole-inbox scan stays blocked until the denylist review"* as a **live runtime gate** — and no code executes either. The boundary exists as three prose instructions (`/scan-inbox` Step 1 "load the boundary files"; skill A1 "drop any sender whose address/domain/label matches"; B1 "build the query from the allowlist"). A rule that cannot enforce itself is the failure class the rigor layer exists to remove. *Why now:* roadmap v2 Phase 0 — this is the last gate before Phase 1, and YED-81 just shipped the write-side backstop; the read side is the remaining hole. *Press release:* "No thread on the denylist can enter the pipeline, the whole-inbox scan physically cannot run before Alex's review, and every run reports what it skipped."
 
