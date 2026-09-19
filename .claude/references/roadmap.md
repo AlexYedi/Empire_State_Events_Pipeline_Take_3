@@ -33,7 +33,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 | **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB ½ (B1+B2 inert) · **post-event ✗** · roles ✗ |
 | **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
 | **P3 · The Loop** — learn from exhaust | Rigor layer v2: correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8 + the registry's existing "system proposes a fix" row + `/rigor-review`, not beside them | watching ✅ (ADR-8, YED-158) · learning ✗ |
-| **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65), headline test, event deep-dives + the theme→prior-post index. Every anchor throws off a build-in-public artifact via the journal | in flight |
+| **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
 | **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, OBS smoke test, YED-141, YED-137, Linear-to-git-truth | ongoing |
 
 ## 4. The dependency chain
@@ -49,10 +49,8 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 ### Phase 0 — Gates & cleanup (→ ~Sep 19)
 | Item | Appetite | Why first |
 |---|---|---|
-| **YED-81 SEC & PII** — re-raised to High; scoped as a *guardrail contract + write-path enforcement*, not a security program | 3–7d | Gates post-event ingestion, whole-inbox scan, and anything unattended. Scoped small it's a week; unscoped it's a quarter. |
-| Denylist v1 review → **enforced in `/scan-inbox` code** (YED-161) | <3d | v1 was "convention, not mechanism" — a rule that cannot enforce itself |
-| Linear reconciled to this plan (§7) | <1d | The plan can't be true while zombie programs compete with it |
-| OBS live GUI pass + first real smoke test (YED-154 follow-through) | <1d | "Done" on paper only |
+| Linear reconciled to this plan (§7) — now the **backlog reconciliation** (`.claude/notes/open-items-inventory-2026-09-13.md`, container rule in `linear-convention.md`) | <1wk | The plan can't be true while zombie programs compete with it; YED-81 + YED-161 shipped (#73/#74/#75) and dropped to §10 |
+| OBS live GUI pass + first real smoke test + ETL (**YED-177**) | <1d / 3–7d | YED-154 was "Done" on paper only |
 
 ### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
 | Item | Appetite | Why now |
@@ -79,10 +77,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 | Measurement → `alex` plugin promotion | <3d | Only after the loop has produced ≥1 merged fix — the proof it's load-bearing |
 | YED-82 craft + honesty + launch (its security-audit half moves to Phase 0 with YED-81) | 3–7d | The hub as the interview artifact, polished after the quarter's proof exists |
 
-**Deliberately deferred to Q1 2027:** unattended producer scheduling (the only step that spends
-metered tokens *and* runs without Alex — also blocked on the ANTHROPIC-key decision); learned relevance
-weights; embedding-based dedup; hub Phase 4 session replay (YED-113); X/Twitter ingestion (small — slot
-when voice-radar next moves).
+**Deliberately deferred to Q1 2027 → one parked issue, YED-179** (unattended producer scheduling — also blocked on the metered-key decision YED-176; learned relevance weights; embedding-based dedup; X/Twitter ingestion). Hub session replay stays YED-113 (parked).
 
 ## 6. Anchors (Linear milestones M4–M6 on the MI Engine) — and what each proves
 
@@ -98,7 +93,7 @@ when voice-radar next moves).
 - **Canceled:** YED-67 + 68/69/70/71/72/73 (NY Tech Week single-vs-swarm harness — superseded by the cross-provider judge) · YED-41/42/46/57 (Full-Stack-GTM relics) · YED-55/56/59 (Capstone 2 — absorbed conceptually by the MI Engine; the CRM write already exists in YED-142; re-issue as an MI lens when a real outreach friction motivates it) · YED-107 (folded into YED-157 lane D).
 - **Programs closed:** "Full-Stack GTM Roadmap (24-week half)" and "GTM-oS" — milestones at 0%, live ideas already inside the MI Engine + Job-Search Engine. Keeping two programs was the source-of-truth failure at the planning layer.
 - **Re-homed:** YED-47, YED-128, YED-131 → MI Engine · YED-65 → Job-Search Engine · YED-114 → Empire State Hub · YED-129 → Build-Rigor · YED-141 → Empire State Events.
-- **Parked (unchanged):** Orchid re-tone (YED-125 — gtm-OS Hub is GTM-owned by design, ADR-2) · visual-selection marker · Clarify stays dead. *GTM University (YED-98/100/101) un-parked 2026-09-13 → §9.*
+- **Parked:** this file no longer lists parked items. They live in Linear under label `parked` (with a revisit trigger) or in Notion Project Ideas (without one) — `linear-convention.md` §Container rule, 2026-09-18. Clarify stays dead (a ruling, not a park). *GTM University (GTM-3/GTM-10/GTM-11, formerly YED-98/100/101) un-parked 2026-09-13 → §9; all gtm-OS items moved to the `GTM-OS` Linear team 2026-09-18.*
 - **Corrected to git truth:** YED-155 → Done (shipped in #60) · YED-66 → Done (the manual-upload path *is* `/post-event-content`) · YED-81 → High.
 
 ## 8. Pre-mortem (the adversarial pass)
@@ -113,7 +108,10 @@ when voice-radar next moves).
 
 ## 9. Decision log (dated; append, never edit)
 
-- **2026-09-13 — GTM University un-parked (YED-164; reverses the §7 park, Alex's call).** Re-aimed against Anthropic's *Staff AI Engineer, GTM Claudification* JD as a **north-star benchmark, not a pivot** — me-model §1.5 (commercial IC search) stays primary. v2 is add-only (v1 unit ids kept: +28 sub-tasks for oversight design, transcript-analysis evals, observability/ROI, Agent SDK + governed MCP, production engineering, inner-source, experimentation, explainable scoring) plus a sequenced 10-stage path; lives in gtm-os-hub. Overlap with P3 (YED-48 eval harness, YED-109 judge, YED-162 loop) is intentional — those builds count in both places.
+- **2026-09-18 — Oct-9 decisions ruled (Alex).** YED-128 **folded** into YED-168 (migrations become the spine's source of truth by construction; acceptance lines carried). YED-175 systems diagnostic **dropped** — the reconciliation is the intervention; reopen only if the container-rule audit trends up. YED-34 **re-scoped from delete to audit-and-place** after inspection (108 agent + 102 command files of real role content; promote the dispatch-worthy 10–20 to plugin root, fold the rest into umbrella skills as personas/references; delete nothing).
+- **2026-09-18 — Four Oct-2 decisions ruled (Alex, on recommendation).** YED-129: **product = PRD, infra = spec** — ADRs/in-repo references are the spec artifact for infra; the three pending PRD mirrors (judge, ADR-8, inbox-miner) are closed as "ADR is the spec". YED-173: Content Pipeline v2 Stage 2 **killed as a unit** (parts absorbed: schemas → YED-168, eval gates → YED-48/judge, status automation behind the YED-23 flip). YED-174: YED-30 Step 5 CLAUDE.md canonical backport **approved** — execute in a fresh session after PR #79. YED-176: **Gemini fallback stays the default**; no Anthropic key until a scripted Claude call is on the runway.
+- **2026-09-18 — Backlog reconciliation.** Container rule ratified (`linear-convention.md`); ~170 inventory items triaged (`notes/backlog-triage-2026-09-18.md`) into 9 decisions (YED-128/129/34/173–176), ~20 new issues (YED-177–197), merges, and deletions; ADR-8 Amendment 3 (Increment 4); `GTM-OS` Linear team created and the 11 gtm-OS issues moved (GTM-1…11); labels `parked`/`decision` live. Prioritization (step 2) runs on the clean board.
+- **2026-09-13 — GTM University un-parked (GTM-1, formerly YED-164; reverses the §7 park, Alex's call).** Re-aimed against Anthropic's *Staff AI Engineer, GTM Claudification* JD as a **north-star benchmark, not a pivot** — me-model §1.5 (commercial IC search) stays primary. v2 is add-only (v1 unit ids kept: +28 sub-tasks for oversight design, transcript-analysis evals, observability/ROI, Agent SDK + governed MCP, production engineering, inner-source, experimentation, explainable scoring) plus a sequenced 10-stage path; lives in gtm-os-hub. Overlap with P3 (YED-48 eval harness, YED-109 judge, YED-162 loop) is intentional — those builds count in both places.
 - **2026-09-12 — v2 adopted.** §7 ratified; YED-81 re-raised to High and scoped as contract + write-path; the third MI lens = the architecture lens (YED-126). M3 closed honestly; M4–M6 opened as A1–A3. Build-Rigor project reopened to house P3.
 - 2026-09-12 — Git conventions + `reconciliation-terminal-charter.md` (PR #67); ADR numbers are minted from `main`; per-workstream worktrees created on demand, never parked detached.
 - 2026-09-12 — Do **not** archive the Linear project "Empire State Hub" — it is the canonical hub tracker (YED-76/81/82/113 live there). ADR-7 Accepted (#69).
@@ -125,6 +123,7 @@ when voice-radar next moves).
 
 ## 10. Shipped log (condensed; full history in git + the hub `/journal`)
 
+- **2026-09-13 → 09-18** — YED-81 SEC & PII guardrail contract + `spine_client.py` write path (ADR-9, #73) · YED-161 inbox boundary mechanism (#74) + denylist v1 accepted (#75) · YED-166 slide↔recording alignment (#77) · YED-167 Postgres glossary + health review (#78) · ADR-10 Knowledge Substrate stub minted.
 - **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · OBS capture lane (YED-154) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
 - **2026-09-04 → 09-11** — Job-Search Engine v1 (YED-146/147/148/150): me-model ICP, `target-companies.md`, role-radar rubric v2.4, Notion Roles DB; content-quality decision backlog cleared.
 - **2026-08** — MI consolidation (YED-130) · topic-intelligence layer (YED-110/120/122) · progressive engine (YED-115/117/121) · Deep Read brief v2 (YED-136) · build journal (YED-119).

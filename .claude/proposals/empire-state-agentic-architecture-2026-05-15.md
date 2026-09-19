@@ -1,7 +1,7 @@
 # Empire State Events → Production Agentic System
 ## Architecture Brief + Sequenced Build Plan
 
-> **Status:** Proposal for review (not yet decided)
+> **Status:** SUPERSEDED 2026-09-12 by roadmap v2 + ADR-0…10 (ruled in the 2026-09-18 backlog reconciliation). None of the build plan was executed; any still-live gap surfaces on its own through Linear. Historical record only.
 > **Drafted:** 2026-05-15 (session `257aa89a-4761-4ff8-801b-833764c26e5d`)
 > **Committed retroactively:** 2026-05-20 (was conversation-only; reconstructed from transcript)
 > **Author:** Claude (cto-architect framing, with `general-purpose` agent fan-out across `alex-agents-skills/` library)

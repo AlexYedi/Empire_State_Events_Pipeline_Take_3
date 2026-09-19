@@ -33,7 +33,7 @@ One JSON object per session, appended to that session's shard `build-sessions/<s
 ## Forward-compatibility seam
 Semantic fields (`dod_met`, `dod_waived`, `correction_rounds`) are nullable. The DoD gate (US-1) and judge (US-3) write them to `.claude/.state/<session>.build_meta` during the session; the Stop hook folds them into the record. So those features light up the same contract without changing it.
 
-## Deferred upgrade (non-destructive) — do NOT build now
+## Deferred upgrade (non-destructive) — do NOT build now — recorded in `platform-constraints.md` §Vendors (2026-09-18)
 Per the 2026-06-26 decision (lean foundation, defer the platform): the **OTEL collector + Langfuse** path is deferred. Add it only on a named trigger — weekly prompt-level agent-trace debugging, or wanting Langfuse's datasets/experiments for the rubric. When added: Claude Code OTEL → collector → relabel to `gen_ai.*` → fan out to {PostHog, Langfuse}, each writing/deriving this same `build_session` contract. **If Langfuse is adopted, first resolve judge ownership (eval-harness vs Langfuse) to avoid two judges.**
 
 ## Emitter

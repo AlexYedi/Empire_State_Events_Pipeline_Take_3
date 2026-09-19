@@ -1,5 +1,7 @@
 # Market-Intel graph — one-time Notion → graph entity backfill (runbook)
 
+> **SUPERSEDED 2026-09-18 → YED-171.** Backfill runs through the substrate producers (`substrate.py ensure-event` / `stage-claims`), never as a direct load. This file is the historical record of what needed backfilling.
+
 Seeds the graph's entity tables (`company`, `topic`, `person`) from Alex's existing Notion knowledge graph
 so the `/ops/market-intel` dashboard has an immediate watchlist + non-zero counts. **One-time data op**, not
 a recurring Hub feature. REST only (never the Supabase MCP — removed). Read-before-write dedup throughout.

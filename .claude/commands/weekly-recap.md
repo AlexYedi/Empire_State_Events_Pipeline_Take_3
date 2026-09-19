@@ -1,11 +1,11 @@
 ---
-description: "Workflow C (SCAFFOLD — not yet wired) — weekly synthesis of all events, content, and outreach activity. Builds 'The Upcoming Week' Sunday LinkedIn post, runs pattern-synthesis if ≥2 briefs have opposing theses, polishes via voice-pass. Designed for Sunday evening cadence."
+description: "Workflow C (SCAFFOLD — not yet wired; parked YED-198) — weekly synthesis of all events, content, and outreach activity. Builds 'The Upcoming Week' Sunday LinkedIn post, runs pattern-synthesis if ≥2 briefs have opposing theses, polishes via voice-pass. Designed for Sunday evening cadence."
 argument-hint: "[optional: ISO week date, defaults to this week]"
 ---
 
 # /weekly-recap — Workflow C (SCAFFOLD)
 
-> **Status:** Skeleton only. Will be useful after 3-5 events have been put through Workflow A. Not yet wired.
+> **Status:** Skeleton only. Will be useful after 3-5 events have been put through Workflow A. Not yet wired — parked as YED-198 (2026-09-18).
 > **Why scaffolded:** Workflow C operates on a week's worth of briefs. Building it now without that data would be premature.
 
 ---
@@ -22,7 +22,7 @@ Run when Alex:
 - **None required** — pulls everything from Notion automatically
 - **(Optional) Date range override** — for backfilling or future-week previews
 
-## Planned agent flow (NOT YET BUILT)
+## Planned agent flow (NOT YET BUILT — YED-198)
 
 ```
 1. Query Notion (this conversation):

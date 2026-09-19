@@ -16,7 +16,7 @@ Fallback note if resume fails. **This supersedes the older content of this file.
 - ✅ CLAUDE.md `<measurement_rigor_layer>` updated to current reality.
 - ✅ Linear: YED-88/89/93/94 closed Done; **YED-109** opened (cross-provider judge, In Progress) with shipped + roadmap checklist.
 - ✅ This breadcrumb refreshed.
-- ⏳ **DEFERRED to the reconciliation session:** ChatPRD → Notion PRD for the cross-provider judge (durable spec of record); refresh the plan-of-record.
+- ⏳ **DEFERRED to the reconciliation session (→ YED-129, ruled 2026-10-02):** ChatPRD → Notion PRD for the cross-provider judge (durable spec of record); refresh the plan-of-record.
 
 ## Roadmap / open items (also in YED-109)
 - [ ] **Drop "provisional"** — ~15 independent Approach-B runs holding ≥80% Gemini-vs-Alex.
@@ -36,3 +36,6 @@ Fallback note if resume fails. **This supersedes the older content of this file.
 1. **ChatPRD → Notion PRD** for the cross-provider judge (the one durable-spec item left).
 2. **Refresh the plan-of-record** (`~/.claude/plans/check-chatprd-linear-github-tranquil-ripple.md` is stale) or supersede → point to YED-109.
 3. (Separate build decision) the YED-109 judge roadmap: wire dual-judge into `/judge-build`; mechanize the dangling-ref check.
+
+---
+**2026-09-18 reconciliation:** the judge roadmap items above (wire dual-dispatch, mechanize dangling-ref, quorum mechanic) → **YED-187**; de-provisional stays passive; the machine-local plan `~/.claude/plans/check-chatprd-…` is retired (KILL); the judge PRD mirror question → **YED-129**.
