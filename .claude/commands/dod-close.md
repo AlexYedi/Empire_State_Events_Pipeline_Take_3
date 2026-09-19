@@ -20,7 +20,8 @@ fix, config tweak, doc edit, pure research) auto-waive the gate — skip it.
    1. Spec artifact before code (ChatPRD → Notion)
    2. Linear issue opened/updated
    3. One adversarial pass in writing (pre-mortem / `alex:cto-principal-architect` / `alex:risk-playbooks`)
-   4. *(once calibrated)* build-quality judge ran within N hours
+   4. build-quality judge ran on this build, this session. A waiver must say *no gradable artifact* or
+      name the Linear issue holding the make-up run; the writer rejects an item-4 waiver whose reason has neither (YED-201 Fix 1A)
 2. **Ask for `correction_rounds`** — how many corrective back-and-forth rounds this build took (the
    friction signal; optional, integer).
 3. **Call the writer once:**
