@@ -66,11 +66,16 @@ internally and enforces the cap on its own output; the Claude seat is told to tr
 
 **Merge (`.claude/hooks/quorum-merge.sh`):** given `--claude-verdict <json>`, `--gemini-log <path>` (or `--gemini-verdict <json>`),
 `--artifact <path>`, and `--mode interactive|autonomous`, it:
-1. reads both verdicts (`weighted_score`, `verdict`),
-2. sets `agree = (claude.verdict == gemini.verdict)`,
-3. resolves: `agree` → `resolution:"auto"`, final verdict = the agreed verdict; `disagree` + `interactive` →
-   `resolution:"escalated"`, final verdict = `flag` pending Alex; `disagree` + `autonomous` → `resolution:"failsafe_flag"`,
-   final verdict = `flag`,
+1. **recomputes BOTH seats' composites** from their criterion scores + cap flags — neither judge computes its own
+   (`judge-system-v2` rule; the Gemini adapter mechanizes it for its seat, this script does it for the Claude seat, so
+   neither seat's arithmetic can drift from the rubric). A self-reported score that differs is recorded as
+   `claude_selfreported_weighted_score`, never silently kept,
+2. sets `agree = (claude.verdict == gemini.verdict)` and `divergence = |claude.ws − gemini.ws|`,
+3. resolves — **matching verdicts alone do NOT auto-accept** (2026-09-19, YED-206). Escalation reasons:
+   `verdict_mismatch` · `score_divergence` (≥ `QUORUM_DIVERGENCE`, default 0.15) · `flat_ceiling:<seat>` (a seat scoring
+   1.0 on all five criteria = low-information) · `gemini_no_evidence_parity`. No reasons → `resolution:"auto"`, final =
+   the agreed verdict; reasons + `interactive` → `resolution:"escalated"` pending Alex; reasons + `autonomous` →
+   `resolution:"failsafe_flag"`, final = `flag`,
 4. appends one `quorum` record to `.claude/evals/logs/<date>-<artifact>-quorum-<run>.jsonl`:
    `{run_id, timestamp, artifact, claude_run_id, gemini_run_id, claude:{verdict,score}, gemini:{verdict,score},
    agree, resolution, final_verdict, mode, alex_ack:null}` — the schema-stable §6 block, additive to the seat lines.

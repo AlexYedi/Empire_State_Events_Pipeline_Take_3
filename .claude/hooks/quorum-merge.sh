@@ -52,6 +52,33 @@ if [ -z "$GV" ]; then
   [ -z "$GRID" ] && GRID=$(tail -1 "$GLOG" | jq -r '.run_id // empty' 2>/dev/null)
 fi
 
+# --- the harness computes the CLAUDE seat's composite too (2026-09-19 round 3) ------------------
+# judge-system-v2 forbids a judge from computing its own composite ("so they cannot drift from the rubric
+# arithmetic"), and gemini-judge.sh mechanizes that for the Gemini seat. The Claude seat was still trusted to
+# self-report weighted_score/verdict — the rule was asserted universally but enforced on one seat only, and the
+# unenforced one is the seat calibration currently certifies as TRUSTED. Same @5 arithmetic here; a seat verdict
+# without criterion_scores (older shape) is passed through unchanged, and any drift is recorded, never silently kept.
+CV_SELF_WS=$(printf '%s' "$CV" | jq -r '.weighted_score // empty' 2>/dev/null)
+if printf '%s' "$CV" | jq -e '(.criterion_scores|type)=="array" and (.criterion_scores|length)==5 and ([.criterion_scores[].score]|all(type=="number"))' >/dev/null 2>&1; then
+  CV=$(printf '%s' "$CV" | jq -c '
+    def cap(id; max): .criterion_scores |= map(if .id==id and .score>max then .score=max else . end);
+    (.cap_flags // {}) as $f
+    | .criterion_scores |= map(.score |= (if . > 1 then 1 elif . < 0 then 0 else . end))
+    | (if $f.spec_drift then cap("correctness"; 0.70) else . end)
+    | (if $f.command_skeleton_absent then cap("completeness"; 0.35) else . end)
+    | (.criterion_scores|map({(.id): .score})|add) as $s
+    | ($s.correctness*0.30 + $s.completeness*0.20 + $s.convention_adherence*0.20 + $s.anti_pattern_avoidance*0.20 + $s.diagnostics*0.10) as $raw
+    | ([$raw] + (if $f.confidence_honesty_violation then [0.65] else [] end) + (if $f.density_padding then [0.65] else [] end) | min) as $capped
+    | .weighted_score = (($capped*1000|round)/1000)
+    | .verdict = (if .weighted_score >= 0.70 then "pass" else "flag" end)')
+  CV_WS=$(printf '%s' "$CV" | jq -r '.weighted_score')
+  if [ -n "$CV_SELF_WS" ] && [ "$(jq -n --argjson a "$CV_SELF_WS" --argjson b "$CV_WS" '(($a-$b)|fabs) > 0.001')" = "true" ]; then
+    CLAUDE_DRIFT="$CV_SELF_WS"
+    echo "   NOTE: claude seat self-reported $CV_SELF_WS; harness recomputed $CV_WS from its criterion scores (rubric arithmetic wins)." >&2
+  fi
+fi
+CLAUDE_DRIFT="${CLAUDE_DRIFT:-}"
+
 # --- parse verdicts (fail loudly on malformed input rather than silently mis-resolving) ---
 CVD=$(printf '%s' "$CV" | jq -r '.verdict' 2>/dev/null); CWS=$(printf '%s' "$CV" | jq -r '.weighted_score' 2>/dev/null)
 GVD=$(printf '%s' "$GV" | jq -r '.verdict' 2>/dev/null); GWS=$(printf '%s' "$GV" | jq -r '.weighted_score' 2>/dev/null)
@@ -106,7 +133,7 @@ jq -nc \
   --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg sid "$SID" --arg mode "$MODE" \
   --arg crid "$CRID" --arg grid "$GRID" --arg res "$RESOLUTION" --arg final "$FINAL" \
   --argjson agree "$AGREE" --argjson div "$DIV" --argjson reasons "$REASONS_JSON" \
-  --arg cflat "$CFLAT" --arg gflat "$GFLAT" --arg gparity "$GPARITY" \
+  --arg cflat "$CFLAT" --arg gflat "$GFLAT" --arg gparity "$GPARITY" --arg cdrift "$CLAUDE_DRIFT" \
   --arg cvd "$CVD" --arg gvd "$GVD" --argjson cws "$CWS" --argjson gws "$GWS" \
   '{run_id:$rid, timestamp:$ts, artifact:$art, session_id:$sid, record_type:"quorum",
     claude:{verdict:$cvd, weighted_score:$cws, run_id:$crid},
@@ -114,5 +141,7 @@ jq -nc \
     agree:$agree, resolution:$res, final_verdict:$final, mode:$mode,
     divergence:$div, escalation_reasons:$reasons, flat_ceiling:{claude:($cflat=="true"), gemini:($gflat=="true")},
     gemini_evidence_parity:($gparity=="true"), weak_corroboration:($gflat=="true" or $gparity=="false"),
+    claude_scoring:(if $cdrift=="" then "as-reported-or-recomputed-equal" else "harness-recomputed" end),
+    claude_selfreported_weighted_score:(if $cdrift=="" then null else ($cdrift|tonumber) end),
     quorum_rules:"2026-09-19 divergence+flat-ceiling (YED-206)", alex_ack:null}' > "$OUT"
 echo "   logged -> $OUT"
