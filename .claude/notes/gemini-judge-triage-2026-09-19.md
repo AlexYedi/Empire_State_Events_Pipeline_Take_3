@@ -72,6 +72,27 @@ contradiction found) and not on another. What held in both cases is the harness:
 Caveat on this particular run: the artifact is the seat's *own* harness, so self-preference may be in play on top of
 the halo effect. Either way the operating rule stands — **Gemini is advisory; a flat 1.0 never auto-accepts.**
 
+## Round 2 + 3: the trusted seat judged the fixes, and flagged them
+
+**Round 2 (Sonnet, 0.65 → flag).** The fix for incomplete rollouts had an incomplete rollout. Three majors, all real:
+`kappa()` returned **1.0 on a zero-variance sample** (claude:opus, 6 unanimous passes — the same illusion of
+calibration this work exists to kill) · `calibration_stats.py`'s docstring claimed excluded rows are excluded but the
+filter was only in the scoring loop · **`judge-build/SKILL.md` Step 2 still dispatched the Sonnet seat with
+`judge-system.md` + `build-quality-v4.md`** while its sibling command file said v2/@5 — spec drift inside the
+spec-drift fix. Plus three minors (silent null→0 clamp, a comment describing append semantics no writer implements,
+a cap flag with no defect evidence). All six fixed in `57b0a39`.
+
+**Round 3 (Sonnet, 0.889 → pass; all six fixes verified against the running code).** One new minor, also fair: the
+`judge-system-v2` rule *"the harness recomputes the composite so it cannot drift from the rubric arithmetic"* was
+**mechanized for the advisory Gemini seat only** — the TRUSTED Sonnet seat still self-reported its own composite.
+Fixed: `quorum-merge.sh` now recomputes both seats' composites from criterion scores + cap flags, records any
+self-reported value as `claude_selfreported_weighted_score`, and the seat contract in SKILL.md drops
+`weighted_score`/`verdict`. Regression tests moved into the repo: `.claude/evals/test_quorum_scenarios.py` (6/6).
+
+**The pattern worth keeping:** every round, the trusted seat found something real in work produced by this session —
+an incomplete migration, a metric that flattered a starved sample, a rule enforced on the weak seat but not the
+strong one. That is the cross-provider quorum doing its job, and the argument for keeping a seat that can say no.
+
 ## Still open
 - `claim_relation` has no producer (in S1a scope, empty table) and `claim.quote` is never populated — tracked on YED-169.
 - Haiku sits just under the κ/recall bars; it is not currently a quorum seat, so no action beyond the record.
