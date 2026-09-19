@@ -3,7 +3,7 @@
 ## Context
 Alex got a late (Jun 23) approval for **NYC AI Demos #10: VENTURE SPOTLIGHT** — curated, tonight Wed Jun 24, 6–8 PM, The Refinery at Domino, Brooklyn. Curating firms: **Thrive Capital, First Round Capital, Index Ventures, Inspired Capital, Able Partners (+ "and more")**, >$60B AUM combined. Hosts: **Kyle Bhiro (Pensar)** + **TechNYC**.
 
-The bigger picture, in Alex's words: he is **transitioning out of the family business — employment is the ultimate goal** for this next chapter. So the confirmed VC list is more than trivia: it's a **job-target map**. The primary new deliverable is a screened board of **open, relevant NYC roles at these firms' AI portfolio companies**. The event-prediction exercise stays, but secondary.
+The bigger picture: Alex is **actively job-searching for the next chapter**, targeting AI-native companies. So the confirmed VC list is more than trivia: it's a **job-target map**. The primary new deliverable is a screened board of **open, relevant NYC roles at these firms' AI portfolio companies**. The event-prediction exercise stays, but secondary.
 
 This plan = three deliverables. **#3 (the job map) is the priority.**
 

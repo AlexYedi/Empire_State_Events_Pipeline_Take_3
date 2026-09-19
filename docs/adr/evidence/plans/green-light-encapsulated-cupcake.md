@@ -72,7 +72,7 @@ selling style** — the product generates inbound demand, the biggest structural
 the seller carries all demand-gen.
 **Differentiator (his edge, folded in):** deep GTM + GTM-systems/AI-building + technical fluency
 (SDLC, AI/ML, consumption models); weight up roles that explicitly value building-with-AI.
-**Comp band:** ≥$200K OTE.
+**Comp band:** at or above the OTE floor in the private me-model (numbers redacted 2026-09-19).
 
 ## Rubric v2 — replaces `role-radar/SKILL.md` Step 3 (weights LOCKED by Alex)
 
@@ -86,7 +86,7 @@ the seller carries all demand-gen.
 
 **Tiers:** A ≥78 (apply) · B 60–77 · C 40–59 · drop <40.
 **Auto-reject:** "own every stage incl. prospecting/demand-gen," no support named; pure-hunter IC;
-sub-$180K; non-AI company — regardless of title.
+below the comp floor; non-AI company — regardless of title.
 
 ## Source-mix v2 (`role-radar/SKILL.md` Step 1)
 

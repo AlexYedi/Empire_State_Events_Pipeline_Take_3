@@ -95,7 +95,7 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 | **AI-multiplier differentiator fit** | 0–10 | JD explicitly values building-with-AI / GTM-systems / technical fluency (SDLC, AI/ML) / consumption-model expertise ("you build with AI daily," "use AI creatively") = up to **10** |
 | **Location / culture** | 0–10 | NYC or hybrid (in-person expectation) = **10** · remote-listed but the company has an **NYC office** (in-office optional) = **5** · **fully remote / no office / no in-person culture = 0** (a culture signal, not just a seat) |
 
-**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; **sub-$200K OTE** (v2.3 floor); traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
+**Auto-reject (flag, do not rank):** owns every stage incl. prospecting/demand-gen with **no existing-business component and no support named**; pure-quota hunter IC with no systems/AI surface; **below the OTE floor** (v2.3; the number lives in `me-model.md` §1.5); traditional/non-AI company — regardless of title. **The reject is lifted by the v2.1 exemptions below** (explicit existing-business component, or PLG-primary motion).
 
 **Tiers (v2.4, 2026-09-11):** **A = ≥85** (apply now) · **B = 60–84** (review) · **C = 40–59** (watch) · **drop < 40**.
 
@@ -126,7 +126,7 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
 
 ### Rubric v2.3 — comp floor & level flexibility (added 2026-09-09 — Alex)
 
-- **Comp gate = $200K OTE floor** (auto-reject below; raised from $180K). Within range: **$300K+ ideal · >$250K strong · $200–300K fully acceptable — do NOT penalize the $200–300K band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a $220K seat at a top-tier rocketship can beat a $320K seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
+- **Comp gate = the OTE floor in `me-model.md` §1.5** (auto-reject below; the numbers and bands live only there, since comp targets stay private). Within range, use the me-model's **ideal / strong / fully-acceptable bands, and do NOT penalize the fully-acceptable band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a floor-level seat at a top-tier rocketship can beat an ideal-band seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
 - **Level flexibility — Mid-Market is IN at top-tier companies.** Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
