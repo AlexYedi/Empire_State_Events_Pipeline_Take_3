@@ -60,13 +60,13 @@ earlier = more time for project ideation and building.
 | 2.2 | **Auto** | Skill loads research brief + reference files (style guide, anti-patterns, outreach templates) | Context assembled | ~1 min |
 | 2.3 | **Manual** | Confirm which content types to generate (weekly post, per-event post, DMs, all) | — | ~30 sec |
 | 2.4 | **Auto** | Skill generates LinkedIn post (2 variants) | — | ~2 min |
-| 2.5 | **Auto** | Skill generates visual content briefs (3 per post) | Prompts for Canva/Gemini/Gamma | ~1 min |
+| 2.5 | **Auto** | Skill generates visual content briefs (3 per post) | Briefs for Claude design (Gemini for pictorial) | ~1 min |
 | 2.6 | **Manual** | Select post variant, provide voice/tone feedback | Captures feedback for style guide updates | ~3 min |
 | 2.7 | **Auto** | Skill generates speaker/host DMs (2-3 per person per topic) | — | ~3 min |
 | 2.8 | **Manual** | Select DMs to send, provide feedback on tone | Unused DM questions become prepared questions | ~5 min |
 | 2.9 | **Auto** | Skill compiles prepared questions from unused DMs | — | ~1 min |
 | 2.10 | **Auto** | Skill writes all content to Notion Content Drafts | Posts, DMs, questions saved with relations | ~2 min |
-| 2.11 | **Manual** | Create visuals using briefs (Canva, Gemini, Gamma) | Supporting images/carousels for posts | 15-30 min |
+| 2.11 | **Manual** | Render visuals from the briefs with Claude design (Gemini for pictorial) | Supporting images/carousels for posts | ~5 min (automated PDF export) |
 | 2.12 | **Manual** | Post to LinkedIn, send DMs | Content goes live | Per your scheduling |
 
 **Trigger:** You say "invoke pre-event content skill for [event name]"
@@ -178,7 +178,7 @@ Quick reference of everything that requires your action:
 | **Discovery** | Find + register for events | Ongoing |
 | **Research trigger** | Paste invite, invoke skill, review brief | Per event |
 | **Content trigger** | Invoke skill, select variants, feedback on voice/tone | Per event |
-| **Visual creation** | Use **Gamma** (default; per visual-briefs.md); Canva/Imagen fallback | Per event |
+| **Visual creation** | Use **Claude design** (default; per visual-briefs.md `## Execution`); Gemini for pictorial | Per event |
 | **Content publishing** | Post to LinkedIn, send DMs | Per event |
 | **Ideation trigger** | Invoke skill, review proposals, select projects | Per event |
 | **Building** | Execute roadmap, deploy, document | Per active project |

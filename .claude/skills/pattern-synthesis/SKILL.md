@@ -174,39 +174,20 @@ Produce the carousel brief in the output schema defined at the bottom of
 
 If any gate fails, redraft before moving to Step 6c.
 
-### Step 6c — Auto-render the carousel via Gamma MCP (default; updated 2026-05-26)
+### Step 6c — Render the carousel with Claude design (default; rewritten 2026-09-19, YED-200)
 
-After the brief passes Step 6b's quality gates AND Step 8 writes the Content
-Draft to Notion, generate the carousel with `mcp__claude_ai_Gamma__generate`
-(`format: "social"`, `cardOptions.dimensions: "4x5"`, `numCards` = slide count,
-Stratos theme, `imageOptions.source: "noImages"`, stats-as-visuals in
-`additionalInstructions`) per `../content-patterns/visual-briefs.md` →
-`## MCP execution — Gamma (default); Canva (fallback only)`. Gamma is the default
-ship path; Canva is a fallback only (demoted 2026-05-26 for garbling dense
-labels). The Canva sequence below is retained as that fallback.
+After the brief passes Step 6b's quality gates AND Step 8 writes the Content Draft to Notion, render
+the carousel per `../content-patterns/visual-briefs.md` → `## Execution — Claude design (default) +
+Gemini (pictorial)`: Claude authors a self-contained 4:5 HTML/SVG design and exports it to PDF. **Do
+not restate the mechanics here**; that section is the one source of truth.
 
-**Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1
-and 2 (Thesis A and Thesis B) MUST share visual frame exactly. When building
-the `query` payload for Slide 2, include the explicit instruction: "LAYOUT:
-Must use IDENTICAL layout to slide 1 of this same carousel — same quote
-placement, same attribution layout, same type hierarchy. Frame parallelism is
-the editorial choice — without it, the reader concludes one thesis is more
-important than the other." Without this, Canva auto-styles each independently
-and the parallel structure breaks.
+**Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1 and 2 (Thesis A and
+Thesis B) MUST share a visual frame exactly: same quote placement, same attribution layout, same type
+hierarchy (one shared CSS class for both slides). Frame parallelism is the editorial choice. Without
+it, the reader concludes one thesis is more important than the other.
 
-Sequence per slide:
-1. Build `query` payload from the slide spec.
-2. Call `mcp__claude_ai_Canva__generate-design` with `design_type: "instagram_post"`.
-3. Receive 4 candidates per slide.
-4. Surface all candidates (4-5 slides × 4 candidates = 16-20 total) in a single
-   markdown table covering all slides.
-5. On Alex's selection, fire `mcp__claude_ai_Canva__create-design-from-candidate`
-   per chosen design.
-6. If tweaks needed, iterate via `mcp__claude_ai_Canva__perform-editing-operations`
-   — do not re-fire `generate-design` for minor changes.
-
-The brief still lives in the Notion page body as a human-readable reference;
-auto-render runs alongside, not instead.
+The brief still lives in the Notion page body as a human-readable reference; the render runs
+alongside it, not instead of it.
 
 ### Step 7 — Draft speaker/host DMs (sub-outputs)
 For each speaker or host whose thesis anchors the post (typically 2-4 people total
