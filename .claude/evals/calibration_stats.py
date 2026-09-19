@@ -12,11 +12,15 @@ scored (triage: .claude/notes/gemini-judge-triage-2026-09-19.md). This reports, 
   flag precision   of the seat's flags, how many Alex agreed with
   flat 1.0         share of runs scoring 1.0 on every criterion (low-information)
 
+kappa is None (printed as "—") when the sample has zero variance: a seat scored only against unanimous
+verdicts has no measurable discrimination, and reporting 1.0 there would be the very illusion this file
+exists to expose.
+
 Alex's verdict comes from `alex_ack` on ANY seat's row for that artifact (agree -> that row's verdict;
 disagree -> its opposite). An artifact is often re-judged after being edited, so a run is matched to the
 NEAREST-IN-TIME ack for the same artifact and only within --window days (default 3); its own ack always
 wins. Rows with evidence_parity:false or calibration_set in {negative-control, triage-experiment} are
-excluded.
+excluded — from BOTH the ground-truth pool and the per-seat scoring.
 
 Usage: python3 .claude/evals/calibration_stats.py [--logs .claude/evals/logs] [--json]
 """
@@ -66,13 +70,21 @@ def seat_of(r: dict) -> str | None:
 
 
 def kappa(pairs: list[tuple[str, str]]) -> float | None:
-    """Cohen's kappa for two binary raters over the same items."""
+    """Cohen's kappa for two binary raters. UNDEFINED (None) on a zero-variance sample.
+
+    When every item in the sample carries the same label, pe == 1 and kappa is 0/0. Returning 1.0 there
+    would report 'perfect agreement corrected for chance' for a seat that has never been tested against a
+    single flag — the same illusion of calibration this file exists to expose (it did exactly that for
+    claude:opus: 6 unanimous passes -> kappa 1.0). sklearn treats this as undefined; so do we.
+    """
     n = len(pairs)
     if n == 0:
         return None
     po = sum(a == b for a, b in pairs) / n
     pe = sum((sum(a == v for a, _ in pairs) / n) * (sum(b == v for _, b in pairs) / n) for v in ("pass", "flag"))
-    return 1.0 if pe == 1 else round((po - pe) / (1 - pe), 3)
+    if pe >= 1:                       # zero variance in at least one rater -> kappa undefined, never 1.0
+        return None
+    return round((po - pe) / (1 - pe), 3)
 
 
 def main() -> int:
@@ -94,7 +106,9 @@ def main() -> int:
 
     truths: dict[str, list[tuple[float, str]]] = collections.defaultdict(list)
     for r in rows:
-        ack = ack_verdict(r.get("alex_ack"))
+        if r.get("calibration_set") in EXCLUDE_SETS or r.get("evidence_parity") is False:
+            continue          # excluded rows must not seed ground truth either, or an excluded ack
+        ack = ack_verdict(r.get("alex_ack"))   # can be handed to a legitimate run via nearest-ack matching
         art = r.get("artifact")
         if not ack or not art:
             continue

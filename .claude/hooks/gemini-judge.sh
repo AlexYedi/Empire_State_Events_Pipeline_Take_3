@@ -163,6 +163,13 @@ fi
 # quorum escalates instead of auto-accepting).
 echo "$VERDICT_JSON" | jq -e '(.criterion_scores|map(.id)|sort) == ["anti_pattern_avoidance","completeness","convention_adherence","correctness","diagnostics"]' >/dev/null 2>&1 \
   || { echo "ERROR: verdict JSON lacks exactly the 5 criteria:" >&2; echo "$VERDICT_JSON" | head -c 600 >&2; exit 1; }
+# every criterion score must be a real number: jq sorts null BELOW every number, so an absent score would be
+# silently clamped to 0 by the range-clamp below ("model skipped a criterion" would become "worst possible defect").
+echo "$VERDICT_JSON" | jq -e '[.criterion_scores[].score] | all(type == "number")' >/dev/null 2>&1 \
+  || { echo "ERROR: a criterion score is missing or non-numeric:" >&2; echo "$VERDICT_JSON" | jq -c '.criterion_scores' >&2; exit 1; }
+# a cap flag with no matching defect is evidence-free: cap anyway (fail-safe = lower), but say so.
+echo "$VERDICT_JSON" | jq -r '[.cap_flags | to_entries[] | select(.value)] as $f | if ($f|length) > 0 and ((.defects|length) == 0)
+  then "  ⚠️  cap flag(s) set with an EMPTY defects[] (" + ([$f[].key] | join(", ")) + ") — capping anyway; evidence missing." else empty end' >&2
 HAS_DANGLING=$([ -n "$DANGLING" ] && echo true || echo false)
 VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c --arg atype "$ATYPE" --argjson dangling "$HAS_DANGLING" '
   def cap(id; max; why): .criterion_scores |= map(if .id==id and .score>max then (.score=max | .reasoning=(.reasoning+" [harness cap "+(max|tostring)+": "+why+"]")) else . end);

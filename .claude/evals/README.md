@@ -36,7 +36,8 @@ LLM-as-judge has **self-preference bias** — here it's judging work produced by
 |---|---|---|---|---|---|---|---|
 | `claude:sonnet` | 16 | 0.90 | 0.50 | **0.80** | **0.80** | 0.00 | **trusted seat** — meets all four |
 | `claude:haiku` | 27 | 0.81 | 0.67 | 0.55 | 0.56 | 0.00 | borderline (κ + recall just under) |
-| `gemini` | 40 | 0.80 | 0.75 | **0.27** | **0.20** | **0.82** | **ADVISORY — fails 3 of 4** |
+| `gemini` | 41 | 0.80 | 0.75 | **0.27** | **0.20** | **0.83** | **ADVISORY — fails 3 of 4** |
+| `claude:opus` | 6 | 1.00 | 1.00 | — | — | 0.00 | not a seat; κ undefined (zero-variance sample) |
 
 - Seats are **advisory** until they clear all four bars; advisory seats are recorded and surfaced but **cannot auto-accept** a quorum (`quorum-merge.sh` escalates on divergence / flat ceiling / missing parity).
 - Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
