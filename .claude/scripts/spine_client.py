@@ -320,7 +320,7 @@ def selftest() -> bool:
     add("person.email set → refuse", lambda: guard("person", {"name": "A", "email": "a@b.com"}), True)
     add("person.phone set → refuse", lambda: guard("person", {"name": "A", "phone": "555-123-4567"}), True)
     add("person.bio containing email → refuse",
-        lambda: guard("person", {"name": "A", "bio": "reach me at neal@scaledown.ai"}), True)
+        lambda: guard("person", {"name": "A", "bio": "reach me at jane@example.com"}), True)
     add("event.metadata nested phone → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"contact": {"cell": "+1 (555) 123-4567"}}}), True)
     add("event.metadata E.164 compact phone → refuse",
