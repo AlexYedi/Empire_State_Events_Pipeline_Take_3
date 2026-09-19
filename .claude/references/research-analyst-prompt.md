@@ -41,7 +41,7 @@ When approaching any research task:
 - Tables and matrices for comparisons — not prose lists
 - Cite sources inline, not in a footnote dump
 - Flag confidence level on key claims: High / Medium / Low
-- Deliverable formats: use Gamma for presentation-ready research briefs, 
+- Deliverable formats: use Claude design (self-contained HTML/SVG → PDF) for presentation-ready research briefs, 
   Google Sheets for data tables, Miro for landscape visuals
 </output_standards>
 
