@@ -3,8 +3,10 @@
 The single home for LLM-as-judge quality evaluation in this pipeline. Established 2026-06-26 by the build-rigor layer (Linear YED-89 / PRD US-3); **coordinates with the `eval-harness` project** (Notion Project Ideas `348d3699…`), which owns the rubric/judge conventions and `rubric_version`. When eval-harness is built, its skill rubrics (pre-event-content, etc.) live here too. **One judge system, not two** (never-duplicate-state).
 
 ## Layout
-- `rubrics/<name>.md` — rubric-as-code: criteria + weights + pass bands + ≥1 pass/fail example each, plus a machine-readable JSON block. Versioned as `<name>@N`; never mutate old versions (bump instead). **Current build rubric: `build-quality@4`** (`rubrics/build-quality-v4.md`, live 2026-08-21 — added the artifact-type-scoped **density cap** ≤0.65 for `deep_read` renders, mechanized by `hooks/density-check.sh`; YED-136). For every artifact type except `deep_read`, `@4` ≡ `@3`. `build-quality-v3.md` (`@3`, confidence-honesty cap), `build-quality-v2.md` (`@2`, dangling-ref + command-skeleton caps) and `build-quality.md` (`@1`) are retained for runs scored under them.
-- `prompts/judge-system.md` — the shared, immutable judge system prompt.
+- `rubrics/<name>.md` — rubric-as-code: criteria + weights + pass bands + ≥1 pass/fail example each, plus a machine-readable JSON block. Versioned as `<name>@N`; never mutate old versions (bump instead). **Current build rubric: `build-quality@5`** (`rubrics/build-quality-v5.md`, live 2026-09-19 — earned-1.0 scale + 0.85 mid anchor, `defects[]` required, NEW spec-drift cap correctness ≤0.70; YED-206). Previous: **`build-quality@4`** (`rubrics/build-quality-v4.md`, live 2026-08-21 — added the artifact-type-scoped **density cap** ≤0.65 for `deep_read` renders, mechanized by `hooks/density-check.sh`; YED-136). For every artifact type except `deep_read`, `@4` ≡ `@3`. `build-quality-v3.md` (`@3`, confidence-honesty cap), `build-quality-v2.md` (`@2`, dangling-ref + command-skeleton caps) and `build-quality.md` (`@1`) are retained for runs scored under them.
+- `prompts/judge-system.md` — the shared judge system prompt, v1 (kept for runs scored under it).
+- `prompts/judge-system-v2.md` — **current** (2026-09-19, YED-206): defects-before-scores, an earned 1.0, spec-before-impression, don't-trust-docstrings; the harness (not the judge) computes the composite.
+- `calibration_stats.py` — per-seat agreement · always-pass baseline · Cohen's κ · flag recall · flat-1.0 rate.
 - `logs/<YYYY-MM-DD>-<artifact>-<run-id>.jsonl` — **authoritative** append-only run-log (the source of truth). Notion is a *deferred projection*, not the store (same contract-first pattern as `build-session-contract.md`).
 
 ## Run-log record schema
@@ -16,10 +18,28 @@ The single home for LLM-as-judge quality evaluation in this pipeline. Establishe
 ```
 `alex_ack` is the **calibration field** — `null` until Alex reviews, then `"agree" | "disagree"` (+ optional note).
 
-## The calibration gate (≥80%) — the judge is ADVISORY until it earns trust
-LLM-as-judge has **self-preference bias** — here it's judging work produced by a similar model (the "judge circularity" risk eval-harness flagged as R1). So:
-- The judge is **advisory only** until ≥20 logged runs reach **≥80% judge–human agreement** (Alex acks). Do NOT gate the DoD on it before then.
-- Re-check agreement on a rolling basis; <80% ⇒ tighten the rubric, don't trust the score.
+## The calibration gate — per seat, and raw agreement is NOT enough (revised 2026-09-19, YED-206)
+LLM-as-judge has **self-preference bias** — here it's judging work produced by a similar model (the "judge circularity" risk eval-harness flagged as R1). The original gate was "≥20 runs at ≥80% judge–human agreement". **That number is gameable by a seat that passes everything**: when Alex flags ~1 in 5 artifacts, a constant "pass" scores ~80% on its own. The Gemini seat's celebrated "83%" was exactly its always-pass baseline (triage: `.claude/notes/gemini-judge-triage-2026-09-19.md`).
+
+**The gate is now four numbers per seat**, produced by `python3 .claude/evals/calibration_stats.py`:
+
+| metric | bar | why |
+|---|---|---|
+| agreement vs Alex | ≥ 0.80 **and above that seat's always-pass baseline** | the old number, kept but no longer alone |
+| Cohen's κ | ≥ 0.60 | agreement corrected for chance; κ≈0 = adds nothing over always-passing |
+| flag recall | ≥ 0.60 | of the artifacts Alex would send back, how many the seat caught — what a gate actually needs |
+| flat-1.0 rate | < 0.30 | a seat scoring 1.0 on every criterion is low-information whatever its verdict |
+
+**Standing as of 2026-09-19** (50 acked runs over 34 artifacts):
+
+| seat | runs | agree | baseline | κ | flag recall | flat 1.0 | standing |
+|---|---|---|---|---|---|---|---|
+| `claude:sonnet` | 16 | 0.90 | 0.50 | **0.80** | **0.80** | 0.00 | **trusted seat** — meets all four |
+| `claude:haiku` | 27 | 0.81 | 0.67 | 0.55 | 0.56 | 0.00 | borderline (κ + recall just under) |
+| `gemini` | 40 | 0.80 | 0.75 | **0.27** | **0.20** | **0.82** | **ADVISORY — fails 3 of 4** |
+
+- Seats are **advisory** until they clear all four bars; advisory seats are recorded and surfaced but **cannot auto-accept** a quorum (`quorum-merge.sh` escalates on divergence / flat ceiling / missing parity).
+- Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
 - The judge **scores + flags; it never auto-rewrites and never hard-blocks.**
 
 ## Deferred (non-destructive, do NOT build now) — now YED-188 (parked slate) + `platform-constraints.md` (2026-09-18)
