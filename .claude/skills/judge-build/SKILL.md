@@ -8,7 +8,7 @@ description: "Cross-provider LLM-as-judge for build artifacts (skills/commands/h
 You orchestrate the **build-quality judge** so quality is a measurable, cross-provider signal — not a vibe, and not a single model rating its own family's work. Part of the build-rigor measurement layer (PRD US-3 / Linear YED-89; cross-provider quorum = YED-109). Home is `.claude/evals/`. Full design: **`.claude/references/cross-provider-judge.md`** (read it once).
 
 **Load first (every run):**
-- `.claude/evals/prompts/judge-system.md` — the immutable judge instructions. Follow verbatim.
+- `.claude/evals/prompts/judge-system-v2.md` — the **current** judge instructions (defects-before-scores, earned 1.0, don't-trust-docstrings). Follow verbatim. (`judge-system.md` = v1, retained for runs scored under it.)
 - `.claude/evals/rubrics/build-quality-v5.md` — the **current** rubric (`build-quality@5`, live 2026-09-19, YED-206): 1.0 must be EARNED ("searched and can name what was checked") + a 0.85 mid anchor, `defects[]` required before scores, and a **NEW spec-drift cap (correctness ≤0.70)** when behaviour contradicts a numbered spec/ADR decision. Pair with `prompts/judge-system-v2.md`. Record `rubric: "build-quality@5"` in every run-log. Inherited from `@4`: 5 criteria + weights, pass band 0.70, and the caps — composite **confidence-honesty cap ≤0.65** (unverified-asserted-as-verified → flag) + completeness caps (dangling-reference ≤0.60; command-skeleton-absent ≤0.35) + the **density cap ≤0.65 (`deep_read` artifacts only)** — padding (high word-to-cited-fact ratio that is generic-explainer filler, NOT legitimate novice on-ramp) → flag. (`build-quality-v4.md`/`-v3.md`/`-v2.md`/`.md` = retained `@3`/`@2`/`@1`; never mutate old versions. For every artifact type EXCEPT `deep_read`, `@4` ≡ `@3`.)
 
 **Ground rules:**
@@ -31,7 +31,7 @@ You orchestrate the **build-quality judge** so quality is a measurable, cross-pr
 Read the file(s). If a spec/AC was given (or findable in Linear/the PRD), hold the artifact against it. Note `artifact_type`.
 
 ## Step 2 — Run the two seats (both score all 5 criteria independently, 0–1 + reasoning)
-- **Claude (Sonnet) seat — house-aware.** Dispatch via the `Agent` tool with **`model: sonnet`** (independent of the Opus main thread, avoids Opus-judging-Opus self-preference; keeps house context). Give it `judge-system.md` + `build-quality-v4.md` + the artifact + the Step-0 missing-refs list + (for `deep_read`) the density signal + any spec. It returns the 5-criterion JSON (`{criterion_scores[], confidence_honesty_violation, weighted_score, verdict}`). Apply the **judge-circularity caution** (be *more* skeptical of plausible-but-wrong work).
+- **Claude (Sonnet) seat — house-aware.** Dispatch via the `Agent` tool with **`model: sonnet`** (independent of the Opus main thread, avoids Opus-judging-Opus self-preference; keeps house context). Give it `judge-system-v2.md` + `build-quality-v5.md` + the artifact + the Step-0 missing-refs list + (for `deep_read`) the density signal + any spec. It returns `{checks_performed[], defects[], criterion_scores[], cap_flags{}, weighted_score, verdict}` — **defects first**, same contract as the Gemini seat. Apply the **judge-circularity caution** (be *more* skeptical of plausible-but-wrong work).
 - **Gemini seat — independent (cross-provider).** Run `bash .claude/hooks/gemini-judge.sh --artifact <path> --artifact-type <t> --calibration-set prospective [--context "<spec>"]`. It scores the same rubric (`@5`), mechanically enforces the dangling-ref cap, runs the density pre-pass for `deep_read` (flag, not hard-cap), and **writes its own run-log line** (`judge_provider:"google"`). **Pass `--artifact-type deep_read` when judging a rendered Deep Read** so the density signal is computed.
 - **Scoped quorum weighting** (per the spec): Gemini carries **full weight** on the provider-neutral criteria (`correctness`, `completeness`); the Claude/Sonnet seat is **primary** on the house-specific criteria (`convention_adherence`, `anti_pattern_avoidance`) where Gemini lacks native Empire-State context; `diagnostics` shared.
 
@@ -64,5 +64,5 @@ Claude/Sonnet {ws}  |  Gemini {ws}   agree: {bool}
 - **Rubric feels wrong for this artifact type** — record it in the ack note; a signal to add an artifact-type rubric later (don't bend the score).
 
 ## Reuses / references
-- `.claude/hooks/{check-refs.sh, density-check.sh, gemini-judge.sh, quorum-merge.sh}` · `.claude/evals/{prompts/judge-system.md, rubrics/build-quality-v4.md, README.md}` · design: `.claude/references/cross-provider-judge.md`.
+- `.claude/hooks/{check-refs.sh, density-check.sh, gemini-judge.sh, quorum-merge.sh}` · `.claude/evals/{prompts/judge-system-v2.md, rubrics/build-quality-v5.md, README.md, calibration_stats.py}` · design: `.claude/references/cross-provider-judge.md`.
 - Coordinates with `eval-harness` (Notion `348d3699…`) — same judge home; eval-harness owns `rubric_version`.

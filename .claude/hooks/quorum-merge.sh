@@ -45,7 +45,8 @@ case "$MODE" in interactive|autonomous) ;; *) echo "ERROR: --mode must be intera
 # --- gemini verdict: inline JSON or read from its run-log line ---
 if [ -z "$GV" ]; then
   [ -n "$GLOG" ] && [ -r "$GLOG" ] || { echo "ERROR: need --gemini-verdict or a readable --gemini-log" >&2; exit 2; }
-  # a log file may hold several appended runs — the LAST line is the run being merged
+  # the adapter writes its run-log with `>` (one line per file today); tail -1 is defensive in case a future
+  # writer appends, and is a no-op on a single-line file.
   GV=$(tail -1 "$GLOG" | jq -c '{verdict, weighted_score, criterion_scores, flat_ceiling, evidence_parity}' 2>/dev/null) \
     || { echo "ERROR: could not parse gemini verdict from $GLOG" >&2; exit 2; }
   [ -z "$GRID" ] && GRID=$(tail -1 "$GLOG" | jq -r '.run_id // empty' 2>/dev/null)
