@@ -264,16 +264,11 @@ When Alex gives you event input, produce:
    two. Run the quality gates from `visual-briefs.md` before handing the brief
    to Alex.
 
-6. **Auto-render the visual via Gamma MCP** (default; updated 2026-05-26) — after
-   the brief is finalized AND the Content Draft is written to Notion via
-   `notion-writer`, generate with `mcp__claude_ai_Gamma__generate` per
-   `../content-patterns/visual-briefs.md` → `## MCP execution — Gamma (default);
-   Canva (fallback only)`: `format: "social"`, `cardOptions.dimensions: "4x5"`,
-   `numCards` = slide count, Stratos theme, `imageOptions.source: "noImages"`,
-   stats-as-visuals in `additionalInstructions`. Surface the `gamma.app/docs/...`
-   URL(s); Gamma can't be MCP-edited (Alex refines in the Gamma editor); export
-   carousels as PDF. Gamma is the default — Canva is a fallback only (demoted
-   2026-05-26 for garbling dense labels). The brief still ships in the Notion
+6. **Render the visual with Claude design** (default; rewritten 2026-09-19, YED-200). After the
+   brief is finalized AND the Content Draft is written to Notion (parent thread), render per
+   `../content-patterns/visual-briefs.md` → `## Execution — Claude design (default) + Gemini
+   (pictorial)`: a self-contained 4:5 HTML/SVG design exported to PDF for structured visuals; Gemini
+   for pictorial imagery. Do not restate the mechanics here. The brief still ships in the Notion
    page body as the human reference.
 
 **On request (or when Day 7 / Day 21 timing comes up in the conversation):**
