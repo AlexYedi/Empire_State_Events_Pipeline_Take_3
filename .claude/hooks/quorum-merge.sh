@@ -143,5 +143,5 @@ jq -nc \
     gemini_evidence_parity:($gparity=="true"), weak_corroboration:($gflat=="true" or $gparity=="false"),
     claude_scoring:(if $cdrift=="" then "as-reported-or-recomputed-equal" else "harness-recomputed" end),
     claude_selfreported_weighted_score:(if $cdrift=="" then null else ($cdrift|tonumber) end),
-    quorum_rules:"2026-09-19 divergence+flat-ceiling (YED-206)", alex_ack:null}' > "$OUT"
+    quorum_rules:"2026-09-19 divergence+flat-ceiling (YED-206)", alex_ack:null}' >> "$OUT"   # append: a same-day re-judge must not clobber the earlier round (YED-201)
 echo "   logged -> $OUT"

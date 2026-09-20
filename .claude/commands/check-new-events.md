@@ -67,7 +67,7 @@ For each event with a PIPELINE block, extract the structured fields using natura
 
 Required fields: Speakers, Host, Topics. If any of these are missing or empty, log the event as a parse warning and exclude it from processing — surface it at the end of the run.
 
-**Also capture the Google Calendar event ID** from the GCal MCP response's `id` field (NOT the iCalUID — use the `id` field, which is what Granola's API returns as `calendar_event_id`). This is the stable join key to Granola's notes and downstream content. Pass it through to `/event-deep-research` as a field named `Google Calendar Event ID` so it lands on the Notion Event row.
+**Also capture the Google Calendar event ID** from the GCal MCP response's `id` field (NOT the iCalUID — use the `id` field). This is the stable join key for downstream content (and matches `calendar_event_id` on the disabled Granola API path, should it return). Pass it through to `/event-deep-research` as a field named `Google Calendar Event ID` so it lands on the Notion Event row.
 
 ## Step 4 — Dedup check against Notion
 
