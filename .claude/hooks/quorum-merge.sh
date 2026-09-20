@@ -129,13 +129,14 @@ if [ "$PRINT_ONLY" = "1" ]; then exit 0; fi
 
 SID="${CLAUDE_CODE_SESSION_ID:-_nosession}"
 OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
+ASHA=$(shasum -a 256 "$ARTIFACT" 2>/dev/null | cut -d" " -f1)   # content fingerprint: calibration matches truth on THIS, not the path (YED-209)
 jq -nc \
-  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg sid "$SID" --arg mode "$MODE" \
+  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg asha "$ASHA" --arg sid "$SID" --arg mode "$MODE" \
   --arg crid "$CRID" --arg grid "$GRID" --arg res "$RESOLUTION" --arg final "$FINAL" \
   --argjson agree "$AGREE" --argjson div "$DIV" --argjson reasons "$REASONS_JSON" \
   --arg cflat "$CFLAT" --arg gflat "$GFLAT" --arg gparity "$GPARITY" --arg cdrift "$CLAUDE_DRIFT" \
   --arg cvd "$CVD" --arg gvd "$GVD" --argjson cws "$CWS" --argjson gws "$GWS" \
-  '{run_id:$rid, timestamp:$ts, artifact:$art, session_id:$sid, record_type:"quorum",
+  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_sha256:$asha, session_id:$sid, record_type:"quorum",
     claude:{verdict:$cvd, weighted_score:$cws, run_id:$crid},
     gemini:{verdict:$gvd, weighted_score:$gws, run_id:$grid},
     agree:$agree, resolution:$res, final_verdict:$final, mode:$mode,

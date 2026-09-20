@@ -52,5 +52,29 @@ decision, never silently.
 - Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
 - The judge **scores + flags; it never auto-rewrites and never hard-blocks.**
 
+## Three seats, one trust ladder (YED-209, 2026-09-19)
+
+Spec: `.claude/proposals/third-judge-seat-openai.md`. How to run it: the `judge-build` skill.
+
+| File | Job |
+|---|---|
+| `seats.json` | one row per seat: `status` (shadow / advisory / voting), `independence_group`, `since` (start of its current prompt+rubric regime). Promotion = Alex edits this file. A 4th seat is a row here, not new code |
+| `judge_lib.py` | what every seat shares: the scorer (parity-tested against the jq in `gemini-judge.sh`), the one evidence bundle + its sha256, verbatim quote verification, the privacy guard, the spend ledger + caps |
+| `quorum_merge.py` | the N-seat merge. Voting seats decide, advisory seats can only add caution, shadow seats are recorded and hidden until Alex acks. A split is never auto-resolved |
+| `calibration_stats.py --gate` | each seat's *effective* status: configured, lowered one rung if a demotion rule fires on its last 20 prospective runs since `since` |
+| `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 8 · `JUDGE_TOTAL_CAP_USD` 45 |
+| `test_judge_lib.py` · `test_quorum_nseat.py` · `test_quorum_scenarios.py` | 23 + 22 + 6 offline cases; run all three before changing any of the above |
+
+**Truth is matched on content, not file name.** Every new row carries `artifact_sha256`; a run is scored only against
+acks on the same hash. A legacy row without a hash is left *unscored* if git shows the file changed between the ack
+and the run. (Before this, a file that was flagged, fixed and re-judged the same day had its correct "pass" scored
+against the old flag, and the trusted seat read κ 0.53.)
+
+**Demotion rules** (each has a minimum sample; they apply to every seat, the trusted one included): flat-1.0 rate ≥ 0.30
+over ≥ 10 runs · flag recall < 0.50 on ≥ 4 real flags · flag precision < 0.40 on ≥ 5 seat flags (over-flagging) ·
+κ < 0.40 on n ≥ 15. **Voting bar** (informational; promotion stays manual): n ≥ 25 prospective with ≥ 8 real flags ·
+κ ≥ 0.60 · recall ≥ 0.70 · precision ≥ 0.60 · flat < 0.20 · agreement ≥ always-pass baseline + 0.10.
+Rows with `calibration_set` in {control, bakeoff, negative-control, triage-experiment} never count toward either.
+
 ## Deferred (non-destructive, do NOT build now) — now YED-188 (parked slate) + `platform-constraints.md` (2026-09-18)
 A separate-model / cross-judge quorum (independence) and a Notion/PostHog projection of scores — per the lean-foundation decision (2026-06-26). The run-log contract above stays stable when added.

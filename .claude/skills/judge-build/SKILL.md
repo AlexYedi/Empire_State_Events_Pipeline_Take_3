@@ -23,6 +23,27 @@ You orchestrate the **build-quality judge** so quality is a measurable, cross-pr
 - **(Optional) Spec** — the issue/PRD/AC it should satisfy (for `correctness`/`completeness`). If absent, infer from the artifact's own stated purpose and say so.
 - **Mode** — `interactive` (Alex in the loop, default) or `autonomous` (batch/headless). Drives disagreement resolution.
 
+## The three-seat run (default since 2026-09-19, YED-209). Use THIS; Steps 2–4 below are the two-seat fallback
+
+Spec: `.claude/proposals/third-judge-seat-openai.md`. Seats and their status live in `.claude/evals/seats.json`
+(`claude` voting · `gemini` advisory · `openai` shadow). **The rule:** a seat's PASS reduces scrutiny only if that
+seat is *voting*; any advisory or voting seat's doubt adds scrutiny; a shadow seat changes nothing; a split is never
+auto-resolved. Every seat scores the **same bytes**, and no seat ever sees another seat's output.
+
+1. **Build ONE evidence bundle** (runs the Step 0 pre-passes and the privacy guard for you):
+   `python3 .claude/evals/judge_lib.py bundle --artifact <path> --artifact-type <t> --spec-file <in-repo spec> [--context "<text>"] --out <scratchpad>/bundle.json`
+   Spec files must be tracked files inside the repo. A gitignored, symlinked or out-of-repo file is refused (exit 3, no override); pass ad-hoc spec text with `--context` instead. Also write the bundle's `.text` to a `.txt` for the Sonnet seat.
+2. **Run the three seats in parallel, all on that bundle:**
+   - Gemini: `bash .claude/hooks/gemini-judge.sh --bundle <bundle.json> --label gemini-<slug>`
+   - OpenAI: `bash .claude/hooks/openai-judge.sh --bundle <bundle.json> --label openai-<slug>` (try `--dry-run` first: free, shows the worst-case cost). Exit 3 = privacy guard, 4 = spend cap. A failed seat is a *missing* seat: never quietly carry on with fewer.
+   - Sonnet: dispatch via the `Agent` tool (`model: sonnet`), give it ONLY the bundle `.txt` plus read access to the repo, and have it return `{checks_performed, defects[{line, quote, …}], criterion_scores, cap_flags}` with **no composite and no verdict**. Tell it not to read `.claude/evals/logs/`.
+3. **Log the Sonnet seat with the validated writer, never by hand:** save its JSON to a file, then
+   `python3 .claude/hooks/seat-log.py --artifact <path> --artifact-type <t> --verdict-file <json> --bundle <bundle.json> --label sonnet-<slug>`
+   It stamps the real time, the content hash and the harness-computed score. (Hand-written rows on 2026-09-19 carried made-up timestamps and corrupted the scorecard.)
+4. **Merge:** `python3 .claude/evals/quorum_merge.py --artifact <path> --seat claude=<log> --seat gemini=<log> --seat openai=<log> [--mode autonomous]`
+   It applies each seat's *effective* status (configured, lowered one rung if `calibration_stats.py --gate` finds a demotion rule fired) and prints the resolution.
+5. **Ack BEFORE looking at the shadow seat.** The merge hides a shadow seat's verdict so it can't sway your label. Get Alex's ack first, write it to the quorum row's `alex_ack`, and only then re-run with `--reveal-shadow --print-only` if he wants to see it.
+
 ## Step 0 — Mechanized pre-passes (both seats share this ground truth)
 1. **Dangling references.** Run `bash .claude/hooks/check-refs.sh --artifact <path>`. Its stdout is the list of load-bearing `.claude/…` references that **do not exist on disk** — verified fact, not model opinion. This closes the `bf17` gap (models under-apply the cap). Pass this list to BOTH seats. The Gemini adapter runs check-refs itself and enforces the cap; for the Claude seat, treat the list as authoritative and cap completeness ≤0.60 (composite ≤0.60) if it is non-empty.
 2. **Tombstones (added 2026-09-19, YED-201 Fix 2A).** Run `python3 .claude/hooks/check-tombstones.py --artifact <path>`. Its stdout lists lines that name a **removed** tool/decision (the Tombstones table in `platform-constraints.md`) with no removal marker on the line. Each hit is verified fact, but the list is a **lower bound**, not proof of absence: a removal marker within 40 chars clears a match. The seats judge whether each line is load-bearing and still read the artifact for misses. Pass the list to BOTH seats (the Gemini adapter runs it itself). A load-bearing step that relies on a removed tool is a correctness + anti_pattern_avoidance defect. It's the removed-Gamma class Gemini passed at 1.0 on 2026-09-18. No numeric cap (rubric unchanged at `@4`).
@@ -65,5 +86,5 @@ Claude/Sonnet {ws}  |  Gemini {ws}   agree: {bool}
 - **Rubric feels wrong for this artifact type** — record it in the ack note; a signal to add an artifact-type rubric later (don't bend the score).
 
 ## Reuses / references
-- `.claude/hooks/{check-refs.sh, check-tombstones.py, density-check.sh, gemini-judge.sh, quorum-merge.sh}` · `.claude/evals/{prompts/judge-system-v2.md, rubrics/build-quality-v5.md, README.md, calibration_stats.py, test_quorum_scenarios.py}` · design: `.claude/references/cross-provider-judge.md`.
+- `.claude/hooks/{check-refs.sh, check-tombstones.py, density-check.sh, gemini-judge.sh, openai-judge.sh, seat-log.py, quorum-merge.sh}` · `.claude/evals/{judge_lib.py, quorum_merge.py, seats.json, pricing.json, spend-ledger.jsonl}` · `.claude/evals/{prompts/judge-system-v2.md, rubrics/build-quality-v5.md, README.md, calibration_stats.py, test_quorum_scenarios.py}` · design: `.claude/references/cross-provider-judge.md`.
 - Coordinates with `eval-harness` (Notion `348d3699…`) — same judge home; eval-harness owns `rubric_version`.

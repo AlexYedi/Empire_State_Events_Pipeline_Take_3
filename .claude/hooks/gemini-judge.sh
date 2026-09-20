@@ -15,7 +15,7 @@ ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
 RUBRIC=".claude/evals/rubrics/build-quality-v5.md"
 SYSTEM=".claude/evals/prompts/judge-system-v2.md"
-LABEL=""; PRINT_ONLY=0
+LABEL=""; PRINT_ONLY=0; BUNDLE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --artifact) ARTIFACT="$2"; shift 2;;
@@ -28,9 +28,14 @@ while [ $# -gt 0 ]; do
     --system) SYSTEM="$2"; shift 2;;
     --label) LABEL="$2"; shift 2;;
     --print-only) PRINT_ONLY=1; shift;;
+    --bundle) BUNDLE="$2"; shift 2;;   # score a pre-built evidence bundle (judge_lib.py bundle): same bytes as every other seat (YED-209)
     *) echo "unknown arg: $1" >&2; exit 2;;
   esac
 done
+if [ -n "$BUNDLE" ]; then   # the bundle names the artifact + type, so a seat can't be pointed at different evidence
+  [ -r "$BUNDLE" ] || { echo "ERROR: --bundle unreadable: $BUNDLE" >&2; exit 2; }
+  ARTIFACT=$(jq -r '.artifact' "$BUNDLE"); ATYPE=$(jq -r '.artifact_type' "$BUNDLE")
+fi
 [ -n "$ARTIFACT" ] && [ -r "$ARTIFACT" ] || { echo "ERROR: --artifact missing/unreadable: $ARTIFACT" >&2; exit 2; }
 [ -r "$RUBRIC" ] || { echo "ERROR: rubric unreadable: $RUBRIC" >&2; exit 2; }
 [ -r "$SYSTEM" ] || { echo "ERROR: system prompt unreadable: $SYSTEM" >&2; exit 2; }
@@ -63,6 +68,7 @@ if [ "$CTX_LEN" -lt 400 ]; then
 else
   PARITY="true"
 fi
+[ -n "$BUNDLE" ] && PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")   # the bundle carries the spec
 
 # derive the rubric version from the rubric file (never hardcode — it drifts when the default bumps)
 RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
@@ -124,6 +130,7 @@ SCHEMA='{"type":"OBJECT","propertyOrdering":["checks_performed","defects","crite
       "command_skeleton_absent":{"type":"BOOLEAN"},"density_padding":{"type":"BOOLEAN"}}}}}'
 
 # --- build request body safely with jq (no manual escaping) ---
+[ -n "$BUNDLE" ] && DANGLING=$(jq -r '.dangling_refs | join("\n")' "$BUNDLE")   # the cap must use the bundle's pre-pass
 REQ=$(jq -n \
   --rawfile sys "$SYSTEM" --rawfile rubric "$RUBRIC" --rawfile art "$ARTIFACT" \
   --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --argjson schema "$SCHEMA" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" --arg tombs "$TOMBS" \
@@ -139,6 +146,9 @@ REQ=$(jq -n \
       + "\n\n===== INSTRUCTIONS =====\n" + $instr
     )}]}],
    generationConfig:{temperature:0,maxOutputTokens:32768,responseMimeType:"application/json",responseSchema:$schema}}')
+
+# bundle mode: every seat scores the SAME bytes. Swap in the bundle's text; schema + generationConfig stay.
+[ -n "$BUNDLE" ] && REQ=$(printf '%s' "$REQ" | jq --slurpfile b "$BUNDLE" '.contents[0].parts[0].text = $b[0].text')
 
 RESP=$(curl -s -w $'\n%{http_code}' -H "x-goog-api-key: $GEMINI_API_KEY" -H "Content-Type: application/json" \
   "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" -d "$REQ" 2>/dev/null)
@@ -215,16 +225,19 @@ SLUG=$(basename "$(dirname "$ARTIFACT")" 2>/dev/null); B=$(basename "$ARTIFACT")
 [ "$B" = "SKILL.md" ] || SLUG=$(echo "$B" | sed 's/\.[^.]*$//')
 RID="${LABEL:-gemini-$(echo "$SLUG" | tr -c 'a-zA-Z0-9' '-')}"
 OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
+ASHA=$(shasum -a 256 "$ARTIFACT" 2>/dev/null | cut -d" " -f1)   # content fingerprint: calibration matches truth on THIS, not the path (YED-209)
 jq -nc \
-  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" \
+  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" --arg asha "$ASHA" \
   --arg jm "gemini:$RESOLVED" --arg sid "$SID" --arg calset "$CALSET" --arg rver "$RUBRIC_VER" \
   --arg dangling "$DANGLING" --arg parity "$PARITY" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
-  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_type:$atype, rubric:$rver,
+  --arg bsha "$([ -n "$BUNDLE" ] && jq -r '.bundle_sha256' "$BUNDLE")" --arg bver "$([ -n "$BUNDLE" ] && jq -r '.bundle_version' "$BUNDLE")" \
+  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_sha256:$asha, artifact_type:$atype, rubric:$rver,
     judge_model:$jm, session_id:$sid, criterion_scores:$v.criterion_scores,
     weighted_score:$v.weighted_score, verdict:$v.verdict, alex_ack:null,
     confidence_honesty_violation:($v.confidence_honesty_violation // false),
     defects:($v.defects // []), checks_performed:($v.checks_performed // []), cap_flags:($v.cap_flags // {}),
     raw_score:$v.raw_score, flat_ceiling:($v.flat_ceiling // false), scoring:"harness-recomputed",
     dangling_refs:($dangling | if .=="" then [] else split("\n") end),
-    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage}' > "$OUT"
+    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage,
+    bundle_sha256:(if $bsha=="" then null else $bsha end), bundle_version:(if $bver=="" then null else ($bver|tonumber) end), seat_status:"advisory"}' >> "$OUT"   # append, never clobber a same-day re-run (YED-209)
 echo "  logged → $OUT"
