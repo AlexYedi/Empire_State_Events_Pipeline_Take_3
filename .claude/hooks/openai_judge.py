@@ -22,7 +22,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import judge_lib as jl  # noqa: E402
 
 URL = "https://api.openai.com/v1/responses"
-MAX_OUTPUT_TOKENS = 16000
+MAX_OUTPUT_TOKENS = 16000        # a ceiling, not a forecast: 10000 truncated 3 of 18 bake-off runs
+BUDGET_OUTPUT_ESTIMATE = 9000    # what the PRE-CALL cap check assumes (observed use ~4-7k incl. reasoning).
+# Using the 16000 ceiling here made gpt-5.5 look like a $0.52 run and blocked the arm entirely. The real
+# protection is not this estimate: it is the monthly/lifetime caps, which are computed from ACTUAL ledger
+# spend after each call, plus prepaid credit with auto-recharge off. This check only stops a wild overrun.
 CRIT = list(jl.CRITERIA)
 SCHEMA = {  # strict mode: every property required, no extras. Key order = the order the model must work in.
     "type": "object", "additionalProperties": False,
@@ -107,6 +111,7 @@ def main() -> int:
     ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v5.md")
     ap.add_argument("--system", default=".claude/evals/prompts/judge-system-v2.md")
     ap.add_argument("--label", default=""); ap.add_argument("--bundle", default="")
+    ap.add_argument("--artifact-blob", default="", help="git blob sha proving this file is repo history (controls)")
     ap.add_argument("--seat-status", default=None, help="override for the log; default comes from seats.json")
     ap.add_argument("--print-only", action="store_true", help="make the call, print the verdict, write no run-log")
     ap.add_argument("--dry-run", action="store_true", help="build + guard + budget only; no network, no spend")
@@ -121,13 +126,16 @@ def main() -> int:
     try:
         if a.bundle:
             bundle = json.load(open(a.bundle, encoding="utf-8"))
-            jl.privacy_guard([bundle["artifact"]], [bundle["text"]])        # guard again: a bundle is just a file
+            blob = a.artifact_blob or bundle.get("artifact_blob")
+            jl.privacy_guard([bundle["artifact"]], [bundle["text"]],        # guard again: a bundle is just a file
+                             {bundle["artifact"]: blob} if blob else None)
         else:
             if not a.artifact or not os.path.isfile(a.artifact):
                 print(f"ERROR: --artifact missing/unreadable: {a.artifact}", file=sys.stderr); return 2
-            bundle = jl.build_bundle(a.artifact, a.artifact_type, a.system, a.rubric, a.context, a.spec_file)
+            bundle = jl.build_bundle(a.artifact, a.artifact_type, a.system, a.rubric, a.context, a.spec_file,
+                                     artifact_blob=a.artifact_blob or None)
         est_in = len(bundle["text"]) // 3 + 600                              # deliberately high (chars/3, not /4)
-        worst = jl.check_budget("openai", model, est_in, MAX_OUTPUT_TOKENS)
+        worst = jl.check_budget("openai", model, est_in, BUDGET_OUTPUT_ESTIMATE)
     except jl.PrivacyViolation as e:
         print(f"PRIVACY GUARD (nothing sent): {e}", file=sys.stderr); return 3
     except jl.BudgetExceeded as e:
@@ -137,7 +145,7 @@ def main() -> int:
     if a.dry_run:
         m, t = jl.spent("openai")
         print(f"dry-run ok · {model}/{effort} · bundle {bundle['bundle_sha256'][:12]} · ~{est_in} input tok · "
-              f"worst case ${worst:.3f} · spent ${m:.2f} this month, ${t:.2f} lifetime · nothing sent")
+              f"est ${worst:.3f} · spent ${m:.2f} this month, ${t:.2f} lifetime · nothing sent")
         return 0
 
     key = load_key()
@@ -210,7 +218,8 @@ def main() -> int:
         "flat_ceiling": scored["flat_ceiling"], "scoring": "harness-recomputed", "quote_check": qv,
         "must_cite_gaps": gaps, "dangling_refs": bundle["dangling_refs"], "calibration_set": a.calibration_set,
         "evidence_parity": bundle["evidence_parity"], "bundle_sha256": bundle["bundle_sha256"],
-        "bundle_version": bundle["bundle_version"], "usage": usage, "cost_usd": cost})
+        "bundle_version": bundle["bundle_version"], "artifact_blob": bundle.get("artifact_blob"),
+        "usage": usage, "cost_usd": cost})
     print(f"  logged → {out}")
     return 0
 

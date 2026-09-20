@@ -117,12 +117,26 @@ def must_cite_gaps(scored: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------- privacy guard
-def privacy_guard(paths: list[str], texts: list[str]) -> None:
-    """Refuse to send anything gitignored, outside the repo, or secret-looking. No override exists."""
+def privacy_guard(paths: list[str], texts: list[str], verified_blobs: dict[str, str] | None = None) -> None:
+    """Refuse to send anything gitignored, outside the repo, or secret-looking.
+
+    `verified_blobs` maps a path to a git blob sha and is NOT an override: the file's bytes must be byte-identical
+    to `git cat-file blob <sha>` in THIS repo. That is proof the content is already in the public history, which is
+    exactly what the in-repo check is trying to establish, so a control materialised to a temp dir can be judged
+    without punching a hole in the guard. If the bytes differ, the path is refused like any other. The secret scan
+    always runs, on every text, verified or not.
+    """
     root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
     if not root:
         raise PrivacyViolation("not inside a git repo: cannot prove the file is safe to send")
+    verified_blobs = verified_blobs or {}
     for p in paths:
+        want = verified_blobs.get(p)
+        if want:
+            blob = subprocess.run(["git", "cat-file", "blob", want], capture_output=True).stdout
+            if blob and open(p, "rb").read() == blob:
+                continue                      # provably this repo's own committed content
+            raise PrivacyViolation(f"{p}: claimed git blob {want[:12]} does not match the file's bytes")
         real = os.path.realpath(p)
         if os.path.islink(p) or not real.startswith(os.path.realpath(root) + os.sep):
             raise PrivacyViolation(f"{p}: a symlink, or outside this repo (private refs are symlinked in worktrees)")
@@ -158,13 +172,14 @@ def _run(cmd: list[str]) -> str:
 
 
 def build_bundle(artifact: str, atype: str, system: str, rubric: str, context: str = "",
-                 spec_files: list[str] | None = None) -> dict:
+                 spec_files: list[str] | None = None, artifact_blob: str | None = None) -> dict:
     """Everything a seat is allowed to see, in one fixed order. Same bytes for every seat, or the merge refuses."""
     spec_files = spec_files or []
     art_text = open(artifact, encoding="utf-8").read()
     spec_blocks = [f"--- spec file: {p} ---\n{open(p, encoding='utf-8').read()}" for p in spec_files]
     ctx = "\n\n".join(x for x in [context.strip(), *spec_blocks] if x)
-    privacy_guard([artifact, *spec_files], [art_text, ctx])
+    privacy_guard([artifact, *spec_files], [art_text, ctx],
+                  {artifact: artifact_blob} if artifact_blob else None)
     dangling = _run([".claude/hooks/check-refs.sh", "--artifact", artifact])
     tombs = _run(["python3", ".claude/hooks/check-tombstones.py", "--artifact", artifact])
     density = ""
@@ -184,7 +199,7 @@ def build_bundle(artifact: str, atype: str, system: str, rubric: str, context: s
             + "\n\n===== ARTIFACT PATH =====\n" + artifact
             + "\n\n===== ARTIFACT CONTENT (line numbers in the margin are NOT part of the file) =====\n" + numbered
             + "\n\n===== INSTRUCTIONS =====\n" + INSTRUCTIONS)
-    return {"bundle_version": BUNDLE_VERSION, "text": text, "bundle_sha256": hashlib.sha256(text.encode()).hexdigest(),
+    return {"artifact_blob": artifact_blob, "bundle_version": BUNDLE_VERSION, "text": text, "bundle_sha256": hashlib.sha256(text.encode()).hexdigest(),
             "artifact": artifact, "artifact_sha256": sha256_file(artifact), "artifact_type": atype,
             "has_dangling": bool(dangling), "dangling_refs": dangling.splitlines(),
             "evidence_parity": len(ctx) >= 400,          # same bar gemini-judge.sh uses: a one-line context is not a spec
