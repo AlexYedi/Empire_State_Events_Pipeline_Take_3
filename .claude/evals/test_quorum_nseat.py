@@ -106,5 +106,12 @@ ck("an unverified seat cannot escalate via flat_ceiling either (Gemini seat, rou
    M({"claude": row(), "gemini": row(flat=True, unverified=True), "openai": None}), "auto", "pass", lacks=("flat_ceiling",))
 ck("an unverified seat cannot escalate via no_evidence_parity either",
    M({"claude": row(), "gemini": row(ws=0.88, parity=False, unverified=True), "openai": None}), "auto", "pass", lacks=("no_evidence_parity",))
+JUNK = {"verdict": "pass", "weighted_score": 0.9, "bundle_sha256": H, "criterion_scores": ["not", "a", "dict", "x", "y"]}
+ck("junk criterion_scores is seat_invalid, not an AttributeError (Sonnet seat, round 2)",
+   M({"claude": row(), "gemini": JUNK, "openai": None}), "escalated", "flag", has=("seat_invalid:gemini",))
+ck("junk quote_check is seat_invalid too",
+   M({"claude": row(), "gemini": {"verdict": "pass", "weighted_score": 0.9, "bundle_sha256": H, "quote_check": "nope"}, "openai": None}),
+   "escalated", "flag", has=("seat_invalid:gemini",))
+ck("a non-dict row is seat_invalid", M({"claude": row(), "gemini": "totally wrong", "openai": None}), "escalated", "flag", has=("seat_invalid:gemini",))
 print(f"{ok}/{n} n-seat scenarios pass")
 sys.exit(0 if ok == n else 1)

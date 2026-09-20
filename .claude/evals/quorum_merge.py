@@ -21,7 +21,8 @@ Status per seat = the LOWER of what Alex configured in seats.json and what the s
   INTEGRITY reasons mean we cannot trust that the seats scored the same thing, so the artifact is never recorded
   as passing on their word: seat_missing · seat_invalid · evidence_mismatch · no_bundle_hash · no_voting_seat.
   QUALITY reasons are disagreement about the artifact itself and may stand as "pass pending ack": advisory_flag ·
-  score_divergence · flat_ceiling · no_evidence_parity · same_group_only.
+  score_divergence · flat_ceiling · no_evidence_parity · same_group_only. (verdict_mismatch is in NEITHER bucket
+  by design: it only fires when the voting seats disagree, which already forces final=flag on its own.)
   A seat tagged evidence_unverified (>30% of its defect quotes are not in the artifact) loses BOTH its escalation
   power and its vote for that run: if its quotes are invented, its pass is not evidence either.
   NOT YET IMPLEMENTED (deferred to the canary step, spec §11 build step 8): spec §2 row 1 also requires "canaries
@@ -75,9 +76,22 @@ def last_row(path: str, artifact: str) -> tuple[dict | None, int]:
 
 
 def valid_row(r: dict | None) -> bool:
-    """A row we can actually score with. A seat that emitted a partial row is NOT silently treated as agreeing."""
-    return bool(r) and r.get("verdict") in ("pass", "flag") and isinstance(r.get("weighted_score"), (int, float)) \
-        and not isinstance(r.get("weighted_score"), bool)
+    """A row we can actually score with. A seat that emitted a partial row is NOT silently treated as agreeing.
+
+    Validates EVERY field merge() later touches, not just the two it reads first: a row with a good verdict and
+    score but junk `criterion_scores` used to pass here and then crash is_flat() (found by the Sonnet seat,
+    2026-09-20). If this function says True, nothing downstream may raise on that row.
+    """
+    if not isinstance(r, dict) or r.get("verdict") not in ("pass", "flag"):
+        return False
+    ws = r.get("weighted_score")
+    if not isinstance(ws, (int, float)) or isinstance(ws, bool):
+        return False
+    cs = r.get("criterion_scores")
+    if cs is not None and (not isinstance(cs, list) or not all(isinstance(c, dict) for c in cs)):
+        return False
+    qc = r.get("quote_check")
+    return qc is None or isinstance(qc, dict)
 
 
 def is_flat(r: dict) -> bool:
@@ -87,6 +101,11 @@ def is_flat(r: dict) -> bool:
 
 def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], effective: dict[str, str],
           mode: str = "interactive", threshold: float = 0.15) -> dict:
+    # Normalise at the boundary: anything that is not a dict becomes a sentinel. Everything below may then
+    # assume dict-or-None, instead of each call site defending itself (the whack-a-mole that produced three
+    # separate AttributeError paths on 2026-09-20).
+    seat_rows = {k: (v if isinstance(v, dict) else (None if v is None else {"_malformed": repr(v)[:80]}))
+                 for k, v in seat_rows.items()}
     reasons: list[str] = []
     notes: list[str] = []
     live = {}                                      # non-shadow seats that reported
@@ -103,6 +122,7 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
             continue
         live[sid] = row
     unverified = {sid for sid, r in live.items() if (r.get("quote_check") or {}).get("evidence_unverified")}
+    assert all(valid_row(r) for r in live.values()), "live rows must be pre-validated: nothing below may raise"
     for sid in sorted(unverified):
         notes.append(f"evidence_unverified:{sid}")
 
@@ -177,7 +197,9 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
     def block(sid: str) -> dict | None:
         r = seat_rows.get(sid)
         if r is None:
-            return None                                   # .get() throughout: a partial row must never traceback
+            return None
+        if not valid_row(r):                              # malformed: recorded as such, never scored
+            return {"verdict": None, "weighted_score": None, "run_id": r.get("run_id"), "valid": False}
         return {"verdict": r.get("verdict"), "weighted_score": r.get("weighted_score"), "run_id": r.get("run_id"),
                 "valid": valid_row(r)}
 
@@ -191,7 +213,8 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
            "canary_freshness": "unchecked: no canary runner yet (YED-209 build step 8)",
            "seats": [{"id": s["id"], "configured": s.get("status"), "effective": effective.get(s["id"]),
                       "independence_group": s.get("independence_group"), **(block(s["id"]) or {"verdict": None}),
-                      "flat_ceiling": bool(seat_rows.get(s["id"]) and is_flat(seat_rows[s["id"]])),
+                      # same definition of "flat" the reasons loop used, so the record can't drift from it
+                      "flat_ceiling": bool(valid_row(seat_rows.get(s["id"])) and is_flat(seat_rows[s["id"]])),
                       "bundle_sha256": (seat_rows.get(s["id"]) or {}).get("bundle_sha256")} for s in cfg],
            "quorum_rules": "n-seat v1 (YED-209): voting decides, advisory adds caution, shadow is recorded only",
            # the LOG deliberately keeps every seat's real verdict, shadow included — calibration_stats needs it to
