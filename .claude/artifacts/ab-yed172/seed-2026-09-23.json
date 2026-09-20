@@ -1,0 +1,14 @@
+{
+  "entities": [
+    {"type": "company", "name": "Clay"},
+    {"type": "company", "name": "xAI"},
+    {"type": "topic", "name": "AI-Native GTM Stacks & Agentic GTM"},
+    {"type": "topic", "name": "AI-Driven Outbound & Personalized Sequencing at Scale"},
+    {"type": "topic", "name": "AI Slop & Outbound Saturation"},
+    {"type": "topic", "name": "GTM Engineering"},
+    {"type": "topic", "name": "Agentic GTM & Growth-as-a-Service"}
+  ],
+  "text": "Agentic GTM with Grok Bot & Clay (Clay livestream, Wed 2026-09-23, 12:00-1:00pm ET). Learn how to make Grok Bots to run daily outbound operations: 100K+ leads always loaded, send volume checked by noon, deliverability monitored daily, bad domains killed and replaced every Friday. Clay CLI workflows are built by Grok bot in a single shot. Every email is personalized with company age, news coverage, and referral contacts. Run more campaigns with fewer people. The full playbook for what Grok Bot can actually do for a GTM motion.",
+  "focus": "A/B arm B - substrate pack for the blind comparison (YED-172, event 2 of 2). This event tests ENTITY/RELATIONSHIP recall: the graph holds several Clay occasions and Clay-adjacent people, and no speakers are published for this livestream.",
+  "window_days": 365
+}
