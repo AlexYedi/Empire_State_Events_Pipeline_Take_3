@@ -6,7 +6,7 @@
 **Content style applied:** `.claude/skills/content-patterns/founder-showcase.md`
 
 > ⚠️ **Confidentiality flag — READ FIRST.** North's founder disclosed a just-closed
-> **Series B (~$34M) on stage and explicitly said "this stays in the room."** It is
+> **a just-closed funding round on stage (amount redacted 2026-09-19) and explicitly said "this stays in the room."** It is
 > **NOT public** (verified: no public Series B record exists). It must NOT appear in
 > any LinkedIn post, carousel, or CRM note. North's public/timely hook is the **North v3
 > launch (Aug 20, 2026)**, not the raise. This brief keeps the number only as an internal
@@ -51,7 +51,7 @@ callouts** (co-workers there to recruit). This is the reusable showcase skeleton
 - **Problem:** A dichotomy between the engineers who *create* cloud/AI spend and the finance people *accountable* for it — nobody owns the seam. Spend is a known problem with no owner. North sits between the two personas.
 - **Unique:** Full-stack FinOps across AWS/Azure/GCP **+ AI token spend ("tokenomics") + data-warehouse (Snowflake/Databricks) cost** in one system; autonomous commitment-purchasing ("Autobot") and a native FinOps LLM ("Noros AI"). Not just a cloud-cost dashboard — an operating layer.
 - **Culture:** "Hungry for a challenge," anti-9-to-5, mission-grand framing; contrarian on hiring-your-network ("not nepotism — bring people you believe in"). Big-brand swagger (sponsors Bristol City FC; claims Brooklyn Nets — *unverified*). "Make SaaS sexy."
-- **Recent / funding (PUBLIC only):** **North v3 launched Aug 20, 2026** — added Azure (completes hyperscaler coverage), native OpenAI/Anthropic/Snowflake integrations, token-governance beta. Public funding: **Series A $5M led by Companyon Ventures; ~$7.3M total** publicly reported. Customer **Brave** (public case study). Ramp / NYPL named on stage — *company-claimed, unverified*. Company-reported scale: ~$2B annual spend managed, $300M+ saved, ~3x YoY. ⛔ **Series B ~$34M = CONFIDENTIAL, do not publish.**
+- **Recent / funding (PUBLIC only):** **North v3 launched Aug 20, 2026** — added Azure (completes hyperscaler coverage), native OpenAI/Anthropic/Snowflake integrations, token-governance beta. Public funding: **Series A $5M led by Companyon Ventures; ~$7.3M total** publicly reported. Customer **Brave** (public case study). Ramp / NYPL named on stage — *company-claimed, unverified*. Company-reported scale: ~$2B annual spend managed, $300M+ saved, ~3x YoY. ⛔ **An on-stage, off-the-record funding disclosure is CONFIDENTIAL: amount redacted, do not publish.**
 - **Hiring:** Engineers, GTM, CS, marketing. Profile: hungry, talented, wants to leave the 9-to-5 for something "truly grand." Recruiter **Donna** in the room.
 
 ### 2. Antimetal — antimetal.com  *("production that runs itself")*

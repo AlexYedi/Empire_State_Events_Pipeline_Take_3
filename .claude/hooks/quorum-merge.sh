@@ -78,5 +78,5 @@ jq -nc \
   '{run_id:$rid, timestamp:$ts, artifact:$art, session_id:$sid, record_type:"quorum",
     claude:{verdict:$cvd, weighted_score:$cws, run_id:$crid},
     gemini:{verdict:$gvd, weighted_score:$gws, run_id:$grid},
-    agree:$agree, resolution:$res, final_verdict:$final, mode:$mode, alex_ack:null}' > "$OUT"
+    agree:$agree, resolution:$res, final_verdict:$final, mode:$mode, alex_ack:null}' >> "$OUT"   # append: a same-day re-judge must not clobber the earlier round (bug found 2026-09-19)
 echo "   logged -> $OUT"

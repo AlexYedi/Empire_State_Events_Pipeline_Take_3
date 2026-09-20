@@ -272,43 +272,34 @@ the carousel brief. If any gate fails:
 Do NOT ship a brief with a flagged gate. The gate exists because that failure
 mode is repeating across runs.
 
-### Step 3b.5: Auto-render the visual via Gamma MCP (default; updated 2026-05-26)
+### Step 3b.5: Render the visual with Claude design (default; rewritten 2026-09-19, YED-200)
 
-Gamma is the **default generator for all visual content** (singles and carousels)
-— see `../content-patterns/visual-briefs.md` → `## MCP execution — Gamma
-(default); Canva (fallback only)`. Canva was demoted to fallback 2026-05-26 (it
-garbled dense labels and produced Instagram-typed assets).
+**Do not restate rendering mechanics here.** The one source of truth is
+`../content-patterns/visual-briefs.md` → `## Execution — Claude design (default) + Gemini (pictorial)`
+and its `### Export` subsection. This step only says when to run it and what to hand over.
 
 After Step 4 writes the Content Draft (post + embedded brief) to Notion:
 1. Offer the **four format options** from visual-briefs.md (2 singles + 3-slide +
    5-slide carousel); let Alex pick, or generate the recommended option.
-2. Fire `mcp__claude_ai_Gamma__generate` with `format: "social"` +
-   `cardOptions.dimensions: "4x5"` for LinkedIn portrait (NOT `presentation`,
-   which forces 16:9/fluid), a dark theme via `get_themes` (e.g. Stratos),
-   `imageOptions.source: "noImages"`, the real stats in `inputText`, and
-   `additionalInstructions` telling Gamma to turn every statistic into a visual.
-   For a carousel set `numCards` and generate once (not per-slide).
-3. Surface the `gamma.app/docs/...` URL(s). Gamma can't be MCP-edited — Alex
-   refines theme/text in the Gamma editor. Export carousels as PDF for the
-   LinkedIn document post.
-4. **Fallback:** if Gamma can't satisfy a specific brief (e.g. a precise single
-   typography card), fall back to Canva per the Canva-fallback pattern in
-   visual-briefs.md.
+2. **Structured / label-dense visuals** (diagrams, matrices, stat cards, carousels): Claude authors
+   a self-contained HTML/SVG design at 4:5 and exports it to PDF/PNG per the Execution section.
+   Claude renders exactly what is authored, so labels and numbers stay intact.
+3. **Pictorial imagery** (conceptual, editorial, photographic; no dense labels): Gemini.
+4. Save the final rendered PDF/HTML in the event folder (final outputs only) and link it from the
+   Notion Content Draft.
 
 ### Step 3b.6: Other rules
 
 - **The brief is the artifact.** When the post is reviewed, the brief is
   reviewed alongside it. They are one Content Draft, not two. The brief stays
-  in the Notion page body as the human-readable reference even after MCP
-  auto-render runs — both because Alex may want to iterate later, and because
-  other tools (Imagen 4, Magic Patterns) remain valid fallbacks for shapes
-  Canva can't handle well (dense org charts, etc.).
+  in the Notion page body as the human-readable reference even after the
+  render runs, because Alex may want to iterate later (edit the HTML, re-export).
 - **Voice propagation.** If `update-voice-and-style.md` runs and updates the
   written voice, the visual voice in `visual-briefs.md` must be reviewed in the
   same pass. They are paired.
 - **Tool routing field is metadata, not execution.** The "Tool:" line per slide
-  describes visual-mode intent for human reference. **Execution defaults to Gamma**
-  (see visual-briefs.md); Canva and Imagen are fallbacks only.
+  describes visual-mode intent for human reference. **Execution is Claude design, or
+  Gemini for pictorial imagery** (see visual-briefs.md `## Execution`).
 
 ---
 
@@ -468,7 +459,7 @@ Skip if:
 
 ## Step 6: Compile Prepared Questions
 
-**Reframed 2026-05-20:** Prepared Questions are now generated **independently** from the same per-person research insights, not as a byproduct of unused DM variants (since Step 4 now produces 1 best 200-char connection note per person rather than 2-3 variants).
+**Reframed 2026-05-20:** Prepared Questions are now generated **independently** from the same per-person research insights, not as a byproduct of unused DM variants (Step 4 produces connection notes: 2 variants per person, A talk-anchored and B adjacent-work-anchored, or 1 when only one real signal exists).
 
 For each person identified in the brief, generate 1-3 prepared questions that:
 - Reference a specific moment from their talk abstract, recent post, podcast, or work
@@ -505,7 +496,7 @@ Write all approved content to the **Content Drafts** database.
 
 **Database:** `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 
-> **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. As of 2026-05-24, Step 3b.5 auto-renders the carousel via Canva MCP — the brief remains in the page body for human reference and as input to alternative tools (Imagen 4, Magic Patterns) when Canva MCP can't satisfy a specific slide's quality bar. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
+> **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. Step 3b.5 renders the carousel with Claude design (Gemini for pictorial imagery). The brief remains in the page body for human reference and for later iteration. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
 
 ### Content pages to create:
 

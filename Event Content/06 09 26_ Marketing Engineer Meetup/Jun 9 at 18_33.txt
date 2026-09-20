@@ -237,11 +237,9 @@ Uh, we post on LinkedIn. We post a lot on LinkedIn, actually of repostation on o
 
 Uh, and so I built this, which basically takes impressions from social. And mirrors it to the leads. We track in HubSlap, which is our CRM. And it wants them. On a graph, and it lets me see how many leads I get on a week by week basis. Overlay with how many impressions are social media Calvin Scott?
 
-In the same week, it's hard to see, but I can annotate. Against on there. Please don't post this on social media. I see you with the phone please, um? And so I annotate, and so I was, like, hmm, I want to know I can go back one more than 90 days.
+In the same week, it's hard to see, but I can annotate. Against on there. Please don't post this on social media.
 
-Um, so we announced our series C in February, and as you would expect, Impressions went up and these went up. But I want to know what other events happen. So, on this week, April 20th, April 12th, you kind of can't see it as mold. Uh, we announced the marketing engineer, and we got its own impressions and leads kind of went up by, like 20, leads that week a bit more the week after.
-
-Um, and then last week we got Asian countries and a lot of Impressions too. So kind of how this works. As it pulls our social. Um, accounts Impressions by accounts and by Channel, and then it tags exactly who the person is. So, this is Dylan Dylan is our co-founder and CTO.
+[REDACTED 2026-09-19: the speaker walked through their internal leads dashboard after asking the room not to share it.]
 
 He just posted 200 times in the last 90 days. So, if you want to generate feeds, if you're a mermaid and you want? More people to sign up for your app. Um, social media, honestly. Like, post your story, your founder story, be composed about how you got laid off and how you're going all in on your startup.
 
