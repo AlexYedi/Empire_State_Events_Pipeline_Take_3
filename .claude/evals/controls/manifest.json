@@ -1,5 +1,5 @@
 {
- "_note": "Control set for the judge seats (YED-209 build step 8). Every item is a REAL artifact state Alex labelled, referenced by git blob so the repo never carries a broken copy. Negative controls (expect flag) are pre-fix states; positive controls (expect pass) are states he acked as passing. Materialise with controls.py. Logged as calibration_set:'control' and never pooled into kappa \u2014 it is a fixed, re-used set.",
+ "_note": "Control set for the judge seats (YED-209 build step 8). Every item is a REAL artifact state Alex labelled, referenced by git blob so the repo never carries a broken copy. Negative controls (expect flag) are pre-fix states; positive controls (expect pass) are states he acked as passing. Materialise with controls.py. Logged as calibration_set:'control' and never pooled into kappa \u2014 it is a fixed, re-used set. Blob shas are FULL 40-char: an abbreviated sha resolved ambiguously and the privacy guard correctly refused the mismatch (2026-09-20).",
  "built": "2026-09-20",
  "source": "run-logs with alex_ack, resolved to the commit preceding the ack",
  "items": [
@@ -8,7 +8,7 @@
    "expect": "flag",
    "artifact": ".claude/hooks/gemini-judge.sh",
    "artifact_type": "code",
-   "blob": "c313b6763c7c",
+   "blob": "c313b6763c7cc5c0db3f4bccbaeeb70985231b39",
    "commit": "57089dc77e03",
    "labelled_on": "2026-07-17",
    "why": "Alex acked this exact content as flag"
@@ -18,7 +18,7 @@
    "expect": "flag",
    "artifact": ".claude/skills/inbox-miner/SKILL.md",
    "artifact_type": "skill",
-   "blob": "6ab5bdf30464",
+   "blob": "6ab5bdf30464718575dd1d54e2728941256f44f5",
    "commit": "90a8b0a4fccf",
    "labelled_on": "2026-09-19",
    "why": "Alex acked this exact content as flag"
@@ -28,7 +28,7 @@
    "expect": "flag",
    "artifact": ".claude/skills/pre-event-content/SKILL.md",
    "artifact_type": "skill",
-   "blob": "fb0483cd75cc",
+   "blob": "fb0483cd75cc42651da53eed5a980265491b0da4",
    "commit": "d1b5aa9790e6",
    "labelled_on": "2026-09-18",
    "why": "Alex acked this exact content as flag"
@@ -38,7 +38,7 @@
    "expect": "flag",
    "artifact": ".claude/skills/role-radar/SKILL.md",
    "artifact_type": "skill",
-   "blob": "17f06034a244",
+   "blob": "17f06034a2446453a6f0d8600353ed69e7082646",
    "commit": "49d4ff760917",
    "labelled_on": "2026-09-19",
    "why": "Alex acked this exact content as flag"
@@ -48,7 +48,7 @@
    "expect": "flag",
    "artifact": ".claude/scripts/spine_client.py",
    "artifact_type": "code",
-   "blob": "efc5e1239f63",
+   "blob": "efc5e1239f63cfb0e10d09b6bdba5b525957022c",
    "commit": "96b478803f93",
    "labelled_on": "2026-09-13",
    "why": "Alex acked this exact content as flag"
@@ -58,7 +58,7 @@
    "expect": "flag",
    "artifact": ".claude/scripts/substrate.py",
    "artifact_type": "code",
-   "blob": "07f801c74119",
+   "blob": "07f801c74119c466601c60bcecd041022af611f9",
    "commit": "87363f959fc2",
    "labelled_on": "2026-09-19",
    "why": "Alex acked this exact content as flag"
@@ -68,7 +68,7 @@
    "expect": "pass",
    "artifact": ".claude/hooks/build-session-emit.sh",
    "artifact_type": "code",
-   "blob": "07dbad5838fe",
+   "blob": "07dbad5838fe6321f540669847c9170e2ae96fb7",
    "commit": "89e759f9635c",
    "labelled_on": "2026-06-26",
    "why": "Alex acked this exact content as pass"
@@ -78,7 +78,7 @@
    "expect": "pass",
    "artifact": ".claude/references/content-style-guide.md",
    "artifact_type": "ref",
-   "blob": "01adf1891f0d",
+   "blob": "01adf1891f0db7e53191d1956e6667d3bbd49dc3",
    "commit": "c46fb8d46a52",
    "labelled_on": "2026-08-21",
    "why": "Alex acked this exact content as pass"
@@ -88,7 +88,7 @@
    "expect": "pass",
    "artifact": ".claude/hooks/deep-read-gate.sh",
    "artifact_type": "code",
-   "blob": "19c194a99d25",
+   "blob": "19c194a99d25f66133cfd8feea6cd279f5ef0992",
    "commit": "19a731c1d0b8",
    "labelled_on": "2026-08-25",
    "why": "Alex acked this exact content as pass"
@@ -98,7 +98,7 @@
    "expect": "pass",
    "artifact": ".claude/commands/event-deep-research.md",
    "artifact_type": "command",
-   "blob": "8ee0714bc7f4",
+   "blob": "8ee0714bc7f4676ed528c7138b87b9a73e542264",
    "commit": "17cc6a90b708",
    "labelled_on": "2026-08-21",
    "why": "Alex acked this exact content as pass"
@@ -108,7 +108,7 @@
    "expect": "pass",
    "artifact": ".claude/skills/inbox-miner/SKILL.md",
    "artifact_type": "skill",
-   "blob": "6d18496567fc",
+   "blob": "6d18496567fcb57076020ad92d531da938cafb7d",
    "commit": "bad950136f69",
    "labelled_on": "2026-09-11",
    "why": "Alex acked this exact content as pass"
@@ -118,7 +118,7 @@
    "expect": "pass",
    "artifact": ".claude/skills/interview-prep-dossier/SKILL.md",
    "artifact_type": "skill",
-   "blob": "adeb0673b88e",
+   "blob": "adeb0673b88e515cdcb8482df3372f15f0badebc",
    "commit": "d5e913d687a8",
    "labelled_on": "2026-07-11",
    "why": "Alex acked this exact content as pass"
@@ -128,7 +128,7 @@
    "expect": "pass",
    "artifact": ".claude/commands/interview-prep.md",
    "artifact_type": "command",
-   "blob": "b3e415d29520",
+   "blob": "b3e415d295202a564a7ae64119397c5462702952",
    "commit": "441fea62dc32",
    "labelled_on": "2026-07-11",
    "why": "Alex acked this exact content as pass"
@@ -138,7 +138,7 @@
    "expect": "pass",
    "artifact": ".claude/skills/role-radar/SKILL.md",
    "artifact_type": "skill",
-   "blob": "91e311ee3c2a",
+   "blob": "91e311ee3c2ab2787dcbf98a6f551e37cc7fd887",
    "commit": "49ddc1c49da1",
    "labelled_on": "2026-09-08",
    "why": "Alex acked this exact content as pass"
@@ -148,7 +148,7 @@
    "expect": "pass",
    "artifact": ".claude/commands/scan-inbox.md",
    "artifact_type": "command",
-   "blob": "b2d60818fd89",
+   "blob": "b2d60818fd8954a82905e1cb726e4fbb70e84eaf",
    "commit": "859d68635d97",
    "labelled_on": "2026-09-11",
    "why": "Alex acked this exact content as pass"
@@ -158,7 +158,7 @@
    "expect": "pass",
    "artifact": ".claude/commands/scan-roles.md",
    "artifact_type": "command",
-   "blob": "32f6e16cc6c7",
+   "blob": "32f6e16cc6c7700ab90543684978a5a7998ee1ca",
    "commit": "49ddc1c49da1",
    "labelled_on": "2026-09-08",
    "why": "Alex acked this exact content as pass"

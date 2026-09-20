@@ -85,6 +85,7 @@ def main() -> int:
         path = materialise(i, tmp)
         cmd = [seat_cfg["runner"], "--artifact", path, "--artifact-type", i["artifact_type"],
                "--calibration-set", "control", "--label", f"control-{i['id']}{a.label_suffix}",
+               "--artifact-blob", i["blob"],   # proof this content is the repo's own history, for the privacy guard
                "--context", f"Control item {i['id']} for the judge control set. This is a real historical state of "
                             f"{i['artifact']} from this repo, judged on its own terms. Score it as you would any build artifact."]
         if model:

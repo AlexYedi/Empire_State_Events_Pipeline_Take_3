@@ -59,10 +59,21 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
   | sed -E 's/[.,;:)`"'"'"']+$//' \
   | sort -u)
 
-missing=0; checked=0
+missing=0; checked=0; ignored=0
 while IFS= read -r ref; do
   [ -n "$ref" ] || continue
   probe="$ref"; case "$probe" in "~/"*) probe="${HOME}/${probe#\~/}";; esac
+  # A GITIGNORED path that is absent is an ENVIRONMENT fact, not a defect: private refs (me-model,
+  # inbox-allowlist) and local state (.state/, settings.local.json) are missing in every worktree by
+  # design. Counting them capped positive controls at 0.60 during the 2026-09-20 bake-off and would
+  # cap any judge run made in a worktree. The reference still has to exist in the repo's ignore rules
+  # to qualify — an outright typo is not ignored, so it still flags.
+  # try the bare path AND with a trailing slash: .gitignore lists runtime DIRS as ".claude/.state/", and
+  # `git check-ignore .claude/.state` (no slash) does not match that rule.
+  if [ ! -e "$probe" ] && { git check-ignore -q "$ref" 2>/dev/null || git check-ignore -q "${ref%/}/" 2>/dev/null; }; then
+    ignored=$((ignored+1))
+    continue
+  fi
   checked=$((checked+1))
   if [ ! -e "$probe" ]; then
     echo "$ref"
@@ -70,5 +81,5 @@ while IFS= read -r ref; do
   fi
 done <<< "$CANDIDATES"
 
-echo "check-refs: ${missing} referenced path(s) missing of ${checked} checked in ${ARTIFACT}" >&2
+echo "check-refs: ${missing} referenced path(s) missing of ${checked} checked in ${ARTIFACT}$([ "$ignored" -gt 0 ] && echo " (${ignored} gitignored path(s) skipped: absent by design, not a defect)")" >&2
 exit 0
