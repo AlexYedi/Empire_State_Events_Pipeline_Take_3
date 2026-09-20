@@ -115,21 +115,24 @@ the two briefs raise. ≤3 forks, grounded in the extracted tension (never gener
 the tension is unambiguous. Keep the loop open, persist to `## Author Steer` (Sharpen), honor below.
 Skippable.
 
-### Step 6 — Draft the post (2 variants)
+### Step 6 — Draft the post (3 variants)
 Follow the 6-part shape from the pattern file exactly. Word targets are targets,
 not caps, but stay within 180-295 words total — and a **hard cap of 3,000 characters**
 (LinkedIn's limit; 180-295 words sits well inside it). Count before presenting; sources
 go to the first comment, never inline. See `../references/content-style-guide.md` →
 LinkedIn Character Budget. (Added 2026-06-10.)
 
-Produce 2 distinct variants. They should differ in a meaningful way, not just
-wording:
+Produce 3 distinct variants (3 for every post: ruled 2026-09-11, confirmed by Alex 2026-09-19). They should
+differ in a meaningful way, not just wording:
 - **Variant 1** — leads with the tension in the Hook. Takes a clear side in the Take.
 - **Variant 2** — leads with a concrete detail (a quote, a stat, a specific
   architecture choice) in the Hook. Take is more exploratory — invites the
   reader to help Alex decide.
+- **Variant 3** — leads with the people: who argued each thesis and what they have built
+  that makes them worth hearing. Take names what each side would have to see to change
+  its mind. *(Default third framing; Alex's steer for the week overrides it.)*
 
-Both variants must pass the voice rules: name names, no throat-clearing, first
+All three variants must pass the voice rules: name names, no throat-clearing, first
 person singular, specific over clever, no consultant-ese.
 
 ### Step 6b — Draft the visual carousel brief
@@ -216,7 +219,7 @@ Create a Content Draft via `notion-create-pages` targeting data source
   from both events.
 - **Topics relation:** JSON-array-string of the union of related topics from both
   briefs.
-- **Body:** Both variants, clearly labeled "Variant 1" and "Variant 2," followed
+- **Body:** All three variants, clearly labeled "Variant 1", "Variant 2" and "Variant 3," followed
   by the **Step 6b carousel brief under a `## Visual Brief — N-slide carousel`
   H2** (Arc 2 — required for synthesis posts; see `../content-patterns/visual-briefs.md`
   for the canonical output schema), followed by the per-person DM drafts under
@@ -231,7 +234,7 @@ Follow the Notion gotchas from CLAUDE.md exactly:
 
 Return to Alex:
 - Notion Content Draft URL.
-- The two variants inline (so Alex can react without clicking through).
+- The three variants inline (so Alex can react without clicking through).
 - The speaker DMs inline (same reason).
 - Tension strength score (1-5) with the calibration rationale.
 - Any gating checks that were close calls — Alex decides whether to ship.

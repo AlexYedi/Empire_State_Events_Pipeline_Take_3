@@ -248,7 +248,7 @@ Live Notion schema is the source of truth — verify with `notion-fetch` before 
 - Voice & style is a living system — update-voice-and-style.md skill propagates learnings to all files
   including content-patterns/*.md
 - Cold outreach only for V1. Warm outreach variant and custom messaging skill deferred.
-- 2 inline option variants per content piece. No scheduling/timing logic.
+- **3 inline option variants per post** (every post type, the Sunday roundup and pattern-synthesis included: ruled 2026-09-11, confirmed "3 everywhere" 2026-09-19). Connection notes stay at 2 (A/B, two signal types). No scheduling/timing logic.
 - Audience: hiring managers at AI-native companies, enterprise GTM peers, event speakers/hosts
 - Full stack GTM positioning is implicit (demonstrated, not stated)
 - Cadence rule for pattern-synthesis: max 1 synthesis post per week (format fatigues fast)
