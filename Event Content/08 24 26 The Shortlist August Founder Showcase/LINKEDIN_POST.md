@@ -7,7 +7,7 @@
 > **Editorial rewrite (2026-08-25):** both variants bring each startup to life with prose — backstory,
 > raison d'être, worldview, the human detail they shared on stage — while still stating the elevator
 > pitch + funding. The **carousel carries the scannable bullets**, which frees the post to tell the story.
-> North's confidential Series B excluded; all names web-verified; Thunder's co-founders unnamed beyond Dilip.
+> an off-the-record funding disclosure excluded; all names web-verified; Thunder's co-founders unnamed beyond Dilip.
 > **Length note:** Variant A ≈ long-form (~4,600 chars — best as a LinkedIn *article*/newsletter, or trim for feed);
 > Variant B ≈ ~3,150 chars (a hair over the 3,000 feed cap — trim two sentences to post as a feed update).
 

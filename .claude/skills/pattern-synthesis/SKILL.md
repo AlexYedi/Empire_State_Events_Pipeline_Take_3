@@ -115,21 +115,24 @@ the two briefs raise. ≤3 forks, grounded in the extracted tension (never gener
 the tension is unambiguous. Keep the loop open, persist to `## Author Steer` (Sharpen), honor below.
 Skippable.
 
-### Step 6 — Draft the post (2 variants)
+### Step 6 — Draft the post (3 variants)
 Follow the 6-part shape from the pattern file exactly. Word targets are targets,
 not caps, but stay within 180-295 words total — and a **hard cap of 3,000 characters**
 (LinkedIn's limit; 180-295 words sits well inside it). Count before presenting; sources
 go to the first comment, never inline. See `../references/content-style-guide.md` →
 LinkedIn Character Budget. (Added 2026-06-10.)
 
-Produce 2 distinct variants. They should differ in a meaningful way, not just
-wording:
+Produce 3 distinct variants (3 for every post: ruled 2026-09-11, confirmed by Alex 2026-09-19). They should
+differ in a meaningful way, not just wording:
 - **Variant 1** — leads with the tension in the Hook. Takes a clear side in the Take.
 - **Variant 2** — leads with a concrete detail (a quote, a stat, a specific
   architecture choice) in the Hook. Take is more exploratory — invites the
   reader to help Alex decide.
+- **Variant 3** — leads with the people: who argued each thesis and what they have built
+  that makes them worth hearing. Take names what each side would have to see to change
+  its mind. *(Default third framing; Alex's steer for the week overrides it.)*
 
-Both variants must pass the voice rules: name names, no throat-clearing, first
+All three variants must pass the voice rules: name names, no throat-clearing, first
 person singular, specific over clever, no consultant-ese.
 
 ### Step 6b — Draft the visual carousel brief
@@ -174,39 +177,20 @@ Produce the carousel brief in the output schema defined at the bottom of
 
 If any gate fails, redraft before moving to Step 6c.
 
-### Step 6c — Auto-render the carousel via Gamma MCP (default; updated 2026-05-26)
+### Step 6c — Render the carousel with Claude design (default; rewritten 2026-09-19, YED-200)
 
-After the brief passes Step 6b's quality gates AND Step 8 writes the Content
-Draft to Notion, generate the carousel with `mcp__claude_ai_Gamma__generate`
-(`format: "social"`, `cardOptions.dimensions: "4x5"`, `numCards` = slide count,
-Stratos theme, `imageOptions.source: "noImages"`, stats-as-visuals in
-`additionalInstructions`) per `../content-patterns/visual-briefs.md` →
-`## MCP execution — Gamma (default); Canva (fallback only)`. Gamma is the default
-ship path; Canva is a fallback only (demoted 2026-05-26 for garbling dense
-labels). The Canva sequence below is retained as that fallback.
+After the brief passes Step 6b's quality gates AND Step 8 writes the Content Draft to Notion, render
+the carousel per `../content-patterns/visual-briefs.md` → `## Execution — Claude design (default) +
+Gemini (pictorial)`: Claude authors a self-contained 4:5 HTML/SVG design and exports it to PDF. **Do
+not restate the mechanics here**; that section is the one source of truth.
 
-**Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1
-and 2 (Thesis A and Thesis B) MUST share visual frame exactly. When building
-the `query` payload for Slide 2, include the explicit instruction: "LAYOUT:
-Must use IDENTICAL layout to slide 1 of this same carousel — same quote
-placement, same attribution layout, same type hierarchy. Frame parallelism is
-the editorial choice — without it, the reader concludes one thesis is more
-important than the other." Without this, Canva auto-styles each independently
-and the parallel structure breaks.
+**Critical for pattern-synthesis: frame parallelism is load-bearing.** Slides 1 and 2 (Thesis A and
+Thesis B) MUST share a visual frame exactly: same quote placement, same attribution layout, same type
+hierarchy (one shared CSS class for both slides). Frame parallelism is the editorial choice. Without
+it, the reader concludes one thesis is more important than the other.
 
-Sequence per slide:
-1. Build `query` payload from the slide spec.
-2. Call `mcp__claude_ai_Canva__generate-design` with `design_type: "instagram_post"`.
-3. Receive 4 candidates per slide.
-4. Surface all candidates (4-5 slides × 4 candidates = 16-20 total) in a single
-   markdown table covering all slides.
-5. On Alex's selection, fire `mcp__claude_ai_Canva__create-design-from-candidate`
-   per chosen design.
-6. If tweaks needed, iterate via `mcp__claude_ai_Canva__perform-editing-operations`
-   — do not re-fire `generate-design` for minor changes.
-
-The brief still lives in the Notion page body as a human-readable reference;
-auto-render runs alongside, not instead.
+The brief still lives in the Notion page body as a human-readable reference; the render runs
+alongside it, not instead of it.
 
 ### Step 7 — Draft speaker/host DMs (sub-outputs)
 For each speaker or host whose thesis anchors the post (typically 2-4 people total
@@ -235,7 +219,7 @@ Create a Content Draft via `notion-create-pages` targeting data source
   from both events.
 - **Topics relation:** JSON-array-string of the union of related topics from both
   briefs.
-- **Body:** Both variants, clearly labeled "Variant 1" and "Variant 2," followed
+- **Body:** All three variants, clearly labeled "Variant 1", "Variant 2" and "Variant 3," followed
   by the **Step 6b carousel brief under a `## Visual Brief — N-slide carousel`
   H2** (Arc 2 — required for synthesis posts; see `../content-patterns/visual-briefs.md`
   for the canonical output schema), followed by the per-person DM drafts under
@@ -250,7 +234,7 @@ Follow the Notion gotchas from CLAUDE.md exactly:
 
 Return to Alex:
 - Notion Content Draft URL.
-- The two variants inline (so Alex can react without clicking through).
+- The three variants inline (so Alex can react without clicking through).
 - The speaker DMs inline (same reason).
 - Tension strength score (1-5) with the calibration rationale.
 - Any gating checks that were close calls — Alex decides whether to ship.

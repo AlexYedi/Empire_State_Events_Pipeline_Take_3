@@ -7,7 +7,7 @@
 |---|---|---|---|
 | Subagents cannot spawn subagents | Anthropic SDK design — `Agent` absent in subagent contexts | fan-out from the parent thread; subagents are text-in/text-out | 2026-05-07 |
 | Agent/skill registry is session-frozen | harness reads `.claude/agents/**` once at start | any registry edit needs a FRESH session to validate; batch such validations (YED-190) | 2026-05-07 |
-| claude.ai MCP connectors (Notion, HubSpot, Calendar, Gmail, Granola, Gamma) unavailable in subagents and shell hooks | connector auth is parent-thread only; no REST key in repo | all MCP writes inline in the parent; hooks can't query Notion (shapes the two-layer Deep Read gate) | 2026-06-10 |
+| claude.ai connector **writes** must run in the parent thread; connectors are unavailable in shell hooks. **Reads are NOT blocked:** a subagent that declares a Gmail read tool can call it (live test 2026-09-19: `company-researcher` ran `search_threads` successfully). The 2026-06-10 failure was `notion-writer` *writing* to Notion from a subagent; other connectors are untested either way | connector auth + the injection guard (a model reading untrusted text gets no write tools) | all MCP **writes** inline in the parent; hooks can't query Notion (shapes the two-layer Deep Read gate); delegating a *read* is allowed when the agent's `tools:` line declares it | 2026-06-10, corrected 2026-09-19 (YED-203) |
 | Dock-launched Claude Code does not inherit `~/.zshrc` | app launch skips the shell profile | launch `claude` from a terminal for env-dependent hooks; `launchctl setenv` documented, untested | 2026-05-14 |
 | git worktrees start with no `.env` | `.env` is gitignored | `ln -s <main-checkout>/.env .env` before running anything env-dependent | 2026-09-08 |
 | git worktrees also lack the gitignored private refs (`me-model.md`, `target-companies.md`, `inbox-allowlist.md`, `inbox-denylist.md`) → `check-refs.sh` reports them missing and BOTH judge seats cap completeness ≤0.60 (false dangling-ref) | gitignored by the public-repo privacy rule; auto-mode classifier denies symlinking them in (sensitive provenance) | with Alex's explicit go, `ln -s <main-checkout>/.claude/references/<f>.md` for each (verified 2026-09-18: stays gitignored, check-refs clean); the Gemini adapter sends only artifact + passed spec files, never referenced-file contents, so never pass a private file as `--spec-file`; never accept a cap caused by this | 2026-09-18 |
@@ -48,9 +48,23 @@
 | Metered Claude: no `ANTHROPIC_API_KEY` in Empire `.env` | RULED 2026-09-18 (YED-176): Gemini fallback is the default | Gemini-first for scripted LLM steps behind a two-backend interface; add a Claude key only when a scripted Claude call is on the runway (YED-179 re-asks) | 2026-09-18 |
 | OTEL collector / Langfuse / deep-beta traces | "rent the platform" only on a named trigger; traces need an Anthropic allowlist | today only `output_tokens` + `peak_context_tokens` are honest (`build-session-contract.md`) | 2026-06-26 |
 
+## Tombstones (removed tools/decisions — mechanically checked, YED-201 Fix 2A, 2026-09-19)
+A removal only sticks if it reaches every file that *uses* the removed thing. `.claude/hooks/check-tombstones.py` flags any line in `.claude/**` / `docs/**` (docs + code/config files) that names a term below **without** a removal marker within 40 characters (removed · retired · ripped · deprecated · tombstone · vestigial · killed · rejected · disabled · superseded · replaced · no longer · do not · never · legacy · historical). The judge runs it in Step 0 (both seats see the hits as fact), and `/rigor-review` runs it repo-wide. **Add a row the same turn you remove something.** Patterns are Python regex, case-sensitive; write a regex alternation `|` as `\|` (GitHub's table escape; the checker unescapes it).
+
+| Term | Pattern | Removed | Use instead |
+|---|---|---|---|
+| Gamma | `\bGamma\b` | 2026-08-07 | Claude HTML/SVG → Artifact → PDF; Gemini for pictorial (`visual-briefs.md`) |
+| Gamma MCP | `mcp__claude_ai_Gamma` | 2026-08-07 | same |
+| Canva as a generator | `Canva(\'s)? (MCP\|fallback\|account\|editor\|auto-render)` | 2026-08-07 (vestigial) | same (Canva the *company* is not tombstoned) |
+| Canva MCP | `mcp__claude_ai_Canva\|generate-design` | 2026-08-07 | same |
+| Langfuse | `Langfuse` | 2026-06-26 | the lean stack: Notion + PostHog + Hub (CLAUDE.md measurement layer) |
+| gtm-os as the measurement layer | `gtm-os(?!-hub)[^.\n]{0,40}(measure\|telemetry\|observab\|eval\|trace)` | 2026-06-26 | same (bare "gtm-os" is the live GTM-OS program / Linear team; gtm-os-hub is live too) |
+| Granola auto-fetch | `Granola[^.\n]{0,40}(fetch\b\|API\|MCP\|get_meeting)` | 2026-05-27 | manual transcript paste; OBS + ElevenLabs Scribe |
+| Clarify | `mcp__claude_ai_Clarify` | 2026-09-09 | HubSpot stays the CRM; OBS + Scribe for capture |
+
 ## Git / repo
 | Constraint | Cause | Workaround | Since |
 |---|---|---|---|
 | `.git/hooks/pre-commit` is local-only (blocks build-surface on `main`) | hooks aren't versioned | re-install on other clones; branch-first is the real rule (CLAUDE.md Git conventions) | 2026-07-18 |
-| The pipeline repo must never be public | holds `.env`, personal CLAUDE.md, private notes | hub repo is the public surface; `npm run check` there | 2026-09-04 |
+| Both repos are PUBLIC by design: build in public (ruled by Alex 2026-09-19; supersedes the 2026-09-04 "never public" row) | transparency, engagement, and a portfolio hiring managers can read | follow `build-in-public.md`: secrets stay in `.env`; personal refs stay gitignored; third-party confidences get redacted before commit. **Open:** GitHub still serves pre-purge commits via `refs/pull/*` (#56–#76), which only GitHub Support can remove (YED-204) | 2026-09-19 |
 | `build-sessions/<session>.jsonl` churns untracked | Stop hook | never chase it | 2026-09-12 |

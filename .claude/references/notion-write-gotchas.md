@@ -55,7 +55,7 @@ l. **`update_content` `old_str` must match the STORED markdown, not the markdown
    written with underscores fails with `"No matches found"` even though the rendered text looks identical.
    Fetch the page first and copy the exact stored snippet, or author the match with `*`. Em-dashes and other
    characters are preserved as-is — emphasis markers are the trap. (Learned wiring Gamma carousel URLs into
-   post drafts: the `**Carousel (Gamma):** _placeholder_` line matched only after switching `_..._` → `*...*`.)
+   post drafts, back when the since-removed Gamma rendered them: the legacy `**Carousel (Gamma):** _placeholder_` line matched only after switching `_..._` → `*...*`.)
 
 m. **`notion-update-page` `insert_content`/`update_content` mangles `\n` escapes into a literal "n" (2026-06-01).**
    Author multi-line update payloads with REAL newlines, not `\n` escape sequences. `create-pages` is unaffected —
