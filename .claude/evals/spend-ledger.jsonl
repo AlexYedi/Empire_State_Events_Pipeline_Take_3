@@ -1,0 +1,1 @@
+{"ts": "2026-09-20T02:17:27Z", "provider": "openai", "model": "gpt-5.4", "artifact": ".claude/hooks/check-tombstones.py", "http": 200, "input_tokens": 5620, "output_tokens": 6868, "cost_usd": 0.11707, "calibration_set": "prospective", "print_only": true, "ok": true}

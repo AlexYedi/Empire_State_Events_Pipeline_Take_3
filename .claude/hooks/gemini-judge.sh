@@ -215,16 +215,17 @@ SLUG=$(basename "$(dirname "$ARTIFACT")" 2>/dev/null); B=$(basename "$ARTIFACT")
 [ "$B" = "SKILL.md" ] || SLUG=$(echo "$B" | sed 's/\.[^.]*$//')
 RID="${LABEL:-gemini-$(echo "$SLUG" | tr -c 'a-zA-Z0-9' '-')}"
 OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
+ASHA=$(shasum -a 256 "$ARTIFACT" 2>/dev/null | cut -d" " -f1)   # content fingerprint: calibration matches truth on THIS, not the path (YED-209)
 jq -nc \
-  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" \
+  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" --arg asha "$ASHA" \
   --arg jm "gemini:$RESOLVED" --arg sid "$SID" --arg calset "$CALSET" --arg rver "$RUBRIC_VER" \
   --arg dangling "$DANGLING" --arg parity "$PARITY" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
-  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_type:$atype, rubric:$rver,
+  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_sha256:$asha, artifact_type:$atype, rubric:$rver,
     judge_model:$jm, session_id:$sid, criterion_scores:$v.criterion_scores,
     weighted_score:$v.weighted_score, verdict:$v.verdict, alex_ack:null,
     confidence_honesty_violation:($v.confidence_honesty_violation // false),
     defects:($v.defects // []), checks_performed:($v.checks_performed // []), cap_flags:($v.cap_flags // {}),
     raw_score:$v.raw_score, flat_ceiling:($v.flat_ceiling // false), scoring:"harness-recomputed",
     dangling_refs:($dangling | if .=="" then [] else split("\n") end),
-    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage}' > "$OUT"
+    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage}' >> "$OUT"   # append, never clobber a same-day re-run (YED-209)
 echo "  logged → $OUT"
