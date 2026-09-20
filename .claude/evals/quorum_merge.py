@@ -31,8 +31,9 @@ Escalation reasons: verdict_mismatch · score_divergence (max pairwise |Δ| >= Q
 non-shadow seats) · flat_ceiling:<seat> · no_evidence_parity:<seat> · advisory_flag:<seat> · seat_missing:<seat> ·
 evidence_mismatch (seats scored different bundles) · no_bundle_hash:<seat> · no_voting_seat ·
 same_group_only (all voting seats share one independence_group, so "unanimous" is one opinion).
-A seat whose defect quotes fail verification (>30%) is tagged evidence_unverified:<seat>: recorded, and its own
-flag / divergence no longer counts as a reason for THIS run (it cannot invent its way into an escalation).
+A seat whose defect quotes fail verification (>30%) is tagged evidence_unverified:<seat>: recorded, and NONE of
+its signals count for THIS run — not its flag, its divergence, its flat ceiling, or its parity. It cannot invent
+its way into an escalation, and (per the vote rule above) it cannot vote either.
 
 Usage:
   quorum_merge.py --artifact <path> --seat <id>=<run-log.jsonl> [--seat ...] [--mode interactive|autonomous]
@@ -53,16 +54,24 @@ ORDER = cal.ORDER
 INTEGRITY = {"seat_missing", "seat_invalid", "evidence_mismatch", "no_bundle_hash", "no_voting_seat"}
 
 
-def last_row(path: str, artifact: str) -> dict | None:
-    rows = []
+def last_row(path: str, artifact: str) -> tuple[dict | None, int]:
+    """The LAST seat row for this artifact, plus the count of unparseable lines.
+
+    Deliberately NOT "the last row that has a verdict": if the newest row is partial, that is a seat_invalid to
+    surface, not something to paper over by reaching further back for an older, healthier-looking row.
+    """
+    rows, corrupt = [], 0
     for line in open(path, encoding="utf-8"):
+        if not line.strip():
+            continue
         try:
             r = json.loads(line)
         except ValueError:
+            corrupt += 1
             continue
-        if r.get("record_type") != "quorum" and r.get("artifact") == artifact and r.get("verdict") in ("pass", "flag"):
+        if r.get("record_type") != "quorum" and r.get("artifact") == artifact:
             rows.append(r)
-    return rows[-1] if rows else None
+    return (rows[-1] if rows else None), corrupt
 
 
 def valid_row(r: dict | None) -> bool:
@@ -110,7 +119,9 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
         reasons.append("evidence_mismatch")
 
     for sid, r in live.items():
-        if is_flat(r):
+        if sid in unverified:
+            continue          # ALL of an unverified seat's signals are stripped, not just its flag: a seat whose
+        if is_flat(r):        # quotes are invented cannot escalate by any route (found by the Gemini seat, 09-20)
             reasons.append(f"flat_ceiling:{sid}")
         if r.get("evidence_parity") is False:
             reasons.append(f"no_evidence_parity:{sid}")
@@ -124,10 +135,22 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
     if div >= threshold:
         reasons.append("score_divergence")
 
-    def group_of(sid: str) -> str:
+    # spec §2: seats sharing a provider OR an independence_group count as ONE vote. Both keys collapse, and
+    # they collapse transitively, so an explicit group cannot be used to make two same-provider seats look
+    # independent (a --seat b --seat c where a,b share a provider and b,c share a group is ONE bloc).
+    def keys_of(sid: str) -> set[str]:
         s_ = next(x for x in cfg if x["id"] == sid)
-        return s_.get("independence_group") or s_.get("provider") or sid      # provider OR group: spec §2
-    groups = {group_of(sid) for sid in voting}
+        return {f"g:{s_['independence_group']}" if s_.get("independence_group") else f"id:{sid}"} | \
+               ({f"p:{s_['provider']}"} if s_.get("provider") else set())
+    blocs: list[set[str]] = []
+    for sid in voting:
+        k = keys_of(sid)
+        hit = [b for b in blocs if b & k]
+        for b in hit:
+            blocs.remove(b)
+            k |= b
+        blocs.append(k)
+    groups = blocs                                     # one entry per independent bloc of voting seats
     verdicts = {r["verdict"] for r in voting.values()}
     if not voting:
         reasons.append("no_voting_seat")
@@ -138,7 +161,7 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
     else:
         agreed = verdicts.pop()
         if len(voting) > 1 and len(groups) == 1:
-            reasons.append("same_group_only")
+            reasons.append("same_group_only")          # "unanimous" from one bloc is one opinion, not corroboration
 
     reasons = sorted(set(reasons))
     integrity = sorted(r for r in reasons if r.split(":")[0] in INTEGRITY)
@@ -161,6 +184,11 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
     rec = {"record_type": "quorum", "artifact": artifact, "mode": mode,
            "agree": agreed is not None, "resolution": resolution, "final_verdict": final,
            "divergence": round(div, 3), "escalation_reasons": reasons, "integrity_reasons": integrity, "notes": notes,
+           "independent_blocs": len(groups), "voting_seats": sorted(voting),
+           # spec §2 row 1 also wants "canaries fresh" before an auto-pass. The canary runner is build step 8,
+           # so the condition is UNCHECKED, not satisfied: recorded here so nobody reads an auto-pass as meaning
+           # the seats were verified against known-good/known-bad controls that day.
+           "canary_freshness": "unchecked: no canary runner yet (YED-209 build step 8)",
            "seats": [{"id": s["id"], "configured": s.get("status"), "effective": effective.get(s["id"]),
                       "independence_group": s.get("independence_group"), **(block(s["id"]) or {"verdict": None}),
                       "flat_ceiling": bool(seat_rows.get(s["id"]) and is_flat(seat_rows[s["id"]])),
@@ -190,22 +218,32 @@ def main() -> int:
     os.chdir(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
     cfg = json.load(open(cal.SEATS_FILE, encoding="utf-8"))["seats"]
     seat_rows: dict[str, dict | None] = {s["id"]: None for s in cfg}
+    corrupt_lines: dict[str, int] = {}
     for spec in a.seat:
         sid, _, path = spec.partition("=")
         if sid not in seat_rows:
             print(f"ERROR: unknown seat '{sid}' — not in {cal.SEATS_FILE}. Nothing merged (a typo must not "
                   f"silently drop a seat). Known ids: {', '.join(sorted(seat_rows))}", file=sys.stderr)
             return 2
-        seat_rows[sid] = last_row(path, a.artifact) if os.path.isfile(path) else None
+        if os.path.isfile(path):
+            seat_rows[sid], bad = last_row(path, a.artifact)
+            if bad:
+                corrupt_lines[sid] = bad
     g = cal.gate(cal.load(".claude/evals/logs"), 3.0)
     effective = {s["id"]: g.get(s["id"], {}).get("effective", s.get("status", "shadow")) for s in cfg}
+    cur_sha = jl.sha256_file(a.artifact) if os.path.isfile(a.artifact) else None
     if a.reveal_shadow and not any(
             r.get("record_type") == "quorum" and r.get("artifact") == a.artifact and r.get("alex_ack")
+            and r.get("artifact_sha256") == cur_sha          # an ack on an OLDER version does not unlock this one
             for r in cal.load(".claude/evals/logs")):
-        print("REFUSED --reveal-shadow: no acked quorum row for this artifact yet. Ack the verdict first, or the "
-              "shadow seat's score anchors the label it is supposed to be measured against.", file=sys.stderr)
+        print("REFUSED --reveal-shadow: no acked quorum row for THIS version of the artifact (content hash "
+              f"{str(cur_sha)[:12]}). Ack the verdict first; an ack on an earlier version does not unlock it, or "
+              "the shadow seat's score anchors the label it is supposed to be measured against.", file=sys.stderr)
         return 2
     rec = merge(a.artifact, seat_rows, cfg, effective, a.mode, float(os.environ.get("QUORUM_DIVERGENCE", "0.15")))
+    for sid, nbad in sorted(corrupt_lines.items()):     # a corrupt line must never be silently skipped
+        rec["notes"].append(f"corrupt_log_lines:{sid}={nbad}")
+        print(f"   ⚠️  {nbad} unparseable line(s) in {sid}'s log — the row used may not be the newest.", file=sys.stderr)
     rec.update({"run_id": a.label or f"quorum-{jl.slug_for(a.artifact)}", "timestamp": jl.now_utc(),
                 "artifact_sha256": jl.sha256_file(a.artifact) if os.path.isfile(a.artifact) else None,
                 "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "_nosession"),

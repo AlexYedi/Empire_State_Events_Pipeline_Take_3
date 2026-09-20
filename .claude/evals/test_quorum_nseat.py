@@ -84,5 +84,27 @@ SAMEPROV = [{"id": "a", "status": "voting", "provider": "openai"}, {"id": "b", "
 ck("two voting seats from one PROVIDER (no group set) are one opinion",
    qm.merge("x.md", {"a": row(), "b": row(ws=0.88)}, SAMEPROV, {"a": "voting", "b": "voting"}),
    "escalated", "pass", has=("same_group_only",))
+
+# --- 2026-09-20 round 2: found by the OpenAI (shadow) seat on the re-judge -----------------------------------
+MIXED = [{"id": "a", "status": "voting", "provider": "openai", "independence_group": "x"},
+         {"id": "b", "status": "voting", "provider": "openai", "independence_group": "y"}]
+ck("an explicit group cannot make two same-PROVIDER seats look independent",
+   qm.merge("x.md", {"a": row(), "b": row(ws=0.88)}, MIXED, {"a": "voting", "b": "voting"}),
+   "escalated", "pass", has=("same_group_only",))
+CHAIN = [{"id": "a", "status": "voting", "provider": "openai", "independence_group": "g1"},
+         {"id": "b", "status": "voting", "provider": "openai", "independence_group": "g2"},
+         {"id": "c", "status": "voting", "provider": "google", "independence_group": "g2"}]
+ck("blocs collapse transitively (a~b by provider, b~c by group => one bloc)",
+   qm.merge("x.md", {"a": row(), "b": row(ws=0.88), "c": row(ws=0.9)}, CHAIN, {k: "voting" for k in "abc"}),
+   "escalated", "pass", has=("same_group_only",))
+TWO = [{"id": "a", "status": "voting", "provider": "anthropic"}, {"id": "b", "status": "voting", "provider": "openai"}]
+r2 = qm.merge("x.md", {"a": row(), "b": row(ws=0.88)}, TWO, {"a": "voting", "b": "voting"})
+ck("genuinely independent blocs auto-pass and are counted", r2, "auto", "pass")
+ck("the record states how many independent blocs voted", r2, "auto", "pass") if r2.get("independent_blocs") == 2 else ck("the record states how many independent blocs voted", {"resolution": "?", "final_verdict": "?", "escalation_reasons": []}, "auto", "pass")
+ck("canary freshness is recorded as unchecked, not silently assumed", r2, "auto", "pass") if "unchecked" in str(r2.get("canary_freshness")) else ck("canary freshness is recorded as unchecked, not silently assumed", {"resolution": "?", "final_verdict": "?", "escalation_reasons": []}, "auto", "pass")
+ck("an unverified seat cannot escalate via flat_ceiling either (Gemini seat, round 2)",
+   M({"claude": row(), "gemini": row(flat=True, unverified=True), "openai": None}), "auto", "pass", lacks=("flat_ceiling",))
+ck("an unverified seat cannot escalate via no_evidence_parity either",
+   M({"claude": row(), "gemini": row(ws=0.88, parity=False, unverified=True), "openai": None}), "auto", "pass", lacks=("no_evidence_parity",))
 print(f"{ok}/{n} n-seat scenarios pass")
 sys.exit(0 if ok == n else 1)
