@@ -58,5 +58,21 @@ Across the two events:
 - Monday's own post-event claims land before Wednesday's run — that's the system working as designed, not contamination; noted in the log.
 - If `retrieve.py` exits 5 (loud failure) on an event, that event counts as an **A win** and the failure is logged, not hidden.
 
+## Pre-run correction (2026-09-19, before event 1 — Alex approved)
+
+**The A/B as first staged was biased against the substrate.** Only **16 of 77** attended events had any company
+links: the dead 2b migration never wrote company hyperedges (0/59), while producer-written events had them (16/16).
+The legacy arm reads Notion's Company relations directly, so Pack A would show continuity Pack B structurally could
+not — on the ledger dimension the comparison is supposed to test. Found while scoping S1b (YED-47).
+
+Fixed by completing **YED-171's tail** (a re-run of the existing producer over Notion rosters — no new producer, no
+new knowledge, and YED-171 is a declared blocker of YED-172), before event 1 rather than mid-experiment:
+- **Coverage 16/77 → 76/77** (+227 company links, 4 new companies, 60 events matched, 0 events created). The one
+  remaining event has no companies in Notion either — correct, not missing.
+- **Idempotency proof:** immediate re-run reported `created=0` across all 60 manifests.
+- **Effect on event 1's seed:** the Monday probe went from **0 prior occasions** to **3** (Ray Dev Day 05-21, and two
+  April Microsoft tech briefs) — the continuity Pack B could not have shown before.
+- **Freeze still holds from here:** no further graph-changing work until both events are scored (YED-205 waits).
+
 ## Cost
 One extra conditioner run per event (a few minutes, ~20–30k tokens) + ~10 minutes of Alex scoring. No extra research fan-out.
