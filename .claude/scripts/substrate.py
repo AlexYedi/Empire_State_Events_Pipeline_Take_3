@@ -467,7 +467,7 @@ class Graph:
             self.patch(table, f"id=eq.{row['id']}", patch)
             self.stats.bump(table, "enriched")
 
-    def ensure_company(self, e: dict) -> str:
+    def ensure_company(self, e: dict) -> str:   # NOTE: same-name ambiguity is surfaced, never silently duplicated
         fields = {"name": e["name"], "website": e.get("website"), "description": e.get("description"),
                   "linkedin_url": e.get("linkedin_url"), "notion_page_id": (pid_variants(e.get("notion_page_id")) or [None])[-1]}
         row = self.by_pid("company", e.get("notion_page_id")) or self.by_name("company", e["name"])
@@ -499,6 +499,25 @@ class Graph:
         return self._remember("topic", e["name"],
                               self.post("topic", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
 
+    def note_ambiguous(self, table: str, name: str, rivals: list[dict], why: str) -> None:
+        """A same-name row exists but was not matched. Creating a second row may be right (two real people)
+        or wrong (one person who changed employer — the commonest event in this graph). Either way it is a
+        judgement, so it is never silent: it prints, it counts, and it lands in a review file for S1b (YED-47).
+        """
+        self.stats.bump(table, "ambiguous_name")
+        detail = "; ".join(f"{r.get('name')} [{str(r.get('id'))[:8]} · {r.get('source') or '—'}]" for r in rivals[:3])
+        sys.stderr.write(f"  ⚠️  {table} '{name}': creating a NEW row though {len(rivals)} same-name row(s) exist "
+                         f"({why}) → {detail}. Review for merge (YED-47).\n")
+        if not self.dry:
+            path = os.path.join(ROOT, ".claude", "artifacts", "identity-ambiguity.jsonl")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            import datetime
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                    "table": table, "name": name, "why": why,
+                                    "existing": [{"id": r.get("id"), "name": r.get("name"), "source": r.get("source"),
+                                                  "company_id": r.get("company_id")} for r in rivals[:5]]}) + "\n")
+
     def ensure_person(self, e: dict) -> str:
         company_id = self.ensure_company({"name": e["company"]}) if e.get("company") else None
         li = (e.get("linkedin_url") or "").strip() or None
@@ -510,10 +529,14 @@ class Graph:
             rows = self.get(f"/person?linkedin_url=ilike.*{q(core)}*&select=*&limit=3")
             row = rows[0] if len(rows) == 1 else None
         if not row:
-            rows = self.get(f"/person?name=ilike.{q(e['name'])}&select=*&limit=5")
-            rows = [r for r in rows if norm_text(r["name"]) == norm_text(e["name"])
-                    and (company_id is None or r.get("company_id") in (None, company_id))]
+            same_name = [r for r in self.get(f"/person?name=ilike.{q(e['name'])}&select=*&limit=5")
+                         if norm_text(r["name"]) == norm_text(e["name"])]
+            rows = [r for r in same_name if company_id is None or r.get("company_id") in (None, company_id)]
             row = rows[0] if len(rows) == 1 else None                # ambiguous name -> create, never guess
+            if not row and same_name:
+                # the commonest case here is ONE person who changed employer, not two people with one name
+                self.note_ambiguous("person", e["name"], same_name,
+                                    "different company_id" if rows != same_name else f"{len(rows)} same-name matches")
         if row:
             self.stats.bump("person", "matched")
             self._fill_missing("person", row, {k: v for k, v in fields.items() if k != "name"})
