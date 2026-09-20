@@ -43,13 +43,13 @@ and carousels. After producing the brief, Claude authors the visual as a
 headless-Chrome auto-render (⌘P → Save as PDF from a published Artifact is the manual
 fallback); see `## Execution` below for the exact command.
 Claude renders exactly what's authored — no re-interpretation, which is what broke
-dense labels in Gamma/Canva. See `## Execution — Claude design (default) + Gemini
+dense labels in the removed Gamma/Canva path. See `## Execution — Claude design (default) + Gemini
 (pictorial)` below.
 
 **Why Gamma was ripped out (2026-08-07):** Gamma was chosen in 2026-05 over Canva
-because Canva's `generate-design` garbled dense labels. But Gamma is still a
-constrained app that re-interprets the brief — it re-flows and mangles dense labels
-too, and forces a tool→export hand-off. Authoring the pixels directly in HTML/SVG
+because Canva's `generate-design` garbled dense labels. But the now-removed Gamma was also a
+constrained app that re-interpreted the brief — it re-flowed and mangled dense labels
+too, and forced a tool→export hand-off. Authoring the pixels directly in HTML/SVG
 removes both failure modes: nothing re-interprets the content, and iteration stays
 in-conversation (edit the file, republish, same URL). **Pictorial imagery**
 (conceptual / editorial / photographic, no dense labels) → **Gemini** (Alex's
@@ -81,7 +81,7 @@ When proposing a post's visual, offer **four distinct format options**, not four
 
 **Emphasis: real visual information** — infographics, architecture / flow diagrams, statistics, charts/graphs, matrices, before/after, "where the value moves." Typography-only cards are a fallback, not the goal; never stock or decorative AI imagery. Every statistic in the post is a candidate for a chart or a stat-callout.
 
-**Tooling (updated 2026-08-07): Claude design is the DEFAULT generator for all structured visual content** — every single image and every carousel — authored as self-contained HTML/SVG and published via the Artifact tool, because Claude renders exactly the labels / diagrams / matrices / stat-callouts as authored (no app re-interpretation — the failure mode of both Gamma and Canva).
+**Tooling (updated 2026-08-07): Claude design is the DEFAULT generator for all structured visual content** — every single image and every carousel — authored as self-contained HTML/SVG and published via the Artifact tool, because Claude renders exactly the labels / diagrams / matrices / stat-callouts as authored (no app re-interpretation — the failure mode of the removed Gamma and Canva paths).
 - **Author:** hand-write the design — dark editorial ground, ONE meaning-bearing accent (see palette below), real typographic hierarchy, inline SVG for diagrams / arrows / timelines. Load the `artifact-design` (+ `artifact-diagramming`, `dataviz`) skills first for calibration.
 - **Size + export:** 4:5 (1080×1350) per slide; use container-query units so it's exact at full size and responsive. Add print CSS (`@page{size:1080px 1350px}` + a page-break per slide) so headless Chrome `--print-to-pdf` (default) — or ⌘P → Save as PDF (fallback) — yields a clean multi-page carousel PDF. See `## Execution` for the render command.
 - **Pictorial only:** Gemini for conceptual / editorial / photographic imagery with no dense labels (Claude writes the prompt; Alex generates). Gamma removed; Canva vestigial.
@@ -265,150 +265,17 @@ prompt (composition + style + mood + negatives — see the style guide's AI Imag
 Prompting rules); Alex generates and reviews. Use only for conceptual / editorial /
 photographic imagery with no dense labels.
 
-> ⛔ **DEPRECATED 2026-08-07 — Gamma removed, Canva vestigial.** The Gamma/Canva MCP
-> mechanics below are retained only as historical reference (how the pre-2026-08
-> pipeline worked). **Do not use them** — the live path is Claude design + Gemini above.
-> Flagged for deletion in a follow-up cleanup.
+### Frame parallelism (tool-neutral rule, kept from the retired MCP section)
 
-### Canva fallback — auto-render (added 2026-05-24, demoted to fallback 2026-05-26)
+For Arc 2 (Thesis A vs B) and Arc 3 (Before vs After), structurally paired slides MUST share a visual
+frame: same quote placement, same attribution layout, same font hierarchy. The same applies to Arc 4
+(One Question, N Perspectives): slides 2 through N-1 share a frame; slide 1 (question) and slide N
+(synthesis) are distinct typography slides that match each other. In Claude design this is one shared
+CSS class per paired slide type.
 
-After the slide specs are finalized, the calling skill auto-renders the
-carousel by firing one `mcp__claude_ai_Canva__generate-design` call per slide.
-This replaces the historical "Alex pastes the brief into Canva manually"
-handoff. Per CLAUDE.md's MCP automation rule, manual is reserved for
-judgment-load steps; rendering is not one of them.
+> The retired Gamma and removed Canva MCP mechanics (pre-2026-08) that lived here were deleted 2026-09-19 (YED-200). They
+> are in git history if ever needed. The live path is the Execution section above.
 
-### Per-slide MCP call shape
-
-For each slide in the brief, construct a `generate-design` call:
-
-```
-mcp__claude_ai_Canva__generate-design({
-  design_type: "instagram_post",   // STEP 1 ONLY: Canva's single 4:5 (1080×1350) social canvas — NOT a LinkedIn asset yet; resize in Step 2
-  query: "<prose payload built from the slide spec — see template below>",
-  user_intent: "Generate slide N of M for [post title] — [slide job]"
-})
-```
-
-⚠️ **Canva `generate-design` has NO `linkedin_post` type** — the enum only offers
-`instagram_post`, `facebook_post`, `twitter_post`, `your_story`, `presentation`,
-etc. We use `instagram_post` ONLY because it is Canva's single 4:5 portrait social
-canvas (1080×1350), which equals LinkedIn's optimal portrait ratio. But it is NOT a
-LinkedIn asset on generation: it lands titled "Instagram Post" and can inherit
-Instagram design conventions. So generation is a **two-step pattern** — generate the
-4:5 canvas (above), then resize to LinkedIn spec (below). Do NOT use `presentation`
-(16:9) or `pinterest_pin` (2:3) — wrong ratios. (Recurring defect — visuals shipping
-as Instagram posts — fixed 2026-05-26.)
-
-**Step 2 — resize the chosen candidate to LinkedIn spec (MANDATORY; this also re-types it off "Instagram Post"):**
-
-```
-mcp__claude_ai_Canva__resize-design({
-  design_id: "<created design id>",
-  design_type: { type: "custom", width: 1080, height: 1350 },   // LinkedIn 4:5; use 2160×2700 for retina
-  user_intent: "Resize to LinkedIn-optimized 4:5 portrait — not an Instagram post"
-})
-```
-
-**LinkedIn output spec (the target — not Instagram):**
-- **Single image (feed):** 1080×1350 (4:5) — the tallest LinkedIn renders in-feed before cropping. Retina: 2160×2700.
-- **Carousel:** a LinkedIn carousel is ONE multi-page **PDF** ("document" post) — NOT N separate images (that's the Instagram pattern). After the slide winners are chosen and resized, `merge-designs` them into one multi-page design, then `export-design` as PDF for the LinkedIn document upload.
-- Never ship a deliverable as a bare `instagram_post`-typed design.
-
-### Query payload template
-
-The `query` parameter is the prose payload Canva's generation model consumes.
-Build it from the slide spec using this template — every field from the slide
-spec maps to a labeled section in the query:
-
-```
-Generate a typography-led LinkedIn carousel slide (slide N of M).
-
-LAYOUT: [Visual mode from spec — Bold typography card / Quote card / Diagram / etc.]
-[For quote cards: emphasize frame parallelism with sibling slides.]
-
-[CONTENT BLOCKS — pull verbatim from spec]
-[Headline]: "[exact text]" — [type weight/size guidance]
-[Body / content]: [exact text or diagram description]
-[Attribution block]: [name / company / category if quote card]
-[Footer attribution]: [if any — source + date]
-
-VISUAL STYLE:
-- Background: [palette spec — hex code]
-- Primary text: [palette spec — hex code]
-- Accent: [palette spec — hex code, with usage notes]
-- Typography-led. NO imagery, NO stock-AI illustrations, NO gradients, NO decorative iconography[, NO speaker photos].
-- High contrast, premium editorial feel.
-
-ASPECT RATIO: 4:5 portrait (1080x1350px).
-
-CONTEXT: [One paragraph — what the carousel is arguing, what role this slide
-plays in the arc, who the author is. Pulled from the carousel thesis + slide job.]
-
-CONSTRAINTS — anti-patterns to avoid:
-- No glowing brain illustrations
-- No robot imagery
-- No portraits or photos of speakers
-- No pink/purple gradients
-- No decorative lightbulbs, gears, or arrows
-- No "Follow for more" footer language
-- [Add any slide-specific anti-patterns]
-```
-
-### Frame parallelism enforcement
-
-For Arc 2 (Thesis A vs B) and Arc 3 (Before vs After), structurally paired
-slides MUST share visual frame. To enforce in MCP calls, include this explicit
-instruction in the `query` for paired slides:
-
-> "LAYOUT: Quote card. Must use IDENTICAL layout to slide N of this same
-> carousel — same quote placement, same attribution layout, same font hierarchy.
-> Frame parallelism is critical."
-
-Same applies to Arc 4 (One Question, N Perspectives): slides 2 through N-1
-share frame; slide 1 (question) and slide N (synthesis) are distinct typography
-slides matching each other.
-
-### Candidate selection flow
-
-`generate-design` returns 4 candidates per slide. The calling skill surfaces
-all candidates as a markdown table (slide number, candidate letter, preview
-URL, thumbnail URL) and waits for Alex's selection. Once selected, fire
-`mcp__claude_ai_Canva__create-design-from-candidate` to land the winners in
-Alex's Canva account. Then immediately `resize-design` each winner to LinkedIn
-spec (Step 2 above) — do not leave them as Instagram-typed designs. For
-multi-slide carousels, `merge-designs` the resized winners into one multi-page
-design and `export-design` as PDF for the LinkedIn document post.
-
-If Alex flags any candidate as "close but needs X," use
-`mcp__claude_ai_Canva__perform-editing-operations` to iterate without
-leaving the conversation. Do not re-fire `generate-design` for tweaks — that
-discards visual DNA from the chosen direction.
-
-### Failure modes
-
-- **All 4 candidates fail the brief.** Re-prompt with sharper anti-pattern
-  language or pull in a brand kit via `mcp__claude_ai_Canva__list-brand-kits`
-  → `brand_kit_id` parameter. If still failing, fall back to manual Canva
-  work for that specific slide and log the failure mode in
-  `.claude/notes/execution-week-frictions.md` so the pattern can be diagnosed.
-- **Frame parallelism broken between slides.** Re-fire the off-pattern slides
-  with a stronger "IDENTICAL layout to slide N" instruction. Do not ship a
-  carousel where slides 2-N-1 visually drift from each other.
-- **MCP returns "Common queries will not be generated" error.** The query
-  was too generic. Add slide-specific detail — exact quote text, named
-  speaker, specific palette hex codes, the full carousel thesis context.
-
-### Tokens / cost
-
-Per CLAUDE.md MCP automation rule #1: Canva MCP calls are billed by Canva
-(under Alex's existing subscription), not by Anthropic. The Claude-side
-token cost is the small JSON request/response per call. A 5-slide carousel
-= 5 `generate-design` calls + 1-5 `create-design-from-candidate` calls + 0-N
-`perform-editing-operations` calls. All effectively free at the Anthropic
-billing layer.
-
----
 
 ## Quality gates
 

@@ -37,8 +37,8 @@ Compose `alex:executive-briefing-kit` for the exec narrative shape.
 
 ## Step 4 — Output destination (NAME IT)
 - **`conversation`** (default) — present the brief inline: threat matrix, differentiators, counter-plays.
-- **`deck`** — also generate a Gamma deck (`mcp__claude_ai_Gamma__generate`, `format: "social"` for 4:5),
-  one slide per section (CLAUDE.md rule 13 — Gamma is the default visual generator).
+- **`deck`** — also generate a Claude-design deck: self-contained 4:5 HTML/SVG exported to PDF per `.claude/skills/content-patterns/visual-briefs.md` → `## Execution`,
+  one slide per section (CLAUDE.md rule 13).
 - **`memo`** — present as a structured long-form memo in conversation.
 This command does **not** write to HubSpot/CRM (Static Lists unavailable via MCP; CRM writes are a separate,
 judgment-gated step). If Alex wants the brief in Notion for review, offer it as an explicit follow-up.
@@ -47,7 +47,7 @@ judgment-gated step). If Alex wants the brief in Notion for review, offer it as 
 - **scope missing** — stop and ask; the whole brief depends on it.
 - **No competitors identifiable** — say so, present what research found, and ask Alex to name targets.
 - **A specialist returns thin** — re-invoke just that one; note the gap in the brief rather than inventing signals.
-- **Gamma unavailable** — fall back to the `conversation` deliverable; don't block.
+- **Deck render fails** — fall back to the `conversation` deliverable; don't block.
 
 ## Ground-truth references
 - `.claude/references/command-orchestration-convention.md` — the required skeleton

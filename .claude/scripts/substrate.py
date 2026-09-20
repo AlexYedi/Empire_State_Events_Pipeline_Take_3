@@ -731,14 +731,14 @@ SAMPLE_BRIEF = """
 # Excerpts of two REAL brief formats (2026-09-18 drift check) — the parser must handle both.
 SHOWCASE_SAMPLE = """
 ## ⛔ Confidentiality flag (read first)
-North's founder disclosed a just-closed Series B on stage and said "this stays in the room." Do NOT publish it.
+A founder shared an off-the-record detail on stage and said "this stays in the room." Do NOT publish it.
 ## The night in one line
 Six early-stage NYC founders pitched back-to-back to hire.
 ## Company breakdowns (6 dimensions)
 ### 1. North — [north.cloud](http://north.cloud) (Cloud & AI FinOps)
 - **Who:** Matt Biringer (CEO), Yassine Açoine (CTO, presented).
 - **Problem:** Engineers create cloud/AI spend; finance is accountable — nobody owns the seam.
-- **Recent (PUBLIC):** North v3 launched Aug 20 2026. Series A $5M. ⛔ Series B confidential — excluded.
+- **Recent (PUBLIC):** North v3 launched Aug 20 2026. Series A $5M. ⛔ off-the-record detail — excluded.
 ### 2. Arist — [arist.co](http://arist.co) (Consulting automation)
 - **Problem:** Execs don't know their org's real problems; McKinsey costs $5M to find out.
 - **Recent (PUBLIC):** Series B $22.5M (SEC Form D, Aug 4 2026); ~$39M total.
@@ -785,7 +785,7 @@ def selftest() -> bool:
     ok("parse: 0 claims from an unrelated doc", parse_brief("## Intro\n- hello world here") == [])
     sc = parse_brief(SHOWCASE_SAMPLE)
     blob = " ".join(i["text"] for i in sc).lower()
-    ok("showcase: confidential section never staged", "stays in the room" not in blob and "series b on stage" not in blob)
+    ok("showcase: confidential section never staged", "stays in the room" not in blob and "off-the-record detail" not in blob)
     ok("showcase: a line carrying ⛔ is dropped whole", not any(i["about_company"] == "North" and i["claim_type"] == "statistic" for i in sc))
     ok("showcase: 'Who' roster lines are not claims", not any("Biringer" in i["text"] for i in sc))
     ok("showcase: claims attributed to their company",
