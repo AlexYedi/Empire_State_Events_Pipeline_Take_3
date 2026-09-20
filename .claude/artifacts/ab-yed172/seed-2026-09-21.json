@@ -1,0 +1,18 @@
+{
+  "entities": [
+    {"type": "person", "name": "Henk Boelman"},
+    {"type": "person", "name": "Jay Gordon"},
+    {"type": "person", "name": "Cedric Vidal"},
+    {"type": "person", "name": "Mehrnoosh Sameki"},
+    {"type": "person", "name": "Stephen Simon"},
+    {"type": "person", "name": "Sebastian Kowalik"},
+    {"type": "company", "name": "Microsoft"},
+    {"type": "company", "name": "Global AI Community"},
+    {"type": "topic", "name": "Agent Evaluation & Reliability in Production"},
+    {"type": "topic", "name": "Multi-Agent Systems"},
+    {"type": "topic", "name": "AI Governance"}
+  ],
+  "text": "AI Show and Tell - New York (Global AI New York), Mon 2026-09-21 6-9pm, Microsoft Research Lab, 300 Lafayette St. Agents are easy to demo. Running them is the hard part: evaluating agents, governing them, and running a team of them in production. Three talks, real systems, real failure modes. 7:00 'Your New Teammates: Architecting a Multi-Agent Workforce' (Henk Boelman) - inside hamba.nl, a live Dutch travel magazine run by seven Foundry-hosted agents covering the full editorial pipeline. 7:30 'From Findings to Fixes: How SCOPE and Azure Cosmos DB Improved AI-Generated Apps' (Jay Gordon, Cedric Vidal). 8:00 'From Intent to Enforcement: Open-Source Evaluation and Governance for AI Agents' (Mehrnoosh Sameki).",
+  "focus": "A/B arm B - substrate pack for the blind comparison (YED-172, event 1 of 2)",
+  "window_days": 365
+}
