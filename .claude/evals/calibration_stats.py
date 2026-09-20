@@ -16,6 +16,16 @@ kappa is None (printed as "—") when the sample has zero variance: a seat score
 verdicts has no measurable discrimination, and reporting 1.0 there would be the very illusion this file
 exists to expose.
 
+TRUTH IS MATCHED ON CONTENT, NOT ON THE FILE NAME (YED-209, 2026-09-19). The first version matched a run to the
+nearest ack for the same artifact PATH. A file that was flagged, fixed, and re-judged the same day then had its
+correct "pass" scored against the flag on the OLD content, and the trusted Sonnet seat read kappa 0.53 /
+recall 0.60 for doing its job. Now:
+  * a row carrying `artifact_sha256` is scored ONLY against acks on the same hash (nearest in time);
+    an ack on a different hash of the same path is never used, whatever the timestamps say;
+  * a legacy row with no hash keeps the time window, but only if git shows NO commit touching that path
+    between the ack and the run (any ref). If the file changed in between, the run is left unscored:
+    an unscored row is honest, a mis-scored row is not.
+
 Alex's verdict comes from `alex_ack` on ANY seat's row for that artifact (agree -> that row's verdict;
 disagree -> its opposite). An artifact is often re-judged after being edited, so a run is matched to the
 NEAREST-IN-TIME ack for the same artifact and only within --window days (default 3); its own ack always
@@ -25,7 +35,7 @@ excluded — from BOTH the ground-truth pool and the per-seat scoring.
 Usage: python3 .claude/evals/calibration_stats.py [--logs .claude/evals/logs] [--json]
 """
 from __future__ import annotations
-import argparse, collections, datetime, glob, json, os
+import argparse, collections, datetime, functools, glob, json, os, subprocess
 
 EXCLUDE_SETS = {"negative-control", "triage-experiment"}
 
@@ -104,7 +114,21 @@ def main() -> int:
         except ValueError:
             return 0.0
 
-    truths: dict[str, list[tuple[float, str]]] = collections.defaultdict(list)
+    @functools.lru_cache(maxsize=None)
+    def change_times(path: str) -> tuple[float, ...]:
+        """Commit times (any ref) that touched `path`. Empty if git is unavailable: the guard then can't fire."""
+        try:
+            out = subprocess.run(["git", "log", "--all", "--format=%ct", "--", path],
+                                 capture_output=True, text=True, timeout=20).stdout
+            return tuple(sorted(float(x) for x in out.split()))
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return ()
+
+    def changed_between(path: str, t1: float, t2: float) -> bool:
+        lo, hi = sorted((t1, t2))
+        return any(lo < c < hi for c in change_times(path))
+
+    truths: dict[str, list[tuple[float, str, str | None]]] = collections.defaultdict(list)
     for r in rows:
         if r.get("calibration_set") in EXCLUDE_SETS or r.get("evidence_parity") is False:
             continue          # excluded rows must not seed ground truth either, or an excluded ack
@@ -115,7 +139,8 @@ def main() -> int:
         v = r.get("final_verdict") if r.get("record_type") == "quorum" else r.get("verdict")
         if v not in ("pass", "flag"):
             continue
-        truths[art].append((when(r), v if ack == "agree" else ("flag" if v == "pass" else "pass")))
+        truths[art].append((when(r), v if ack == "agree" else ("flag" if v == "pass" else "pass"),
+                            r.get("artifact_sha256")))
 
     def truth_for(r: dict) -> str | None:
         """Own ack first; else the nearest ack for the same artifact inside the window."""
@@ -123,12 +148,27 @@ def main() -> int:
         if own:
             v = r.get("verdict")
             return v if own == "agree" else ("flag" if v == "pass" else "pass")
-        cands = truths.get(r.get("artifact", ""))
+        art = r.get("artifact", "")
+        cands = truths.get(art)
         if not cands:
             return None
-        t = when(r)
-        dt, v = min(((abs(t - ts), v) for ts, v in cands), key=lambda x: x[0])
-        return v if dt <= a.window * 86400 else None
+        t, sha = when(r), r.get("artifact_sha256")
+        if sha:                                   # content-matched: same hash only, no window needed
+            same = [(abs(t - ts), v) for ts, v, h in cands if h == sha]
+            if same:
+                return min(same, key=lambda x: x[0])[1]
+            cands = [c for c in cands if c[2] is None]      # never borrow an ack made on OTHER content
+            if not cands:
+                return None
+        dt, ts, v = min(((abs(t - ts), ts, v) for ts, v, _ in cands), key=lambda x: x[0])
+        if dt > a.window * 86400:
+            return None
+        if t and ts and changed_between(art, t, ts):
+            stats["unscored_file_changed"] += 1
+            return None
+        return v
+
+    stats = collections.Counter()
 
     # 2. score each seat against that truth
     seats: dict[str, dict] = collections.defaultdict(lambda: {"pairs": [], "flat": 0, "n_runs": 0})
@@ -160,12 +200,14 @@ def main() -> int:
             "flag_precision": round(sum(j == "flag" and t == "flag" for j, t in p) / flags_seat, 3) if flags_seat else None,
             "flat_1.0_rate": round(s["flat"] / s["n_runs"], 3) if s["n_runs"] else None,
         }
-    acks = [v for c in truths.values() for _, v in c]
+    acks = [v for c in truths.values() for _, v, _ in c]
     if a.json:
-        print(json.dumps({"alex_acked_runs": len(acks), "artifacts": len(truths), "window_days": a.window, "seats": out}, indent=1))
+        print(json.dumps({"alex_acked_runs": len(acks), "artifacts": len(truths), "window_days": a.window,
+                          "unscored_file_changed": stats["unscored_file_changed"], "seats": out}, indent=1))
         return 0
     print(f"Alex-acked runs: {len(acks)} over {len(truths)} artifacts  (flag: {sum(v == 'flag' for v in acks)})"
-          f"  · match window: ±{a.window:g}d\n")
+          f"  · match window: ±{a.window:g}d  · left unscored because the file changed between ack and run: "
+          f"{stats['unscored_file_changed']}\n")
     hdr = f"{'seat':<15}{'runs':>5}{'vs Alex':>8}{'agree':>7}{'base':>7}{'kappa':>7}{'recall':>8}{'prec':>7}{'flat1.0':>9}"
     print(hdr + "\n" + "-" * len(hdr))
     for seat, m in out.items():
