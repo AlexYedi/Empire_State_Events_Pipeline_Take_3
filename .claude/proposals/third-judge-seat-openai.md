@@ -1,6 +1,6 @@
 <!-- Spec for YED-209. Infra = spec (YED-129): this in-repo reference is the spec artifact; no ChatPRD doc.
      Authored 2026-09-19 by the principal-architect agent on Fable 5.1, read-only, before any code.
-     STATUS: PROPOSED, awaiting Alex's rulings on the three forks at the end. Build is blocked on PR #85 (YED-206). -->
+     STATUS: APPROVED 2026-09-19 (rulings in the Decision log at the end). Build is blocked on PR #85 (YED-206). -->
 
 # Third judge seat (OpenAI): design spec for approval
 
@@ -320,3 +320,10 @@ Most likely causes of failure three months out, ranked, each with its mitigation
   - `references/platform-constraints.md`
   - `references/build-in-public.md`
   - `references/value-action-registry.md`
+
+## Decision log
+- **2026-09-19, Alex: all three forks ruled as recommended.**
+  1. **Rotation:** all three seats run on every judge run.
+  2. **Model:** run the pre-registered three-arm bake-off (`gpt-5.4-mini`, `gpt-5.4`, `gpt-5.5`), about $11 one-time, before committing. The selection rule in §4 is fixed before results are seen.
+  3. **Sonnet:** subject to the same auto-demotion as every seat, but only after the hash-matching scorecard fix (§0, build step 2) lands.
+- **2026-09-19, sequencing:** build step 1 (reconcile PR #85 with `main`) belongs to the session that owns the #85 branch. The take-both resolution recipe is on YED-206. Nothing in this spec is stacked on #85 before it merges.
