@@ -119,7 +119,7 @@ CTA:
 - **This week only.** Events outside the coming week (e.g., the following week) do NOT belong in this roundup — drop them or hold for the next one.
 - **Only events Alex is actually attending.** Attendance changes; if Alex has dropped an event, it comes out. (This is exactly what the `steering-interview` Q3/Q4 captures before generation.)
 
-**Generate 2 variants** with different hooks/framing angles (different through-line framings — NOT different takes). Present as inline options.
+**Generate 3 variants** with different hooks/framing angles (different through-line framings — NOT different takes). Present as inline options. *(3 for every post, roundup included: ruled 2026-09-11, confirmed "3 everywhere" by Alex 2026-09-19. Connection notes stay at 2, A/B, because they are anchored to two signal types, not framings.)*
 
 ### Quality Checks
 - At least 2, no more than 3 data points per event synopsis
