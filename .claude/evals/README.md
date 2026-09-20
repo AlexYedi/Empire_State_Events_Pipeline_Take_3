@@ -30,14 +30,23 @@ LLM-as-judge has **self-preference bias** — here it's judging work produced by
 | flag recall | ≥ 0.60 | of the artifacts Alex would send back, how many the seat caught — what a gate actually needs |
 | flat-1.0 rate | < 0.30 | a seat scoring 1.0 on every criterion is low-information whatever its verdict |
 
-**Standing as of 2026-09-19** (50 acked runs over 34 artifacts):
+**Standing as of 2026-09-19, recomputed after YED-201 restored the round-1 records a log-overwrite bug had been
+destroying** (53 acked runs over 34 artifacts — a bigger, flag-heavier sample than the first cut of this table):
 
-| seat | runs | agree | baseline | κ | flag recall | flat 1.0 | standing |
+| seat | scored vs Alex | agree | baseline | κ | flag recall | flat 1.0 | standing |
 |---|---|---|---|---|---|---|---|
-| `claude:sonnet` | 16 | 0.90 | 0.50 | **0.80** | **0.80** | 0.00 | **trusted seat** — meets all four |
-| `claude:haiku` | 27 | 0.81 | 0.67 | 0.55 | 0.56 | 0.00 | borderline (κ + recall just under) |
-| `gemini` | 41 | 0.80 | 0.75 | **0.27** | **0.20** | **0.83** | **ADVISORY — fails 3 of 4** |
+| `claude:haiku` | 27 | 0.82 | 0.67 | 0.55 | 0.56 | 0.00 | advisory (κ + recall under) |
+| `claude:sonnet` | 15 | **0.73** | 0.33 | **0.50** | 0.60 | 0.00 | advisory (agreement + κ under) |
+| `gemini` | 26 | 0.65 | 0.62 | **0.12** | **0.10** | **0.81** | **advisory — fails 3 of 4** |
 | `claude:opus` | 6 | 1.00 | 1.00 | — | — | 0.00 | not a seat; κ undefined (zero-variance sample) |
+
+**No seat currently clears all four bars, including the one this file called "trusted" earlier the same day.** That
+earlier read came from 10 scored runs on a pass-heavy sample; the restored records added flag-heavy ones and Sonnet's
+absolute agreement fell to 0.73. Read honestly: Sonnet is still the most *informative* seat by a wide margin — 0.73
+against a 0.33 always-pass baseline is a real signal, where Gemini's 0.65 against a 0.62 baseline is nearly none — but
+**the bar is not moved to make a seat pass.** Consequence: the quorum escalates more often, which is the fail-safe
+direction. Re-check as acks accrue; if the 0.80 absolute bar proves wrong for flag-heavy samples, change it in a dated
+decision, never silently.
 
 - Seats are **advisory** until they clear all four bars; advisory seats are recorded and surfaced but **cannot auto-accept** a quorum (`quorum-merge.sh` escalates on divergence / flat ceiling / missing parity).
 - Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
