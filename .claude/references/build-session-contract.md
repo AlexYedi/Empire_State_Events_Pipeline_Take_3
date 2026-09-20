@@ -1,6 +1,6 @@
 # `build_session` contract (v1)
 
-The stable interface for build-session telemetry. **This contract — not any vendor — is the durable layer** ("instrument once" lives here). Tools (the local JSONL record, PostHog, a future OTEL collector + Langfuse) are swappable adapters behind it. Backing: Linear YED-88 · PRD US-2 · plan of record `.claude/references/roadmap.md` (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
+The stable interface for build-session telemetry. **This contract — not any vendor — is the durable layer** ("instrument once" lives here). Tools (the local JSONL record, PostHog, a deferred OTEL collector + Langfuse) are swappable adapters behind it. Backing: Linear YED-88 · PRD US-2 · plan of record `.claude/references/roadmap.md` (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
 
 ## Principle (build-better-not-faster)
 - **Authoritative record first, projection second.** Every session is written to an append-only local record (`.claude/artifacts/build-sessions/<session_id>.jsonl` — one shard per session; the pre-2026-09-12 single file `build-sessions.jsonl` is frozen history and still read) — the source of truth. PostHog is a *derived projection* for dashboards; if PostHog changes/breaks, no data is lost.
@@ -34,7 +34,7 @@ One JSON object per session, appended to that session's shard `build-sessions/<s
 Semantic fields (`dod_met`, `dod_waived`, `correction_rounds`) are nullable. The DoD gate (US-1) and judge (US-3) write them to `.claude/.state/<session>.build_meta` during the session; the Stop hook folds them into the record. So those features light up the same contract without changing it.
 
 ## Deferred upgrade (non-destructive) — do NOT build now — recorded in `platform-constraints.md` §Vendors (2026-09-18)
-Per the 2026-06-26 decision (lean foundation, defer the platform): the **OTEL collector + Langfuse** path is deferred. Add it only on a named trigger — weekly prompt-level agent-trace debugging, or wanting Langfuse's datasets/experiments for the rubric. When added: Claude Code OTEL → collector → relabel to `gen_ai.*` → fan out to {PostHog, Langfuse}, each writing/deriving this same `build_session` contract. **If Langfuse is adopted, first resolve judge ownership (eval-harness vs Langfuse) to avoid two judges.**
+Per the 2026-06-26 decision (lean foundation, defer the platform): the **OTEL collector + Langfuse** path is deferred. Add it only on a named trigger — weekly prompt-level agent-trace debugging, or wanting the deferred Langfuse path's datasets/experiments for the rubric. When added: Claude Code OTEL → collector → relabel to `gen_ai.*` → fan out to {PostHog, the deferred Langfuse}, each writing/deriving this same `build_session` contract. **If the deferred Langfuse is ever adopted, first resolve judge ownership (eval-harness vs that platform) to avoid two judges.**
 
 ## Emitter
 `.claude/hooks/build-session-emit.sh` (Stop hook). Writes the authoritative JSONL always; POSTs to PostHog `/capture/` only if `$POSTHOG_PROJECT_TOKEN` is set. Disable via `settings.local.json` → `{"hooks":{"disable":["build-session-emit"]}}`.

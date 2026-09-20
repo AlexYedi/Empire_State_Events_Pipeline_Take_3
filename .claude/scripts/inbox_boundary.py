@@ -27,7 +27,7 @@ Matching rules (from inbox-denylist.md / inbox-allowlist.md, now executable):
   * domain  = part after @, case-insensitive, subdomains included; `*` globs allowed
   * label   = the thread carries the label or any child of it (`Me` matches `Me/Health/Gym`)
   * order   = sender → domain → label, BEFORE any body is read; a match at any level → skip entirely
-  * denylist wins over allowlist on conflict (ramp.com receipt vs ramp.com careers → skip in v1)
+  * denylist wins over allowlist on conflict (fintech.example receipt vs fintech.example careers → skip in v1)
 """
 from __future__ import annotations
 import argparse, fnmatch, json, os, re, sys
@@ -292,7 +292,7 @@ _DENY_FIXTURE = """# Inbox denylist — test
 ## Matching rules
 1. `From`, the sender **domain**, labels — ignore me `not-an-entry.example`
 ## Denylisted domains — institutional (safe defaults, seeded)
-- **Financial:** `bank.example`, `ramp.com` *(also a target)*, `docusign` *(bare)*
+- **Financial:** `bank.example`, `fintech.example` *(also a target)*, `docusign` *(bare)*
 - **Health:** `myhealth*`, `*insurance*`
 - **Gov:** `*.gov`
 ## Denylisted Gmail labels (POPULATED)
@@ -317,7 +317,7 @@ _ALLOW_FIXTURE = """# Inbox allowlist
 *(A few seeds below — confirm/prune. Prefer `product@` / `updates@` / `changelog@` style senders.)*
 
 - `ship@info.vercel.com` — Vercel
-- `lancedb.com` — LanceDB
+- `devtool.example` — DevTool
 """
 _INBOX_FIXTURE = [
     {"thread_id": "t1", "from": "Bank Alerts <no-reply@alerts.bank.example>", "subject": "Your statement", "labels": ["Inbox"], "snippet": "balance $4,210 acct ending 5531"},
@@ -325,10 +325,10 @@ _INBOX_FIXTURE = [
     {"thread_id": "t3", "from": "Dr Office <care@somecare.com>", "subject": "Visit", "labels": ["Me/Health/Dental"]},
     {"thread_id": "t4", "from": "recruiter@bigco.com", "subject": "Application", "labels": ["Job Hunting/Rejection"]},
     {"thread_id": "t5", "from": "portal@myhealthplus.com", "subject": "Results", "labels": ["Inbox"]},
-    {"thread_id": "t6", "from": "careers@ramp.com", "subject": "Enterprise AM role", "labels": ["Inbox"]},
+    {"thread_id": "t6", "from": "careers@fintech.example", "subject": "Open role", "labels": ["Inbox"]},
     {"thread_id": "t7", "from": "Techpresso <hi@techpresso.co>", "subject": "Mistral raises", "labels": ["Content/Newsletters"], "snippet": "body text"},
     {"thread_id": "t8", "from": "ship@info.vercel.com", "subject": "Ship week", "labels": ["Inbox"]},
-    {"thread_id": "t9", "from": "chanchan@lancedb.com", "subject": "LanceDB digest", "labels": ["Inbox"]},
+    {"thread_id": "t9", "from": "digest@devtool.example", "subject": "DevTool digest", "labels": ["Inbox"]},
     {"thread_id": "t10", "from": "product@unknownstartup.ai", "subject": "Changelog", "labels": ["Inbox"]},
     {"thread_id": "t11", "from": "mom@gmail.com", "subject": "dinner sunday", "labels": ["Inbox"]},
     {"thread_id": "t12", "from": "notice@state.ny.gov", "subject": "Notice", "labels": ["Inbox"]},
@@ -342,11 +342,11 @@ def selftest() -> bool:
     ck = lambda name, cond: checks.append((name, bool(cond)))
     ck("parser: status v1 DRAFT detected", deny.version == 1 and deny.status == "DRAFT" and not deny.accepted)
     ck("parser: domains/globs/senders/labels parsed; bare word ignored",
-       deny.domains == {"bank.example", "ramp.com"} and set(deny.globs) == {"myhealth*", "*insurance*", "*.gov"}
+       deny.domains == {"bank.example", "fintech.example"} and set(deny.globs) == {"myhealth*", "*insurance*", "*.gov"}
        and deny.senders == {"hello@alerts.pharmacy.example", "blast@coldoutbound.io"} and deny.labels == ["Me", "Me/Health", "Me/Personal Finance", "Job Hunting"]
        and deny.ignored == ["docusign"])
     ck("parser: rules/review-log sections contribute NO entries", "not-an-entry.example" not in deny.domains and "2026-09-08" not in deny.senders)
-    ck("parser: allowlist senders/domains + default labels", allow.senders == {"ship@info.vercel.com"} and allow.domains == {"lancedb.com"} and {"Content/Newsletters", "Pipeline/signal-source"} <= allow.labels)
+    ck("parser: allowlist senders/domains + default labels", allow.senders == {"ship@info.vercel.com"} and allow.domains == {"devtool.example"} and {"Content/Newsletters", "Pipeline/signal-source"} <= allow.labels)
     ck("parser: `label:` prefix stripped (no raw query tokens as labels)", not any(l.lower().startswith("label:") for l in allow.labels))
     ck("parser: a blockquote QUESTION never becomes an entry (Companies/Ramp not denylisted)",
        not any(l.startswith("Companies/") for l in deny.labels) and "Companies/Ramp" in deny.prose_skipped)
@@ -360,10 +360,10 @@ def selftest() -> bool:
     ck("Stage A: exact sender + spam-section sender skipped", {s["reason"] for s in a["skipped"] if s["thread_id"] in ("t2", "t13")} == {"deny:sender"})
     ck("Stage A: label child (Me/Health/Dental, Job Hunting/Rejection) skipped as deny:label", {s["reason"] for s in a["skipped"] if s["thread_id"] in ("t3", "t4")} == {"deny:label"})
     ck("Stage A: globs (myhealth*, *.gov) skipped", {s["reason"] for s in a["skipped"] if s["thread_id"] in ("t5", "t12")} == {"deny:domain"})
-    ck("Stage A: denylist wins over a target-company domain (careers@ramp.com skipped)", any(s["thread_id"] == "t6" for s in a["skipped"]))
+    ck("Stage A: denylist wins over a target-company domain (careers@fintech.example skipped)", any(s["thread_id"] == "t6" for s in a["skipped"]))
     ck("Stage A: counts in the report", a["counts"]["input"] == 13 and a["counts"]["kept"] == 5 and a["counts"]["skipped"] == 8 and a["counts"]["deny:domain"] == 4)
     out = json.dumps(a)
-    ck("Stage A: NO denylisted address/domain in the output", not any(x in out for x in ("bank.example", "pharmacy.example", "myhealthplus", "ramp.com", "coldoutbound", "state.ny.gov", "somecare", "bigco")))
+    ck("Stage A: NO denylisted address/domain in the output", not any(x in out for x in ("bank.example", "pharmacy.example", "myhealthplus", "fintech.example", "coldoutbound", "state.ny.gov", "somecare", "bigco")))
     ck("Stage A: snippet/body NEVER retained", "snippet" not in out and "balance" not in out and "body text" not in out)
     b = filter_threads(_INBOX_FIXTURE, "B", deny, allow)
     ck("Stage B: only allowlisted, non-denylisted threads keep bodies", {t["thread_id"] for t in b["kept"]} == {"t7", "t8", "t9"} and all(t.get("body_allowed") for t in b["kept"]))
