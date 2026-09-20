@@ -186,7 +186,8 @@ def build_bundle(artifact: str, atype: str, system: str, rubric: str, context: s
             + "\n\n===== INSTRUCTIONS =====\n" + INSTRUCTIONS)
     return {"bundle_version": BUNDLE_VERSION, "text": text, "bundle_sha256": hashlib.sha256(text.encode()).hexdigest(),
             "artifact": artifact, "artifact_sha256": sha256_file(artifact), "artifact_type": atype,
-            "has_dangling": bool(dangling), "dangling_refs": dangling.splitlines(), "evidence_parity": bool(ctx),
+            "has_dangling": bool(dangling), "dangling_refs": dangling.splitlines(),
+            "evidence_parity": len(ctx) >= 400,          # same bar gemini-judge.sh uses: a one-line context is not a spec
             "rubric_version": _rubric_version(rubric)}
 
 
@@ -252,3 +253,29 @@ def append_log(path: str, row: dict) -> None:
 def slug_for(artifact: str) -> str:
     b = os.path.basename(artifact)
     return os.path.basename(os.path.dirname(artifact)) if b == "SKILL.md" else os.path.splitext(b)[0]
+
+
+def _cli() -> int:
+    """judge_lib.py bundle --artifact P --artifact-type T [--context S] [--spec-file F ...] --out bundle.json"""
+    import argparse, sys
+    ap = argparse.ArgumentParser(description="build ONE evidence bundle for every judge seat")
+    ap.add_argument("cmd", choices=["bundle"])
+    ap.add_argument("--artifact", required=True); ap.add_argument("--artifact-type", default="skill")
+    ap.add_argument("--context", default=""); ap.add_argument("--spec-file", action="append", default=[])
+    ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v5.md")
+    ap.add_argument("--system", default=".claude/evals/prompts/judge-system-v2.md")
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    os.chdir(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    try:
+        b = build_bundle(a.artifact, a.artifact_type, a.system, a.rubric, a.context, a.spec_file)
+    except PrivacyViolation as e:
+        print(f"PRIVACY GUARD (no bundle written): {e}", file=sys.stderr); return 3
+    json.dump(b, open(a.out, "w", encoding="utf-8"))
+    print(f"bundle {b['bundle_sha256'][:12]} · artifact {b['artifact_sha256'][:12]} · {len(b['text'])} chars · "
+          f"evidence_parity={b['evidence_parity']} · dangling={len(b['dangling_refs'])} → {a.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_cli())

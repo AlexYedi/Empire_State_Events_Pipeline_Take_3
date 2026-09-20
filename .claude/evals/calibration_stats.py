@@ -37,7 +37,7 @@ Usage: python3 .claude/evals/calibration_stats.py [--logs .claude/evals/logs] [-
 from __future__ import annotations
 import argparse, collections, datetime, functools, glob, json, os, subprocess
 
-EXCLUDE_SETS = {"negative-control", "triage-experiment"}
+EXCLUDE_SETS = {"negative-control", "triage-experiment", "control", "bakeoff"}
 
 
 def ack_verdict(ack) -> str | None:
@@ -73,7 +73,7 @@ def seat_of(r: dict) -> str | None:
     jm = str(r.get("judge_model") or "")
     if not jm or r.get("verdict") not in ("pass", "flag"):
         return None
-    for key, name in (("gemini", "gemini"), ("sonnet", "claude:sonnet"), ("haiku", "claude:haiku"), ("opus", "claude:opus")):
+    for key, name in (("gemini", "gemini"), ("openai", "openai"), ("sonnet", "claude:sonnet"), ("haiku", "claude:haiku"), ("opus", "claude:opus")):
         if key in jm.lower():
             return name
     return jm.split()[0]
@@ -97,13 +97,13 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
     return round((po - pe) / (1 - pe), 3)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--logs", default=".claude/evals/logs")
-    ap.add_argument("--json", action="store_true")
-    ap.add_argument("--window", type=float, default=3.0, help="max days between a run and the ack it is scored against")
-    a = ap.parse_args()
-    rows = load(a.logs)
+ORDER = ["shadow", "advisory", "voting"]
+SEATS_FILE = ".claude/evals/seats.json"
+
+
+def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple[dict, dict, collections.Counter]:
+    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (the gate's slice)."""
+    a = argparse.Namespace(window=window)
 
     # 1. every acked row -> (artifact, when, Alex's verdict). Keep them ALL; an artifact re-judged after an
     #    edit has several, and which one applies depends on when the run happened.
@@ -176,6 +176,8 @@ def main() -> int:
         seat = seat_of(r)
         if not seat or r.get("calibration_set") in EXCLUDE_SETS or r.get("evidence_parity") is False:
             continue
+        if not keep(seat, r):
+            continue
         s = seats[seat]
         s["n_runs"] += 1
         cs = r.get("criterion_scores") or []
@@ -199,7 +201,68 @@ def main() -> int:
             "flag_recall": round(sum(j == "flag" and t == "flag" for j, t in p) / flags_truth, 3) if flags_truth else None,
             "flag_precision": round(sum(j == "flag" and t == "flag" for j, t in p) / flags_seat, 3) if flags_seat else None,
             "flat_1.0_rate": round(s["flat"] / s["n_runs"], 3) if s["n_runs"] else None,
+            "truth_flags": flags_truth, "seat_flags": flags_seat,
         }
+    return out, truths, stats
+
+
+def gate(rows: list[dict], window: float) -> dict:
+    """Effective status per configured seat = its configured status, lowered ONE rung if a demotion rule fires.
+
+    Promotion is never automatic (Alex edits seats.json). Demotion is, and it applies to every seat, the trusted
+    one included: exempting the anchor seat is how a blind spot survives. Rules read the last 20 PROSPECTIVE runs
+    since the seat's `since` date (its current prompt/rubric regime; older behaviour is not held against it).
+    Each rule has a minimum sample so three unlucky runs can't demote a seat.
+    """
+    cfg = json.load(open(SEATS_FILE, encoding="utf-8"))["seats"] if os.path.exists(SEATS_FILE) else []
+    res = {}
+    for seat in cfg:
+        name, since = seat["seat_name"], str(seat.get("since") or "")
+        mine = [r for r in rows if seat_of(r) == name and r.get("calibration_set") == "prospective"
+                and str(r.get("timestamp") or "") >= since]
+        recent = {id(r) for r in sorted(mine, key=lambda r: str(r.get("timestamp") or ""))[-20:]}
+        m = compute(rows, window, keep=lambda s_, r: s_ == name and id(r) in recent)[0].get(name, {})
+        n_runs, n = m.get("runs", 0), m.get("scored_against_alex", 0)
+        why = []
+        if n_runs >= 10 and (m.get("flat_1.0_rate") or 0) >= 0.30:
+            why.append(f"flat-1.0 rate {m['flat_1.0_rate']:.2f} >= 0.30 over {n_runs} runs")
+        if m.get("truth_flags", 0) >= 4 and (m.get("flag_recall") or 0) < 0.50:
+            why.append(f"flag recall {m['flag_recall']:.2f} < 0.50 on {m['truth_flags']} real flags")
+        if m.get("seat_flags", 0) >= 5 and (m.get("flag_precision") or 0) < 0.40:
+            why.append(f"flag precision {m['flag_precision']:.2f} < 0.40 on {m['seat_flags']} seat flags (over-flagging)")
+        if n >= 15 and m.get("kappa") is not None and m["kappa"] < 0.40:
+            why.append(f"kappa {m['kappa']:.2f} < 0.40 on n={n}")
+        conf = seat.get("status", "shadow")
+        eff = ORDER[max(0, ORDER.index(conf) - 1)] if why else conf
+        ready = (n >= 25 and m.get("truth_flags", 0) >= 8 and (m.get("kappa") or 0) >= 0.60 and (m.get("flag_recall") or 0) >= 0.70
+                 and (m.get("flag_precision") or 0) >= 0.60 and (m.get("flat_1.0_rate") or 0) < 0.20
+                 and (m.get("agreement") or 0) >= (m.get("always_pass_baseline") or 0) + 0.10)
+        res[seat["id"]] = {"seat_name": name, "configured": conf, "effective": eff, "demoted_because": why,
+                           "meets_voting_bar": ready, "window": m}
+    return res
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--logs", default=".claude/evals/logs")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--gate", action="store_true", help="effective status per configured seat (auto-demotion)")
+    ap.add_argument("--window", type=float, default=3.0, help="max days between a run and the ack it is scored against")
+    a = ap.parse_args()
+    rows = load(a.logs)
+    if a.gate:
+        g = gate(rows, a.window)
+        if a.json:
+            print(json.dumps(g, indent=1)); return 0
+        for sid, x in g.items():
+            w = x["window"]
+            print(f"{sid:<8} configured={x['configured']:<9} effective={x['effective']:<9} "
+                  f"runs={w.get('runs', 0)} scored={w.get('scored_against_alex', 0)} kappa={w.get('kappa')} "
+                  f"recall={w.get('flag_recall')} flat={w.get('flat_1.0_rate')}  voting-bar-met={x['meets_voting_bar']}")
+            for y in x["demoted_because"]:
+                print(f"           DEMOTED: {y}")
+        return 0
+    out, truths, stats = compute(rows, a.window)
     acks = [v for c in truths.values() for _, v, _ in c]
     if a.json:
         print(json.dumps({"alex_acked_runs": len(acks), "artifacts": len(truths), "window_days": a.window,

@@ -1,5 +1,7 @@
 # Cross-provider judge quorum — spec (v1, 2026-07-17)
 
+> **Extended 2026-09-19 (YED-209): three seats.** An OpenAI seat joined in *shadow*, with an N-seat merge, per-seat auto-demotion and content-matched calibration. The design, decision table and pre-mortem are in `.claude/proposals/third-judge-seat-openai.md`; the operating summary is in `.claude/evals/README.md`. Everything below still describes the two original seats accurately.
+
 **Why.** The build-quality judge is `provisional-trusted` (crossed 20-@-80% but on a Claude-only, ~1/3-self-produced
 sample). The unclosed risk is **judge circularity / self-preference** (R1): Claude rating Claude-produced work.
 A **second judge from a different provider (Google Gemini)** is the documented next step (deferred 2026-06-26) —
