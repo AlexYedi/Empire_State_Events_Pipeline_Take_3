@@ -17,6 +17,9 @@ Every metric in the build-rigor + measurement layer, with its `{threshold → ac
 | signal provenance coverage | M2 trust strip | < 80% of recent signals carry `source`/citation | tighten producer sourcing — a producer is emitting uncited signals | Hub dashboard (trust strip) |
 | producer liveness | M2 trust strip | any producer silent > 14d | producer health check — is the source/API broken? | Hub dashboard (trust strip) |
 | relevance ranking (evolving viewpoint) | M2 relevance recompute (YED-121) | a topic's relevance > ~1.5 (rising & fresh) | draft content on the strongest **uncovered** topic — feed `pre-event-content` / `pattern-synthesis` | Hub dashboard (evolving viewpoint) |
+| judge API spend (`.claude/evals/spend-ledger.jsonl`) | YED-209 cost guard | ≥ 75% of the monthly cap ($8), or lifetime ≥ $35 of the $45 cap | review volume + model; Alex decides to top up or downgrade. The adapter already refuses at the cap (exit 4) | weekly review |
+| seat effective status (`calibration_stats.py --gate`) | YED-209 trust ladder | any seat auto-demoted | read `demoted_because`; don't re-promote until the cause is understood. A demoted VOTING seat means every run escalates until fixed | in-session (quorum output) + weekly review |
+| quorum escalation rate | quorum rows | > 40% of the last 20 quorums | retune thresholds, or drop a noisy advisory seat to shadow (escalation fatigue kills the gate) | weekly review |
 | viewpoint freshness | M2 relevance recompute (YED-121) | top relevance decaying / no topic re-engaged in > 7d | run **/morning-refresh** to farm new signal — the viewpoint is going stale | Hub dashboard (evolving viewpoint) |
 
 ## Judge status (versioned — never change silently)

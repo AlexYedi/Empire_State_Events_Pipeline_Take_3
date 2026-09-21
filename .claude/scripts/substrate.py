@@ -28,7 +28,8 @@ Manifest shape:
    "entities": [{"type": "person"|"company"|"topic", "name", "role", "notion_page_id",
                  "title", "company", "linkedin_url", "website", "description"}]}
 PII (ADR-9): persons get professional fields only — name · title · company_id · linkedin_url ·
-role_context. Never `bio`, never text lifted from a transcript. The guard backstops this.
+role_context. Never `bio`, never text lifted from a transcript — that rule is THIS producer's discipline
+(the guard allows `bio`); the guard backstops only contact detail (email/phone refused anywhere, incl. inside bio).
 """
 from __future__ import annotations
 import argparse, hashlib, html, json, os, re, sys

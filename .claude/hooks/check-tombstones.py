@@ -6,8 +6,8 @@ removal left 6 skills/commands still calling Gamma. Models under-enforce human-a
 same lesson as check-refs / bf17), so this is a mechanical check, not a rubric line.
 
 Source of truth: the "## Tombstones" table in .claude/references/platform-constraints.md.
-A line is flagged when it matches a tombstone pattern and carries NO removal marker on the same line.
-Conservative by design: under-flagging is the safe bias (a marker anywhere on the line clears it).
+A line is flagged when it matches a tombstone pattern and there is NO removal marker within WINDOW characters
+of the match, inside the same sentence. Conservative by design: under-flagging is the safe bias.
 
 Usage:
   check-tombstones.py --artifact <path>   # judge Step 0: one file
@@ -28,13 +28,15 @@ MARKER = re.compile(r"remov|retir|ripped|deprecat|tombston|vestigial|killed|reje
 WINDOW = 40
 # history / logs / generated data: describing the past there is correct, not drift
 SKIP_DIRS = (".claude/artifacts/", ".claude/evals/logs/", ".claude/notes/",
-             ".claude/proposals/", "docs/adr/", ".claude/data/", ".claude/.state/")
+             ".claude/proposals/", "docs/adr/", ".claude/data/")
 SKIP_FILES = {REGISTRY, ".claude/evals/correction-recurrence.md", ".claude/hooks/check-tombstones.py"}
 # text files where a live call to a removed tool can hide: docs AND executable code/config
 SCAN_EXT = (".md", ".py", ".sh", ".mjs", ".js", ".ts", ".json", ".yml", ".yaml", ".toml")
 
 def load_tombstones():
     rows, in_table = [], False
+    if not os.path.isfile(REGISTRY):          # a moved/missing registry is "no table", not a crash
+        return rows
     for line in open(REGISTRY, encoding="utf-8"):
         if line.startswith("## "):
             in_table = line.startswith("## Tombstones")

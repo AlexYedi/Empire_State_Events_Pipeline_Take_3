@@ -117,7 +117,7 @@ CTA (varies by content type) — See Content Type CTAs below.
 
 ## LinkedIn Character Budget (hard limit — added 2026-06-10)
 
-**The LinkedIn feed-post hard cap is 3,000 characters** (stable since June 2023; verified June 2026). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
+**The LinkedIn feed-post hard cap is 3,000 characters** (LinkedIn's published limit; unchanged since 2023. Re-check it against LinkedIn's own help pages before citing the number publicly — "verified June 2026" was asserted here with no source recorded, flagged 2026-09-20). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
 
 - **Hard cap: 3,000 characters. Non-negotiable.** Count the post before presenting it. If a draft exceeds 3,000, cut it to budget *before* showing Alex — do not ship an over-limit draft with a "trim this" note.
 - **Engagement sweet spot: 1,300–1,900 characters.** Default target for most posts. Long-form recaps may run to ~2,200 but should rarely approach the cap.
@@ -217,8 +217,12 @@ dropped, it's a deliberate call — note it, don't treat it as an oversight.
 ### Format & Sizing (LinkedIn-Optimized)
 
 LinkedIn's mobile feed crops to fit. **4:5 portrait is the default** — it takes
-~20% more vertical screen space than 1:1 and ~65% more than 16:9, which directly
-increases dwell time.
+**25% more vertical screen space than 1:1 and 122% more than 16:9** — at a fixed feed
+width a 4:5 image is 1.25× as tall, 1:1 is 1.0×, and 16:9 is 0.5625×, so 1.25/0.5625 = 2.22.
+(Corrected 2026-09-20: this read "~20%" and "~65%". Three judge seats independently flagged
+the line; the arithmetic is checkable and the old 65% understated the case for 4:5.) More
+of the feed occupied is the mechanism people cite for longer dwell; treat the dwell-time
+link as the reason to prefer 4:5, not as a measured result of ours.
 
 | Format | Dimensions | When to Use |
 |---|---|---|
