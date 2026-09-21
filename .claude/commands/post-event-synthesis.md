@@ -52,7 +52,7 @@ Run when Alex:
 ## What to do today (until wired)
 
 If Alex tries to run `/post-event-synthesis` before this is built:
-1. Acknowledge the workflow is scaffolded but not yet wired
+1. Acknowledge the workflow is scaffolded but not yet wired (parked, YED-198)
 2. Default to invoking `content-correspondent` skill directly (existing path)
 3. Note that adding `transcript-analysis` + `objection-mining` + `commercial-insight-generator` upfront would deepen the output
 4. Offer to wire the full chain "next session" or in a dedicated build session

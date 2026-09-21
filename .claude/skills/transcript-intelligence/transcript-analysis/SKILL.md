@@ -14,14 +14,15 @@ description: "Extract actionable intelligence from sales call transcripts. Syste
 
 ## Input modes — two ways this skill is invoked (added 2026-05-24)
 
-### Mode A — Granola-anchored (preferred)
+### Mode A — Granola-anchored (⛔ DISABLED since 2026-05-27; kept for re-enable)
 
-Per CLAUDE.md MCP automation rule #1, transcripts come from Granola via MCP, not
-from manual paste. Default sequence:
+**Do not fire the Granola API or MCP today.** The Granola connector sees zero notes on Alex's plan
+(`platform-constraints.md` → Vendors), so **Mode B is the live path.** The disabled sequence, for the
+day it works again:
 
 1. Identify the time window (Alex usually says "last batch," "this week," "last 10 calls," or "since [date]").
 2. Call `mcp__claude_ai_Granola__list_meetings` to enumerate meetings in the window. Filter by meeting type / title keywords if Alex specifies (e.g., "discovery calls," "demo calls").
-3. For each relevant meeting, call `mcp__claude_ai_Granola__get_meeting_transcript` to pull the diarized transcript + AI summary.
+3. For each relevant meeting, call the disabled Granola `get_meeting_transcript` MCP tool to pull the diarized transcript + AI summary.
 4. Run the 7-layer extraction framework below across the pulled corpus.
 
 If Alex specifies a folder, project, or query filter, use the relevant Granola
@@ -32,13 +33,13 @@ analysis), tell Alex honestly — extraction signal at N<10 is unreliable, and
 the 7-layer framework was designed for N≥10. Surface the count and ask whether
 to proceed anyway, widen the window, or wait for more calls.
 
-### Mode B — Manual paste (legacy, still supported)
+### Mode B — Manual paste or a saved transcript (the LIVE path)
 
 When Granola wasn't recording or transcripts come from another source
 (Gong export, Fathom export, manual notes), Alex pastes them directly into
 the conversation. Run the existing 7-layer framework against the pasted
-material. Mode A is preferred because it removes paste friction, but Mode B
-remains the fallback for non-Granola corpora.
+material. Sources today: the OBS + ElevenLabs Scribe capture lane (`/ingest-recording`), a publisher's
+on-demand transcript, or files already saved under `event-transcripts/`.
 
 ---
 

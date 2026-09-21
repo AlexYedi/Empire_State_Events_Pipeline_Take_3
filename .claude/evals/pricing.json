@@ -1,0 +1,13 @@
+{
+  "_note": "USD per 1M tokens. Output price applies to reasoning tokens too. A model missing from this table cannot be called (judge_lib.cost_usd refuses to spend blind). Update the date and source when you change a price.",
+  "as_of": "2026-09-19",
+  "source": "https://openai.com/api/pricing/ (read 2026-09-19 by the YED-209 architect pass); verify before a bake-off",
+  "models": {
+    "gpt-5.4-mini": {"input_per_mtok": 0.75, "output_per_mtok": 4.50},
+    "gpt-5":        {"input_per_mtok": 1.25, "output_per_mtok": 10.00},
+    "gpt-5.1":      {"input_per_mtok": 1.25, "output_per_mtok": 10.00},
+    "gpt-5.2":      {"input_per_mtok": 1.75, "output_per_mtok": 14.00},
+    "gpt-5.4":      {"input_per_mtok": 2.50, "output_per_mtok": 15.00},
+    "gpt-5.5":      {"input_per_mtok": 5.00, "output_per_mtok": 30.00}
+  }
+}

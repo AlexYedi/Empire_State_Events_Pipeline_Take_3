@@ -1,0 +1,154 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Signal Rich, Action Poor — where the panel drew the lines</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#0b1220}
+.slide{width:1080px;height:1350px;position:relative;background:#0b1220;color:#f5f7fa;font-family:"Iowan Old Style","Palatino",Georgia,serif;padding:96px 88px 88px 88px;overflow:hidden}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font-family:Menlo,monospace;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:#93a4c3}
+h1{font-size:92px;line-height:1.02;margin:36px 0 0 0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:70px;line-height:1.06;margin:30px 0 0 0;font-weight:700;letter-spacing:-.01em}
+.accent{color:#e8a13a}.warn{color:#e0693d}.ok{color:#5cc28a}
+.sub{font-size:32px;line-height:1.35;color:#d7deea;margin-top:26px;max-width:880px}
+.foot{position:absolute;left:88px;right:88px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:Menlo,monospace;font-size:21px;color:#7f8fab;gap:40px}
+.foot .src{max-width:800px;line-height:1.35}
+svg text{font-family:Menlo,monospace}
+.names{font-size:29px;line-height:1.5;color:#d7deea;margin-top:30px}
+.names b{color:#f5f7fa}
+table{border-collapse:collapse;width:100%;margin-top:34px}
+td{vertical-align:top;padding:17px 12px 17px 0;border-top:2px solid #223154;font-size:25px;line-height:1.28;color:#d7deea}
+tr:last-child td{border-bottom:2px solid #223154}
+td.who{width:210px;font-size:25px;color:#f5f7fa;font-weight:700}
+td.who span{display:block;font-family:Menlo,monospace;font-size:18px;color:#93a4c3;font-weight:400;margin-top:4px}
+th{font-family:Menlo,monospace;font-size:20px;letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:0 12px 12px 0}
+.pattern{margin-top:30px;font-size:31px;line-height:1.35}
+</style></head><body>
+
+<!-- SLIDE 1: the frame -->
+<section class="slide">
+  <div class="kicker">RevGenius webinar · Sept 17 · 1 of 4</div>
+  <h1>Signal rich.<br><span class="accent">Action poor.</span></h1>
+  <div class="sub">Four vendors selling the "system of action," the layer where a signal becomes a finished task, and they didn't agree on where it lives or when it acts alone.</div>
+  <svg viewBox="0 0 904 500" width="904" height="500" style="margin-top:40px" role="img" aria-label="Three stacked layers: record stores what happened, intelligence explains it, action does the next step; a gap between intelligence and action is labeled where work still lands on a rep">
+    <defs><marker id="up" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e8a13a"/></marker></defs>
+    <rect x="0" y="0" width="904" height="120" rx="14" fill="#1f1a10" stroke="#e8a13a" stroke-width="4"/>
+    <rect x="0" y="190" width="904" height="120" rx="14" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <rect x="0" y="360" width="904" height="120" rx="14" fill="#121c31" stroke="#223154" stroke-width="2"/>
+    <text x="30" y="55" font-size="28" font-weight="700" fill="#e8a13a">SYSTEM OF ACTION</text>
+    <text x="30" y="92" font-size="21" fill="#f5f7fa">does the next step: sends, updates, follows up</text>
+    <text x="30" y="245" font-size="26" font-weight="700" fill="#f5f7fa">SYSTEM OF INTELLIGENCE</text>
+    <text x="30" y="282" font-size="21" fill="#93a4c3">explains what happened: calls, signals, scores</text>
+    <text x="30" y="415" font-size="26" font-weight="700" fill="#f5f7fa">SYSTEM OF RECORD</text>
+    <text x="30" y="452" font-size="21" fill="#93a4c3">stores what happened: the CRM</text>
+    <line x1="700" y1="186" x2="700" y2="128" stroke="#e8a13a" stroke-width="5" marker-end="url(#up)" stroke-dasharray="10 8"/>
+    <text x="724" y="152" font-size="20" fill="#e8a13a">the gap: a rep</text>
+    <text x="724" y="176" font-size="20" fill="#e8a13a">at 6pm Thursday</text>
+  </svg>
+  <div class="names"><b>Adam Liska</b> (Airspeed) · <b>Alex Lindahl</b> (Clay) · <b>Mintis Sow</b> (HubSpot) · <b>Tyler Phillips</b> (Apollo.io) · hosted by <b>Jared Robin</b> (RevGenius)</div>
+  <div class="foot"><div class="src">Source: RevGenius "Signal Rich, Action Poor" webinar, Sept 17 2026 · framing per Airspeed</div><div>→</div></div>
+</section>
+
+<!-- SLIDE 2: the autonomy line -->
+<section class="slide">
+  <div class="kicker">2 of 4 · when may an agent act alone?</div>
+  <h2>Everyone drew the<br><span class="accent">autonomy line</span> in a different place.</h2>
+  <svg viewBox="0 0 904 760" width="904" height="760" style="margin-top:40px" role="img" aria-label="A spectrum from human approves every action to agent acts alone; Lindahl sits nearest human review for outbound, Sow next with customer-facing actions most conservative, Phillips in the middle with autonomy only where a metric verifies the work, Liska nearest agent autonomy delegating the long tail">
+    <defs>
+      <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#5a6b8c"/><stop offset="1" stop-color="#e8a13a"/></linearGradient>
+    </defs>
+    <rect x="0" y="80" width="904" height="14" rx="7" fill="url(#g)"/>
+    <text x="0" y="50" font-size="21" fill="#93a4c3">HUMAN APPROVES</text>
+    <text x="904" y="50" font-size="21" fill="#e8a13a" text-anchor="end">AGENT ACTS ALONE</text>
+    <!-- markers -->
+    <g stroke="#f5f7fa" stroke-width="3">
+      <line x1="150" y1="94" x2="150" y2="150"/><line x1="330" y1="94" x2="330" y2="330"/>
+      <line x1="520" y1="94" x2="520" y2="510"/><line x1="770" y1="94" x2="770" y2="150"/>
+    </g>
+    <g fill="#0b1220" stroke="#f5f7fa" stroke-width="4">
+      <circle cx="150" cy="87" r="16"/><circle cx="330" cy="87" r="16"/><circle cx="520" cy="87" r="16"/><circle cx="770" cy="87" r="16"/>
+    </g>
+    <!-- Lindahl -->
+    <text x="10" y="190" font-size="27" font-weight="700" fill="#f5f7fa">Lindahl · Clay</text>
+    <text x="10" y="224" font-size="20" fill="#d7deea">Outbound stays human-</text>
+    <text x="10" y="250" font-size="20" fill="#d7deea">reviewed on purpose:</text>
+    <text x="10" y="276" font-size="20" fill="#d7deea">rep edits are how the</text>
+    <text x="10" y="302" font-size="20" fill="#d7deea">workflow learns.</text>
+    <!-- Sow -->
+    <text x="200" y="370" font-size="27" font-weight="700" fill="#f5f7fa">Sow · HubSpot</text>
+    <text x="200" y="404" font-size="20" fill="#d7deea">Tiered by risk: customer-facing</text>
+    <text x="200" y="430" font-size="20" fill="#d7deea">= most caution ("a brand</text>
+    <text x="200" y="456" font-size="20" fill="#d7deea">conversation"); email can run</text>
+    <text x="200" y="482" font-size="20" fill="#d7deea">inside hard constraints.</text>
+    <!-- Phillips -->
+    <text x="380" y="550" font-size="27" font-weight="700" fill="#f5f7fa">Phillips · Apollo.io</text>
+    <text x="380" y="584" font-size="20" fill="#d7deea">Autonomous only where a metric</text>
+    <text x="380" y="610" font-size="20" fill="#d7deea">checks the work (reply rate).</text>
+    <text x="380" y="636" font-size="20" fill="#d7deea">Taste calls keep a human loop</text>
+    <text x="380" y="662" font-size="20" fill="#d7deea">until the AI earns it.</text>
+    <!-- Liska -->
+    <text x="604" y="190" font-size="27" font-weight="700" fill="#e8a13a">Liska · Airspeed</text>
+    <text x="604" y="224" font-size="20" fill="#d7deea">Delegate the neglected</text>
+    <text x="604" y="250" font-size="20" fill="#d7deea">long tail, customer-</text>
+    <text x="604" y="276" font-size="20" fill="#d7deea">facing too. Inaction</text>
+    <text x="604" y="302" font-size="20" fill="#d7deea">has a cost.</text>
+  </svg>
+  <div class="foot"><div class="src">Positions are an editorial read of each panelist's stated view · Source: RevGenius webinar, Sept 17 2026</div><div>→</div></div>
+</section>
+
+<!-- SLIDE 3: where work lives vs where truth lives -->
+<section class="slide">
+  <div class="kicker">3 of 4 · the CRM fight</div>
+  <h2>Where people work ≠<br><span class="accent">where the truth lives.</span></h2>
+  <svg viewBox="0 0 904 800" width="904" height="800" style="margin-top:36px" role="img" aria-label="Two-by-two: horizontal axis is where reps work, from in the CRM to anywhere; vertical axis is where the record lives, from one shared record to a flexible data store; Sow sits at CRM and one record, Lindahl and Liska at anywhere and one record, Phillips at anywhere and flexible store">
+    <line x1="120" y1="40" x2="120" y2="700" stroke="#3a4a6b" stroke-width="3"/>
+    <line x1="120" y1="700" x2="890" y2="700" stroke="#3a4a6b" stroke-width="3"/>
+    <line x1="505" y1="40" x2="505" y2="700" stroke="#223154" stroke-width="2" stroke-dasharray="8 8"/>
+    <line x1="120" y1="370" x2="890" y2="370" stroke="#223154" stroke-width="2" stroke-dasharray="8 8"/>
+    <text x="120" y="745" font-size="20" fill="#93a4c3">REPS WORK IN THE CRM</text>
+    <text x="890" y="745" font-size="20" fill="#93a4c3" text-anchor="end">REPS WORK ANYWHERE →</text>
+    <text x="0" y="0" font-size="20" fill="#93a4c3" transform="translate(84,60) rotate(90)">ONE SHARED RECORD</text>
+    <text x="0" y="0" font-size="20" fill="#93a4c3" transform="translate(84,420) rotate(90)">FLEXIBLE DATA STORE</text>
+    <!-- Sow -->
+    <circle cx="240" cy="150" r="20" fill="#f5f7fa"/>
+    <text x="160" y="205" font-size="25" font-weight="700" fill="#f5f7fa">Sow · HubSpot</text>
+    <text x="160" y="236" font-size="19" fill="#d7deea">"The agent should be</text>
+    <text x="160" y="260" font-size="19" fill="#d7deea">in the CRM." 2,500 sellers</text>
+    <text x="160" y="284" font-size="19" fill="#d7deea">can't juggle five agents.</text>
+    <!-- Lindahl + Liska -->
+    <circle cx="560" cy="100" r="18" fill="#e8a13a"/>
+    <text x="596" y="108" font-size="25" font-weight="700" fill="#e8a13a">Liska · Airspeed</text>
+    <text x="596" y="140" font-size="19" fill="#d7deea">CRM as codebase: work</text>
+    <text x="596" y="164" font-size="19" fill="#d7deea">in any tool, commit to</text>
+    <text x="596" y="188" font-size="19" fill="#d7deea">one shared repo.</text>
+    <circle cx="560" cy="250" r="18" fill="#e8a13a"/>
+    <text x="596" y="258" font-size="25" font-weight="700" fill="#e8a13a">Lindahl · Clay</text>
+    <text x="596" y="290" font-size="19" fill="#d7deea">Reps leave the CRM;</text>
+    <text x="596" y="314" font-size="19" fill="#d7deea">the data still flows</text>
+    <text x="596" y="338" font-size="19" fill="#d7deea">in, automatically.</text>
+    <!-- Phillips -->
+    <circle cx="560" cy="470" r="18" fill="#e0693d"/>
+    <text x="596" y="478" font-size="25" font-weight="700" fill="#e0693d">Phillips · Apollo.io</text>
+    <text x="596" y="510" font-size="19" fill="#d7deea">CRM "not built for AI</text>
+    <text x="596" y="534" font-size="19" fill="#d7deea">native world"; a flexible</text>
+    <text x="596" y="558" font-size="19" fill="#d7deea">database may beat it.</text>
+    <text x="596" y="582" font-size="19" fill="#d7deea">Work where your agents</text>
+    <text x="596" y="606" font-size="19" fill="#d7deea">are.</text>
+  </svg>
+  <div class="foot"><div class="src">Placement is an editorial read · Source: RevGenius webinar, Sept 17 2026</div><div>→</div></div>
+</section>
+
+<!-- SLIDE 4: never-again ledger -->
+<section class="slide">
+  <div class="kicker">4 of 4 · held up vs never again</div>
+  <h2>Every failure was <span class="warn">too much.</span><br>Every win was <span class="ok">narrower.</span></h2>
+  <table>
+    <tr><th></th><th class="warn">✗ Would not repeat</th><th class="ok">✓ Held up</th></tr>
+    <tr><td class="who">Sow<span>HubSpot</span></td><td>Rolling out scores to sellers (TAM scores and the like)</td><td>AI summaries of how to prospect + the next best thing</td></tr>
+    <tr><td class="who">Phillips<span>Apollo.io</span></td><td>Endless iterations on AI messaging, a taste call with no metric</td><td>Building for agents: MCP, "ship headlessly" (after 1.5 years idle)</td></tr>
+    <tr><td class="who">Lindahl<span>Clay</span></td><td>Unlimited creative freedom once the brand system was in Claude</td><td>The brand system in Claude itself, plus design check-ins</td></tr>
+    <tr><td class="who">Liska<span>Airspeed</span></td><td>Surfacing all the context the system had</td><td>Computer + browser control (a Mac mini run from a phone)</td></tr>
+  </table>
+  <div class="pattern">Too many scores, iterations, context and freedom. The wins narrowed it to <span class="accent">one next action, one metric, one brand system, one headless interface.</span></div>
+  <div class="foot"><div class="src">Source: closing round, RevGenius "Signal Rich, Action Poor," Sept 17 2026 · thanks to Jared Robin, RevGenius &amp; Airspeed</div><div></div></div>
+</section>
+</body></html>

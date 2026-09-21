@@ -15,7 +15,7 @@ Takes a transcript Alex uploads/pastes from his own recording of an attended eve
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
 - **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are gate-enforced (`substrate-gate.sh`).
-- **LinkedIn post(s) + visual carousel brief → Gamma** (Step 4). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
+- **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
 - **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `.claude/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
 
@@ -309,7 +309,7 @@ them over its defaults. If Step 3.9 was skipped (no real fork / "just draft it")
 content-correspondent then runs its standard logic per `.claude/skills/content-correspondent/SKILL.md`: bucket-sorts contacts, drafts Tier 1 comment + Tier 2 post + visual carousel brief + bucket A/B outreach DMs. The skill's existing "Granola → structured notes if the session was recorded; use for direct quotes from speakers" line is now operationalized — the structured input is exactly what it asked for.
 
 **v2 output set + gates (YED-96):**
-- **Canonical outputs = the brief (Steps 3.7–3.8) + LinkedIn post(s) + the visual carousel brief → Gamma.** These always run.
+- **Canonical outputs = the brief (Steps 3.7–3.8) + LinkedIn post(s) + the visual carousel brief → Claude-design render.** These always run.
 - **Outreach is OPT-IN, not default.** Do NOT auto-draft bucket A/B DMs. Generate outreach **only for people Alex explicitly names** for this event (captured via the `steering-interview` "person you want to land well with" answer). Free-LinkedIn connection-message limits make blanket outreach low-yield. Default: skip and note "outreach skipped — none flagged."
 - **Attribution → public-content HARD GATE (the one irreversible failure — YED-96 R3):** a quote may be used **verbatim in a draft that @-tags a person ONLY if it is HIGH-confidence** in the conditioned quote bank. MED / low-confidence quotes → paraphrase, drop the tag, or exclude. A clean-looking transcript must not let a misattributed line reach a post that tags the wrong person.
 - **Quote-safety framing:** the brief is *permissive capture*; the post is *gated publish* — stance-license earned (post-event = high), Rule-12 source-check on thesis claims, confidence tags enforced (`content-style-guide.md` / `content-anti-patterns.md`).
@@ -428,12 +428,12 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 
 ## Failure modes
 
-**Note:** the Granola-API failure modes below are **N/A while Granola is disabled** (top banner). The active failure modes now are: no transcript provided → draft from Alex's recap + pre-event brief (lower fidelity, no verbatim quotes); Notion event not found → top-3 title candidates; notion-writer fails → return drafts in chat so the work isn't lost.
+**Note:** the disabled Granola-API failure modes below are **N/A while that path is off** (top banner). The active failure modes now are: no transcript provided → draft from Alex's recap + pre-event brief (lower fidelity, no verbatim quotes); Notion event not found → top-3 title candidates; notion-writer fails → return drafts in chat so the work isn't lost.
 
 - **GRANOLA_API_KEY not set** — fail clean with setup instruction (above).
-- **Granola API 401** — key invalid or expired. Tell Alex to regenerate in Granola Settings → API.
-- **Granola API 429** — rate limit (5/sec sustained, 25 in 5sec burst). Sleep 2s and retry once.
-- **Granola API returns empty list for the date window** — widen window to event_date ±48h once. If still empty, no recording exists (common for **in-person events** — Granola has no Android app). Offer the **manual-paste path**: Alex pastes his own recording's transcript, **persist it to `event-transcripts/YYYY-MM-DD_Event.md`** so it survives across sessions (see memory `feedback-comment-workflow-2026-05-26`), then run **Step 3.5 conditioning** on it (mandatory for manual paste) → Step 4. Or skip.
+- *(disabled path)* **Granola API 401** — key invalid or expired. Tell Alex to regenerate the key (disabled Granola path: Settings → API).
+- *(disabled path)* **Granola API 429** — rate limit (5/sec sustained, 25 in 5sec burst). Sleep 2s and retry once.
+- *(disabled path)* **Granola API returns empty list for the date window** — widen window to event_date ±48h once. If still empty, no recording exists (common for **in-person events** — Granola has no Android app). Offer the **manual-paste path**: Alex pastes his own recording's transcript, **persist it to `event-transcripts/YYYY-MM-DD_Event.md`** so it survives across sessions (see memory `feedback-comment-workflow-2026-05-26`), then run **Step 3.5 conditioning** on it (mandatory for manual paste) → Step 4. Or skip.
 - **Multiple Granola notes match with comparable confidence** — present list with title + start_time + duration, ask Alex to pick.
 - **Notion Event row not found** — present top 3 title-similarity candidates from Events DB. If none, allow "create draft without Notion anchor" path.
 - **Notion People DB doesn't match Granola attendees** — pass attendee names through unmatched; content-correspondent will still draft outreach but Content Draft `People` relation will be sparse. Acceptable — Alex can backfill in Notion if needed.
@@ -459,7 +459,7 @@ The `summary_markdown` + diarized `transcript` together is intentional: summary 
 
 ## Ground truth references
 
-- **Granola API docs**: https://docs.granola.ai/introduction (auth, endpoints, rate limits)
+- **Granola API docs** *(disabled path, kept for re-enable)*: https://docs.granola.ai/introduction (auth, endpoints, rate limits)
 - **Granola Get Note schema**: https://docs.granola.ai/api-reference/get-note.md (calendar_event, transcript, attendees fields)
 - **Conditioning skill (Step 3.5)**: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md` — speaker resolution, entity glossary, confidence-scored quote bank
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder

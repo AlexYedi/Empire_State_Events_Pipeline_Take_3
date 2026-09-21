@@ -32,8 +32,9 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
    ceremony.
 6. **Output destination — NAME IT.** Every command states where the result lands and how:
    - **Conversation** (default for analysis/briefs — the honest lean default; don't invent a write).
-   - **Gamma** for `deck` format (`mcp__claude_ai_Gamma__generate`, `format: "social"` for 4:5) — the
-     default visual generator (CLAUDE.md rule 13).
+   - **Claude design** for `deck` format: a self-contained 4:5 HTML/SVG design exported to PDF, per
+     `.claude/skills/content-patterns/visual-briefs.md` → `## Execution` (CLAUDE.md rule 13; Gemini for
+     pictorial imagery).
    - **Notion** for artifacts that enter the review loop — parent-thread MCP only
      ([[project_notion_writes_must_be_parent_thread]]); `notion-search`, never
      `notion-query-data-sources` (plan-gated); real newlines in `update-page`.

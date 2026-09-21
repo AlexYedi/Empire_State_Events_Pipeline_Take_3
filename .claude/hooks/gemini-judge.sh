@@ -13,9 +13,9 @@ cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null || true
 
 ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
-RUBRIC=".claude/evals/rubrics/build-quality-v4.md"
-SYSTEM=".claude/evals/prompts/judge-system.md"
-LABEL=""; PRINT_ONLY=0
+RUBRIC=".claude/evals/rubrics/build-quality-v5.md"
+SYSTEM=".claude/evals/prompts/judge-system-v2.md"
+LABEL=""; PRINT_ONLY=0; BUNDLE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --artifact) ARTIFACT="$2"; shift 2;;
@@ -28,9 +28,14 @@ while [ $# -gt 0 ]; do
     --system) SYSTEM="$2"; shift 2;;
     --label) LABEL="$2"; shift 2;;
     --print-only) PRINT_ONLY=1; shift;;
+    --bundle) BUNDLE="$2"; shift 2;;   # score a pre-built evidence bundle (judge_lib.py bundle): same bytes as every other seat (YED-209)
     *) echo "unknown arg: $1" >&2; exit 2;;
   esac
 done
+if [ -n "$BUNDLE" ]; then   # the bundle names the artifact + type, so a seat can't be pointed at different evidence
+  [ -r "$BUNDLE" ] || { echo "ERROR: --bundle unreadable: $BUNDLE" >&2; exit 2; }
+  ARTIFACT=$(jq -r '.artifact' "$BUNDLE"); ATYPE=$(jq -r '.artifact_type' "$BUNDLE")
+fi
 [ -n "$ARTIFACT" ] && [ -r "$ARTIFACT" ] || { echo "ERROR: --artifact missing/unreadable: $ARTIFACT" >&2; exit 2; }
 [ -r "$RUBRIC" ] || { echo "ERROR: rubric unreadable: $RUBRIC" >&2; exit 2; }
 [ -r "$SYSTEM" ] || { echo "ERROR: system prompt unreadable: $SYSTEM" >&2; exit 2; }
@@ -63,6 +68,7 @@ if [ "$CTX_LEN" -lt 400 ]; then
 else
   PARITY="true"
 fi
+[ -n "$BUNDLE" ] && PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")   # the bundle carries the spec
 
 # derive the rubric version from the rubric file (never hardcode — it drifts when the default bumps)
 RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
@@ -78,6 +84,12 @@ if [ -x .claude/hooks/check-refs.sh ]; then
   DANGLING=$(.claude/hooks/check-refs.sh --artifact "$ARTIFACT" 2>/dev/null)
 fi
 
+# --- deterministic tombstone pre-pass (YED-201 Fix 2A): live references to removed tools/decisions ---
+TOMBS=""
+if [ -x .claude/hooks/check-tombstones.py ]; then
+  TOMBS=$(python3 .claude/hooks/check-tombstones.py --artifact "$ARTIFACT" 2>/dev/null)
+fi
+
 # --- density pre-pass (deep_read only; supplies the number-side of the @4 density cap — NOT a deterministic cap:
 #     padding vs. legitimate novice on-ramp is a judgment call, so the script flags and the judge decides) ---
 DENSITY=""
@@ -85,30 +97,58 @@ if [ "$ATYPE" = "deep_read" ] && [ -x .claude/hooks/density-check.sh ]; then
   DENSITY=$(.claude/hooks/density-check.sh --artifact "$ARTIFACT" 2>/dev/null | grep -E '^density-check: (words|OK|PADDING-RISK|UNCITED-LONGFORM)' | head -1)
 fi
 
-INSTR='You are scoring ONE build artifact. Follow the judge system rules and the rubric above.
-Score each of the 5 criteria INDEPENDENTLY 0-1 with 1-3 sentences of reasoning citing the specific thing.
-Scoped-quorum note: you are the INDEPENDENT cross-provider judge. Weight your judgment most on correctness and
-completeness (provider-neutral). For convention_adherence and anti_pattern_avoidance you may lack this repo'\''s
-house context, so judge them conservatively and say so if unsure. House-context primer (for convention_adherence/anti_pattern_avoidance): project skills in .claude/skills/ take NO alex: prefix (that prefix is for alex-plugin skills only); use notion-search NOT notion-query-data-sources; subagents cannot spawn subagents (fan-out runs from the parent thread); MCP writes are parent-thread only; Supabase as the Market-Intelligence store is sanctioned (NOT an anti-pattern), Supabase as a measurement store is tombstoned.
-Return ONLY a JSON object with EXACTLY:
-{"criterion_scores":[{"id":"correctness","score":0.0,"reasoning":""},{"id":"completeness","score":0.0,"reasoning":""},{"id":"convention_adherence","score":0.0,"reasoning":""},{"id":"anti_pattern_avoidance","score":0.0,"reasoning":""},{"id":"diagnostics","score":0.0,"reasoning":""}],"confidence_honesty_violation":false,"weighted_score":0.0,"verdict":"pass"}
-Compute raw = correctness*0.30 + completeness*0.20 + convention_adherence*0.20 + anti_pattern_avoidance*0.20 + diagnostics*0.10 (round 3 dp). THEN apply build-quality@4 caps to get the final weighted_score: if the artifact asserts an unverified/uncited claim as verified, set confidence_honesty_violation=true and cap weighted_score<=0.65; if it references a load-bearing file that does not exist, cap<=0.60; if a command only lists agents without dispatch/output, cap<=0.35; and (deep_read artifacts ONLY) if the DENSITY SIGNAL below flags padding AND on inspection the long prose is generic-explainer filler rather than legitimate novice on-ramp (defining jargon / explaining a mechanism from common technical background — which is uncited BY DESIGN and must NOT be penalised), cap<=0.65. An honestly-short section is a PASS, never a shortfall. verdict="pass" if final weighted_score>=0.70 else "flag".'
+# --- @5 instructions (2026-09-19, YED-206) -------------------------------------------------------
+# The @4 block pre-filled "verdict":"pass", told the seat to judge house criteria "conservatively" (read as: don't
+# penalise), and let the MODEL compute the composite. Triage (.claude/notes/gemini-judge-triage-2026-09-19.md): the
+# seat returned a flat 1.0 on 20/23 real prospective artifacts. Now: the schema forces defects[] BEFORE scores
+# (generationConfig.responseSchema below — a system-prompt-only version of this was tested and ignored), nothing is
+# pre-filled, and THIS SCRIPT computes the composite + verdict from criterion scores and cap flags.
+INSTR='You are scoring ONE build artifact against the rubric above, following the judge system rules.
+Work in this order, and the output schema enforces it:
+1. checks_performed: list the concrete things you checked (e.g. "each numbered ADR decision vs the code", "every write path", "error handling on network calls").
+2. defects: every defect you found, major or minor, each with location (line number, function or section), criterion, severity, spec_ref (the numbered spec/ADR decision it contradicts, or ""), and description. Competent artifacts usually still have minor reviewer nits; list them.
+3. criterion_scores: score each of the 5 criteria 0-1 INDEPENDENTLY using the rubric scale (1.0 = searched and found nothing of consequence; ~0.85 = passes with nits; 0.70 = pass line; below = send back). Reasoning must cite specific lines or sections.
+4. cap_flags: set confidence_honesty_violation (an unverified/uncited claim asserted as verified), spec_drift (behaviour contradicts a numbered decision in the supplied spec), command_skeleton_absent (a command that lists agents without dispatch/output), density_padding (deep_read only: padding is generic filler, not legitimate novice on-ramp; an honestly short section is NOT padding).
+Do NOT compute a composite score or a verdict; the harness does that.
+House-context primer (for convention_adherence/anti_pattern_avoidance): project skills in .claude/skills/ take NO alex: prefix (that prefix is for alex-plugin skills only); subagents cannot spawn subagents (fan-out runs from the parent thread); MCP writes are parent-thread only; Supabase as the Market-Intelligence store is sanctioned (NOT an anti-pattern), Supabase as a measurement store is tombstoned. If you lack house context for a convention question, say so in the reasoning and score what you CAN verify; do not default to 1.0.'
+
+# responseSchema forces the order checks -> defects -> scores -> cap flags (propertyOrdering) and required fields.
+SCHEMA='{"type":"OBJECT","propertyOrdering":["checks_performed","defects","criterion_scores","cap_flags"],
+ "required":["checks_performed","defects","criterion_scores","cap_flags"],
+ "properties":{
+  "checks_performed":{"type":"ARRAY","items":{"type":"STRING"}},
+  "defects":{"type":"ARRAY","items":{"type":"OBJECT","propertyOrdering":["location","criterion","severity","spec_ref","description"],
+    "required":["location","criterion","severity","spec_ref","description"],
+    "properties":{"location":{"type":"STRING"},
+      "criterion":{"type":"STRING","enum":["correctness","completeness","convention_adherence","anti_pattern_avoidance","diagnostics"]},
+      "severity":{"type":"STRING","enum":["major","minor"]},"spec_ref":{"type":"STRING"},"description":{"type":"STRING"}}}},
+  "criterion_scores":{"type":"ARRAY","items":{"type":"OBJECT","propertyOrdering":["id","score","reasoning"],"required":["id","score","reasoning"],
+    "properties":{"id":{"type":"STRING","enum":["correctness","completeness","convention_adherence","anti_pattern_avoidance","diagnostics"]},
+      "score":{"type":"NUMBER"},"reasoning":{"type":"STRING"}}}},
+  "cap_flags":{"type":"OBJECT","required":["confidence_honesty_violation","spec_drift","command_skeleton_absent","density_padding"],
+    "properties":{"confidence_honesty_violation":{"type":"BOOLEAN"},"spec_drift":{"type":"BOOLEAN"},
+      "command_skeleton_absent":{"type":"BOOLEAN"},"density_padding":{"type":"BOOLEAN"}}}}}'
 
 # --- build request body safely with jq (no manual escaping) ---
+[ -n "$BUNDLE" ] && DANGLING=$(jq -r '.dangling_refs | join("\n")' "$BUNDLE")   # the cap must use the bundle's pre-pass
 REQ=$(jq -n \
   --rawfile sys "$SYSTEM" --rawfile rubric "$RUBRIC" --rawfile art "$ARTIFACT" \
-  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" \
+  --arg ctx "$CONTEXT" --arg atype "$ATYPE" --arg instr "$INSTR" --argjson schema "$SCHEMA" --arg path "$ARTIFACT" --arg dangling "$DANGLING" --arg density "$DENSITY" --arg tombs "$TOMBS" \
   '{contents:[{parts:[{text:(
       $sys + "\n\n===== RUBRIC (version is stated in the rubric text below) =====\n" + $rubric
       + "\n\n===== ARTIFACT TYPE =====\n" + $atype
       + "\n\n===== PER-ARTIFACT CONTEXT/SPEC =====\n" + (if $ctx=="" then "(none supplied — score correctness/completeness against the artifact'\''s own stated purpose; note reduced confidence)" else $ctx end)
-      + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per build-quality@4, a load-bearing reference that does not exist caps completeness ≤0.60.") end)
+      + "\n\n===== VERIFIED-MISSING REFERENCES (deterministic file-existence check — treat as ground truth) =====\n" + (if $dangling=="" then "(none — all checked .claude/ references exist)" else ($dangling + "\n→ per the rubric, a load-bearing reference that does not exist caps completeness ≤0.60 (the harness enforces it).") end)
+      + "\n\n===== LIVE REFERENCES TO REMOVED TOOLS/DECISIONS (deterministic tombstone check vs platform-constraints.md — each hit is ground truth that the line names a removed thing with no removal marker within 40 chars; the list is a LOWER BOUND, so still read the artifact; YOU judge whether each hit is load-bearing) =====\n" + (if $tombs=="" then "(none)" else ($tombs + "\n→ a load-bearing step that relies on a removed tool is a correctness + anti_pattern_avoidance defect (resurrecting a superseded decision).") end)
       + "\n\n===== DENSITY SIGNAL (deep_read only; words÷citations — a FLAG, not a verdict; you decide padding vs. legitimate on-ramp) =====\n" + (if $density=="" then "(not a deep_read artifact, or density-check unavailable — density cap N/A)" else $density end)
       + "\n\n===== ARTIFACT PATH =====\n" + $path
       + "\n\n===== ARTIFACT CONTENT =====\n" + $art
       + "\n\n===== INSTRUCTIONS =====\n" + $instr
     )}]}],
-   generationConfig:{temperature:0,maxOutputTokens:16000,responseMimeType:"application/json"}}')
+   generationConfig:{temperature:0,maxOutputTokens:32768,responseMimeType:"application/json",responseSchema:$schema}}')
+
+# bundle mode: every seat scores the SAME bytes. Swap in the bundle's text; schema + generationConfig stay.
+[ -n "$BUNDLE" ] && REQ=$(printf '%s' "$REQ" | jq --slurpfile b "$BUNDLE" '.contents[0].parts[0].text = $b[0].text')
 
 RESP=$(curl -s -w $'\n%{http_code}' -H "x-goog-api-key: $GEMINI_API_KEY" -H "Content-Type: application/json" \
   "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" -d "$REQ" 2>/dev/null)
@@ -123,22 +163,57 @@ VERDICT_JSON=$(printf '%s' "$BODY" | jq -r '.candidates[0].content.parts[0].text
 RESOLVED=$(printf '%s' "$BODY" | jq -r '.modelVersion // "unknown"' 2>/dev/null)
 USAGE=$(printf '%s' "$BODY" | jq -c '.usageMetadata // {}' 2>/dev/null)
 [ -n "$VERDICT_JSON" ] || { echo "ERROR: empty verdict (thinking tokens may have starved output; raise maxOutputTokens)" >&2; exit 1; }
-echo "$VERDICT_JSON" | jq -e '.criterion_scores | length == 5' >/dev/null 2>&1 || { echo "ERROR: malformed verdict JSON:" >&2; echo "$VERDICT_JSON" | head -c 600 >&2; exit 1; }
-
-# --- deterministic @4 dangling-ref cap enforcement (only ever LOWERS a score; never raises — safe;
-#     density is intentionally NOT hard-capped here — padding vs. on-ramp is a judgment the model makes above) ---
-if [ -n "$DANGLING" ]; then
-  VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c '
-    .criterion_scores |= map(if .id=="completeness" and .score>0.60
-      then (.score=0.60 | .reasoning=(.reasoning + " [check-refs: capped to 0.60 — referenced file(s) missing on disk]")) else . end)
-    | (if .weighted_score>0.60 then .weighted_score=0.60 else . end)
-    | .verdict=(if .weighted_score>=0.70 then "pass" else "flag" end)')
-  echo "  check-refs: dangling reference(s) present → completeness/composite capped ≤0.60 deterministically" >&2
+if ! echo "$VERDICT_JSON" | jq -e '.criterion_scores | length == 5' >/dev/null 2>&1; then
+  # Loud AND inspectable: keep the full raw response + say WHY generation stopped (a MAX_TOKENS truncation and a
+  # wrong-shape answer look identical in a 600-char head).
+  DUMP="${TMPDIR:-/tmp}/gemini-judge-last-failure.json"; printf '%s' "$BODY" > "$DUMP"
+  echo "ERROR: malformed verdict JSON — finishReason=$(printf '%s' "$BODY" | jq -r '.candidates[0].finishReason // "?"') ·" \
+       "usage=$(printf '%s' "$BODY" | jq -c '.usageMetadata // {}') · valid_json=$(echo "$VERDICT_JSON" | jq -e . >/dev/null 2>&1 && echo yes || echo no) ·" \
+       "criteria=$(echo "$VERDICT_JSON" | jq -r '.criterion_scores|length' 2>/dev/null || echo '?') · full response: $DUMP" >&2
+  exit 1
 fi
+
+# --- @5: the HARNESS computes the composite + verdict (the model never does) -----------------------
+# Per-criterion caps first (spec drift → correctness ≤0.70 · dangling ref → completeness ≤0.60 · command skeleton →
+# completeness ≤0.35), then the weighted sum, then composite caps (confidence-honesty ≤0.65 · deep_read padding ≤0.65 ·
+# dangling ≤0.60). Caps only ever LOWER a score. flat_ceiling = all five RAW scores == 1.0 (low-information; the
+# quorum escalates instead of auto-accepting).
+echo "$VERDICT_JSON" | jq -e '(.criterion_scores|map(.id)|sort) == ["anti_pattern_avoidance","completeness","convention_adherence","correctness","diagnostics"]' >/dev/null 2>&1 \
+  || { echo "ERROR: verdict JSON lacks exactly the 5 criteria:" >&2; echo "$VERDICT_JSON" | head -c 600 >&2; exit 1; }
+# every criterion score must be a real number: jq sorts null BELOW every number, so an absent score would be
+# silently clamped to 0 by the range-clamp below ("model skipped a criterion" would become "worst possible defect").
+echo "$VERDICT_JSON" | jq -e '[.criterion_scores[].score] | all(type == "number")' >/dev/null 2>&1 \
+  || { echo "ERROR: a criterion score is missing or non-numeric:" >&2; echo "$VERDICT_JSON" | jq -c '.criterion_scores' >&2; exit 1; }
+# a cap flag with no matching defect is evidence-free: cap anyway (fail-safe = lower), but say so.
+echo "$VERDICT_JSON" | jq -r '[.cap_flags | to_entries[] | select(.value)] as $f | if ($f|length) > 0 and ((.defects|length) == 0)
+  then "  ⚠️  cap flag(s) set with an EMPTY defects[] (" + ([$f[].key] | join(", ")) + ") — capping anyway; evidence missing." else empty end' >&2
+HAS_DANGLING=$([ -n "$DANGLING" ] && echo true || echo false)
+VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c --arg atype "$ATYPE" --argjson dangling "$HAS_DANGLING" '
+  def cap(id; max; why): .criterion_scores |= map(if .id==id and .score>max then (.score=max | .reasoning=(.reasoning+" [harness cap "+(max|tostring)+": "+why+"]")) else . end);
+  (.criterion_scores|map(.score)|all(. == 1)) as $flat
+  | .flat_ceiling = $flat
+  | .criterion_scores |= map(.score |= (if . > 1 then 1 elif . < 0 then 0 else . end))
+  | (if .cap_flags.spec_drift then cap("correctness"; 0.70; "spec drift") else . end)
+  | (if $dangling then cap("completeness"; 0.60; "check-refs: referenced file(s) missing") else . end)
+  | (if $atype=="command" and .cap_flags.command_skeleton_absent then cap("completeness"; 0.35; "command skeleton absent") else . end)
+  | (.criterion_scores|map({(.id): .score})|add) as $s
+  | ($s.correctness*0.30 + $s.completeness*0.20 + $s.convention_adherence*0.20 + $s.anti_pattern_avoidance*0.20 + $s.diagnostics*0.10) as $raw
+  | ([$raw]
+     + (if .cap_flags.confidence_honesty_violation then [0.65] else [] end)
+     + (if $atype=="deep_read" and .cap_flags.density_padding then [0.65] else [] end)
+     + (if $dangling then [0.60] else [] end) | min) as $capped
+  | .raw_score = (($raw*1000|round)/1000)
+  | .weighted_score = (($capped*1000|round)/1000)
+  | .confidence_honesty_violation = .cap_flags.confidence_honesty_violation
+  | .verdict = (if .weighted_score >= 0.70 then "pass" else "flag" end)')
+[ -n "$DANGLING" ] && echo "  check-refs: dangling reference(s) present → completeness/composite capped ≤0.60 deterministically" >&2
+[ "$(echo "$VERDICT_JSON" | jq -r '.flat_ceiling')" = "true" ] && echo "  ⚠️  FLAT CEILING: all five criteria 1.0 — low-information; the quorum will escalate instead of auto-accepting." >&2
 
 WS=$(echo "$VERDICT_JSON" | jq -r '.weighted_score'); VD=$(echo "$VERDICT_JSON" | jq -r '.verdict')
 echo "== Gemini judge ($RESOLVED) — $ARTIFACT =>  $WS ($VD)  [set:$CALSET]"
 echo "$VERDICT_JSON" | jq -r '.criterion_scores[] | "  \(.id) \(.score) — \(.reasoning)"'
+echo "$VERDICT_JSON" | jq -r '"  defects: \(.defects|length) (\([.defects[]|select(.severity=="major")]|length) major) · checks: \(.checks_performed|length) · raw \(.raw_score) → capped \(.weighted_score)"'
+echo "$VERDICT_JSON" | jq -r '.defects[] | "    - [\(.severity)/\(.criterion)] \(.location): \(.description)" + (if .spec_ref != "" then " (\(.spec_ref))" else "" end)'
 echo "  usage: $USAGE"
 
 if [ "$PRINT_ONLY" = "1" ]; then exit 0; fi
@@ -150,14 +225,19 @@ SLUG=$(basename "$(dirname "$ARTIFACT")" 2>/dev/null); B=$(basename "$ARTIFACT")
 [ "$B" = "SKILL.md" ] || SLUG=$(echo "$B" | sed 's/\.[^.]*$//')
 RID="${LABEL:-gemini-$(echo "$SLUG" | tr -c 'a-zA-Z0-9' '-')}"
 OUT=".claude/evals/logs/${DAY}-${SLUG}-${RID}.jsonl"
+ASHA=$(shasum -a 256 "$ARTIFACT" 2>/dev/null | cut -d" " -f1)   # content fingerprint: calibration matches truth on THIS, not the path (YED-209)
 jq -nc \
-  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" \
+  --arg rid "$RID" --arg ts "$TS" --arg art "$ARTIFACT" --arg atype "$ATYPE" --arg asha "$ASHA" \
   --arg jm "gemini:$RESOLVED" --arg sid "$SID" --arg calset "$CALSET" --arg rver "$RUBRIC_VER" \
   --arg dangling "$DANGLING" --arg parity "$PARITY" --argjson v "$VERDICT_JSON" --argjson usage "$USAGE" \
-  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_type:$atype, rubric:$rver,
+  --arg bsha "$([ -n "$BUNDLE" ] && jq -r '.bundle_sha256' "$BUNDLE")" --arg bver "$([ -n "$BUNDLE" ] && jq -r '.bundle_version' "$BUNDLE")" \
+  '{run_id:$rid, timestamp:$ts, artifact:$art, artifact_sha256:$asha, artifact_type:$atype, rubric:$rver,
     judge_model:$jm, session_id:$sid, criterion_scores:$v.criterion_scores,
     weighted_score:$v.weighted_score, verdict:$v.verdict, alex_ack:null,
     confidence_honesty_violation:($v.confidence_honesty_violation // false),
+    defects:($v.defects // []), checks_performed:($v.checks_performed // []), cap_flags:($v.cap_flags // {}),
+    raw_score:$v.raw_score, flat_ceiling:($v.flat_ceiling // false), scoring:"harness-recomputed",
     dangling_refs:($dangling | if .=="" then [] else split("\n") end),
-    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage}' > "$OUT"
+    calibration_set:$calset, judge_provider:"google", evidence_parity:($parity=="true"), usage:$usage,
+    bundle_sha256:(if $bsha=="" then null else $bsha end), bundle_version:(if $bver=="" then null else ($bver|tonumber) end), seat_status:"advisory"}' >> "$OUT"   # append, never clobber a same-day re-run (YED-209)
 echo "  logged → $OUT"

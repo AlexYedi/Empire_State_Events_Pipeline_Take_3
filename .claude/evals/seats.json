@@ -1,0 +1,47 @@
+{
+  "_note": "One row per judge seat. `status` is what Alex CONFIGURED; the effective status is the LOWER of this and what the seat has EARNED (calibration_stats.py --gate). Promotion is a manual edit to this file by Alex, never automatic. Demotion is automatic. A 4th seat is a new row here, not new code. Spec: .claude/proposals/third-judge-seat-openai.md `since` = the start of the seat's current prompt/rubric regime; demotion rules only read runs after it.",
+  "statuses": {
+    "shadow": "runs and is logged; no effect on the verdict; shown to Alex only AFTER he acks",
+    "advisory": "can ADD an escalation reason; can never enable or cause an auto-accept",
+    "voting": "its verdict counts toward the final verdict"
+  },
+  "seats": [
+    {
+      "id": "claude",
+      "seat_name": "claude:sonnet",
+      "provider": "anthropic",
+      "independence_group": "anthropic",
+      "status": "voting",
+      "runner": "agent",
+      "note": "house-aware seat, dispatched via the Agent tool (model: sonnet); logged with seat-log.py",
+      "since": "2026-07-17"
+    },
+    {
+      "id": "gemini",
+      "seat_name": "gemini",
+      "provider": "google",
+      "independence_group": "google",
+      "status": "advisory",
+      "runner": ".claude/hooks/gemini-judge.sh",
+      "note": "ADVISORY since YED-206: flat 1.0 on 20/23 real artifacts · regime = the @5 rubric + judge-system-v2 + defects-before-scores schema (PR #85 merge time).",
+      "since": "2026-09-20T01:57:17Z"
+    },
+    {
+      "id": "openai",
+      "seat_name": "openai",
+      "provider": "openai",
+      "independence_group": "openai",
+      "status": "shadow",
+      "runner": ".claude/hooks/openai-judge.sh",
+      "model": "gpt-5.4-mini",
+      "reasoning_effort": "medium",
+      "note": "entered 2026-09-19 (YED-209), SHADOW until it earns advisory. Model selected 2026-09-20 by the pre-registered bake-off: all three arms tied at 3/4 recall with 0 false flags on the control set, so tiebreak rule 4 (cheaper wins) picked gpt-5.4-mini at $0.044/run — a quarter of gpt-5.4 and a third of gpt-5.5, for identical measured accuracy. Record: controls/bakeoff-result-2026-09-20.md",
+      "since": "2026-09-19",
+      "model_selected_on": "2026-09-20",
+      "model_runners_up": {
+        "gpt-5.4": "$0.113/run, identical accuracy",
+        "gpt-5.5": "$0.166/run, identical accuracy"
+      }
+    }
+  ]
+}

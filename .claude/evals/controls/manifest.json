@@ -1,0 +1,183 @@
+{
+  "_note": "Control set for the judge seats (YED-209 build step 8). Every item is a REAL artifact state Alex labelled, referenced by git blob so the repo never carries a broken copy. Negative controls (expect flag) are pre-fix states; positive controls (expect pass) are states he acked as passing. Materialise with controls.py. Logged as calibration_set:'control' and never pooled into kappa \u2014 it is a fixed, re-used set. Blob shas are FULL 40-char: an abbreviated sha resolved ambiguously and the privacy guard correctly refused the mismatch (2026-09-20).",
+  "built": "2026-09-20",
+  "source": "run-logs with alex_ack, resolved to the commit preceding the ack",
+  "items": [
+    {
+      "id": "neg-content-style-guide_md-c46fb8d",
+      "expect": "flag",
+      "artifact": ".claude/references/content-style-guide.md",
+      "artifact_type": "ref",
+      "blob": "01adf1891f0db7e53191d1956e6667d3bbd49dc3",
+      "commit": "c46fb8d46a52",
+      "labelled_on": "2026-08-21",
+      "why": "RELABELLED 2026-09-20 by Alex. Originally carried a pass ack, but all three bake-off arms flagged it independently on a confidence-honesty cap and two cited the same lines. On inspection the flag is correct: the line claimed 4:5 gives '~65% more vertical space than 16:9' when the true figure is 122% (1.25/0.5625), and a 3,000-char cap was asserted as 'verified June 2026' with no source. Fixed in content-style-guide.md in the same commit. The original pass ack almost certainly belongs to a later version \u2014 see resolution_caveat.",
+      "relabelled": {
+        "from": "pass",
+        "on": "2026-09-20",
+        "by": "Alex",
+        "evidence": "3 seats independent; arithmetic checkable"
+      }
+    },
+    {
+      "id": "neg-gemini-judge_sh-57089dc",
+      "expect": "flag",
+      "artifact": ".claude/hooks/gemini-judge.sh",
+      "artifact_type": "code",
+      "blob": "c313b6763c7cc5c0db3f4bccbaeeb70985231b39",
+      "commit": "57089dc77e03",
+      "labelled_on": "2026-07-17",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "neg-inbox-miner-90a8b0a",
+      "expect": "flag",
+      "artifact": ".claude/skills/inbox-miner/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "6ab5bdf30464718575dd1d54e2728941256f44f5",
+      "commit": "90a8b0a4fccf",
+      "labelled_on": "2026-09-19",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "neg-pre-event-content-d1b5aa9",
+      "expect": "flag",
+      "artifact": ".claude/skills/pre-event-content/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "fb0483cd75cc42651da53eed5a980265491b0da4",
+      "commit": "d1b5aa9790e6",
+      "labelled_on": "2026-09-18",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "neg-role-radar-49d4ff7",
+      "expect": "flag",
+      "artifact": ".claude/skills/role-radar/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "17f06034a2446453a6f0d8600353ed69e7082646",
+      "commit": "49d4ff760917",
+      "labelled_on": "2026-09-19",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "neg-spine_client_py-96b4788",
+      "expect": "flag",
+      "artifact": ".claude/scripts/spine_client.py",
+      "artifact_type": "code",
+      "blob": "efc5e1239f63cfb0e10d09b6bdba5b525957022c",
+      "commit": "96b478803f93",
+      "labelled_on": "2026-09-13",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "neg-substrate_py-87363f9",
+      "expect": "flag",
+      "artifact": ".claude/scripts/substrate.py",
+      "artifact_type": "code",
+      "blob": "07f801c74119c466601c60bcecd041022af611f9",
+      "commit": "87363f959fc2",
+      "labelled_on": "2026-09-19",
+      "why": "Alex acked this exact content as flag"
+    },
+    {
+      "id": "pos-build-session-emit_sh-89e759f",
+      "expect": "pass",
+      "artifact": ".claude/hooks/build-session-emit.sh",
+      "artifact_type": "code",
+      "blob": "07dbad5838fe6321f540669847c9170e2ae96fb7",
+      "commit": "89e759f9635c",
+      "labelled_on": "2026-06-26",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-deep-read-gate_sh-19a731c",
+      "expect": "pass",
+      "artifact": ".claude/hooks/deep-read-gate.sh",
+      "artifact_type": "code",
+      "blob": "19c194a99d25f66133cfd8feea6cd279f5ef0992",
+      "commit": "19a731c1d0b8",
+      "labelled_on": "2026-08-25",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-event-deep-research_md-17cc6a9",
+      "expect": "pass",
+      "artifact": ".claude/commands/event-deep-research.md",
+      "artifact_type": "command",
+      "blob": "8ee0714bc7f4676ed528c7138b87b9a73e542264",
+      "commit": "17cc6a90b708",
+      "labelled_on": "2026-08-21",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-inbox-miner-bad9501",
+      "expect": "pass",
+      "artifact": ".claude/skills/inbox-miner/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "6d18496567fcb57076020ad92d531da938cafb7d",
+      "commit": "bad950136f69",
+      "labelled_on": "2026-09-11",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-interview-prep-dossier-d5e913d",
+      "expect": "pass",
+      "artifact": ".claude/skills/interview-prep-dossier/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "adeb0673b88e515cdcb8482df3372f15f0badebc",
+      "commit": "d5e913d687a8",
+      "labelled_on": "2026-07-11",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-interview-prep_md-441fea6",
+      "expect": "pass",
+      "artifact": ".claude/commands/interview-prep.md",
+      "artifact_type": "command",
+      "blob": "b3e415d295202a564a7ae64119397c5462702952",
+      "commit": "441fea62dc32",
+      "labelled_on": "2026-07-11",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-role-radar-49ddc1c",
+      "expect": "pass",
+      "artifact": ".claude/skills/role-radar/SKILL.md",
+      "artifact_type": "skill",
+      "blob": "91e311ee3c2ab2787dcbf98a6f551e37cc7fd887",
+      "commit": "49ddc1c49da1",
+      "labelled_on": "2026-09-08",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-scan-inbox_md-859d686",
+      "expect": "pass",
+      "artifact": ".claude/commands/scan-inbox.md",
+      "artifact_type": "command",
+      "blob": "b2d60818fd8954a82905e1cb726e4fbb70e84eaf",
+      "commit": "859d68635d97",
+      "labelled_on": "2026-09-11",
+      "why": "Alex acked this exact content as pass"
+    },
+    {
+      "id": "pos-scan-roles_md-49ddc1c",
+      "expect": "pass",
+      "artifact": ".claude/commands/scan-roles.md",
+      "artifact_type": "command",
+      "blob": "32f6e16cc6c7700ab90543684978a5a7998ee1ca",
+      "commit": "49ddc1c49da1",
+      "labelled_on": "2026-09-08",
+      "why": "Alex acked this exact content as pass"
+    }
+  ],
+  "excluded_contradictory_blobs": [
+    "1cbeb8a5d5dc",
+    "250cab854db0",
+    "61e45944b30f",
+    "7f0ff9920ade",
+    "954a69584dfa",
+    "c7772f78f1e5",
+    "f9e8fc21d1ea"
+  ],
+  "resolution_caveat": "An ack is mapped to content by taking the commit that preceded it. That is only sound when the judged content was COMMITTED at ack time. 7 blobs came back labelled BOTH pass and flag (judged, fixed, and re-judged before the fix was committed, so both acks resolve to the same blob) and are excluded rather than guessed at. This is why every seat row now carries artifact_sha256: new controls will not need this inference at all."
+}
