@@ -37,7 +37,7 @@ Wait for both. If one is thin, re-invoke just that one with deeper scope — don
 
 ## Step 4 — Output destination (NAME IT)
 - **`conversation`** (default) — present: size, trends, competitor matrix, scenarios, recommendations.
-- **`deck`** — also a Gamma deck (`mcp__claude_ai_Gamma__generate`, `format: "social"` for 4:5), one section
+- **`deck`** — also a Claude-design deck: self-contained 4:5 HTML/SVG exported to PDF per `.claude/skills/content-patterns/visual-briefs.md` → `## Execution`, one section
   per slide (CLAUDE.md rule 13).
 - **`memo`** — structured long-form in conversation.
 The scenario model is presented inline as a table (assumptions + sensitivity). This command does not write to
@@ -48,7 +48,7 @@ external systems; offer a Notion write as an explicit follow-up if Alex wants it
 - **Thin data on a niche category** — present what's grounded, label the gaps honestly, and flag the low-
   confidence cells rather than inventing sizing (no fabricated numbers).
 - **A specialist returns thin** — re-invoke just that one; don't restart.
-- **Gamma unavailable** — fall back to the `conversation` deliverable.
+- **Deck render fails** — fall back to the `conversation` deliverable.
 
 ## Ground-truth references
 - `.claude/references/command-orchestration-convention.md` — the required skeleton

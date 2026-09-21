@@ -1,5 +1,7 @@
 # Cross-provider judge quorum — spec (v1, 2026-07-17)
 
+> **Extended 2026-09-19 (YED-209): three seats.** An OpenAI seat joined in *shadow*, with an N-seat merge, per-seat auto-demotion and content-matched calibration. The design, decision table and pre-mortem are in `.claude/proposals/third-judge-seat-openai.md`; the operating summary is in `.claude/evals/README.md`. Everything below still describes the two original seats accurately.
+
 **Why.** The build-quality judge is `provisional-trusted` (crossed 20-@-80% but on a Claude-only, ~1/3-self-produced
 sample). The unclosed risk is **judge circularity / self-preference** (R1): Claude rating Claude-produced work.
 A **second judge from a different provider (Google Gemini)** is the documented next step (deferred 2026-06-26) —
@@ -15,11 +17,11 @@ the concrete path to dropping "provisional." This spec is the design; build foll
 - Why Gemini Pro not Flash-Lite: free tier on this key = Flash-Lite only (too weak → noisy disagreements). Billing enabled 2026-07-17; Pro is the quality independent seat. Cost is negligible at judge volume.
 
 ## Scoped quorum (not naïve 50/50)
-Both judges score all 5 `build-quality@4` criteria, BUT their votes are **weighted by domain competence**:
+Both judges score all 5 `build-quality@5` criteria, BUT their votes are **weighted by domain competence**:
 - **Provider-neutral criteria** (`correctness`, `completeness`) — Gemini's independent read carries full weight; this is where cross-provider catches Claude's blind spots.
 - **House-specific criteria** (`convention_adherence`, `anti_pattern_avoidance`) — Claude (Sonnet) retains primary judgment; Gemini lacks native Empire-State context (notion-search vs notion-query-data-sources, SDK subagent constraint, tombstoned decisions) unless heavily briefed. Gemini's vote here is advisory only.
 - `diagnostics` — shared.
-Gemini gets the SAME `judge-system.md` + `build-quality@4` + per-artifact spec/context the Claude judge gets (apples-to-apples), plus a house-context primer for the convention criteria. For `deep_read` artifacts it also runs `density-check.sh` and gets the density signal (a flag, not a hard cap — the model judges padding vs. legitimate on-ramp).
+Gemini gets the SAME `judge-system-v2.md` + `build-quality@5` + per-artifact spec/context the Claude judge gets (apples-to-apples), plus a house-context primer for the convention criteria. For `deep_read` artifacts it also runs `density-check.sh` and gets the density signal (a flag, not a hard cap — the model judges padding vs. legitimate on-ramp).
 
 ## Quorum resolution (no model tiebreak — it would be circular)
 A disputant cannot adjudicate its own disagreement, and we have no genuinely-independent *third* provider. So:
@@ -32,11 +34,11 @@ A disputant cannot adjudicate its own disagreement, and we have no genuinely-ind
 Same `.claude/evals/logs/*.jsonl` schema. New/used fields:
 - `judge_model`: `"gemini-pro-latest"` (+ capture the **resolved model version** from the API response, since `-latest` aliases shift — preserves calibration traceability).
 - `calibration_set`: `"backfill"` (Approach A) | `"prospective"` (Approach B) — **report agreement separately AND combined** so the clean independent signal (B) is never inflated by the correlated backfill (A).
-- A `quorum` block on dual-judged artifacts: `{claude: <verdict>, gemini: <verdict>, agree: <bool>, resolution: auto|escalated|failsafe_flag}`.
+- A `quorum` block on dual-judged artifacts: `{claude, gemini, agree, divergence, escalation_reasons[], flat_ceiling{}, gemini_evidence_parity, weak_corroboration, resolution: auto|escalated|failsafe_flag}`.
 
 ## Calibration plan
 - **Approach A — backfill (fast, reuses labels):** run Gemini on the same artifact-STATES already Alex-acked. For unchanged files → current on-disk; for files changed after judging → reconstruct as-judged content from git. Report **Gemini-vs-Alex** (calibration) + **Gemini-vs-Haiku/Sonnet** (inter-judge reliability) + the disagreement set. `calibration_set: backfill`.
-- **Approach B — prospective (clean, held-out):** every new `/judge-build` runs both judges; Alex acks once; agreement accrues on fresh, independent artifacts. `calibration_set: prospective`. **This is what actually retires "provisional"** — target ≥80% Gemini-vs-Alex across ~15+ prospective runs.
+- **Approach B — prospective (clean, held-out):** every new `/judge-build` runs both judges; Alex acks once; agreement accrues on fresh, independent artifacts. `calibration_set: prospective`. **REVISED 2026-09-19 (YED-206):** raw agreement does not retire "provisional" — a seat that passes everything scores ~80% by itself (Gemini's "83%" *was* its always-pass baseline). A seat is trusted only when it clears all four bars in `.claude/evals/README.md` (agreement above its own baseline · κ ≥ 0.60 · flag recall ≥ 0.60 · flat-1.0 rate < 0.30), measured by `.claude/evals/calibration_stats.py`. Gemini currently fails three of four → **ADVISORY**: it runs, it is recorded, it cannot auto-accept. Triage: `.claude/notes/gemini-judge-triage-2026-09-19.md`.
 
 ## Build gotchas (learned during prereq verification)
 1. **Gemini Pro is a thinking model** — set `generationConfig.maxOutputTokens` generously (~8000) or reasoning tokens starve the JSON verdict (a 20-token cap returned empty). Consider `responseMimeType: application/json` + a response schema to force clean structured output.
@@ -66,11 +68,16 @@ internally and enforces the cap on its own output; the Claude seat is told to tr
 
 **Merge (`.claude/hooks/quorum-merge.sh`):** given `--claude-verdict <json>`, `--gemini-log <path>` (or `--gemini-verdict <json>`),
 `--artifact <path>`, and `--mode interactive|autonomous`, it:
-1. reads both verdicts (`weighted_score`, `verdict`),
-2. sets `agree = (claude.verdict == gemini.verdict)`,
-3. resolves: `agree` → `resolution:"auto"`, final verdict = the agreed verdict; `disagree` + `interactive` →
-   `resolution:"escalated"`, final verdict = `flag` pending Alex; `disagree` + `autonomous` → `resolution:"failsafe_flag"`,
-   final verdict = `flag`,
+1. **recomputes BOTH seats' composites** from their criterion scores + cap flags — neither judge computes its own
+   (`judge-system-v2` rule; the Gemini adapter mechanizes it for its seat, this script does it for the Claude seat, so
+   neither seat's arithmetic can drift from the rubric). A self-reported score that differs is recorded as
+   `claude_selfreported_weighted_score`, never silently kept,
+2. sets `agree = (claude.verdict == gemini.verdict)` and `divergence = |claude.ws − gemini.ws|`,
+3. resolves — **matching verdicts alone do NOT auto-accept** (2026-09-19, YED-206). Escalation reasons:
+   `verdict_mismatch` · `score_divergence` (≥ `QUORUM_DIVERGENCE`, default 0.15) · `flat_ceiling:<seat>` (a seat scoring
+   1.0 on all five criteria = low-information) · `gemini_no_evidence_parity`. No reasons → `resolution:"auto"`, final =
+   the agreed verdict; reasons + `interactive` → `resolution:"escalated"` pending Alex; reasons + `autonomous` →
+   `resolution:"failsafe_flag"`, final = `flag`,
 4. appends one `quorum` record to `.claude/evals/logs/<date>-<artifact>-quorum-<run>.jsonl`:
    `{run_id, timestamp, artifact, claude_run_id, gemini_run_id, claude:{verdict,score}, gemini:{verdict,score},
    agree, resolution, final_verdict, mode, alex_ack:null}` — the schema-stable §6 block, additive to the seat lines.

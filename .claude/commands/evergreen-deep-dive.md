@@ -58,13 +58,13 @@ One subagent per speaker (general-purpose), each given ONLY its slice. Each agen
 ## Step 3 — Ship (main thread)
 - **Notion:** one Content Draft per deep-dive — `Content Type: linkedin_post_post`, `Event Phase:
   post_event`, linked to the Event row, `needs_review`. (Title prefix `Deep-Dive — `.)
-- **Gamma — render-on-publish (default for evergreen).** Author the carousel *brief* now, but **defer the Gamma render until Alex decides to publish that specific post.** Evergreen posts can sit for weeks; don't spend Gamma credits on a bank that may not ship, and don't risk stale assets. At publish time, push (`format: social`, `4x5`, Stratos dark, `noImages`, PDF export). (Render immediately only if Alex says he's posting soon.)
+- **Carousel — render-on-publish (default for evergreen).** Author the carousel *brief* now, but **defer the render until Alex decides to publish that specific post.** Evergreen posts can sit for weeks, and a render made today risks stale assets. At publish time, render with Claude design per `.claude/skills/content-patterns/visual-briefs.md` → `## Execution` (4:5, PDF export). (Render immediately only if Alex says he's posting soon.)
 - **Drip plan:** stagger ~2/week over 2–3 weeks; alternate broad-appeal ↔ deep/technical; lead with
   the widest-appeal framework. Surface the suggested order to Alex.
 
 ## Notes / gotchas
 - Subagents can't write Notion/Gmail (memory `empire-events-notion-write-path`) → agents write the
-  deep-dive FILES; the parent commits to Notion + fires Gamma.
+  deep-dive FILES; the parent commits to Notion and runs the render.
 - **Pin ABSOLUTE output paths per agent + verify locations after.** A relative `…/Deep-Dives/…` in a
   fan-out prompt caused one 2x-AI agent to misfile into the *wrong* event folder (caught in
   verification, relocated). Always give each agent the full event-folder path, and `ls` the

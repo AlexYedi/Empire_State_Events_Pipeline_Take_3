@@ -2,6 +2,7 @@
 **Owner:** Alex — Lead Enterprise Account Director / AI Builder  
 **Last Updated:** 2026-04-09  
 **Version:** 1.1  
+**Staleness note (2026-09-19, YED-200):** this is an April 2026 whole-stack snapshot. For the Empire State pipeline, Gamma was removed and Canva is vestigial since 2026-08-07 (Claude design + Gemini replaced them), and the Granola path is disabled. The rows below are annotated where that matters. Live constraints: `platform-constraints.md`.  
 **Purpose:** Single source of truth for all tools, integrations, MCP connections, automation workflows, and architectural decisions. Upload this file into every Claude Project so all role modules have full stack awareness.
 
 ---
@@ -58,7 +59,7 @@
        │                     |                        |
 ┌──────▼──────────────────────────────────────────────────────────┐
 │                  DESIGN, CONTENT & MEDIA                        │
-│  Canva · Gamma · Magic Patterns · Mobbin · Miro                 │
+│  Canva · Gamma (both legacy for Empire State) · Magic Patterns · Mobbin · Miro                 │
 │  Gemini/Imagen 3 (image gen) · Google Vids (video)              │
 │  NotebookLM Audio Overviews · ElevenLabs (narration)            │
 └─────────────────────────────────────────────────────────────────┘
@@ -138,7 +139,7 @@
 |------|--------------|-------------------|-------|
 | **Canva** | Visual design | Marketing assets, social graphics, presentations, brand materials | MCP connected |
 | **Magic Patterns** | UI component design | React component generation, design system exploration | MCP connected. Use before building custom UI |
-| **Gamma** | Decks & documents | Investor decks, research briefs, proposals, sales materials | MCP connected. Default for presentation-ready output |
+| **Gamma** (removed from Empire State) | Decks & documents | Investor decks, research briefs, proposals, sales materials | Removed from the Empire State pipeline 2026-08-07 (it re-interpreted content and broke labels). Still a subscription for ad-hoc decks; MCP connector not authenticated |
 | **Framer** | Interactive prototypes | Marketing sites, interactive demos, no-code web publishing | Use for sites that need animation and polish |
 | **Miro** | Visual collaboration | Strategy workshops, journey mapping, architecture diagrams, ICP canvases | Good for async visual thinking |
 | **Mobbin** | UI research | iOS/Android/web UI pattern research, design inspiration | Reference before designing flows |
@@ -178,7 +179,7 @@
 | **Gmail** | `https://gmail.mcp.claude.com/mcp` | ✅ Active | Search messages, read threads, create drafts | OAuth |
 | **Canva** | `https://mcp.canva.com/mcp` | ✅ Active | Generate designs, create assets | OAuth |
 | **Magic Patterns** | `https://mcp.magicpatterns.com/mcp` | ✅ Active | Create/iterate UI components, publish artifacts | API key |
-| **Gamma** | `https://mcp.gamma.app/mcp` | ✅ Active | Create and update decks/docs | OAuth |
+| **Gamma** (removed from Empire State 2026-08-07) | `https://mcp.gamma.app/mcp` | ⛔ Not authenticated | Create and update decks/docs | OAuth |
 | **Granola** | `https://mcp.granola.ai/mcp` | ✅ Active | Retrieve meeting notes, search transcripts | OAuth |
 | **ChatPRD** | `https://app.chatprd.ai/mcp` | ✅ Active | Create/update product documents | API key |
 | **Clay** | `https://api.clay.com/v3/mcp` | ✅ Active | Enrich contacts/companies, search accounts, run subroutines | API key |
@@ -212,7 +213,7 @@
 
 | Workflow Name | Trigger | What It Does | Tools Used | Status |
 |---------------|---------|--------------|------------|--------|
-| Engineering_meetingToLinear_onGranolaComplete | Granola meeting webhookExtracts action items via Claude → creates Linear issuesGranola, Claude API, Linear, Gmail🔵 In Design — brief ready| 
+| Engineering_meetingToLinear_onGranolaComplete *(never built; Granola path disabled 2026-05-27)* | disabled Granola meeting webhookExtracts action items via Claude → creates Linear issues (disabled Granola path), Claude API, Linear, Gmail🔵 In Design — brief ready| 
 | | 
 | |
 | |
@@ -324,7 +325,7 @@ SUPABASE_SERVICE_ROLE_KEY = server-only, never expose
 | Scenario | Use This | Not That |
 |----------|----------|----------|
 | Investor deck / proposal | Gamma | Canva (not structured enough), Google Slides |
-| Social graphics / marketing assets | Canva | Gamma |
+| Social graphics / marketing assets | Canva | Claude design (Gamma removed 2026-08-07) |
 | Social media scheduling / distribution | Buffer | Manual posting across platforms |
 | Interactive marketing site | Framer | Webflow (not in stack) |
 | UI component generation | Magic Patterns | Building from scratch |
@@ -338,7 +339,7 @@ SUPABASE_SERVICE_ROLE_KEY = server-only, never expose
 |----------|----------|----------|
 | Custom image / conceptual visual for social post | Gemini (Imagen 3) | Stock photos, generic templates |
 | Social-optimized infographic / designed visual | Canva | Gemini (Canva has social templates + export) |
-| Multi-slide carousel for LinkedIn | Gamma or Canva | Google Slides (less design polish) |
+| Multi-slide carousel for LinkedIn | Claude design → 4:5 PDF (replaced Gamma and Canva 2026-08-07) | Google Slides (less design polish) |
 | Presentation-style video from text/slides | Google Vids | Manual video editing |
 | Podcast-style audio from research brief | NotebookLM Audio Overviews | ElevenLabs (NotebookLM is zero-effort from existing briefs) |
 | High-quality narration / voiceover from script | ElevenLabs | NotebookLM (less control over voice/delivery) |
@@ -375,7 +376,7 @@ SUPABASE_SERVICE_ROLE_KEY = server-only, never expose
 Perplexity (research) 
   → Claude (synthesize + structure) 
   → Supabase (store) 
-  → Gamma (format for output)
+  → Claude design (format for output; replaced Gamma 2026-08-07)
 ```
 *Use for: competitive analysis, market research, ICP research*
 
@@ -464,7 +465,7 @@ GitHub PR merge
 | Tool | Reason Not Adopted |
 |------|--------------------|
 | ChatGPT | Removed from model stack — Claude covers all reasoning, writing, strategy, and code needs; Gemini covers long-context and Google integration. No unique role for ChatGPT. |
-| NapkinAI | No MCP/API access (browser-only). Canva, Gamma, and Gemini (Imagen 3) cover diagram, data visualization, and concept map needs with better integration into the content pipeline. Removed 2026-04-09. |
+| NapkinAI | No MCP/API access (browser-only). At the time, Canva, the since-removed Gamma, and Gemini (Imagen 3) covered diagram, data visualization, and concept map needs with better integration into the content pipeline. Removed 2026-04-09. |
 
 ---
 
