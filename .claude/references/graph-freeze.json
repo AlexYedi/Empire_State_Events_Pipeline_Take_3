@@ -1,7 +1,8 @@
 {
   "_what": "Single source of truth for the graph-write freeze. COMMITTED on purpose: .claude/.state/ is gitignored AND per-worktree, so a freeze marker there would be invisible to every other session — the exact blindness that let two sessions duplicate a Notion namespace on 2026-09-20 (YED-213).",
   "_who_reads_it": [
-    ".claude/scripts/substrate.py — refuses graph writes while active (exit 4); the enforcement point",
+    ".claude/scripts/spine_client.py — THE ENFORCEMENT POINT. freeze_block() in req() raises GraphFrozen on POST/PATCH/PUT/DELETE before the PII guard and before the socket. It lives here, not in the producer, because an adversarial pass found SEVEN scripts writing to the graph (spine_write, recompute_relevance, merge_topics, inbox_signal_write, backfill_people, substrate) — gating only substrate.py left the freeze bypassable by five of them, including merge_topics, which hard-deletes. One door, guarded once (the ADR-9 argument).",
+    ".claude/scripts/substrate.py — a SECOND, earlier check (exit 4) purely for a friendlier message with the waive instructions. Not the boundary; removing it would not open a hole.",
     ".claude/hooks/substrate-gate.sh — adds the freeze-aware waive instruction to its failure message",
     ".claude/hooks/ab-reminder.sh — echoes the reason so the wording cannot drift from the rule"
   ],
@@ -17,7 +18,7 @@
   "expected_lift": "2026-09-26",
 
   "blocks": [
-    "graph WRITES via substrate.py: ensure-entity, ensure-event, ensure-document, stage-claims, backfill, approve-claims",
+    "EVERY graph write from ANY script — POST/PATCH/PUT/DELETE through spine_client.req(). Not just the producer's verbs (ensure-entity, ensure-event, ensure-document, stage-claims, backfill, approve-claims) but also recompute_relevance, merge_topics, inbox_signal_write, backfill_people and spine_write.",
     "YED-205 (pre-event write path) and YED-47 (identity resolution tiers + soft-merge), which both mutate graph rows"
   ],
   "does_not_block": [
@@ -30,7 +31,7 @@
   ],
 
   "override": {
-    "how": "pass --freeze-override \"<why>\" to substrate.py",
+    "how": "GRAPH_FREEZE_OVERRIDE=\"<why>\" as an environment variable — it works for EVERY writer, because most of them (recompute_relevance, merge_topics, backfill_people, inbox_signal_write) take no CLI arguments. substrate.py additionally accepts --freeze-override \"<why>\" for the same effect with a friendlier message.",
     "logged_to": ".claude/artifacts/graph-freeze-overrides.jsonl",
     "note": "An override is data, not a failure — same philosophy as a DoD waiver. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
   },
