@@ -25,8 +25,9 @@ Status per seat = the LOWER of what Alex configured in seats.json and what the s
   by design: it only fires when the voting seats disagree, which already forces final=flag on its own.)
   A seat tagged evidence_unverified (>30% of its defect quotes are not in the artifact) loses BOTH its escalation
   power and its vote for that run: if its quotes are invented, its pass is not evidence either.
-  NOT YET IMPLEMENTED (deferred to the canary step, spec §11 build step 8): spec §2 row 1 also requires "canaries
-  fresh" for an auto-pass. There is no canary runner yet, so that condition is unchecked rather than forgotten.
+  CANARIES (spec §2 row 1, built 2026-09-20): a seat whose last canary FAILED, or whose canary is stale while it
+  votes, is demoted by the gate before it gets here, so a failing seat cannot hold a vote. The quorum record also
+  carries each seat's canary status; "never run" is reported as such, never as fresh.
 
 Escalation reasons: verdict_mismatch · score_divergence (max pairwise |Δ| >= QUORUM_DIVERGENCE, default 0.15, among
 non-shadow seats) · flat_ceiling:<seat> · no_evidence_parity:<seat> · advisory_flag:<seat> · seat_missing:<seat> ·
@@ -100,12 +101,14 @@ def is_flat(r: dict) -> bool:
 
 
 def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], effective: dict[str, str],
-          mode: str = "interactive", threshold: float = 0.15) -> dict:
+          mode: str = "interactive", threshold: float = 0.15, canary: dict | None = None) -> dict:
     # Normalise at the boundary: anything that is not a dict becomes a sentinel. Everything below may then
     # assume dict-or-None, instead of each call site defending itself (the whack-a-mole that produced three
     # separate AttributeError paths on 2026-09-20).
     seat_rows = {k: (v if isinstance(v, dict) else (None if v is None else {"_malformed": repr(v)[:80]}))
                  for k, v in seat_rows.items()}
+    canary = canary or {}
+    canary_status = {s["id"]: ((canary.get(s["id"]) or {}).get("status") or "never run") for s in cfg}
     reasons: list[str] = []
     notes: list[str] = []
     live = {}                                      # non-shadow seats that reported
@@ -207,10 +210,10 @@ def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], eff
            "agree": agreed is not None, "resolution": resolution, "final_verdict": final,
            "divergence": round(div, 3), "escalation_reasons": reasons, "integrity_reasons": integrity, "notes": notes,
            "independent_blocs": len(groups), "voting_seats": sorted(voting),
-           # spec §2 row 1 also wants "canaries fresh" before an auto-pass. The canary runner is build step 8,
-           # so the condition is UNCHECKED, not satisfied: recorded here so nobody reads an auto-pass as meaning
-           # the seats were verified against known-good/known-bad controls that day.
-           "canary_freshness": "unchecked: no canary runner yet (YED-209 build step 8)",
+           # spec §2 row 1: "canaries fresh". Enforcement is in the gate (a failing/stale seat is demoted before
+           # it can vote); this field is the audit trail, so an auto-pass can never be read as "controls were
+           # green" when they were merely never run.
+           "canary_freshness": canary_status,
            "seats": [{"id": s["id"], "configured": s.get("status"), "effective": effective.get(s["id"]),
                       "independence_group": s.get("independence_group"), **(block(s["id"]) or {"verdict": None}),
                       # same definition of "flat" the reasons loop used, so the record can't drift from it
@@ -263,7 +266,9 @@ def main() -> int:
               f"{str(cur_sha)[:12]}). Ack the verdict first; an ack on an earlier version does not unlock it, or "
               "the shadow seat's score anchors the label it is supposed to be measured against.", file=sys.stderr)
         return 2
-    rec = merge(a.artifact, seat_rows, cfg, effective, a.mode, float(os.environ.get("QUORUM_DIVERGENCE", "0.15")))
+    canary = json.load(open(cal.CANARY_STATE, encoding="utf-8")) if os.path.exists(cal.CANARY_STATE) else {}
+    rec = merge(a.artifact, seat_rows, cfg, effective, a.mode,
+                float(os.environ.get("QUORUM_DIVERGENCE", "0.15")), canary)
     for sid, nbad in sorted(corrupt_lines.items()):     # a corrupt line must never be silently skipped
         rec["notes"].append(f"corrupt_log_lines:{sid}={nbad}")
         print(f"   ⚠️  {nbad} unparseable line(s) in {sid}'s log — the row used may not be the newest.", file=sys.stderr)
