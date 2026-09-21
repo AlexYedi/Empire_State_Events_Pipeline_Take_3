@@ -75,7 +75,11 @@ Claude/Sonnet {ws}  |  Gemini {ws}   agree: {bool}
 {if escalated: the divergent criterion, both seats' reasoning SIDE-BY-SIDE, highlighted}
 {if flag: the 1–2 highest-leverage fixes}
 ```
-- **Agree** → ask once: **"Agree with this verdict? (agree / disagree — and why)"** → write into the quorum record's `alex_ack`.
+- **Agree** → ask once: **"Agree with this verdict? (agree / disagree — and why)"** → write into the quorum record's `alex_ack`
+  as a **string** (`"agree"` / `"disagree"`, never a dict), with `alex_ack_at` as a **full UTC timestamp**
+  (`2026-09-21T14:03:11Z`, not a date). Ack *latency* is the early-warning signal for reflexive agreement — the
+  risk that the labeler becomes the always-pass rater and every κ goes undefined — and a date-only stamp makes it
+  unmeasurable (rigor-review 2026-09-21).
 - **Escalated** → the disagreement is the highest-value output: show it, ask Alex to adjudicate → that call becomes the `alex_ack` and the tiebreak. A disagree is *more* valuable than an agree — it shows where to tighten the rubric.
 - **Autonomous** → no prompt; record `failsafe_flag` and note it's queued. Tell Alex the running Approach-B agreement rate if ≥5 prospective acks exist.
 
