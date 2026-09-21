@@ -19,10 +19,17 @@ This is the **learning loop** — the step that turns feedback into improvement,
 - **Outcomes:** Content Drafts tagged this week (`/tag-outcome` results) — Outcome vs Goal.
 
 ## Step 2 — Review against the registry (only the action-triggering metrics)
+**First, run the null-model check — before reading any metric as good news:**
+`bash .claude/hooks/run-canaries.sh` then `python3 .claude/evals/calibration_stats.py --gate`.
+Any seat reported `null-model: unvalidated` is no better than always saying "pass" and cannot auto-accept,
+whatever its agreement rate looks like. **A metric within +0.10 of its do-nothing baseline is not evidence.**
+(YED-212: "83% agreement" was the always-pass baseline for 63 days, and the gate's 80% threshold sat below it.)
+Ask the same question of any NEW metric before trusting it: what does this score when the system does nothing?
 - build-quality scores < 0.70 — were they reworked?
 - corrective-rounds ÷ value — trend up?
 - DoD waiver-rate — climbing / clustering on builds?
-- judge–human agreement (from `alex_ack`) — ≥ 80%? (else judge stays advisory)
+- judge–human agreement (from `alex_ack`) — **is it ≥ +0.10 above the always-pass baseline on the same rows?** Raw agreement alone means nothing (YED-212)
+- **ack hygiene (the labeler is a rater too):** what share of escalations did Alex simply agree with, and how fast? A reflexive-agree pattern turns the ground truth into a constant and makes every κ undefined
 - acted-on outcome vs goal — trending which way?
 For each that crosses its threshold, take the registry's named **action**.
 
