@@ -84,5 +84,31 @@ over ≥ 10 runs · flag recall < 0.50 on ≥ 4 real flags · flag precision < 0
 κ ≥ 0.60 · recall ≥ 0.70 · precision ≥ 0.60 · flat < 0.20 · agreement ≥ always-pass baseline + 0.10.
 Rows with `calibration_set` in {control, bakeoff, negative-control, triage-experiment} never count toward either.
 
+## The null-model contract + the calibration-data ruling (YED-212, 2026-09-21)
+
+**A metric a do-nothing policy scores just as well on is not a standard.** Every gating metric declares its
+null baseline; a metric within +0.10 of it (n≥10), or with zero variance (n≥10), is **unvalidated** and cannot
+auto-accept. `calibration_stats.null_check()` · surfaced in `--gate` and in `/rigor-review` Step 2.
+
+**Parity: absent ≠ paired.** 32 Gemini and 47 Claude rows predate the `evidence_parity` field and were being
+counted as if the seat had been given the spec. Seat scoring is now **strict** (parity-true only) and reports
+`parity_unknown` separately; `compute(..., strict_parity=False)` gives the historical view. Alex's **acks still
+seed truth regardless of parity** — his verdict is about the artifact, not about what one seat was shown.
+(Requiring parity there collapsed the truth pool from 35 artifacts to 1; caught in test.)
+
+**Last-voting-seat guard.** If demotions would leave no voting seat, the final demotion is **recorded, not
+applied** (`last_voting_seat_held`), pending Alex's confirmation in `seats.json`. With no trusted seat every run
+escalates, and a gate that cries wolf gets overridden — the failure this layer exists to prevent.
+
+### Calibration-data ruling (Alex, 2026-09-21)
+The Gemini seat's 2026-07-17 "provisional-trusted" promotion is **VOID as a trust claim**: it rested on 83%
+agreement that was arithmetically the always-pass baseline. The rows are **kept as labelled data, partitioned**:
+
+| partition | rows | standing |
+|---|---|---|
+| backfill (`calibration_set: backfill`) | 17 | baseline//history only — never evidence for promotion |
+| prospective, `evidence_parity` absent | ~12 | **excluded** from seat scoring (counted as if paired until 2026-09-21) |
+| prospective, `evidence_parity: true` | ~15 | valid — and these are the evidence *for* demoting Gemini to advisory |
+
 ## Deferred (non-destructive, do NOT build now) — now YED-188 (parked slate) + `platform-constraints.md` (2026-09-18)
 A separate-model / cross-judge quorum (independence) and a Notion/PostHog projection of scores — per the lean-foundation decision (2026-06-26). The run-log contract above stays stable when added.

@@ -39,6 +39,36 @@ import argparse, collections, datetime, functools, glob, json, os, subprocess
 
 EXCLUDE_SETS = {"negative-control", "triage-experiment", "control", "bakeoff"}
 
+# --- null-baseline contract (YED-212, ruled 2026-09-21) ----------------------------------------------------
+# A metric that a do-nothing policy scores just as well on is not a standard. "83% Gemini-vs-Alex agreement"
+# WAS the always-pass baseline (15/18) on a corpus where 83% of artifacts pass, and the gate's >=80% threshold
+# sat BELOW it — so the gate could never fire, for 63 days. Every gating metric now declares its null model and
+# must beat it by this margin; anything that doesn't is `unvalidated` and loses the right to auto-accept.
+NULL_MARGIN = 0.10      # how far above the do-nothing baseline a metric must sit to count as informative
+NULL_MIN_N = 10         # below this, report "insufficient" — never "validated"
+
+
+def null_check(observed: float | None, baseline: float | None, n: int, values: list | None = None) -> dict:
+    """Is this metric doing better than doing nothing? Returns a verdict a caller can act on.
+
+    `values` (optional) enables the zero-variance arm: a source that emits one constant carries no information
+    however good the constant looks. That is the shape the Gemini seat had (flat 1.0 on 81% of runs).
+    """
+    if n < NULL_MIN_N:
+        return {"status": "insufficient", "n": n, "detail": f"n={n} < {NULL_MIN_N}"}
+    if values is not None and len(set(values)) <= 1:
+        return {"status": "unvalidated", "n": n, "reason": "zero_variance",
+                "detail": f"every one of {n} observations is {values[0] if values else '?'} — constant output"}
+    if observed is None or baseline is None:
+        return {"status": "insufficient", "n": n, "detail": "observed or baseline unavailable"}
+    margin = round(observed - baseline, 3)
+    if margin < NULL_MARGIN:
+        return {"status": "unvalidated", "n": n, "reason": "at_or_below_null_baseline", "observed": round(observed, 3),
+                "baseline": round(baseline, 3), "margin": margin,
+                "detail": f"{observed:.2f} vs do-nothing {baseline:.2f} (+{margin:.2f} < +{NULL_MARGIN})"}
+    return {"status": "validated", "n": n, "observed": round(observed, 3), "baseline": round(baseline, 3),
+            "margin": margin}
+
 
 def ack_verdict(ack) -> str | None:
     """'agree'/'disagree' (string or {verdict: ...}) -> the ack word, else None."""
@@ -48,6 +78,14 @@ def ack_verdict(ack) -> str | None:
         return None
     a = ack.strip().lower()
     return "agree" if a.startswith("agree") else "disagree" if a.startswith("disagree") else None
+
+
+def parity(r: dict) -> str:
+    """true | false | unknown. ABSENT IS NOT TRUE: 32 Gemini and 47 Claude rows predate the field and were being
+    counted as if the seat had been given the spec (YED-212). Unknown rows are reported separately, never
+    silently pooled into the number the gate reads."""
+    ep = r.get("evidence_parity")
+    return "true" if ep is True else "false" if ep is False else "unknown"
 
 
 def load(logs: str) -> list[dict]:
@@ -103,8 +141,13 @@ CANARY_STATE = ".claude/evals/controls/state.json"
 CANARY_STALE_DAYS = 14
 
 
-def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple[dict, dict, collections.Counter]:
-    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (the gate's slice)."""
+def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
+            strict_parity: bool = True) -> tuple[dict, dict, collections.Counter]:
+    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (the gate's slice).
+
+    strict_parity=True (the gate's setting) scores only rows with evidence_parity TRUE, and reports how many were
+    set aside as unknown. strict_parity=False scores unknown rows too, for the historical view.
+    """
     a = argparse.Namespace(window=window)
 
     # 1. every acked row -> (artifact, when, Alex's verdict). Keep them ALL; an artifact re-judged after an
@@ -132,8 +175,11 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple
 
     truths: dict[str, list[tuple[float, str, str | None]]] = collections.defaultdict(list)
     for r in rows:
-        if r.get("calibration_set") in EXCLUDE_SETS or r.get("evidence_parity") is False:
+        if r.get("calibration_set") in EXCLUDE_SETS or parity(r) == "false":
             continue          # excluded rows must not seed ground truth either, or an excluded ack
+        # NOTE: parity gates how a SEAT is scored, not whether Alex's verdict counts. His ack is a judgement
+        # about the artifact; it does not stop being his judgement because one seat lacked the spec. Requiring
+        # parity here collapsed the truth pool from 35 artifacts to 1 (caught in test, YED-212).
         ack = ack_verdict(r.get("alex_ack"))   # can be handed to a legitimate run via nearest-ack matching
         art = r.get("artifact")
         if not ack or not art:
@@ -173,10 +219,15 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple
     stats = collections.Counter()
 
     # 2. score each seat against that truth
-    seats: dict[str, dict] = collections.defaultdict(lambda: {"pairs": [], "flat": 0, "n_runs": 0})
+    seats: dict[str, dict] = collections.defaultdict(lambda: {"pairs": [], "flat": 0, "n_runs": 0, "parity_unknown": 0})
     for r in rows:
         seat = seat_of(r)
-        if not seat or r.get("calibration_set") in EXCLUDE_SETS or r.get("evidence_parity") is False:
+        if not seat or r.get("calibration_set") in EXCLUDE_SETS:
+            continue
+        pz = parity(r)
+        if pz == "false" or (strict_parity and pz == "unknown"):
+            if pz == "unknown":
+                seats[seat]["parity_unknown"] += 1      # counted and shown, never silently folded in
             continue
         if not keep(seat, r):
             continue
@@ -203,7 +254,11 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple
             "flag_recall": round(sum(j == "flag" and t == "flag" for j, t in p) / flags_truth, 3) if flags_truth else None,
             "flag_precision": round(sum(j == "flag" and t == "flag" for j, t in p) / flags_seat, 3) if flags_seat else None,
             "flat_1.0_rate": round(s["flat"] / s["n_runs"], 3) if s["n_runs"] else None,
-            "truth_flags": flags_truth, "seat_flags": flags_seat,
+            "truth_flags": flags_truth, "seat_flags": flags_seat, "parity_unknown": s["parity_unknown"],
+            # the number that matters: does this seat beat a policy of always saying "pass"?
+            "null_check": null_check(sum(j == t for j, t in p) / n if n else None,
+                                     sum(t == "pass" for _, t in p) / n if n else None, n,
+                                     values=[j for j, _ in p] or None),
         }
     return out, truths, stats
 
@@ -253,16 +308,32 @@ def gate(rows: list[dict], window: float) -> dict:
                     why.append(f"canary {age}d old (> {CANARY_STALE_DAYS}d) for a voting seat")
             except (KeyError, ValueError):
                 pass
+        # the null-baseline rule (YED-212): a seat no better than always-saying-pass cannot auto-accept
+        nc = m.get("null_check") or {}
+        if nc.get("status") == "unvalidated":
+            why.append(f"null-baseline: {nc.get('detail')}")
         conf = seat.get("status", "shadow")
         eff = ORDER[max(0, ORDER.index(conf) - 1)] if why else conf
         ready = (n >= 25 and m.get("truth_flags", 0) >= 8 and (m.get("kappa") or 0) >= 0.60 and (m.get("flag_recall") or 0) >= 0.70
                  and (m.get("flag_precision") or 0) >= 0.60 and (m.get("flat_1.0_rate") or 0) < 0.20
                  and (m.get("agreement") or 0) >= (m.get("always_pass_baseline") or 0) + 0.10)
         res[seat["id"]] = {"seat_name": name, "configured": conf, "effective": eff, "demoted_because": why,
+                           "null_check": nc,
                            "meets_voting_bar": ready, "window": m,
                            "canary": ({"status": c.get("status"), "last_run": c.get("last_run"),
                                        "consecutive_failures": c.get("consecutive_failures", 0)}
                                       if c else {"status": "never run"})}
+    # --- last-voting-seat guard (Alex's ruling 2026-09-21) ---------------------------------------------------
+    # If applying the demotions would leave NO voting seat, the demotion of the final one is recorded but not
+    # applied. Rationale: with no trusted seat every run escalates, and a gate that cries wolf gets overridden —
+    # the failure mode this whole layer exists to prevent. Alex confirms it by hand in seats.json.
+    if not any(v["effective"] == "voting" for v in res.values()):
+        survivors = [k for k, v in res.items() if v["configured"] == "voting" and v["demoted_because"]]
+        if survivors:
+            pick = min(survivors, key=lambda k: len(res[k]["demoted_because"]))   # the least-broken one
+            res[pick]["effective"] = "voting"
+            res[pick]["last_voting_seat_held"] = True
+            res[pick]["demotion_pending_confirmation"] = res[pick]["demoted_because"]
     return res
 
 
@@ -285,6 +356,15 @@ def main() -> int:
                   f"recall={w.get('flag_recall')} flat={w.get('flat_1.0_rate')}  voting-bar-met={x['meets_voting_bar']}")
             for y in x["demoted_because"]:
                 print(f"           DEMOTED: {y}")
+            nc = x.get("null_check") or {}
+            if nc:
+                print(f"           null-model: {nc.get('status')} — {nc.get('detail', 'beats the do-nothing baseline')}")
+        held = [k for k, v in g.items() if v.get("last_voting_seat_held")]
+        if held:
+            print(f"\n⚠️  {', '.join(held)} would have been demoted, but it is the LAST voting seat. Demotion is")
+            print("    RECORDED, NOT APPLIED, pending Alex's confirmation (YED-212 ruling 2026-09-21): auto-demoting")
+            print("    the last seat makes every run escalate, and the pressure to override that defeats the gate.")
+            print("    Confirm by setting the seat's status in seats.json, or fix the cause and re-run.")
         return 0
     out, truths, stats = compute(rows, a.window)
     acks = [v for c in truths.values() for _, v, _ in c]
