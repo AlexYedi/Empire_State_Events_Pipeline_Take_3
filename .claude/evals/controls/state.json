@@ -1,0 +1,12 @@
+{
+ "openai": {
+  "consecutive_failures": 1,
+  "last_run": "2026-09-21T02:32:10Z",
+  "misses": 1,
+  "model": "gpt-5.4-mini",
+  "model_resolved": "gpt-5.4-mini-2026-03-17",
+  "reason": "first real canary (YED-209 step 8)",
+  "scored": 3,
+  "status": "fail"
+ }
+}

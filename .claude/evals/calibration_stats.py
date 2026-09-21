@@ -99,6 +99,8 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
 
 ORDER = ["shadow", "advisory", "voting"]
 SEATS_FILE = ".claude/evals/seats.json"
+CANARY_STATE = ".claude/evals/controls/state.json"
+CANARY_STALE_DAYS = 14
 
 
 def compute(rows: list[dict], window: float, keep=lambda seat, r: True) -> tuple[dict, dict, collections.Counter]:
@@ -215,6 +217,7 @@ def gate(rows: list[dict], window: float) -> dict:
     Each rule has a minimum sample so three unlucky runs can't demote a seat.
     """
     cfg = json.load(open(SEATS_FILE, encoding="utf-8"))["seats"] if os.path.exists(SEATS_FILE) else []
+    canary = json.load(open(CANARY_STATE, encoding="utf-8")) if os.path.exists(CANARY_STATE) else {}
     res = {}
     for seat in cfg:
         name, since = seat["seat_name"], str(seat.get("since") or "")
@@ -232,13 +235,34 @@ def gate(rows: list[dict], window: float) -> dict:
             why.append(f"flag precision {m['flag_precision']:.2f} < 0.40 on {m['seat_flags']} seat flags (over-flagging)")
         if n >= 15 and m.get("kappa") is not None and m["kappa"] < 0.40:
             why.append(f"kappa {m['kappa']:.2f} < 0.40 on n={n}")
+        # --- canary rules (YED-209 step 8). A seat that cannot tell a known-bad artifact from a known-good one
+        # is not a judge, whatever its agreement rate says. Absence of a canary is NOT a failure (it would demote
+        # everything the day this shipped) — it is reported as `canary: never run` so the quorum can say so.
+        c = canary.get(seat["id"]) or {}
+        if c:
+            if (c.get("consecutive_failures") or 0) >= 2:
+                why.append(f"{c['consecutive_failures']} consecutive canary failures (last {c.get('last_run', '?')[:10]})")
+            last_model = c.get("model_resolved") or ""
+            cur_model = seat.get("model") or ""
+            if c.get("status") == "pass" and cur_model and last_model and cur_model not in last_model:
+                why.append(f"model changed to {cur_model} since the last green canary ({last_model}): re-run canaries")
+            try:
+                age = (datetime.datetime.now(datetime.timezone.utc)
+                       - datetime.datetime.fromisoformat(c["last_run"].replace("Z", "+00:00"))).days
+                if age > CANARY_STALE_DAYS and ORDER.index(seat.get("status", "shadow")) >= 2:
+                    why.append(f"canary {age}d old (> {CANARY_STALE_DAYS}d) for a voting seat")
+            except (KeyError, ValueError):
+                pass
         conf = seat.get("status", "shadow")
         eff = ORDER[max(0, ORDER.index(conf) - 1)] if why else conf
         ready = (n >= 25 and m.get("truth_flags", 0) >= 8 and (m.get("kappa") or 0) >= 0.60 and (m.get("flag_recall") or 0) >= 0.70
                  and (m.get("flag_precision") or 0) >= 0.60 and (m.get("flat_1.0_rate") or 0) < 0.20
                  and (m.get("agreement") or 0) >= (m.get("always_pass_baseline") or 0) + 0.10)
         res[seat["id"]] = {"seat_name": name, "configured": conf, "effective": eff, "demoted_because": why,
-                           "meets_voting_bar": ready, "window": m}
+                           "meets_voting_bar": ready, "window": m,
+                           "canary": ({"status": c.get("status"), "last_run": c.get("last_run"),
+                                       "consecutive_failures": c.get("consecutive_failures", 0)}
+                                      if c else {"status": "never run"})}
     return res
 
 
