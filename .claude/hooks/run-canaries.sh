@@ -71,7 +71,13 @@ for id in "${IDS[@]}"; do
      --arg why "$REASON" --argjson scored "$SCORED" --argjson misses "$MISSES" \
      '.[$i] = {last_run:$ts, status:$st, model:$m, model_resolved:$r, scored:$scored, misses:$misses,
                reason:$why,
-               consecutive_failures: (if $st=="pass" then 0 else ((.[$i].consecutive_failures // 0) + 1) end)}' \
+               # an ERROR (the adapter could not run) is NOT a judgement failure and must not demote the seat:
+               # a broken flag of mine scored gemini 0/3 on 2026-09-21 and would have demoted it for my bug.
+               # Adapter health is a separate rule (spec: failure rate > 20% over 10 runs).
+               consecutive_failures: (if $st=="pass" then 0
+                                      elif $st=="error" then (.[$i].consecutive_failures // 0)
+                                      else ((.[$i].consecutive_failures // 0) + 1) end),
+               consecutive_errors: (if $st=="error" then ((.[$i].consecutive_errors // 0) + 1) else 0 end)}' \
      "$TMP" > "$TMP.new" && mv "$TMP.new" "$TMP"
 done
 

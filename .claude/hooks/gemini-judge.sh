@@ -15,7 +15,7 @@ ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
 RUBRIC=".claude/evals/rubrics/build-quality-v5.md"
 SYSTEM=".claude/evals/prompts/judge-system-v2.md"
-LABEL=""; PRINT_ONLY=0; BUNDLE=""
+LABEL=""; PRINT_ONLY=0; BUNDLE=""; ABLOB=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --artifact) ARTIFACT="$2"; shift 2;;
@@ -28,13 +28,21 @@ while [ $# -gt 0 ]; do
     --system) SYSTEM="$2"; shift 2;;
     --label) LABEL="$2"; shift 2;;
     --print-only) PRINT_ONLY=1; shift;;
-    --bundle) BUNDLE="$2"; shift 2;;   # score a pre-built evidence bundle (judge_lib.py bundle): same bytes as every other seat (YED-209)
+    --bundle) BUNDLE="$2"; shift 2;;
+    --artifact-blob) ABLOB="$2"; shift 2;;   # git blob proving a materialised control is this repo's own history (YED-209)   # score a pre-built evidence bundle (judge_lib.py bundle): same bytes as every other seat (YED-209)
     *) echo "unknown arg: $1" >&2; exit 2;;
   esac
 done
 if [ -n "$BUNDLE" ]; then   # the bundle names the artifact + type, so a seat can't be pointed at different evidence
   [ -r "$BUNDLE" ] || { echo "ERROR: --bundle unreadable: $BUNDLE" >&2; exit 2; }
   ARTIFACT=$(jq -r '.artifact' "$BUNDLE"); ATYPE=$(jq -r '.artifact_type' "$BUNDLE")
+fi
+if [ -n "$ABLOB" ]; then
+  # provable provenance: the file must be byte-identical to that blob in THIS repo. Not an override —
+  # it is the same check judge_lib.privacy_guard makes, so a control in a temp dir can be judged.
+  if ! git cat-file blob "$ABLOB" 2>/dev/null | cmp -s - "$ARTIFACT"; then
+    echo "PRIVACY GUARD (nothing sent): $ARTIFACT does not match git blob $ABLOB" >&2; exit 3
+  fi
 fi
 [ -n "$ARTIFACT" ] && [ -r "$ARTIFACT" ] || { echo "ERROR: --artifact missing/unreadable: $ARTIFACT" >&2; exit 2; }
 [ -r "$RUBRIC" ] || { echo "ERROR: rubric unreadable: $RUBRIC" >&2; exit 2; }
