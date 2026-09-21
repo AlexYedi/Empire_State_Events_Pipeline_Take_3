@@ -1,0 +1,40 @@
+{
+  "_what": "Single source of truth for the graph-write freeze. COMMITTED on purpose: .claude/.state/ is gitignored AND per-worktree, so a freeze marker there would be invisible to every other session — the exact blindness that let two sessions duplicate a Notion namespace on 2026-09-20 (YED-213).",
+  "_who_reads_it": [
+    ".claude/scripts/substrate.py — refuses graph writes while active (exit 4); the enforcement point",
+    ".claude/hooks/substrate-gate.sh — adds the freeze-aware waive instruction to its failure message",
+    ".claude/hooks/ab-reminder.sh — echoes the reason so the wording cannot drift from the rule"
+  ],
+  "_how_to_lift": "Set active to false and fill lifted/lifted_note. Do not delete the block — the history is the point.",
+
+  "active": true,
+  "issue": "YED-172",
+  "declared": "2026-09-19",
+  "declared_by": "Alex",
+  "reason": "A/B in flight: the substrate pack is being compared against the legacy pull across two events. Changing the graph between event 1 (2026-09-20) and event 2 (2026-09-23) would make the arms incomparable — an improvement and added data would be indistinguishable.",
+  "origin": "Not theoretical. The A/B as first staged was biased against the substrate: only 16 of 77 attended events had company links, so the legacy arm could show continuity the substrate structurally could not. Fixed BEFORE event 1 (16/77 -> 76/77, +227 links, created=0 on re-run). The freeze generalises that fix: you cannot change the thing you are measuring while you measure it.",
+  "lifts_when": "both A/B events are scored and the verdict paragraph is written to .claude/notes/knowledge-substrate-review-2026-09-18.md",
+  "expected_lift": "2026-09-26",
+
+  "blocks": [
+    "graph WRITES via substrate.py: ensure-entity, ensure-event, ensure-document, stage-claims, backfill, approve-claims",
+    "YED-205 (pre-event write path) and YED-47 (identity resolution tiers + soft-merge), which both mutate graph rows"
+  ],
+  "does_not_block": [
+    "reads of any kind (retrieve.py, identity_probe.py, the A/B itself)",
+    "--dry-run on any verb",
+    "waive (it is the escape valve for rows opened before the freeze)",
+    "preview-claims (offline)",
+    "writing CODE that will later write to the graph — only the data is frozen",
+    "Notion, HubSpot, content, research, telemetry, the judge"
+  ],
+
+  "override": {
+    "how": "pass --freeze-override \"<why>\" to substrate.py",
+    "logged_to": ".claude/artifacts/graph-freeze-overrides.jsonl",
+    "note": "An override is data, not a failure — same philosophy as a DoD waiver. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
+  },
+
+  "lifted": null,
+  "lifted_note": null
+}
