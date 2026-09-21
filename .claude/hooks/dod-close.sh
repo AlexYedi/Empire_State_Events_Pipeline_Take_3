@@ -39,6 +39,7 @@ DOD_MET=null
 DOD_WAIVED=false
 CORRECTION_ROUNDS=null
 REASONS=()
+RECORDS=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,6 +47,9 @@ while [ $# -gt 0 ]; do
     --dod-waived)        DOD_WAIVED="${2:-false}"; shift 2 ;;
     --correction-rounds) CORRECTION_ROUNDS="${2:-null}"; shift 2 ;;
     --reason)            REASONS+=("${2:-}"); shift 2 ;;
+    --record)            RECORDS+=("${2:-}"); shift 2 ;;   # a note for the log that is NOT a waiver (e.g. a
+                                                           # redemption). Counting these inflated the waiver
+                                                           # rate by 2 of 12 in the 2026-09-21 review.
     *) echo "dod-close: unknown arg '$1'" >&2; shift ;;
   esac
 done
@@ -91,6 +95,7 @@ for r in "${REASONS[@]}"; do
   fi
 done
 
+WAIVER_LOG_DEFAULT=".claude/artifacts/dod-waivers.jsonl"
 SID="${CLAUDE_CODE_SESSION_ID:-_pending}"
 STATE_DIR=".claude/.state"
 META_FILE="$STATE_DIR/${SID}.build_meta"
@@ -120,13 +125,20 @@ if [ "$DOD_WAIVED" = "true" ]; then
     fi
     if [ "$ITEM" = "null" ]; then
       jq -nc --arg ts "$TS" --arg sid "$SID" --arg why "$WHY" \
-        '{ts:$ts, session_id:$sid, item:null, reason:$why}' >> "$WAIVER_LOG"
+        '{ts:$ts, session_id:$sid, item:null, reason:$why, type:"waiver"}' >> "$WAIVER_LOG"
     else
       jq -nc --arg ts "$TS" --arg sid "$SID" --arg item "$ITEM" --arg why "$WHY" \
-        '{ts:$ts, session_id:$sid, item:$item, reason:$why}' >> "$WAIVER_LOG"
+        '{ts:$ts, session_id:$sid, item:$item, reason:$why, type:"waiver"}' >> "$WAIVER_LOG"
     fi
   done
 fi
+
+for r in "${RECORDS[@]:-}"; do
+  [ -z "$r" ] && continue
+  mkdir -p "$(dirname "$WAIVER_LOG_DEFAULT")" 2>/dev/null
+  jq -nc --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg sid "$SID" --arg why "$r" \
+    '{ts:$ts, session_id:$sid, item:"record", reason:$why, type:"record"}' >> ".claude/artifacts/dod-waivers.jsonl"
+done
 
 echo "dod-close: wrote $META_FILE (dod_met=$DOD_MET dod_waived=$DOD_WAIVED correction_rounds=$CORRECTION_ROUNDS)"
 exit 0
