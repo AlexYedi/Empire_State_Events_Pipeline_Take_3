@@ -2,7 +2,25 @@
 
 Rule fixed in advance: `bakeoff-preregistration.md`. Nothing below was chosen after seeing the numbers.
 
-## Result: **no arm qualifies.** Pre-registered rule 5 applies — report the negative finding, don't move the bar.
+## Result as first run: **no arm qualifies** (rule 5 — reported as a negative finding, bar not moved).
+## After Alex's ruling on the disputed control: **`gpt-5.4-mini` wins on rule 4 (tie → cheaper).**
+
+> **Ruling, 2026-09-20 (Alex).** The one item disqualifying all three arms, `pos-content-style-guide`, was
+> **mislabelled**. The seats were right: the guide claimed 4:5 gives "~65% more vertical space than 16:9" when
+> the true figure is **122%** (1.25 / 0.5625), and asserted a 3,000-char cap as "verified June 2026" with no
+> source. Both are fixed in `content-style-guide.md`, and the control is relabelled `neg-`. Recomputed from the
+> *existing* logged runs — no arm was re-run, nothing was re-scored to taste:
+>
+> | arm | recall | false-flag | $/run |
+> |---|---|---|---|
+> | **`gpt-5.4-mini`** | **3/4** | **0/2** | **$0.044** |
+> | `gpt-5.4` | 3/4 | 0/2 | $0.113 |
+> | `gpt-5.5` | 3/4 | 0/2 | $0.166 |
+>
+> Identical measured accuracy at 4× the price spread → rule 4 selects the cheapest. `gpt-5.4-mini` is now the
+> OpenAI seat's model in `seats.json`. **It changes nothing about trust:** the seat stays in SHADOW and still
+> needs ≥25 prospective runs with ≥8 real flags, κ ≥ 0.60 and recall ≥ 0.70 against Alex's labels to vote.
+> The honest caveat is that this is n=6; the tie may simply mean the control set is too small to separate them.
 
 Six controls (3 negative = real pre-fix states Alex flagged, 3 positive = states he acked pass), identical
 evidence bundle per item, harness-computed verdicts.

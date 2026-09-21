@@ -33,10 +33,15 @@
       "independence_group": "openai",
       "status": "shadow",
       "runner": ".claude/hooks/openai-judge.sh",
-      "model": "gpt-5.4",
+      "model": "gpt-5.4-mini",
       "reasoning_effort": "medium",
-      "note": "entered 2026-09-19 (YED-209). Model is provisional until the pre-registered bake-off picks it.",
-      "since": "2026-09-19"
+      "note": "entered 2026-09-19 (YED-209), SHADOW until it earns advisory. Model selected 2026-09-20 by the pre-registered bake-off: all three arms tied at 3/4 recall with 0 false flags on the control set, so tiebreak rule 4 (cheaper wins) picked gpt-5.4-mini at $0.044/run — a quarter of gpt-5.4 and a third of gpt-5.5, for identical measured accuracy. Record: controls/bakeoff-result-2026-09-20.md",
+      "since": "2026-09-19",
+      "model_selected_on": "2026-09-20",
+      "model_runners_up": {
+        "gpt-5.4": "$0.113/run, identical accuracy",
+        "gpt-5.5": "$0.166/run, identical accuracy"
+      }
     }
   ]
 }
