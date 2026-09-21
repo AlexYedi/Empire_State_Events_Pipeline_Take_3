@@ -22,7 +22,7 @@
     "YED-205 (pre-event write path) and YED-47 (identity resolution tiers + soft-merge), which both mutate graph rows"
   ],
   "does_not_block": [
-    "reads of any kind (retrieve.py, identity_probe.py, the A/B itself)",
+    "reads — including retrieve.py's entity_neighborhood and match_claims_hybrid, which are POSTs to /rpc/ and are allowlisted in spine_client.READ_ONLY_RPCS. An /rpc/ name NOT on that allowlist is refused while frozen (fail-closed: an RPC is not assumed read-only).",
     "--dry-run on any verb",
     "waive (it is the escape valve for rows opened before the freeze)",
     "preview-claims (offline)",

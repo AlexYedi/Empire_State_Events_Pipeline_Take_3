@@ -265,8 +265,31 @@ def freeze_active() -> dict | None:
     return f if isinstance(f, dict) and f.get("active") else None
 
 
+# Postgres functions that are READS despite being invoked over POST /rpc/. Exempt from the freeze,
+# because freezing them breaks retrieval — retrieve.py's entity_neighborhood (relational pull) and
+# match_claims_hybrid (semantic pull) are its two core read paths, i.e. the A/B's own substrate arm.
+# Regression caught by the judge 2026-09-20: the first version blocked every POST, including these,
+# while the doc claimed "reads are unaffected". GET was tested; the RPC read path was not.
+# Deliberately an ALLOWLIST, not a blanket `/rpc/` pass-through: the PII guard above exempts all of
+# /rpc/ on the assumption that RPCs write nothing, and a future write-RPC would inherit that
+# assumption silently. Here an unknown RPC is REFUSED — add it below once confirmed read-only.
+READ_ONLY_RPCS = ("entity_neighborhood", "match_claims_hybrid")
+
+
 def freeze_block(method: str, path: str) -> None:
     if method not in ("POST", "PATCH", "PUT", "DELETE"):
+        return
+    if method == "POST" and path.startswith("/rpc/"):
+        name = path[len("/rpc/"):].split("?", 1)[0]
+        if name in READ_ONLY_RPCS:
+            return
+        # Unknown RPC during a freeze: fail closed rather than assume it is a read.
+        if freeze_active():
+            raise GraphFrozen(
+                f"GRAPH-WRITE FREEZE ACTIVE — refused POST /rpc/{name}.\n"
+                f"This RPC is not in spine_client.READ_ONLY_RPCS, so it cannot be assumed read-only "
+                f"while a freeze is in force. If it only reads, add it to that tuple (with a comment "
+                f"saying how you verified it). If it writes, it is correctly blocked.")
         return
     fz = freeze_active()
     if not fz:
@@ -449,6 +472,14 @@ def selftest() -> bool:
     add("freeze: PATCH refused", lambda: freeze_block("PATCH", "/claim?id=eq.1"), True)
     add("freeze: DELETE refused", lambda: freeze_block("DELETE", "/claim?id=eq.1"), True)
     add("freeze: GET never refused (reads stay open)", lambda: freeze_block("GET", "/event"), False)
+    # The regression the judge caught: retrieve.py's reads are POSTs to /rpc/, so "GET is open" was
+    # never sufficient to claim "reads are unaffected". These two ARE the substrate's read path.
+    add("freeze: POST /rpc/entity_neighborhood allowed (retrieve.py relational pull)",
+        lambda: freeze_block("POST", "/rpc/entity_neighborhood"), False)
+    add("freeze: POST /rpc/match_claims_hybrid allowed (retrieve.py semantic pull)",
+        lambda: freeze_block("POST", "/rpc/match_claims_hybrid"), False)
+    add("freeze: an UNKNOWN /rpc/ is refused (not assumed read-only)",
+        lambda: freeze_block("POST", "/rpc/some_future_mutating_fn"), True)
 
     def _overridden():
         os.environ["GRAPH_FREEZE_OVERRIDE"] = "selftest"
