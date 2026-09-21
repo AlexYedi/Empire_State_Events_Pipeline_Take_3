@@ -49,15 +49,21 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 
 - **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
-  → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, posted:.updated_at}'`
+  → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, updated:.updated_at}'`
+  ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt` and Lever `createdAt` are true posted dates** and may be used normally.
 - **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip`):
   `curl -s "https://api.ashbyhq.com/posting-api/job-board/{board}"`
   → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:.location, posted:.publishedAt, remote:.isRemote}'`
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
   → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:.categories.location, posted:.createdAt}'`
 
-- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / Growth (Strategist) / Solutions Consultant / Solutions Engineer / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
-- **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup); freshness = `posted`.
+- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / **`Growth Strategist|Growth Account|Growth AE|Scaled Growth` (never bare `Growth` — see the drop-list bullet)** / Solutions Consultant / Solutions Engineer / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
+- **The drop-list runs AFTER the keep-list and WINS (fixed 2026-09-20).** A title that matched a keep term is still dropped when it also matches
+  `Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen`
+  — **EXCEPT for the PROTECTED set `Solutions Engineer|Sales Engineer|Solutions Consultant`, which survive the drop-list.** Apply the protected check first: if the title matches a protected term, keep it and stop; otherwise drop-list wins over keep-list.
+  ⚠️ **Why the exception exists (caught by the build-quality judge, 2026-09-20):** the keep-list deliberately keeps *Solutions Engineer*, and the drop term is a bare `Engineer` — without this carve-out, drop-wins silently kills a target title. That is a regression the first draft of this rule introduced.
+  **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
+- **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup); freshness = `posted` for **Ashby and Lever only**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a scored TSV so raw JSON never touches parent context).
 - **Coverage = the 21 registry companies. Deferred (skip v1; recorded on YED-149):** Hugging Face, Intercom, Rippling, Mistral (no big-3 API by slug). The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 3 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08.**
@@ -79,7 +85,7 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 ## Step 2 — Dedupe
 - **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Dice/RSS/Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
 - Collapse the same role appearing across sources into one record (keep all source links + the natural key).
-- Dedupe against the Roles DB: `notion-search` scoped to the Roles data source by the natural key (stored in `Content Hash`) or `title company`; `notion-fetch` to confirm. **Freshness = the ATS `posted_at`.** Skip roles already tracked unless status/materially changed.
+- Dedupe against the Roles DB: `notion-search` scoped to the Roles data source by the natural key (stored in `Content Hash`) or `title company`; `notion-fetch` to confirm. **Freshness = the ATS `posted_at` for Ashby/Lever; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
 
 ---
 
@@ -127,6 +133,7 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
 ### Rubric v2.3 — comp floor & level flexibility (added 2026-09-09 — Alex)
 
 - **Comp gate = the OTE floor in `me-model.md` §1.5** (auto-reject below; the numbers and bands live only there, since comp targets stay private). Within range, use the me-model's **ideal / strong / fully-acceptable bands, and do NOT penalize the fully-acceptable band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a floor-level seat at a top-tier rocketship can beat an ideal-band seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
+- **Posted RANGE vs. the floor — rule not yet written; decision owed (YED-210, opened 2026-09-20).** The gate is phrased for a single OTE number, but postings publish ranges. Until Alex rules: a range that **straddles** the floor, or **tops out exactly at** it, is **HELD — written to the Roles DB with `ICP Tier` left blank and a `Notes` line naming the ruling owed**, never auto-ranked and never auto-rejected. Two roles hit this on 2026-09-19 (Vercel Scaled Commercial AE Install Base; Anthropic CSM Enterprise Tech). Do not invent a midpoint/top/bottom convention — that is the decision YED-210 exists to make.
 - **Level flexibility — Mid-Market is IN at top-tier companies** *(wired into the Role-mechanism row of the scoring table via its segment note; change both together).* Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
@@ -143,7 +150,7 @@ If the Roles DB doesn't exist, present this proposed schema and create it via `n
 - `URL` (url) · `Company URL` (url)
 - `ICP Score` (number) · `ICP Tier` (select: A / B / C / drop)
 - `Status` (select: new / reviewing / applied / interviewing / rejected / offer / archived)
-- `Posted Date` (date — the ATS `posted_at`, for freshness) · `Date Found` (date)
+- `Posted Date` (date — the ATS `posted_at`, for freshness; **leave EMPTY for Greenhouse rows** — `updated_at` is last-modified and writing it here launders a wrong date into the DB) · `Date Found` (date)
 - `Content Hash` (text — the dedup natural key `{ats_vendor}:{ats_job_id}`, or `title|company` fallback) · `Notes` (text)
 - (later) relations to Companies / People
 
@@ -157,13 +164,22 @@ Then present the ranked roles:
   why: {1-line — archetype + AI-nativeness + tier + signals}
   {detailsPageUrl} | {companyPageUrl}
 ### B-tier ... ### C-tier (collapsed counts) ... ### Dropped ({n}, reasons)
+
+### Held — needs your ruling ({n})
+- **{Role}** @ {Company} — **no tier** — {the undefined case, e.g. "posted range straddles the OTE floor"} — {what it would score on mechanism alone}
 ```
+**Freshness marker per row:** a Greenhouse row has **no posted date** (Step 1 caveat), so never let the `last {recency}` header imply one. Mark Greenhouse rows `freshness: UNKNOWN`; only Ashby/Lever rows may show a posted date.
+
+**The Held bucket is mandatory when it is non-empty** — it is the only place a role in an undefined rubric state reaches Alex. A held role is never silently ranked and never silently dropped. Current known case: the posted-comp-range-vs-floor gap (YED-210).
+
 End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**. STOP for approval.
 
 ---
 
 ## Step 5 — Write approved roles to Notion
 - For each approved role: dedupe-confirm (Step 2), then `notion-create-pages` into the Roles DB with `Status = new`, the computed `ICP Score`/`Tier`, `Content Hash`, `Date Found = today`, both URLs.
+- **`Posted Date`: write it ONLY for Ashby/Lever rows. Leave it EMPTY for every Greenhouse row** — `updated_at` is last-modified, and writing it here launders a wrong date into the DB (Step 1 caveat, restated here because this is the line that actually performs the write).
+- **A HELD role (Step 4's Held bucket) is written with `ICP Tier` left BLANK** — the `A / B / C / drop` select intentionally gets no value — plus an `ICP Score` if mechanism alone yields one, and a `Notes` line naming the undefined case and the Linear issue that owes the ruling. Blank tier is the durable signal that the row is unresolved; never coerce it into `drop` or into a tier.
 - Existing role with material change → `notion-update-page` (don't duplicate).
 - Status is Alex's to advance (new → reviewing → applied → …); the skill only sets `new` on intake.
 
