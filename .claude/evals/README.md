@@ -63,12 +63,20 @@ Spec: `.claude/proposals/third-judge-seat-openai.md`. How to run it: the `judge-
 | `quorum_merge.py` | the N-seat merge. Voting seats decide, advisory seats can only add caution, shadow seats are recorded and hidden until Alex acks. A split is never auto-resolved |
 | `calibration_stats.py --gate` | each seat's *effective* status: configured, lowered one rung if a demotion rule fires on its last 20 prospective runs since `since` |
 | `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 8 · `JUDGE_TOTAL_CAP_USD` 45 |
-| `test_judge_lib.py` · `test_quorum_nseat.py` · `test_quorum_scenarios.py` | 23 + 22 + 6 offline cases; run all three before changing any of the above |
+| `controls.py` · `controls/manifest.json` | the control set: real labelled artifact states by git blob. `run` judges them and scores against the label |
+| `.claude/hooks/run-canaries.sh` · `controls/state.json` | the SCHEDULED half: a 3-item sample per seat (~$0.13), recorded per seat with the resolved model id. `--full` runs the whole set |
+| `test_judge_lib.py` · `test_quorum_nseat.py` · `test_canary_gate.py` · `test_quorum_scenarios.py` | 23 + 40 + 7 + 6 offline cases; run all four before changing any of the above |
 
 **Truth is matched on content, not file name.** Every new row carries `artifact_sha256`; a run is scored only against
 acks on the same hash. A legacy row without a hash is left *unscored* if git shows the file changed between the ack
 and the run. (Before this, a file that was flagged, fixed and re-judged the same day had its correct "pass" scored
 against the old flag, and the trusted seat read κ 0.53.)
+
+**Canaries (built 2026-09-20).** Run `bash .claude/hooks/run-canaries.sh` before `/rigor-review` and after any
+seat/model change. A seat is demoted a rung on **two consecutive failures**, when its **resolved model id changed**
+since the last green run (a silent snapshot swap invalidates freshness), or when a **voting** seat's canary is
+>14d old. A seat that has *never* run one is reported as `never run`, not demoted — absence of evidence is not
+failure, but it is never silently read as "fresh" either: every quorum record carries each seat's canary status.
 
 **Demotion rules** (each has a minimum sample; they apply to every seat, the trusted one included): flat-1.0 rate ≥ 0.30
 over ≥ 10 runs · flag recall < 0.50 on ≥ 4 real flags · flag precision < 0.40 on ≥ 5 seat flags (over-flagging) ·

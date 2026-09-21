@@ -101,7 +101,13 @@ TWO = [{"id": "a", "status": "voting", "provider": "anthropic"}, {"id": "b", "st
 r2 = qm.merge("x.md", {"a": row(), "b": row(ws=0.88)}, TWO, {"a": "voting", "b": "voting"})
 ck("genuinely independent blocs auto-pass and are counted", r2, "auto", "pass")
 ck("the record states how many independent blocs voted", r2, "auto", "pass") if r2.get("independent_blocs") == 2 else ck("the record states how many independent blocs voted", {"resolution": "?", "final_verdict": "?", "escalation_reasons": []}, "auto", "pass")
-ck("canary freshness is recorded as unchecked, not silently assumed", r2, "auto", "pass") if "unchecked" in str(r2.get("canary_freshness")) else ck("canary freshness is recorded as unchecked, not silently assumed", {"resolution": "?", "final_verdict": "?", "escalation_reasons": []}, "auto", "pass")
+BAD = {"resolution": "?", "final_verdict": "?", "escalation_reasons": []}
+ck("with no canary state, every seat reports 'never run' — never 'fresh'", r2, "auto", "pass") \
+    if all(v == "never run" for v in (r2.get("canary_freshness") or {}).values()) else ck("canary status defaults to never-run", BAD, "auto", "pass")
+r3 = qm.merge("x.md", {"a": row(), "b": row(ws=0.88)}, TWO, {"a": "voting", "b": "voting"},
+              canary={"a": {"status": "pass"}, "b": {"status": "fail"}})
+ck("a seat's canary status is carried into the quorum record", r3, "auto", "pass") \
+    if r3["canary_freshness"] == {"a": "pass", "b": "fail"} else ck("canary status carried per seat", BAD, "auto", "pass")
 ck("an unverified seat cannot escalate via flat_ceiling either (Gemini seat, round 2)",
    M({"claude": row(), "gemini": row(flat=True, unverified=True), "openai": None}), "auto", "pass", lacks=("flat_ceiling",))
 ck("an unverified seat cannot escalate via no_evidence_parity either",
