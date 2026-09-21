@@ -73,6 +73,12 @@ new knowledge, and YED-171 is a declared blocker of YED-172), before event 1 rat
 - **Effect on event 1's seed:** the Monday probe went from **0 prior occasions** to **3** (Ray Dev Day 05-21, and two
   April Microsoft tech briefs) — the continuity Pack B could not have shown before.
 - **Freeze still holds from here:** no further graph-changing work until both events are scored (YED-205 waits).
+  **Declared and enforced in `.claude/references/graph-freeze.json` as of 2026-09-21 — that file is the rule, this
+  line is a pointer.** It was convention-only until then: `substrate.py` now refuses every mutating verb with exit 4
+  while it is active (reads, `--dry-run`, `waive` and `preview-claims` stay open; `--freeze-override "<why>"` is
+  allowed and logged). The freeze and `substrate-gate.sh` watch different halves of a write — *may it happen* vs
+  *did it finish* — and the refusal lands before any PENDING gate row is opened, so honouring the freeze can no
+  longer trip the gate.
 
 ## Cost
 One extra conditioner run per event (a few minutes, ~20–30k tokens) + ~10 minutes of Alex scoring. No extra research fan-out.

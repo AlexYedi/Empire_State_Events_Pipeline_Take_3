@@ -89,6 +89,79 @@ CONF_RE = re.compile(r"\b(HIGH|MED)\b")
 STATE_DIR = os.path.join(ROOT, ".claude", ".state")
 GATE_FAIL_LOG = os.path.join(ROOT, ".claude", "artifacts", "substrate-gate-failures.jsonl")
 
+# ---------------------------------------------------------------------------------------------
+# Graph-write freeze (YED-213 reconciliation, 2026-09-21).
+# The freeze and the substrate gate watch DIFFERENT HALVES of the same write:
+#   freeze -> may this write happen at all?      (checked here, BEFORE ensure-event touches the graph)
+#   gate   -> did a write that happened finish?  (checked by substrate-gate.sh at Stop, on PENDING rows)
+# Enforcing the freeze here is what keeps them from conflicting: a refused write never reaches
+# `ledger_mark(..., "pending")`, so the gate has nothing to block on. The old failure shape was a
+# run that called ensure-event (already violating the freeze), then stopped short of stage-claims
+# and got blocked by the gate for honouring a rule it had already broken.
+# Rows opened BEFORE a freeze was declared are closed with `waive --reason` — deliberately not
+# blocked, because the escape valve must stay reachable while frozen.
+# ---------------------------------------------------------------------------------------------
+FREEZE_PATH = os.path.join(ROOT, ".claude", "references", "graph-freeze.json")
+FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.jsonl")
+# Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
+# --dry-run is exempted at the call site, not here.
+FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
+                 "backfill", "approve-claims")
+
+
+def freeze_state() -> dict | None:
+    """The active freeze, or None. A malformed/unreadable file is NOT treated as 'no freeze' —
+    it returns a synthetic active freeze, so a corrupted marker fails closed like the gate does."""
+    if not os.path.exists(FREEZE_PATH):
+        return None
+    try:
+        f = json.load(open(FREEZE_PATH, encoding="utf-8"))
+    except (ValueError, OSError) as e:
+        return {"active": True, "issue": "?", "reason": f"graph-freeze.json is unreadable ({e}) — "
+                "failing closed. Fix or repair the file rather than deleting it."}
+    return f if isinstance(f, dict) and f.get("active") else None
+
+
+def freeze_check(verb: str, dry_run: bool, override: str | None) -> int:
+    """0 = proceed. 4 = refused by an active freeze (distinct from 3 = 'no claims parsed')."""
+    if verb not in FREEZE_BLOCKS or dry_run:
+        return 0
+    fz = freeze_state()
+    if not fz:
+        return 0
+    if override:
+        import datetime
+        os.makedirs(os.path.dirname(FREEZE_LOG), exist_ok=True)
+        with open(FREEZE_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"event": "graph_freeze_override", "verb": verb,
+                                "issue": fz.get("issue"), "override_reason": override,
+                                "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending"),
+                                "ts": datetime.datetime.now(datetime.timezone.utc)
+                                        .strftime("%Y-%m-%dT%H:%M:%SZ")}) + "\n")
+        print(f"⚠️  GRAPH FREEZE OVERRIDDEN ({fz.get('issue')}): {override}\n"
+              f"    logged to {os.path.relpath(FREEZE_LOG, ROOT)} — proceeding.")
+        return 0
+    print(f"""⛔ GRAPH-WRITE FREEZE ACTIVE ({fz.get('issue', '?')}) — `{verb}` refused, nothing was written.
+
+{fz.get('reason', '')}
+
+Lifts when: {fz.get('lifts_when', 'see .claude/references/graph-freeze.json')}
+
+This is NOT the substrate gate. The gate asks whether a write that happened finished; this asks
+whether the write may happen at all. Because this refusal happens first, no PENDING gate row was
+opened and the Stop hook will not block you for stopping here.
+
+Your options:
+  1. Wait for the freeze to lift (the honest default).
+  2. Re-run with --dry-run to see what WOULD be written.
+  3. If an event already has a PENDING gate row from before the freeze, close it:
+       .venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> \\
+           --reason "graph freeze {fz.get('issue', '')}: claims staged after it lifts"
+  4. Genuine emergency: --freeze-override "<why>" (allowed, and logged as data).
+
+Source of truth: .claude/references/graph-freeze.json""")
+    return 4
+
 
 def _ledger_path() -> str:
     sid = os.environ.get("CLAUDE_CODE_SESSION_ID") or "_pending"
@@ -897,6 +970,12 @@ def selftest() -> bool:
         with open(_ledger_path(), "a", encoding="utf-8") as f:
             f.write("{not json\n")
         ok("gate: corrupt ledger line blocks (fail-closed)", '"decision":"block"' in run_hook())
+        # freeze <-> gate reconciliation (YED-213): the gate must not tell you to run a verb the
+        # producer will refuse. With a freeze active its message has to name the freeze + the waive.
+        if freeze_state():
+            out = run_hook()
+            ok("gate: names the active freeze instead of only 'run stage-claims'",
+               "GRAPH-WRITE FREEZE IS ACTIVE" in out and "waive" in out)
     finally:
         if os.path.exists(_ledger_path()):
             os.remove(_ledger_path())
@@ -904,6 +983,37 @@ def selftest() -> bool:
             os.environ.pop("CLAUDE_CODE_SESSION_ID", None)
         else:
             os.environ["CLAUDE_CODE_SESSION_ID"] = saved
+    # ---- graph-write freeze (YED-213) -------------------------------------------------------
+    # Pinned because the whole point is that the freeze is enforced at the producer, not trusted
+    # to a sentence in a note. Every case below is a way the two mechanisms could re-collide.
+    ok("freeze: the marker is a COMMITTED file, not per-worktree .state",
+       FREEZE_PATH.startswith(os.path.join(ROOT, ".claude", "references")))
+    ok("freeze: a write verb is refused with exit 4 while active",
+       freeze_check("ensure-event", False, None) == 4 if freeze_state() else True)
+    ok("freeze: --dry-run is never blocked", freeze_check("ensure-event", True, None) == 0)
+    ok("freeze: waive stays reachable (the escape valve for pre-freeze rows)",
+       freeze_check("waive", False, None) == 0)
+    ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
+    ok("freeze: every mutating verb is covered",
+       set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document",
+                              "stage-claims", "backfill", "approve-claims"})
+    _saved_freeze = FREEZE_PATH
+    try:                                              # unreadable marker must fail CLOSED
+        globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
+        ok("freeze: absent marker means no freeze (default-open when nothing is declared)",
+           freeze_state() is None)
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tf:
+            tf.write("{ this is not json")
+            broken = tf.name
+        globals()["FREEZE_PATH"] = broken
+        fz = freeze_state()
+        ok("freeze: a CORRUPT marker fails closed (active), like the gate's corrupt-line rule",
+           bool(fz) and fz.get("active") is True)
+        os.unlink(broken)
+    finally:
+        globals()["FREEZE_PATH"] = _saved_freeze
+
     fail = 0
     for name, good in checks:
         fail += 0 if good else 1
@@ -927,6 +1037,9 @@ def main(argv: list[str]) -> int:
                     help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
                          "stage-claims must close — the Stop hook fails the run otherwise")
     ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged")
+    ap.add_argument("--freeze-override", metavar="WHY",
+                    help="proceed despite an active graph-write freeze (.claude/references/graph-freeze.json). "
+                         "Logged to .claude/artifacts/graph-freeze-overrides.jsonl — allowed, never silent")
     ap.add_argument("--brief")
     ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
     ap.add_argument("--approve", action="store_true",
@@ -934,6 +1047,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
+    rc_freeze = freeze_check(a.verb, a.dry_run, a.freeze_override)   # before ANY write path runs
+    if rc_freeze:
+        return rc_freeze
     if a.verb == "preview-claims":                 # offline: what would stage-claims stage? (review surface)
         if not a.brief:
             ap.error("preview-claims needs --brief")
