@@ -37,3 +37,4 @@
 {"ts":"2026-09-19T20:31:45Z","session_id":"2f260fe3-fec6-4884-96a8-14ac77cdc145","item":"item1 spec","reason":"waived — eval/ops ritual; per YED-129 infra=spec the YED-189/190 bodies are the spec"}
 {"ts":"2026-09-19T20:31:45Z","session_id":"2f260fe3-fec6-4884-96a8-14ac77cdc145","item":"item4 judge","reason":"waived — no gradable build artifact (session edits = doc pointers + registry/eval-log entries); the session's output IS three quorum runs (YED-190)"}
 {"ts":"2026-09-19T21:41:55Z","session_id":"2f260fe3-fec6-4884-96a8-14ac77cdc145","item":"item1 spec","reason":"waived, fixes to existing skills; per YED-129 infra=spec the YED-200/202/203 issue bodies (judge findings) are the spec"}
+{"ts":"2026-09-20T22:57:43Z","session_id":"43cf0866-c462-44da-89a4-5b26387e3d72","item":"1","reason":"infra bug-fix with no user/audience surface — per the YED-129 scope ruling (product = PRD, infra = spec) the spec is the skill file itself plus YED-211; no ChatPRD doc owed."}
