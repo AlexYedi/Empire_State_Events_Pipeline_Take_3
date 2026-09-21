@@ -15,7 +15,7 @@ ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
 RUBRIC=".claude/evals/rubrics/build-quality-v5.md"
 SYSTEM=".claude/evals/prompts/judge-system-v2.md"
-LABEL=""; PRINT_ONLY=0; BUNDLE=""; ABLOB=""
+LABEL=""; PRINT_ONLY=0; BUNDLE=""; ABLOB=""; DRY_RUN=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --artifact) ARTIFACT="$2"; shift 2;;
@@ -28,6 +28,9 @@ while [ $# -gt 0 ]; do
     --system) SYSTEM="$2"; shift 2;;
     --label) LABEL="$2"; shift 2;;
     --print-only) PRINT_ONLY=1; shift;;
+    --dry-run) DRY_RUN=1; shift;;            # parse + pre-passes + guards, NO network call, no spend.
+                                             # --print-only still CALLS the API (it only skips the log write);
+                                             # the conformance test needs a genuinely free path (2026-09-21).
     --bundle) BUNDLE="$2"; shift 2;;
     --artifact-blob) ABLOB="$2"; shift 2;;   # git blob proving a materialised control is this repo's own history (YED-209)   # score a pre-built evidence bundle (judge_lib.py bundle): same bytes as every other seat (YED-209)
     *) echo "unknown arg: $1" >&2; exit 2;;
@@ -157,6 +160,11 @@ REQ=$(jq -n \
 
 # bundle mode: every seat scores the SAME bytes. Swap in the bundle's text; schema + generationConfig stay.
 [ -n "$BUNDLE" ] && REQ=$(printf '%s' "$REQ" | jq --slurpfile b "$BUNDLE" '.contents[0].parts[0].text = $b[0].text')
+
+if [ "$DRY_RUN" = "1" ]; then
+  echo "dry-run ok · gemini/$MODEL · artifact $ARTIFACT · parity=$PARITY · dangling=$(printf '%s' "$DANGLING" | grep -c . || true) · nothing sent"
+  exit 0
+fi
 
 RESP=$(curl -s -w $'\n%{http_code}' -H "x-goog-api-key: $GEMINI_API_KEY" -H "Content-Type: application/json" \
   "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" -d "$REQ" 2>/dev/null)
