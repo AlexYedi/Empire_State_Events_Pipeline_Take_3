@@ -80,6 +80,23 @@ CORRUPT_NOTE=""
 [ "${CORRUPT:-0}" -gt 0 ] && CORRUPT_NOTE="
 (Includes $CORRUPT unparseable ledger line(s), counted as pending — fail-closed.)"
 
+# Freeze awareness (YED-213, 2026-09-21). The freeze and this gate watch different halves of a
+# write — freeze: may it happen; gate: did it finish. substrate.py refuses frozen writes BEFORE a
+# PENDING row exists, so under a freeze these rows can only predate it. Say so, and point at the
+# escape valve, instead of instructing a stage-claims run the producer will refuse.
+FREEZE_NOTE=""
+FREEZE_FILE=".claude/references/graph-freeze.json"
+if [ -f "$FREEZE_FILE" ] && jq -e '.active == true' "$FREEZE_FILE" >/dev/null 2>&1; then
+  FZ_ISSUE=$(jq -r '.issue // "?"' "$FREEZE_FILE" 2>/dev/null)
+  FZ_LIFTS=$(jq -r '.lifts_when // "see the file"' "$FREEZE_FILE" 2>/dev/null)
+  FREEZE_NOTE="
+
+⛔ A GRAPH-WRITE FREEZE IS ACTIVE ($FZ_ISSUE) — so option 1 will be REFUSED by substrate.py (exit 4).
+These rows predate the freeze. Either waive them now with the freeze as the reason (option 2, the
+normal move), or leave them pending and stage the claims once the freeze lifts: $FZ_LIFTS.
+Freeze definition: $FREEZE_FILE"
+fi
+
 FAILED_MSG="⚠️ SUBSTRATE GATE: FAILED — $PENDING event(s) reached the graph (3.8b) but their learnings were never staged as claims (3.8c):
 
 ${PENDING_LIST}This is the 'decoupled quietly meant unobserved' failure the Deep Read gate exists for, on the knowledge graph. To resolve:
@@ -88,7 +105,7 @@ ${PENDING_LIST}This is the 'decoupled quietly meant unobserved' failure the Deep
      (idempotent; the ledger flips to STAGED on success); OR
   2. If there is genuinely no brief to stage, acknowledge it (this is LOGGED, not a silent pass):
      .venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> --reason \"<why>\"
-  Do NOT report these events as complete while they are pending.${CORRUPT_NOTE}"
+  Do NOT report these events as complete while they are pending.${CORRUPT_NOTE}${FREEZE_NOTE}"
 
 if [ "$STOP_ACTIVE" != "true" ]; then
   printf '{"decision":"block","reason":%s}\n' "$(printf '%s' "$FAILED_MSG" | jq -Rsa .)"

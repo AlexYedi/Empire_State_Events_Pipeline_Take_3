@@ -1,0 +1,41 @@
+{
+  "_what": "Single source of truth for the graph-write freeze. COMMITTED on purpose: .claude/.state/ is gitignored AND per-worktree, so a freeze marker there would be invisible to every other session — the exact blindness that let two sessions duplicate a Notion namespace on 2026-09-20 (YED-213).",
+  "_who_reads_it": [
+    ".claude/scripts/spine_client.py — THE ENFORCEMENT POINT. freeze_block() in req() raises GraphFrozen on POST/PATCH/PUT/DELETE before the PII guard and before the socket. It lives here, not in the producer, because an adversarial pass found SEVEN scripts writing to the graph (spine_write, recompute_relevance, merge_topics, inbox_signal_write, backfill_people, substrate) — gating only substrate.py left the freeze bypassable by five of them, including merge_topics, which hard-deletes. One door, guarded once (the ADR-9 argument).",
+    ".claude/scripts/substrate.py — a SECOND, earlier check (exit 4) purely for a friendlier message with the waive instructions. Not the boundary; removing it would not open a hole.",
+    ".claude/hooks/substrate-gate.sh — adds the freeze-aware waive instruction to its failure message",
+    ".claude/hooks/ab-reminder.sh — echoes the reason so the wording cannot drift from the rule"
+  ],
+  "_how_to_lift": "Set active to false and fill lifted/lifted_note. Do not delete the block — the history is the point.",
+
+  "active": true,
+  "issue": "YED-172",
+  "declared": "2026-09-19",
+  "declared_by": "Alex",
+  "reason": "A/B in flight: the substrate pack is being compared against the legacy pull across two events. Changing the graph between event 1 (2026-09-20) and event 2 (2026-09-23) would make the arms incomparable — an improvement and added data would be indistinguishable.",
+  "origin": "Not theoretical. The A/B as first staged was biased against the substrate: only 16 of 77 attended events had company links, so the legacy arm could show continuity the substrate structurally could not. Fixed BEFORE event 1 (16/77 -> 76/77, +227 links, created=0 on re-run). The freeze generalises that fix: you cannot change the thing you are measuring while you measure it.",
+  "lifts_when": "both A/B events are scored and the verdict paragraph is written to .claude/notes/knowledge-substrate-review-2026-09-18.md",
+  "expected_lift": "2026-09-26",
+
+  "blocks": [
+    "EVERY graph write from ANY script — POST/PATCH/PUT/DELETE through spine_client.req(). Not just the producer's verbs (ensure-entity, ensure-event, ensure-document, stage-claims, backfill, approve-claims) but also recompute_relevance, merge_topics, inbox_signal_write, backfill_people and spine_write.",
+    "YED-205 (pre-event write path) and YED-47 (identity resolution tiers + soft-merge), which both mutate graph rows"
+  ],
+  "does_not_block": [
+    "reads — including retrieve.py's entity_neighborhood and match_claims_hybrid, which are POSTs to /rpc/ and are allowlisted in spine_client.READ_ONLY_RPCS. An /rpc/ name NOT on that allowlist is refused while frozen (fail-closed: an RPC is not assumed read-only).",
+    "--dry-run on any verb",
+    "waive (it is the escape valve for rows opened before the freeze)",
+    "preview-claims (offline)",
+    "writing CODE that will later write to the graph — only the data is frozen",
+    "Notion, HubSpot, content, research, telemetry, the judge"
+  ],
+
+  "override": {
+    "how": "GRAPH_FREEZE_OVERRIDE=\"<why>\" as an environment variable — it works for EVERY writer, because most of them (recompute_relevance, merge_topics, backfill_people, inbox_signal_write) take no CLI arguments. substrate.py additionally accepts --freeze-override \"<why>\" for the same effect with a friendlier message.",
+    "logged_to": ".claude/artifacts/graph-freeze-overrides.jsonl",
+    "note": "An override is data, not a failure — same philosophy as a DoD waiver. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
+  },
+
+  "lifted": null,
+  "lifted_note": null
+}

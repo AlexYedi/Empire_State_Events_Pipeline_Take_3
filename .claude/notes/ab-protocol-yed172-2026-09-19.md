@@ -73,6 +73,13 @@ new knowledge, and YED-171 is a declared blocker of YED-172), before event 1 rat
 - **Effect on event 1's seed:** the Monday probe went from **0 prior occasions** to **3** (Ray Dev Day 05-21, and two
   April Microsoft tech briefs) — the continuity Pack B could not have shown before.
 - **Freeze still holds from here:** no further graph-changing work until both events are scored (YED-205 waits).
+  **Declared and enforced in `.claude/references/graph-freeze.json` as of 2026-09-21 — that file is the rule, this
+  line is a pointer.** It was convention-only until then. Enforcement is in **`spine_client.req()`** — the one write
+  path — so it covers every script that reaches the graph, not just the producer (an adversarial pass found seven
+  writers; gating only `substrate.py` left five of them able to write straight through a freeze). Reads, `--dry-run`,
+  `waive` and `preview-claims` stay open; `GRAPH_FREEZE_OVERRIDE="<why>"` is allowed and logged. The freeze and `substrate-gate.sh` watch different halves of a write — *may it happen* vs
+  *did it finish* — and the refusal lands before any PENDING gate row is opened, so honouring the freeze can no
+  longer trip the gate.
 
 ## Cost
 One extra conditioner run per event (a few minutes, ~20–30k tokens) + ~10 minutes of Alex scoring. No extra research fan-out.
