@@ -45,17 +45,21 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 `.claude/references/target-companies.md` ({ATS vendor, board token/slug} per company).
 
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
-Read the **company→ATS registry** in `.claude/references/target-companies.md` (21 companies confirmed 2026-09-08). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
+Read the **company→ATS registry** in `.claude/references/target-companies.md` (**30 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21** from the Flywheel "New York AI Mafia" graphic; all endpoints re-verified live that day). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
-- **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai`):
+- **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai, formationbio`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
   → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, updated:.updated_at}'`
   ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt` and Lever `createdAt` are true posted dates** and may be used normally.
-- **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip`):
+- **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip, runway-ml, profound, modal, taktile, reflectionai, mirage, traversal`):
   `curl -s "https://api.ashbyhq.com/posting-api/job-board/{board}"`
   → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:.location, posted:.publishedAt, remote:.isRemote}'`
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
   → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:.categories.location, posted:.createdAt}'`
+- **Workable** (`huggingface`) — added 2026-09-21 so Hugging Face stops being invisible to every scan:
+  `curl -s "https://apply.workable.com/api/v1/widget/accounts/{account}?details=true"`
+  → `jq '.jobs[] | {id:.shortcode, title, url:.shortlink, loc:((.city // "") + " " + (.country // "")), posted:.published_on, remote:.telecommuting}'`
+  **Freshness is TRUE here** — `published_on` is a real posted date (ISO `YYYY-MM-DD`), so it may be written to `Posted Date` normally, unlike Greenhouse. Natural key = `workable:{shortcode}`. Note the job object nests nothing useful under `.id`; **`shortcode` is the stable id**.
 
 - **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / **`Growth Strategist|Growth Account|Growth AE|Scaled Growth` (never bare `Growth` — see the drop-list bullet)** / Solutions Consultant / Solutions Engineer / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
 - **The drop-list runs AFTER the keep-list and WINS (fixed 2026-09-20).** A title that matched a keep term is still dropped when it also matches
@@ -63,10 +67,10 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
   — **EXCEPT for the PROTECTED set `Solutions Engineer|Sales Engineer|Solutions Consultant`, which survive the drop-list.** Apply the protected check first: if the title matches a protected term, keep it and stop; otherwise drop-list wins over keep-list.
   ⚠️ **Why the exception exists (caught by the build-quality judge, 2026-09-20):** the keep-list deliberately keeps *Solutions Engineer*, and the drop term is a bare `Engineer` — without this carve-out, drop-wins silently kills a target title. That is a regression the first draft of this rule introduced.
   **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
-- **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup); freshness = `posted` for **Ashby and Lever only**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
+- **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup; for Workable the id is `.shortcode`); freshness = `posted` for **Ashby, Lever and Workable**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a scored TSV so raw JSON never touches parent context).
-- **Coverage = the 21 registry companies. Deferred (skip v1; recorded on YED-149):** Hugging Face, Intercom, Rippling, Mistral (no big-3 API by slug). The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
-- 3 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08.**
+- **Coverage = the 30 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
+- 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 6 additions + the Workable shape re-verified live 2026-09-21.**
 
 ### 1b. RSS.app feeds from saved LinkedIn searches (manual paste — optional)
 - For each feed URL Alex provides, `WebFetch` it; extract title, company, location, link, pubDate.

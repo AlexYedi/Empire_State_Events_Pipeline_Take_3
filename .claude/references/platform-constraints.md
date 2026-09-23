@@ -50,6 +50,32 @@
 | Metered Claude: no `ANTHROPIC_API_KEY` in Empire `.env` | RULED 2026-09-18 (YED-176): Gemini fallback is the default | Gemini-first for scripted LLM steps behind a two-backend interface; add a Claude key only when a scripted Claude call is on the runway (YED-179 re-asks) | 2026-09-18 |
 | OTEL collector / Langfuse / deep-beta traces | "rent the platform" only on a named trigger; traces need an Anthropic allowlist | today only `output_tokens` + `peak_context_tokens` are honest (`build-session-contract.md`) | 2026-06-26 |
 
+## LinkedIn (added 2026-09-21)
+
+- **Unauthenticated fetch of any LinkedIn URL returns HTTP 999.** This is a block, not evidence of
+  absence — never record "profile not found" or infer a person doesn't exist from a 999.
+- **The working read path is the Claude-in-Chrome MCP against Alex's already-authenticated session.**
+  Verified 2026-09-21: navigated to `/messaging/`, opened a thread, read the full exchange. This is how
+  to check what a message actually says instead of drafting blind.
+  - **Read-only by policy.** Never send, reply, react, or connect from the browser session — outbound
+    LinkedIn action is Tier 3 (Alex's call, every time). Reading an existing thread to ground a draft
+    is fine; putting words on his account is not.
+  - **Check before drafting.** On 2026-09-21 a thread recorded as "unread and unanswered" turned out to
+    have **two replies from Alex already in it**. Two openers had been drafted for a problem that did
+    not exist. One screenshot would have prevented both.
+- **Luma is authenticated in the same browser session** — calendar Follow/Unfollow works directly
+  (`lu.ma/<slug>`, button top-right of the calendar header). Following a calendar is a persistent
+  subscription, so it needs Alex's say-so first; it is not a read.
+
+## ATS boards (added 2026-09-21)
+
+- **A wrong board slug usually returns HTTP 200, not 404.** Greenhouse/Ashby boards are namespaced by
+  string, and unrelated companies hold plausible names. **A 200 is not identity verification** —
+  always read a job's title/location/description text and confirm it is the intended company before
+  writing a slug into the registry. Three live traps found in one session: `ashby/runway` (different
+  company), `greenhouse/profound` (Boston biotech), `greenhouse/flourish` (wealth-management fintech).
+  Full list + the correct slugs: `.claude/references/target-companies.md`.
+
 ## Tombstones (removed tools/decisions — mechanically checked, YED-201 Fix 2A, 2026-09-19)
 A removal only sticks if it reaches every file that *uses* the removed thing. `.claude/hooks/check-tombstones.py` flags any line in `.claude/**` / `docs/**` (docs + code/config files) that names a term below **without** a removal marker within 40 characters (removed · retired · ripped · deprecated · tombstone · vestigial · killed · rejected · disabled · superseded · replaced · no longer · do not · never · legacy · historical). The judge runs it in Step 0 (both seats see the hits as fact), and `/rigor-review` runs it repo-wide. **Add a row the same turn you remove something.** Patterns are Python regex, case-sensitive; write a regex alternation `|` as `\|` (GitHub's table escape; the checker unescapes it).
 
