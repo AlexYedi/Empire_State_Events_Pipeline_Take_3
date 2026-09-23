@@ -48,4 +48,15 @@ echo "Method: conditioner runs TWICE (legacy-only → Pack A, substrate-only →
 echo "score with Alex + a Sonnet seat (NOT the Gemini seat, advisory per YED-206) · reveal key · log both scorecards to"
 echo "\`.claude/evals/logs/<date>-ab-yed172-<slug>.jsonl\` — that log is what silences this reminder."
 echo
-echo "⚠️ Graph-write freeze holds until BOTH events are scored (YED-205 waits). Score each event before looking at the other."
+# The freeze is declared ONCE, in graph-freeze.json, and ENFORCED by substrate.py (exit 4).
+# This block only echoes it — never restate the rule here, or the copy drifts from the enforcement.
+FREEZE_FILE=".claude/references/graph-freeze.json"
+if command -v jq >/dev/null 2>&1 && [ -f "$FREEZE_FILE" ] && jq -e '.active == true' "$FREEZE_FILE" >/dev/null 2>&1; then
+  echo "⛔ Graph-write freeze ACTIVE ($(jq -r '.issue // "?"' "$FREEZE_FILE")) — enforced, not advisory: substrate.py"
+  echo "   refuses ensure-*/stage-claims/backfill/approve-claims with exit 4. Reads and --dry-run are unaffected."
+  echo "   Lifts when: $(jq -r '.lifts_when // "see the file"' "$FREEZE_FILE")"
+  echo "   Definition + override procedure: \`$FREEZE_FILE\`"
+else
+  echo "✅ No graph-write freeze active — substrate writes are open (YED-205 / YED-47 unblocked)."
+fi
+echo "Score each event before looking at the other."

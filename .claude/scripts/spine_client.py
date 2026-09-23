@@ -235,11 +235,90 @@ def q(v) -> str:
     return urllib.parse.quote(str(v), safe="")
 
 
+# -------------------------------------------------------------------------------------------------
+# Graph-write freeze (YED-213, 2026-09-21). Enforced HERE, not in substrate.py, for the reason ADR-9
+# already gives: this is the one write path. An adversarial pass found seven scripts reaching the
+# graph — spine_write, recompute_relevance, merge_topics, inbox_signal_write, backfill_people and
+# substrate all write — so gating only the producer would have left a freeze trivially bypassable by
+# any of the others. Same argument as the PII guard: one door, guarded once.
+# Reads (GET/HEAD) are never blocked. Override is an env var because most of these are not CLI-
+# argument scripts: GRAPH_FREEZE_OVERRIDE="<why>" — allowed, and logged as data, never silent.
+# -------------------------------------------------------------------------------------------------
+FREEZE_PATH = os.path.join(ROOT, ".claude", "references", "graph-freeze.json")
+FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.jsonl")
+
+
+class GraphFrozen(RuntimeError):
+    """Raised instead of performing a write while a freeze is active."""
+
+
+def freeze_active() -> dict | None:
+    """The active freeze, or None. Unreadable marker => fail CLOSED (synthetic active freeze),
+    matching the substrate gate's corrupt-ledger-line rule."""
+    if not os.path.exists(FREEZE_PATH):
+        return None
+    try:
+        f = json.load(open(FREEZE_PATH, encoding="utf-8"))
+    except (ValueError, OSError) as e:
+        return {"active": True, "issue": "?",
+                "reason": f"graph-freeze.json unreadable ({e}) — failing closed."}
+    return f if isinstance(f, dict) and f.get("active") else None
+
+
+# Postgres functions that are READS despite being invoked over POST /rpc/. Exempt from the freeze,
+# because freezing them breaks retrieval — retrieve.py's entity_neighborhood (relational pull) and
+# match_claims_hybrid (semantic pull) are its two core read paths, i.e. the A/B's own substrate arm.
+# Regression caught by the judge 2026-09-20: the first version blocked every POST, including these,
+# while the doc claimed "reads are unaffected". GET was tested; the RPC read path was not.
+# Deliberately an ALLOWLIST, not a blanket `/rpc/` pass-through: the PII guard above exempts all of
+# /rpc/ on the assumption that RPCs write nothing, and a future write-RPC would inherit that
+# assumption silently. Here an unknown RPC is REFUSED — add it below once confirmed read-only.
+READ_ONLY_RPCS = ("entity_neighborhood", "match_claims_hybrid")
+
+
+def freeze_block(method: str, path: str) -> None:
+    if method not in ("POST", "PATCH", "PUT", "DELETE"):
+        return
+    if method == "POST" and path.startswith("/rpc/"):
+        name = path[len("/rpc/"):].split("?", 1)[0]
+        if name in READ_ONLY_RPCS:
+            return
+        # Unknown RPC during a freeze: fail closed rather than assume it is a read.
+        if freeze_active():
+            raise GraphFrozen(
+                f"GRAPH-WRITE FREEZE ACTIVE — refused POST /rpc/{name}.\n"
+                f"This RPC is not in spine_client.READ_ONLY_RPCS, so it cannot be assumed read-only "
+                f"while a freeze is in force. If it only reads, add it to that tuple (with a comment "
+                f"saying how you verified it). If it writes, it is correctly blocked.")
+        return
+    fz = freeze_active()
+    if not fz:
+        return
+    why = os.environ.get("GRAPH_FREEZE_OVERRIDE")
+    if why:
+        import datetime
+        os.makedirs(os.path.dirname(FREEZE_LOG), exist_ok=True)
+        with open(FREEZE_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"event": "graph_freeze_override", "method": method, "path": path,
+                                "issue": fz.get("issue"), "override_reason": why,
+                                "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending"),
+                                "ts": datetime.datetime.now(datetime.timezone.utc)
+                                        .strftime("%Y-%m-%dT%H:%M:%SZ")}) + "\n")
+        return
+    raise GraphFrozen(
+        f"GRAPH-WRITE FREEZE ACTIVE ({fz.get('issue', '?')}) — refused {method} {path}, nothing was written.\n"
+        f"{fz.get('reason', '')}\n"
+        f"Lifts when: {fz.get('lifts_when', 'see .claude/references/graph-freeze.json')}\n"
+        "Reads and --dry-run are unaffected. Emergency: GRAPH_FREEZE_OVERRIDE=\"<why>\" (logged).\n"
+        "Source of truth: .claude/references/graph-freeze.json")
+
+
 def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout: int = 30,
         raise_on_error: bool = False, extra_headers: dict | None = None):
     """(status, parsed_json_or_text). Every POST/PATCH/PUT body is guarded (except /rpc/ paths).
     There is deliberately NO parameter that disables the guard — judge finding 2026-09-13."""
     method = method.upper()
+    freeze_block(method, path)          # may this write happen at all? (before the PII guard, before the socket)
     if method in ("POST", "PATCH", "PUT") and body is not None:
         guard_body(path, body)
     key = load_key()
@@ -373,16 +452,85 @@ def selftest() -> bool:
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
+    # ---- graph-write freeze at the one door (YED-213) ---------------------------------------
+    # Pinned against a TEMP marker, not the live one, so these pass whether or not a freeze is
+    # currently declared. The point being pinned: the freeze is enforced where every writer
+    # funnels, because an adversarial pass found seven scripts writing to the graph — gating only
+    # substrate.py would have left it bypassable by any of the other six.
+    import tempfile as _tf
+    _saved_fp, _saved_ov = FREEZE_PATH, os.environ.get("GRAPH_FREEZE_OVERRIDE")
+    # The override log is an AUDIT trail — a selftest must never append to it, or the evidence is
+    # indistinguishable from a real emergency override. Redirected to a temp file for the duration.
+    _saved_log = FREEZE_LOG
+    globals()["FREEZE_LOG"] = os.path.join(_tf.mkdtemp(prefix="freeze-log-"), "overrides.jsonl")
+    _fd = _tf.NamedTemporaryFile("w", suffix=".json", delete=False)
+    _fd.write(json.dumps({"active": True, "issue": "TEST", "reason": "selftest", "lifts_when": "never"}))
+    _fd.close()
+    globals()["FREEZE_PATH"] = _fd.name
+    os.environ.pop("GRAPH_FREEZE_OVERRIDE", None)
+    add("freeze: POST refused at the one write path", lambda: freeze_block("POST", "/event"), True)
+    add("freeze: PATCH refused", lambda: freeze_block("PATCH", "/claim?id=eq.1"), True)
+    add("freeze: DELETE refused", lambda: freeze_block("DELETE", "/claim?id=eq.1"), True)
+    add("freeze: GET never refused (reads stay open)", lambda: freeze_block("GET", "/event"), False)
+    # The regression the judge caught: retrieve.py's reads are POSTs to /rpc/, so "GET is open" was
+    # never sufficient to claim "reads are unaffected". These two ARE the substrate's read path.
+    add("freeze: POST /rpc/entity_neighborhood allowed (retrieve.py relational pull)",
+        lambda: freeze_block("POST", "/rpc/entity_neighborhood"), False)
+    add("freeze: POST /rpc/match_claims_hybrid allowed (retrieve.py semantic pull)",
+        lambda: freeze_block("POST", "/rpc/match_claims_hybrid"), False)
+    add("freeze: an UNKNOWN /rpc/ is refused (not assumed read-only)",
+        lambda: freeze_block("POST", "/rpc/some_future_mutating_fn"), True)
+
+    def _overridden():
+        os.environ["GRAPH_FREEZE_OVERRIDE"] = "selftest"
+        try:
+            freeze_block("POST", "/event")
+        finally:
+            os.environ.pop("GRAPH_FREEZE_OVERRIDE", None)
+    add("freeze: GRAPH_FREEZE_OVERRIDE proceeds (and is logged, never silent)", _overridden, False)
+
+    _broken = _tf.NamedTemporaryFile("w", suffix=".json", delete=False)
+    _broken.write("{not json")
+    _broken.close()
+
+    def _corrupt():
+        globals()["FREEZE_PATH"] = _broken.name
+        try:
+            freeze_block("POST", "/event")
+        finally:
+            globals()["FREEZE_PATH"] = _fd.name
+    add("freeze: corrupt marker fails CLOSED", _corrupt, True)
+
+    def _absent():
+        globals()["FREEZE_PATH"] = os.path.join(ROOT, "__no_such_freeze__.json")
+        try:
+            freeze_block("POST", "/event")
+        finally:
+            globals()["FREEZE_PATH"] = _fd.name
+    add("freeze: absent marker means writes are open", _absent, False)
+
     failures = 0
     for name, fn, expect in cases:
         try:
             fn()
             got = False
-        except PIIViolation:
+        except (PIIViolation, GraphFrozen):
+            # Both mean "this write was refused at the door" — the only distinction the runner
+            # needs. GraphFrozen was added 2026-09-21; before that it would have escaped the
+            # loop and crashed the suite rather than failing a case.
             got = True
         ok = got == expect
         failures += 0 if ok else 1
         print(f"  {'✓' if ok else '✗'} {name}")
+    globals()["FREEZE_PATH"] = _saved_fp                      # restore the live marker + env + log
+    globals()["FREEZE_LOG"] = _saved_log
+    if _saved_ov is not None:
+        os.environ["GRAPH_FREEZE_OVERRIDE"] = _saved_ov
+    for _p in (_fd.name, _broken.name):
+        try:
+            os.unlink(_p)
+        except OSError:
+            pass
     n = len(cases)
     print(f"selftest: {n - failures}/{n} guard cases pass")
     return failures == 0
