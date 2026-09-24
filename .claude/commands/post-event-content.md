@@ -34,6 +34,23 @@ If the user invokes `content-correspondent` directly with raw pasted material, d
 1. **Event name** — fuzzy-match-friendly. The command resolves it against the Notion Events DB by title similarity, then anchors downstream lookups.
 2. **Transcript (manual upload/paste)** — Alex's own recording transcript for the event (Otter/Zoom/phone export or pasted text). This is the post-event input now that Granola is off. **No `GRANOLA_API_KEY` needed** — the Granola path is disabled.
 
+
+**Step 1.0 — CLAIM THE EVENT before anything else (YED-213, added 2026-09-24).** Git isolation does not isolate
+Notion: on 2026-09-20 two sessions ran this pipeline for the same event and only avoided duplicate pages because
+one happened to notice a Notion timestamp. Run this FIRST, before resolving the event:
+
+```bash
+python3 .claude/hooks/event-claim.py claim "<event name>" --note "<what you are running>"
+```
+
+* **exit 0** — you own this event's Notion namespace (Event, People, Companies, Topics, Content Drafts) for the run.
+* **exit 3** — another session is already running it. **Go read-only for this event and report to Alex**, exactly as
+  the reconciliation terminal does for git. Do not write. Takeover is deliberate and recorded:
+  `--force "<why>"`. A crashed session's claim expires on its own after 4h.
+
+**Release when the run closes** (or if you abandon it): `python3 .claude/hooks/event-claim.py release "<event name>"`.
+`event-claim.py list` shows live claims across every session on this machine.
+
 ## Step 1 — Resolve the Notion Event row
 
 Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title using `mcp__notion__notion-search`. From the matching row, read:
