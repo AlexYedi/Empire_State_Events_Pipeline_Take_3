@@ -8,7 +8,7 @@
   ],
   "_how_to_lift": "Set active to false and fill lifted/lifted_note. Do not delete the block — the history is the point.",
 
-  "active": true,
+  "active": false,
   "issue": "YED-172",
   "declared": "2026-09-19",
   "declared_by": "Alex",
@@ -36,6 +36,6 @@
     "note": "An override is data, not a failure — same philosophy as a DoD waiver. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
   },
 
-  "lifted": null,
-  "lifted_note": null
+  "lifted": "2026-09-24",
+  "lifted_note": "Lifted on the A/B COMPLETING, not on a particular verdict — the freeze existed to hold the graph still while it was being measured, and measurement is done. Both events scored by both blind raters on 2026-09-24. Ruling: the substrate does NOT replace the legacy Step 1.7a pull (it lost event 2 on both seats and took event 1 on only one of two), so ADR-10 stays Proposed. YED-47 and YED-205 are unblocked. The substrate is re-scoped, not retired: it remains the post-event claim store and the job-search/interview lens. Verdict + caveats: .claude/notes/knowledge-substrate-review-2026-09-18.md. Scorecards: .claude/evals/logs/2026-09-24-ab-yed172-*.jsonl. If a future freeze is declared, set active:true and fill reason/lifts_when again — do not delete this block, the history is the point."
 }

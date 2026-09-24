@@ -19,9 +19,14 @@ RUN_CARD=".claude/artifacts/ab-yed172/run-card-2026-09-21.md"
 TODAY="${AB_TODAY:-$(date +%F)}"
 
 # events: slug | seed | what it is | run-by
+# Repointed 2026-09-24 to the events that ACTUALLY ran. The original two (show-and-tell, clay) were both
+# replaced mid-experiment: AI Show and Tell was run then dropped (Alex didn't attend, so he couldn't score
+# criterion 1), and the Clay livestream was abandoned when Notion MCP dropped and left the legacy arm without
+# its data source. Because the silencing check matches on slug, leaving the old slugs here meant the hook
+# could never see the real scorecards and would have kept firing to the 09-26 hard stop with the A/B closed.
 EVENTS=(
-  "show-and-tell|.claude/artifacts/ab-yed172/seed-2026-09-21.json|Mon 9/21 · AI Show and Tell NY (Microsoft Research Lab, 6pm)|run it SUN 9/20 EVENING — Alex needs the brief before 6pm Mon"
-  "clay|.claude/artifacts/ab-yed172/seed-2026-09-23.json|Wed 9/23 · Clay: Agentic GTM with Grok Bot (livestream, 12pm)|run it TUE 9/22 EVENING or WED MORNING"
+  "apollo-graphos|.claude/artifacts/ab-yed172/seed-2026-09-24-apollo.json|Thu 9/24 · Is My Graph Healthy? (Apollo GraphQL, 11am webinar)|SCORED 2026-09-24"
+  "ai-builders|.claude/artifacts/ab-yed172/seed-2026-09-24-aibuilders.json|Thu 9/24 · AI Builders Session (3percentclub, Brooklyn, 6pm)|SCORED 2026-09-24"
 )
 
 [ -r "$RUN_CARD" ] || exit 0                                   # the A/B was removed/finished — nothing to say

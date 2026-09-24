@@ -47,3 +47,46 @@ Prove the whole loop on one narrow slice, both halves, **before** the mutating D
 
 ## What must not be relitigated (reviewer's words)
 Claims-as-first-class pointing at events is **load-bearing, not clever** — the standard assertion/occasion/entity reification split; the rejected alternative mints N rows per occasion, conflates "said" with "happened," and corrupts trust-strip semantics. Three node types with D7 enforced. And **"one producer library + one retrieval interface + backfill runs through the producers"** is the best idea in the document: it makes the 2b-migration failure class mechanically impossible rather than merely discouraged.
+
+---
+
+## A/B verdict — YED-172, closed 2026-09-24 (DRAFT, for Alex's edit)
+
+**Ruling: the substrate does NOT replace the legacy Step 1.7a pull. ADR-10 stays Proposed.**
+
+Two events counted, two blind raters each, pre-registered sheet. Apollo GraphQL (09-24, entity-rich): Alex
+preferred the substrate on topic-card depth, the Sonnet seat preferred the legacy pull on speaker-named questions
+— a split *between raters on one event*, which the rule did not anticipate. AI Builders (09-24, deliberately
+thin): **both seats preferred the legacy pull.** The rule required the substrate to be preferred-or-tied on both
+events; it was not, so the legacy pull stands. A third event, AI Show and Tell (09-20), was run and then dropped —
+Alex did not attend, so he could not honestly score "usable in the room."
+
+**The result is real, and it is also narrower than it looks.** Alex's two preferences split by *event type*, not
+randomly: substrate on the event where genuine continuity existed to retrieve, legacy on the event where neither
+arm had entity coverage and Notion's hand-curated topic pages simply held more substance than the graph. On that
+reading this was partly a **coverage** comparison rather than a **method** comparison — the graph holds claims
+extracted from post-event briefs, while Notion topic pages hold depth accumulated by hand over months. That is
+interpretation, recorded as such, and deliberately not used to soften the ruling.
+
+**What the experiment actually bought is not the winner.** It is that the two arms are good at different things:
+the substrate on **material** (Alex, Apollo: *"topic cards are far stronger"*), the legacy pull on **packaging**
+(both seats, both events: speaker-named chase-able questions, dated numerically-specific signals). The legacy
+arm's advantage traced to a concrete mechanism — Notion topic pages carry a `Top Questions` property that has been
+accumulating for months, and the substrate has no question-shaped claim type to retrieve. That is YED-217
+(conditioner aims material at named speakers) and YED-218 (question claim type). Both matter **more** after this
+result, not less.
+
+Worth recording separately: **zero errors on all four packs from both seats.** Neither arm padded under thinness,
+which was the designed test for event 2.
+
+**Caveats that belong next to the ruling:** n=2 events and 2 raters; event 1 was dropped after being run, changing
+the sample mid-experiment; Apollo required a decontamination deviation (a parallel session had written
+event-specific research into Notion for that exact event) and AI Builders did not; and the Apollo confounds
+favoured the legacy arm on balance — a hand-written keyword list for its market-signal sweep, plus residual
+batch-window leakage — so **the legacy win is if anything slightly overstated.**
+
+**Consequences:** graph-write freeze lifts (it was contingent on measurement finishing, not on a verdict) · YED-47
+and YED-205 unblock · ADR-10 remains Proposed · the substrate is **re-scoped, not retired** — it stays the
+post-event claim store and the job-search/interview lens, and the open question becomes coverage, not method.
+
+Full scorecards, confounds and the rater-correction record: `.claude/evals/logs/2026-09-24-ab-yed172-*.jsonl`.
