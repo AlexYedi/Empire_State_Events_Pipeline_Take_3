@@ -1,0 +1,16 @@
+{
+  "entities": [
+    {"type": "company", "name": "Apollo GraphQL"},
+    {"type": "person", "name": "Dale Seo"},
+    {"type": "person", "name": "Dan Boerner"},
+    {"type": "person", "name": "Chauntay Lawson"},
+    {"type": "person", "name": "Kaitlyn Barnard"},
+    {"type": "topic", "name": "MCP at Enterprise Scale"},
+    {"type": "topic", "name": "AI Coding Agent Infrastructure"},
+    {"type": "topic", "name": "Agent Autonomy & Human-in-the-Loop in Production"},
+    {"type": "topic", "name": "Enterprise AI Agent Security & Governance"}
+  ],
+  "text": "Is My Graph Healthy? Natural Language Access to GraphOS (Apollo GraphQL webinar, Thu 2026-09-24, 11:00am-12:00pm ET). Apollo MCP Server began as a way to let customers' agents reach their own GraphQL APIs, turning GraphQL operations into MCP tools with no hand-written tool per endpoint. The requests that followed were not about customers' own graphs: they wanted agents to reach GraphOS itself. Answering 'is my graph healthy?' meant a tour across half a dozen Studio pages - launch history, composition errors, lint reports, router status, operation latency, error rates. The answer was always in there; assembling it was the work. So Apollo became its own customer: GraphOS MCP Server is Apollo MCP Server configured against Apollo's own GraphQL API, hosted at mcp.apollographql.com, so you run nothing. The session covers: (1) what you can actually ask, demonstrated live, from 'have the recent launches on my graph been stable?' up to 'is my graph healthy?'; (2) the two ways to connect - API keys work best for coding agents in the terminal, OAuth is better for non-developers using Claude Desktop or ChatGPT; (3) what your agent is allowed to see - documentation tools are read-only so public, an API key scopes the agent to a single graph, an OAuth login signs in as you so it reaches every graph you can reach. Speakers: Dale Seo (Sr Software Engineer, Apollo GraphQL), Dan Boerner (Head of Customer Advocacy, Apollo GraphQL). Hosted by Chauntay Lawson (Sr. Program Manager) and Kaitlyn Barnard (Product Marketing, Apollo).",
+  "focus": "A/B arm B - substrate pack for the blind comparison (YED-172). This event tests recall in a domain ADJACENT to but distinct from GTM: MCP, agent access scoping, and developer infrastructure. Alex has prior coverage (MCP Release Party, MCP at Enterprise Scale) so the test is whether the substrate surfaces genuine continuity rather than reporting emptiness. Named speakers, unlike the Clay livestream.",
+  "window_days": 365
+}

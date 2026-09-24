@@ -1,0 +1,14 @@
+{
+  "entities": [
+    {"type": "company", "name": "3percentclub"},
+    {"type": "company", "name": "Fractal NYC"},
+    {"type": "person", "name": "Maria Ashby"},
+    {"type": "topic", "name": "Open-Weights Models & Model Routing"},
+    {"type": "topic", "name": "AI Infrastructure Cost & Token Economics"},
+    {"type": "topic", "name": "AI Coding Agent Infrastructure"},
+    {"type": "topic", "name": "LLM Evaluation"}
+  ],
+  "text": "AI Builders Session: Open Models, Model Routing & API Integration (Thu 2026-09-24, 6:00-8:00pm ET, 11 Conselyea St, Brooklyn NY; in-person with a virtual Zoom option). Track 01, Applied Engineering, newcomers welcome — each session in the Builder Track is standalone, no Week 1 prerequisite. Not every task needs your most expensive frontier model. This session covers working with open-weights models (Qwen, Llama, DeepSeek via Ollama/OpenRouter) alongside proprietary endpoints (Claude, GPT), with emphasis on practical routing strategies: assigning planning logic to advanced models like Opus while delegating execution tasks to lightweight alternatives like Sonnet or Qwen. It also addresses prompt-caching mechanics and the complications of model-switching. Hands-on component: a guided API integration lab in Python or TypeScript, focused on task sizing against compute budgets and token costs. Coding experience in Python or TypeScript recommended. Presented by 3percentclub (a nonprofit focused on increasing diversity in tech by providing underrepresented talent with accessible education), part of its AI Architects Fellowship Builders Track, preparing developers for an October Civic Hackathon. Hosted by Maria Ashby; co-hosted by Fractal NYC. 14 registered attendees.",
+  "focus": "A/B arm B - substrate pack for the blind comparison (YED-172, event 2 of 2). Deliberately a THIN-ENTITY event: one named host, two small orgs unlikely to be in the store, and a topic area (open-weights routing, token economics) where prior coverage is uncertain. The test is whether a pack honestly reports emptiness or pads to look useful - which is the dimension that decided the 2026-09-20 run.",
+  "window_days": 365
+}
