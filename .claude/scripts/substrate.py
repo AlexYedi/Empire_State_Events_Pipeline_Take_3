@@ -61,6 +61,11 @@ SECTIONS = [
     (("hot takes", "hot-takes"), "hot_take"),
     (("substantive insights", "top insights", "key insight", "ranked insights", "insights", "top takeaways", "takeaways"), "learning"),
     (("stat bank",), "statistic"),
+    # YED-218 (2026-09-24). Questions were the legacy Notion pull's single biggest advantage in the
+    # YED-172 A/B: Topic pages carry a `Top Questions` property that has been accumulating for months,
+    # and the graph had no question-shaped claim to retrieve, so every pack re-derived them from
+    # statements. `claim_type` is unconstrained text, so this needs no DDL.
+    (("top questions", "prepared questions", "open questions", "questions"), "question"),
 ]
 # Sections that are NEVER staged, whatever they contain (a promise made in the room outranks the graph).
 EXCLUDED_SECTIONS = ("confidentiality", "⛔")
@@ -783,6 +788,29 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                 g.stats.bump("claim_entity", "linked (idempotent)", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
                        on_conflict="claim_id,entity_type,entity_id,role")
+    # question claims -> claim_entity(topic, about), for every topic on THIS event's roster.
+    # Alex's call 2026-09-24: anchor questions to BOTH the event and its topics. The event anchor is
+    # already set (claim.event_id above); the topic anchor is what makes a question resurface when the
+    # TOPIC recurs at a different event — which is the entire reason to store questions rather than
+    # re-derive them from statements each time. Unlike speakers and about-companies, questions are not
+    # attributed to one entity, so they link to the whole topic set rather than a resolved single match;
+    # the roster scoping is what keeps that honest. Schema already permits it: claim_entity's CHECK
+    # constraints allow entity_type='topic' and role='about', so this is additive, no DDL.
+    questions = [it for it in items if it["claim_type"] == "question"]
+    if questions and not g.dry:
+        ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
+        topic_ids = [r["entity_id"] for r in
+                     g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.topic&select=entity_id")]
+        if not topic_ids:
+            g.stats.bump("claim_entity", "question_topic_unresolved", len(questions))
+        else:
+            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "topic", "entity_id": t, "role": "about"}
+                     for it in questions if it["claim_key"] in ids for t in topic_ids]
+            if links:
+                g.stats.bump("claim_entity", "linked (idempotent)", len(links))
+                g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+                       on_conflict="claim_id,entity_type,entity_id,role")
+
     by_type: dict[str, int] = {}
     for it in items:
         by_type[it["claim_type"]] = by_type.get(it["claim_type"], 0) + 1
@@ -983,6 +1011,24 @@ def selftest() -> bool:
             os.environ.pop("CLAUDE_CODE_SESSION_ID", None)
         else:
             os.environ["CLAUDE_CODE_SESSION_ID"] = saved
+    # ---- question claims (YED-218) -----------------------------------------------------------
+    ok("questions: 'Top Questions' heading -> question claims",
+       [i["claim_type"] for i in parse_brief("## Top Questions\n1. When your eval harness disagrees with "
+                                             "production, which do you trust?\n2. What is the minimum eval "
+                                             "suite that catches the regressions that matter?")]
+       == ["question", "question"])
+    ok("questions: 'Prepared Questions' alias",
+       [i["claim_type"] for i in parse_brief("## Prepared Questions\n- Is the permission ceiling scoped per "
+                                             "task class, or all-or-nothing?")] == ["question"])
+    ok("questions: a question section is a section BOUNDARY like any other",
+       [i["claim_type"] for i in parse_brief("## Top Questions\n- Which do you trust?\n## Pitfalls\n- Letting "
+                                             "agents self-merge.")] == ["question", "pitfall"])
+    ok("questions: do-not-publish still applies to a question",
+       parse_brief("## Top Questions\n- Unsourced: how many agents does Datadog run? (do not publish)")
+       [0]["do_not_publish"])
+    ok("questions: confidentiality still outranks — ⛔ section is never staged",
+       parse_brief("## Top Questions ⛔\n- What is your runway?") == [])
+
     # ---- graph-write freeze (YED-213) -------------------------------------------------------
     # Pinned because the whole point is that the freeze is enforced at the producer, not trusted
     # to a sentence in a note. Every case below is a way the two mechanisms could re-collide.
