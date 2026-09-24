@@ -29,6 +29,23 @@ This command runs when:
 2. **(Optional) Google Calendar Event ID** — if the input includes a `Google Calendar Event ID:` line (as `/check-new-events` always passes), capture it and forward to `notion-writer` for the Events DB row. This is the deterministic join key to Granola for `/post-event-content`.
 3. **(Optional) Stated focus** — if Alex says "I'm going to find a hiring manager" or "I want to test my POV on agentic systems", pass that downstream so Success Signals are tailored
 
+
+**Step 1.0 — CLAIM THE EVENT before anything else (YED-213, added 2026-09-24).** Git isolation does not isolate
+Notion: on 2026-09-20 two sessions ran this pipeline for the same event and only avoided duplicate pages because
+one happened to notice a Notion timestamp. Run this FIRST, before parsing:
+
+```bash
+python3 .claude/hooks/event-claim.py claim "<event name>" --note "<what you are running>"
+```
+
+* **exit 0** — you own this event's Notion namespace (Event, People, Companies, Topics, Content Drafts) for the run.
+* **exit 3** — another session is already running it. **Go read-only for this event and report to Alex**, exactly as
+  the reconciliation terminal does for git. Do not write. Takeover is deliberate and recorded:
+  `--force "<why>"`. A crashed session's claim expires on its own after 4h.
+
+**Release when the run closes** (or if you abandon it): `python3 .claude/hooks/event-claim.py release "<event name>"`.
+`event-claim.py list` shows live claims across every session on this machine.
+
 ## Step 1 — Parse and triage (this conversation, NOT a subagent)
 
 Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this conversation:
