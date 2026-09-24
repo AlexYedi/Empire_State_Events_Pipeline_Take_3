@@ -4,7 +4,7 @@ A reminder that cannot turn itself off is worse than no reminder: it trains you 
 These five cases pin that contract. Fixtures are temp eval-log files, removed at the end.
 Run: python3 .claude/hooks/test_ab_reminder.py
 """
-import os, pathlib, shutil, subprocess, tempfile
+import json, os, pathlib, shutil, subprocess, tempfile
 
 REPO = pathlib.Path(os.environ.get("CLAUDE_PROJECT_DIR") or pathlib.Path(__file__).resolve().parents[2])
 
@@ -23,13 +23,18 @@ for f in ("run-card-2026-09-21.md", "seed-2026-09-21.json", "seed-2026-09-23.jso
     src = REPO / ".claude/artifacts/ab-yed172" / f
     if src.exists():
         shutil.copy(src, W / ".claude/artifacts/ab-yed172" / f)
-fz = REPO / ".claude/references/graph-freeze.json"        # so the freeze branch is exercised for real
-if fz.exists():
-    (W / ".claude/references").mkdir(parents=True, exist_ok=True)
-    shutil.copy(fz, W / ".claude/references/graph-freeze.json")
+# A SYNTHETIC active marker, not a copy of the live one (fixed 2026-09-24). Copying the real file coupled the
+# suite to whether a freeze happened to be active that day: the moment YED-172's freeze was lifted, the
+# "echo reads the marker" case failed despite the hook being correct. The fixture is what's under test here —
+# that the hook quotes the file rather than restating the rule — so the fixture should be deterministic.
+(W / ".claude/references").mkdir(parents=True, exist_ok=True)
+(W / ".claude/references/graph-freeze.json").write_text(json.dumps({
+    "active": True, "issue": "TEST-FIXTURE", "reason": "synthetic freeze for the reminder-hook contract test",
+    "lifts_when": "never — this is a fixture",
+}))
 
-E1 = LOGS / "2026-09-21-ab-yed172-show-and-tell.jsonl"
-E2 = LOGS / "2026-09-23-ab-yed172-clay.jsonl"
+E1 = LOGS / "2026-09-24-ab-yed172-apollo-graphos.jsonl"
+E2 = LOGS / "2026-09-24-ab-yed172-ai-builders.jsonl"
 
 
 def run(day):
@@ -42,11 +47,16 @@ CASES = []
 for f in (E1, E2):
     f.unlink(missing_ok=True)
 CASES.append(("before the window (9/19)", run("2026-09-19") == "", "silent"))
+# Assertions are STRUCTURAL, not name-based (fixed 2026-09-24). They previously asserted on the literal event
+# titles ("Show and Tell", "Clay"); when the A/B's events were replaced mid-experiment the assertions failed
+# even though the hook behaved correctly. Counting the rendered bullet lines tests the contract — how many
+# events are still pending — without coupling the suite to which events those happen to be.
 out = run("2026-09-20")
-CASES.append(("in window, nothing scored", "both events pending" in out and "Show and Tell" in out and "Clay" in out, "both listed"))
+CASES.append(("in window, nothing scored",
+              "both events pending" in out and out.count("\n- ") == 2, "both listed"))
 E1.write_text('{"fixture":"event 1 scored"}\n')
 out = run("2026-09-22")
-CASES.append(("event 1 scored", "1 event pending" in out and "Show and Tell" not in out and "Clay" in out, "only event 2"))
+CASES.append(("event 1 scored", "1 event pending" in out and out.count("\n- ") == 1, "only event 2"))
 E2.write_text('{"fixture":"event 2 scored"}\n')
 CASES.append(("both scored", run("2026-09-23") == "", "silent, permanently"))
 for f in (E1, E2):
