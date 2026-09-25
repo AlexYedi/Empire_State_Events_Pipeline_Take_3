@@ -65,6 +65,10 @@ pack also had questions, but its best one *"has no named target."* So the gap is
    Otochkin) `KNOWN`, reading "Alex heard them say it" as verification. A question inherits whatever the card
    decided. The test-shaped wording limits the damage, but the card-level ambiguity (attribution verified vs.
    content verified) is a trust-flag question for its own issue: **YED-222**.
+   ✅ **RULED by Alex 2026-09-25:** *"if they said it, attribute it to them and put it in that context without
+   taking the claim further."* The flag describes the attribution (KNOWN while fresh). The content is carried
+   as the speaker's claim, never restated as fact or extended. Aimed questions keep the attribution, so they
+   are tests of that person's claim by construction. Written into the trust-flag section of the spec.
 
 ## Validation
 
@@ -93,4 +97,6 @@ anchor, an invented target, and a missing trust tag. It failed all 3 questions, 
    (it points to the raw pull).
 3. Save the returned pack to `.claude/.state/yed-217/pack.md`, then:
    `python3 .claude/scripts/check_aimed_questions.py .claude/.state/yed-217/pack.md --invite .claude/.state/yed-217/apollo_invite.txt --raw .claude/.state/yed-217/apollo_substrate_raw.md`
-4. Pass = ≥1 question aimed at Dale Seo or Dan Boerner, and 0 FAIL lines. Record the result on YED-217.
+4. Pass = ≥1 question aimed at Dale Seo or Dan Boerner, and 0 FAIL lines. Also check by eye (the script can't): every
+   question built on a first-hand speaker claim **names the speaker** (e.g. "Levan argued… does that hold?") and
+   doesn't state the claim as fact (YED-222). Record the result on YED-217.
