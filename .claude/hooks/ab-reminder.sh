@@ -19,9 +19,14 @@ RUN_CARD=".claude/artifacts/ab-yed172/run-card-2026-09-21.md"
 TODAY="${AB_TODAY:-$(date +%F)}"
 
 # events: slug | seed | what it is | run-by
+# Repointed 2026-09-24 to the events that ACTUALLY ran. The original two (show-and-tell, clay) were both
+# replaced mid-experiment: AI Show and Tell was run then dropped (Alex didn't attend, so he couldn't score
+# criterion 1), and the Clay livestream was abandoned when Notion MCP dropped and left the legacy arm without
+# its data source. Because the silencing check matches on slug, leaving the old slugs here meant the hook
+# could never see the real scorecards and would have kept firing to the 09-26 hard stop with the A/B closed.
 EVENTS=(
-  "show-and-tell|.claude/artifacts/ab-yed172/seed-2026-09-21.json|Mon 9/21 · AI Show and Tell NY (Microsoft Research Lab, 6pm)|run it SUN 9/20 EVENING — Alex needs the brief before 6pm Mon"
-  "clay|.claude/artifacts/ab-yed172/seed-2026-09-23.json|Wed 9/23 · Clay: Agentic GTM with Grok Bot (livestream, 12pm)|run it TUE 9/22 EVENING or WED MORNING"
+  "apollo-graphos|.claude/artifacts/ab-yed172/seed-2026-09-24-apollo.json|Thu 9/24 · Is My Graph Healthy? (Apollo GraphQL, 11am webinar)|SCORED 2026-09-24"
+  "ai-builders|.claude/artifacts/ab-yed172/seed-2026-09-24-aibuilders.json|Thu 9/24 · AI Builders Session (3percentclub, Brooklyn, 6pm)|SCORED 2026-09-24"
 )
 
 [ -r "$RUN_CARD" ] || exit 0                                   # the A/B was removed/finished — nothing to say
@@ -48,4 +53,15 @@ echo "Method: conditioner runs TWICE (legacy-only → Pack A, substrate-only →
 echo "score with Alex + a Sonnet seat (NOT the Gemini seat, advisory per YED-206) · reveal key · log both scorecards to"
 echo "\`.claude/evals/logs/<date>-ab-yed172-<slug>.jsonl\` — that log is what silences this reminder."
 echo
-echo "⚠️ Graph-write freeze holds until BOTH events are scored (YED-205 waits). Score each event before looking at the other."
+# The freeze is declared ONCE, in graph-freeze.json, and ENFORCED by substrate.py (exit 4).
+# This block only echoes it — never restate the rule here, or the copy drifts from the enforcement.
+FREEZE_FILE=".claude/references/graph-freeze.json"
+if command -v jq >/dev/null 2>&1 && [ -f "$FREEZE_FILE" ] && jq -e '.active == true' "$FREEZE_FILE" >/dev/null 2>&1; then
+  echo "⛔ Graph-write freeze ACTIVE ($(jq -r '.issue // "?"' "$FREEZE_FILE")) — enforced, not advisory: substrate.py"
+  echo "   refuses ensure-*/stage-claims/backfill/approve-claims with exit 4. Reads and --dry-run are unaffected."
+  echo "   Lifts when: $(jq -r '.lifts_when // "see the file"' "$FREEZE_FILE")"
+  echo "   Definition + override procedure: \`$FREEZE_FILE\`"
+else
+  echo "✅ No graph-write freeze active — substrate writes are open (YED-205 / YED-47 unblocked)."
+fi
+echo "Score each event before looking at the other."

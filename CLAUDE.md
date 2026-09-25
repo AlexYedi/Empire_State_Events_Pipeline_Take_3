@@ -120,6 +120,15 @@ Larger arc the codification work is part of. Goal: make "build-better-not-faster
 - **The `main` checkout stays on `main`.** It is never used for feature work and belongs to the reconciliation terminal only.
 - **Shared namespaces are single-writer:** ADR numbers (mint from `main`), Linear status, `roadmap.md`, and this file are edited in one designated session, never on two branches at once.
 - **Stop point → PR the same hour.** Convergence self-corrects when PRs are cut promptly; it drifts when branches sit.
+- **Shared EXTERNAL systems are single-writer too (added 2026-09-24, YED-213).** The rules above isolate
+  *checkouts*; they do nothing for Notion, HubSpot or the graph. **An event's Notion namespace is single-writer:**
+  whoever starts a pipeline for an event owns its Event page, People, Companies, Topics and Content Drafts until
+  the run closes. A second session that finds a run in progress **goes read-only and reports**. Enforced, not
+  merely agreed: `.claude/hooks/event-claim.py claim "<event>"` at Step 1.0 of `/event-deep-research` and
+  `/post-event-content` (exit 3 = held), claims are machine-global in `~/.claude/event-claims/` so every session
+  sees them, and they expire after 4h so a crashed run cannot lock an event. Why it matters: on 2026-09-20 two
+  sessions ran the same event and disagreed on two facts; duplicate effort is cheap, **contradictory records that
+  later runs read as fact are not**.
 - **Reconciliation is a role, not a habit:** when worktrees/branches/status need converging, one session runs `.claude/references/reconciliation-terminal-charter.md` (Rule 0: everyone else quiesced first; merge-and-sync only, no building).
 
 ### Visual brief pattern (added 2026-05-12)
