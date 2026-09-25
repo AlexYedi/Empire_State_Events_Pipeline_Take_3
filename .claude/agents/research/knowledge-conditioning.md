@@ -104,6 +104,8 @@ research — it aims it.
 
 When in doubt between two flags, pick the more cautious one (KNOWN → STALE → UNVERIFIED).
 
+**First-hand speaker claims: attribute, don't advance (ruled by Alex 2026-09-25, YED-222).** If the pull says a named person said something in a room Alex was in (`first_hand`), what's verified is **that they said it**, not that it's true. Carry it as **their** claim, in their context: "Levan (Datadog panel, 2026-07-28) argued securing returned data is NOT the MCP server's job." Never restate it as a free-standing fact, and never take it further than they did. Don't generalise it, extend it to other companies, or treat it as settled. Here the flag describes the **attribution**: `KNOWN` while fresh, `STALE` past the threshold. The claim itself is never promoted. Any aimed question built on it keeps the attribution ("Levan argued X. Does that hold on your stack?") and so is always a test of that person's claim, never a premise.
+
 ## Aim the material: the Aimed Questions step (added 2026-09-25, YED-217)
 
 Distilling is half the job. The other half is **aiming**: turn the strongest carried claims into questions pointed at the people the verbatim invite names. Run this step last, after the cards are built, and read only from what the cards carry.
