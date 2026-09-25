@@ -64,7 +64,7 @@ pack also had questions, but its best one *"has no named target."* So the gap is
    a person's thesis is `UNVERIFIED` regardless. The stand-in tagged first-hand speaker theses (Levan, Gleb
    Otochkin) `KNOWN`, reading "Alex heard them say it" as verification. A question inherits whatever the card
    decided. The test-shaped wording limits the damage, but the card-level ambiguity (attribution verified vs.
-   content verified) is a trust-flag question for its own issue.
+   content verified) is a trust-flag question for its own issue: **YED-222**.
 
 ## Validation
 
