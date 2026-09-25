@@ -55,7 +55,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 5. **Assemble the SCAN HEAD (ADR-5 — this is your primary output).** The head is the in-room, phone-glanceable layer. Format it to match `.claude/skills/event-research/SKILL.md` Step 3's **Scan head** schema — **not** the old full lattice:
    - `## Quick Take` (3 sentences from step 2)
    - `## People at-a-glance` — per person: 1-line who-they-are + Personal hook + Professional hook + Prioritization Signals (prioritize / de-prioritize / open-on-site). This is the **10-second** resolution; the full career-arc prose is the Deep Read's job, not here.
-   - `## Questions to ask` — consolidate the questions the research already produced: the topic **Top Questions** + the per-person **Open on-site** questions. De-dupe and group. **Do NOT invent new questions and do NOT reproduce `pre-event-content`'s outbound prepared questions** — these are the in-room research questions only.
+   - `## Questions to ask` — consolidate the questions the research already produced: the topic **Top Questions** + the per-person **Open on-site** questions + the Prior-Context Pack's **Aimed Questions** (YED-217; each keeps its named target, its anchor, and its trust flag — an `UNVERIFIED` one keeps its test-shaped wording and its anchor also goes under Verification Flags). De-dupe and group. **Do NOT invent new questions and do NOT reproduce `pre-event-content`'s outbound prepared questions** — these are the in-room research questions only.
    - `## Success Signals` (from step 3, incl. ≥1 anti-signal)
    - `## Verification Flags` (its own section — every unverified/unsourced/ambiguous item, see quality bar)
    - **Do NOT put the topic/company bullet lattice in the head.** That depth is now the Deep Read (Primer/Landscape + Companies), rendered later from the Evidence Set. Putting it in the head is the exact regression this design removes.
@@ -76,7 +76,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 
 **Scan head:**
 - `People at-a-glance`: each person has both a personal hook AND a professional hook, OR an explicit "None found — engage off topic discussion in the room". No invented hooks. Kept at 10-second resolution — no career-arc prose (that's the Deep Read).
-- `Questions to ask` is populated from the topic Top Questions + person Open-on-site only; no invented questions, no outbound `pre-event-content` duplication.
+- `Questions to ask` is populated from the topic Top Questions + person Open-on-site + the pack's Aimed Questions only; no invented questions, no outbound `pre-event-content` duplication.
 - Quick Take is mobile-readable in 30 seconds.
 - Success Signals include at least one anti-signal.
 - `Verification Flags` is its own head section — every mismatched domain, ambiguous identity, or unsourced claim surfaced prominently, never silently resolved.
