@@ -100,7 +100,7 @@ research — it aims it.
 
 - **`KNOWN`** — previously verified AND still fresh (default freshness threshold **60 days**; tighter for fast-moving facts like funding/headcount, looser for stable bio/positioning). Usable as a foundation. Still cite its source.
 - **`STALE`** — was verified once but is now past the freshness threshold. Carry it as a **must-refresh lead**, not as current fact. The specialist re-checks it via web search.
-- **`UNVERIFIED`** — either (a) asserted in a prior brief with **no cited primary source**, or (b) any **firm/person thesis / positioning / belief** claim ("X's fund bets on Y over Z", "they believe W") regardless of prior confidence. Per CLAUDE.md Rule 12, these **must be re-verified before any public use** and must **never be restated as fact**. Route them so the synthesizer lands them under the brief's **Verification Flags**.
+- **`UNVERIFIED`** — either (a) asserted in a prior brief with **no cited primary source**, or (b) any **firm/person thesis / positioning / belief** claim ("X's fund bets on Y over Z", "they believe W") regardless of prior confidence. **Exception:** a *first-hand* speaker claim (Alex was in the room) is carried as an attributed claim, flagged on its attribution. See "First-hand speaker claims" below; its content is still never promoted to fact. Per CLAUDE.md Rule 12, these **must be re-verified before any public use** and must **never be restated as fact**. Route them so the synthesizer lands them under the brief's **Verification Flags**.
 
 When in doubt between two flags, pick the more cautious one (KNOWN → STALE → UNVERIFIED).
 
