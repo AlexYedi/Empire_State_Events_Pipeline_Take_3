@@ -1,0 +1,1326 @@
+{
+ "produced": "2026-09-25",
+ "source": "Notion Topics DB, rows mode, Top Questions is_not_empty; three pulls (Last Updated desc, asc, middle window 2026-05-30..06-21) merged, deduped by page id",
+ "topics": [
+  {
+   "notion_page_id": "3e1d3699c2db812c8b81ef9d2f0dcc1f",
+   "name": "Developer-Relations-Led GTM",
+   "last_updated": "2026-09-20",
+   "top_questions": "How do you attribute revenue or retained usage back to a specific city stop — what metric says a stop worked? · With Nebius having acquired Tavily, is this still a partnership or one company's GTM wearing two logos? · A new CMO started roughly seven weeks before the tour launched — did the tour concept predate that hire? · What is different about growing a developer community around AI infrastructure now versus communications APIs a decade ago?"
+  },
+  {
+   "notion_page_id": "3e1d3699c2db81a58956cfabf254c453",
+   "name": "AI Sales Agents",
+   "last_updated": "2026-09-20",
+   "top_questions": "Where is the one step in an agent's flow you decided NOT to let it act on alone — and what would have broken if you had? · Does a sales agent have a sandbox equivalent — an environment safe to fail in before it touches a real prospect — or does the live-prospect surface make after-the-fact observability the only workable model? · When an agent fails a scenario nobody tested for, is it more often a bad-data problem or a bad-judgment problem? · Does 'run more campaigns with fewer people' mean leverage per rep or smaller teams?"
+  },
+  {
+   "notion_page_id": "3ded3699c2db812cbbfad291d56df421",
+   "name": "Agent Autonomy & Human-in-the-Loop in Production",
+   "last_updated": "2026-09-17",
+   "top_questions": "1. Is the permission ceiling scoped per task class by measured track record, or is it an all-or-nothing toggle?<br>2. Are approval gates triggered by risk signal or by action category — the fatigue curves differ sharply?<br>3. When the approval queue backs up, does an unanswered item default to approve or deny?<br>4. What is your equivalent of plan-only mode — the fallback that keeps an agent out of prod when it misreads a signal?<br>5. Has anyone measured their own reviewers' agreement rate on what counts as risky?"
+  },
+  {
+   "notion_page_id": "3ded3699c2db813cb682f91fe85279f6",
+   "name": "Trusting Agent PRs (review thresholds & agentic reviewers)",
+   "last_updated": "2026-09-17",
+   "top_questions": "1. Have you enabled AI-approval-counts-toward-required-reviewers anywhere — and which paths did you deliberately exclude?<br>2. Is your reviewer agent the same model family as your generator, and how would you know it is not agreeing with its own blind spots?<br>3. Who writes the standard of done, and does it exist before the code does?<br>4. What track record promotes an agent from advisory to trusted — and what demotes it?<br>5. Is the relaxation of review driven by new evidence, or by velocity pressure?"
+  },
+  {
+   "notion_page_id": "3ded3699c2db818d9caae6772b6be67d",
+   "name": "Closed-Loop Remediation (agents fixing agents, automated rollback)",
+   "last_updated": "2026-09-17",
+   "top_questions": "1. If the same model writes the bug and the fix, is that redundancy or correlated failure — and how would you test the difference?<br>2. Is your fix-agent a balancing loop or a reinforcing one, and what is the evidence rather than the intuition?<br>3. What is your retry budget, and was the number tested or guessed?<br>4. Is burn rate computed against the canary slice or global traffic?<br>5. For which class of service is automated rollback actually unsafe?"
+  },
+  {
+   "notion_page_id": "3dcd3699c2db81f3a160d2833dd6bdf8",
+   "name": "Centaur vs. Reverse Centaur (who shapes the work in AI-assisted jobs)",
+   "last_updated": "2026-09-15",
+   "top_questions": "Where in your workflow does the agent choose the shape of the work? What does your AI tool do when you say you're still thinking? Which artifacts should an agent be allowed to draft but never approve? Does 'amplified vs diminished' (Lenny's 2026 survey: a top predictor of career optimism) show up in your team's AI rollout?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db8168b18fedbee6bc42de",
+   "name": "AI-Era Marketing Tech Stack",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. When Clay scoring and CRM scoring disagree, which wins and where does the score live?<br>2. How do you version and audit plain-language scoring when the model changes?<br>3. Does activation stay an audience sync or move to agents launching campaigns via Meta's Ads MCP?<br>4. Which tools did Find / Prioritize / Activate actually replace at a named customer?<br>5. Who owns the stack after the rebuild, and did headcount change?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db81a78dc7eb80888bc3d5",
+   "name": "AI-Assisted Legacy Migration",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. What percentage of flows convert without human edits, and how is \"correct\" measured?<br>2. Is \"under six months\" contract-to-decommission or build start?<br>3. Which flow types still need hand rewriting?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db81ab8f75d9fa6d37fc09",
+   "name": "Legacy Middleware Modernization",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. What share of flows are simple routing vs stateful, long-running or transactional logic?<br>2. Who pays for the dual-run period?<br>3. What replaces vendor monitoring/support, and what does it cost?<br>4. Is trading TIBCO lock-in for AWS lock-in acceptable?<br>5. At what volume does per-invocation pricing cost more than a flat license?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db81ba9800f63125c58a23",
+   "name": "AI-Native CRM (prompting your CRM)",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. When a question needs precise math, does the answer come from the report engine or the model?<br>2. How are permission-scoped answers reconciled between a manager and a rep?<br>3. Can the AI create/save views and reports, or only answer and propose changes?<br>4. How is an AI-generated number verified before a forecast call?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db815d9ca5d664f88efc0a",
+   "name": "Enterprise Knowledge / Workspace AI (Systems of Context)",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. Where should the system of context live — where work is authored, in an overlay index, or in the productivity suite?<br>2. Do external agents over MCP get the same permission and verification signals as the vendor's own agent?<br>3. How does a vendor decide how much to retrieve given context rot and per-credit cost?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db81308bf2f363325788c4",
+   "name": "Context Engineering (data integration, quality, governance for AI)",
+   "last_updated": "2026-09-13",
+   "top_questions": "1. When an agent runs on a trigger, whose permissions does it retrieve under — creator, triggering user, or explicitly shared pages?<br>2. Is there a freshness/verified signal that down-ranks stale or duplicate pages before the model reads them?<br>3. Can an admin audit which pages and connector sources an agent actually read?<br>4. Live search vs pre-indexed connectors — how fast do source permission changes propagate?<br>5. Should the system of context live where work is authored, or in an overlay index across tools?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db8134b318ef3d7efd8edc",
+   "name": "Autonomous Software Factories (Level 1 → Level 2)",
+   "last_updated": "2026-09-12",
+   "top_questions": "1. What measurable gate moves a team from Level 1 to Level 2?<br>2. Do agentic reviewer approvals count toward branch protection, and on which paths would you never allow it?<br>3. Whose standard does the reviewer check against, and is it written before the code?<br>4. Who writes the spec, and what makes it agent-ready?<br>5. What does a shipped feature cost end to end?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db811f945ad5eba2d870bd",
+   "name": "AI-Assisted Database Performance Tuning",
+   "last_updated": "2026-09-12",
+   "top_questions": "1. Without raw parameters, how does the agent reason about a plan that flips on one skewed value?<br>2. Are the EXPLAIN plans the agent sees ANALYZE actuals or estimate-only?<br>3. Which recommendations would you never let an agent apply, even on a branch?<br>4. Xata archived its AI agent and shipped branch-based MCP — does the market want the vendor's agent or context for my agent?<br>5. What's the eval that separates right tuning advice from plausible advice?"
+  },
+  {
+   "notion_page_id": "3dad3699c2db81b7a2d9d38496cb461c",
+   "name": "Personal AI Computers / Personal Cloud",
+   "last_updated": "2026-09-12",
+   "top_questions": "1. When a scheduled task runs while I'm not there, whose permissions is it acting under — and how is it sandboxed from the rest of my digital life?<br>2. How has the credits/metering model actually changed user behavior versus what you expected?<br>3. A year in, what's the split between people who wanted a computer and people who wanted one tool built once — and does that change what you build next?<br>4. Claude Cowork ships \"AI alongside your files\" inside a \\$20 plan — what does a dedicated cloud space give me that Cowork structurally can't?<br>5. How does your isolation model differ concretely from OpenClaw's, and does OpenClaw's security record validate or threaten the pitch?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db814c9c1ff549101ea91e",
+   "name": "Replace-Your-SaaS-Stack (build-vs-buy in the AI-app-builder era)",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) Of the 16 apps, how many have you had to rebuild/patch since launch, and what's that maintenance cost vs the subscription you cut? 2) Where did you draw the line on what NOT to replace? 3) Who owns an app after the builder changes roles?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db81d89669d4e6face164c",
+   "name": "AI Full-Stack App Builders / Vibe Coding (product agents vs coding agents vs prototyping)",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) 'Spec-driven' vs 'prompt-driven' — in practice how often do you still touch the generated code when something breaks? 2) Which tools have you put real customer data through vs demo-only? 3) How much of tool choice is capability-today vs betting who's standing in 2 years?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db811e8de7e429e6486e0b",
+   "name": "GTM Engineering",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) Who owns GTM eng at your company and how did you figure that out? 2) Where did a no-code tool's promise break down enough that you moved to code — and was the maintenance burden actually lower, or a different brittleness? 3) Where does a human SDR still beat a system, and what signal tells you when that changes?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81229945cdf6f783f30b",
+   "name": "Agents as Users / The New Application Layer",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) Designing for agents, where do you draw the line on exposed context vs inferred — and does it shift as models improve? 2) How much of the 60% agent traffic is passive crawling vs action-taking? 3) Two separate interface specs (UX vs AX) from day one, or a layered model?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81e69481f86700303d72",
+   "name": "Agentic CI / Independent Proof-of-Behavior",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) If the same agent writes code and test, where does independent validation come from — another model, a human, or behavioral proof? 2) Is GitHub's agentic-CI move a rising tide or does it compress the independent layer? 3) Is faster CI a band-aid on bad test architecture?"
+  },
+  {
+   "notion_page_id": "36bd3699c2db81589a2ceae00f500e04",
+   "name": "Postgres as the Agent Data Layer",
+   "last_updated": "2026-09-12",
+   "top_questions": "(1) agent holds Postgres connection through multi-step reasoning loop — pooling strategy preserving session semantics AND handling concurrency? (2) ai.analyze_sentiment latency profile + model version mgmt when inference is in a SQL function? (3) consolidation thesis break point — when does workload force you off consolidated Postgres?"
+  },
+  {
+   "notion_page_id": "36bd3699c2db81e29f89deb8f71084a9",
+   "name": "MCP for Databases / Agentic Data Access (beyond RAG)",
+   "last_updated": "2026-09-12",
+   "top_questions": "(1) near-100% text-to-SQL on what schema baseline + what happens to failure cases auto-executed? (2) who maintains the tool definition as schema evolves (drift)? (3) for non-AlloyDB Postgres (Supabase/RDS) — full capability via open-source MCP Toolbox, or managed features Google-DB-only?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81fbadfdf235cb9d2348",
+   "name": "Engineering Leadership in the AI Era",
+   "last_updated": "2026-09-12",
+   "top_questions": "1. 'How has your approach to hiring changed in the last 12 months — are you looking for different skills, different profiles, or are you just hiring fewer people overall?'<br>2. 'What's the actual productivity gain you're seeing from AI coding tools in your org, and how do you measure it in a way you trust?'<br>3. 'Where are AI tools creating new problems for engineering leaders — not the obvious ones, but the ones you didn't anticipate when you started adopting them?'<br>4. 'How are you distinguishing raw throughput from validated throughput now that PR volume is so easy to inflate?'<br>5. 'When an EM goes hands-on with code again, how do you keep that from becoming a bus factor of one or starving your ICs of growth opportunities?'<br>6. 'Are you running your AI agents as a coordinated team with shared context, or keeping them siloed — and how do you weigh that, given coordination finds more but also creates shared blind spots?'"
+  },
+  {
+   "notion_page_id": "357d3699c2db8191aae8e0dfce2e8c22",
+   "name": "CRM as System of Action",
+   "last_updated": "2026-09-12",
+   "top_questions": "1. Which actions have customers actually let run with no approval, and which got pulled back?<br>2. Who is the single writer for a field like deal stage when several vendors' agents can write?<br>3. What's the minimum permission set for trusted deal execution, and does the agent act as the rep or its own identity in the audit log?<br>4. If HubSpot ships native agents, when does a HubSpot shop still need a separate system of action?<br>5. Which pricing model (per-result, credits, platform) leaves the vendor accountable for a wrong action?"
+  },
+  {
+   "notion_page_id": "350d3699c2db81269fe6f57cc96e7f3a",
+   "name": "Spec-Driven Development with Agentic AI",
+   "last_updated": "2026-09-12",
+   "top_questions": "How do you tighten requirements iteratively without spec sprawl? What's the right granularity for a task slice — verifiable but not micro-managed? How do specs evolve when the AI surfaces an unanticipated edge case mid-implementation? When does cross-agent portability (Spec Kit) outweigh deeper integration (Kiro)? How do you write specs in a way that's faithful to both the human reader and the AI executor?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81179484e75dd2738fb3",
+   "name": "AI-Native Go-To-Market",
+   "last_updated": "2026-09-12",
+   "top_questions": "1) How do AI-native startups measure and forecast pipeline when top-of-funnel is community? 2) What's the transition point from founder-led to AE-led sales for AI products? 3) How do FDEs contribute to content / brand without becoming full-time marketing? 4) What does the first non-founder GTM hire look like at an AI-native startup — AE? FDE? Solutions?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81d98ac3f366e35b9a51",
+   "name": "Cloud Sandboxes for AI Agents",
+   "last_updated": "2026-09-08",
+   "top_questions": "1) What actually differentiates sandbox providers — cold-start, isolation, persistence? 2) When GitHub bundles sandboxes natively, what's the moat? 3) What does RL-training-at-scale actually require?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81bc82ccd6eb1e07bd98",
+   "name": "AI Search Optimization (AEO / GEO)",
+   "last_updated": "2026-09-08",
+   "top_questions": "1) LinkedIn as #1 cited domain — does that change what you publish where? 2) Which of LLMO/GEO/AEO are you actually targeting, and how do you attribute a citation-rate change? 3) What's a credible measurement stack for a team that can't afford enterprise tooling?"
+  },
+  {
+   "notion_page_id": "366d3699c2db812ea293d4408374131d",
+   "name": "Open-source AI Infrastructure",
+   "last_updated": "2026-09-08",
+   "top_questions": "- 18 months post-acquisition: is the LangFuse/LibreChat roadmap still community-driven or captured by ClickHouse's enterprise roadmap?<br>- For regulated-industry customers: does self-hosted MIT stack actually solve the compliance problem or just move it?<br>- What's the honest post-acquisition incentive structure for OSS contributors — and has that changed how the community engages?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db813f932dc9e1cfbaee47",
+   "name": "Agentic AI",
+   "last_updated": "2026-09-08",
+   "top_questions": "1. What's your experience with the gap between single-run success and sustained reliability over multiple runs?<br>2. With MCP and A2A as complementary protocols, which is proving harder to implement well in practice?<br>3. How are you thinking about the security surface area of agents with tool access and write permissions?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db81f9bb82fff68906ed5c",
+   "name": "Enterprise-Grade Concerns for AI-Built Apps (access, compliance, security, cost, design)",
+   "last_updated": "2026-08-30",
+   "top_questions": "1) Access controls/compliance — enforced at the app level (RBAC per build) or a platform layer above everything? 2) Cost attribution — do you know per-app inference spend, or a blended number? 3) Has anything needed to change specifically for the EU AI Act's Aug deadline?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db816b9895e136f12105ea",
+   "name": "RAG with Vector Databases (real-time / beyond-RAG)",
+   "last_updated": "2026-08-30",
+   "top_questions": "1) When did you move off pgvector to something purpose-built — latency or write-volume? 2) For streaming RAG, how do you keep the index consistent on doc update/delete? 3) Is inline VECTOR_SEARCH replacing a separate RAG service or just a convenience layer?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db816e83e2c5e564f29fa5",
+   "name": "Event-Driven AI / Streaming Agents on Apache Flink",
+   "last_updated": "2026-08-30",
+   "top_questions": "1) Where's the line between calling ML_PREDICT in a Flink pipeline and an actual 'agent'? 2) Has anyone used checkpoint/replay for post-incident agent audit in production, or is it a pitch-deck feature? 3) With IBM owning the roadmap, does open Apache Flink Agents stay genuinely multi-vendor?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db81ac856af7217fbbfdb9",
+   "name": "Agentic AI & Multi-Agent Workflows",
+   "last_updated": "2026-08-30",
+   "top_questions": "1) When a multi-agent workflow fails, is it one agent wrong or agents miscommunicating — and how do you instrument that? 2) Is the EU AI Act reshaping human-in-the-loop architecture or just audit docs? 3) Is A2A actually used for agent-to-agent, or is MCP doing all the real work?"
+  },
+  {
+   "notion_page_id": "3ccd3699c2db81c1ad87d0bccb688056",
+   "name": "MCP (Model Context Protocol) Tool Calling",
+   "last_updated": "2026-08-30",
+   "top_questions": "1) Any runtime check on tool descriptions, or still trust-the-server? 2) Now MCP + A2A share a foundation, are you using both or is one doing all the work? 3) At what call volume did MCP's connection model become a constraint?"
+  },
+  {
+   "notion_page_id": "3cbd3699c2db8153912dcc3943da4fd4",
+   "name": "Latency-Optimized LLM Inference for Voice / Small Purpose-Built Voice Models",
+   "last_updated": "2026-08-29",
+   "top_questions": "1) Are the marketed 192ms/354ms numbers what you actually see on the shared gateway, or does self-hosting change the picture materially? 2) How are you deciding between a stitched pipeline (LiveKit/Gemma) vs a single fused model (OpenAI Realtime) — latency, cost, or control? 3) How do you decide, turn by turn, when the model should think longer vs respond immediately under 'controllable reasoning'?"
+  },
+  {
+   "notion_page_id": "3cbd3699c2db81b2864de73f05816237",
+   "name": "Real-Time Speech-to-Text (Streaming STT) & the Endpointing Battleground",
+   "last_updated": "2026-08-29",
+   "top_questions": "1) agent_context needs the LLM's last turn fed back into the STT call — does LiveKit's routing handle that plumbing or is it still in the agent code? 2) With Speechmatics now next to Deepgram/Cartesia inside LiveKit, are customers actually A/B testing STT per call, or picking one and never revisiting? 3) Is real-world noise/accent robustness still the long pole, or is it all endpointing + latency now?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db8106818ef2224c6654d3",
+   "name": "Thought Leadership / Founder-Led as a Channel",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) 56% of buyers consult existing customers before they'll talk to a rep — is your best 'thought leadership' asset actually a customer's voice, not the founder's? 2) How do you defend a channel's budget internally when its highest-trust activity happens in dark social you structurally can't attribute? 3) If AI-ghostwriting is now the norm for 'founder-led' content, what actually distinguishes a trusted post from LinkedIn's version of AI slop?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db8144b62fdb5b26f2ef11",
+   "name": "AI-Native GTM Stacks & Agentic GTM",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) When you say 'AI agent' in your stack, is a human approving every message or is it fully autonomous — and how did you decide where that line goes? 2) 11x's collapse came from claimed ARR outrunning retained revenue — how are you underwriting outcome-based agent pricing without repeating that math mistake? 3) Which of your GTM agents actually COMPOUNDS (gets smarter from your first-party data) vs just executes a static playbook faster?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81519e87ea7bdb648d49",
+   "name": "AI Slop & Outbound Saturation",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Clay banned unedited AI writing internally while selling AI enrichment externally — where do you draw that line in your own outbound? 2) Is your reply-rate decline AI-slop fatigue, or inbox real estate consolidating toward fewer better-resourced senders — do you have data separating those? 3) How much of your best outbound is first-party signal (yours, compounding) vs rented intent (everyone's, decaying)?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81c78703c2919960f1dd",
+   "name": "GTM Engineering (GTME) as a Discipline",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) You've built data/orchestration/execution — which of the four layers is actually still hard, and which did you assume was hard but turned out commodity? 2) What % of your signal-based pipeline is first-party vs rented — and if you don't know, why not? 3) If every Series B has a GTM engineer running near-identical Clay tables in 18mo, what's the next arbitrage — and are you building toward it?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db810eb906e434ee67c10b",
+   "name": "The LLM Eval Tooling Landscape",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Now that OpenAI owns PromptFoo, how to think about a model provider owning an eval tool used against competitors' models — does Bedrock Model Evaluation face the same conflict? 2) For teams not fully on Bedrock, how mature is 'bring your own inference' in practice? 3) Most of the market runs two tools (dev-time + production) — does Bedrock replace the second, or do customers still bolt on Langfuse/Arize/Braintrust?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81b39500c9349a321261",
+   "name": "LLM Evaluation Practice (2026 State of the Art)",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) When judge + human spot-check disagree, what's the resolution protocol — trust the judge, retrain the rubric, or pull the case into the golden set? 2) Bedrock lets you pick the judge from its own catalog — how do you mitigate self-enhancement bias when judge + candidate share a provider? 3) Where's the line between offline gate + online monitoring — has a regression ever been caught only in prod, and what did it cost?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81d3af1bd2ca37e7543a",
+   "name": "Model-Promotion Gates & Eval in CI",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) For your gate's judge, do you calibrate vs human ground truth (kappa) or trust raw agreement — and how often re-run as the model under test changes? 2) Bedrock picks the judge from its own catalog — how do you address self-enhancement bias when judge + candidate share a lineage? 3) When an aggregate score holds flat between two versions, how do you catch a handful of scenarios that silently regressed and the average absorbed?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81f38546e0d7fbf0c36d",
+   "name": "Eval Metrics Beyond Accuracy",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Is your faithfulness/groundedness threshold calibrated against your own human-labeled data, or borrowed from a published default — and how often recalibrated? 2) How do you decompose a RAG failure between retrieval + generation — can generation quality mask a retrieval regression? 3) Do you gate on p99 latency alongside quality, or only monitor after the fact?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db814087f5e1c16b73034b",
+   "name": "Apache Spark & Spark 4.2",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) With AQE handling much skew automatically, where does it still fall short — what skew still needs a human? 2) Spark 4.2 leans into vector search + metric views — Spark chasing AI workloads, or catching up to what teams bolted on with separate vector DBs? 3) Is GPU acceleration complementary to CPU-native engines (Comet/Sail) or competing for the same workloads?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db8156b1e9dc4a03391c5c",
+   "name": "Native Execution Engines (Modernize Spark Without a Rewrite)",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Comet/Gluten fall back to regular Spark for unsupported operators — how much of a real workload actually ends up covered vs falling back? 2) Sail is a full engine replacement — what's the real compatibility risk vs the plugin approach? 3) Now that Gluten is ASF TLP and Comet hit 1.0, does that governance maturity change enterprise build-vs-buy on the acceleration layer?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db817b89c5dd468cce3e72",
+   "name": "Lakehouse & Open Table Formats 2026",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Iceberg basically won the format war — is the real fight now the catalog layer, and who's winning it? 2) Real-time lakehouse — solving a real problem or vendors chasing a streaming use case already solved elsewhere? 3) With Delta + Iceberg sharing physical Parquet, does that reduce lock-in or just move it to the catalog?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81e7915dc5f8c20eae5b",
+   "name": "Spark Observability & Performance Tooling",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) As native engines self-report performance telemetry, does that shrink the need for a separate observability layer or just change what it must catch? 2) Your Cluster Agent applies fixes automatically — how much human sign-off sits between 'agent suggests' and 'agent changes a prod pipeline'? 3) What's the newest/least-understood Spark performance issue — the one people don't yet know to look for?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db8190a3bdedb0b7e30ece",
+   "name": "AI-Native Startup Talent Market (NYC)",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) First hire you made off a warm intro vs a posted role — what made that path better? 2) As you scale past seed/A, does warm-intro hiring break or change shape? 3) Ideal GTM/operator hire right now — forward-deployed/customer-facing or classic pipeline-and-process?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db819b8804d9e0deaa4434",
+   "name": "Agentic GTM & Growth-as-a-Service",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) When you say 'own the outcome,' what metric are you contractually accountable for, and what if you miss? 2) How much live-ad-account write access do enterprises actually give you, and what's the biggest procurement objection? 3) A year out, still ads-first or a broader GTM-outcome mandate?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81a39806d1fe840d3f15",
+   "name": "Cloud Cost Optimization & FinOps",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) When usage shifts fast (AI workload overnight), how quickly does the system re-optimize commitments vs a human team? 2) As GPU/token spend grows, is that core FinOps or a separate AI-cost category? 3) Does taking a cut of savings create pressure to over-cut and add reliability risk?"
+  },
+  {
+   "notion_page_id": "3c4d3699c2db81ab8e39c093af533a30",
+   "name": "Vertical AI Applications",
+   "last_updated": "2026-08-21",
+   "top_questions": "1) Where's the line between what AI decides autonomously vs stays human-reviewed, and how has it moved in 6mo? 2) As base models improve, what's actually defensible in 2yrs — workflow, proprietary data, or customer relationships? 3) (Arist) Is the SMS channel the differentiator, or could a horizontal L&D platform bolt it on?"
+  },
+  {
+   "notion_page_id": "3c3d3699c2db8133aa92e8467f078b2a",
+   "name": "Kubernetes Observability & the Telemetry Pipeline",
+   "last_updated": "2026-08-21",
+   "top_questions": "1. Where's the OTel/Prometheus line in your stack — scrape Prometheus into an OTel Collector, or run separate paths? 2. Do you buy the wide-events/Observability-2.0 argument, or is the 3-pillar model still right for a K8s shop your size? 3. What actually drives your observability bill — ingest, cardinality, or seat/host — and did native histograms move it?"
+  },
+  {
+   "notion_page_id": "3c3d3699c2db81b28fcbd77789eb3244",
+   "name": "Agentic Ops / Agentic SRE",
+   "last_updated": "2026-08-21",
+   "top_questions": "1. Where's the line between 'agent recommends' and 'agent acts' in production, and has it moved in the last six months? 2. Elastic acquired DeductiveAI rather than building agentic RCA in-house — build-vs-buy signal for the market, or Elastic-specific? 3. Vendors self-report accuracy (Cleric's 92%) — what would independently-audited data need to look like before you'd trust an agent with prod write-access?"
+  },
+  {
+   "notion_page_id": "388d3699c2db81379b3dc5a44c414564",
+   "name": "Go-to-Market Strategy for AI (and AI for GTM)",
+   "last_updated": "2026-08-11",
+   "top_questions": "1) Is AI-generated outreach poisoning the well — are buyers penalizing it, and how do you distinguish signal from noise? 2) PLG-for-SMB / SLG-for-enterprise rarely integrates cleanly — what does your architecture look like at the boundary? 3) Is the CISO conversation moving earlier in AI deals, and how has it changed your POC/pilot structure?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81569babf9655a248d4f",
+   "name": "Agent Evaluation & Reliability in Production",
+   "last_updated": "2026-08-06",
+   "top_questions": "1) When your eval harness disagrees with production, which do you trust and what's the reconciliation protocol? 2) Are you running LLM-as-judge on sampled prod traffic, and how do you handle the judge being the same model family as the agent (egocentric bias)? 3) What's the minimum eval suite that catches the regressions that matter - how did you find which evals were just noise?"
+  },
+  {
+   "notion_page_id": "370d3699c2db816683b9c6b636beab5c",
+   "name": "Robotics & Embodied AI (Physical AI)",
+   "last_updated": "2026-08-06",
+   "top_questions": "(1) BMW/Mercedes are structured assembly — what's your mental model for when unit economics migrate to less-structured environments, and the leading indicator that the timeline is real vs marketing? (2) Open weights (pi0, GR00T) vs defensible margin — is the moat proprietary operational data, and who's accumulating it fastest? (3) If China compresses hardware sub-\\$10K and the model layer goes open, does the investable opportunity collapse to deployment expertise + vertical workflow integration (managed-services-shaped), or is there a platform layer that captures disproportionate value?"
+  },
+  {
+   "notion_page_id": "370d3699c2db81e79a6bd69587f81d9e",
+   "name": "Frontier AI Investing & Capital Flows (Service-as-Software)",
+   "last_updated": "2026-08-06",
+   "top_questions": "(1) Circular financing is getting serious analyst coverage — how do you underwrite revenue quality when a material share may flow within the investment loop? A diligence methodology, or a risk you size around? (2) LP/GP alignment looks structural (LPs need liquidity, deep tech needs 12-15 yrs, secondaries are the pressure valve) — are continuation vehicles solving alignment or deferring it with more fees? (3) Service-as-Software assumes AI converts services spend to software margins, but outcome-based selling requires shared operational data + ROI buying — which application-layer companies have actually cracked that GTM, and what does the playbook look like?"
+  },
+  {
+   "notion_page_id": "350d3699c2db81f09211e80b8638e0ee",
+   "name": "AI Coding Agents",
+   "last_updated": "2026-08-06",
+   "top_questions": "When do you let an agent run end-to-end vs. checkpoint review? How do you sandbox experiments? What's the right 'spec → task → PR' granularity? How do you handle agent disagreement (multiple agents producing different solutions)? How do you cost-budget an autonomous loop?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8134b212f67a822f3ca4",
+   "name": "Agentic AI Security",
+   "last_updated": "2026-08-06",
+   "top_questions": "1. What's the right default trust model for an agent that can read files, write files, and execute shell commands?<br>2. Does a signed skill registry solve 15% malicious rate, or does it just move the attack surface?<br>3. Is human-in-the-loop confirmation the path forward, or does it break the viral ergonomics that made agents mainstream?<br>4. What's the Freedom Tech community's own threat model for OpenClaw-class agents — and how does it differ from the corporate security advisories?<br>5. Where does agent runtime security become a compliance requirement rather than a best practice?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81eabc19c4a5e3275945",
+   "name": "Agent Architecture Patterns",
+   "last_updated": "2026-08-06",
+   "top_questions": "1) In your experience, what's the single most common mistake teams make when they try to skip from prompt chaining straight to orchestrator-workers? 2) When you deconstruct a workflow, what's the heuristic for deciding which step should be LLM-driven vs deterministic code? 3) How often does an agent you've built in production actually exercise the 'dynamic direction' part — or does most real-world value come from durable workflows with a few LLM steps inside?"
+  },
+  {
+   "notion_page_id": "347d3699c2db815eac45ecd84347e838",
+   "name": "Enterprise AI Adoption (FDE-led)",
+   "last_updated": "2026-08-06",
+   "top_questions": "1) At what point does an FDE-led motion break and need to transition to a scaled solutions/CS org? 2) How are buyers evaluating AI vendors differently than traditional SaaS? 3) What's the right pricing model for agent-based products? 4) How do enterprises structure their own internal AI teams to buy/build intelligently?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8108b852e596ccd21cee",
+   "name": "Agent-to-Agent (A2A) Transactions & Agent Identity/Trust",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Does agent identity converge on an onchain standard like ERC-8004, or route through federated KYB because compliance won't accept a token as an audit trail? 2) A2A doesn't mandate how agent cards get verified - still true in production, or has a de facto standard emerged? 3) What's the first vertical where you'd trust two agents to close a deal with zero human review - and the line you'd never cross?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8137924dc4d45a0019c8",
+   "name": "Agentic Payment Rails & Protocols (x402, AP2, card networks, stablecoins)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) When an agent pays x402/USDC vs AP2/card, who prices out the interchange difference - does that lock stablecoin rails into low-value M2M spend and leave cards for high-value human-adjacent? 2) Is 'demand isn't there yet' for x402 still true from where you sit, or stale - what's your month-over-month volume curve? 3) Do AP2/x402/Visa TAP converge, or does one win by being embedded in the dominant agent runtime regardless of technical merit?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8179a7a8f841e652c735",
+   "name": "Agentic Commerce (thesis: real vs. narrative + who owns the relationship)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) OpenAI walked Instant Checkout back within weeks - overreach on the 'collapse discovery-to-purchase' thesis, or a data-pipeline sequencing problem they'll re-attempt? 2) As a merchant, own your agent on your domain (cede reach) or plug into someone else's (cede the relationship)? 3) Which stat is closer to how you underwrite this internally - McKinsey's \\$3-5T or Gartner's narrower 20%-by-2030?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db818e9edbcb55bd1e7561",
+   "name": "Trust, Fraud, Authorization & Liability when the Buyer is an Agent",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) If a protocol verifies an agent was authorized but the purchase was still wrong, who eats the loss - merchant, issuer, or platform - and has that been tested in a real dispute? 2) How do you read Amazon v. Perplexity - a merchant-authorization question, or a precedent for whether the open web is agent-navigable by default? 3) Is the 2.4x agent-dispute rate a growing-pain that normalizes, or a structural tax priced into agentic checkout permanently?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81119e32d71b7987b782",
+   "name": "Consumption-Based vs. Seat-Based Pricing for Enterprise AI",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Is the emerging default hybrid (base seat + metered usage), or is pure consumption winning for agentic tools specifically? 2) After Microsoft/Uber, are buyers now asking for spend caps as a deal-blocking requirement? 3) For a coding agent, is there real movement toward outcome-based pricing, or is token/session consumption the practical ceiling?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8113a5abdb8f92abb2b8",
+   "name": "Bedrock as an Enterprise AI Control Plane",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Is AgentCore Identity the umbrella layer with the Claude gateway as one client, or two stacks to reconcile? 2) For an EDP customer, does routing Claude through Bedrock change unit economics, or is it purely procurement consolidation? 3) When you say data never leaves the customer's AWS account - does that hold for telemetry/CloudTrail too, or only inference payloads?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db816490fef5c93f3338e5",
+   "name": "AI-DLC (AI-Driven Development Lifecycle)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Was the Bedrock rebuild greenfield - does the 76-day compression hold for legacy/brownfield code where most enterprise engineering lives? 2) Where's the review gate inside a 'bolt' - before merge or after? 3) Is AI-DLC broad inside AWS now, or concentrated in a few flagship teams?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db816cb733ec942eb4de77",
+   "name": "Enterprise Deployment of AI Coding Agents (Claude Code at org scale)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) When Anthropic's gateway solves per-user cost attribution, is the Microsoft/Uber story a pricing-model problem or a governance problem - and which does this architecture fix? 2) For a regulated customer, is CloudTrail/IAM logging sufficient audit evidence, or do teams layer a separate agent-audit tool? 3) Where's the line between the gateway's policy engine and a customer's existing IAM/PAM stack?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81bdb772ecbfad68983c",
+   "name": "Claude CoWork / Desktop for Knowledge Workers",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) For non-engineers, what does the approval step look like before CoWork takes an action with side effects - per-action, or a scoped policy set in advance? 2) Does an org reuse the connectors/governance it built for engineering, or vet each surface separately? 3) How does local file access reconcile with DLP tooling not built for an autonomous local agent?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8103985cca5cce37f144",
+   "name": "Quantum: Hype vs. Reality & the Commercial Timeline",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) What's your own bar for a real 'utility era' result vs a press-release result? 2) NVIDIA, IBM, Microsoft are betting on connectivity, superconducting scale-up, and topological qubits respectively - can more than one pay off, or does physics force convergence? 3) If advising a non-quantum-native company on when to pay attention, what's the trigger?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81509bc1d9b91d2f01b9",
+   "name": "Near-Term Quantum Applications (chemistry, materials, optimization)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Which area - chemistry, materials, optimization, finance - produces the first UNDISPUTED quantum advantage, and when? 2) When you hear a 'quantum advantage' claim in the press, what's the first thing you check? 3) Have you solved something with a hybrid workflow where the quantum part genuinely wasn't optional?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81648128d960fe1c5e91",
+   "name": "Quantum-Classical Hybrid Workflows",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) In hybrid workflows today, roughly what fraction of wall-clock is actually on the QPU vs classical orchestration? 2) Converging on 'rarely-called high-value subroutine' or 'tightly-coupled real-time accelerator' - and does that change what a company builds toward now? 3) What does a team need on the classical/HPC side before a quantum pilot is even worth attempting?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8187b8b4dec4605dfc82",
+   "name": "Quantum-Accelerated Supercomputing",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) NVIDIA and IBM both published quantum-centric supercomputing architectures within weeks - converging standard or format war? 2) If NVIDIA never builds a QPU, what's the actual moat - interconnect, software stack, or distribution? 3) For a company already all-GPU, what's the realistic trigger to evaluate quantum acceleration?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db8179ad9bc1af30c6a2d1",
+   "name": "AI-Powered GTM (incl. embedded / MCP GTM)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Where's the line for you between AI assisting a rep and AI owning a step end-to-end? 2) Across hundreds of customer stacks, is the constraint really the tooling now, or still process + data hygiene? 3) Ramp put Apollo in the same cohort as Anthropic and Granola - do you compete with legacy sales tools or with the AI labs' own agent platforms?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db817d8347e22161debb3a",
+   "name": "GTM Engineering (the emerging role)",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) When Apollo hires/works with a 'GTM Engineer', what's the actual skill test - can they build, or operate the AI Assistant well? 2) Is the RevOps-to-GTM-Eng shift concentrated in venture-backed SaaS or also slower enterprise orgs? 3) For someone with deep GTM/AM experience but no coding background, what's the realistic on-ramp right now?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81948755db6ee49645b3",
+   "name": "TAM Mapping & Audience-Building with AI",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Post-Pocus, is Apollo's TAM leaning more on product-usage signal or still firmographic/intent - and how are they reconciled when they disagree? 2) How do you keep a 'natural language' TAM build from just encoding the rep's existing bias? 3) What's the actual signal decay rate on intent data before a list is stale?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81a2814bfddd5023ecff",
+   "name": "AI-Driven Outbound & Personalized Sequencing at Scale",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) Where's the volume threshold before deliverability risk outweighs the personalization gain? 2) Given the churn numbers on fully autonomous AI SDRs, is Apollo designing toward the human+AI pod model or still pushing full autonomy? 3) How did the LinkedIn relationship actually get repaired - a data-usage change or a policy shift?"
+  },
+  {
+   "notion_page_id": "39ad3699c2db81d38534e9fb9a5407e4",
+   "name": "RevOps in the AI Era",
+   "last_updated": "2026-07-11",
+   "top_questions": "1) With \\<10% of teams seeing real AI ROI in RevOps, what does the other 90% get wrong first? 2) Does GTM Engineering absorb RevOps, or settle into a permanent build/run split? 3) When an AI agent routes a lead wrong in real time, who owns the accountability?"
+  },
+  {
+   "notion_page_id": "396d3699c2db814f9acdda46565b34d5",
+   "name": "Multichannel Conversational AI & CPaaS",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) Voice-vs-chat-vs-WhatsApp — latency/cost, customer-preference, or data-needs decision? 2) Where does CPaaS still earn its fee now Meta's Business Agent is \\~free for basic WhatsApp? 3) Is barge-in really where most deployments fail or overweighted because flashy?"
+  },
+  {
+   "notion_page_id": "396d3699c2db81c4bf26c3df2b4dde14",
+   "name": "Agent Memory & Human Handoff Design",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) At handoff, what exactly gets passed (transcript/summary/structured fields) and who decided? 2) Rules-based vs confidence-based escalation — which catches more real failures? 3) How often does a real production failure surface a gap synthetic tests missed?"
+  },
+  {
+   "notion_page_id": "396d3699c2db8150ab49df2acf1bc5f9",
+   "name": "Data Infrastructure & Observability for AI",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) Self-host vs managed Langfuse — residency or ops capacity driving the call? 2) Does staying OSS actually resolve the roadmap/pricing-drift worry post-acquisition? 3) Is observability really your bottleneck, or still model capability?"
+  },
+  {
+   "notion_page_id": "396d3699c2db818e9529e4c233071dce",
+   "name": "Real-World AI Use Cases & Deployment",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) Which deployments reached full autonomy vs still shadow mode? 2) Is your eval harness built from synthetic tests or real production failures? 3) When a deployment stalls — model, or legacy integration/ownership?"
+  },
+  {
+   "notion_page_id": "396d3699c2db81b6af64e3b0feb0c349",
+   "name": "AI Infrastructure for Large-Scale Systems",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) At what latency/utilization threshold does serverless GPU beat reserved capacity? 2) Is GPU waste a provisioning problem or does it need pipeline rearchitecture? 3) Is container isolation actually enough for sandboxing MCP-connected agents?"
+  },
+  {
+   "notion_page_id": "396d3699c2db8174a8e1fd412429d058",
+   "name": "AI-Generated Code Governance & Risk Tolerance",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) Who owns the tolerance-boundary call — security, platform, or tech leads — and is it enforced at commit time or shelfware? 2) Is the bigger risk in the code AI writes, or in what an agent pulls in autonomously (deps, MCP servers)? 3) Does a second model reviewing the first reduce risk, or move the trust problem up a layer?"
+  },
+  {
+   "notion_page_id": "396d3699c2db81a3bdcdfc085c57f6f7",
+   "name": "ML/AI Lineage, Provenance & MLOps Source of Truth",
+   "last_updated": "2026-07-07",
+   "top_questions": "1) Capture at the network/process boundary (eBPF) or at the data-transformation layer — what's the trade-off? 2) Where does the lineage-vs-provenance gap actually bite? 3) Is the real fragmentation cross-vendor, or intra-platform (code/infra/model versioning in separate systems inside one platform)?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81819f38e343b80eab5c",
+   "name": "Agent Observability & Management",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) Of the 63% who lack adequate tooling — is the gap trace depth, quality eval, cost attribution, or governance/audit? (4 different products) 2) Datadog/Splunk are moving in hard — what's the moat for a purpose-built platform when every enterprise has a Datadog contract? 3) You can trace every token/tool-call, but the hard problem is whether the agent made a GOOD decision — how do you solve the semantic-eval layer + where does human review stay?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81b99f32cf37147c37bf",
+   "name": "Agents & APIs (how agents consume/orchestrate APIs)",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) With MCP going stateless Jul 28 — what breaks in implementations assuming server-side session state, and is there a migration path? 2) Tool poisoning: spec says sanitize, reference SDK doesn't, 200K instances exposed — is the answer a security layer above MCP or a spec change? 3) Designing an API to be agent-consumed vs human-consumed — what structurally changes in endpoint design + auth (beyond 'add llms.txt')?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81c39713e2632b2f8757",
+   "name": "AI Engineering (building & shipping AI apps)",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) When the agent is wrong AND confident, how do you surface that in the PR artifact before merge? 2) Context engineering — what's the implementation pattern teams get wrong most: retrieval, memory, or pipeline design? 3) The 56% production success number — is the constraint the model, the evals catching real failures, or how teams define success?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81d98f72c2f1e878323e",
+   "name": "AI App Infrastructure & Deployment (serverless GPU)",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) The memory-snapshot cold-start approach — at what model size/context length does it break down before you're back to provisioned concurrency? 2) For agent loops where cold starts stack — are teams architecting around it (hot pools, pre-warming) or expecting optimization to make it moot? 3) The run-it-in-your-own-cloud story is great for compliance — what's the ops burden enterprises discover past the demo?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81769030cffa2a8007f0",
+   "name": "Reliable GTM Systems with Code",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) How do you decide where the human-approval gate goes — rule of thumb or per-workflow? 2) What does your eval harness actually look like for a production GTM agent, and what surprised you building it? 3) The Ramp/Stripe/Coinbase convergence — what early signal tells you a team's agent architecture is heading toward that pattern or away from it?"
+  },
+  {
+   "notion_page_id": "38dd3699c2db81eba060fa1f730ddbff",
+   "name": "Coding Agents for GTM",
+   "last_updated": "2026-06-28",
+   "top_questions": "1) Where does the Claude Code approach break down — which workflow types still favor a purpose-built tool, and what pattern predicts which is which? 2) Does [CLAUDE.md](http://CLAUDE.md) as institutional knowledge scale beyond one operator, or does each person's context diverge? 3) Is 1,000 parallel subagents a useful unit for GTM, or does data quality bottleneck before compute?"
+  },
+  {
+   "notion_page_id": "388d3699c2db8143bf01ce6002878ad3",
+   "name": "The Decision Layer: Autonomous Enterprise Decision-Making",
+   "last_updated": "2026-06-23",
+   "top_questions": "1) Where in your stack has AI actually crossed from recommending to deciding, and how did you get comfortable? 2) You can't review every decision after the fact — how do you design and audit the pre-execution constraints? 3) Does 'AI owns high-frequency/low-variance/well-defined, humans own the rest' map to how you actually allocated decision authority?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81b392e3f0d98001e5d1",
+   "name": "Agent Observability & Monitoring",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) When an agent does something unexpected in prod, what's your actual triage workflow - and where does tooling break down? 2) How do you separate 'the agent returned a response' from 'returned a USEFUL response' - where does that quality signal live in your stack? 3) What does cost attribution look like at the per-agent/per-task level, and what surprised you when you first turned it on?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81ed95c0f2d935371006",
+   "name": "Why Agents Fail in Production / Agentic Guardrails",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) What failure mode actually got you to add guardrails - a cost incident, a bad output that reached a user, or something else? 2) Where's your line between 'agent needs human approval' and 'agent can act autonomously', and what does that threshold look like in practice? 3) After teams solve the obvious failures (runaway loops, tool misuse), where does the NEXT class of agent failures come from?"
+  },
+  {
+   "notion_page_id": "386d3699c2db8141b1b3f65ca9d1075e",
+   "name": "Contextual SLMs & Prompt/Context Compression",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) What's the compression API's own latency, and does it support async so I can run it during ASR? 2) At what token-count does compression ROI turn positive given a 128K window? 3) Does the compression `rate` auto-tune to my target model?"
+  },
+  {
+   "notion_page_id": "386d3699c2db817b913de41b05d345ea",
+   "name": "Voice AI Infrastructure & Ultra-Low-Latency RTC",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) What silence_duration_ms do you recommend for a noisy room, and is semantic endpointing stable yet? 2) Where does the latency budget actually go in a production ConvoAI pipeline? 3) Raw Agora+Pipecat vs managed Vapi — when does each win?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81c2b578cc3a0131a24e",
+   "name": "Real-Time Voice Agent Orchestration",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) What build patterns / failure modes recur across your hackathon series (Istanbul -\\> Manila -\\> NYC)? 2) Is ConvoAI semantic turn detection production-trustworthy yet, or stay on VAD? 3) Which Agora-native capability do teams most underuse — multi-party, RTM, or noise suppression?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db8147b3c8cabea63fb178",
+   "name": "Apache Spark",
+   "last_updated": "2026-04-09",
+   "top_questions": "1. With Declarative Pipelines in 4.1, how are teams migrating existing imperative pipeline code — gradual overlay or rearchitect?<br>2. Where's the boundary between 'use Spark' and 'use something lighter like DuckDB or DataFusion'?<br>3. Real-Time Streaming Mode hitting single-digit ms — is that changing what workloads run on Spark vs. dedicated stream processors like Flink?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db818d8918c3dbb97c4708",
+   "name": "Spark Resource Optimization & Auto-Rightsizing",
+   "last_updated": "2026-04-09",
+   "top_questions": "1. When you say 'hands-off,' how did you build trust in the automation — what was the process for getting teams to stop manually setting resource requests?<br>2. What's the failure mode when auto-rightsizing gets it wrong, and how do you detect it before production impact?<br>3. Did you build internally or evaluate commercial tools first — what drove the custom route?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db81aa8cb3e7bb9fa4b065",
+   "name": "Distributed DataFusion",
+   "last_updated": "2026-04-09",
+   "top_questions": "1. What's the relationship between DataFusion and Spark — is Comet the bridge, or are there workloads where you'd choose one over the other?<br>2. What made DataFusion the right choice for Datadog's query infrastructure over building from scratch?<br>3. How does the open-source contribution model work when a company like Datadog is building production systems on top of DataFusion?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db8197913ae53fe4e9d7ef",
+   "name": "RAG (Retrieval-Augmented Generation)",
+   "last_updated": "2026-04-09",
+   "top_questions": "1. How are you handling the chunking trade-off between recall precision and context completeness?<br>2. With agentic RAG adding multi-step retrieval, how do you evaluate whether the retrieval path was optimal vs. arriving at a correct answer by luck?<br>3. At what point does maintaining a high-quality knowledge base cost more than stuffing everything into a million-token context window?"
+  },
+  {
+   "notion_page_id": "340d3699c2db814884f1ed6bdd44045d",
+   "name": "Open-Source Infrastructure for Quantum Networking",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. What does the open-source quantum networking contributor community look like — how many people worldwide can contribute?<br>2. Is open-source a philosophical choice or go-to-market strategy — do you need it for enterprise trust in a field this new?<br>3. How does Dainamiq sustain an open-source business — Red Hat model, Databricks model, or something else?"
+  },
+  {
+   "notion_page_id": "340d3699c2db8158a53bc2e8f18ee24b",
+   "name": "Quantum Random Number Generation (QRNG) & Entropy Management",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. Where does QRNG entropy plug into the protocol stack — key derivation, PQC algorithms, or both?<br>2. Practical difference between NIST 800-90B validated QRNG and standard hardware RNG?<br>3. Is QRNG the 'gateway drug' for enterprise quantum adoption — the thing that gets the budget line started?"
+  },
+  {
+   "notion_page_id": "340d3699c2db8179a0e8f36d1a812d74",
+   "name": "Quantum Networking Protocol Stack",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. What's the hardest standards compliance problem — ETSI QKD 014, NIST 800-90B, or Cisco SKIP integration?<br>2. How many QKD hardware vendors exist that need abstracting — is the market fragmented enough for middleware?<br>3. Where does open-source create advantage vs. proprietary — same dynamics as open-source databases vs. Oracle?"
+  },
+  {
+   "notion_page_id": "340d3699c2db8183914fd49bbd350f0b",
+   "name": "Quantum Key Distribution (QKD) & Post-Quantum Cryptography (PQC)",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. For enterprise sales — how do you explain the SNDL threat to a CISO without quantum on their roadmap?<br>2. In the hybrid QKD+PQC model, what fails first — quantum hardware or key management software?<br>3. What does 'a key that a network encryptor will accept' mean practically — what's the gap?"
+  },
+  {
+   "notion_page_id": "340d3699c2db810f9024e0326c294efe",
+   "name": "Agent Skills & Specialization",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. What makes a good skill vs. a bad one — what's the difference between reliable output and garbage?<br>2. Can skills compose — can you chain multiple skills into a workflow, or is each standalone?<br>3. Is there a path toward skills portability across frameworks, or is lock-in inevitable?"
+  },
+  {
+   "notion_page_id": "340d3699c2db8171b417e449c29d947f",
+   "name": "Personal Cloud Infrastructure & Democratized Computing",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. How does Zo think about the relationship between OpenClaw (agent framework) and Zo (infrastructure) — is that the intended pairing?<br>2. For someone non-technical, what's the actual onboarding — how long from signup to running a useful automation?<br>3. Rob, you went from Substack founding eng to Substrate to Zo — what's the through-line?"
+  },
+  {
+   "notion_page_id": "340d3699c2db818189efc3d85de807b5",
+   "name": "From Chatbots to Structured Intelligence",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. What does a 'hypothesis-led' research framework look like architecturally — what structure turns a question into a report?<br>2. When you say 'Entity Gaps' in competitive research — what's the taxonomy? How does the agent decide what constitutes a gap?<br>3. At what point does structured output from an agent become reliable enough to act on without human review?"
+  },
+  {
+   "notion_page_id": "340d3699c2db81aab599c7e7facd3fd9",
+   "name": "Autonomous Agent Frameworks (OpenClaw)",
+   "last_updated": "2026-04-12",
+   "top_questions": "1. With 13K+ skills on ClawHub, how do you evaluate quality vs. quantity — is there a curation layer?<br>2. OpenClaw's founder left for OpenAI and the project moved to a foundation — does that strengthen or weaken it long-term?<br>3. What's the boundary between what OpenClaw agents should do autonomously vs. what needs human approval?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8129b1f7ddca01920ddf",
+   "name": "Conversational AI Design Patterns (Turn-Taking, Interruption, Latency)",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) What's the right VAD sensitivity default for sales vs. support use cases? (2) How do top voice agents handle 'disfluencies' (um, uh, let me think)? (3) Is there a standard eval framework emerging, or is everyone rolling their own? (4) How are teams thinking about latency SLAs vs. quality SLAs — where's the trade-off curve? (5) What's the best-in-class barge-in implementation pattern? (6) How are teams handling multilingual / accented speech where standard VAD models struggle?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81429283f802b209d06f",
+   "name": "Voice as the Default Human-AI Interface",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) In which categories has voice definitively won vs. still losing to text? (2) What's the measured ROI on enterprise voice agent deployments — is there a public benchmark? (3) How is 'voice-first' vs. 'multimodal' framed by the builders — complementary or competing? (4) How are teams handling fallback from voice to text (e.g., sending a link mid-call)? (5) What's the second-order effect on content creation / personal productivity when voice becomes default (e.g., Wispr Flow, Granola, Otter)? (6) How does voice change the LLM prompt design — more conversational, less structured?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81fa843ee14699cec784",
+   "name": "Production Voice Agent Architecture (Deployment, Scaling, Observability)",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) What does a canonical 2026 production voice agent architecture look like — composed or vertically integrated? (2) How are teams handling observability across the telephony → STT → LLM → TTS chain? (3) What's the cost curve per call at 1k vs 100k vs 1M calls/month? (4) How are teams scaling cold-start latency? (5) What's the eval strategy — live A/B, offline replay, or both? (6) Where does the 'it works on my machine but breaks in production' cliff usually happen?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81fb9c2bc95b001e424b",
+   "name": "Real-Time Voice AI Infrastructure",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) Real production latency for Agora SD-RTN + LLM of choice — does \\<200ms network latency translate to sub-800ms total turn latency in practice? (2) How does TEN Framework compare to LiveKit Agents, Pipecat, or Retell's abstraction? (3) When does a single-model (NVIDIA PersonaPlex-style) approach beat cascaded STT+LLM+TTS, and when does it lose? (4) What's the cost curve at 100k vs 1M calls/month on Agora vs hyperscaler vs self-hosted? (5) How are teams handling barge-in + context preservation in practice? (6) Which model choices (Claude Haiku 4.5, Gemini Flash, GPT-4o-mini) actually hit the latency budget in production?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81248879cdfa841a5d0d",
+   "name": "GitHub as Agentic Developer Platform",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) How does Coding Agent handle ambiguous or under-specified issues — does it ask, or just guess? (2) What's the org-level cost observability story for Copilot at 1000+ seats? (3) How do Coding Agent, Claude Code, and Devin compare on the same benchmark issues? (4) What's the security review story when agents autonomously land code? (5) Are custom .[agent.md](http://agent.md) agents portable to non-GitHub runtimes? (6) How is GitHub Spark differentiated from Bolt/Lovable/Replit Agent on the spec-to-app surface?"
+  },
+  {
+   "notion_page_id": "347d3699c2db813392e1d923fc61e4d8",
+   "name": "Azure AI Foundry as Agentic Runtime",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) When does Foundry Control Plane hit GA and what's included vs. deferred? (2) What's the real cost curve at 1M+ agent invocations/month vs. DIY LangGraph+OpenAI? (3) How portable is a Foundry-built agent off Azure? (4) How does Agent Memory compare to Mem0, Zep, or custom vector-based memory? (5) What's the posture on Anthropic vs. OpenAI model weighting — is Claude first-class or second-class on Foundry? (6) How do Foundry agents interact with non-Microsoft SaaS (Salesforce, Workday, ServiceNow) — native or MCP-bridged?"
+  },
+  {
+   "notion_page_id": "347d3699c2db815fab60dca000525c43",
+   "name": "VS Code as Agent-Native IDE",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) What's the right mental model for choosing which agent handles which task — by capability, by cost, by preference? (2) How do teams standardize .[agent.md](http://agent.md) conventions across repos? (3) Does unified agent memory work across VS Code instances on different machines? (4) What's the ecosystem story for non-Microsoft agents (e.g., Cursor-style) running inside VS Code? (5) How does the Agents companion app differ from existing agent dashboards? (6) Is there a best-practice pattern for when to use multi-agent inside VS Code vs. separate sessions?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81b58a98ef4a681cf3df",
+   "name": "Microsoft's AI Agent Factory Thesis",
+   "last_updated": "2026-04-18",
+   "top_questions": "(1) At what deployment scale does platform cost advantage flip — is there a break-even threshold where DIY or FDE-built beats Foundry? (2) How does Microsoft handle the 'last mile' problem — the bespoke customer tuning FDE-led startups do? (3) Is there an FDE-inside-Foundry pattern emerging (MSFT pros-serv + Foundry runtime)? (4) How do customers pick between Foundry agents and building on AWS Bedrock AgentCore? (5) What's the migration path story — if a customer builds on Foundry today, how locked-in are they? (6) How does Microsoft's 'platform absorbs the agent' bet age if Anthropic or OpenAI ship their own enterprise agent platforms?"
+  },
+  {
+   "notion_page_id": "347d3699c2db815a8fbbfe881a5058ea",
+   "name": "AI Startup Hiring Trends",
+   "last_updated": "2026-04-18",
+   "top_questions": "1) What does a well-calibrated FDE comp package look like at Seed vs. Series A vs. Series B? 2) Where are the best companies sourcing FDE candidates? 3) How do you interview for 'ships in customer environment' without a take-home that takes 20 hours? 4) When should a startup hire its first FDE vs. the founders continuing to own deployments? 5) How do candidates evaluate FDE offers — what are the red flags?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81a9a233f6c5e7f11a41",
+   "name": "Agentic Systems (FDE Lens)",
+   "last_updated": "2026-04-18",
+   "top_questions": "1) When does an agent-native foundation model beat a well-scaffolded frontier model in production? 2) What does a mature agent observability stack look like? 3) How do you evaluate multi-step agent performance rigorously? 4) Where does the FDE role fit when a product is fundamentally agent-first?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81b5ab63ca928be327e9",
+   "name": "Forward Deployed Engineering",
+   "last_updated": "2026-04-18",
+   "top_questions": "1) What's the actual day-to-day balance between customer-facing and engineering-facing work? 2) How do you structure FDE compensation vs. pure SWE vs. solutions? 3) What's the handoff playbook from FDE to scaled CS/solutions? 4) How do FDEs influence product roadmap without becoming custom-work sinks? 5) What does the career ladder look like past senior FDE?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81e4bcc2e2240192e2de",
+   "name": "Successful AI Deployment Requirements",
+   "last_updated": "2026-04-18",
+   "top_questions": "1) What does a rigorous customer-specific eval harness actually look like? 2) How do you price and scope data audit + integration work in a software contract? 3) What are the leading indicators that a deployment will churn in 6 months? 4) How should enterprises structure internal 'AI deployment' teams — where does this function live? 5) What's the right human-in-the-loop design for agent workflows at different risk levels?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81729cdaed6d65c92418",
+   "name": "Microsoft Purview",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. What's the actual coverage of Purview AI Hub across non-M365 AI apps (Claude, custom OpenAI apps, internal-deployed models)? 2. How do sensitivity labels propagate from source data into OneLake shortcut-referenced external stores? 3. What's the licensing math for a 1,000-seat enterprise enabling both Copilot and Fabric with full Purview AI Hub controls? 4. What does Purview's detection story look like for shadow LLM apps — specifically browser-based ChatGPT usage? 5. How does Purview integrate with non-Microsoft governance tools (Collibra, Alation) for customers in hybrid estates?"
+  },
+  {
+   "notion_page_id": "347d3699c2db819c97c2df24fd0bf57c",
+   "name": "Microsoft Fabric",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. What's the realistic TCO story vs. Snowflake for a 500-person company with existing Azure spend? 2. How does Fabric capacity unit burst behavior play in production — what's the 90th percentile surprise? 3. What's the honest gap list between Fabric Warehouse and Snowflake SQL today? 4. How do Purview and Fabric actually compose for row-level security at the Copilot/agent layer? 5. Does the Copilot-in-Fabric experience hold up for non-BI workloads (Warehouse, Data Engineering)? 6. What happens to a Fabric deployment when the customer also has a mature Databricks lakehouse — merge, coexist, or pick one?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81a6bafef8c3fb637399",
+   "name": "Copilot in Fabric",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. How robust is Copilot in Fabric to schema changes and data drift over time? 2. What's the Purview audit trail for Copilot-generated queries that touch sensitive data — field-level or just query-level? 3. How does Copilot in Fabric compose with Foundry agents — is the boundary between 'analytics Copilot' and 'agent' clean or blurry? 4. Who owns the semantic layer when Copilot is generating queries against it — data engineering or business users? 5. What's the realistic accuracy/trust calibration for enterprise workloads — when should a user trust the output without review?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81b1ae66c3b441bd877f",
+   "name": "OneLake",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. What breaks operationally when you try to treat OneLake as the primary write target for data originating in Snowflake? 2. How does Microsoft price shortcut egress/traffic — and does that math change at scale? 3. What's the Purview governance coverage story for shortcut-referenced external data — specifically sensitivity label propagation? 4. How does Delta Lake version compatibility work across shortcuts when the source system upgrades? 5. What's the competitive response from Iceberg-native catalogs (Unity, Polaris, Tabular-era approach) and how does Microsoft counter?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8171beaee01cbb0cb400",
+   "name": "Local-First / Sovereign AI",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. Where does the sovereignty narrative actually change enterprise buying behavior, versus stay as marketing language?<br>2. What's the realistic local hardware floor for a usable agent stack in 2026, and who gets priced out?<br>3. Does the local-first thesis survive contact with multi-agent workflows that need to coordinate with cloud services?<br>4. What's the right trust model for skill marketplaces — signing, reputation, sandboxing, or something crypto-community-native?<br>5. At what point does local-first become the default posture for consumer AI, rather than the power-user preference?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8177bff4e1b82434409e",
+   "name": "Freedom Tech Movement",
+   "last_updated": "2026-04-19",
+   "top_questions": "1. Which Freedom Tech projects actually got real adoption beyond the ideological core, and what did those have in common?<br>2. How does the Bitcoin/Monero community's threat modeling translate to AI agent security — is it a direct transfer or does something fundamental break?<br>3. What's the right bridge language between Freedom Tech sovereignty thesis and enterprise sovereignty-as-procurement-requirement?<br>4. Where is HRF funding flowing in AI, and what's the gap between funded projects and what dissidents actually use?<br>5. Does this movement scale beyond its ideological early adopters, or does it stay a subculture that exports ideas to the mainstream?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8133b660df0d5d9d7921",
+   "name": "Marketing & Revenue Attribution Evolution",
+   "last_updated": "2026-04-19",
+   "top_questions": "Is attribution reporting deprecated in the new HockeyStack stack or preserved as a legacy surface? What is the POV on multi-touch vs. incrementality vs. self-reported across different funnel stages? How do Revenue Agents treat attribution — input, output, or both? What does a 'post-attribution' dashboard actually look like for a CMO defending budget to a CFO?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81b5842bc2f4f633bf7d",
+   "name": "GTM Operating Systems vs. Point Tools",
+   "last_updated": "2026-04-19",
+   "top_questions": "What is HockeyStack's deprecation path for customers still using them primarily for attribution? How does the OS positioning hold up against Salesforce Agentforce specifically? What is the wedge for a new customer — do they land on attribution and grow into OS, or land directly in Revenue Agents? What does land-and-expand look like at the enterprise level?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81068b5fd784777f9b19",
+   "name": "Commerce & Supply Chain Intelligence",
+   "last_updated": "2026-04-19",
+   "top_questions": "How do you price into traditional, cost-conscious verticals? Who signs — CTO, COO, or line manager? What's the data integration story for legacy systems? Demoable ROI — what's your pilot-to-deal conversion rate?"
+  },
+  {
+   "notion_page_id": "347d3699c2db8120b8aef2cbf1f71fe1",
+   "name": "Accelerator Ecosystem Dynamics",
+   "last_updated": "2026-04-19",
+   "top_questions": "What's ERA's post-accelerator support model? How do founders rate the experience? Which cohort companies have the clearest GTM motion (vs. product/tech leads)? Who's going to be in the room — investors, other founders, press?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81259564c9b09e570d40",
+   "name": "Content & Brand AI",
+   "last_updated": "2026-04-19",
+   "top_questions": "How is your output differentiated from horizontal LLM tools? What's the brand voice fidelity story — fine-tuning, RAG, or style constraints? How do you price against commoditizing generation costs? What's defensible?"
+  },
+  {
+   "notion_page_id": "347d3699c2db814bb438ef8af2497043",
+   "name": "AI-Native Vertical SaaS",
+   "last_updated": "2026-04-19",
+   "top_questions": "How do you defend against horizontal AI tools expanding into your wedge? What's your data moat beyond workflow capture? How much of the value accrues to the LLM provider vs. you? Where's the 10x vs. existing SaaS incumbents — not just better AI, but a different shape?"
+  },
+  {
+   "notion_page_id": "347d3699c2db819a8f60e428b4cde1b8",
+   "name": "Legal & Compliance AI",
+   "last_updated": "2026-04-19",
+   "top_questions": "How do you handle hallucination risk — grounding, citations, confidence levels? Who's the buyer — GC, CCO, or BU lead? What's your liability posture? Enterprise contract terms and E&O insurance? Integration with DMS / GRC platforms?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81f99dfbf7709da11929",
+   "name": "Enterprise Sales & GTM Intelligence",
+   "last_updated": "2026-04-19",
+   "top_questions": "What's different vs. Clay / Apollo / Gong feature expansion? How do you handle deliverability at scale? Who owns the buyer relationship — rep or AI? Pricing — per-seat, per-outcome, or usage? What signal are you surfacing that humans miss?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81218c5cc010a9889b6f",
+   "name": "Ruby + AI Resurgence / Vibe Coding / Ship-Things Culture",
+   "last_updated": "2026-04-19",
+   "top_questions": "Is \"vibe coding\" a stable label or a 2026 meme that dies by 2027? What does the Ruby + AI stack look like in 18 months — deeper agent frameworks, new testing tools, something unforeseen? How does the ship-things ethos coexist with enterprise AI deployment standards (SOC2, model governance, compliance)? Can Ruby's community-first model scale as AI-era developer counts expand, or does it stay intentionally small and high-signal? Who is the next wave of Ruby + AI companies — sponsors now, acquirers in 3 years?"
+  },
+  {
+   "notion_page_id": "347d3699c2db817daae8e05ecd4f72c1",
+   "name": "Non-Engineers Building With AI / The New Builder",
+   "last_updated": "2026-04-19",
+   "top_questions": "What's the failure mode for a nontechnical builder at scale — and what early signals should Alex watch for in his own tools? When does the new-builder need to hire an engineer vs. keep building solo? How do we distinguish \"vibe-coded toy\" from \"production-ready AI-built tool\" — is there an emerging rubric? What's the new hiring bar for AI-native companies — are they weighting shipped-AI-tools over traditional credentials yet? How should a GTM leader position themselves when half the \"full-stack\" personal tooling advantage they'd have had three years ago is now table stakes?"
+  },
+  {
+   "notion_page_id": "347d3699c2db817eb914f3f367bea2d5",
+   "name": "AI Harnesses & Agent Hooks for Codebases",
+   "last_updated": "2026-04-19",
+   "top_questions": "What separates a durable harness from a brittle one — coverage of conventions, test discipline, observability, or something else? How do skills, hooks, and conventions compose without stepping on each other? What's the right handoff point between AI generation and human review — PR level, commit level, function level? Who owns harness quality in an organization? What metrics actually tell you a harness is getting better vs. getting worse over time?"
+  },
+  {
+   "notion_page_id": "347d3699c2db812b8c2bd37dcf660267",
+   "name": "CS as Business Transformation (Outcomes Over Admin)",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) Where does the friction show up when moving from activity-based to outcome-based scorecards — leadership buy-in, customer data quality, or CSM skillset? 2) When you say \"business transformation,\" who's the customer-side owner — is COO/VP Ops the new center of gravity vs. legacy procurement/IT? 3) How are you splitting transformation work between CS and Professional Services — or has that line dissolved at EliseAI?"
+  },
+  {
+   "notion_page_id": "347d3699c2db815b9fa7e47933c1d628",
+   "name": "CS Owning Revenue Outcomes (Expansion + Retention as Commercial Accountability)",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) What does your CS comp structure look like — are senior CSMs carrying a number, and what's the split between retention vs. expansion attainment? 2) When CS owns expansion, how do you keep the customer relationship from feeling 'sold to' on every call — what's the cultural guardrail? 3) Where do you draw the line between CS-owned expansion and handing it back to Sales/AE motion?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81dab1aec928388a4f85",
+   "name": "Executive Relationships & The Modern CS Career Path",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) When you build out a senior CS team, what are you screening for that wasn't on the spec 3 years ago? 2) What's the deliberate move that gets a senior CSM from 'trusted advisor to the VP' to 'in the room with the CEO' — and how do you teach it? 3) If someone's a strong enterprise AE looking to move into senior CS leadership at an AI-native company, what's the credibility gap they need to close first?"
+  },
+  {
+   "notion_page_id": "347d3699c2db810aa2c2e5d1e40cd17e",
+   "name": "Durable Execution for AI Agents",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) Most durable-execution engines were built for the payments/ETL era — what's actually different about AI agent workloads that makes the existing playbook break? 2) For a team starting today, does the decision come down to 'who's your model provider' or 'where does the rest of your infra live'? 3) Where does durable execution stop and evaluations/observability begin — is it one stack or two?"
+  },
+  {
+   "notion_page_id": "347d3699c2db813aa2bac707d844463d",
+   "name": "Claude Managed Agents",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) What's the right mental model for choosing Managed Agents vs self-hosting Claude Agent SDK on Vercel Sandbox — cost, control, latency, or compliance? 2) When Managed Agents run in Anthropic's sandbox, how does an enterprise extend that sandbox with their own internal tools/MCP servers without exposing credentials to Anthropic? 3) What does the multi-tenant permission model look like — per-user scoping, per-organization, or do most customers still front it with their own auth layer?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81c38194d7a0283e1aa5",
+   "name": "Vercel Workflows",
+   "last_updated": "2026-04-19",
+   "top_questions": "1) For an enterprise team already on Temporal for non-AI workflows, what's the migration story — or does Workflows stay inside the AI perimeter while Temporal keeps the financial perimeter? 2) When a step involves a long-running LLM call that blows past a Vercel Function execution window, how does the WDK handle the pause/resume — at the runtime level or at the persistence layer? 3) What does the observability stack look like in practice — OpenTelemetry spans, Vercel's own traces, or both?"
+  },
+  {
+   "notion_page_id": "34fd3699c2db810c948ddac4d9baf365",
+   "name": "The NYC AI/Data Scene Gatekeeper Structure",
+   "last_updated": "2026-04-26",
+   "top_questions": "Will the gatekeeper-investor model scale or remain NYC-specific? What's the equivalent in adjacent cities (SF Cerebral Valley, LA/SoCal AI scene)? Do operators benefit from picking ONE gatekeeper to align with, or spreading across all three? At what stage of operator career does this strategy peak in usefulness?"
+  },
+  {
+   "notion_page_id": "34fd3699c2db817195b2cde96991d0d9",
+   "name": "Right-Time Data & The Modern Data Stack Inversion",
+   "last_updated": "2026-04-26",
+   "top_questions": "Which incumbent (Fivetran, Confluent, Airbyte) is most exposed to right-time replacing real-time? What's the 12-month indicator the inversion thesis is correct? Are AI-shaped buyers structurally different from ad-tech-era buyers in this category? Where does Estuary's enterprise GTM motion converge with the LiveRamp playbook Yaffe came from?"
+  },
+  {
+   "notion_page_id": "34fd3699c2db81f1b3e5f8361807161b",
+   "name": "Production Agentic Infrastructure",
+   "last_updated": "2026-04-26",
+   "top_questions": "What's the failure mode — too aggressive (false-positive PRs) or too cautious (missing real issues)? Cost-per-bug-investigation now — does the math beat human triage? Which industries productionize agents next after fintech (healthcare via Adonis already doing it)? When does a startup that sells 'self-maintaining' as a product emerge vs. continued internal-build?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db8198ba8cc33800fb5cab",
+   "name": "Multi-Agent Coordination Without Orchestrators",
+   "last_updated": "2026-04-26",
+   "top_questions": "Where's the contested middle between orchestrator-first (LangChain) and emergent coordination (Intent Space)? Which use cases are LangSmith-shaped vs. Intent-Space-shaped? When does coordination cost exceed orchestration cost in practice? Will Intent Space-style protocols scale or remain academic? What's the developer experience trade-off teams will accept?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db817894c1db49155b1b46",
+   "name": "Agentic Analytics & The Semantic Layer",
+   "last_updated": "2026-04-26",
+   "top_questions": "Will Agentic BI be one dominant product, three with stable share, or absorbed into platform-native semantic layers (Snowflake/Databricks)? How do data leaders decide between Cube and Snowflake's semantic layer when already on Snowflake? What's the diagnostic for whether a data team has a 'foundations problem' before agents start failing in production? When does headless BI architecture become table stakes vs. differentiator?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db81838f48cbe087984bfa",
+   "name": "Data Foundations for AI Agents",
+   "last_updated": "2026-04-26",
+   "top_questions": "What's the practical diagnostic that tells a data leader they have a foundations problem? How do you prioritize foundations work without boiling the ocean? What's the failure mode when agents amplify bad data — silent corruption or loud breakage? Where does Joe Reis's 'Mixed Model Arts' fit relative to canonical data modeling (Kimball, Inmon)?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db813faf50dcca4ff4629e",
+   "name": "AI x Media Convergence",
+   "last_updated": "2026-04-26",
+   "top_questions": "Does the software-into-media-subscription bundle work, or does the math break at scale? Where does AI-generated content cross from supplement to substitute? Which media businesses survive when content cost falls 91% — the brands with taste, the brands with distribution, or the brands with earned authority? Is 'human-first' a sustainable wedge or a temporary positioning?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db815ca8bdc6a6b8eaea33",
+   "name": "Independent Media Economics in the AI Era",
+   "last_updated": "2026-04-26",
+   "top_questions": "Does Every's Spiral-bundle math work, or is it a marketing experiment? Which independent media outlets become the next Dispatch-shaped acquirers? Is software-as-bonus a sustainable subscription perk or a one-off novelty? How do indie media companies hire enough talent to be both newsroom AND product team?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db81c982f6c5e1ce2c0b87",
+   "name": "Adaptive Software & Agent-Driven UIs",
+   "last_updated": "2026-04-26",
+   "top_questions": "When does the adaptive layer make a product worse, and how do you detect that fast enough? Does open intent-broadcast (Sky Valley) actually scale better than orchestrator-first (LangChain), or only in some use cases? Where's the contested middle? What's the failure mode for self-evolving consumer apps that doesn't exist for static ones?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db811db6f6c4a6a28c570c",
+   "name": "AI for HR & Performance Management",
+   "last_updated": "2026-04-26",
+   "top_questions": "Why is HR tech 1.0 still struggling to die? What's structurally different about the AI moment that makes 2026 the right time? Will employees accept this level of work-data aggregation or will it backlash like surveillance software? Is the right buyer engineering leadership or HR?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db812e9c74fd1ac94b0dd4",
+   "name": "AI in Healthcare Revenue Cycle Management",
+   "last_updated": "2026-04-26",
+   "top_questions": "What did Olive AI get wrong that the next wave (Adonis, others) is getting right? Are health systems buying AI-orchestration now or still cautious post-Olive? Where's the white space — payer-side AI vs. provider-side? Will Adonis-class incumbents block new entrants or will the market support 3-5 players?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db8198903ddfbfeb6c891d",
+   "name": "The NYC AI Talent Layer",
+   "last_updated": "2026-04-26",
+   "top_questions": "Which curators have the strongest signal-to-noise? Are application-only events a temporary pattern or the new permanent norm? How do operators differentiate themselves in saturated curated rooms? When does NYC's talent infrastructure surpass SF's for AI-native hiring?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db81a1a956fb86a7c55b3c",
+   "name": "Workflow Collapse — The 2026 GTM Pattern",
+   "last_updated": "2026-04-26",
+   "top_questions": "Which workflows have the highest collapse-multiplier and lowest regulatory exposure? Are buyers actually paying premium for collapsed workflows or just reducing seats? Does this pattern hold beyond enterprise SaaS into consumer? Which companies will get re-rated in 2026 because they're really workflow-collapse plays masquerading as something else?"
+  },
+  {
+   "notion_page_id": "34ed3699c2db81b4aeebe53c0c3250dc",
+   "name": "Personal & Local AI Infrastructure",
+   "last_updated": "2026-04-26",
+   "top_questions": "Where does the Personal Cloud category land — productized like Zo, DIY like OpenClaw, or hardware-bundled like Apple/AMD? What's the killer use case that crosses the chasm? Does cloud AI + local fallback win, or pure local? Who captures value — chip makers, runtime makers, or skill-marketplace makers?"
+  },
+  {
+   "notion_page_id": "350d3699c2db817892c4d5969ea010ce",
+   "name": "Cassandra / Astra DB Data Modeling for AI",
+   "last_updated": "2026-04-28",
+   "top_questions": "When do you co-locate vectors and scalars vs. denormalize across tables? When does a wide-column model break down for analytical queries (where to introduce Spark/Presto)? How do you spec access patterns in a way an AI coding agent can faithfully implement (and not regress to relational habits)? How do partition keys interact with multi-tenant agent contexts?"
+  },
+  {
+   "notion_page_id": "357d3699c2db810bacfcc96db0229b31",
+   "name": "AI Sales Coaches & Conversation Intelligence",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. Real-time whisper-coaching — when does it help vs. distract reps in production?<br>2. How are you measuring whether AI-coached reps are getting better or just sounding the same?<br>3. What does your stack look like for synthetic-buyer practice (Hyperbound or built in-house)?"
+  },
+  {
+   "notion_page_id": "357d3699c2db81419a31e447df1e99e9",
+   "name": "The SDR Role Reshape",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. What does your hybrid pod ratio look like, and what determines when a lead routes human vs. agent?<br>2. How is SDR comp changing as AI does more of the activity-based work?<br>3. Where are future AEs coming from if SDR seats compress — and is anyone solving the career path problem?"
+  },
+  {
+   "notion_page_id": "357d3699c2db81539e4ed6e6749f5ff0",
+   "name": "AI SDR Hits & Misses",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. What's the ratio in your hybrid pod — humans-to-agents, and what determines when a lead routes human vs. agent?<br>2. Where does your AI SDR demonstrably underperform a junior human SDR, and what's your fallback?<br>3. How are you measuring contribution when AI initiates and a human closes — and how does that show up in comp?"
+  },
+  {
+   "notion_page_id": "357d3699c2db81748dc7c99570d16053",
+   "name": "Voice AI for B2B Outbound",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. What's your latency floor and how often does the AI 'feel' off in production calls?<br>2. How are you handling the compliance surface — TCPA, state-level consent, FCC robocall rules?<br>3. Where's your AI voice agent demonstrably worse than a junior SDR, and what triggers a human handoff mid-call?"
+  },
+  {
+   "notion_page_id": "357d3699c2db8187a7d1f83bcbcaa521",
+   "name": "Personalization at the Signal Layer",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. Which 2-3 signals actually drive your conversion — and which do you ignore even if vendors push them?<br>2. How are you composing signals across sources — are you running a single platform or stitching multiple?<br>3. Where is signal-driven outreach working vs. failing — what categories or personas is it not landing for?"
+  },
+  {
+   "notion_page_id": "357d3699c2db81abad01e01b8fa58b91",
+   "name": "AI Coding Agent Infrastructure",
+   "last_updated": "2026-05-04",
+   "top_questions": "1. What agent shapes are GPU-bottlenecked vs CPU-bottlenecked, and where does Modal's serverless model break?<br>2. Where's the line between 'use Vellum's canvas' and 'write code' — and how does it shift as the agent matures?<br>3. What's the hidden cost most teams underestimate when adopting managed agent runtime (Nori-style)?"
+  },
+  {
+   "notion_page_id": "347d3699c2db81c2a39ac13143cc2d95",
+   "name": "AI Revenue Agents & Agentic GTM",
+   "last_updated": "2026-05-04",
+   "top_questions": "What is the concrete architecture under Revenue Agents — orchestrated LLM calls, a fine-tuned model, or an RL-style system trained on outcomes? How is agent lift measured against a baseline rep? What is the human-in-the-loop pattern — approve-before-send, post-hoc review, or fully autonomous? What is the trust model when an agent hallucinates on an enterprise account?"
+  },
+  {
+   "notion_page_id": "358d3699c2db811c942ec3a5f71d5e84",
+   "name": "AI Agent Observability",
+   "last_updated": "2026-05-06",
+   "top_questions": "1. Multi-agent failure debugging — actual investigation workflow? Trust platform clustering or still manual trace forensics?<br>2. OTel GenAI just hit stable — honest timeline for dropping proprietary instrumentation? Migration cost for teams deep in LangSmith/Braintrust schemas?<br>3. Tail-based sampling makes more sense than head-based for anomalies — are customers actually running tail-based, or is \"sample 10% at random\" still the real-world default?<br>4. Loop and Polly promise NL trace analysis — at what failure complexity does AI-assisted root cause stop being useful and you fall back to humans?<br>5. Audit trail use case vs. developer debugging use case want different things (immutability/compliance vs. fast iteration). Are those actually the same product, or will the market split?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db814eb6b4f6e5af2eb92b",
+   "name": "AI Agent Reliability & Evaluation",
+   "last_updated": "2026-05-06",
+   "top_questions": "1. Step-level tracing seems largely solved, but outcome scoring is wide open — how are you bridging that gap?<br>2. With agents dropping from 60% to 25% success over multiple runs, how do you set reliability thresholds for production?<br>3. Are standard benchmarks like GAIA actually predicting how your agents perform in production?<br><br>## 2026-05-06 additions — LLM Evaluation Frameworks<br><br>1. LLM-as-judge bias research is damning — calibrating with bias correction + randomized presentation, or accepting bias as background noise?<br>2. Public benchmark saturation is real — what makes a good private eval suite? Principled methodology or \"curate your worst production failures\"?<br>3. Multi-turn eval — hardest part: defining \"success\" for full thread, or trajectory evaluation (right path, not just right answer)?<br>4. Realistic golden-dataset sample size — 200-500 to start, but at what volume does adding examples stop meaningfully improving coverage?<br>5. Online evals on production — running LLM-as-judge at 10-20% sampling adds real cost. Heuristic for cost/coverage tradeoff?<br>6. When a model provider ships a new version — decision process: golden dataset score comparison, or qualitative production trace signals?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db813cb2fbd85074d70850",
+   "name": "Future of Data Infrastructure",
+   "last_updated": "2026-05-07",
+   "top_questions": "1. Are streaming-first lakehouses the new default, or is batch still the pragmatic choice for most teams?<br>2. With open table formats winning, what's the next layer of vendor differentiation?<br>3. How do you see the Python-native processing tools (Polars, DuckDB) coexisting with Spark long-term?"
+  },
+  {
+   "notion_page_id": "357d3699c2db811290dff1bb19a4b647",
+   "name": "Data Cloud × Agentic AI",
+   "last_updated": "2026-05-07",
+   "top_questions": "Seven calibrated questions for Wells (Applied Field Engineering — implementation perspective, not just sales):<br><br>1. **Multi-tenant governance:** Snowflake's role inheritance to agents is clean. What does a multi-tenant agent serving 500 users with different roles look like in production? Routing problem your team solves in architecture, or platform-level investment?<br><br>2. **Cost predictability:** After March's AI Functions cost management GA, what does responsible cost governance for Cortex Agents at scale actually look like? Plans to give agent workloads native resource monitors?<br><br>3. **MCP connector maturity:** April announced a lot of connectors. For battle-tested in regulated enterprise vs. closer to reference implementations — how would you honestly characterize where each sits?<br><br>4. **Agent perimeter architecture:** Inside-Snowflake argument is coherent (latency, governance, no exfil). Counter: running orchestration in your DW couples reasoning to storage pricing. April LLM pricing overhaul changed economics. How do customers think about that lock-in risk?<br><br>5. **Project SnowWork wedge:** SnowWork is the business-user version of Cortex Agents. Strategic intent: land in business teams and expand into developer-built, or primarily showcase? Who's actually using in the field?<br><br>6. **Databricks coexistence posture:** Cortex Code added a Databricks connector in April. Surprising given competitive framing. Genuine federation comfort, or \"meet customers where they are\" wedge to consolidate?<br><br>7. **\\$400M deal:** Largest deal in Snowflake history closed in Q4 — over \\$400M. Without naming customer, can you say anything about workload profile? DW consolidation, AI platform consolidation, or something Cortex specifically unlocked?"
+  },
+  {
+   "notion_page_id": "33dd3699c2db81019ae8d00211f45a66",
+   "name": "AI-Ready Data",
+   "last_updated": "2026-05-07",
+   "top_questions": "1. What percentage of your AI budget is going to data readiness versus model development — and is that ratio shifting?<br>2. How are you handling semantic consistency across tools — adopting OSI or building a proprietary semantic layer?<br>3. When Gartner says 60% of AI projects will be abandoned due to data readiness, what does 'AI-ready' actually mean in your context?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81239f08c29d4c90a6e3",
+   "name": "AI-Era API Security",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. Of the 11 MCP risk categories, which one is most underestimated by enterprise security teams right now — and why does it stay underestimated even as the others get attention?<br>2. Is MCP's security posture fundamentally fixable at the protocol level, or does it require an external governance/gateway layer as a hard dependency?<br>3. What does a realistic enterprise MCP security audit look like today — is anyone actually doing them, and what does the process cost in team-weeks?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db816fad7fc40b87232d9a",
+   "name": "MCP at Enterprise Scale",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. At what point in the MCP maturity curve (stdio prototype → HTTP with auth → production with identity) do you see most enterprise teams actually operating today — and what's the most common reason teams stall?<br>2. The Kong 30-50 tool degradation threshold is striking — is that threshold model-specific (GPT-4 vs. Claude) or do you see it as universal, and what does that mean for enterprises that want to expose their entire API catalog to agents?<br>3. MCP is 18 months old and already fragmenting into multiple gateway/registry products. Is that healthy competition or premature architectural lock-in?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81709376d5bff35a92f4",
+   "name": "Agent-Ready APIs (OpenAPI for Agents)",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. If an API passes your 'agent-ready' checklist today, what's the most common thing that still causes agent failures at runtime — and why doesn't the spec catch it?<br>2. Is 'agent-ready API' a new design discipline, or is it just good API design with better tooling? What specifically changes when agents are the primary consumer?<br>3. How do you prevent the agent-readiness spec from becoming another checkbox that organizations game without improving the underlying API quality?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81d0bc16eeab9a9d0d81",
+   "name": "API Governance for Agentic Systems",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. What's the minimum viable governance framework for an enterprise that currently has 500 ungoverned internal APIs and wants to expose them to agents — where do you start?<br>2. Is capability-level governance (Naftiko's model) and protocol-level governance (MCP) complementary or competing — can enterprises run both simultaneously?<br>3. How do you govern API behavior (not just API specs) for agent consumers — when the gap between spec and implementation is where the actual risk lives?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db819dbd9fc2e8069301b1",
+   "name": "Custom AI Infrastructure in Regulated Environments",
+   "last_updated": "2026-05-11",
+   "top_questions": "1) When standard HIPAA-compliant LLM wrappers fail, what's the specific failure mode — is it at the inference layer, the connector/data access layer, or the logging/audit layer? What would your 'build vs. buy' checklist look like?<br>2) Non-technical staff building production agents is the headline result — what's the failure mode you're most worried about at scale as that access broadens? Where does the compliance perimeter hold and where does it get porous?<br>3) EU AI Act high-risk classification is hitting healthcare AI next — for teams in regulated environments who haven't started their conformity assessment, what should they have done 12 months ago?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81d0a4b5ed6c71ecae30",
+   "name": "Programmatic Prompt Optimization (DSPy)",
+   "last_updated": "2026-05-11",
+   "top_questions": "1) When you're using DSPy to optimize a super-employee agent, what does your eval dataset look like — how many labeled examples do you need before the optimizer produces meaningfully better prompts than human intuition?<br>2) The multi-objective optimization case is interesting for agentic systems: how do you weight cost vs. accuracy when optimizing for long-running agent tasks where the cost per failed task is the real variable?<br>3) At what scale of inference volume does DSPy optimization ROI become clearly positive — is there a minimum throughput threshold below which hand-tuning is still the right call?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81bca5beeabe21ea9a1c",
+   "name": "Hiring in AI-Era Engineering Orgs",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. 'Are you hiring fewer people than you were two years ago — and if so, is that a deliberate strategy or just a byproduct of AI tools changing what you can do with the team you have?'<br>2. 'What does your interview process look like now versus 18 months ago, and what specifically changed because of AI tools?'<br>3. 'Where do you think the junior pipeline problem goes in 3-5 years — are you actively worried about it, or do you think it solves itself?'"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81478e14e7bd9a4d75e2",
+   "name": "Context Engineering",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. How is 'context engineering' different from 'RAG' in practice — where does the discipline start and stop?<br>2. What's the right unit of context — documents, chunks, facts, annotations? How does the choice affect agent behavior?<br>3. How do you handle context that becomes stale or contradictory over time?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db814ea15acd1aad8aedef",
+   "name": "AI Media Compression for eCommerce",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. How do you measure 'no perceptible quality loss' — what's the evaluation methodology and who sets the threshold?<br>2. Where does psychovisual compression add value that standard WebP/AVIF conversion doesn't already provide?<br>3. What's the competitive argument for AI-native compression when Cloudflare has commoditized standard image delivery?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81e4bf63c34b80487bdf",
+   "name": "Self-Hosted AI Inference",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. At what inference volume does self-hosted become cheaper than API pricing, and what's the TCO model?<br>2. How do you handle model versioning and updates in a self-hosted environment — what breaks when the base model changes?<br>3. What's the minimum MLOps maturity an enterprise team needs before self-hosted inference is viable rather than a liability?"
+  },
+  {
+   "notion_page_id": "35dd3699c2db81fa8ae2e77b86816f30",
+   "name": "LLM Knowledge Bases",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. How do you evaluate retrieval quality for a knowledge base in production — what metrics matter beyond recall@k?<br>2. When does a knowledge graph add value over flat vector retrieval, and when is it overkill?<br>3. What's the migration story when your knowledge base vendor changes their pricing or architecture?"
+  },
+  {
+   "notion_page_id": "357d3699c2db81909d8ac3c7ff914778",
+   "name": "AI Agent Memory Layer",
+   "last_updated": "2026-05-11",
+   "top_questions": "1. How are you actually integrating memory — is it doing semantic work or just storing chat history?<br>2. Where does memory layer add cost vs. value? When can you skip it?<br>3. What's your migration story if Cognee/Mem0/Letta fragmenting forces you off your current vendor?"
+  },
+  {
+   "notion_page_id": "366d3699c2db81d684aeee86637b0c49",
+   "name": "Production AI Demos and Shipping Patterns",
+   "last_updated": "2026-05-20",
+   "top_questions": "- What part of your production system wouldn't survive a 5-minute live demo?<br>- What broke first in the prototype-to-production transition?<br>- Is AI engineering a permanent discipline or a transitional phase until models absorb the tooling?"
+  },
+  {
+   "notion_page_id": "366d3699c2db81fb8e55e5fa0241d81c",
+   "name": "LLM Observability and Tracing",
+   "last_updated": "2026-05-20",
+   "top_questions": "- Same parent for DB and observability: genuine integration advantage or just tightening lock-in?<br>- OTel native vs vendor SDK: what's the real tradeoff when you're at 1M+ traces/month?<br>- Where do evals catch signal that tracing alone misses — and what's the setup cost to get there?"
+  },
+  {
+   "notion_page_id": "366d3699c2db8111b03ec0cdf8c37e0c",
+   "name": "Agentic Systems on Ray",
+   "last_updated": "2026-05-20",
+   "top_questions": "1. What's the production pattern for durable agent state on Ray — persistent actor storage, external KV, or something else?<br>2. The 3-5 agent coordination ceiling — is that a Ray architecture limit or a general multi-agent coordination problem?<br>3. At what point does RL-for-orchestration (training agents to route/delegate) become operationally viable vs. handcrafted routing logic?"
+  },
+  {
+   "notion_page_id": "366d3699c2db8117be14fbefc086118d",
+   "name": "Distributed Training with Ray + PyTorch",
+   "last_updated": "2026-05-20",
+   "top_questions": "1. At 70B+ parameter scale, where does Monarch (Meta's topology-hiding framework) win over Ray Train, and where does Ray Train win?<br>2. What's the practical pattern for sub-epoch checkpointing with FSDP on Ray Train — is there a reference implementation?<br>3. For teams migrating from Databricks/Spark ML to Ray for training, what's the recommended incremental path?"
+  },
+  {
+   "notion_page_id": "366d3699c2db812ab0adc46071645b00",
+   "name": "Ray for AI Workloads",
+   "last_updated": "2026-05-20",
+   "top_questions": "1. The HAProxy/gRPC bypass in Ray 2.55+ — is that the architectural direction for Ray Serve going forward, or an optimization layer that could change?<br>2. What's the recommended pattern for GCS high availability in self-managed Ray clusters — is Redis HA the only production-grade option?<br>3. Where does RLLib's new API stack stand — is the old API stack being EOL'd on a specific timeline?"
+  },
+  {
+   "notion_page_id": "366d3699c2db81e29c3ce872932eaf56",
+   "name": "Distributed Python Ecosystem",
+   "last_updated": "2026-05-20",
+   "top_questions": "1. For teams with large Spark investments, what's the boundary where adding Ray on top is worth the operational overhead — what's the cost reduction signal?<br>2. Is Polars' growth shrinking the addressable distributed computing market, or just shifting where the bottom of the market sits?<br>3. At what org size does the 'one system for everything' argument for Ray actually win vs. best-of-breed specialized tools?"
+  },
+  {
+   "notion_page_id": "36bd3699c2db818e95c8e7aa672677d2",
+   "name": "Agentic Commerce",
+   "last_updated": "2026-05-25",
+   "top_questions": "(1) ACP and AP2 solve the transaction layer, but the RECOMMENDATION layer — who is in the agent's consideration set and why — is a black box. What is the catalog optimization / discoverability playbook for brands that want to be found by agents?<br>(2) Most agentic transactions are functionally guest checkouts; user identity is unresolved until the purchase moment. What is the realistic timeline for pre-transaction agent identity resolution — is this a protocol layer or platform layer solution?<br>(3) Collison said ads are \"less relevant\" in an agentic world, yet Stripe simultaneously partnered with Meta for native checkout in Facebook ads. How do they reconcile these two positions?"
+  },
+  {
+   "notion_page_id": "36bd3699c2db81cfbf08fd33b21d7c3e",
+   "name": "Agentic Marketing",
+   "last_updated": "2026-05-25",
+   "top_questions": "(1) Given Gartner's 40% cancellation rate, what separates the production cohort from perpetual-pilot — is it data maturity, governance, or org ownership?<br>(2) Who is accountable when an agent makes a CREATIVE decision (not just timing) that goes off-brand — marketing, legal, or no one yet?<br>(3) Is the real blocker capability or org readiness? Most marketing orgs can't define their own processes cleanly enough for an agent to execute them."
+  },
+  {
+   "notion_page_id": "36bd3699c2db81de86bbf72eb15d918b",
+   "name": "Enterprise AI Agent Security & Governance",
+   "last_updated": "2026-05-25",
+   "top_questions": "1. Does agent identity get solved at the model layer, the orchestration layer, or does it become a new product category entirely (Aembit-style non-human identity)?<br>2. Prompt injection: is there an architectural fix on the horizon, or is accept-and-monitor the permanent enterprise posture?<br>3. What's a defensible governance posture an enterprise can deploy today, pre-NIST, that will still be compliant when EU AI Act high-risk obligations go live in August?"
+  },
+  {
+   "notion_page_id": "370d3699c2db8177ab4eecc5bbb4034a",
+   "name": "The Marketing Engineer (AI-Native Marketing)",
+   "last_updated": "2026-05-30",
+   "top_questions": "(1) When you prototype a campaign/experiment with AI (v0, Cursor), how do you decide when it's ready to hand to production engineering vs just shipping it yourself — where's the line between 'good enough for the experiment' and 'needs a real build'? (2) AEO feels like early SEO — everyone agrees it matters but nobody knows the revenue relationship; how do you measure AI visibility in a way that's defensible to a CFO, not just a marketing team that wants to show it's working? (3) Where does the Marketing Engineer actually SIT in your org — marketing, growth, or engineering — and how does that reporting line shape what they're able to build?"
+  },
+  {
+   "notion_page_id": "370d3699c2db818dbf0de600bbf391a1",
+   "name": "Building Agentic Products (Designing for a Shifting Frontier)",
+   "last_updated": "2026-05-30",
+   "top_questions": "(1) The Antigravity tenets (Trust/Autonomy/Feedback/Self-Improvement) imply trade-offs — which created the most internal disagreement, and what alternative did you NOT ship? (2) 'Scaffolding is coping' says design for automatic improvement as models get better — but model jumps aren't always backward-compatible. How do you architect for model-version sensitivity without rebuilding each cycle? (3) Three human-in-the-loop philosophies — verify-before (Kiro), verify-at-checkpoints (Antigravity), verify-on-completion (Anthropic) — what signal tells you which to apply, and is there a case where none is right?"
+  },
+  {
+   "notion_page_id": "370d3699c2db8185acb5ca5d1a98bf92",
+   "name": "AI Agents for Customer Experience (CX)",
+   "last_updated": "2026-05-30",
+   "top_questions": "1) Fin for Sales single-agent shared-memory — governance model for context pollution between sales/support intent without re-creating handoff friction?<br>2) \"Resolution\" is vendor-defined and outcome pricing bills against it — what does resolution mean in-contract when the customer disputes it, who wins?<br>3) Gartner says 50% abandon headcount-cut plans by 2027 — if the shift is toward \"AI trainer\" roles, what does that role look like in your org and where is it hardest to hire?"
+  },
+  {
+   "notion_page_id": "36bd3699c2db81beaf2ed8a1efbb40cd",
+   "name": "Scaling AI Agents to Production / Reliability",
+   "last_updated": "2026-05-30",
+   "top_questions": "1. Compound error problem — is the answer shorter workflows with more checkpoints, or is there a model-layer reliability improvement coming that changes the math?<br>2. Who owns a production agent in an enterprise org — product, IT, or ML platform team? How does ownership affect reliability outcomes?<br>3. Where does the line between deterministic workflow and agent discretion get drawn — is it a policy decision, an architecture decision, or something you discover empirically?"
+  },
+  {
+   "notion_page_id": "366d3699c2db81ceabf4c5d868044076",
+   "name": "AI Developer Tooling Ecosystem",
+   "last_updated": "2026-05-30",
+   "top_questions": "- Is Docker a meaningful part of your AI dev workflow beyond Kubernetes — or just another container runtime?<br>- For smaller vendors: build vs. integrate post-consolidation — what's the rational choice now?<br>- Are MCP production deployments real (at scale) or still primarily demo-layer integrations?"
+  },
+  {
+   "notion_page_id": "372d3699c2db81728ea9c60ab42fd055",
+   "name": "Single-Player to Multiplayer GTM",
+   "last_updated": "2026-06-01",
+   "top_questions": "1) Are most companies here actually doing multiplayer GTM, or still trying to get single-player right — where's the real stall point (capability, coordination, or leadership buy-in)? 2) ELG/nearbound data (3.6x, 28 days faster) comes mostly from mature-partnership companies — for a zero-ecosystem company, what's the realistic time horizon before partner-influenced pipeline shows in the numbers? 3) Does AI just make multiplayer coordination faster (co-sell triggers, champion tracking, overlap routing), or create genuinely new motions that didn't exist before AI — and can anyone give a concrete example of the latter?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81618628cf02a2ac5125",
+   "name": "Agentic Infrastructure & MCP",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) When agents get verified actions across 400+ integrations, is the trust boundary per-user, per-agent, or per-action — and how do you handle scope escalation? 2) At 75k actions, what's the search/retrieval accuracy and how is it scored? 3) Is the next hard problem shifting from 'build the integration' to 'build the registry + reputation layer' — which of 10k servers to trust?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db818c9fa5e5502e314077",
+   "name": "Rust in Production / Core Services",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) Where's the crossover point where Rust's hiring/onboarding cost pencils out vs. just over-provisioning a Go service? 2) Which rewrites succeed (well-bounded, latency-critical) vs. fail (wholesale)? 3) Is GC-pause elimination the real win for most workloads, or a minority case?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81949a05e75598a62508",
+   "name": "Content Engineering",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) How do you handle extraction for mid-market cos where experts are a layer down and less available? 2) Once the knowledge base + system is built, how do you detect drift (AI outputs reflecting yesterday's positioning)? What's the maintenance loop? 3) Is there a version that doesn't require the content team to also be AI system designers — are those roles merging or is that a client problem?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81728310cc36e1fb3af7",
+   "name": "AI Content Engineering / Editorial Pipelines",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) Is the 'de-claude' pass a style, credibility, or AEO-citation problem? 2) How do teams not on Cloudflare get the retry/idempotency architecture? 3) How is fact-grounding handled for high-stakes content?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81a5b24ccf44f7f391cf",
+   "name": "Marketing Engineering (the role)",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) Breaking a workflow into agent architecture — what do teams get wrong first (eval layer? memory?)? 2) CMO vs CTO reporting — what actually works? 3) Is 'GTM engineer' meaningfully different from 'marketing engineer'?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81aba862f0d41f42748e",
+   "name": "Agentic Marketing Workflows",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) What does a well-calibrated exception-routing system look like, and how long to tune? 2) Is anyone running the isolated-branch pattern at scale? 3) How are teams solving persistent agent memory for marketing?"
+  },
+  {
+   "notion_page_id": "37bd3699c2db81afb311f844959ea0d8",
+   "name": "MCP for Marketing",
+   "last_updated": "2026-06-10",
+   "top_questions": "1) Does developer-native (Cursor/Claude Code) expand the operator pool or just appeal to the same engineers? 2) What's a responsible security posture before wiring email/CRM to an MCP? 3) With Marketo shipping 100+ ops, where does differentiation move?"
+  },
+  {
+   "notion_page_id": "386d3699c2db811d8441fe1c9d5cff66",
+   "name": "Cortex Code / Snowflake CoCo",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) How much enterprise data engineering actually lives entirely in Snowflake vs distributed — does cross-stack context work or is it aspirational? 2) What does Natoma change about what a CISO must approve before CoCo runs in production? 3) Plan Mode is governance for buyers but friction for senior engineers — how's adoption velocity measured?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81689bb0c1b606516df3",
+   "name": "The Future of Software Development Shift",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Where does agentic coding actually break in production (legacy context, incomplete specs, org dependencies) and what's the recovery pattern? 2) What's the org signal that you've crossed prototype→production before the tech-debt crisis? 3) If spec quality is the bottleneck, who owns it — PM or eng — and is anyone training/tooling for it?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81968557cd4aee77a489",
+   "name": "OpenClaw & the Future of Software",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Is the security problem fixable within the open/local model, or does enterprise agent deployment need a fundamentally different governance architecture? 2) If 'AI comes to you' wins, do messaging platforms become the primary AI interface — and where do enterprise budgets flow? 3) What does the \\$1.3M/mo number say about autonomous-agent economics at enterprise scale?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81ef871acd1554953ef9",
+   "name": "The Data Cloud as AI/Agent Foundation",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Data platform vs productivity suite — where does the orchestration decision actually get made in a large enterprise? 2) How are customers managing consumption-cost unpredictability as agentic workloads scale — is it an adoption brake? 3) Databricks growing 65% vs your 29% — where are you actually winning the head-to-head?"
+  },
+  {
+   "notion_page_id": "386d3699c2db812a8c9ad3e5952877d5",
+   "name": "AI Governance & Responsible Deployment at Scale",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Operationally, who gets called at 2am when an agent misbehaves, and what happens next? 2) How is CAIO authority actually different from CISO/CIO in a conflict? 3) First-line vs central governance — what actually works when you need to move fast?"
+  },
+  {
+   "notion_page_id": "386d3699c2db816dbcc6fc6fa6673fbf",
+   "name": "Pilot-to-Production Chasm for Enterprise AI",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) What forcing function made the difference between a pilot that died and one that shipped? 2) What does governance look like in production vs as a policy doc? 3) What's actually behind the 67/33 vendor-vs-build production gap — tech or accountability?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81a7879fe3be52cfbe40",
+   "name": "AI Reshaping Operating Models & Decision-Making",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Where is HITL genuinely protective vs accountability theater? 2) When you redesigned the operating model (not just added AI), what was the hardest people/process change? 3) Who owns accountability when a decision-layer AI output is wrong — in practice, not the policy doc?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81bdae40fd190082a6a3",
+   "name": "AI in Identity/Fraud/KYC + Consumer Fintech/Investing",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) When does an investor-defined agent become autonomous investment management to a regulator — has the SEC engaged? 2) What's the real blocker behind 82%/4% KYC automation — adverse-action bar, explainability, or something else? 3) If synthetic identities use real data elements, what's the actual detection surface left?"
+  },
+  {
+   "notion_page_id": "386d3699c2db81e69fd6ed231cd34bf8",
+   "name": "Deploying AI in Regulated Environments (Fintech)",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) How are you handling GenAI deployment without a clear framework to validate against post-SR-26-02? 2) Are hybrid interpretable+powerful architectures real yet or design-doc? 3) How many FIs have actually operationalized DORA third-party AI requirements vs have a policy doc?"
+  },
+  {
+   "notion_page_id": "386d3699c2db812ea2e2dbfd57e30c21",
+   "name": "Computer-Use / Production Browser Agents",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) When a site changes UI and a workflow breaks — self-repair or human fix? 2) Which verticals are in production vs piloting? 3) Is auth solved with OmniConnect or still the primary friction?"
+  },
+  {
+   "notion_page_id": "386d3699c2db8151818cf9260a389451",
+   "name": "OCI for AI Workloads",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) At what scale/data-sensitivity does an OCI dedicated cluster beat Azure OpenAI/Bedrock on total cost? 2) Realistic timeline to add OCI without full migration? 3) Does the Stargate halo translate to non-OpenAI enterprise procurement?"
+  },
+  {
+   "notion_page_id": "386d3699c2db817c92c1e642c7b2b052",
+   "name": "AI's Impact on CI Infra / Build Speed",
+   "last_updated": "2026-06-21",
+   "top_questions": "1) Is the CI bottleneck hardware, test architecture, or observability — fix which first? 2) What does 3-5x PR volume break first? 3) When does flakiness make CI more noise than signal?"
+  }
+ ]
+}
