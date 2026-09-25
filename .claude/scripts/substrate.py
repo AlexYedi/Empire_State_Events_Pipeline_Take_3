@@ -788,24 +788,53 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                 g.stats.bump("claim_entity", "linked (idempotent)", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
                        on_conflict="claim_id,entity_type,entity_id,role")
-    # question claims -> claim_entity(topic, about), for every topic on THIS event's roster.
-    # Alex's call 2026-09-24: anchor questions to BOTH the event and its topics. The event anchor is
-    # already set (claim.event_id above); the topic anchor is what makes a question resurface when the
-    # TOPIC recurs at a different event — which is the entire reason to store questions rather than
-    # re-derive them from statements each time. Unlike speakers and about-companies, questions are not
-    # attributed to one entity, so they link to the whole topic set rather than a resolved single match;
-    # the roster scoping is what keeps that honest. Schema already permits it: claim_entity's CHECK
-    # constraints allow entity_type='topic' and role='about', so this is additive, no DDL.
+    # question claims -> claim_entity(topic, about) for the topic(s) each question MOST associates
+    # with, chosen among THIS event's roster topics by embedding similarity (same local bge-small the
+    # claims are embedded with — no new dependency, no metered API). Alex's call 2026-09-25: per-question
+    # association, not the whole roster. The event anchor is already set (claim.event_id above); the
+    # topic anchor is what makes a question resurface when the TOPIC recurs at a different event.
+    # Selection: the top topic always, plus any near-tie within 0.03 cosine, capped at 3 — a question
+    # genuinely spanning two topics gets both, one that clearly belongs to one topic gets one.
+    # Roster scoping keeps the fuzzy match safe, exactly as it does for speaker attribution above.
+    # Schema already permits it: claim_entity's CHECKs allow entity_type='topic' + role='about'.
     questions = [it for it in items if it["claim_type"] == "question"]
     if questions and not g.dry:
         ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         topic_ids = [r["entity_id"] for r in
                      g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.topic&select=entity_id")]
-        if not topic_ids:
+        trows = g.get(f"/topic?id=in.({','.join(topic_ids)})&select=id,name") if topic_ids else []
+        if not trows:
             g.stats.bump("claim_entity", "question_topic_unresolved", len(questions))
         else:
-            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "topic", "entity_id": t, "role": "about"}
-                     for it in questions if it["claim_key"] in ids for t in topic_ids]
+            sys.path.insert(0, DOCKB)
+            from dockb_common import embed_passages
+            qvecs = embed_passages([it["text"] for it in questions])
+            tvecs = embed_passages([t["name"] for t in trows])
+
+            def cos(a: list[float], b: list[float]) -> float:
+                dot = sum(x * y for x, y in zip(a, b))
+                na = sum(x * x for x in a) ** 0.5 or 1.0
+                nb = sum(y * y for y in b) ** 0.5 or 1.0
+                return dot / (na * nb)
+
+            links = []
+            for it, qv in zip(questions, qvecs):
+                if it["claim_key"] not in ids:
+                    continue
+                ranked = sorted(((cos(qv, tv), t) for tv, t in zip(tvecs, trows)), key=lambda x: -x[0])
+                top = ranked[0][0]
+                # Fan out to near-ties only when the top match is itself confident. Dry-check on real
+                # questions vs real topic names (2026-09-25): clean hits scored 0.68–0.76 with a ≥0.07
+                # margin; a question with NO real home on the roster scored a flat 0.60/0.59/0.59 and the
+                # near-tie rule scattered it across three topics, one plainly wrong. Flat + weak means
+                # "uncertain", so commit to the single best topic and make the weakness visible.
+                if top >= 0.65:
+                    chosen = [t for s, t in ranked if s >= top - 0.03][:3]
+                else:
+                    chosen = [ranked[0][1]]
+                    g.stats.bump("claim_entity", "question_topic_weak_match")
+                links += [{"claim_id": ids[it["claim_key"]], "entity_type": "topic", "entity_id": t["id"],
+                           "role": "about"} for t in chosen]
             if links:
                 g.stats.bump("claim_entity", "linked (idempotent)", len(links))
                 g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
