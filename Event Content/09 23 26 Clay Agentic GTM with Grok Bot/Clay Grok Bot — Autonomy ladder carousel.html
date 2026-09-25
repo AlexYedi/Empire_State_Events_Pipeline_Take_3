@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Autonomy Ladder</title>
+<style>
+:root{
+  --bg:#14161B; --fg:#F3F1EC; --amb:#D97706;
+  --g1:#B4B6BB; --g2:#8A8D94; --g3:#4A4E57; --g4:#2A2D35; --g5:#1D2027;
+  --serif:"Iowan Old Style","Palatino","Georgia",serif;
+  --mono:"Menlo","Monaco",monospace;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--fg);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:var(--serif)}
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--bg);padding:80px 80px 0 80px}
+.slide:not(:last-child){break-after:page}
+html.solo .slide{display:none}
+html.solo .slide.on{display:block}
+
+.kicker{font-family:var(--mono);font-size:20px;letter-spacing:.14em;color:var(--g2);text-transform:uppercase;margin-bottom:28px}
+.kicker b{color:var(--g1);font-weight:400}
+h1{font-family:var(--serif);font-weight:400;font-size:72px;line-height:1.04;letter-spacing:-.01em;color:var(--fg)}
+.foot{position:absolute;left:80px;right:80px;bottom:52px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;border-top:1px solid var(--g4);padding-top:18px}
+.src{font-family:var(--mono);font-size:19px;line-height:1.4;color:var(--g2);max-width:790px}
+.pg{font-family:var(--mono);font-size:22px;color:var(--g1);white-space:nowrap}
+.amb{color:var(--amb)}
+
+/* slide 1 */
+.s1 h1{font-size:112px;line-height:1.0;margin-top:30px}
+.s1 .fence-line{font-family:var(--serif);font-style:italic;font-size:60px;color:var(--amb);margin-top:26px}
+.s1 .ctx{font-family:var(--mono);font-size:23px;line-height:1.5;color:var(--g1);margin-top:40px}
+.layers{margin-top:56px;display:flex;flex-direction:column;gap:14px}
+.layer{display:grid;grid-template-columns:190px 1fr;align-items:center;height:64px;border:1.5px solid var(--g3);border-radius:6px;background:var(--g5);padding:0 24px}
+.layer .k{font-family:var(--mono);font-size:21px;letter-spacing:.16em;color:var(--g2)}
+.layer .v{font-family:var(--serif);font-size:32px;color:var(--fg)}
+.layer.f{border:2.5px dashed var(--amb);background:transparent}
+.layer.f .k{color:var(--amb)}
+.crew{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:56px;border-top:1px solid var(--g4);padding-top:26px}
+.crew .lab{font-family:var(--mono);font-size:20px;letter-spacing:.16em;color:var(--g2);margin-bottom:12px}
+.crew .who{font-family:var(--mono);font-size:24px;color:var(--fg);line-height:1.3}
+.crew .org{font-family:var(--mono);font-size:22px;color:var(--g2);line-height:1.35}
+
+/* slide 2 */
+.fence{position:relative;margin-top:70px;border:3px dashed var(--amb);border-radius:18px;padding:62px 34px 62px 34px}
+.fl{position:absolute;font-family:var(--mono);font-size:20px;letter-spacing:.08em;color:var(--amb);background:var(--bg);padding:0 12px;white-space:nowrap}
+.fl.t1{top:-15px;left:40px}.fl.t2{top:-15px;right:40px}
+.fl.b1{bottom:-15px;left:40px}.fl.b2{bottom:-15px;right:40px}
+.lanes{display:grid;grid-template-columns:1fr 170px 1fr;align-items:stretch}
+.lane{border:1.5px solid var(--g3);border-radius:8px;background:var(--g5);padding:26px 24px}
+.lane .k{font-family:var(--mono);font-size:20px;letter-spacing:.16em;color:var(--g2)}
+.lane .n{font-family:var(--serif);font-size:44px;margin-top:6px;margin-bottom:14px}
+.lane ul{list-style:none}
+.lane li{font-family:var(--mono);font-size:21px;line-height:1.32;color:var(--fg);padding:13px 0 13px 0;border-top:1px solid var(--g4)}
+.mid{display:flex;flex-direction:column;justify-content:center;gap:70px;padding:0 8px}
+.flow{text-align:center}
+.flow .lbl{font-family:var(--mono);font-size:18px;line-height:1.3;color:var(--g1);margin-bottom:8px}
+.flow.back .lbl{margin-top:8px;margin-bottom:0}
+.s2 .cap{font-family:var(--mono);font-size:21px;color:var(--g1);margin-top:40px;line-height:1.4}
+.s2 .cap i{display:inline-block;width:34px;border-top:3px dashed var(--amb);vertical-align:6px;margin-right:12px}
+
+/* slide 3 */
+.stair{position:relative;width:920px;height:830px;margin-top:40px}
+.step{position:absolute;bottom:0;width:180px;border:1.5px solid var(--g3);border-bottom:none;border-radius:6px 6px 0 0;background:var(--g5);padding:16px 12px}
+.step .no{font-family:var(--mono);font-size:22px;color:var(--g2)}
+.step .nm{font-family:var(--serif);font-size:26px;line-height:1.05;margin-top:6px}
+.step .ds{font-family:var(--mono);font-size:19px;line-height:1.3;color:var(--g1);margin-top:10px}
+.step.top{border:2.5px solid var(--amb);border-bottom:none;background:rgba(217,119,6,.14)}
+.step.top .no{color:var(--amb)}
+.base{position:absolute;left:0;right:0;bottom:0;border-top:2px solid var(--g3)}
+.brk{position:absolute;border:2px solid var(--g1);border-bottom:none;height:18px}
+.brk-l{position:absolute;font-family:var(--mono);font-size:20px;letter-spacing:.14em;color:var(--g1);white-space:nowrap}
+.tag{font-family:var(--mono);font-size:20px;letter-spacing:.12em;color:var(--bg);background:var(--amb);padding:6px 12px 5px;border-radius:3px;white-space:nowrap}
+.s3 .note{font-family:var(--mono);font-size:21px;color:var(--g1);margin-top:26px}
+
+/* slide 4 */
+.legend{font-family:var(--mono);font-size:21px;color:var(--g1);margin-top:22px}
+.dia{display:inline-block;width:16px;height:16px;background:var(--amb);transform:rotate(45deg);margin-right:12px;vertical-align:1px}
+.pipe{margin-top:34px}
+.node{display:grid;grid-template-columns:70px 1fr;align-items:center}
+.node .ic{display:flex;justify-content:center}
+.node .sq{width:22px;height:22px;border:2.5px solid var(--g1);border-radius:3px}
+.node .dm{width:26px;height:26px;background:var(--amb);transform:rotate(45deg)}
+.node .bx{display:grid;grid-template-columns:330px 1fr;align-items:center;height:78px;border:1.5px solid var(--g3);border-radius:6px;background:var(--g5);padding:0 22px}
+.node.g .bx{border:2px solid var(--amb)}
+.node .t{font-family:var(--serif);font-size:32px;line-height:1.05}
+.node .d{font-family:var(--mono);font-size:20px;line-height:1.3;color:var(--g1)}
+.node.end .bx{background:transparent;border:2px solid var(--g1)}
+.link{display:grid;grid-template-columns:70px 1fr;height:30px}
+.link div:first-child{display:flex;justify-content:center}
+.link span{display:block;width:2.5px;height:30px;background:var(--g2)}
+.s4 .fn{font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--g1);margin-top:26px}
+
+/* slide 5 */
+.rub{margin-top:44px;border-top:1px solid var(--g4)}
+.rrow{display:grid;grid-template-columns:86px 1fr;align-items:start;padding:24px 0;border-bottom:1px solid var(--g4)}
+.rrow .no{font-family:var(--mono);font-size:40px;color:var(--amb);line-height:1.05}
+.rrow .lb{font-family:var(--serif);font-size:44px;line-height:1.05;color:var(--fg)}
+.rrow .gl{font-family:var(--mono);font-size:22px;line-height:1.35;color:var(--g1);margin-top:10px}
+.s5 .fn{font-family:var(--serif);font-style:italic;font-size:36px;line-height:1.25;color:var(--fg);margin-top:36px;border-left:6px solid var(--amb);padding:4px 0 4px 26px}
+</style>
+</head>
+<body>
+
+<!-- 1 / 5 -->
+<section class="slide s1">
+  <div class="kicker">Field notes · <b>Clay livestream</b></div>
+  <h1>The agent plans.<br>The platform runs.</h1>
+  <div class="fence-line">The human draws the fence.</div>
+  <div class="ctx">Episode 1 of Clay's new builders &amp; agencies series<br>55-minute screen-share demo · Sept 23, 2026</div>
+  <div class="layers">
+    <div class="layer"><div class="k">AGENT</div><div class="v">Grok Bot (xAI)</div></div>
+    <div class="layer"><div class="k">PLATFORM</div><div class="v">Clay</div></div>
+    <div class="layer f"><div class="k">FENCE</div><div class="v">The human</div></div>
+  </div>
+  <div class="crew">
+    <div><div class="lab">HOST</div><div class="who">Davide Grieco</div><div class="org">Head of Growth, Clay</div></div>
+    <div><div class="lab">GUEST</div><div class="who">Eric Nowoslawski</div><div class="org">Founder, Growth Engine X</div></div>
+  </div>
+  <div class="foot"><div class="src">Clay livestream on Sequel.io · Sept 23, 2026</div><div class="pg">1 / 5</div></div>
+</section>
+
+<!-- 2 / 5 -->
+<section class="slide s2">
+  <div class="kicker">The architecture · <b>Who does what</b></div>
+  <h1>Two lanes, one fence</h1>
+  <div class="fence">
+    <div class="fl t1">ICP CONTAINED</div><div class="fl t2">GOAL LOCKED</div>
+    <div class="fl b1">DATA UP FRONT</div><div class="fl b2">TEMPLATE LOCKED</div>
+    <div class="lanes">
+      <div class="lane">
+        <div class="k">AGENT</div><div class="n">Grok Bot</div>
+        <ul>
+          <li>Plans the campaign</li>
+          <li>Remembers every campaign launched</li>
+          <li>Runs daily routines (noon and 6&nbsp;pm checks)</li>
+          <li>Analyzes results, suggests fixes</li>
+        </ul>
+      </div>
+      <div class="mid">
+        <div class="flow">
+          <div class="lbl">builds workflows via Clay CLI</div>
+          <svg width="150" height="22" viewBox="0 0 150 22"><path d="M4 11 H134" stroke="#B4B6BB" stroke-width="3"/><path d="M132 3 L147 11 L132 19 z" fill="#B4B6BB"/></svg>
+        </div>
+        <div class="flow back">
+          <svg width="150" height="22" viewBox="0 0 150 22"><path d="M16 11 H146" stroke="#8A8D94" stroke-width="3"/><path d="M18 3 L3 11 L18 19 z" fill="#8A8D94"/></svg>
+          <div class="lbl">run results, credits, failures</div>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="k">PLATFORM</div><div class="n">Clay</div>
+        <ul>
+          <li>Moves each row on as soon as it's ready</li>
+          <li>Queues and throttles shared API keys</li>
+          <li>Shows every node: runs, credits, failures</li>
+          <li>Persists when the agent's machine restarts</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="cap"><i></i>The fence: four limits a human sets before any loop runs</div>
+  <div class="foot"><div class="src">Source: Eric Nowoslawski &amp; Davide Grieco, Clay livestream, 2026</div><div class="pg">2 / 5</div></div>
+</section>
+
+<!-- 3 / 5 -->
+<section class="slide s3">
+  <div class="kicker">The ladder · <b>Where customers sit</b></div>
+  <h1>Autonomy is earned<br>per customer</h1>
+  <div class="stair">
+    <div class="step" style="left:0;height:230px"><div class="no">01</div><div class="nm">Suggest</div><div class="ds">A daily audit proposes fixes</div></div>
+    <div class="step" style="left:185px;height:330px"><div class="no">02</div><div class="nm">Approve</div><div class="ds">A human picks what ships</div></div>
+    <div class="step" style="left:370px;height:430px"><div class="no">03</div><div class="nm">Pilot</div><div class="ds">Notify and confirm, 3 days</div></div>
+    <div class="step" style="left:555px;height:530px"><div class="no">04</div><div class="nm">Threshold</div><div class="ds">Right 10 of 10 times</div></div>
+    <div class="step top" style="left:740px;height:630px"><div class="no">05</div><div class="nm">Autonomous</div><div class="ds">Runs tests and list filters alone</div></div>
+    <div class="base"></div>
+    <!-- most customers: over steps 1-2 -->
+    <div class="brk-l" style="left:0;bottom:392px">MOST CUSTOMERS</div>
+    <div class="brk" style="left:0;width:365px;bottom:352px"></div>
+    <!-- 2-3 customers: over step 5 -->
+    <div style="position:absolute;right:0;bottom:660px"><span class="tag">2–3 CUSTOMERS</span></div>
+  </div>
+  <div class="note">Rungs 3–4 are Eric's path for automating email replies.</div>
+  <div class="foot"><div class="src">Source: Eric Nowoslawski, Clay livestream, 2026. Self-reported.</div><div class="pg">3 / 5</div></div>
+</section>
+
+<!-- 4 / 5 -->
+<section class="slide s4">
+  <div class="kicker">The mechanism · <b>Demo workflow, redrawn</b></div>
+  <h1>Built by the bot,<br>CSV to sender</h1>
+  <div class="legend"><span class="dia"></span>= a cheap yes/no decision model, not a chat model</div>
+  <div class="pipe">
+    <div class="node"><div class="ic"><div class="sq"></div></div><div class="bx"><div class="t">CSV</div><div class="d">400 firms per campaign</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node g"><div class="ic"><div class="dm"></div></div><div class="bx"><div class="t">Jev company gate</div><div class="d">Does it fit the ICP?</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node"><div class="ic"><div class="sq"></div></div><div class="bx"><div class="t">Prospeo</div><div class="d">Find contacts</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node g"><div class="ic"><div class="dm"></div></div><div class="bx"><div class="t">Jev contact gate</div><div class="d">Is this the right person?</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node"><div class="ic"><div class="sq"></div></div><div class="bx"><div class="t">Prospeo</div><div class="d">Find the work email</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node"><div class="ic"><div class="sq"></div></div><div class="bx"><div class="t">LeadMagic</div><div class="d">Validate, incl. catch-all domains</div></div></div>
+    <div class="link"><div><span></span></div><div></div></div>
+    <div class="node end"><div class="ic"><div class="sq" style="background:#B4B6BB"></div></div><div class="bx"><div class="t">Smartlead</div><div class="d">Send</div></div></div>
+  </div>
+  <div class="fn">Two campaigns: bankruptcy lawyers and construction firms.<br>Built by a bot trained on the agency's past Clay workflows.</div>
+  <div class="foot"><div class="src">Source: Eric Nowoslawski's screen-share, Clay livestream, Sept 2026</div><div class="pg">4 / 5</div></div>
+</section>
+
+<!-- 5 / 5 -->
+<section class="slide s5">
+  <div class="kicker">The takeaway · <b>Before you hand over the keys</b></div>
+  <h1>Fences before autonomy</h1>
+  <div class="rub">
+    <div class="rrow"><div class="no">1</div><div><div class="lb">Contain the ICP</div><div class="gl">The agent can't drift from colleges to marketing agencies</div></div></div>
+    <div class="rrow"><div class="no">2</div><div><div class="lb">Lock the goal</div><div class="gl">The meeting stays the goal, even when the AI argues against it</div></div></div>
+    <div class="rrow"><div class="no">3</div><div><div class="lb">Pull data up front</div><div class="gl">No mid-run "game time" pulls that overspend or pull wrong</div></div></div>
+    <div class="rrow"><div class="no">4</div><div><div class="lb">Lock the template</div><div class="gl">One marked slot for the value prop or pain; the frame is human</div></div></div>
+    <div class="rrow"><div class="no">5</div><div><div class="lb">Grade the first 50</div><div class="gl">Review outputs good or bad before running at scale</div></div></div>
+  </div>
+  <div class="fn">Still open: who cuts the bottom 30% of sending domains, the bot or a human?</div>
+  <div class="foot"><div class="src">Source: Eric Nowoslawski, Clay livestream, Sept 2026</div><div class="pg">5 / 5</div></div>
+</section>
+
+<script>
+(function(){
+  var m=location.search.match(/solo=(\d)/);
+  if(m){document.documentElement.classList.add('solo');var s=document.querySelectorAll('.slide')[+m[1]-1];if(s)s.classList.add('on');}
+})();
+</script>
+</body>
+</html>
