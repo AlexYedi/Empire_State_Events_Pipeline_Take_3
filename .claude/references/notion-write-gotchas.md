@@ -69,3 +69,14 @@ scrape-derived Email/Phone** from a brief, a roster, a transcript, or an inbox d
 Known POV/Bio · LinkedIn URL · Events` and leave Email/Phone/Notes untouched. `Notes` is never mirrored to the
 spine or the hub. Contact detail for a real relationship belongs in **HubSpot** via the gated post-event step
 (YED-142), which is one-way — nothing reads HubSpot back into the graph.
+
+## (o) `notion-update-page` takes a bare UUID for `page_id`, never a page URL (2026-09-22)
+Convention (c) says *relations* take full page **URLs** — that is still true, and it is the trap. The
+`page_id` parameter is the opposite: it must be a dashed UUID (`3e1d3699-c2db-81c3-a383-fb9a53ad2cf9`).
+Passing the URL that `notion-query-data-sources` and `notion-fetch` hand back fails with
+`body.update_page.page_id should be a valid uuid`. Convert by stripping the domain and re-hyphenating
+8-4-4-4-12. So in a single write: `page_id` = bare UUID, relation values inside `properties` = URLs.
+
+Also: `notion-update-page` params are **flat**, not wrapped in a `data` object (unlike
+`notion-query-data-sources`, which requires `{"data": {...}}`). And `update_content` takes a
+`content_updates` array of `{old_str, new_str}` — not top-level `old_str`/`new_str`.

@@ -7,7 +7,7 @@ description: "Signal scanner — job search & tracking. Aggregates roles from le
 
 You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed to new partners and scraping the account is ruled out, so we aggregate roles from legitimate sources (ATS boards APIs + RSS + Apollo + Dice), score them against Alex's **Target-Role ICP**, and track application status in Notion.
 
-**The target — source of truth is `.claude/references/me-model.md` §1.5 "Target-Role ICP" (read it; keep this rubric in sync):** quota-carrying **commercial** roles — Enterprise/Strategic **CSM**, **Account Manager/Director on a book**, **Growth Strategist**, or a **supported** Enterprise/Strategic AE — at top-tier **AI-native** companies (`.claude/references/target-companies.md`). Deep GTM + systems + AI-building is the **differentiator, not the job title**. **Score by the role's MECHANISM (what the JD says it does), not its title.** The decisive filter is **leverage vs. "in spite of the company"**: keep roles that give leverage (existing book/expansion, BDR/marketing/inbound support, or a **PLG** product-led motion); reject owning the entire funnel alone.
+**The target — source of truth is `.claude/references/me-model.md` §1.5 "Target-Role ICP" (read it; keep this rubric in sync):** quota-carrying **commercial** roles at top-tier **AI-native** companies. **The in-scope shapes are defined ONCE, in Step 3 — go read them there; they are deliberately not restated here** (a second copy drifts, which is what happened on 2026-09-24) (`.claude/references/target-companies.md`). Deep GTM + systems + AI-building is the **differentiator, not the job title**. **Score by the role's MECHANISM (what the JD says it does), not its title.** The decisive filter is **leverage vs. "in spite of the company"**: keep roles that give leverage (existing book/expansion, BDR/marketing/inbound support, or a **PLG** product-led motion); reject owning the entire funnel alone.
 
 This is one of three **signal scanners** feeding the Empire State pipeline (alongside `trend-radar` and `voice-radar`).
 
@@ -45,13 +45,13 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 `.claude/references/target-companies.md` ({ATS vendor, board token/slug} per company).
 
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
-Read the **company→ATS registry** in `.claude/references/target-companies.md` (**30 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21** from the Flywheel "New York AI Mafia" graphic; all endpoints re-verified live that day). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
+Read the **company→ATS registry** in `.claude/references/target-companies.md` (**31 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic; all endpoints re-verified live that day). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
 - **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai, formationbio`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
   → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, updated:.updated_at}'`
-  ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt` and Lever `createdAt` are true posted dates** and may be used normally.
-- **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip, runway-ml, profound, modal, taktile, reflectionai, mirage, traversal`):
+  ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt`, Lever `createdAt` and Workable `published_on` are true posted dates** and may be used normally.
+- **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip, runway-ml, profound, modal, taktile, reflectionai, mirage, traversal, generalintuition-medal`):
   `curl -s "https://api.ashbyhq.com/posting-api/job-board/{board}"`
   → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:.location, posted:.publishedAt, remote:.isRemote}'`
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
@@ -61,16 +61,16 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
   → `jq '.jobs[] | {id:.shortcode, title, url:.shortlink, loc:((.city // "") + " " + (.country // "")), posted:.published_on, remote:.telecommuting}'`
   **Freshness is TRUE here** — `published_on` is a real posted date (ISO `YYYY-MM-DD`), so it may be written to `Posted Date` normally, unlike Greenhouse. Natural key = `workable:{shortcode}`. Note the job object nests nothing useful under `.id`; **`shortcode` is the stable id**.
 
-- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / **`Growth Strategist|Growth Account|Growth AE|Scaled Growth` (never bare `Growth` — see the drop-list bullet)** / Solutions Consultant / Solutions Engineer / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
+- **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / **`Growth Strategist|Growth Account|Growth AE|Scaled Growth` (never bare `Growth` — see the drop-list bullet)** / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
 - **The drop-list runs AFTER the keep-list and WINS (fixed 2026-09-20).** A title that matched a keep term is still dropped when it also matches
   `Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen`
-  — **EXCEPT for the PROTECTED set `Solutions Engineer|Sales Engineer|Solutions Consultant`, which survive the drop-list.** Apply the protected check first: if the title matches a protected term, keep it and stop; otherwise drop-list wins over keep-list.
-  ⚠️ **Why the exception exists (caught by the build-quality judge, 2026-09-20):** the keep-list deliberately keeps *Solutions Engineer*, and the drop term is a bare `Engineer` — without this carve-out, drop-wins silently kills a target title. That is a regression the first draft of this rule introduced.
+  **There is no protected set. The drop-list simply wins.**
+  ⚠️ **A PROTECTED carve-out for `Solutions Engineer|Sales Engineer|Solutions Consultant` used to live here and was REMOVED 2026-09-24 (Alex).** Ruling, verbatim: *"solutions engineer is way outside my skill set or proposed focus … make sure we are not going technical with any roles."* The carve-out existed to stop the bare `Engineer` drop term from killing Solutions Engineer — but that title is no longer wanted, so the bare `Engineer` drop is now **correct behaviour, not a regression.** Do not re-add the carve-out without a new ruling.
   **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
 - **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup; for Workable the id is `.shortcode`); freshness = `posted` for **Ashby, Lever and Workable**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a scored TSV so raw JSON never touches parent context).
-- **Coverage = the 30 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
-- 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 6 additions + the Workable shape re-verified live 2026-09-21.**
+- **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
+- 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 9 additions + the Workable shape re-verified live 2026-09-21; General Intuition verified live 2026-09-24.**
 
 ### 1b. RSS.app feeds from saved LinkedIn searches (manual paste — optional)
 - For each feed URL Alex provides, `WebFetch` it; extract title, company, location, link, pubDate.
@@ -89,7 +89,7 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 ## Step 2 — Dedupe
 - **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Dice/RSS/Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
 - Collapse the same role appearing across sources into one record (keep all source links + the natural key).
-- Dedupe against the Roles DB: `notion-search` scoped to the Roles data source by the natural key (stored in `Content Hash`) or `title company`; `notion-fetch` to confirm. **Freshness = the ATS `posted_at` for Ashby/Lever; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
+- Dedupe against the Roles DB: `notion-search` scoped to the Roles data source by the natural key (stored in `Content Hash`) or `title company`; `notion-fetch` to confirm. **Freshness = the ATS `posted_at` for Ashby, Lever and Workable; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
 
 ---
 
@@ -97,9 +97,36 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 
 Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (JD language), not its title.**
 
+> **THE FIVE SHAPES — nothing else is in scope (ruled by Alex 2026-09-24).**
+> **(1) Account Manager · (2) Account Director · (3) quota-carrying Customer Success Manager ·
+> (4) "all channel" Account Executive — existing book AND outbound · (5) Growth Strategist —
+> *only when it carries a book* (see the Growth book test below).**
+>
+> **(5) GROWTH STRATEGIST — IN, but the title only raises the question (ruled 2026-09-24).** Alex:
+> *"growth strategist should be kept, but it is tough to keep up with all of the fun names that
+> companies come up with — so yes, but no when it refers only to a marketing function, which many
+> companies do."* So run the **same book test** rubric v2.2 uses for IC-vs-management:
+> **does the role own accounts, a book, expansion or a quota?** Yes → score it as shape 5.
+> No — it runs campaigns, demand-gen, lifecycle, funnel metrics or content → **it is a marketing
+> function and is OUT: score it `0 + REJECT` on role mechanism**, however good the company. (Stated
+> explicitly because every other failure path in Step 3 names its bucket — judge round 2.) This is the *same leak* the narrowed keep-list
+> already guards (bare `Growth` passed "Growth Marketing Manager" on 2026-09-19); the grep narrows
+> the candidates, the book test decides them.
+>
+> **No technical roles.** Solutions Engineer, Sales Engineer and Solutions Consultant are **OUT** — they
+> were removed from the keep-list, the drop-list carve-out and the scoring table on 2026-09-24. A
+> pre-sales/technical-win seat is not a book.
+>
+> Shape 4 is the one that needs care: **"all channel" means existing + outbound, not outbound-only.**
+> An AE who prospects and closes with no existing-business component is still the own-the-whole-funnel
+> reject, however good the comp. *(Worked example, 2026-09-24: Modal AE-Enterprise KEPT — "drive new
+> business by generating pipeline" AND "expand existing accounts"; Traversal Enterprise AE REJECTED —
+> "own the full sales cycle, from strategic prospecting to closing" with only Sales-Engineering support
+> and no book, despite OTE $300–320K and an in-person NYC seat.)*
+
 | Dimension | Points | How to score |
 |---|---|---|
-| **Role mechanism** (what the JD actually has you do) | 0–35 | *Segment note (v2.3): wherever this row says "Enterprise/Strategic", a **Mid-Market** seat at a top-tier / high-growth AI-native company (AI-native tier 25 or 20) scores the **same points**. MM at any other company is not covered by v2.3: score it on the JD's mechanism and write the call in `Notes`.* · Quota/consumption-carrying Enterprise/Strategic **CSM**, **Account Manager/Director on a book** (retention+expansion vs. a target), or **Growth Strategist** = **35** · **supported** Enterprise/Strategic **AE** (new logo *with* explicit inbound + BDR + product pull, often + existing book) = **28** · **Solutions Consultant / hybrid sell+CS** with a named post-sale partner = **25** · heavy-new-logo with only *some* support = **0** · full-cycle own-the-whole-funnel solo = **0 + REJECT** |
+| **Role mechanism** (what the JD actually has you do) | 0–35 | *Segment note (v2.3): wherever this row says "Enterprise/Strategic", a **Mid-Market** seat at a top-tier / high-growth AI-native company (AI-native tier 25 or 20) scores the **same points**. MM at any other company is not covered by v2.3: score it on the JD's mechanism and write the call in `Notes`.* · Quota/consumption-carrying Enterprise/Strategic **CSM**, **Account Manager/Director on a book** (retention+expansion vs. a target), or **Growth Strategist** *(shape 5 — apply the Growth book test above; a marketing-function "Growth Strategist" is OUT, not 35)* = **35** · **"all channel" Enterprise/Strategic AE (shape 4)** — new logo *with* explicit inbound + BDR + product pull **AND a named existing-book / expansion component** = **28**. **The existing-book component is REQUIRED, not optional** (tightened 2026-09-24; the old wording read "often + existing book", which let an outbound-only seat score 28). **Support without a book is NOT shape 4** — it scores **0 on this row** (the heavy-new-logo bucket). **To be precise about what that does and does not mean** (the earlier wording said "rescued only by the PLG exemption", which was ambiguous — judge round 2): a support-named/no-book role is **NOT auto-rejected**, because the auto-reject below requires *no existing-business component **AND** no support named*. It simply scores 0 on mechanism, which caps it out of A on arithmetic alone. At a **PLG-primary** company the PLG exemption (v2.1 #2) then floors it into **B/C**; everywhere else it keeps the 0 and lands where the remaining dimensions put it · heavy-new-logo with only *some* support = **0** · full-cycle own-the-whole-funnel solo = **0 + REJECT** |
 | **AI-native company tier** | 0–25 | frontier / AI-native (Anthropic, OpenAI, Clay, Vercel, Notion, Sierra, Perplexity, Cursor/Anysphere, …) = **25** · AI-forward high-growth (Ramp, Intercom, Verkada, Rippling, Zip, Glean, …) = **20** · AI-heavy SaaS = **12** · **traditional / non-AI = 0**. See `target-companies.md`. |
 | **Leverage / support signal** (decisive — near-veto) | 0–20 | explicit BDR/marketing/inbound support, **existing book / expansion ownership**, **or PLG / product-led-growth as the primary motion** (product generates inbound demand) = **20** · partial = **10** · none / pure top-down-outbound / "own the whole funnel" = **0 + REJECT flag** |
 | **AI-multiplier differentiator fit** | 0–10 | JD explicitly values building-with-AI / GTM-systems / technical fluency (SDLC, AI/ML) / consumption-model expertise ("you build with AI daily," "use AI creatively") = up to **10** |
@@ -149,7 +176,7 @@ If the Roles DB doesn't exist, present this proposed schema and create it via `n
 **Roles DB schema**
 - `Role Title` (title)
 - `Company` (text)
-- `Source` (select: greenhouse / lever / ashby / rssapp_li / apollo / dice / manual)
+- `Source` (select: greenhouse / lever / ashby / **workable** / rssapp_li / apollo / dice / manual) — **`workable` was added to the live Notion select 2026-09-24**; it was missing since Workable support shipped on 09-21, so a Hugging Face row had no valid `Source` value to write. Caught by the build-quality judge, round 2.
 - `Location` (text) · `Workplace` (select: remote / hybrid / onsite)
 - `URL` (url) · `Company URL` (url)
 - `ICP Score` (number) · `ICP Tier` (select: A / B / C / drop)
@@ -172,7 +199,7 @@ Then present the ranked roles:
 ### Held — needs your ruling ({n})
 - **{Role}** @ {Company} — **no tier** — {the undefined case, e.g. "posted range straddles the OTE floor"} — {what it would score on mechanism alone}
 ```
-**Freshness marker per row:** a Greenhouse row has **no posted date** (Step 1 caveat), so never let the `last {recency}` header imply one. Mark Greenhouse rows `freshness: UNKNOWN`; only Ashby/Lever rows may show a posted date.
+**Freshness marker per row:** a Greenhouse row has **no posted date** (Step 1 caveat), so never let the `last {recency}` header imply one. Mark Greenhouse rows `freshness: UNKNOWN`; **Ashby, Lever and Workable** rows may show a posted date.
 
 **The Held bucket is mandatory when it is non-empty** — it is the only place a role in an undefined rubric state reaches Alex. A held role is never silently ranked and never silently dropped. Current known case: the posted-comp-range-vs-floor gap (YED-210).
 
@@ -182,7 +209,8 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 
 ## Step 5 — Write approved roles to Notion
 - For each approved role: dedupe-confirm (Step 2), then `notion-create-pages` into the Roles DB with `Status = new`, the computed `ICP Score`/`Tier`, `Content Hash`, `Date Found = today`, both URLs.
-- **`Posted Date`: write it ONLY for Ashby/Lever rows. Leave it EMPTY for every Greenhouse row** — `updated_at` is last-modified, and writing it here launders a wrong date into the DB (Step 1 caveat, restated here because this is the line that actually performs the write).
+- **`Source`: write the ATS vendor that produced the row** — the same token used in the `Content Hash` natural key (`{ats_vendor}:{id}`), so the two can never disagree. One of the eight select options above.
+- **`Posted Date`: write it for Ashby, Lever and Workable rows. Leave it EMPTY for every Greenhouse row** — `updated_at` is last-modified, and writing it here launders a wrong date into the DB (Step 1 caveat, restated here because this is the line that actually performs the write).
 - **A HELD role (Step 4's Held bucket) is written with `ICP Tier` left BLANK** — the `A / B / C / drop` select intentionally gets no value — plus an `ICP Score` if mechanism alone yields one, and a `Notes` line naming the undefined case and the Linear issue that owes the ruling. Blank tier is the durable signal that the row is unresolved; never coerce it into `drop` or into a tier.
 - Existing role with material change → `notion-update-page` (don't duplicate).
 - Status is Alex's to advance (new → reviewing → applied → …); the skill only sets `new` on intake.
