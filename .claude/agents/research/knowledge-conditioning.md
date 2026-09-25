@@ -77,6 +77,14 @@ research — it aims it.
 - Prior Opportunities / Challenges / Use Cases / Top Questions (condensed, tagged)
 - **Refresh leads:** [what's likely to have moved since Last Updated]
 
+## Aimed Questions  (for synthesizer → brief "Questions to ask"; person-researcher)
+### → [Named person, role]  |  → The room  |  → The format
+- **Q:** [question, one or two sentences]
+  - **Anchor:** "[word-for-word excerpt from the RAW pull, ≤25 words, cut only with …]" — from [card name above] · [c:xxxxxxxx if the pull has one]
+  - **Trust:** `[KNOWN|STALE|UNVERIFIED]` `[source · date · url]` — copied from the anchor, never upgraded
+  - **Why this target:** [one line — what in their role / talk / the invite makes them the person to ask]
+- If nothing qualifies: "No aimed questions — no carried claim met the bar." (a valid, honest state)
+
 ## Graph Signals  (cross-cutting — for signal-scanner + synthesizer)
 - Prior market/funding/exec signals from the Supabase graph, each `[source · date · confidence]`.
 - If empty: "No prior graph signals — graph read-path returned nothing (expected in early runs)."
@@ -94,6 +102,28 @@ research — it aims it.
 - **`UNVERIFIED`** — either (a) asserted in a prior brief with **no cited primary source**, or (b) any **firm/person thesis / positioning / belief** claim ("X's fund bets on Y over Z", "they believe W") regardless of prior confidence. Per CLAUDE.md Rule 12, these **must be re-verified before any public use** and must **never be restated as fact**. Route them so the synthesizer lands them under the brief's **Verification Flags**.
 
 When in doubt between two flags, pick the more cautious one (KNOWN → STALE → UNVERIFIED).
+
+## Aim the material: the Aimed Questions step (added 2026-09-25, YED-217)
+
+Distilling is half the job. The other half is **aiming**: turn the strongest carried claims into questions pointed at the people the verbatim invite names. Run this step last, after the cards are built, and read only from what the cards carry.
+
+**Why:** the YED-172 A/B (2026-09-24) found that a pack with good material can still lose on *packaging*. The pack a blind rater preferred at Apollo turned prior knowledge into *"specific, speaker-named, chase-able questions"*. The other pack had better topic cards, but its best question had no named target. This step makes aiming part of the spec instead of something that happens by luck, whichever retrieval source fed the pack.
+
+**Sources you may aim from (anchors):**
+- Any claim/fact you carried onto a Company, People, or Topic card or into Graph Signals.
+- A `Top Questions` item already on a Topic record in the pull. That's already a question, so aim it rather than rewording it. It is anchored to that topic record.
+- Nothing else. **Never** use general knowledge, the invite's marketing copy on its own, or your own speculation. If there's no carried claim behind it, there's no question.
+
+**Targets, in order of preference:**
+1. **A person named in the `VERBATIM SOURCE`** (speaker, host, panelist, moderator). Aim each question at the named person whose role or talk best fits the claim, and say why in one line. Only use names that appear in the invite. A name that appears only in a prior brief is not a target for *this* event.
+2. **The room**, when nobody suitable is named: livestreams, horizontal/leaderless collectives, or workshops that list only a host org. Aim at the attendees ("ask the room / the person next to you at the lab") or at **the format** ("listen for whether the demo shows X"). Missing named speakers is a normal state, **not** a blocker. Do not flag a "principal UNRESOLVED" and do not hold the question back while waiting for a name.
+
+**The constraints (these are the point of the step):**
+- **Anchored.** Every question quotes its anchor claim **word for word as it appears in the raw pull you were handed**, not as you paraphrased it on a card. Cards may paraphrase; anchors may not. Keep the quote ≤25 words, and shorten it only by cutting with `…`. Never insert, swap, or "tidy" a word (e.g. "its DBs" must not become "its own DBs"). Name the card the claim was carried on, and include the claim id (`c:xxxxxxxx`) whenever the pull has one. That way anyone can trace the question to one exact line of the source. If you can't quote an anchor, cut the question. No Level-2 filler ("what's your vision for…", "how do you think about…" with nothing specific behind it).
+- **Provenance inheritance.** The question takes on its anchor's trust flag and `[source · date · url]` *unchanged*. An `UNVERIFIED` claim produces an `UNVERIFIED` question, a `STALE` claim a `STALE` question. If a question combines two anchors, it takes the more cautious flag.
+- **No laundering through phrasing.** A trust tag is not enough if the wording assumes the claim is true. For an `UNVERIFIED` or `STALE` anchor, phrase the question as a **test** of the claim ("Does the 30–50-tool degradation threshold hold on your stack, or is it model-specific?"). Do not phrase it as a **premise** ("Given that agents degrade past 30–50 tools, how do you…"). A premise-shaped question on an unverified claim reads as settled fact once it's in the room or in a post. That is the Rule 12 failure this step exists to prevent.
+- **Firm/person thesis claims** (always `UNVERIFIED` per the trust flags) may only be aimed as a test *at the person whose thesis it is*, e.g. "You've been quoted as betting on X over Y. Is that still the call?" Never aim one person's thesis at a different person as a premise.
+- **Budget:** at most 2 per named person and at most 6 in total. Take the strongest first: anchors that are fresh, specific (a number, a named mechanism, a dated event), and directly on this event's agenda. **Zero is a valid output.** A quota must never become a reason to pad. The cap also does not re-route anything: if the best-fit person is already at 2, **drop** the question. Don't pass it to a weaker-fit person (a host or program manager, say) just because they still have room.
 
 ## Relevance filter (the breadth-without-noise control)
 
@@ -117,10 +147,12 @@ When in doubt between two flags, pick the more cautious one (KNOWN → STALE →
 - The pack is scannable: a specialist can find its slice and its refresh-leads in seconds.
 - Relevance filter is explicit and auditable (Dropped + Coverage gaps populated, not blank-by-omission).
 - Reads as leads-to-verify, never as a settled fact sheet.
+- **Aimed Questions:** each question carries an anchor that appears word for word in the raw pull and was carried on a card above, has a trust flag equal to (or more cautious than) that anchor's, targets a person named in the `VERBATIM SOURCE` (or the room / the format), and is phrased as a test whenever the anchor isn't `KNOWN`. Any question that fails one of these checks is cut, not softened.
 
 ## Reference
 
 - Conditioning discipline (post-event mirror): `.claude/commands/post-event-content.md` Steps 3.5–3.7 (transcript-conditioning + the `post_event_brief` "completeness over curation" principle).
+- Aimed Questions check (mechanical, run by the parent, not by you): `.claude/scripts/check_aimed_questions.py PACK --invite INVITE --raw RAW` verifies anchors against the raw pull, the trust tag, targets against the invite, and test-vs-premise wording.
 - Provenance / Rule 12: `CLAUDE.md` Rule 12; the Signal Log tiers in `.claude/agents/research/competitive-signal-scanner.md`.
 - Retrieval sources + shapes: `.claude/skills/event-research/SKILL.md` Step 1.7; `.claude/references/market-intel-spine.md` (Supabase graph); `.claude/references/notion-schema.md`.
 
