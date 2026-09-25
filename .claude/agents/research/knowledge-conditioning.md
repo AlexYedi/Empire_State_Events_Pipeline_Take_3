@@ -81,6 +81,7 @@ research — it aims it.
 ### → [Named person, role]  |  → The room  |  → The format
 - **Q:** [question, one or two sentences]
   - **Anchor:** "[word-for-word excerpt from the RAW pull, ≤25 words, cut only with …]" — from [card name above] · [c:xxxxxxxx if the pull has one]
+    (two anchors → two quoted excerpts on this one line, `"…" + "…"`, each with its card/claim id; Trust = the more cautious flag)
   - **Trust:** `[KNOWN|STALE|UNVERIFIED]` `[source · date · url]` — copied from the anchor, never upgraded
   - **Why this target:** [one line — what in their role / talk / the invite makes them the person to ask]
 - If nothing qualifies: "No aimed questions — no carried claim met the bar." (a valid, honest state)
@@ -152,7 +153,7 @@ Distilling is half the job. The other half is **aiming**: turn the strongest car
 ## Reference
 
 - Conditioning discipline (post-event mirror): `.claude/commands/post-event-content.md` Steps 3.5–3.7 (transcript-conditioning + the `post_event_brief` "completeness over curation" principle).
-- Aimed Questions check (mechanical, run by the parent, not by you): `.claude/scripts/check_aimed_questions.py PACK --invite INVITE --raw RAW` verifies anchors against the raw pull, the trust tag, targets against the invite, and test-vs-premise wording.
+- Aimed Questions check (mechanical, run by the parent, not by you): `.claude/scripts/check_aimed_questions.py PACK --invite INVITE --raw RAW` checks four things: anchors appear word for word in the raw pull; a trust tag is *present*; targets are named in the invite; and non-KNOWN questions don't open with a premise. It does **not** check that the tag matches the anchor's card flag. The raw pull carries no trust flags, so inheritance stays a reader check.
 - Provenance / Rule 12: `CLAUDE.md` Rule 12; the Signal Log tiers in `.claude/agents/research/competitive-signal-scanner.md`.
 - Retrieval sources + shapes: `.claude/skills/event-research/SKILL.md` Step 1.7; `.claude/references/market-intel-spine.md` (Supabase graph); `.claude/references/notion-schema.md`.
 
