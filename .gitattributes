@@ -2,3 +2,7 @@
 # Append-only telemetry log — auto-union on merge instead of conflicting (retires recurring conflicts)
 .claude/artifacts/build-sessions.jsonl merge=union
 .claude/artifacts/dod-waivers.jsonl merge=union
+# Per-session telemetry + judge run-logs + spend ledger are append-only JSONL: union, never conflict (2026-09-25)
+.claude/artifacts/build-sessions/*.jsonl merge=union
+.claude/evals/logs/*.jsonl merge=union
+.claude/evals/spend-ledger.jsonl merge=union
