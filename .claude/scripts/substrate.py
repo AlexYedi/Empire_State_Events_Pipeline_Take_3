@@ -111,7 +111,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
 # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
 # --dry-run is exempted at the call site, not here.
 FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "approve-claims")
+                 "backfill", "backfill-questions", "approve-claims")
 
 
 def freeze_state() -> dict | None:
@@ -849,6 +849,101 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     return 0
 
 
+def source_key_for_topic_questions(notion_topic_id: str) -> str:
+    return sha("notion_topic_questions:" + pid_variants(notion_topic_id)[0])
+
+
+# Real banks (inspected 2026-09-25, 200 topics) come in THREE shapes: numbered lines split by
+# <br>/newline; prose joined with " · " (the briefs' middle-dot separator); and — the majority, 81 of
+# the first 100 — questions run together as plain sentences with no separator at all, each ending in
+# "?". So a "?" followed by whitespace and a capital/quote/paren is also a boundary. The lookbehind
+# keeps the "?" on the question it closes.
+# A FOURTH shape surfaced on the second pass: "1) … 2) … 3) …" numbered INLINE in one paragraph, so a
+# 1–2 digit number + ")" or "." followed by a capital/quote is a boundary anywhere, not just at line
+# start. (Two digits max + required capital keeps "v2.5" and "60% to 25%." from splitting.)
+QUESTION_SPLIT_RE = re.compile(
+    r"(?:^|<br\s*/?>|\n)\s*(?:\d+[.)]\s*|[-*•]\s*)"      # numbered / bulleted at line start
+    r"|\s+\d{1,2}[.)]\s+(?=[A-Z\"'(“])"                     # numbered inline: "… 2) Where …"
+    r"|\s+·\s+"                                             # middle-dot joined
+    r"|(?<=\?)\s+(?=[A-Z\"'(“])")                           # run-on sentences, each ending "?"
+
+
+def split_questions(blob: str) -> list[str]:
+    """A Notion `Top Questions` property is one text blob in any of four shapes (see the regex).
+    Return the individual questions, cleaned. A part with no "?" at all is a preamble or label
+    ("Seven calibrated questions for X:"), not a question — dropped. Markdown heading residue that
+    leaked into a property ("… ## 2026-…") is cut off."""
+    out = []
+    for p in QUESTION_SPLIT_RE.split(html.unescape(blob or "")):
+        p = clean_md(p or "").split(" ## ")[0].strip()
+        if len(p) > 12 and "?" in p:
+            out.append(p)
+    return out
+
+
+def backfill_questions(g: Graph, manifest: dict) -> int:
+    """YED-218 backfill: the Notion Topics DB `Top Questions` banks -> question claims.
+
+    Different producer path from stage_claims on purpose: a topic question bank has no brief and no
+    event. Each question becomes a claim with event_id ABSENT, anchored to its topic via
+    claim_entity(topic, about) — exactly, not by embedding match, because here we KNOW the topic.
+    asserted_at = the Topic page's Last Updated date (Alex's call 2026-09-25): entity_neighborhood
+    orders `asserted_at desc nulls last limit N`, so an undated backfilled row would sort last and be
+    cut; Last Updated is honest about when the question was last considered live. provenance_tier =
+    notion_prior (already in the CHECK); status approved — this is Alex's own curated bank.
+    Idempotent on (source_key, claim_key); re-runs relink existing claims.
+    Manifest: {"topics": [{"notion_page_id", "name", "last_updated", "questions": [str] | "top_questions": str}]}
+    """
+    topics = manifest.get("topics") or []
+    if not topics:
+        sys.stderr.write("backfill-questions: manifest has no topics\n")
+        return 3
+    if not g.dry:
+        sys.path.insert(0, DOCKB)
+        from dockb_common import embed_passages, vec_literal
+    total_new = total_links = 0
+    for t in topics:
+        qs = t.get("questions") or split_questions(t.get("top_questions", ""))
+        if not qs:
+            g.stats.bump("question_backfill", "topic_without_questions")
+            continue
+        tid = g.ensure_topic({"name": t["name"], "notion_page_id": t.get("notion_page_id")})
+        if not tid:
+            g.stats.bump("question_backfill", "topic_unresolved")
+            continue
+        skey = source_key_for_topic_questions(t["notion_page_id"])
+        when = (t.get("last_updated") or "")[:10] or None
+        have = {r["claim_key"] for r in g.get(f"/claim?source_key=eq.{skey}&select=claim_key")}
+        new = [q for q in qs if claim_key(q) not in have]
+        g.stats.bump("claim", "matched", len(qs) - len(new))
+        if new:
+            vecs = ["[dry-run: not embedded]"] * len(new) if g.dry else [vec_literal(v) for v in embed_passages(new)]
+            rows = []
+            for q_text, vec in zip(new, vecs):
+                row = {"source_key": skey, "claim_key": claim_key(q_text), "claim_text": q_text,
+                       "claim_type": "question", "locator": {"section": "Top Questions", "topic": t["name"]},
+                       "provenance_tier": "notion_prior", "confidence": 0.7, "asserted_at": when,
+                       "status": "approved", "extractor": "parse", "lane": "A",
+                       "embedding": vec, "embedding_model": EMBED_MODEL,
+                       "metadata": {"backfill": "notion_topic_questions", "notion_topic_id": t.get("notion_page_id")}}
+                rows.append({k: v for k, v in row.items() if v is not None})
+            g.stats.bump("claim", "created", len(rows))
+            total_new += len(rows)
+            g.post("claim", rows, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
+        if not g.dry:
+            ids = [r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id")]
+            links = [{"claim_id": cid, "entity_type": "topic", "entity_id": tid, "role": "about"} for cid in ids]
+            if links:
+                g.stats.bump("claim_entity", "linked (idempotent)", len(links))
+                total_links += len(links)
+                g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+                       on_conflict="claim_id,entity_type,entity_id,role")
+        print(f"  {'dry ' if g.dry else ''}{t['name'][:60]:60s} questions={len(qs):2d} new={len(new):2d} asserted_at={when}")
+    print(("DRY-RUN " if g.dry else "") + f"backfill-questions: {len(topics)} topics · new claims={total_new} · topic links={total_links}")
+    print(g.stats.report())
+    return 0
+
+
 # ---------------------------------------------------------------------------------------------
 # self-test — offline, deterministic
 # ---------------------------------------------------------------------------------------------
@@ -1071,7 +1166,7 @@ def selftest() -> bool:
     ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
     ok("freeze: every mutating verb is covered",
        set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document",
-                              "stage-claims", "backfill", "approve-claims"})
+                              "stage-claims", "backfill", "backfill-questions", "approve-claims"})
     _saved_freeze = FREEZE_PATH
     try:                                              # unreadable marker must fail CLOSED
         globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
@@ -1103,7 +1198,7 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
-                                     "backfill", "preview-claims", "approve-claims"])
+                                     "backfill", "backfill-questions", "preview-claims", "approve-claims"])
     ap.add_argument("--manifest", help="one manifest (all verbs except backfill)")
     ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
                                            "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
@@ -1165,6 +1260,8 @@ def main(argv: list[str]) -> int:
     if a.verb == "ensure-entity":
         for e in m.get("entities", []):
             g.ensure_entity(e)
+    elif a.verb == "backfill-questions":
+        return backfill_questions(g, m)
     elif a.verb == "waive":
         if not (gate_key and a.reason):
             ap.error("waive needs a manifest with event.notion_page_id and --reason")
