@@ -752,12 +752,15 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     if rows:
         g.stats.bump("claim", "created", len(rows))
         g.post("claim", rows, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
+    # claim_key -> claim id, fetched ONCE and shared by the three linking blocks below (speakers,
+    # showcase companies, questions). Was re-queried per block; the Gemini seat flagged it 2026-09-25.
+    ids: dict[str, str] = {}
     # speakers -> claim_entity(asserted_by). Resolved ONLY against persons already linked to THIS
     # event (the roster ensure-event wrote), by name-token containment: 'Mila Zhou' matches
     # 'Miaolai (Mila) Zhou'. Scoping to the roster is what makes the fuzzy match safe.
     speakers = {it["speaker"] for it in items if it["speaker"]}
     if speakers and not g.dry:
-        ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
+        ids = ids or {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         roster_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.person&select=entity_id")]
         roster = g.get(f"/person?id=in.({','.join(roster_ids)})&select=id,name") if roster_ids else []
         for name in speakers:
@@ -774,7 +777,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     # founder-showcase claims -> claim_entity(company, about), resolved against THIS event's roster
     about = {it["about_company"] for it in items if it.get("about_company")}
     if about and not g.dry:
-        ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
+        ids = ids or {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         co_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.company&select=entity_id")]
         roster = g.get(f"/company?id=in.({','.join(co_ids)})&select=id,name") if co_ids else []
         for name in about:
@@ -799,7 +802,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     # Schema already permits it: claim_entity's CHECKs allow entity_type='topic' + role='about'.
     questions = [it for it in items if it["claim_type"] == "question"]
     if questions and not g.dry:
-        ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
+        ids = ids or {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")}
         topic_ids = [r["entity_id"] for r in
                      g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.topic&select=entity_id")]
         trows = g.get(f"/topic?id=in.({','.join(topic_ids)})&select=id,name") if topic_ids else []
@@ -823,11 +826,14 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
                     continue
                 ranked = sorted(((cos(qv, tv), t) for tv, t in zip(tvecs, trows)), key=lambda x: -x[0])
                 top = ranked[0][0]
-                # Fan out to near-ties only when the top match is itself confident. Dry-check on real
-                # questions vs real topic names (2026-09-25): clean hits scored 0.68–0.76 with a ≥0.07
-                # margin; a question with NO real home on the roster scored a flat 0.60/0.59/0.59 and the
-                # near-tie rule scattered it across three topics, one plainly wrong. Flat + weak means
-                # "uncertain", so commit to the single best topic and make the weakness visible.
+                # Fan out to near-ties only when the top match is itself confident. THRESHOLDS ARE
+                # PROVISIONAL, derived from a dry-check of only FOUR real questions against seven topic
+                # names (2026-09-25) — not a calibration run. In that check the three clean hits scored
+                # 0.68–0.76 with a ≥0.07 margin; the one question with NO real home on the roster scored
+                # a flat 0.60/0.59/0.59 and the near-tie rule scattered it across three topics, one plainly
+                # wrong. Flat + weak means "uncertain", so commit to the single best topic and make the
+                # weakness visible via the stat below. Revisit 0.65/0.03 once `question_topic_weak_match`
+                # has accumulated across real runs; the judge (2026-09-25) rightly flagged n=4 as thin.
                 if top >= 0.65:
                     chosen = [t for s, t in ranked if s >= top - 0.03][:3]
                 else:
@@ -872,11 +878,13 @@ def split_questions(blob: str) -> list[str]:
     """A Notion `Top Questions` property is one text blob in any of four shapes (see the regex).
     Return the individual questions, cleaned. A part with no "?" at all is a preamble or label
     ("Seven calibrated questions for X:"), not a question — dropped. Markdown heading residue that
-    leaked into a property ("… ## 2026-…") is cut off."""
+    leaked into a property ("… ## 2026-…") is cut off. The length floor only guards against
+    punctuation fragments ("?" alone, "…?"); the "?" requirement is what filters preambles. The judge
+    (2026-09-25) caught the earlier floor of 12 silently eating real short questions ("Is it safe?")."""
     out = []
     for p in QUESTION_SPLIT_RE.split(html.unescape(blob or "")):
         p = clean_md(p or "").split(" ## ")[0].strip()
-        if len(p) > 12 and "?" in p:
+        if len(p) > 4 and "?" in p:
             out.append(p)
     return out
 
@@ -922,6 +930,9 @@ def backfill_questions(g: Graph, manifest: dict) -> int:
             for q_text, vec in zip(new, vecs):
                 row = {"source_key": skey, "claim_key": claim_key(q_text), "claim_text": q_text,
                        "claim_type": "question", "locator": {"section": "Top Questions", "topic": t["name"]},
+                       # 0.7 = this file's default for an untagged first-hand claim (see CONF_RE handling
+                       # and its selftest). A curated-but-unverified bank question earns the same default:
+                       # Alex chose to keep it, nobody has confirmed it against a primary source.
                        "provenance_tier": "notion_prior", "confidence": 0.7, "asserted_at": when,
                        "status": "approved", "extractor": "parse", "lane": "A",
                        "embedding": vec, "embedding_model": EMBED_MODEL,
@@ -1152,6 +1163,20 @@ def selftest() -> bool:
        [0]["do_not_publish"])
     ok("questions: confidentiality still outranks — ⛔ section is never staged",
        parse_brief("## Top Questions ⛔\n- What is your runway?") == [])
+    # split_questions — the backfill's splitter, pinned against the four real bank shapes + the two
+    # failure modes the judge raised (2026-09-25): silent short-question drop, quoted-question over-split.
+    ok("split: numbered lines", split_questions("1. Who owns it?<br>2. What breaks first?") == ["Who owns it?", "What breaks first?"])
+    ok("split: middle-dot joined", len(split_questions("Is it real? · Who pays? · When does it ship?")) == 3)
+    ok("split: numbered INLINE", split_questions("1) Who owns GTM eng? 2) Where did no-code break?") == ["Who owns GTM eng?", "Where did no-code break?"])
+    ok("split: run-on sentences each ending ?", len(split_questions("Where does the agent choose? What does it do when you pause? Which artifacts may it draft?")) == 3)
+    ok("split: a SHORT real question is kept (was silently dropped at len>12)",
+       "Is it safe?" in split_questions("What is the minimum eval suite? Is it safe?"))
+    ok("split: a quoted question inside a question is NOT over-split",
+       split_questions("When a user asks 'Is it safe?' what does the agent answer?") == ["When a user asks 'Is it safe?' what does the agent answer?"])
+    ok("split: a standalone preamble part with no ? is dropped",
+       split_questions("Seven calibrated questions for Wells. · Who pays? · When?") == ["Who pays?", "When?"])
+    ok("split: heading residue is cut off", split_questions("Which metric wins? ## 2026-09-08 Trend Radar") == ["Which metric wins?"])
+    ok("split: version numbers do not split", len(split_questions("Does v2.5 change the answer on 60% to 25% success?")) == 1)
 
     # ---- graph-write freeze (YED-213) -------------------------------------------------------
     # Pinned because the whole point is that the freeze is enforced at the producer, not trusted
