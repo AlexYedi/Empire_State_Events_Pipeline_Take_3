@@ -19,7 +19,7 @@ dropped, or changed word does.
 
 Usage:
   check_aimed_questions.py PACK.md --invite INVITE.txt [--raw RAW.md]
-  check_aimed_questions.py --selftest    # proves it catches 5 planted defect classes
+  check_aimed_questions.py --selftest    # proves it catches 5 planted defect classes + the silent-zero case
 Exit 0 = all pass · 1 = at least one failure · 2 = no Aimed Questions section.
 """
 import argparse
@@ -28,7 +28,7 @@ import sys
 
 PREMISE = re.compile(r"^\s*(given that|given|since|because|now that|as)\b", re.I)
 TRUST = re.compile(r"(KNOWN|STALE|UNVERIFIED)")
-QUOTE = re.compile(r"[\"“](.+?)[\"”](?=\s*(?:[,.;:—–-]|combined|from|$))")
+QUOTE = re.compile(r"[\"“](.+?)[\"”](?=\s*(?:[,.;:—–+-]|combined|from|$))")
 ELISION = re.compile(r"…|\.\.\.")
 
 
@@ -84,7 +84,12 @@ SELFTEST_GOOD = """## Aimed Questions
 - **Q:** Is anyone here self-hosting MCP, and would a managed server change that?
   - **Anchor:** "Managed MCP removes the self-host tax." — from Topic: MCP at Enterprise Scale · c:1fdbd097
   - **Trust:** `KNOWN` `[first_hand · 2026-05-27]`
+- **Q:** Does one managed server stay one server once several teams want in?
+  - **Anchor:** "Managed MCP removes the self-host tax." — Topic · c:1fdbd097 + "Monolithic MCP servers don't scale organizationally" — Topic · c:eaa3504a
+  - **Trust:** `STALE` `[first_hand · 2026-05-27]`
 """
+SELFTEST_ZERO_OK = "## Aimed Questions\n- No aimed questions — no carried claim met the bar.\n"
+SELFTEST_ZERO_BAD = "## Aimed Questions\n\n## Audit\n"
 # Each bad question plants exactly one defect class; all must FAIL.
 SELFTEST_BAD = """## Aimed Questions
 ### → Dale Seo, Sr Software Engineer
@@ -114,7 +119,8 @@ def selftest():
     d = tempfile.mkdtemp()
     paths = {}
     for name, text in {"invite": SELFTEST_INVITE, "raw": SELFTEST_RAW,
-                       "good": SELFTEST_GOOD, "bad": SELFTEST_BAD}.items():
+                       "good": SELFTEST_GOOD, "bad": SELFTEST_BAD,
+                       "zero_ok": SELFTEST_ZERO_OK, "zero_bad": SELFTEST_ZERO_BAD}.items():
         paths[name] = os.path.join(d, name)
         open(paths[name], "w").write(text)
     import contextlib
@@ -123,12 +129,15 @@ def selftest():
     with contextlib.redirect_stdout(buf):
         good = run(paths["good"], paths["invite"], paths["raw"])
         bad = run(paths["bad"], paths["invite"], paths["raw"])
+        zero_ok = run(paths["zero_ok"], paths["invite"], paths["raw"])
+        zero_bad = run(paths["zero_bad"], paths["invite"], paths["raw"])
     out = buf.getvalue()
     n_fail = out.count("[FAIL]")
-    ok = good == 0 and bad == 1 and n_fail == 5
+    ok = good == 0 and bad == 1 and n_fail == 5 and zero_ok == 0 and zero_bad == 1
     print(out if not ok else "", end="")
-    print(f"selftest: good exit={good} (want 0) · bad exit={bad} (want 1) · "
-          f"planted defects caught {n_fail}/5 → {'PASS' if ok else 'FAIL'}")
+    print(f"selftest: good exit={good} (want 0, incl. a two-anchor question) · bad exit={bad} (want 1) · "
+          f"planted defects caught {n_fail}/5 · zero+explained={zero_ok} (want 0) · "
+          f"zero+silent={zero_bad} (want 1) → {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
 
 
@@ -159,8 +168,11 @@ def run(pack_path, invite_path, raw_path):
     source_name = "raw pull" if raw_text is not None else "pack"
     items = parse(body)
     if not items:
-        print("ZERO QUESTIONS (valid per spec if the section says why)")
-        return 0
+        if "no aimed questions" in body.lower():
+            print("ZERO QUESTIONS, with the spec's explanation line: valid")
+            return 0
+        print("FAIL: zero questions and no 'No aimed questions — …' explanation line (spec requires it)")
+        return 1
 
     fails = 0
     for i, it in enumerate(items, 1):
