@@ -361,6 +361,9 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
             return e.code, txt
         except _TRANSIENT as e:                        # no answer at all: stall / reset / dropped socket
             if attempt >= attempts:
+                sys.stderr.write(f"req: gave up after {attempts} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
+                                 f"{str(e)[:120]}. Nothing after this call ran; a re-run is idempotent (upserts "
+                                 f"and GETs), and any gate row stays PENDING until it succeeds.\n")
                 raise
             wait = REQ_BACKOFF[min(attempt, len(REQ_BACKOFF)) - 1]
             sys.stderr.write(f"req: transient {type(e).__name__} ({str(e)[:80]}) on {method} {path[:90]} — "
@@ -510,6 +513,18 @@ def selftest() -> bool:
             st, body = req("GET", "/person?select=id&limit=1")
             if not (st == 200 and body == [] and calls["n"] == 3):
                 raise PIIViolation(f"retry loop drifted: status={st} calls={calls['n']}")
+            # Exhausted retries say so in one readable line (YED-228 follow-up), then re-raise the same type.
+            import io, contextlib
+            calls["n"] = -10                                   # every attempt stalls
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stderr(buf):
+                    req("GET", "/person?select=id&limit=1")
+                raise PIIViolation("exhausted retries did not raise")
+            except urllib.error.URLError:
+                if "gave up after 3 attempt(s) on GET /person" not in buf.getvalue():
+                    raise PIIViolation("exhausted retries raised without the readable 'gave up' line")
+            calls["n"] = 0
             calls["n"] = 0
             try:
                 req("POST", "/person", [{"name": "Plain Insert"}], prefer="return=representation")

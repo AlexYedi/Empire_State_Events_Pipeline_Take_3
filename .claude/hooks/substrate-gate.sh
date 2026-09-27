@@ -22,16 +22,19 @@
 # kept separate so the judged Deep Read gate is not modified. Backfill runs do not use
 # --expect-claims and never create rows here.
 #
-# Stop fires PER TURN, not per run (2026-09-27 — see _run_in_progress.sh). A pending row is not a
-# failure while this session holds a live event claim; the gate evaluates for real at the first turn
-# end after the claim is released or expires. Failure rows are written once per (session, event set).
+# Stop fires per turn; the gate treats pending as in-progress while the event claim is live; it fails at the
+# first turn end after the claim is released or expires (2026-09-27, YED-228 — see _run_in_progress.sh).
 #
 # Disable (emergency only): add "substrate-gate" to .hooks.disable in .claude/settings.local.json.
 # Output contract: JSON on stdout. Always exit 0.
 
 set -uo pipefail
 
-cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
+# A gate that cannot run must say so (YED-228 follow-up): a missing jq or an unreachable project dir used to
+# `exit 0` silently, turning the gate into a no-op nobody could see. Static JSON — jq may be the thing missing.
+cant_run() { printf '{"systemMessage":"⚠️ %s: gate could NOT run (%s) — pending Deep Read / graph-write rows are UNCHECKED this turn."}\n' "$1" "$2"; exit 0; }
+
+cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || cant_run "substrate-gate" "project dir unreachable"
 
 INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
@@ -46,7 +49,7 @@ if [ -f "$SETTINGS_LOCAL" ] && jq -e '.hooks.disable | index("substrate-gate")' 
   exit 0
 fi
 
-command -v jq >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || cant_run "substrate-gate" "jq not installed"
 
 # shellcheck source=_run_in_progress.sh
 . "$(dirname "${BASH_SOURCE[0]}")/_run_in_progress.sh"
