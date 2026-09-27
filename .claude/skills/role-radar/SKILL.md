@@ -17,7 +17,7 @@ This is one of three **signal scanners** feeding the Empire State pipeline (alon
 - **Ethics:** Public APIs, RSS, official endpoints only. No LinkedIn scraping. RSS.app reads a *feed you generated from a saved search* — it never touches your account.
 - **Human-in-the-loop:** Present scored roles for review before any Notion write.
 - **Credit discipline:** Apollo and Clay are credit-metered. Confirm spend explicitly (exact wording below). Dice MCP is free.
-- **Notion plan constraint (verified 2026-06-24):** no Business+AI tier → use `notion-search` (scoped to the Roles data source) + `notion-fetch` for dedup. Do NOT use `notion-query-data-sources`.
+- **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk read per run (Content Hash + Tier + Status + Notes for every row, paginated with LIMIT/OFFSET, ~100 rows a page), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
 - **No fabricated numbers / honest gaps:** if a source errors, say so.
 
 **Scope:** ATS boards APIs (primary) + RSS.app + Apollo-at-targets + Dice (secondary); Notion-only; manual trigger. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
@@ -89,7 +89,8 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 ## Step 2 — Dedupe
 - **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Dice/RSS/Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
 - Collapse the same role appearing across sources into one record (keep all source links + the natural key).
-- Dedupe against the Roles DB: `notion-search` scoped to the Roles data source by the natural key (stored in `Content Hash`) or `title company`; `notion-fetch` to confirm. **Freshness = the ATS `posted_at` for Ashby, Lever and Workable; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
+- Dedupe against the Roles DB: one bulk SQL read of `Content Hash` (see the plan constraint above), or `notion-search` scoped to the Roles data source by the natural key / `title company`; `notion-fetch` to confirm.
+- **Fallback dedup on `title|company` (added 2026-09-27, YED-224).** Rows written before ATS keying carry `Content Hash = title|company`, and a natural-key check alone cannot see them. After the natural-key pass, compare each candidate's normalized `title|company` (lower-case, whitespace-collapsed, company alias-tolerant) against the DB. A hit means the legacy row IS this posting → **re-key that row** (write the ATS key into `Content Hash`, plus `Source`, `URL`, `Posted Date`) instead of creating a second row. Why: the 09-19 scan wrote ~20 title-hash rows; the 09-24 scan duplicated five of them by ATS key, and the 09-27 scan would have re-added Runway's Strategic Enterprise AE as "new". Re-posts (same title+company, old id gone, new id live — Writer did this to four roles on 09-22) are handled the same way: re-key, don't duplicate. **Freshness = the ATS `posted_at` for Ashby, Lever and Workable; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
 
 ---
 
@@ -219,6 +220,7 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 
 ## Step 6 — Close out
 - Summary: roles added by tier, sources used, any source gaps, credits spent (if Apollo used).
+- **Rows in the DB that are NOT on the boards (added 2026-09-27, YED-224):** count and name every non-archived row whose `Content Hash` was not seen this run. Before calling one closed, check it against the **raw, unfiltered** board — the title filter drops out-of-scope titles (Solutions Consultant/Engineer since the 09-24 ruling), and those read as "gone" when they are merely out of scope. Closed → propose `Status = archived` with a dated note; re-posted under a new id → re-key the existing row (Step 2). Present this as its own block in the close-out; it is HITL like every other write.
 - Offer next: "Pull contacts/hiring managers at the A-tier companies?" → `voice-radar` / Clay enrich (credit-gated). Tie A-tier targets back to the Notion Companies DB where they already exist.
 
 ---
