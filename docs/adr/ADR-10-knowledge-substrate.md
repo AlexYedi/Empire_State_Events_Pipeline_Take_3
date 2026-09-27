@@ -1,6 +1,6 @@
 # ADR-10 — The Knowledge Substrate: claims first-class, documents generalized, one producer path, one retrieval path
 
-**Status:** Proposed 2026-09-18 — decisions 1–5 ratified by Alex in session (below); moves to **Accepted** when migrations 0009 + 0010 are live on prod and the W1 A/B (YED-172) has run.
+**Status:** **Accepted 2026-09-27** (Proposed 2026-09-18; decisions 1–5 ratified by Alex in session, 6–9 added with the body). Both conditions the Proposed line set are met: migrations 0009 + 0010 are live on prod after a green twin rehearsal (#81, 2026-09-19), and the W1 A/B (YED-172) ran and closed 2026-09-24. **Amendment 1 (below) records what the A/B decided about the substrate's boundary.** Ruled by Alex 2026-09-27 (YED-168).
 **Governs:** the Market-Intelligence Supabase graph's data model beyond ADR-0…4 — how claims, documents, entities and events relate; the single producer path into the graph; the single retrieval path out of it.
 
 ## Context
@@ -35,6 +35,17 @@ Systems read: *Shifting the Burden* — Notion absorbed "where do learnings go?"
 - **`/event-deep-research` Step 1.7a** gains 1.7a-S (the substrate pack) alongside the legacy pull for the A/B window; the legacy pull is removed only on evidence (YED-172).
 - **`doc_claims`** is deprecated in place (0 rows); S1b drops it. `extract_claims.py` moves to `claim` with S1b.
 - **Deferred, deliberately:** S1b identity (YED-47), entity embeddings + `match_entities`, the other four lenses, `/digest` generalization (YED-157), outcome/usage ranking and recompute-v2, the hub trust-strip change, `shipped`, pg_cron (S3).
+
+## Amendment 1 — 2026-09-27: the A/B set the boundary, not the model
+
+The W1 A/B (YED-172; two blind events, Alex + a Sonnet seat scoring pack-level) returned a split verdict: the substrate pack **wins on material** (denser, dated topic substance — Alex: "topic cards are far stronger") and **loses on packaging** (the legacy pull produced speaker-named, chase-able questions). Ruling: **the substrate does not replace the legacy Step 1.7a pull.** What follows from that, all now shipped:
+
+- **Decisions 1–9 stand unchanged.** Nothing in the data model was contradicted; the A/B tested a *consumer*, not the schema.
+- **The boundary is re-drawn.** The substrate is the **post-event claim store** (every attended event's claims, questions and speaker theses, through the one producer path) and the **job-search lens** (`retrieve.py --lens`) — not a replacement for pre-event retrieval. The legacy pull stays. The packaging gap closed as YED-217 (the conditioner aims carried claims at named speakers); the durable half as YED-218 (question claims first-class; 795 backfilled from 220 topic banks).
+- **YED-171** (backfill through the producer) completed. **YED-128** is absorbed here as decided 2026-09-18: from 0009 on, `db push` / the GitHub integration is the only deploy path — no hand-applied SQL.
+- **Open, deliberately: coverage, not method** — how many attended events carry claims. Identity stays S1b (YED-47).
+
+Reversing any of decisions 1–9 needs a new ADR. This amendment narrows the boundary the substrate serves, which a Proposed ADR may carry into Acceptance without a successor.
 
 ## Relations
 
