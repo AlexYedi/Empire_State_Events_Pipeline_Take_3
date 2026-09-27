@@ -160,6 +160,47 @@ Returns the confirmation block from Step 4g. The Event page + `research_brief` C
 
 This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The Stop-hook gate (`deep-read-gate.sh`) fails the run at close if any row is still pending — so a silently-skipped Deep Read cannot close green. Skipping this `add` is the one way to defeat the gate; it is as mandatory as the Notion write it sits beside.
 
+## Step 4.2 — Write the research to the knowledge graph (this conversation — YED-205, gated)
+
+**Why:** the pre-event research is the richest thing this pipeline produces, and until YED-205 none of it reached the
+graph that `/interview-prep`, retrieval and post-event runs read. Spec + decisions: `.claude/notes/yed-205-spec-2026-09-27.md`.
+**What it writes:** the researched companies/people/topics, the `research_brief` document row, and one **claim** per
+Evidence Ledger row, with `web_verified` for rows with a URL and `email_signal` for rows pointing at a public URL (a lead).
+**What it never writes:** an event row. You have not attended yet (ADR-10 D9); `/post-event-content` 3.8b creates the
+attended row and attaches these claims to it automatically. Private-correspondence rows (email-signal, no URL) and
+`notion-prior` rows are skipped and counted, never written. All writes go through `spine_client` (ADR-9).
+
+**4.2a Open the gate (with the Deep Read ledger `add`, right after notion-writer returns).** Write the manifest
+file (4.2b) first: every `substrate.py` verb reads it, including this one. Then:
+```
+.venv/bin/python .claude/scripts/substrate.py expect-research --manifest .claude/.state/research/<slug>.manifest.json
+```
+This opens a PENDING row keyed `research:<page id>` (distinct from the post-event row). The `substrate-gate.sh` Stop hook
+fails the run while it is pending, so a skipped Step 4.2 cannot close green. It writes nothing to the graph.
+
+**4.2b Write two files** under `.claude/.state/research/` (gitignored; `<slug>` = the event title, kebab-cased):
+- `<slug>.manifest.json`: `{"event": {"notion_page_id": "<Event page id from 4g>", "title": "…", "event_date": "YYYY-MM-DD"},
+  "entities": [...]}`. One entry per researched entity, from the triage plan + the 4g confirmation:
+  company `{"type":"company","name","website","linkedin_url","notion_page_id"}` · person
+  `{"type":"person","name","title","company","linkedin_url","notion_page_id"}` · topic `{"type":"topic","name","notion_page_id"}`.
+  **Never** email, phone or bio (ADR-9). No `kind`, no `role`: there is no event row pre-event.
+- `<slug>.evidence.md`: the synthesizer's **Evidence Set**, verbatim. If its `##### Evidence Ledger — <Name>` headings
+  were lost, write the four specialist returns concatenated instead; their ledgers carry the same headings.
+
+**4.2c Stage it:**
+```
+.venv/bin/python .claude/scripts/substrate.py stage-research --manifest .claude/.state/research/<slug>.manifest.json \
+    --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g>
+```
+Success flips the gate row to STAGED. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
+ledger rows (loud; re-run with the raw specialist returns), **4** = graph-write freeze active (leave it pending, or waive
+citing the freeze), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, leave
+the row pending and tell Alex. The gate will hold the run open, which is correct.
+
+**4.2d Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
+If it genuinely cannot be written, the only other exit is a logged waive:
+`.venv/bin/python .claude/scripts/substrate.py waive --phase pre_event --manifest <m.json> --reason "<why>"`.
+
 ## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)
 
 **Only after Step 4 committed the Scan head (4g).** Run **Step 4.5 of `.claude/skills/event-research/SKILL.md`** in this conversation (the render dispatches and the Notion append both happen here — MCP writes are parent-thread only). This phase is **non-blocking**: a render failure is a warning, never a pipeline failure — the Scan head + entity records are already committed.
@@ -179,6 +220,9 @@ This is co-located with the Scan-head commit on purpose: the row is written **pe
    In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
+
+**Gate note (YED-205):** Step 4.2's graph write is gated the same way. `substrate-gate.sh` fails the run at close while a
+`research:<page id>` row is pending. Resolve it with Step 4.2c or a logged `waive --phase pre_event`.
 
 ## Step 5 — HubSpot writes (this conversation)
 
