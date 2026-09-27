@@ -125,7 +125,17 @@ def main() -> int:
 
     try:
         if a.bundle:
+            if a.context or a.spec_file:
+                # YED-223: the bundle's bytes are scored verbatim; extra evidence flags would be silently dropped.
+                print("ERROR: --context/--spec-file are ignored with --bundle (the bundle already fixes the evidence).\n"
+                      "       Rebuild the bundle instead: python3 .claude/evals/judge_lib.py bundle ... --spec-file <path>",
+                      file=sys.stderr)
+                return 2
             bundle = json.load(open(a.bundle, encoding="utf-8"))
+            if not bundle.get("evidence_parity"):
+                print("  ⚠️  EVIDENCE-PARITY: this bundle was built with < 400 chars of spec — logging "
+                      "evidence_parity:false. REBUILD the bundle with --spec-file; no seat flag can fix it.",
+                      file=sys.stderr)
             blob = a.artifact_blob or bundle.get("artifact_blob")
             jl.privacy_guard([bundle["artifact"]], [bundle["text"]],        # guard again: a bundle is just a file
                              {bundle["artifact"]: blob} if blob else None)
@@ -182,7 +192,7 @@ def main() -> int:
         return fail(f"malformed verdict: {e}")
 
     art_text = open(art, encoding="utf-8").read()
-    qv = jl.verify_quotes(scored.get("defects") or [], art_text)
+    qv = jl.verify_quotes(scored.get("defects") or [], art_text, atype)
     gaps = jl.must_cite_gaps(scored)
     jl.ledger_append(**base, ok=True)
 

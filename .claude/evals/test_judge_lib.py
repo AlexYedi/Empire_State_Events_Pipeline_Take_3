@@ -65,6 +65,27 @@ q = jl.verify_quotes([{"quote": "return 1 # the answer"}, {"quote": "this text i
 ck("quotes: whitespace-normalised match passes, a fabricated one fails, empty ignored", q["quoted"] == 2 and q["unverified"] == 1)
 ck("quotes: >30% unverified => evidence_unverified", q["evidence_unverified"] is True)
 ck("quotes: all real => verified", jl.verify_quotes([{"quote": "def f():"}], art)["evidence_unverified"] is False)
+# YED-223: formatting a seat drops or re-renders in PROSE is not fabrication …
+md = "**One exception — the emerging-seller signal:** when the JD pitches `x` at an early-career seller"
+vq = lambda q, text, t: jl.verify_quotes([{"quote": q}], text, t)
+ck("quotes: prose — stripped ** and backticks still verify",
+   vq("One exception — the emerging-seller signal: when the JD pitches x", md, "skill")["unverified"] == 0)
+ck("quotes: prose — em-dash rendered as a colon still verifies", vq("One exception: the emerging-seller signal", md, "skill")["unverified"] == 0)
+ck("quotes: prose — spaced single hyphen swaps with an em-dash", vq("One exception - the emerging-seller signal", md, "ref")["unverified"] == 0)
+ck("quotes: exact-mismatch count kept as a secondary field", vq("One exception: the emerging-seller signal", md, "skill")["unverified_exact"] == 1)
+ck("quotes: prose — invented text still unverified", vq("the JD pitches it at a senior seller", md, "skill")["unverified"] == 1)
+ck("quotes: an unknown artifact type is matched strictly", vq("One exception: the emerging-seller signal", md, None)["unverified"] == 1)
+# … but in CODE every delimiter is syntax: judge rounds 1-2 fabrications, pinned as must-fail (strict mode)
+code = ('x = hay_loose\ndef verify_quotes(defects, text):\n    print("ignored with --bundle")\n'
+        'def __init__(self, _private, *args, **kwargs):\n')
+for fake, why in (("hayloose", "intraword underscore"), ("def verifyquotes(defects, text):", "identifier underscore"),
+                  ("ignored with: bundle", "`--` flag prefix"), ("def init(self", "dunder"),
+                  ("self, private,", "leading underscore"), ("private, args, kwargs", "*args / **kwargs")):
+    for t_ in ("code", "hook"):
+        ck(f"quotes: {t_} — fabricated quote rejected ({why})", vq(fake, code, t_)["unverified"] == 1)
+ck("quotes: code — a real snake_case quote still verifies", vq("x = hay_loose", code, "code")["unverified"] == 0)
+# and prose mode never touches `_`, so a prose artifact quoting code is still safe on identifiers
+ck("quotes: prose — underscores are never stripped", vq("hayloose", code, "skill")["unverified"] == 1)
 s = jl.score(V([.8, .9, .9, .9, .9]), "skill", False)
 ck("must-cite: <0.85 with no defect is reported", jl.must_cite_gaps(s) == ["correctness"])
 s["defects"] = [{"criterion": "correctness"}]
@@ -95,6 +116,16 @@ with tempfile.TemporaryDirectory() as d:
         ck("budget: $20 monthly cap enforced", True)
     jl.ledger_append(provider="google", cost_usd=999)
     ck("budget: another provider's spend is not counted", round(jl.spent("openai")[1], 2) == 64.8)
+
+# YED-223: the build-time parity warning fires for a spec-less bundle and stays quiet for a specced one
+import subprocess as _sp, tempfile as _tf, os as _os
+for ctx, want in (("", True), ("x" * 500, False)):
+    fd, out = _tf.mkstemp(suffix=".json"); _os.close(fd)
+    p = _sp.run(["python3", ".claude/evals/judge_lib.py", "bundle", "--artifact", ".claude/evals/judge_lib.py",
+                 "--artifact-type", "code", "--context", ctx, "--out", out], capture_output=True, text=True)
+    _os.unlink(out)
+    ck(f"bundle build: parity warning {'fires' if want else 'stays quiet'} ({len(ctx)}-char context)",
+       ("EVIDENCE-PARITY WARNING" in p.stderr) == want and p.returncode == 0)
 
 print(f"{ok}/{n} judge_lib cases pass")
 sys.exit(0 if ok == n else 1)

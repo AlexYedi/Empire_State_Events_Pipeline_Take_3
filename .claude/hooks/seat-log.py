@@ -42,7 +42,7 @@ def main() -> int:
         scored = jl.score(verdict, a.artifact_type, dangling)
     except (ValueError, OSError, jl.JudgeError) as e:
         print(f"ERROR: malformed verdict: {e}", file=sys.stderr); return 1
-    qv = jl.verify_quotes(scored.get("defects") or [], open(a.artifact, encoding="utf-8").read())
+    qv = jl.verify_quotes(scored.get("defects") or [], open(a.artifact, encoding="utf-8").read(), a.artifact_type)
     slug = jl.slug_for(a.artifact)
     rid = a.label or f"sonnet-{slug}"
     row = {"run_id": rid, "timestamp": jl.now_utc(), "artifact": a.artifact,
