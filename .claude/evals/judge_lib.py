@@ -96,22 +96,28 @@ def _norm(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip().lower()
 
 
-# Formatting that a seat routinely drops or re-renders when it quotes, and that says nothing about whether the
-# text is real: markdown emphasis/code markers, and dash / colon variants. Stripped from BOTH sides, so it can
-# only make a real quote match — it never makes an invented sentence appear. (YED-223, 2026-09-27: a Sonnet seat
-# quoted `**One exception — …:**` without the asterisks and another rendered an em-dash as a colon; the exact
-# check called both fabricated, dropped the only voting seat, and forced a false FLAG on a pass artifact.)
-_FORMAT_RE = re.compile(r"[*_`]")
-_DASH_RE = re.compile(r"\s*(?:—|–|--|:)\s*")
+# Formatting a seat routinely drops or re-renders when it quotes: MARKDOWN delimiters, and a dash<->colon swap.
+# (YED-223, 2026-09-27: a Sonnet seat quoted `**One exception — …:**` without the asterisks and another rendered
+# an em-dash as a colon; the exact check called both fabricated, dropped the only voting seat, forced a false FLAG.)
+#
+# What is tolerated — and ONLY this, because judge round 1 showed blanket stripping lets invented text match code:
+#   * markdown delimiters — `**`, `__`, backticks, and a single `*`/`_` that sits at a word BOUNDARY (i.e. markup).
+#     An `_` or `*` INSIDE a word is content and is kept: `hay_loose` never matches a made-up `hayloose`.
+#   * em-dash, en-dash, a SPACED single hyphen (` - `) and a colon are interchangeable punctuation.
+#     `--` is NOT folded: it is a CLI-flag prefix in code, and folding it let `--bundle` vouch for `: bundle`.
+# Residual (recorded): the dash<->colon swap means a quote that changes only that one punctuation mark verifies.
+_MD_RE = re.compile(r"\*\*|__|`|(?<![A-Za-z0-9])[*_]|[*_](?![A-Za-z0-9])")
+_DASH_RE = re.compile(r"\s*(?:—|–|:)\s*|\s+-\s+")
 
 
 def _norm_loose(t: str) -> str:
-    return _norm(_DASH_RE.sub(" ~ ", _FORMAT_RE.sub("", t)))
+    return _norm(_DASH_RE.sub(" ~ ", _MD_RE.sub("", t)))
 
 
 def verify_quotes(defects: list, artifact_text: str) -> dict:
-    """Each defect's `quote` must appear in the artifact, modulo whitespace, case, markdown markers and
-    dash/colon variants (see _norm_loose). A seat that invents a flaw still can't quote it.
+    """Each defect's `quote` must appear in the artifact, modulo whitespace, case, markdown delimiters at word
+    boundaries, and the em/en-dash / spaced-hyphen / colon swap (see _norm_loose for exactly what is tolerated
+    and the one recorded residual). Characters inside identifiers and `--` flags are never altered.
 
     `unverified` / `evidence_unverified` use the formatting-tolerant match; `unverified_exact` keeps the old
     whitespace-only count as a secondary field so drift in how seats quote stays visible. The caller tags the

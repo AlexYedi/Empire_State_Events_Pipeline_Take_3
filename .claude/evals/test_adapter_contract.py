@@ -88,6 +88,7 @@ def main() -> int:
         for s in seats:
             r = s["runner"]
             if not os.path.isfile(r):
+                ck(f"{s['id']}: runner exists for the --bundle refusal cases", False, r)   # fail loudly, never skip
                 continue
             for extra in (["--context", "more spec"], ["--spec-file", art]):
                 p = run(r, ["--bundle", bpath, *extra, "--dry-run"])
