@@ -71,6 +71,16 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate-sweep-sessionstart.sh --session-end"
+          }
+        ]
+      }
     ]
   }
 }
