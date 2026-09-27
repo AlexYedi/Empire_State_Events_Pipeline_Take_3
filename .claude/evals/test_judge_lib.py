@@ -65,6 +65,17 @@ q = jl.verify_quotes([{"quote": "return 1 # the answer"}, {"quote": "this text i
 ck("quotes: whitespace-normalised match passes, a fabricated one fails, empty ignored", q["quoted"] == 2 and q["unverified"] == 1)
 ck("quotes: >30% unverified => evidence_unverified", q["evidence_unverified"] is True)
 ck("quotes: all real => verified", jl.verify_quotes([{"quote": "def f():"}], art)["evidence_unverified"] is False)
+# YED-223: formatting a seat drops or re-renders is not fabrication …
+md = "**One exception — the emerging-seller signal:** when the JD pitches `x` at an early-career seller"
+ck("quotes: stripped markdown markers still verify",
+   jl.verify_quotes([{"quote": "One exception — the emerging-seller signal: when the JD pitches x"}], md)["unverified"] == 0)
+ck("quotes: em-dash rendered as a colon still verifies",
+   jl.verify_quotes([{"quote": "One exception: the emerging-seller signal"}], md)["unverified"] == 0)
+ck("quotes: exact-mismatch count kept as a secondary field",
+   jl.verify_quotes([{"quote": "One exception: the emerging-seller signal"}], md)["unverified_exact"] == 1)
+# … but an invented sentence still fails
+ck("quotes: invented text still unverified under the tolerant match",
+   jl.verify_quotes([{"quote": "the JD pitches it at a senior seller"}], md)["unverified"] == 1)
 s = jl.score(V([.8, .9, .9, .9, .9]), "skill", False)
 ck("must-cite: <0.85 with no defect is reported", jl.must_cite_gaps(s) == ["correctness"])
 s["defects"] = [{"criterion": "correctness"}]
