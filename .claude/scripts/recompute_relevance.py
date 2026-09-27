@@ -54,9 +54,12 @@ def main():
     now = datetime.now(timezone.utc)
 
     # 1. all topics
-    _, topics = req("GET", "/topic?select=id,name,engagement_count,last_engaged_at,relevance_score&limit=2000")
+    _, topics = req("GET", "/topic?select=id,name,engagement_count,last_engaged_at,relevance_score,metadata&limit=2000")
     if not isinstance(topics, list):
         sys.exit(f"failed to read topics: {topics}")
+    # YED-47: soft-merged topics (metadata.merged_into) are tombstones — their engagement was transferred to
+    # the target and their relevance_score nulled at merge time. Scoring them would resurrect them in the hub.
+    topics = [t for t in topics if not (t.get("metadata") or {}).get("merged_into")]
 
     # 2. event-proximity: topics linked to an UPCOMING attended event within the window
     now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")

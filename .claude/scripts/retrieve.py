@@ -58,6 +58,18 @@ def rpc(name: str, args: dict):
     return (st, body)
 
 
+def follow_tombstone(t: str, row: dict | None, depth: int = 5) -> dict | None:
+    """YED-47 spec item 3: a seed that names a soft-merged row (metadata.merged_into) resolves to its live
+    target, so the pack is built around the surviving entity. Read path: a dangling target is left as-is
+    (the producer's resolver fails loud; retrieval degrades quietly and the probe reports it)."""
+    while row and (row.get("metadata") or {}).get("merged_into") and depth:
+        nxt = get(f"/{t}?id=eq.{q(row['metadata']['merged_into'])}&select=id,name,metadata&limit=1") or []
+        if not nxt:
+            break
+        row, depth = nxt[0], depth - 1
+    return row
+
+
 def resolve(seed: list[dict]) -> tuple[list[dict], list[str]]:
     table = {"person": "person", "company": "company", "topic": "topic"}
     found, missing = [], []
@@ -69,11 +81,12 @@ def resolve(seed: list[dict]) -> tuple[list[dict], list[str]]:
         row = None
         v = pid_variants(e.get("notion_page_id"))
         if v:
-            rows = get(f"/{t}?notion_page_id=in.({','.join(q(x) for x in v)})&select=id,name&limit=1") or []
-            row = rows[0] if rows else None
+            rows = get(f"/{t}?notion_page_id=in.({','.join(q(x) for x in v)})&select=id,name,metadata&limit=1") or []
+            row = follow_tombstone(t, rows[0]) if rows else None
         if not row and e.get("name"):
-            rows = get(f"/{t}?name=ilike.{q(e['name'])}&select=id,name&limit=5") or []
-            rows = [r for r in rows if norm_text(r["name"]) == norm_text(e["name"])]
+            rows = get(f"/{t}?name=ilike.{q(e['name'])}&select=id,name,metadata&limit=5") or []
+            rows = [follow_tombstone(t, r) for r in rows if norm_text(r["name"]) == norm_text(e["name"])]
+            rows = list({r["id"]: r for r in rows}.values())          # a tombstone + its target count once
             row = rows[0] if len(rows) == 1 else None
         if row:
             found.append({"type": t, "id": row["id"], "name": row["name"]})
