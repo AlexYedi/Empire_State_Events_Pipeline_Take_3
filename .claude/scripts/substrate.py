@@ -16,6 +16,13 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
   stage-claims    --brief b.md --manifest m.json [--brief-ref notion:<id>] [--approve]
                   parse a post_event_brief's learnings sections into `claim` rows (first_hand),
                   embed them (local bge-small, same space as doc_chunks), link speakers
+  expect-research --manifest m.json   (YED-205) open the PRE-EVENT gate row `research:<page id>` — no graph write
+  stage-research  --manifest m.json --evidence ev.md --brief-ref notion:<research brief id>
+                  (YED-205) the pre-event write: roster entities + the research_brief document + one claim per
+                  Evidence Ledger row (web-verified w/ URL -> web_verified; email-signal w/ public URL -> email_signal;
+                  everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
+                  post-event ensure-event attaches these claims when the attended row appears.
+                  Spec: .claude/notes/yed-205-spec-2026-09-27.md
   merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
                   HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
                   engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
@@ -123,7 +130,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
 # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
 # --dry-run is exempted at the call site, not here.
 FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "backfill-questions", "approve-claims", "merge")
+                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research")
 
 
 def freeze_state() -> dict | None:
@@ -185,8 +192,12 @@ def _ledger_path() -> str:
     return os.path.join(STATE_DIR, f"{sid}.substrate_gate.jsonl")
 
 
-def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *, keep_if: tuple = ()) -> None:
-    """Upsert one row by key. keep_if: markers that must not be downgraded (idempotent add)."""
+def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *, keep_if: tuple = (),
+                phase: str = "post_event") -> None:
+    """Upsert one row by key. keep_if: markers that must not be downgraded (idempotent add).
+    phase: 'post_event' (key = Notion event page id) or 'pre_event' (key = 'research:' + page id — a DISTINCT key,
+    because the gate never downgrades STAGED: a shared key would let a staged pre-event row satisfy the post-event
+    gate). substrate-gate.sh reads `phase` to name the right fix."""
     import datetime
     path = _ledger_path()
     os.makedirs(STATE_DIR, exist_ok=True)
@@ -208,7 +219,7 @@ def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *,
     if kept and kept.get("marker") in keep_if:
         rows.append(json.dumps(kept))
     else:
-        row = {"key": key, "event": title, "marker": marker,
+        row = {"key": key, "event": title, "marker": marker, "phase": phase,
                "ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         if reason:
             row["reason"] = reason
@@ -449,6 +460,126 @@ def _utcnow() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+# ---------------------------------------------------------------------------------------------
+# YED-205 — the pre-event write path: Evidence Ledger parsing (pure, covered by --selftest).
+# The research specialists (company-researcher / person-researcher / topic-landscape-analyst) each emit
+#   ##### Evidence Ledger — <Name>
+#   - claim: <≤15 words> | tier: web-verified | source: <site> | url: <URL> | date: <YYYY-MM-DD>
+# and the synthesizer passes those rows through verbatim in its Evidence Set. They ARE the claims.
+# ---------------------------------------------------------------------------------------------
+RESEARCH_SECTION = "evidence_ledger"
+# A heading ('##### Evidence Ledger — X') or, pre-mortem 2026-09-27, the same label set in bold on its own line.
+LEDGER_HEAD_RE = re.compile(r"^(?:#{2,6}\s*|\*\*\s*)Evidence Ledger\s*[—–:-]\s*(.+?)\s*(?:\*\*)?\s*$", re.I)
+# Pre-mortem 2026-09-27: a URL alone does not prove an email-signal row is public — a specialist can attach the
+# company homepage to "open thread with their CEO about a pilot". A row whose SOURCE is a mailbox, or whose TEXT reads
+# as correspondence, is private relationship state (ADR-9: HubSpot's), whatever URL it carries. Conservative on purpose.
+MAILBOX_SOURCE_RE = re.compile(r"\b(gmail|inbox|mailbox|e-?mail thread|correspondence|dm|direct message|linkedin message)\b", re.I)
+CORRESPONDENCE_RE = re.compile(r"\b(thread|replied|reply|emailed|e-?mailed|inbox|dm'?d|reached out|intro(?:duced)? (?:by|via)|"
+                               r"last (?:reply|message|contact)|our (?:call|chat|conversation)|Alex)\b", re.I)
+LEDGER_ROW_RE = re.compile(r"^\s*[-*]\s*claim\s*:\s*(.+)$", re.I)
+LEDGER_FIELD_SPLIT = re.compile(r"\s*\|\s*(?=(?:tier|source|url|date)\s*:)", re.I)
+TIER_MAP = {"web-verified": "web_verified", "web_verified": "web_verified",
+            "email-signal": "email_signal", "email_signal": "email_signal",
+            "notion-prior": "notion_prior", "notion_prior": "notion_prior"}
+RESEARCH_CONF = {"web_verified": 0.7, "email_signal": 0.5}
+
+
+def research_source_key(notion_event_id: str) -> str:
+    """One source_key per researched event. Post-event ensure-event recomputes it to attach these claims."""
+    return sha("research:" + pid_variants(notion_event_id)[0])
+
+
+def research_gate_key(notion_event_id: str) -> str:
+    return "research:" + pid_variants(notion_event_id)[0]
+
+
+def _public_url(u: str | None) -> str | None:
+    u = (u or "").strip().strip("<>").strip()
+    return u if re.match(r"^https?://[^\s/]+\.[^\s]+", u, re.I) else None
+
+
+def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
+    """Evidence Set / specialist returns -> (claim candidates, skip counts). Parsing only — zero inference.
+    Decision 2 (spec): web-verified WITH a URL -> web_verified; email-signal WITH a public http(s) URL ->
+    email_signal (a lead); email-signal without one is private correspondence -> skipped (relationship state is
+    HubSpot's, ADR-9); notion-prior -> skipped (it came from the graph/Notion); a web-verified row missing its URL
+    -> skipped (the specialist contract makes the URL mandatory). Every skip is counted, never silent."""
+    out, skipped, entity = [], {}, None
+
+    def skip(why: str):
+        skipped[why] = skipped.get(why, 0) + 1
+    for line in (md or "").splitlines():
+        h = LEDGER_HEAD_RE.match(line)
+        if h:
+            entity = clean_md(h.group(1)).strip("[] ") or None
+            continue
+        if re.match(r"^#{1,6}\s", line):            # any other heading ends the current ledger
+            entity = None
+            continue
+        m = LEDGER_ROW_RE.match(line)
+        if not m or not entity:
+            if m:
+                skip("row_outside_a_ledger")
+            continue
+        parts = LEDGER_FIELD_SPLIT.split(m.group(1))
+        fields = {"claim": clean_md(parts[0])}
+        for p in parts[1:]:
+            k, _, v = p.partition(":")
+            fields[k.strip().lower()] = v.strip()
+        tier = TIER_MAP.get((fields.get("tier") or "").strip().lower())
+        url = _public_url(fields.get("url"))
+        text = fields["claim"].strip(" .")
+        if len(text) < 8 or text.startswith("["):   # empty / template placeholder
+            skip("empty_or_template")
+            continue
+        if tier == "notion_prior":
+            skip("notion_prior")
+            continue
+        if tier == "email_signal" and (not url or MAILBOX_SOURCE_RE.search(fields.get("source") or "")
+                                       or CORRESPONDENCE_RE.search(text)):
+            skip("email_signal_private")
+            continue
+        if tier == "web_verified" and not url:
+            skip("web_verified_missing_url")
+            continue
+        if tier not in RESEARCH_CONF:
+            skip("unknown_tier")
+            continue
+        date = (fields.get("date") or "").strip()
+        date = date[:10] if re.match(r"^\d{4}-\d{2}-\d{2}", date) else None
+        full = f"{entity}: {text}"                   # stands alone in retrieval
+        out.append({"entity": entity, "text": full, "claim_key": claim_key(full), "tier": tier, "url": url,
+                    "source": clean_md(fields.get("source") or "") or None, "date": date,
+                    "confidence": RESEARCH_CONF[tier]})
+    seen, uniq = set(), []
+    for it in out:                                   # the same fact repeated across sections = one claim
+        if it["claim_key"] in seen:
+            skip("duplicate_row")
+            continue
+        seen.add(it["claim_key"])
+        uniq.append(it)
+    return uniq, skipped
+
+
+def roster_match(heading: str, roster: list[tuple[str, str, str]]) -> tuple[str, str] | None:
+    """Ledger heading -> (type, id) among THIS event's roster only (type, name, id). Tiers, first unique hit wins:
+    exact normalized name; the name without a trailing '(Qualifier)'; then (pre-mortem 2026-09-27) name-token
+    containment for COMPANIES AND TOPICS ONLY ('Soxton' ~ 'Soxton.AI', the same rule stage_claims uses for founder
+    showcases). People are exact-only — no fuzzy person matching, ever (ADR-4 D3). Returns None when absent OR
+    ambiguous at the first tier that has hits — never guessed; the caller counts it and stages the claim unlinked.
+    Linking here only attaches a claim to an entity already on this event's roster; it never creates or merges one."""
+    tiers = (lambda t, n: norm_text(n) == norm_text(heading),
+             lambda t, n: norm_text(split_qualifier(n)[0]) == norm_text(split_qualifier(heading)[0]),
+             lambda t, n: t != "person" and same_company(split_qualifier(heading)[0], split_qualifier(n)[0]))
+    for test in tiers:
+        hits = {(t, i) for t, n, i in roster if test(t, n)}
+        if len(hits) == 1:
+            return next(iter(hits))
+        if len(hits) > 1:
+            return None
+    return None
+
+
 OWNER_FIRST = "Alex"
 
 
@@ -567,6 +698,15 @@ class Graph:
     def _remember(self, table: str, name: str, rid: str) -> str:
         self._made[(table, norm_text(name))] = rid
         return rid
+
+    def embed(self, texts: list[str]) -> list[str]:
+        """pgvector literals for `texts` (local bge-small, same space as every other claim; no metered API).
+        A method so the offline selftest can substitute a stub."""
+        if self.dry:
+            return ["[dry-run: not embedded]"] * len(texts)
+        sys.path.insert(0, DOCKB)
+        from dockb_common import embed_passages, vec_literal
+        return [vec_literal(v) for v in embed_passages(texts)]
 
     def get(self, path: str) -> list:
         st, body = req("GET", path)
@@ -954,7 +1094,25 @@ class Graph:
             self.post("event_entity", {"event_id": eid, "entity_type": t, "entity_id": iid, "role": role},
                       prefer="resolution=ignore-duplicates,return=minimal",
                       on_conflict="event_id,entity_type,entity_id,role")
+        if (row or {}).get("kind", ev.get("kind")) == "attended":   # decision 1: attach onto an ATTENDED row only
+            self.attach_research(ev, eid)
         return eid
+
+    def attach_research(self, ev: dict, eid: str) -> None:
+        """YED-205 decision 1: pre-event research claims were staged with NO event (attendance is never inferred).
+        Once an event row exists for the same Notion page, attach them, and their brief document, to it. Only rows
+        still unattached are touched, so a re-run is a no-op. Scope: the event's own Notion page id; nothing else."""
+        if not ev.get("notion_page_id") or str(eid).startswith("dry:"):
+            return
+        rk = research_source_key(ev["notion_page_id"])
+        loose = self.get(f"/claim?source_key=eq.{rk}&event_id=is.null&select=id,document_id")
+        if not loose:
+            return
+        self.patch("claim", f"source_key=eq.{rk}&event_id=is.null", {"event_id": eid})
+        self.stats.bump("claim", "research_attached", len(loose))
+        docs = sorted({c["document_id"] for c in loose if c.get("document_id")})
+        if docs:
+            self.patch("documents", f"id=in.({','.join(docs)})&event_id=is.null", {"event_id": eid})
 
     # -- documents -------------------------------------------------------------------------------
     def ensure_document(self, d: dict, event_id: str | None = None) -> str:
@@ -970,8 +1128,8 @@ class Graph:
             "word_count": len(body.split()), "doc_date": d.get("doc_date"), "event_id": event_id,
             "produced_by": d.get("produced_by"), "visibility": d.get("visibility", "private"),
             "notion_page_id": (pid_variants(d.get("notion_page_id")) or [None])[-1],
-            "embedding_model": EMBED_MODEL,
-        }.items() if v not in (None, "")}
+            "embedding_model": EMBED_MODEL, "metadata": d.get("metadata"),
+        }.items() if v not in (None, "", {})}
         if cur:                                   # new version: retire the old current row FIRST (partial unique index)
             self.patch("documents", f"id=eq.{cur[0]['id']}", {"is_current": False})
             row.update({"version": cur[0]["version"] + 1, "supersedes_id": cur[0]["id"]})
@@ -1007,13 +1165,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     have = {r["claim_key"] for r in g.get(f"/claim?source_key=eq.{skey}&select=claim_key")}   # reads are safe in dry-run
     new = [it for it in items if it["claim_key"] not in have]
     g.stats.bump("claim", "matched", len(items) - len(new))
-    vectors = []
-    if new and g.dry:
-        vectors = ["[dry-run: not embedded]"] * len(new)
-    elif new:
-        sys.path.insert(0, DOCKB)
-        from dockb_common import embed_passages, vec_literal   # local bge-small; no metered API
-        vectors = [vec_literal(v) for v in embed_passages([it["text"] for it in new])]
+    vectors = g.embed([it["text"] for it in new]) if new else []   # local bge-small; no metered API
     rows = []
     for it, vec in zip(new, vectors):
         rows.append({
@@ -1132,6 +1284,83 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     return 0
 
 
+def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) -> int:
+    """YED-205 — the pre-event write. Spec: .claude/notes/yed-205-spec-2026-09-27.md.
+    Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
+    claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
+    already exists for this page (a re-run after attendance), claims attach to it. Returns 3 on zero claims
+    (loud; the gate stays PENDING), 5 when the manifest lacks the Notion event page id (4 is the graph freeze's)."""
+    ev = manifest.get("event") or {}
+    if not ev.get("notion_page_id"):
+        sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims + the gate)\n")
+        return 5
+    items, skipped = parse_ledger(md)
+    for why, n in sorted(skipped.items()):
+        g.stats.bump("ledger_row", f"skipped_{why}", n)
+    if not items:
+        sys.stderr.write("LOUD FAILURE: 0 admissible Evidence Ledger rows. Expected '##### Evidence Ledger — <Name>' "
+                         "headings with '- claim: … | tier: web-verified | source: … | url: … | date: …' rows. "
+                         f"Skipped: {skipped or 'nothing matched'}. If the synthesizer dropped the headings, pass the "
+                         "raw specialist returns instead.\n")
+        return 3
+    roster = []
+    for e in manifest.get("entities", []):
+        t, iid = g.ensure_entity(e)
+        if iid:
+            roster.append((t, e["name"], iid))
+    existing = g.find_event(ev)                      # never created here — only found (re-run after attendance)
+    eid = existing["id"] if existing else None
+    doc_id = None
+    if brief_ref:
+        doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
+                                    "source_type": "research_brief", "body_text": redact_body(md),
+                                    "doc_date": (ev.get("event_date") or "")[:10] or None,
+                                    "produced_by": "/event-deep-research",
+                                    "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
+                                                 "phase": "pre_event"}}, event_id=eid)
+    skey = research_source_key(ev["notion_page_id"])
+    have = {r["claim_key"] for r in g.get(f"/claim?source_key=eq.{skey}&select=claim_key")}
+    new = [it for it in items if it["claim_key"] not in have]
+    g.stats.bump("claim", "matched", len(items) - len(new))
+    fallback = (ev.get("event_date") or "")[:10] or None
+    rows = []
+    for it, vec in zip(new, g.embed([it["text"] for it in new]) if new else []):
+        rows.append({k: v for k, v in {
+            "source_key": skey, "claim_key": it["claim_key"], "claim_text": it["text"], "claim_type": "fact",
+            "locator": {"section": RESEARCH_SECTION, "entity": it["entity"], "source": it["source"], "url": it["url"]},
+            "document_id": doc_id, "event_id": eid, "provenance_tier": it["tier"], "confidence": it["confidence"],
+            "asserted_at": it["date"] or fallback, "status": "candidate", "extractor": "parse", "lane": "research",
+            "embedding": vec, "embedding_model": EMBED_MODEL,
+            "metadata": {"phase": "pre_event", "url": it["url"],
+                         "notion_event_id": pid_variants(ev["notion_page_id"])[0]},
+        }.items() if v is not None})
+    if rows:
+        g.stats.bump("claim", "created", len(rows))
+        g.post("claim", rows, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
+    ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")} if not g.dry else {}
+    links, unresolved = [], set()
+    for it in items:
+        hit = roster_match(it["entity"], roster)
+        if not hit:
+            unresolved.add(it["entity"])
+            continue
+        if it["claim_key"] in ids:
+            links.append({"claim_id": ids[it["claim_key"]], "entity_type": hit[0], "entity_id": hit[1], "role": "about"})
+    g.stats.bump("claim_entity", "about_unresolved_heading", len(unresolved))
+    if links:
+        g.stats.bump("claim_entity", "linked (idempotent)", len(links))
+        g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+               on_conflict="claim_id,entity_type,entity_id,role")
+    by_tier: dict[str, int] = {}
+    for it in items:
+        by_tier[it["tier"]] = by_tier.get(it["tier"], 0) + 1
+    # the exact Step 4.2d line, so the command can paste it into the Step 6 summary unchanged
+    print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
+          f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
+          f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}")
+    return 0
+
+
 def source_key_for_topic_questions(notion_topic_id: str) -> str:
     return sha("notion_topic_questions:" + pid_variants(notion_topic_id)[0])
 
@@ -1183,9 +1412,6 @@ def backfill_questions(g: Graph, manifest: dict) -> int:
     if not topics:
         sys.stderr.write("backfill-questions: manifest has no topics\n")
         return 3
-    if not g.dry:
-        sys.path.insert(0, DOCKB)
-        from dockb_common import embed_passages, vec_literal
     total_new = total_links = 0
     for t in topics:
         qs = t.get("questions") or split_questions(t.get("top_questions", ""))
@@ -1202,7 +1428,7 @@ def backfill_questions(g: Graph, manifest: dict) -> int:
         new = [q for q in qs if claim_key(q) not in have]
         g.stats.bump("claim", "matched", len(qs) - len(new))
         if new:
-            vecs = ["[dry-run: not embedded]"] * len(new) if g.dry else [vec_literal(v) for v in embed_passages(new)]
+            vecs = g.embed(new)
             rows = []
             for q_text, vec in zip(new, vecs):
                 row = {"source_key": skey, "claim_key": claim_key(q_text), "claim_text": q_text,
@@ -1316,6 +1542,8 @@ class _FakeGraph(Graph):
             return str(cur) in [x.strip() for x in val.strip("()").split(",")]
         if op == "is":
             return (cur is None) if val == "null" else (cur is not None)
+        if op in ("gte", "lte"):
+            return cur is not None and (str(cur) >= val if op == "gte" else str(cur) <= val)
         if op == "ilike":
             pat = "^" + ".*".join(re.escape(p) for p in val.split("*")) + "$"
             return cur is not None and re.match(pat, str(cur), re.I) is not None
@@ -1338,11 +1566,19 @@ class _FakeGraph(Graph):
     def get(self, path: str) -> list:
         return [dict(r) for r in self._select(path)]
 
+    def embed(self, texts):
+        return ["[0.1,0.2]"] * len(texts)
+
+    DEFAULTS = {"documents": {"is_current": True, "version": 1}}   # column defaults the real schema applies
+
     def post(self, table, row, prefer="return=representation", on_conflict=None):
         out = []
+        cols = on_conflict.split(",") if on_conflict else []
         for r in (row if isinstance(row, list) else [row]):
             guard(table, r)
-            r = {**r, "id": r.get("id") or self.uuid()}
+            if cols and any(all(o.get(c) == r.get(c) for c in cols) for o in self.t[table]):
+                continue                              # resolution=ignore-duplicates, as PostgREST does on the unique key
+            r = {**self.DEFAULTS.get(table, {}), **r, "id": r.get("id") or self.uuid()}
             self.t[table].append(r)
             out.append(dict(r))
         return out
@@ -1469,6 +1705,129 @@ def _identity_selftest(ok) -> None:
         g["AMBIGUITY_LEDGER"], g["MERGE_LOG"] = saved
         import shutil
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+RESEARCH_SAMPLE = """
+## Evidence Set (for the Deep Read render — do not display to Alex as brief content)
+### Companies
+##### Evidence Ledger — Soxton.AI
+- claim: Raised a $4M seed led by Primary in August 2026 | tier: web-verified | source: TechCrunch | url: https://techcrunch.com/soxton-seed | date: 2026-08-14
+- claim: Sells AI contract review to mid-market legal teams | tier: web-verified | source: soxton.ai | url: https://soxton.ai/ | date: 2026-09-01
+- claim: Newsletter says Soxton is hiring a founding AE | tier: email-signal | source: Term Sheet newsletter | url: https://fortune.com/termsheet/0926 | date: 2026-09-26
+- claim: Existing thread with their CEO about a pilot | tier: email-signal | source: Gmail | url: n/a | date: 2026-05-02
+- claim: Positioned as legal-ops first per prior brief | tier: notion-prior | source: prior brief | url: n/a | date: 2026-08-24
+- claim: Claims 40% faster contract turnaround | tier: web-verified | source: blog | url: | date: 2026-07-01
+- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD]
+### People
+##### Evidence Ledger — Logan Brown
+- claim: Previously led legal engineering at Ironclad | tier: web-verified | source: LinkedIn | url: https://www.linkedin.com/in/loganbrown | date: 2026-09-10
+##### Evidence Ledger — Nobody On The Roster
+- claim: Spoke at Legal Geek NYC on contract AI in 2025 | tier: web-verified | source: Legal Geek | url: https://legalgeek.co/nyc-2025 | date: 2025-11-04
+### Primer
+##### Evidence Ledger — Contract AI
+- claim: Raised a $4M seed led by Primary in August 2026 | tier: web-verified | source: TechCrunch | url: https://techcrunch.com/soxton-seed | date: 2026-08-14
+- claim: Legal AI funding hit $2.1B in H1 2026 | tier: web-verified | source: Crunchbase News | url: https://news.crunchbase.com/legal-ai-h1-2026 | date: 2026-07-15
+### The Frame
+- claim: stray row after a non-ledger heading | tier: web-verified | source: x | url: https://x.com/a | date: 2026-01-01
+"""
+
+
+def _research_selftest(ok) -> None:
+    """YED-205, offline, against _FakeGraph + a sample Evidence Set in the specialists' documented format."""
+    items, skipped = parse_ledger(RESEARCH_SAMPLE)
+    by = {i["text"]: i for i in items}
+    ok("ledger: 7 admissible rows — 6 web_verified (incl. an off-roster person + the same fact under a topic), 1 email lead",
+       len(items) == 7 and sum(i["tier"] == "web_verified" for i in items) == 6 and sum(i["tier"] == "email_signal" for i in items) == 1)
+    ok("ledger: claim text is self-contained '<Entity>: <claim>'",
+       "Soxton.AI: Raised a $4M seed led by Primary in August 2026" in by)
+    ok("ledger: private email-signal (no URL) skipped + counted", skipped.get("email_signal_private") == 1)
+    ok("ledger: notion-prior skipped + counted", skipped.get("notion_prior") == 1)
+    ok("ledger: web-verified without a URL skipped + counted", skipped.get("web_verified_missing_url") == 1)
+    ok("ledger: the template placeholder row is never a claim", skipped.get("empty_or_template") == 1)
+    ok("ledger: a row under a non-ledger heading is never a claim", skipped.get("row_outside_a_ledger") == 1
+       and not any("stray row" in i["text"] for i in items))
+    ok("ledger: date parsed; email lead conf 0.5, web 0.7",
+       by["Soxton.AI: Raised a $4M seed led by Primary in August 2026"]["date"] == "2026-08-14"
+       and by["Soxton.AI: Newsletter says Soxton is hiring a founding AE"]["confidence"] == 0.5)
+    ok("ledger: the same fact under TWO entities is two claims (different subject), not deduped away",
+       "Contract AI: Raised a $4M seed led by Primary in August 2026" in by)
+    r = [("company", "Soxton.AI", "c1"), ("person", "Logan Brown", "p1"), ("topic", "Contract AI", "t1"), ("company", "Pascal (Fintech)", "c2")]
+    ok("roster: exact + qualifier-stripped match; absent -> None",
+       roster_match("Soxton.AI", r) == ("company", "c1") and roster_match("Pascal", r) == ("company", "c2")
+       and roster_match("Nobody On The Roster", r) is None)
+    ok("roster: company/topic token containment ('Soxton' ~ 'Soxton.AI') is a last, unique-only tier",
+       roster_match("Soxton", r) == ("company", "c1"))
+    ok("roster: people are exact-only — 'Logan' never matches 'Logan Brown'", roster_match("Logan", r) is None)
+    ok("roster: tier-3 pools companies + topics, so a heading contained in BOTH is unlinked, never picked",
+       roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Contract AI", "t1")]) is None)
+    ok("roster: KNOWN LIMIT, pinned: a heading contained in exactly one entity of another type links to it",
+       roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Agent Evals", "t1")]) == ("company", "c1"))
+    ok("roster: containment that hits two entities -> None",
+       roster_match("Holly", [("company", "Holly Health", "c1"), ("company", "Holly AI", "c2")]) is None)
+    ok("ledger: a bold '**Evidence Ledger — X**' label opens a ledger too",
+       len(parse_ledger("**Evidence Ledger — Amperos**\n- claim: Builds battery analytics for fleets | tier: web-verified"
+                        " | source: amperos.com | url: https://amperos.com | date: 2026-09-01")[0]) == 1)
+    leak, why = parse_ledger("##### Evidence Ledger — Soxton.AI\n"
+                             "- claim: Open thread with their CEO about a pilot | tier: email-signal | source: newsletter | url: https://soxton.ai | date: 2026-09-01\n"
+                             "- claim: Funding round mentioned in digest | tier: email-signal | source: Gmail | url: https://soxton.ai/news | date: 2026-09-01\n"
+                             "- claim: Term Sheet reports a seed extension | tier: email-signal | source: Term Sheet | url: https://fortune.com/ts | date: 2026-09-02")
+    ok("ledger: an email-signal row with a URL is STILL private when its text is correspondence or its source a mailbox",
+       len(leak) == 1 and leak[0]["text"].endswith("seed extension") and why.get("email_signal_private") == 2)
+    ok("roster: same name in two types -> None (never guessed)",
+       roster_match("Holly", [("company", "Holly", "c9"), ("topic", "Holly", "t9")]) is None)
+    ok("gate: pre-event key is DISTINCT from the post-event key", research_gate_key("a" * 32) != pid_variants("a" * 32)[0]
+       and research_gate_key("a" * 32).startswith("research:"))
+    # ---- end to end on the fake graph --------------------------------------------------------------
+    fg = _FakeGraph()
+    pid = "3ded3699c2db816a828ec6410801d5de"
+    m = {"event": {"notion_page_id": pid, "title": "The Shortlist: September Founder Showcase", "event_date": "2026-09-28"},
+         "entities": [{"type": "company", "name": "Soxton.AI", "website": "https://soxton.ai"},
+                      {"type": "person", "name": "Logan Brown", "company": "Soxton.AI"},
+                      {"type": "topic", "name": "Contract AI"}]}
+    rc = stage_research(fg, RESEARCH_SAMPLE, m, brief_ref="notion:brief123")
+    cl = fg.t["claim"]
+    ok("stage: rc 0; 7 claims, all candidate, lane research, one source_key",
+       rc == 0 and len(cl) == 7 and all(c["status"] == "candidate" and c["lane"] == "research" for c in cl)
+       and {c["source_key"] for c in cl} == {research_source_key(pid)})
+    ok("stage: NO event row created pre-event (ADR-10 D9); claims carry no event_id",
+       fg.t["event"] == [] and all("event_id" not in c for c in cl))
+    ok("stage: roster entities ensured (company, person, topic)",
+       {r["name"] for r in fg.t["company"]} == {"Soxton.AI"} and len(fg.t["person"]) == 1 and len(fg.t["topic"]) == 1)
+    ok("stage: research_brief document written with the Notion event id in metadata",
+       len(fg.t["documents"]) == 1 and fg.t["documents"][0]["source_type"] == "research_brief"
+       and fg.t["documents"][0]["metadata"]["notion_event_id"] == pid)
+    ok("stage: claim_entity(about) links 6 roster-matched claims; the off-roster heading stays unlinked + counted",
+       len(fg.t["claim_entity"]) == 6 and all(l["role"] == "about" for l in fg.t["claim_entity"])
+       and fg.stats.c["claim_entity"].get("about_unresolved_heading") == 1)
+    ok("stage: asserted_at = the source's date", {c["asserted_at"] for c in cl} >= {"2026-08-14", "2026-09-10"})
+    before = (len(fg.t["claim"]), len(fg.t["company"]), len(fg.t["documents"]), len(fg.t["claim_entity"]))
+    fg.stats = Stats()
+    stage_research(fg, RESEARCH_SAMPLE, m, brief_ref="notion:brief123")
+    ok("stage: re-run creates nothing (created=0) and adds no rows",
+       fg.stats.created() == 0 and (len(fg.t["claim"]), len(fg.t["company"]), len(fg.t["documents"]), len(fg.t["claim_entity"])) == before)
+    empty = _FakeGraph()
+    ok("stage: zero admissible rows -> exit 3 (loud), and NOTHING is written to any table",
+       stage_research(empty, "## Evidence Set\nnothing here", m, brief_ref="notion:x") == 3
+       and not any(empty.t.values()))
+    ok("stage: manifest without the Notion event id -> exit 5 (not 4: that is the freeze's code)",
+       stage_research(_FakeGraph(), RESEARCH_SAMPLE, {"event": {}}, brief_ref=None) == 5)
+    # ---- attendance: post-event ensure-event attaches them ----------------------------------------------
+    eid = fg.ensure_event({"event": {**m["event"], "kind": "attended"}, "entities": []})
+    ok("attend: ensure-event attaches every research claim + the brief document to the attended row",
+       all(c.get("event_id") == eid for c in fg.t["claim"]) and fg.t["documents"][0].get("event_id") == eid
+       and fg.stats.c["claim"].get("research_attached") == 7)
+    fg.stats = Stats()
+    fg.ensure_event({"event": {**m["event"], "kind": "attended"}, "entities": []})
+    ok("attend: re-run attaches nothing new", "research_attached" not in fg.stats.c.get("claim", {}))
+    mk = _FakeGraph()
+    stage_research(mk, RESEARCH_SAMPLE, m, brief_ref=None)
+    mk.ensure_event({"event": {**m["event"], "kind": "market"}, "entities": []})
+    ok("attend: a NON-attended row (kind market) never attaches research claims",
+       all("event_id" not in c for c in mk.t["claim"]))
+    other = _FakeGraph()
+    other.t["claim"].append({"id": "x", "source_key": research_source_key("b" * 32), "claim_key": "k"})
+    other.ensure_event({"event": {"notion_page_id": pid, "title": "E", "kind": "attended"}, "entities": []})
+    ok("attend: another event's research claims are never touched", "event_id" not in other.t["claim"][0])
 
 
 def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
@@ -1654,7 +2013,7 @@ def selftest() -> bool:
     ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
     ok("freeze: every mutating verb is covered",
        set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                              "backfill", "backfill-questions", "approve-claims", "merge"})
+                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research"})
     _saved_freeze = FREEZE_PATH
     try:                                              # unreadable marker must fail CLOSED
         globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
@@ -1674,6 +2033,8 @@ def selftest() -> bool:
 
     # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
     _identity_selftest(ok)
+    # ---- the pre-event write path (YED-205) --------------------------------------------------------
+    _research_selftest(ok)
 
     fail = 0
     for name, good in checks:
@@ -1689,7 +2050,11 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
-                                     "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge"])
+                                     "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
+                                     "expect-research", "stage-research"])
+    ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
+    ap.add_argument("--phase", choices=["post_event", "pre_event"], default="post_event",
+                    help="(waive) which gate row: post_event (default) or pre_event (the research row)")
     ap.add_argument("--table", choices=["company", "person", "topic"], help="(merge) entity table")
     ap.add_argument("--from", dest="merge_from", metavar="ID|NAME", help="(merge) the row to tombstone")
     ap.add_argument("--into", dest="merge_into", metavar="ID|NAME", help="(merge) the row that survives")
@@ -1778,9 +2143,26 @@ def main(argv: list[str]) -> int:
     elif a.verb == "waive":
         if not (gate_key and a.reason):
             ap.error("waive needs a manifest with event.notion_page_id and --reason")
-        ledger_mark(gate_key, ev.get("title", ""), "waived", a.reason)
+        if a.phase == "pre_event":
+            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "waived", a.reason, phase="pre_event")
+        else:
+            ledger_mark(gate_key, ev.get("title", ""), "waived", a.reason)
         print(f"waived: {ev.get('title')} — {a.reason} (logged to substrate-gate-failures.jsonl)")
         return 0
+    elif a.verb == "expect-research":
+        if not gate_key:
+            ap.error("expect-research needs a manifest with event.notion_page_id")
+        if not a.dry_run:
+            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "pending",
+                        keep_if=("staged", "waived"), phase="pre_event")
+        print(f"expect-research: gate row research:{gate_key[:8]} PENDING — stage-research closes it")
+        return 0
+    elif a.verb == "stage-research":
+        if not a.evidence:
+            ap.error("stage-research needs --evidence")
+        rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref)
+        if rc == 0 and not a.dry_run and gate_key:
+            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "staged", phase="pre_event")
     elif a.verb == "ensure-event":
         g.ensure_event(m)
         if a.expect_claims and not a.dry_run and gate_key:
