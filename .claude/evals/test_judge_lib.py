@@ -74,6 +74,15 @@ ck("quotes: em-dash rendered as a colon still verifies",
 ck("quotes: exact-mismatch count kept as a secondary field",
    jl.verify_quotes([{"quote": "One exception: the emerging-seller signal"}], md)["unverified_exact"] == 1)
 # … but an invented sentence still fails
+# judge round 1 (Sonnet): blanket stripping let fabricated quotes verify against real CODE — pinned as must-fail
+code = 'x = hay_loose\ndef verify_quotes(defects, text):\n    print("ignored with --bundle")\n'
+for fake, why in (("hayloose", "an intraword underscore is content"),
+                  ("def verifyquotes(defects, text):", "an identifier underscore is content"),
+                  ("ignored with: bundle", "`--` is a flag prefix, not a dash")):
+    ck(f"quotes: fabricated code quote rejected ({why})", jl.verify_quotes([{"quote": fake}], code)["unverified"] == 1)
+ck("quotes: a real snake_case quote still verifies", jl.verify_quotes([{"quote": "x = hay_loose"}], code)["unverified"] == 0)
+ck("quotes: spaced single hyphen swaps with an em-dash",
+   jl.verify_quotes([{"quote": "One exception - the emerging-seller signal"}], md)["unverified"] == 0)
 ck("quotes: invented text still unverified under the tolerant match",
    jl.verify_quotes([{"quote": "the JD pitches it at a senior seller"}], md)["unverified"] == 1)
 s = jl.score(V([.8, .9, .9, .9, .9]), "skill", False)
