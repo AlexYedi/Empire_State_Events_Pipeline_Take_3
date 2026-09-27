@@ -16,6 +16,16 @@ RULE (all must hold, else the reference still flags):
      an `artifacts` path component, AND
   3. that same file performs an append-mode write (`open(..., "a"…)` / `open(..., mode="a"…)` / `>>`).
 
+SELF-EXCLUSION (judge round 1, 2026-09-27): this helper lives in .claude/hooks/, one of the dirs it
+scans, and its own selftest fixtures contain append-shaped text beside `artifacts` + `.jsonl` names. Without
+excluding itself it recognised its own NEGATIVE controls as live ledgers — a read-only or typo'd reference
+with those names was silently excused. The helper's own path is excluded from the scan, and the selftest now
+asserts the negative controls are ABSENT from the live set, not only that the positives are present.
+
+SCOPE: writers are searched under .claude/scripts/ and .claude/hooks/ only — where every ledger writer lives
+(repo-wide `git grep` for append-mode writes to .claude/artifacts/*.jsonl found none elsewhere, 2026-09-27).
+A writer added outside those dirs would not excuse its ledger; the reference would flag, which is the safe side.
+
 KNOWN LIMITATION (recorded, not hidden): (2)+(3) are file-level co-occurrence, not dataflow. A file
 that appends to ledger A and only READS ledger B would excuse a missing B. Writers here bind the path to
 a constant and append through the constant, so per-line matching would miss every real writer; the
@@ -54,12 +64,15 @@ def ledgers_from_texts(texts):
     return names
 
 
+SELF = ".claude/hooks/runtime_ledgers.py"
+
+
 def tracked_writer_texts(root=ROOT):
     p = subprocess.run(["git", "ls-files", *WRITER_DIRS], cwd=root, capture_output=True, text=True)
     out = {}
     for rel in p.stdout.split():
-        if not rel.endswith((".py", ".sh")):
-            continue
+        if not rel.endswith((".py", ".sh")) or rel == SELF:
+            continue  # never scan ourselves: the selftest fixtures would poison the live set
         try:
             out[rel] = open(os.path.join(root, rel), encoding="utf-8", errors="ignore").read()
         except OSError:
@@ -115,13 +128,23 @@ def selftest():
         if got != want:
             fails += 1
             print(f"FAIL  {ref}: expected {want}, got {got} ({why})", file=sys.stderr)
+    # LIVE-repo guards. No hardcoded positive names (renaming a real ledger must not break this test);
+    # instead: (a) the fixtures' names — which have no real writer — must be ABSENT from the live set,
+    # (b) every live name must be backed by a writer file that is not this helper.
     live = runtime_ledger_names()
-    for must in ("substrate-gate-failures.jsonl", "identity-ambiguity.jsonl",
-                 "identity-merges.jsonl", "graph-freeze-overrides.jsonl"):
-        if must not in live:
+    live_checks = 0
+    for neg in ("gate-failures.jsonl", "shell-fails.jsonl", "read-only.jsonl", "overwritten.jsonl"):
+        live_checks += 1
+        if neg in live:
             fails += 1
-            print(f"FAIL  live repo: {must} not recognised as a runtime ledger", file=sys.stderr)
-    n = len(cases) + 4
+            print(f"FAIL  live repo: fixture name {neg} leaked into the live ledger set", file=sys.stderr)
+    writers = tracked_writer_texts()
+    live_checks += 1
+    unbacked = sorted(n for n in live if not any(n in t for t in writers.values()))
+    if unbacked or SELF in writers:
+        fails += 1
+        print(f"FAIL  live repo: unbacked names {unbacked} / self scanned: {SELF in writers}", file=sys.stderr)
+    n = len(cases) + live_checks
     print(f"runtime_ledgers selftest: {n - fails}/{n} pass", file=sys.stderr)
     return fails == 0
 
