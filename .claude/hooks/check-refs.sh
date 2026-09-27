@@ -59,7 +59,11 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
   | sed -E 's/[.,;:)`"'"'"']+$//' \
   | sort -u)
 
-missing=0; checked=0; ignored=0
+missing=0; checked=0; ignored=0; runtime=0
+# Runtime-created append-only ledgers (YED-227): a missing `.claude/artifacts/<name>.jsonl` that some tracked
+# script appends to is absent-until-first-write, not a defect. The rule lives in ONE place —
+# .claude/hooks/runtime_ledgers.py — shared with build_graph.py (ADR-8 D2). Computed once, lazily.
+RUNTIME_LEDGERS=""; RUNTIME_LOADED=0
 while IFS= read -r ref; do
   [ -n "$ref" ] || continue
   probe="$ref"; case "$probe" in "~/"*) probe="${HOME}/${probe#\~/}";; esac
@@ -74,6 +78,17 @@ while IFS= read -r ref; do
     ignored=$((ignored+1))
     continue
   fi
+  if [ ! -e "$probe" ]; then
+    case "$ref" in
+      .claude/artifacts/*.jsonl|./.claude/artifacts/*.jsonl)
+        if [ "$RUNTIME_LOADED" = 0 ]; then
+          RUNTIME_LEDGERS=$(python3 "$(dirname "$0")/runtime_ledgers.py" --list 2>/dev/null); RUNTIME_LOADED=1
+        fi
+        if printf '%s\n' "$RUNTIME_LEDGERS" | grep -qxF "${ref#./}"; then
+          runtime=$((runtime+1)); continue
+        fi;;
+    esac
+  fi
   checked=$((checked+1))
   if [ ! -e "$probe" ]; then
     echo "$ref"
@@ -81,5 +96,5 @@ while IFS= read -r ref; do
   fi
 done <<< "$CANDIDATES"
 
-echo "check-refs: ${missing} referenced path(s) missing of ${checked} checked in ${ARTIFACT}$([ "$ignored" -gt 0 ] && echo " (${ignored} gitignored path(s) skipped: absent by design, not a defect)")" >&2
+echo "check-refs: ${missing} referenced path(s) missing of ${checked} checked in ${ARTIFACT}$([ "$ignored" -gt 0 ] && echo " (${ignored} gitignored path(s) skipped: absent by design, not a defect)")$([ "$runtime" -gt 0 ] && echo " (${runtime} runtime ledger(s) skipped: created on first append — YED-227)")" >&2
 exit 0
