@@ -1,6 +1,6 @@
 # Empire State Events Pipeline — Workflows Reference
 
-This document is the rerun manual for the four pipeline workflows. Read top to bottom to understand the system; jump by section when re-running a specific workflow.
+This document is the rerun manual for the pipeline workflows. Read top to bottom to understand the system; jump by section when re-running a specific workflow.
 
 **Status legend:**
 - ✅ **Wired** — fully built, tested, ready to run
@@ -12,18 +12,18 @@ This document is the rerun manual for the four pipeline workflows. Read top to b
 |---|---|---|---|
 | **A.0 — Calendar Auto-Ingest** | ✅ Wired (validated 2026-05-20) | `/check-new-events` | Thin wrapper on top of A — detects PIPELINE-block events in "Going to Events" GCal, dedups, then loops A + pre-event-content with continue-or-quit between events |
 | A — Event Deep Research | ✅ Wired (synthesizer pivot landed 2026-05-07 — fan-out runs in parent thread) | `/event-deep-research` | Pre-event: parse invite → 4-specialist parallel fan-out → synthesizer → Notion + HubSpot |
-| B — Post-Event Synthesis | 🟡 Scaffolded | `/post-event-synthesis` | Post-event: transcripts/notes → DMs + posts + retro |
-| C — Weekly Recap | 🟡 Scaffolded | `/weekly-recap` | Sunday: upcoming-week post + cross-event synthesis |
-| D — Voice Pass | 🟡 Scaffolded | `/voice-pass` | Polish: voice-editor over `needs_review` Content Drafts |
+| B — Post-Event | ✅ Wired | `/post-event-content` | Post-event: transcript → conditioning → `post_event_brief` → drafts + outreach |
 
-### Commands added since (2026-05 → 2026-07) — not part of the original four-workflow spine
+**Retired 2026-09-27:** the `/post-event-synthesis`, `/weekly-recap` and `/voice-pass` scaffolds (drafted 2026-05-04, never wired) were deleted. Their jobs already run elsewhere: post-event = `/post-event-content`; the Sunday "Upcoming Week" roundup = the `pre-event-content` skill; voice polish = the rules inside every content skill + Alex's Notion comment loop. YED-198 closed. Rebuild any of them only against a named publishing friction.
 
-The four workflows above are the pipeline core. These commands were built afterward and were not
+### Commands added since (2026-05 → 2026-07) — not part of the original workflow spine
+
+The workflows above are the pipeline core. These commands were built afterward and were not
 reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 months behind reality).
 
 | Command | Status | Purpose |
 |---|---|---|
-| `/post-event-content` | ✅ Wired | Day-to-day post-event: manual transcript → conditioning → `post_event_brief` → content-correspondent drafts. (The live B path; `/post-event-synthesis` is the deferred fuller chain.) |
+| `/post-event-content` | ✅ Wired | Day-to-day post-event: manual transcript → conditioning → `post_event_brief` → content-correspondent drafts. |
 | `/ingest-recording` | ✅ Wired | Event `.m4a` → ElevenLabs scribe_v2 roster-seeded clean transcript (feeds `/post-event-content`). |
 | `/evergreen-deep-dive` | ✅ Wired | Presenter-level evergreen deep-dive posts, decoupled from event timing (content bank). |
 | `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
@@ -71,46 +71,20 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 ---
 
-## How the four workflows fit together
+## How the workflows fit together
 
 ```
-                         ┌─────────────────────────┐
-                         │  Calendar invite drops  │
-                         │   (paste into chat)     │
-                         └────────────┬────────────┘
-                                      ▼
-   ┌────────────────────────────────────────────────────────────┐
-   │  Workflow A — /event-deep-research                          │
-   │    parse → triage → 4-agent fan-out → brief → Notion/HS    │
-   └────────────────────────┬───────────────────────────────────┘
-                            ▼
-              ┌─────────────┴──────────────┐
-              ▼                            ▼
-   ┌──────────────────┐         ┌──────────────────────┐
-   │ pre-event-content│         │  project-ideation    │
-   │  (existing skill)│         │  (existing skill)    │
-   │  → DMs + posts   │         │  → 3 project ideas   │
-   └────────┬─────────┘         └──────────────────────┘
-            ▼
-   ┌──────────────────────┐
-   │  Workflow D —        │
-   │  /voice-pass         │  ◀──── (over any Content Drafts in needs_review)
-   └──────────────────────┘
-            ▼
-        [ATTEND EVENT]
-            ▼
-   ┌────────────────────────────────────────────────────────────┐
-   │  Workflow B — /post-event-synthesis                         │
-   │   transcripts/notes → transcript-analysis → objection-mining│
-   │   → commercial-insight-generator → content-correspondent    │
-   │   → pattern-synthesis (if 2 briefs disagree)                │
-   └────────────────────────┬───────────────────────────────────┘
-                            ▼
-   ┌────────────────────────────────────────────────────────────┐
-   │  Workflow C — /weekly-recap (Sunday)                        │
-   │   queries Notion → upcoming-week post + synthesis post      │
-   │   → /voice-pass over everything → all to needs_review       │
-   └────────────────────────────────────────────────────────────┘
+   Calendar invite
+        ▼
+   Workflow A — /event-deep-research   (parse → triage → 4-agent fan-out → brief → Notion + graph)
+        ▼
+   pre-event-content skill             (posts · connection notes · questions; Sunday "Upcoming Week" roundup)
+        ▼
+   Alex reviews drafts in Notion       (inline comments = the voice pass)
+        ▼
+   [ATTEND EVENT]
+        ▼
+   Workflow B — /post-event-content    (transcript → post_event_brief → drafts + outreach)
 ```
 
 ---
@@ -189,129 +163,10 @@ After A completes, the natural next moves:
 
 ## Workflow B — Post-Event
 
-Two paths exist:
+- **B — `/post-event-content`** ✅ WIRED (manual-upload anchored since 2026-05-27; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Manual transcript paste → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Claude-design carousel render → `notion-writer` commits all rows. The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
 
-- **B-active — `/post-event-content`** ✅ WIRED (manual-upload anchored since 2026-05-27; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Manual transcript paste → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Claude-design carousel render → `notion-writer` commits all rows. The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
-- **B-scaffolded — `/post-event-synthesis`** 🟡 (below). The larger systemization with transcript-analysis → objection-mining → commercial-insight-generator → content-correspondent → pattern-synthesis chained automatically. Not yet wired end-to-end — parked as YED-198.
-
-### `/post-event-synthesis` 🟡 SCAFFOLDED
-
-Turns post-event raw material into structured intel + content drafts.
-
-### Triggers
-- Alex says: "just got back from [event]", "back from [event]", "wrapped up [event]"
-- Alex pastes a Granola/Wispr transcript, voice notes, or freeform recap
-- Alex says: "post-event content for [event]", "synthesize last night", "turn my notes into content"
-
-### Required inputs
-1. **Raw material** — Granola transcript, Wispr voice notes, freeform recap, photos with captions
-2. **Event name** (so the original brief can be pulled from Notion)
-3. **(Optional) Contact list** — names Alex met that should get DMs
-
-### Planned flow (not yet wired end-to-end — parked, YED-198)
-
-```
-1. Pull research brief from Notion (main conversation)
-2. transcript-analysis skill → action items, themes, quotes, objections
-3. objection-mining skill → friction signals
-4. commercial-insight-generator agent → documentarian thesis / Reframe
-5. content-correspondent skill → bucket-sort contacts (A/B/C), draft DMs, Tier 1 comments, Tier 2 post
-6. pattern-synthesis skill (only if ≥2 briefs in last 7 days have opposing theses)
-7. /voice-pass over all generated drafts (Workflow D)
-8. Write all to Notion Content Drafts with Event Phase = post_event, Status = needs_review
-```
-
-### What works today
-- `content-correspondent` skill is the existing path — it works standalone
-- `transcript-analysis`, `objection-mining`, `commercial-insight-generator` are imported and callable individually
-
-### What's not wired yet
-- The chained orchestration (steps 2 → 3 → 4 → 5 → 6)
-- Programmatic detection of "opposing theses" for pattern-synthesis trigger
-- Single-command entry point — today, run the steps manually or just call `content-correspondent`
-
-### Where to look
-- [.claude/commands/post-event-synthesis.md](commands/post-event-synthesis.md) — full TODO list + wiring decisions to make
-
----
-
-## Workflow C — `/weekly-recap` 🟡 SCAFFOLDED
-
-Sunday-cadence synthesis across the week's events, content, and outreach.
-
-### Triggers
-- Alex says: "weekly recap", "wrap the week", "build the Sunday post"
-- Sunday evening (manual cadence today; future scheduled-task candidate)
-- Alex asks: "what events do I have this week?" before content sprint
-
-### Required inputs
-- **None** — all inputs come from Notion queries
-- **(Optional) Date range override** — for backfilling
-
-### Planned flow (not yet wired end-to-end — parked, YED-198)
-
-```
-1. Query Notion: Events in upcoming 7 days + Content Drafts from past 7 days (status ≠ archived)
-2. Group: upcoming events / attended events / drafts in flight
-3. UPCOMING events → pre-event-content skill builds "The Upcoming Week" Sunday post
-4. ATTENDED events → if ≥2 briefs have opposing theses, run pattern-synthesis (cap: 1/week)
-5. /voice-pass over all drafts produced (Workflow D)
-6. Write everything to Content Drafts with status = needs_review
-7. Summary report: posts ready, events upcoming, drafts in flight, anti-signals fired
-```
-
-### What works today
-- `pre-event-content` skill produces "The Upcoming Week" roundup standalone
-- `pattern-synthesis` skill runs standalone given two briefs
-
-### What's not wired yet
-- The cross-week aggregation
-- Programmatic "opposing theses" detection
-- Cadence-rule enforcement (max 1 synthesis post / 7 days)
-
-### When this becomes useful
-After 3–5 events have been put through Workflow A. Building it before that operates on empty data.
-
-### Where to look
-- [.claude/commands/weekly-recap.md](commands/weekly-recap.md) — full wiring TODO
-
----
-
-## Workflow D — `/voice-pass` 🟡 SCAFFOLDED
-
-Polish layer over Content Drafts in `needs_review` status.
-
-### Triggers
-- Alex says: "voice pass", "polish my drafts", "run voice-editor"
-- Drafts are stuck in `needs_review` and Alex wants a quality pass
-
-### Required inputs
-- **None** — defaults to scanning all `needs_review` drafts
-- **(Optional) Specific Content Draft URL** or scope filter (by Content Type / date range)
-
-### Planned flow (not yet wired end-to-end — parked, YED-198)
-
-```
-1. Query Notion: Content Drafts where Status = needs_review (+ optional filters)
-2. For each, invoke voice-editor agent with content + style-guide.md + anti-patterns.md
-3. voice-editor returns: severity (clean/minor/moderate/major) + specific before/after fixes
-4. Group by severity, present to Alex
-5. Apply accepted edits to Notion; optionally bump status to approved
-```
-
-### What works today
-- `voice-editor` agent is imported and callable directly with pasted draft content
-- `update-voice-and-style.md` and `update-anti-patterns.md` skills propagate style updates
-
-### What's not wired yet
-- The batch-query + per-draft loop
-- Severity rubric definition
-- Notion update flow (replace body wholesale vs. diff-style)
-
-### Where to look
-- [.claude/commands/voice-pass.md](commands/voice-pass.md) — full wiring TODO
-- [.claude/agents/content/voice-editor.md](agents/content/voice-editor.md) — agent contract
-- [.claude/references/content-style-guide.md](references/content-style-guide.md) — voice spec
+### Retired scaffolds
+`/post-event-synthesis` (Workflow B's chained version), `/weekly-recap` (Workflow C) and `/voice-pass` (Workflow D) were deleted 2026-09-27 — see the note under the status table. The individual pieces they would have chained (`transcript-analysis`, `objection-mining`, `commercial-insight-generator`, `pattern-synthesis`, `voice-editor`) remain callable on their own.
 
 ---
 
@@ -382,7 +237,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 **Ops** (`.claude/agents/ops/`):
 - *Custom:* `notion-writer`
 
-### Commands imported (in addition to the 4 workflow commands)
+### Commands imported (in addition to the workflow commands)
 
 `.claude/commands/`:
 - `create-messaging-brief` — copywriting kit
@@ -410,14 +265,9 @@ Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 
 Bring in later when use cases warrant.
 
-## What's NOT here (intentionally — automation deferred) — parked as YED-198 (2026-09-18)
+## What's NOT here (intentionally — automation deferred)
 
-Per Alex's decision (2026-05-04): hooks and scheduled tasks deferred until commands are working (parked → YED-198, 2026-09-18). Future automation candidates:
-- SessionStart hook → check Events with status=intake, surface count to Alex
-- Stop hook on content-creating skills → auto-run /voice-pass on the just-created draft
-- UserPromptSubmit hook matching "just got back from" → suggest /post-event-synthesis
-- Scheduled task: Sunday 6pm → /weekly-recap
-- Scheduled task: daily 8am → nudge if events with status=intake older than 24h
+The 2026-05-04 hooks/scheduled-task ideas (intake-count nudges, auto voice pass, "just got back from" prompt, Sunday auto-recap) were dropped with YED-198 on 2026-09-27. Reintroduce one only when a named friction motivates it.
 
 ---
 

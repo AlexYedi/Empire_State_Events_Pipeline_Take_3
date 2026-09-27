@@ -147,7 +147,7 @@ and `content-anti-patterns.md`.
 | **`pre-event-content`** | honors the Aim steer (content #1 / format #2 / context #4 / audience #5) | runs the Sharpen forks on the committed brief before drafting posts/notes/questions |
 | **`event-deep-research`** | input accepts the Aim block; #3 scopes the fan-out | n/a (research stage) |
 | **`post-event-content`** | Aim folded in at/around Step 3.6 (aims enrichment + names the "land-well-with" person) | **Step 3.9** — after the `post_event_brief` (3.7), before content-correspondent (Step 4) |
-| **`weekly-recap`** | Aim at top | Sharpen after the event set is assembled, before drafting |
+| **Upcoming Week roundup** (`pre-event-content`) | Aim at top | Sharpen after the event set is assembled, before drafting |
 | **`pattern-synthesis`** | — | Sharpen after both briefs are read, before the two-thesis draft |
 | **`content-correspondent`** (direct) | — | Sharpen after material is conditioned, before drafting |
 
