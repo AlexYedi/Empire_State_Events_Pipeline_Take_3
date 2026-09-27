@@ -92,7 +92,9 @@ Run log: `.claude/evals/logs/2026-09-11-doc-kb-a5-ab-baseline.json`.
 - **Front-matter noise** — TOC/index pages can appear in results. Backlog: skip front-matter at ingest.
 - PDF is best-effort (page-based locators); epub gives cleaner structure.
 
-## Phase B (→ **YED-157** (re-scoped 2026-09-18 to a generalized `/digest`; claims point at events, never promoted))
-Bridge doc claims into the MI graph: notable claims → `event` rows (`kind=market/reference`,
-`source`=doc citation + chunk locator), linked via `event_entity` to the topics/companies
-they discuss. Open design question: how claims are selected (manual flag vs LLM extraction pass).
+## Phase B — closed 2026-09-27 (YED-157 superseded by ADR-10)
+The digest design was cut. What remains is parked as **YED-235**: repoint `extract_claims.py`
+(which still writes to the deprecated `doc_claims` table) at the ADR-10 `claim` table with
+`provenance_tier='reference'`, and approve through `substrate.py approve-claims`. `retrieve.py`
+already ranks reference claims, so no consumer wiring is needed. Build it only when a YED-235
+revisit trigger fires.

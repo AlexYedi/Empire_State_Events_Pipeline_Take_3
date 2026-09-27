@@ -30,7 +30,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 
 | | What it is | State (2026-09-12) |
 |---|---|---|
-| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB ½ (B1+B2 inert) · **post-event ✗** · roles ✗ |
+| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB: ingest + ask only (claim extraction parked, YED-235) · **post-event ✗** · roles ✗ |
 | **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
 | **P3 · The Loop** — learn from exhaust | Rigor layer v2: correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8 + the registry's existing "system proposes a fix" row + `/rigor-review`, not beside them | watching ✅ (ADR-8, YED-158) · learning ✗ |
 | **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
@@ -54,7 +54,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 ### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
 | Item | Appetite | Why now |
 |---|---|---|
-| **YED-157 B3–B5** — `/doc-digest` (4 lanes, HITL, 25-word check), consumer wiring (the two filter lines), extraction eval; YED-107 folded into lane D | 1–2wk | B1+B2 are inert until this exists; this is where doc-KB earns its keep |
+| ~~YED-157 B3–B5~~ — **closed 2026-09-27, superseded by ADR-10.** The claim table, `reference` tier and `approve-claims` gate already exist; the digest/lanes were cut as speculative. Remaining piece = YED-235 (parked, ≤1 day: repoint `extract_claims.py` at `claim`, with a revisit trigger) | — | Library value unproven at close: 2 docs, 0 claims, no real `/ask-library` runs |
 | YED-149 roles → spine producer | 3–7d | Third producer; the job-search lens becomes graph-native |
 | YED-131 nightly topic recompute (pg_cron, no LLM tokens) | <3d | Cheap; unblocks the P2 hub panels |
 
@@ -81,7 +81,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 | Anchor | Target | Proof |
 |---|---|---|
-| **A1 · One graph, three producers** (M4) | 2026-10-17 | Post-event, doc-digest, roles all writing to the spine; trust strip shows them; first digest approved |
+| **A1 · One graph, three producers** (M4) | 2026-10-17 | Post-event and roles writing to the spine; trust strip shows them (doc-digest dropped 2026-09-27 — YED-157 closed) |
 | **A2 · The map** (M5) | 2026-11-14 | Reference architecture live as taxonomy v2 + hub panels; the architecture lens answers "what's moving in layer X" |
 | **A3 · The loop closes** (M6) | 2026-12-12 | First judge-gated, exhaust-derived fix merged; event-research eval live; judge de-provisional |
 | **Career** (continuous) | monthly | ≥1 hiring-manager activation traceable to a post or hub artifact (`audience-north-star.md` floor) |
