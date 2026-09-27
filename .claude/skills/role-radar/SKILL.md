@@ -1,11 +1,11 @@
 ---
 name: role-radar
-description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby via curl — primary; + RSS.app saved-search feeds, Apollo-at-targets, Dice secondary), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban. Notion-only, manual trigger, human-in-the-loop. No LinkedIn scraping."
+description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby/Workable via curl — primary; + Apollo-at-targets, credit-gated, optional), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban. Notion-only, manual trigger, human-in-the-loop. No LinkedIn scraping."
 ---
 
 # Role Radar Skill
 
-You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed to new partners and scraping the account is ruled out, so we aggregate roles from legitimate sources (ATS boards APIs + RSS + Apollo + Dice), score them against Alex's **Target-Role ICP**, and track application status in Notion.
+You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed to new partners and scraping the account is ruled out, so we aggregate roles from legitimate sources (the ATS boards APIs, plus Apollo at named targets when asked), score them against Alex's **Target-Role ICP**, and track application status in Notion.
 
 **The target — source of truth is `.claude/references/me-model.md` §1.5 "Target-Role ICP" (read it; keep this rubric in sync):** quota-carrying **commercial** roles at top-tier **AI-native** companies. **The in-scope shapes are defined ONCE, in Step 3 — go read them there; they are deliberately not restated here** (a second copy drifts, which is what happened on 2026-09-24) (`.claude/references/target-companies.md`). Deep GTM + systems + AI-building is the **differentiator, not the job title**. **Score by the role's MECHANISM (what the JD says it does), not its title.** The decisive filter is **leverage vs. "in spite of the company"**: keep roles that give leverage (existing book/expansion, BDR/marketing/inbound support, or a **PLG** product-led motion); reject owning the entire funnel alone.
 
@@ -14,27 +14,25 @@ This is one of three **signal scanners** feeding the Empire State pipeline (alon
 **Why this exists (concept primer for Alex):** a job tracker is just a small CRM with a scoring function on the front. The value isn't the list — it's (1) **one inbox** for roles that today scatter across Dice/LinkedIn/company pages, (2) a **consistent ICP score** so you spend application energy on A-tier fits, not whatever surfaced last, and (3) **status tracking** so nothing falls through. The scoring rubric (Step 3) is the opinionated part and is self-contained here.
 
 **Ground rules (Empire State conventions):**
-- **Ethics:** Public APIs, RSS, official endpoints only. No LinkedIn scraping. RSS.app reads a *feed you generated from a saved search* — it never touches your account.
+- **Ethics:** Public ATS APIs and official endpoints only. No LinkedIn scraping.
 - **Human-in-the-loop:** Present scored roles for review before any Notion write.
-- **Credit discipline:** Apollo and Clay are credit-metered. Confirm spend explicitly (exact wording below). Dice MCP is free.
+- **Credit discipline:** Apollo and Clay are credit-metered. Confirm spend explicitly (exact wording below).
 - **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk read per run (Content Hash + Tier + Status + Notes for every row, paginated with LIMIT/OFFSET, ~100 rows a page), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
 - **No fabricated numbers / honest gaps:** if a source errors, say so.
 
-**Scope:** ATS boards APIs (primary) + RSS.app + Apollo-at-targets + Dice (secondary); Notion-only; manual trigger. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
+**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used across four scans — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 31-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
 
 ---
 
 ## Inputs
 - **(Optional) Role focus** — defaults to Alex's target archetypes (below). May narrow, e.g. "just GTM engineer + RevOps".
 - **(Optional) Location** — default **New York City** + **Remote (US)**.
-- **(Optional) Recency** — Dice `posted_date`: `ONE`/`THREE`/`SEVEN` days. Default `SEVEN`.
-- **(Optional) RSS.app feed URLs** — Alex pastes feed URLs he generated from saved LinkedIn searches (see Setup).
+- **(Optional) Recency** — default last 7 days on the ATS `posted` date (Ashby/Lever/Workable); Greenhouse rows have no posted date and are treated as UNKNOWN freshness.
 
 ---
 
 ## Step 0 — One-time setup (first run only)
 1. **Roles DB:** the Notion **Roles** database EXISTS (created 2026-09-08) — data source `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`, under the NYC AI Event Content Hub. `notion-fetch` it to confirm the live schema before writes (schema also in Step 4). If it were ever missing, recreate via `notion-create-database` with the Step 4 schema (HITL).
-2. **RSS.app feeds (optional, recommended):** tell Alex once — in RSS.app, paste a saved LinkedIn job-search URL to generate an RSS feed; save the feed URL(s) and pass them to this skill. This is the legitimate LinkedIn bridge; the feed is read, the account is never automated.
 
 ---
 
@@ -72,22 +70,15 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 - **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 9 additions + the Workable shape re-verified live 2026-09-21; General Intuition verified live 2026-09-24.**
 
-### 1b. RSS.app feeds from saved LinkedIn searches (manual paste — optional)
-- For each feed URL Alex provides, `WebFetch` it; extract title, company, location, link, pubDate.
-- Flag any feed that returns empty/broken (LinkedIn markup changes can break RSS.app feeds — best-effort, not a spine).
-
-### 1c. Apollo job-postings at named targets (credit-gated — optional)
-- Only if Alex wants roles at specific targets *not* on the big-3 ATS. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
+### 1b. Apollo job-postings at named targets (credit-gated — optional)
+- Only if Alex wants roles at specific targets *not* on the big-4 ATS. **Off by default** — the scan runs the boards; Apollo is a per-request add-on. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
 - **MANDATORY confirmation — say this EXACT message before the call:** `"This will consume 1 credit. Do you want to proceed?"` If pulling N companies, confirm the TOTAL: "This will consume N credits. Do you want to proceed?" Do not proactively show the balance. Do not call without explicit approval. Apollo may be blocked on the free plan → report and skip.
 
-### 1d. Dice — `mcp__claude_ai_Dice__search_jobs` (free, SECONDARY keyword sweep)
-- Keyword-noisy and skews contract/staffing/IT — a supplementary net, not the spine. Keywords for the target shapes: `"Customer Success Manager"`, `"Account Director"`, `"Enterprise Account Manager"`, `"Growth Strategist"`, `"Enterprise Account Executive"`. Set `location`, `workplace_types=["Remote","Hybrid","On-Site"]`, `posted_date="SEVEN"`. Capture title, company, location, workplace, `detailsPageUrl` + `companyPageUrl`, posted date.
-- **MANDATORY AI disclosure (Dice tool requirement):** *"These job listings were found using AI-powered search. Verify details directly with employers before applying."*
 
 ---
 
 ## Step 2 — Dedupe
-- **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Dice/RSS/Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
+- **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
 - Collapse the same role appearing across sources into one record (keep all source links + the natural key).
 - Dedupe against the Roles DB: one bulk SQL read of `Content Hash` (see the plan constraint above), or `notion-search` scoped to the Roles data source by the natural key / `title company`; `notion-fetch` to confirm.
 - **Fallback dedup on `title|company` (added 2026-09-27, YED-224).** Rows written before ATS keying carry `Content Hash = title|company`, and a natural-key check alone cannot see them. After the natural-key pass, compare each candidate's normalized `title|company` (lower-case, whitespace-collapsed, company alias-tolerant) against the DB. A hit means the legacy row IS this posting → **re-key that row** (write the ATS key into `Content Hash`, plus `Source`, `URL`, `Posted Date`) instead of creating a second row. Why: the 09-19 scan wrote ~20 title-hash rows; the 09-24 scan duplicated five of them by ATS key, and the 09-27 scan would have re-added Runway's Strategic Enterprise AE as "new". Re-posts (same title+company, old id gone, new id live — Writer did this to four roles on 09-22) are handled the same way: re-key, don't duplicate. **Freshness = the ATS `posted_at` for Ashby, Lever and Workable; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
@@ -177,7 +168,7 @@ If the Roles DB doesn't exist, present this proposed schema and create it via `n
 **Roles DB schema**
 - `Role Title` (title)
 - `Company` (text)
-- `Source` (select: greenhouse / lever / ashby / **workable** / rssapp_li / apollo / dice / manual) — **`workable` was added to the live Notion select 2026-09-24**; it was missing since Workable support shipped on 09-21, so a Hugging Face row had no valid `Source` value to write. Caught by the build-quality judge, round 2.
+- `Source` (select: greenhouse / lever / ashby / **workable** / apollo / manual — `rssapp_li` and `dice` remain in the live Notion select for historical rows only and are never written since the 2026-09-27 removal) — **`workable` was added to the live Notion select 2026-09-24**; it was missing since Workable support shipped on 09-21, so a Hugging Face row had no valid `Source` value to write. Caught by the build-quality judge, round 2.
 - `Location` (text) · `Workplace` (select: remote / hybrid / onsite)
 - `URL` (url) · `Company URL` (url)
 - `ICP Score` (number) · `ICP Tier` (select: A / B / C / drop)
@@ -204,7 +195,7 @@ Then present the ranked roles:
 
 **The Held bucket is mandatory when it is non-empty** — it is the only place a role in an undefined rubric state reaches Alex. A held role is never silently ranked and never silently dropped. The posted-range-vs-floor case was ruled 2026-09-27 (v2.3 midpoint rule, YED-210) and is no longer a Held case; the bucket exists for the next undefined state, and every new one gets a Linear issue the same turn.
 
-End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**. STOP for approval.
+End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**. STOP for approval.
 
 ---
 
@@ -226,14 +217,12 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 ---
 
 ## Failure modes
-- **Dice thin / off-target** — vary keywords; widen `posted_date` to `SEVEN`; drop the location filter for remote-heavy archetypes.
-- **RSS.app feed broken** — note it; LinkedIn markup churn breaks these periodically. Best-effort source.
-- **Apollo org not found / API blocked** — Apollo may be blocked on the free plan; if the call fails, report honestly and fall back to Dice + RSS.app. Never fabricate roles.
+- **Apollo org not found / API blocked** — Apollo may be blocked on the free plan; if the call fails, report honestly and run on the ATS boards alone. Never fabricate roles.
 - **Roles DB schema drift** — `notion-fetch` the data source; live schema wins.
 
 ## Confidence & honest gaps
-- **Strong (high):** aggregation + consistent ICP scoring + status tracking across Dice/RSS/Apollo.
-- **Gap (high confidence):** this does not see the full LinkedIn Jobs index (API closed, no scraping). RSS.app of saved searches is the legitimate partial bridge; TheirStack (paid) widens coverage later. Name the gap; don't imply full LinkedIn coverage.
+- **Strong (high):** aggregation + consistent ICP scoring + status tracking across the 31 ATS boards (+ Apollo when asked).
+- **Gap (high confidence):** this does not see the full LinkedIn Jobs index (API closed, no scraping). RSS.app of saved searches was the intended partial bridge and was removed 2026-09-27 unused; TheirStack (paid) is the option if coverage ever becomes the constraint. Name the gap; don't imply full LinkedIn coverage.
 
 ## Reuses / references
 - **`.claude/references/me-model.md` §1.5 "Target-Role ICP"** — the source of truth this rubric mirrors (keep in sync).
@@ -241,4 +230,4 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
 - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
 - Graph-producer (deferred v1.1): `trend-radar/SKILL.md` Step 5.5 pattern + `.claude/references/market-intel-spine.md`.
-- Tools — `mcp__claude_ai_Dice__search_jobs`, `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`, `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
+- Tools — `curl` + `jq` (ATS boards), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
