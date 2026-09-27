@@ -21,7 +21,14 @@ from spine_client import req, q  # guarded REST client (YED-81)
 
 
 def upsert_company(name, source):
-    st, rows = req("GET", f"/company?name=eq.{q(name)}&select=id,engagement_count")
+    st, rows = req("GET", f"/company?name=eq.{q(name)}&select=id,engagement_count,metadata")
+    # YED-47: a soft-merged row (metadata.merged_into) resolves to its live target — engagement lands on the
+    # surviving company, never on the tombstone (pre-mortem 2026-09-27: this was the one name-resolving writer
+    # outside substrate.py).
+    hops = 0
+    while isinstance(rows, list) and rows and (rows[0].get("metadata") or {}).get("merged_into") and hops < 5:
+        st, rows = req("GET", f"/company?id=eq.{q(rows[0]['metadata']['merged_into'])}&select=id,engagement_count,metadata")
+        hops += 1
     if isinstance(rows, list) and rows:
         cid = rows[0]["id"]
         ec = (rows[0].get("engagement_count") or 0) + 1

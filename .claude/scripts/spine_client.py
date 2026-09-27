@@ -238,8 +238,8 @@ def q(v) -> str:
 # -------------------------------------------------------------------------------------------------
 # Graph-write freeze (YED-213, 2026-09-21). Enforced HERE, not in substrate.py, for the reason ADR-9
 # already gives: this is the one write path. An adversarial pass found seven scripts reaching the
-# graph — spine_write, recompute_relevance, merge_topics, inbox_signal_write, backfill_people and
-# substrate all write — so gating only the producer would have left a freeze trivially bypassable by
+# graph — spine_write, recompute_relevance, merge_topics (retired 2026-09-27 into `substrate.py merge`),
+# inbox_signal_write, backfill_people and substrate all write — so gating only the producer would have left a freeze trivially bypassable by
 # any of the others. Same argument as the PII guard: one door, guarded once.
 # Reads (GET/HEAD) are never blocked. Override is an env var because most of these are not CLI-
 # argument scripts: GRAPH_FREEZE_OVERRIDE="<why>" — allowed, and logged as data, never silent.

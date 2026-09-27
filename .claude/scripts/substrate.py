@@ -9,13 +9,25 @@ backfill script: the backfill runs THIS code over a list of manifests, the same 
 /post-event-content Step 3.8 calls. If a backfill needs behaviour the live producer lacks, the
 producer is wrong. Idempotency proof for every verb: the second run reports `created: 0`.
 
-Verbs (W1 — four only; merge / record-usage / record-outcome are out of scope per the review):
+Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of scope per the review):
   ensure-entity   --manifest m.json   companies / people / topics  (match-before-create)
   ensure-event    --manifest m.json   the event row + its entities + event_entity hyperedges
   ensure-document --manifest d.json   one artifact row (versioned by external_ref) + document_entity
   stage-claims    --brief b.md --manifest m.json [--brief-ref notion:<id>] [--approve]
                   parse a post_event_brief's learnings sections into `claim` rows (first_hand),
                   embed them (local bge-small, same space as doc_chunks), link speakers
+  merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
+                  HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
+                  engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
+                  `merge --revert --table T --from <id|name>` restores from the snapshot. The agent PROPOSES
+                  with --dry-run; Alex runs the live one. Replaces merge_topics.py (retired 2026-09-27 — it
+                  hard-deleted the source, contra ADR-4 D3).
+
+Identity (YED-47 S1b-lite, no DDL): company `Name (Qualifier)` resolves to `Name` ONLY when the bare-name
+candidate is unique AND both website hosts agree; every less-certain case is created AND surfaced to
+.claude/artifacts/identity-ambiguity.jsonl (never guessed). Every resolver follows a tombstone to its live
+target. Persons: page-id -> LinkedIn -> exact name + company; ambiguous -> create + surface. No fuzzy person
+matching, ever (ADR-4 D3). Weekly probe: .claude/scripts/identity_probe.py (from /rigor-review).
 
 Common flags: --dry-run (no writes; still reports matched/would-create) · --json (machine summary)
 Self-test (offline, no network): python3 .claude/scripts/substrate.py --selftest
@@ -111,7 +123,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
 # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
 # --dry-run is exempted at the call site, not here.
 FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "backfill-questions", "approve-claims")
+                 "backfill", "backfill-questions", "approve-claims", "merge")
 
 
 def freeze_state() -> dict | None:
@@ -380,6 +392,63 @@ def clean_title(t: str | None) -> str | None:
     return re.sub(r"\s*\([^)]*\)\s*$", "", t).strip() or None if t else None
 
 
+# ---------------------------------------------------------------------------------------------
+# Identity S1b-lite (YED-47; PRD approved 2026-09-19) — pure helpers, covered by --selftest.
+# The premise was re-scoped on data (live probe 2026-09-19, re-run 2026-09-27): 0 exact company
+# collisions, 1 exact person duplicate, and every other duplicate is a PARENTHETICAL TWIN
+# ('AWS (Amazon)' / 'AWS') that a name_norm index would not have caught and that THIS producer minted.
+# So: no DDL; one narrow company tier; tombstone-following resolvers; a human-only reversible merge.
+# ---------------------------------------------------------------------------------------------
+QUALIFIER_RE = re.compile(r"^(.*\S)\s*\(([^()]+)\)\s*$")
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+AMBIGUITY_LEDGER = os.path.join(ROOT, ".claude", "artifacts", "identity-ambiguity.jsonl")
+MERGE_LOG = os.path.join(ROOT, ".claude", "artifacts", "identity-merges.jsonl")
+TOMBSTONE_DEPTH = 5           # merge refuses a tombstoned target, so a chain longer than this is corruption
+
+
+def split_qualifier(name: str) -> tuple[str, str | None]:
+    """'AWS (Amazon)' -> ('AWS', 'Amazon'); 'AWS' -> ('AWS', None). Only a TRAILING parenthetical counts."""
+    m = QUALIFIER_RE.match(name or "")
+    return (m.group(1).strip(), m.group(2).strip()) if m else ((name or "").strip(), None)
+
+
+def web_host(url: str | None) -> str | None:
+    """'https://www.AWS.amazon.com/x?y' -> 'aws.amazon.com'; empty -> None. Subdomains are NOT folded:
+    aws.amazon.com vs amazon.com is a different host, which keeps that case unresolved and surfaced."""
+    if not url or not str(url).strip():
+        return None
+    h = re.sub(r"^\s*(?:https?:)?//", "", str(url).strip().lower()).split("/")[0].split("?")[0]
+    h = h.split("@")[-1].split(":")[0]
+    return (h[4:] if h.startswith("www.") else h) or None
+
+
+def resolve_company_tier(name: str, website: str | None, candidates: list[dict]) -> tuple[dict | None, str]:
+    """Spec item 1 (YED-47). SCOPE: applies only when the INCOMING name carries a trailing qualifier.
+    `Name (Qualifier)` resolves to `Name` when exactly one live candidate carries the bare name AND both
+    website hosts exist and are equal. Returns (row, why); every other case is (None, why) and the caller
+    creates + surfaces — it never guesses. A bare incoming name is never resolved to a qualified row."""
+    base, qual = split_qualifier(name)
+    if not qual:
+        return None, "no qualifier"
+    cands = [c for c in candidates if norm_text(c.get("name") or "") == norm_text(base)]
+    if not cands:
+        return None, "no bare-name candidate"
+    if len(cands) > 1:
+        return None, f"{len(cands)} bare-name candidates"
+    hi, hc = web_host(website), web_host(cands[0].get("website"))
+    if not hi or not hc:
+        which = "both" if not (hi or hc) else ("incoming" if not hi else "candidate")
+        return None, f"website host missing on {which}"
+    if hi != hc:
+        return None, f"website hosts differ ({hi} vs {hc})"
+    return cands[0], f"qualifier tier: unique bare-name candidate + host {hc} agrees"
+
+
+def _utcnow() -> str:
+    import datetime
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 OWNER_FIRST = "Alex"
 
 
@@ -527,16 +596,42 @@ class Graph:
             raise SystemExit(f"PATCH /{table}?{flt} -> {st}: {str(body)[:400]}")
 
     # -- lookups -------------------------------------------------------------------------------
+    def follow(self, table: str, row: dict | None) -> dict | None:
+        """Spec item 3 (YED-47): a row soft-merged away (metadata.merged_into) resolves to its live target.
+        Chain-safe: `merge` refuses a tombstoned target, so a chain deeper than TOMBSTONE_DEPTH is corruption
+        and fails loud rather than guessing. A dangling merged_into fails loud too."""
+        hops = 0
+        while row and (row.get("metadata") or {}).get("merged_into"):
+            if hops >= TOMBSTONE_DEPTH:
+                raise SystemExit(f"{table} {row.get('id')}: tombstone chain deeper than {TOMBSTONE_DEPTH} — refusing to guess")
+            tid = row["metadata"]["merged_into"]
+            tgt = self.get(f"/{table}?id=eq.{q(tid)}&select=*&limit=1")
+            if not tgt:
+                raise SystemExit(f"{table} {row.get('id')}: merged_into {tid} does not exist — revert or repair the tombstone")
+            row, hops = tgt[0], hops + 1
+            self.stats.bump(table, "followed_tombstone")
+        return row
+
     def by_pid(self, table: str, pid: str | None, select: str = "*") -> dict | None:
         v = pid_variants(pid)
         if not v:
             return None
         rows = self.get(f"/{table}?notion_page_id=in.({','.join(q(x) for x in v)})&select={select}&limit=2")
-        return rows[0] if rows else None
+        return self.follow(table, rows[0]) if rows else None
+
+    def live_by_name(self, table: str, name: str) -> list[dict]:
+        """Every row whose name equals `name` (case/space-insensitive), each followed through its tombstone
+        and de-duplicated by id — a tombstone and its target count once."""
+        rows = self.get(f"/{table}?name=ilike.{q(name.replace('*', ''))}&select=*&limit=5")
+        out: dict[str, dict] = {}
+        for r in rows:
+            if norm_text(r["name"]) == norm_text(name):
+                r = self.follow(table, r)
+                out.setdefault(r["id"], r)
+        return list(out.values())
 
     def by_name(self, table: str, name: str) -> dict | None:
-        rows = self.get(f"/{table}?name=ilike.{q(name.replace('*', ''))}&select=*&limit=5")
-        rows = [r for r in rows if norm_text(r["name"]) == norm_text(name)]
+        rows = self.live_by_name(table, name)
         return rows[0] if rows else None
 
     # -- entities --------------------------------------------------------------------------------
@@ -550,6 +645,27 @@ class Graph:
         fields = {"name": e["name"], "website": e.get("website"), "description": e.get("description"),
                   "linkedin_url": e.get("linkedin_url"), "notion_page_id": (pid_variants(e.get("notion_page_id")) or [None])[-1]}
         row = self.by_pid("company", e.get("notion_page_id")) or self.by_name("company", e["name"])
+        if not row:
+            base, qual = split_qualifier(e["name"])
+            if qual:
+                # Spec item 1 — the resolution tier, scoped to an incoming name WITH a qualifier.
+                cands = self.live_by_name("company", base)
+                row, why = resolve_company_tier(e["name"], e.get("website"), cands)
+                if row:
+                    self.stats.bump("company", "qualifier_resolved")
+                elif cands:
+                    self.note_ambiguous("company", e["name"], cands, why)
+                # zero bare-name candidates: an ORDINARY create, not an ambiguity — there is nothing it could
+                # have been confused with, so it is not surfaced (judge, 2026-09-27: say so explicitly).
+            else:
+                # A bare incoming name whose qualified twin(s) exist ('AWS' vs 'AWS (Amazon)'): the tier is
+                # one-directional by spec, so this is created AND surfaced — never resolved to a qualified row.
+                twins = self.get(f"/company?name=ilike.{q(base.replace('*', '') + ' (*')}&select=*&limit=5")
+                twins = list({r["id"]: r for r in (self.follow("company", t) for t in twins
+                              if norm_text(split_qualifier(t["name"])[0]) == norm_text(base))}.values())
+                if twins:
+                    self.note_ambiguous("company", e["name"], twins,
+                                        "qualified twin(s) exist; bare -> qualified is never auto-resolved")
         if row:
             self.stats.bump("company", "matched")
             self._fill_missing("company", row, {k: v for k, v in fields.items() if k != "name"})
@@ -585,14 +701,16 @@ class Graph:
         """
         self.stats.bump(table, "ambiguous_name")
         detail = "; ".join(f"{r.get('name')} [{str(r.get('id'))[:8]} · {r.get('source') or '—'}]" for r in rivals[:3])
-        sys.stderr.write(f"  ⚠️  {table} '{name}': creating a NEW row though {len(rivals)} same-name row(s) exist "
-                         f"({why}) → {detail}. Review for merge (YED-47).\n")
+        sys.stderr.write(f"  ⚠️  {table} '{name}': creating a NEW row though {len(rivals)} candidate row(s) exist "
+                         f"({why}) → {detail}. Review for merge: substrate.py merge --dry-run (YED-47).\n")
         if not self.dry:
-            path = os.path.join(ROOT, ".claude", "artifacts", "identity-ambiguity.jsonl")
+            # The ledger is created on the first live ambiguity. Its absence means "no data yet", not
+            # "no ambiguities". identity_probe.py counts DISTINCT (table, name) per window, so a re-run
+            # that re-surfaces one ambiguity cannot inflate the DDL re-trigger (>=10 distinct in 30 days).
+            path = AMBIGUITY_LEDGER
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            import datetime
             with open(path, "a", encoding="utf-8") as f:
-                f.write(json.dumps({"ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                f.write(json.dumps({"ts": _utcnow(), "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending"),
                                     "table": table, "name": name, "why": why,
                                     "existing": [{"id": r.get("id"), "name": r.get("name"), "source": r.get("source"),
                                                   "company_id": r.get("company_id")} for r in rivals[:5]]}) + "\n")
@@ -606,10 +724,9 @@ class Graph:
         if not row and li:
             core = re.sub(r"^https?://(www\.)?", "", li.rstrip("/").lower())
             rows = self.get(f"/person?linkedin_url=ilike.*{q(core)}*&select=*&limit=3")
-            row = rows[0] if len(rows) == 1 else None
+            row = self.follow("person", rows[0]) if len(rows) == 1 else None
         if not row:
-            same_name = [r for r in self.get(f"/person?name=ilike.{q(e['name'])}&select=*&limit=5")
-                         if norm_text(r["name"]) == norm_text(e["name"])]
+            same_name = self.live_by_name("person", e["name"])      # followed + de-duplicated (spec item 3)
             rows = [r for r in same_name if company_id is None or r.get("company_id") in (None, company_id)]
             row = rows[0] if len(rows) == 1 else None                # ambiguous name -> create, never guess
             if not row and same_name:
@@ -620,10 +737,14 @@ class Graph:
             self.stats.bump("person", "matched")
             self._fill_missing("person", row, {k: v for k, v in fields.items() if k != "name"})
             return row["id"]
-        if (hit := self._cached("person", e["name"])):
+        # The per-run cache is keyed by name AND company for persons. Keyed by name alone it handed the
+        # second 'Angie Jones' in one run the first one's id right after note_ambiguous had said a NEW row
+        # was being created — caught by the YED-47 offline selftest, 2026-09-27.
+        ckey = f"{e['name']}|{company_id or ''}"
+        if (hit := self._cached("person", ckey)):
             return hit
         self.stats.bump("person", "created")
-        return self._remember("person", e["name"],
+        return self._remember("person", ckey,
                               self.post("person", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
 
     def ensure_entity(self, e: dict) -> tuple[str, str]:
@@ -632,6 +753,162 @@ class Graph:
         if not fn:
             raise SystemExit(f"unknown entity type {t!r}")
         return t, fn(e)
+
+    # -- soft-merge (spec item 2, YED-47; ADR-4 D3: tombstone, never delete) ----------------------
+    EDGE_TABLES = ("event_entity", "claim_entity", "document_entity")
+
+    def say(self, msg: str) -> None:
+        if not getattr(self, "quiet", False):
+            print(msg)
+
+    def entity_ref(self, table: str, ref: str) -> dict:
+        """id or exact name -> the row itself, NOT followed (merge must see the tombstone, revert needs it)."""
+        if UUID_RE.match(ref or ""):
+            rows = self.get(f"/{table}?id=eq.{q(ref)}&select=*&limit=1")
+        else:
+            rows = [r for r in self.get(f"/{table}?name=ilike.{q(ref.replace('*', ''))}&select=*&limit=5")
+                    if norm_text(r["name"]) == norm_text(ref)]
+        if len(rows) != 1:
+            raise SystemExit(f"merge: {table} {ref!r} -> {len(rows)} row(s); need exactly one (pass the id)")
+        return rows[0]
+
+    def _patch_try(self, table: str, flt: str, row: dict) -> tuple[bool, int, int]:
+        """PATCH that reports instead of aborting: (ok, http status, rows touched). A 409 is the unique-edge
+        collision (the target already carries this edge) and is the one status merge treats as 'keep on
+        source' — nothing is ever deleted to make room."""
+        guard(table, row, op="update")
+        if self.dry:
+            return True, 200, 1
+        st, body = req("PATCH", f"/{table}?{flt}", row, prefer="return=representation")
+        n = len(body) if isinstance(body, list) else 0
+        return st in (200, 204) and n > 0, st, n
+
+    @staticmethod
+    def _edge_key(table: str, r: dict) -> dict:
+        if "id" in r:                                   # event_entity has a surrogate id
+            return {"id": r["id"]}
+        owner = "claim_id" if table == "claim_entity" else "document_id"
+        return {owner: r[owner], "entity_type": r["entity_type"], "role": r["role"]}
+
+    def merge_plan(self, table: str, src: dict) -> dict:
+        edges = []
+        for et in self.EDGE_TABLES:
+            for r in self.get(f"/{et}?entity_type=eq.{table}&entity_id=eq.{q(src['id'])}&select=*"):
+                edges.append({"table": et, "key": self._edge_key(et, r), "role": r.get("role"),
+                              "event_id": r.get("event_id")})
+        persons = [r["id"] for r in self.get(f"/person?company_id=eq.{q(src['id'])}&select=id")] if table == "company" else []
+        return {"edges": edges, "persons": persons, "engagement": src.get("engagement_count") or 0,
+                "last_engaged_at": src.get("last_engaged_at")}
+
+    def _log_merge(self, row: dict) -> None:
+        os.makedirs(os.path.dirname(MERGE_LOG), exist_ok=True)
+        with open(MERGE_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({**row, "ts": _utcnow(),
+                                "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending")}) + "\n")
+
+    def merge(self, table: str, src: dict, tgt: dict, reason: str) -> int:
+        """Human-only, reversible. Re-points every edge it can from src to tgt, transfers engagement, then
+        tombstones src: metadata.merged_into + metadata.merge (the snapshot --revert replays). DELETES NOTHING:
+        an edge the target already carries stays on the source (recorded as kept_on_source). Idempotent:
+        a tombstoned source reports 'already merged' and changes nothing."""
+        if src["id"] == tgt["id"]:
+            raise SystemExit("merge: source == target")
+        if (src.get("metadata") or {}).get("merged_into"):
+            self.say(f"  ✅ {table} '{src['name']}' already merged into {src['metadata']['merged_into']} — nothing to do")
+            return 0
+        if (tgt.get("metadata") or {}).get("merged_into"):
+            raise SystemExit(f"merge: target '{tgt['name']}' is itself a tombstone (merged_into "
+                             f"{tgt['metadata']['merged_into']}) — merge into THAT row; chains are not minted")
+        plan = self.merge_plan(table, src)
+        self.say(f"  {table} '{src['name']}' [{src['id'][:8]}] → '{tgt['name']}' [{tgt['id'][:8]}]")
+        self.say(f"     re-point {len(plan['edges'])} edge(s) "
+                 + ", ".join(f"{e['table']}:{e['role']}" for e in plan["edges"][:8]) + (" …" if len(plan["edges"]) > 8 else ""))
+        if plan["persons"]:
+            self.say(f"     re-point person.company_id on {len(plan['persons'])} person(s)")
+        self.say(f"     engagement +{plan['engagement']} · then tombstone the source (metadata.merged_into) — delete nothing")
+        if self.dry:
+            self.say("     DRY RUN — no writes. Alex runs the live merge (every merge is human-approved).")
+            return 0
+        for e in plan["edges"]:
+            flt = "&".join(f"{k}=eq.{q(v)}" for k, v in e["key"].items()) + f"&entity_id=eq.{q(src['id'])}"
+            ok, st, n = self._patch_try(e["table"], flt, {"entity_id": tgt["id"]})
+            e["moved"], e["status"] = bool(ok and n == 1), st
+            if not e["moved"]:
+                e["kept_on_source"] = "conflict: target already carries this edge" if st == 409 else f"http {st}, {n} row(s)"
+            self.stats.bump(e["table"], "repointed" if e["moved"] else "kept_on_source")
+        moved_persons = []
+        for pid in plan["persons"]:
+            ok, st, n = self._patch_try("person", f"id=eq.{q(pid)}&company_id=eq.{q(src['id'])}", {"company_id": tgt["id"]})
+            if ok:
+                moved_persons.append(pid)
+        self.stats.bump("person", "company_repointed", len(moved_persons))
+        if plan["engagement"] or plan["last_engaged_at"]:
+            last = max([x for x in (tgt.get("last_engaged_at"), plan["last_engaged_at"]) if x], default=None)
+            patch = {"engagement_count": (tgt.get("engagement_count") or 0) + plan["engagement"]}
+            if last:
+                patch["last_engaged_at"] = last
+            self.patch(table, f"id=eq.{q(tgt['id'])}", patch)
+        snapshot = {"merged_into": tgt["id"], "merged_into_name": tgt.get("name"), "ts": _utcnow(), "reason": reason,
+                    "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending"),
+                    "edges": plan["edges"], "persons": moved_persons, "engagement_moved": plan["engagement"],
+                    "target_last_engaged_before": tgt.get("last_engaged_at")}
+        meta = dict(src.get("metadata") or {})
+        meta.update({"merged_into": tgt["id"], "merge": snapshot})
+        # engagement was TRANSFERRED, not copied: the tombstone keeps 0 so a relevance recompute cannot count
+        # it twice (pre-mortem 2026-09-27); revert puts it back from engagement_moved.
+        # relevance_score is nulled (nulling is always allowed): the hub's viewpoint filters `relevance_score=gt.0`
+        # and recompute_relevance skips tombstones, so a merged topic leaves the dashboard the same day.
+        # engagement_count / relevance_score are _MI_COMMON columns on all three mergeable tables (company,
+        # person, topic — spine_client.ALLOW), so this PATCH is deliberately unconditional, not topic-only.
+        self.patch(table, f"id=eq.{q(src['id'])}", {"metadata": meta, "engagement_count": 0, "relevance_score": None})
+        self.stats.bump(table, "tombstoned")
+        kept = [e for e in plan["edges"] if not e["moved"]]
+        self._log_merge({"event": "merge", "table": table, "from": src["id"], "from_name": src.get("name"),
+                         "into": tgt["id"], "into_name": tgt.get("name"), "reason": reason,
+                         "edges_moved": len(plan["edges"]) - len(kept), "edges_kept_on_source": len(kept),
+                         "persons_repointed": len(moved_persons)})
+        self.say(f"     ✅ merged — {len(plan['edges']) - len(kept)} edge(s) re-pointed, {len(kept)} kept on the tombstone "
+                 f"(target already had them), {len(moved_persons)} person(s) re-pointed. Source row still exists. "
+                 f"Undo: merge --revert --table {table} --from {src['id']}")
+        return 0
+
+    def revert(self, table: str, src: dict) -> int:
+        """Replay the snapshot backwards. Each edge is restored only if it still sits on the merge target
+        (a later move is left alone and reported), engagement subtracts what was moved, and the tombstone
+        marker comes off with the snapshot filed under metadata.merge_history."""
+        meta = dict(src.get("metadata") or {})
+        snap = meta.get("merge")
+        if not meta.get("merged_into") or not snap:
+            raise SystemExit(f"revert: {table} '{src.get('name')}' is not a tombstone with a snapshot — nothing to revert")
+        tgt_id = meta["merged_into"]
+        moved = [e for e in snap.get("edges", []) if e.get("moved")]
+        self.say(f"  revert {table} '{src['name']}' [{src['id'][:8]}] ← '{snap.get('merged_into_name')}' [{tgt_id[:8]}]: "
+                 f"restore {len(moved)} edge(s), {len(snap.get('persons', []))} person(s), engagement −{snap.get('engagement_moved', 0)}")
+        if self.dry:
+            self.say("     DRY RUN — no writes.")
+            return 0
+        restored = skipped = 0
+        for e in moved:
+            flt = "&".join(f"{k}=eq.{q(v)}" for k, v in e["key"].items()) + f"&entity_id=eq.{q(tgt_id)}"
+            ok, st, n = self._patch_try(e["table"], flt, {"entity_id": src["id"]})
+            restored += 1 if ok else 0
+            skipped += 0 if ok else 1
+        for pid in snap.get("persons", []):
+            ok, _, _ = self._patch_try("person", f"id=eq.{q(pid)}&company_id=eq.{q(tgt_id)}", {"company_id": src["id"]})
+        if snap.get("engagement_moved"):
+            tgt = self.get(f"/{table}?id=eq.{q(tgt_id)}&select=engagement_count&limit=1")
+            if tgt:
+                self.patch(table, f"id=eq.{q(tgt_id)}",
+                           {"engagement_count": max(0, (tgt[0].get("engagement_count") or 0) - snap["engagement_moved"])})
+        meta.pop("merged_into", None)
+        meta.pop("merge", None)
+        meta.setdefault("merge_history", []).append({**snap, "reverted_at": _utcnow()})
+        self.patch(table, f"id=eq.{q(src['id'])}", {"metadata": meta, "engagement_count": snap.get("engagement_moved", 0) or 0})
+        self.stats.bump(table, "reverted")
+        self._log_merge({"event": "revert", "table": table, "from": src["id"], "from_name": src.get("name"),
+                         "was_into": tgt_id, "edges_restored": restored, "edges_skipped": skipped})
+        self.say(f"     ✅ reverted — {restored} edge(s) restored, {skipped} skipped (moved again since), tombstone cleared")
+        return 0
 
     # -- events ----------------------------------------------------------------------------------
     def find_event(self, ev: dict) -> dict | None:
@@ -1015,6 +1292,192 @@ Agents cheating the eval · benchmark contamination via data vendors · over-con
 """
 
 
+class _FakeGraph(Graph):
+    """Offline stand-in for --selftest: an in-memory graph answering the PostgREST filter shapes this file
+    issues (eq / in / is / ilike with `*`, select, limit). Lets the resolvers, merge and revert run end to end
+    with no network. A test double, NOT a second write path — nothing here reaches spine_client.req."""
+    def __init__(self):
+        super().__init__(dry_run=False, stats=Stats())
+        self.quiet = True
+        self.t: dict[str, list[dict]] = {k: [] for k in ("company", "person", "topic", "event", "event_entity",
+                                                          "claim_entity", "document_entity", "documents", "claim")}
+        self.n = 0
+
+    def uuid(self) -> str:
+        self.n += 1
+        return f"00000000-0000-4000-8000-{self.n:012d}"
+
+    @staticmethod
+    def _match(row: dict, key: str, op: str, val: str) -> bool:
+        cur = row.get(key)
+        if op == "eq":
+            return str(cur) == val
+        if op == "in":
+            return str(cur) in [x.strip() for x in val.strip("()").split(",")]
+        if op == "is":
+            return (cur is None) if val == "null" else (cur is not None)
+        if op == "ilike":
+            pat = "^" + ".*".join(re.escape(p) for p in val.split("*")) + "$"
+            return cur is not None and re.match(pat, str(cur), re.I) is not None
+        raise ValueError(op)
+
+    def _select(self, path: str) -> list[dict]:
+        import urllib.parse
+        table, _, qs = path.lstrip("/").partition("?")
+        out, limit = list(self.t[table]), None
+        for k, v in urllib.parse.parse_qsl(qs, keep_blank_values=True):
+            if k in ("select", "offset", "order"):
+                continue
+            if k == "limit":
+                limit = int(v)
+                continue
+            op, _, val = v.partition(".")
+            out = [r for r in out if self._match(r, k, op, val)]
+        return out[:limit] if limit else out
+
+    def get(self, path: str) -> list:
+        return [dict(r) for r in self._select(path)]
+
+    def post(self, table, row, prefer="return=representation", on_conflict=None):
+        out = []
+        for r in (row if isinstance(row, list) else [row]):
+            guard(table, r)
+            r = {**r, "id": r.get("id") or self.uuid()}
+            self.t[table].append(r)
+            out.append(dict(r))
+        return out
+
+    def _patch_try(self, table, flt, row):
+        guard(table, row, op="update")
+        hits = self._select(f"/{table}?{flt}")
+        if table in self.EDGE_TABLES and "entity_id" in row:      # the unique-edge collision -> 409, like PostgREST
+            for h in hits:
+                owner = "event_id" if table == "event_entity" else ("claim_id" if table == "claim_entity" else "document_id")
+                if any(o is not h and o[owner] == h[owner] and o["entity_type"] == h["entity_type"]
+                       and o["entity_id"] == row["entity_id"] and o["role"] == h["role"] for o in self.t[table]):
+                    return False, 409, 0
+        for h in hits:
+            h.update(row)
+        return bool(hits), 200, len(hits)
+
+    def patch(self, table, flt, row):
+        self._patch_try(table, flt, row)
+
+
+def _identity_selftest(ok) -> None:
+    """YED-47 acceptance 1–3, offline. The ledger + merge log are redirected so a selftest never writes the
+    audit files (same rule as the freeze-override log in spine_client's selftest)."""
+    import tempfile
+    g = globals()
+    saved = (g["AMBIGUITY_LEDGER"], g["MERGE_LOG"])
+    tmp = tempfile.mkdtemp(prefix="identity-selftest-")
+    g["AMBIGUITY_LEDGER"], g["MERGE_LOG"] = os.path.join(tmp, "ambiguity.jsonl"), os.path.join(tmp, "merges.jsonl")
+    try:
+        ok("qualifier: 'AWS (Amazon)' splits; bare name has none",
+           split_qualifier("AWS (Amazon)") == ("AWS", "Amazon") and split_qualifier("AWS") == ("AWS", None))
+        ok("host: scheme/www/path/case stripped; empty -> None",
+           web_host("HTTPS://www.AWS.amazon.com/x?y") == "aws.amazon.com" and web_host("") is None and web_host(None) is None)
+        ok("host: subdomains are NOT folded (aws.amazon.com != amazon.com)", web_host("https://aws.amazon.com") != web_host("https://amazon.com"))
+        fg = _FakeGraph()
+        aws = fg.post("company", {"name": "AWS", "website": "https://aws.amazon.com", "source": SOURCE})[0]["id"]
+        ok("tier: 'AWS (Amazon)' -> AWS when the candidate is unique and hosts agree (acceptance 1a)",
+           fg.ensure_company({"name": "AWS (Amazon)", "website": "https://www.aws.amazon.com/"}) == aws
+           and fg.stats.c["company"].get("qualifier_resolved") == 1 and len(fg.t["company"]) == 1)
+        pace = fg.post("company", {"name": "Pace", "website": "https://pace.com"})[0]["id"]
+        pace_acme = fg.ensure_company({"name": "Pace (Acme)", "website": "https://acme.com"})
+        ok("tier: hosts differ -> NEW row, surfaced to the ledger, never guessed (acceptance 1b)",
+           pace_acme != pace and fg.stats.c["company"].get("ambiguous_name") == 1
+           and os.path.exists(AMBIGUITY_LEDGER) and "hosts differ" in open(AMBIGUITY_LEDGER).read())
+        ok("tier: two bare candidates -> no match (acceptance 1c)",
+           resolve_company_tier("Nori (X)", "https://a.io", [{"name": "Nori", "website": "https://a.io"},
+                                                             {"name": "Nori", "website": "https://a.io"}])[0] is None)
+        ok("tier: website missing on either side -> no match",
+           resolve_company_tier("AAIF (x)", None, [{"name": "AAIF", "website": "https://aaif.io"}])[0] is None
+           and resolve_company_tier("AAIF (x)", "https://aaif.io", [{"name": "AAIF"}])[0] is None)
+        zed_ai = fg.post("company", {"name": "Zed (AI)", "website": "https://zed.dev"})[0]["id"]
+        zed = fg.ensure_company({"name": "Zed", "website": "https://zed.dev"})
+        ok("tier: bare incoming name never resolves TO a qualified row — created + surfaced (one-directional by spec)",
+           zed != zed_ai and fg.stats.c["company"].get("ambiguous_name") == 2)
+        ok("tier: dry-run never writes the ledger", (lambda d: (d.ensure_company({"name": "Pace (Beta)", "website": "https://b.io"}),
+                                                                 os.path.getsize(AMBIGUITY_LEDGER))[1])(_dry_fake(fg))
+           == os.path.getsize(AMBIGUITY_LEDGER))
+        acme, beta = fg.ensure_company({"name": "Acme"}), fg.ensure_company({"name": "Beta"})
+        p1 = fg.ensure_person({"name": "Angie Jones", "company": "Acme"})
+        p2 = fg.ensure_person({"name": "Angie Jones", "company": "Beta"})
+        ok("person: same name, different company, no LinkedIn -> still created + surfaced (acceptance 1d; no fuzzy match)",
+           p1 != p2 and fg.stats.c["person"].get("ambiguous_name") == 1)
+        ok("person: re-run resolves to the company-matching row (no third row)",
+           fg.ensure_person({"name": "Angie Jones", "company": "Beta"}) == p2 and len(fg.t["person"]) == 2)
+        # ---- merge + revert (acceptance 2) ----
+        ev1 = fg.post("event", {"title": "E1", "kind": "attended"})[0]["id"]
+        ev2 = fg.post("event", {"title": "E2", "kind": "attended"})[0]["id"]
+        fg.post("event_entity", {"event_id": ev1, "entity_type": "company", "entity_id": pace_acme, "role": "subject"})
+        fg.post("event_entity", {"event_id": ev1, "entity_type": "company", "entity_id": pace, "role": "subject"})   # target has it too
+        fg.post("event_entity", {"event_id": ev2, "entity_type": "company", "entity_id": pace_acme, "role": "subject"})
+        pat = fg.post("person", {"name": "Pat Lee", "company_id": pace_acme})[0]["id"]
+        for r in fg.t["company"]:
+            if r["id"] == pace_acme:
+                r["engagement_count"] = 3
+        src, tgt = fg.entity_ref("company", pace_acme), fg.entity_ref("company", "Pace")
+        rows_before, edges_before = len(fg.t["company"]), len(fg.t["event_entity"])
+        dry = _dry_fake(fg)
+        dry.merge("company", src, tgt, "dry")
+        ok("merge --dry-run: prints the plan and changes nothing", len(fg.t["event_entity"]) == edges_before
+           and not (fg.entity_ref("company", pace_acme).get("metadata") or {}).get("merged_into"))
+        fg.merge("company", src, tgt, "selftest: Pace (Acme) is Pace")
+        e_by = lambda ev: [e for e in fg.t["event_entity"] if e["event_id"] == ev]
+        ok("merge: movable edge re-pointed to the target", any(e["entity_id"] == pace for e in e_by(ev2)))
+        ok("merge: colliding edge KEPT on the source — nothing deleted",
+           len(e_by(ev1)) == 2 and any(e["entity_id"] == pace_acme for e in e_by(ev1))
+           and len(fg.t["event_entity"]) == edges_before and len(fg.t["company"]) == rows_before)
+        ok("merge: person.company_id re-pointed", next(p for p in fg.t["person"] if p["id"] == pat)["company_id"] == pace)
+        ts = fg.entity_ref("company", pace_acme)
+        ok("merge: tombstone + snapshot written (merged_into, 2 edges of which 1 moved, 1 person, engagement 3)",
+           ts["metadata"]["merged_into"] == pace and len(ts["metadata"]["merge"]["edges"]) == 2
+           and sum(e["moved"] for e in ts["metadata"]["merge"]["edges"]) == 1 and ts["metadata"]["merge"]["persons"] == [pat]
+           and fg.entity_ref("company", pace)["engagement_count"] == 3
+           and fg.entity_ref("company", pace_acme)["engagement_count"] == 0)   # transferred, not copied
+        ok("merge: logged to identity-merges.jsonl", '"event": "merge"' in open(MERGE_LOG).read())
+        ok("resolver: a seed naming the tombstone resolves to its target — by name AND via ensure_company (acceptance 3)",
+           fg.by_name("company", "Pace (Acme)")["id"] == pace and fg.ensure_company({"name": "Pace (Acme)"}) == pace
+           and fg.stats.c["company"].get("followed_tombstone", 0) >= 2)
+        ok("resolver: person.company resolution follows the tombstone too",
+           fg.ensure_person({"name": "Sam Ortiz", "company": "Pace (Acme)"}) and
+           next(p for p in fg.t["person"] if p["name"] == "Sam Ortiz")["company_id"] == pace)
+        n_edges = len(fg.t["event_entity"])
+        ok("merge: re-run says 'already merged' and changes nothing",
+           fg.merge("company", fg.entity_ref("company", pace_acme), tgt, "again") == 0 and len(fg.t["event_entity"]) == n_edges)
+        try:
+            fg.merge("company", fg.entity_ref("company", zed), fg.entity_ref("company", pace_acme), "into a tombstone")
+            ok("merge: into a tombstone is REFUSED (no chains minted)", False)
+        except SystemExit:
+            ok("merge: into a tombstone is REFUSED (no chains minted)", True)
+        fg.revert("company", fg.entity_ref("company", pace_acme))
+        back = fg.entity_ref("company", pace_acme)
+        ok("revert: edge restored, person restored, engagement subtracted, tombstone cleared, history kept",
+           any(e["entity_id"] == pace_acme for e in e_by(ev2))
+           and next(p for p in fg.t["person"] if p["id"] == pat)["company_id"] == pace_acme
+           and fg.entity_ref("company", pace)["engagement_count"] == 0 and back["engagement_count"] == 3
+           and "merged_into" not in back["metadata"] and len(back["metadata"]["merge_history"]) == 1)
+        ok("revert: the row resolves to ITSELF again", fg.by_name("company", "Pace (Acme)")["id"] == pace_acme)
+        try:
+            fg.revert("company", fg.entity_ref("company", pace_acme))
+            ok("revert: a non-tombstone is refused", False)
+        except SystemExit:
+            ok("revert: a non-tombstone is refused", True)
+    finally:
+        g["AMBIGUITY_LEDGER"], g["MERGE_LOG"] = saved
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
+    """A dry-run view over the same in-memory tables (reads real, writes suppressed)."""
+    d = _FakeGraph()
+    d.t, d.dry, d.n = fg.t, True, fg.n + 1000
+    return d
+
+
 def selftest() -> bool:
     checks = []
 
@@ -1190,8 +1653,8 @@ def selftest() -> bool:
        freeze_check("waive", False, None) == 0)
     ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
     ok("freeze: every mutating verb is covered",
-       set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document",
-                              "stage-claims", "backfill", "backfill-questions", "approve-claims"})
+       set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
+                              "backfill", "backfill-questions", "approve-claims", "merge"})
     _saved_freeze = FREEZE_PATH
     try:                                              # unreadable marker must fail CLOSED
         globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
@@ -1209,6 +1672,9 @@ def selftest() -> bool:
     finally:
         globals()["FREEZE_PATH"] = _saved_freeze
 
+    # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
+    _identity_selftest(ok)
+
     fail = 0
     for name, good in checks:
         fail += 0 if good else 1
@@ -1223,7 +1689,11 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
-                                     "backfill", "backfill-questions", "preview-claims", "approve-claims"])
+                                     "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge"])
+    ap.add_argument("--table", choices=["company", "person", "topic"], help="(merge) entity table")
+    ap.add_argument("--from", dest="merge_from", metavar="ID|NAME", help="(merge) the row to tombstone")
+    ap.add_argument("--into", dest="merge_into", metavar="ID|NAME", help="(merge) the row that survives")
+    ap.add_argument("--revert", action="store_true", help="(merge) undo a soft-merge from its snapshot")
     ap.add_argument("--manifest", help="one manifest (all verbs except backfill)")
     ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
                                            "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
@@ -1231,7 +1701,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--expect-claims", action="store_true",
                     help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
                          "stage-claims must close — the Stop hook fails the run otherwise")
-    ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged")
+    ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged · "
+                                     "(merge) why these two rows are one thing — logged; REQUIRED for a live merge")
     ap.add_argument("--freeze-override", metavar="WHY",
                     help="proceed despite an active graph-write freeze (.claude/references/graph-freeze.json). "
                          "Logged to .claude/artifacts/graph-freeze-overrides.jsonl — allowed, never silent")
@@ -1258,6 +1729,23 @@ def main(argv: list[str]) -> int:
         return 0 if items else 3
     stats = Stats()
     g = Graph(a.dry_run, stats)
+    if a.verb == "merge":
+        if not (a.table and a.merge_from):
+            ap.error("merge needs --table and --from (+ --into and --reason, or --revert)")
+        src = g.entity_ref(a.table, a.merge_from)
+        if a.revert:
+            rc = g.revert(a.table, src)
+        else:
+            if not a.merge_into:
+                ap.error("merge needs --into (or --revert)")
+            if not a.reason and not a.dry_run:
+                ap.error("a live merge needs --reason (every merge is human-approved and logged)")
+            rc = g.merge(a.table, src, g.entity_ref(a.table, a.merge_into), a.reason or "(dry run)")
+        print(("DRY-RUN " if a.dry_run else "") + f"merge: created={stats.created()}")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": "merge", "dry_run": a.dry_run, "revert": a.revert, "stats": stats.c}))
+        return rc
     if a.verb == "backfill":
         if not a.manifest_dir:
             ap.error("backfill needs --manifest-dir")
