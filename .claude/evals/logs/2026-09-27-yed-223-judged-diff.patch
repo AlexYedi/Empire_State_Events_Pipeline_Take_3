@@ -1,0 +1,214 @@
+diff --git a/.claude/evals/judge_lib.py b/.claude/evals/judge_lib.py
+index e5c0cee..2507c69 100644
+--- a/.claude/evals/judge_lib.py
++++ b/.claude/evals/judge_lib.py
+@@ -96,19 +96,37 @@ def _norm(t: str) -> str:
+     return re.sub(r"\s+", " ", t).strip().lower()
+ 
+ 
++# Formatting that a seat routinely drops or re-renders when it quotes, and that says nothing about whether the
++# text is real: markdown emphasis/code markers, and dash / colon variants. Stripped from BOTH sides, so it can
++# only make a real quote match — it never makes an invented sentence appear. (YED-223, 2026-09-27: a Sonnet seat
++# quoted `**One exception — …:**` without the asterisks and another rendered an em-dash as a colon; the exact
++# check called both fabricated, dropped the only voting seat, and forced a false FLAG on a pass artifact.)
++_FORMAT_RE = re.compile(r"[*_`]")
++_DASH_RE = re.compile(r"\s*(?:—|–|--|:)\s*")
++
++
++def _norm_loose(t: str) -> str:
++    return _norm(_DASH_RE.sub(" ~ ", _FORMAT_RE.sub("", t)))
++
++
+ def verify_quotes(defects: list, artifact_text: str) -> dict:
+-    """Each defect's `quote` must be a whitespace-normalized verbatim substring of the artifact.
++    """Each defect's `quote` must appear in the artifact, modulo whitespace, case, markdown markers and
++    dash/colon variants (see _norm_loose). A seat that invents a flaw still can't quote it.
+ 
+-    A seat that invents a flaw can't quote it. Returns counts; the caller tags the run `evidence_unverified`
+-    when more than 30% of quoted defects fail, which strips that seat's power to escalate for this run.
++    `unverified` / `evidence_unverified` use the formatting-tolerant match; `unverified_exact` keeps the old
++    whitespace-only count as a secondary field so drift in how seats quote stays visible. The caller tags the
++    run `evidence_unverified` when more than 30% of quoted defects fail, which strips that seat's power to
++    escalate (and, in the quorum, to vote) for this run.
+     """
+-    hay = _norm(artifact_text)
++    hay, hay_loose = _norm(artifact_text), _norm_loose(artifact_text)
+     quoted = [d for d in defects or [] if isinstance(d, dict) and _norm(str(d.get("quote") or ""))]
+-    bad = [d for d in quoted if _norm(str(d["quote"])) not in hay]
++    bad = [d for d in quoted if _norm_loose(str(d["quote"])) not in hay_loose]
++    bad_exact = [d for d in quoted if _norm(str(d["quote"])) not in hay]
+     n = len(quoted)
+     return {"quoted": n, "unverified": len(bad), "unverified_rate": round(len(bad) / n, 3) if n else 0.0,
+             "evidence_unverified": bool(n) and len(bad) / n > 0.30,
+-            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5]}
++            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5],
++            "unverified_exact": len(bad_exact), "match": "format-tolerant"}
+ 
+ 
+ def must_cite_gaps(scored: dict) -> list[str]:
+@@ -293,6 +311,15 @@ def _cli() -> int:
+     json.dump(b, open(a.out, "w", encoding="utf-8"))
+     print(f"bundle {b['bundle_sha256'][:12]} · artifact {b['artifact_sha256'][:12]} · {len(b['text'])} chars · "
+           f"evidence_parity={b['evidence_parity']} · dangling={len(b['dangling_refs'])} → {a.out}")
++    if not b["evidence_parity"]:
++        # YED-223: parity is fixed HERE, at build time. No seat flag can repair it later — the adapters score the
++        # bundle's bytes verbatim and refuse --context/--spec-file alongside --bundle.
++        print("\n  ⚠️  EVIDENCE-PARITY WARNING: this bundle carries < 400 chars of spec/context.\n"
++              "      Every seat scoring it will log evidence_parity:false and be EXCLUDED from calibration,\n"
++              "      and cross-file defects (spec drift) are invisible to all of them.\n"
++              "      Fix: REBUILD the bundle with --spec-file <in-repo spec> (repeatable) and/or --context.\n"
++              "      Re-running a seat with extra flags cannot help; the seats refuse them with --bundle.\n",
++              file=sys.stderr)
+     return 0
+ 
+ 
+diff --git a/.claude/evals/test_adapter_contract.py b/.claude/evals/test_adapter_contract.py
+index 9a4f9d3..57e8ee5 100755
+--- a/.claude/evals/test_adapter_contract.py
++++ b/.claude/evals/test_adapter_contract.py
+@@ -76,6 +76,30 @@ def main() -> int:
+         finally:
+             os.unlink(tmp)
+ 
++    # 4. YED-223: with --bundle, --context / --spec-file must be REFUSED, never silently dropped. The bundle's
++    #    bytes are what every seat scores; an extra flag that changes nothing is how a caller came to believe
++    #    it had repaired evidence parity (2026-09-24, YED-221 round 1).
++    import judge_lib as jl
++    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, dir=".claude/evals") as f:
++        json.dump(jl.build_bundle(art, "code", ".claude/evals/prompts/judge-system-v2.md",
++                                  ".claude/evals/rubrics/build-quality-v5.md", "x" * 500), f)
++        bpath = f.name
++    try:
++        for s in seats:
++            r = s["runner"]
++            if not os.path.isfile(r):
++                continue
++            for extra in (["--context", "more spec"], ["--spec-file", art]):
++                p = run(r, ["--bundle", bpath, *extra, "--dry-run"])
++                blob = (p.stdout + p.stderr).lower()
++                ck(f"{s['id']}: refuses {extra[0]} alongside --bundle", p.returncode != 0 and "--bundle" in blob,
++                   f"rc={p.returncode} {(p.stdout + p.stderr).strip()[:90]}")
++            p = run(r, ["--bundle", bpath, "--dry-run"])
++            ck(f"{s['id']}: a plain --bundle --dry-run still works", p.returncode == 0,
++               f"rc={p.returncode} {(p.stdout + p.stderr).strip()[:90]}")
++    finally:
++        os.unlink(bpath)
++
+     print(f"{ok}/{n} adapter-contract cases pass")
+     return 0 if ok == n else 1
+ 
+diff --git a/.claude/evals/test_judge_lib.py b/.claude/evals/test_judge_lib.py
+index 2846721..fd7c0bb 100644
+--- a/.claude/evals/test_judge_lib.py
++++ b/.claude/evals/test_judge_lib.py
+@@ -65,6 +65,17 @@ q = jl.verify_quotes([{"quote": "return 1 # the answer"}, {"quote": "this text i
+ ck("quotes: whitespace-normalised match passes, a fabricated one fails, empty ignored", q["quoted"] == 2 and q["unverified"] == 1)
+ ck("quotes: >30% unverified => evidence_unverified", q["evidence_unverified"] is True)
+ ck("quotes: all real => verified", jl.verify_quotes([{"quote": "def f():"}], art)["evidence_unverified"] is False)
++# YED-223: formatting a seat drops or re-renders is not fabrication …
++md = "**One exception — the emerging-seller signal:** when the JD pitches `x` at an early-career seller"
++ck("quotes: stripped markdown markers still verify",
++   jl.verify_quotes([{"quote": "One exception — the emerging-seller signal: when the JD pitches x"}], md)["unverified"] == 0)
++ck("quotes: em-dash rendered as a colon still verifies",
++   jl.verify_quotes([{"quote": "One exception: the emerging-seller signal"}], md)["unverified"] == 0)
++ck("quotes: exact-mismatch count kept as a secondary field",
++   jl.verify_quotes([{"quote": "One exception: the emerging-seller signal"}], md)["unverified_exact"] == 1)
++# … but an invented sentence still fails
++ck("quotes: invented text still unverified under the tolerant match",
++   jl.verify_quotes([{"quote": "the JD pitches it at a senior seller"}], md)["unverified"] == 1)
+ s = jl.score(V([.8, .9, .9, .9, .9]), "skill", False)
+ ck("must-cite: <0.85 with no defect is reported", jl.must_cite_gaps(s) == ["correctness"])
+ s["defects"] = [{"criterion": "correctness"}]
+diff --git a/.claude/hooks/gemini-judge.sh b/.claude/hooks/gemini-judge.sh
+index d3cbfa8..bd6f63b 100755
+--- a/.claude/hooks/gemini-judge.sh
++++ b/.claude/hooks/gemini-judge.sh
+@@ -38,6 +38,13 @@ while [ $# -gt 0 ]; do
+ done
+ if [ -n "$BUNDLE" ]; then   # the bundle names the artifact + type, so a seat can't be pointed at different evidence
+   [ -r "$BUNDLE" ] || { echo "ERROR: --bundle unreadable: $BUNDLE" >&2; exit 2; }
++  # YED-223: the bundle's bytes are scored verbatim, so --context / --spec-file here would be silently dropped
++  # (they used to be — and looked like a fix when paired with a rebuilt bundle). Refuse instead of ignoring.
++  if [ -n "$CONTEXT" ] || [ -n "$SPEC_FILES" ]; then
++    echo "ERROR: --context/--spec-file are ignored with --bundle (the bundle already fixes the evidence)." >&2
++    echo "       Rebuild the bundle instead: python3 .claude/evals/judge_lib.py bundle ... --spec-file <path> --context \"...\"" >&2
++    exit 2
++  fi
+   ARTIFACT=$(jq -r '.artifact' "$BUNDLE"); ATYPE=$(jq -r '.artifact_type' "$BUNDLE")
+ fi
+ if [ -n "$ABLOB" ]; then
+@@ -70,7 +77,11 @@ $(cat "$sf")"
+   fi
+ done
+ CTX_LEN=$(printf '%s' "$CONTEXT" | wc -c | tr -d ' ')
+-if [ "$CTX_LEN" -lt 400 ]; then
++if [ -n "$BUNDLE" ]; then
++  # parity is a property of the BUNDLE (judge_lib.build_bundle), fixed when it was built — not of this call
++  PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")
++  [ "$PARITY" = "false" ] && echo "  ⚠️  EVIDENCE-PARITY: this bundle was built with < 400 chars of spec — logging evidence_parity:false. REBUILD the bundle with --spec-file; no seat flag can fix it." >&2
++elif [ "$CTX_LEN" -lt 400 ]; then
+   PARITY="false"
+   echo "  ⚠️  EVIDENCE-PARITY WARNING: context is ${CTX_LEN} chars; no substantive spec supplied." >&2
+   echo "      The Claude seat is briefed with the spec + supporting files; this seat is not." >&2
+@@ -79,7 +90,6 @@ if [ "$CTX_LEN" -lt 400 ]; then
+ else
+   PARITY="true"
+ fi
+-[ -n "$BUNDLE" ] && PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")   # the bundle carries the spec
+ 
+ # derive the rubric version from the rubric file (never hardcode — it drifts when the default bumps)
+ RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
+diff --git a/.claude/hooks/openai_judge.py b/.claude/hooks/openai_judge.py
+index d0746a7..aa80040 100755
+--- a/.claude/hooks/openai_judge.py
++++ b/.claude/hooks/openai_judge.py
+@@ -125,7 +125,17 @@ def main() -> int:
+ 
+     try:
+         if a.bundle:
++            if a.context or a.spec_file:
++                # YED-223: the bundle's bytes are scored verbatim; extra evidence flags would be silently dropped.
++                print("ERROR: --context/--spec-file are ignored with --bundle (the bundle already fixes the evidence).\n"
++                      "       Rebuild the bundle instead: python3 .claude/evals/judge_lib.py bundle ... --spec-file <path>",
++                      file=sys.stderr)
++                return 2
+             bundle = json.load(open(a.bundle, encoding="utf-8"))
++            if not bundle.get("evidence_parity"):
++                print("  ⚠️  EVIDENCE-PARITY: this bundle was built with < 400 chars of spec — logging "
++                      "evidence_parity:false. REBUILD the bundle with --spec-file; no seat flag can fix it.",
++                      file=sys.stderr)
+             blob = a.artifact_blob or bundle.get("artifact_blob")
+             jl.privacy_guard([bundle["artifact"]], [bundle["text"]],        # guard again: a bundle is just a file
+                              {bundle["artifact"]: blob} if blob else None)
+diff --git a/.claude/references/cross-provider-judge.md b/.claude/references/cross-provider-judge.md
+index f770be6..96cf972 100644
+--- a/.claude/references/cross-provider-judge.md
++++ b/.claude/references/cross-provider-judge.md
+@@ -91,3 +91,9 @@ one ack covers both. `autonomous` mode never blocks — it records `failsafe_fla
+ 
+ ## DoD
+ Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-close`. Spec artifact = this file (mirror to ChatPRD/Notion). Adversarial pass = the quorum-circularity catch (already in writing, this session).
++
++## Bundle mode and quote verification (YED-223, 2026-09-27)
++
++**Evidence parity is a property of the bundle, fixed when `judge_lib.py bundle` builds it.** Every seat scores the bundle's bytes verbatim, so a seat flag cannot add evidence after the fact. The adapters therefore **refuse** `--context`/`--spec-file` together with `--bundle` (exit 2) instead of silently dropping them, and `judge_lib.py bundle` prints an unmissable warning when the bundle carries < 400 chars of spec. The fix for a parity-false bundle is always to rebuild it. Build diff artifacts against the merge-base, never two-dot against a moving `origin/main`.
++
++**Quote verification is format-tolerant.** A defect's `quote` must appear in the artifact after normalizing both sides for whitespace, case, markdown emphasis/code markers (`*`, `_`, backticks) and dash/colon variants (`—`, `–`, `--`, `:`). Stripping is symmetric, so it can only let a real quote match; it cannot make invented text appear. The strict count survives as `unverified_exact`. Motivating cases: a voting seat invalidated on 2026-09-27 for dropping `**` markers (forcing a false flag), and a 2026-09-24 shadow-seat run recorded as "2/2 fabricated" where one quote was real text minus `**` and the other quoted the previous version of the file. That run still correctly ends up `evidence_unverified`.
+diff --git a/.claude/skills/judge-build/SKILL.md b/.claude/skills/judge-build/SKILL.md
+index 685b4fb..ba959fb 100644
+--- a/.claude/skills/judge-build/SKILL.md
++++ b/.claude/skills/judge-build/SKILL.md
+@@ -33,11 +33,12 @@ auto-resolved. Every seat scores the **same bytes**, and no seat ever sees anoth
+ 1. **Build ONE evidence bundle** (runs the Step 0 pre-passes and the privacy guard for you):
+    `python3 .claude/evals/judge_lib.py bundle --artifact <path> --artifact-type <t> --spec-file <in-repo spec> [--context "<text>"] --out <scratchpad>/bundle.json`
+    Spec files must be tracked files inside the repo. A gitignored, symlinked or out-of-repo file is refused (exit 3, no override); pass ad-hoc spec text with `--context` instead. Also write the bundle's `.text` to a `.txt` for the Sonnet seat.
++   **Evidence parity is fixed HERE, at build time** (YED-223). If the build prints an EVIDENCE-PARITY WARNING, **rebuild the bundle** with `--spec-file`/`--context` — never re-run a seat with extra flags: the adapters score the bundle's bytes verbatim and **refuse** `--context`/`--spec-file` alongside `--bundle` (exit 2). Build the artifact diff against the **merge-base** (`git diff $(git merge-base origin/main HEAD)..HEAD`), never two-dot against `origin/main` — a `main` that moved mid-run makes the diff show other people's merges as deletions (2026-09-27).
+ 2. **Run the three seats in parallel, all on that bundle:**
+    - Gemini: `bash .claude/hooks/gemini-judge.sh --bundle <bundle.json> --label gemini-<slug>`
+    - OpenAI: `bash .claude/hooks/openai-judge.sh --bundle <bundle.json> --label openai-<slug>` (try `--dry-run` first: free, shows the worst-case cost). Exit 3 = privacy guard, 4 = spend cap. A failed seat is a *missing* seat: never quietly carry on with fewer.
+    - Sonnet: dispatch via the `Agent` tool (`model: sonnet`), give it ONLY the bundle `.txt` plus read access to the repo, and have it return `{checks_performed, defects[{line, quote, …}], criterion_scores, cap_flags}` with **no composite and no verdict**. Tell it not to read `.claude/evals/logs/`.
+-3. **Log the Sonnet seat with the validated writer, never by hand:** save its JSON to a file, then
++3. **Log the Sonnet seat with the validated writer, never by hand:** (its quote check is format-tolerant since YED-223 — markdown markers and dash/colon variants are ignored on both sides, so a seat is no longer invalidated for quoting `**X — y**` as `X: y`; `unverified_exact` keeps the strict count) save its JSON to a file, then
+    `python3 .claude/hooks/seat-log.py --artifact <path> --artifact-type <t> --verdict-file <json> --bundle <bundle.json> --label sonnet-<slug>`
+    It stamps the real time, the content hash and the harness-computed score. (Hand-written rows on 2026-09-19 carried made-up timestamps and corrupted the scorecard.)
+ 4. **Merge:** `python3 .claude/evals/quorum_merge.py --artifact <path> --seat claude=<log> --seat gemini=<log> --seat openai=<log> [--mode autonomous]`

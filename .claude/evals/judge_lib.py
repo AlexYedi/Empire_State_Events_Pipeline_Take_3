@@ -96,19 +96,46 @@ def _norm(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip().lower()
 
 
-def verify_quotes(defects: list, artifact_text: str) -> dict:
-    """Each defect's `quote` must be a whitespace-normalized verbatim substring of the artifact.
+# Formatting a seat routinely drops or re-renders when it quotes PROSE: markdown `**`, backticks, a `*` at a word
+# boundary, and a dash<->colon swap. (YED-223, 2026-09-27: a Sonnet seat quoted `**One exception — …:**` without
+# the asterisks and another rendered an em-dash as a colon; the strict check called both fabricated, dropped the
+# only voting seat, forced a false FLAG on a skill file.)
+#
+# PROSE ONLY. In code every one of those characters is syntax: stripping `_`/`__` turned `hay_loose`, `_private`
+# and `__init__` into matchable fabrications, folding `--` let `--bundle` vouch for `: bundle`, and stripping `*`
+# collapses `*args`. Judge rounds 1-2 reproduced each. So code-like artifacts are matched strictly (whitespace
+# and case only) and `_` is never touched in any mode. Residual (recorded): in prose, a quote that differs only
+# by the dash<->colon swap or dropped `**`/backticks/boundary `*` verifies.
+PROSE_TYPES = frozenset({"skill", "command", "ref", "dossier", "deep_read"})
+_MD_RE = re.compile(r"\*\*|`|(?<![A-Za-z0-9])\*|\*(?![A-Za-z0-9])")
+_DASH_RE = re.compile(r"\s*(?:—|–|:)\s*|\s+-\s+")
 
-    A seat that invents a flaw can't quote it. Returns counts; the caller tags the run `evidence_unverified`
-    when more than 30% of quoted defects fail, which strips that seat's power to escalate for this run.
+
+def _norm_loose(t: str) -> str:
+    return _norm(_DASH_RE.sub(" ~ ", _MD_RE.sub("", t)))
+
+
+def verify_quotes(defects: list, artifact_text: str, artifact_type: str | None = None) -> dict:
+    """Each defect's `quote` must appear in the artifact. Always modulo whitespace and case. For PROSE artifact
+    types (PROSE_TYPES) also modulo dropped markdown `**` / backticks / boundary `*` and the em/en-dash /
+    spaced-hyphen / colon swap; code-like types (and an unknown type) are matched strictly. See the comment
+    above _MD_RE for why, and for the one recorded residual.
+
+    `unverified` / `evidence_unverified` use the mode's match; `unverified_exact` keeps the strict count so drift
+    in how seats quote stays visible. The caller tags the run `evidence_unverified` when more than 30% of quoted
+    defects fail, which strips that seat's power to escalate (and, in the quorum, to vote) for this run.
     """
-    hay = _norm(artifact_text)
+    tolerant = artifact_type in PROSE_TYPES
+    norm = _norm_loose if tolerant else _norm
+    hay, hay_mode = _norm(artifact_text), norm(artifact_text)
     quoted = [d for d in defects or [] if isinstance(d, dict) and _norm(str(d.get("quote") or ""))]
-    bad = [d for d in quoted if _norm(str(d["quote"])) not in hay]
+    bad = [d for d in quoted if norm(str(d["quote"])) not in hay_mode]
+    bad_exact = [d for d in quoted if _norm(str(d["quote"])) not in hay]
     n = len(quoted)
     return {"quoted": n, "unverified": len(bad), "unverified_rate": round(len(bad) / n, 3) if n else 0.0,
             "evidence_unverified": bool(n) and len(bad) / n > 0.30,
-            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5]}
+            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5],
+            "unverified_exact": len(bad_exact), "match": "prose-tolerant" if tolerant else "strict"}
 
 
 def must_cite_gaps(scored: dict) -> list[str]:
@@ -293,6 +320,15 @@ def _cli() -> int:
     json.dump(b, open(a.out, "w", encoding="utf-8"))
     print(f"bundle {b['bundle_sha256'][:12]} · artifact {b['artifact_sha256'][:12]} · {len(b['text'])} chars · "
           f"evidence_parity={b['evidence_parity']} · dangling={len(b['dangling_refs'])} → {a.out}")
+    if not b["evidence_parity"]:
+        # YED-223: parity is fixed HERE, at build time. No seat flag can repair it later — the adapters score the
+        # bundle's bytes verbatim and refuse --context/--spec-file alongside --bundle.
+        print("\n  ⚠️  EVIDENCE-PARITY WARNING: this bundle carries < 400 chars of spec/context.\n"
+              "      Every seat scoring it will log evidence_parity:false and be EXCLUDED from calibration,\n"
+              "      and cross-file defects (spec drift) are invisible to all of them.\n"
+              "      Fix: REBUILD the bundle with --spec-file <in-repo spec> (repeatable) and/or --context.\n"
+              "      Re-running a seat with extra flags cannot help; the seats refuse them with --bundle.\n",
+              file=sys.stderr)
     return 0
 
 

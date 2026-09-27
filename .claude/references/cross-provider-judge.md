@@ -91,3 +91,9 @@ one ack covers both. `autonomous` mode never blocks — it records `failsafe_fla
 
 ## DoD
 Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-close`. Spec artifact = this file (mirror to ChatPRD/Notion). Adversarial pass = the quorum-circularity catch (already in writing, this session).
+
+## Bundle mode and quote verification (YED-223, 2026-09-27)
+
+**Evidence parity is a property of the bundle, fixed when `judge_lib.py bundle` builds it.** Every seat scores the bundle's bytes verbatim, so a seat flag cannot add evidence after the fact. The adapters therefore **refuse** `--context`/`--spec-file` together with `--bundle` (exit 2) instead of silently dropping them, and `judge_lib.py bundle` prints an unmissable warning when the bundle carries < 400 chars of spec. The fix for a parity-false bundle is always to rebuild it. Build diff artifacts against the merge-base, never two-dot against a moving `origin/main`.
+
+**Quote verification is format-tolerant for prose only.** A defect's `quote` must appear in the artifact modulo whitespace and case. For prose artifact types (`skill`, `command`, `ref`, `dossier`, `deep_read`) it is also tolerant of dropped markdown `**`, backticks, a word-boundary `*`, and the em-dash / en-dash / spaced-hyphen / colon swap. Code-like types are matched strictly, and `_` is never altered in any mode: in code every delimiter is syntax, and the judge reproduced fabrications against `hay_loose`, `__init__`, `_private`, `*args` and `--bundle` when the first two versions stripped them. Recorded residual: in prose, a quote differing only by that swap or dropped markers verifies. The strict count survives as `unverified_exact`. **Coverage:** quote verification runs for the Claude seat (`seat-log.py`) and the OpenAI seat (`openai_judge.py`). The Gemini seat's response schema has no `quote` field, so it has never been quote-checked, before or after this change; tracked on YED-187.

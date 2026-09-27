@@ -38,6 +38,13 @@ while [ $# -gt 0 ]; do
 done
 if [ -n "$BUNDLE" ]; then   # the bundle names the artifact + type, so a seat can't be pointed at different evidence
   [ -r "$BUNDLE" ] || { echo "ERROR: --bundle unreadable: $BUNDLE" >&2; exit 2; }
+  # YED-223: the bundle's bytes are scored verbatim, so --context / --spec-file here would be silently dropped
+  # (they used to be — and looked like a fix when paired with a rebuilt bundle). Refuse instead of ignoring.
+  if [ -n "$CONTEXT" ] || [ -n "$SPEC_FILES" ]; then
+    echo "ERROR: --context/--spec-file are ignored with --bundle (the bundle already fixes the evidence)." >&2
+    echo "       Rebuild the bundle instead: python3 .claude/evals/judge_lib.py bundle ... --spec-file <path> --context \"...\"" >&2
+    exit 2
+  fi
   ARTIFACT=$(jq -r '.artifact' "$BUNDLE"); ATYPE=$(jq -r '.artifact_type' "$BUNDLE")
 fi
 if [ -n "$ABLOB" ]; then
@@ -70,7 +77,11 @@ $(cat "$sf")"
   fi
 done
 CTX_LEN=$(printf '%s' "$CONTEXT" | wc -c | tr -d ' ')
-if [ "$CTX_LEN" -lt 400 ]; then
+if [ -n "$BUNDLE" ]; then
+  # parity is a property of the BUNDLE (judge_lib.build_bundle), fixed when it was built — not of this call
+  PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")
+  [ "$PARITY" = "false" ] && echo "  ⚠️  EVIDENCE-PARITY: this bundle was built with < 400 chars of spec — logging evidence_parity:false. REBUILD the bundle with --spec-file; no seat flag can fix it." >&2
+elif [ "$CTX_LEN" -lt 400 ]; then
   PARITY="false"
   echo "  ⚠️  EVIDENCE-PARITY WARNING: context is ${CTX_LEN} chars; no substantive spec supplied." >&2
   echo "      The Claude seat is briefed with the spec + supporting files; this seat is not." >&2
@@ -79,7 +90,6 @@ if [ "$CTX_LEN" -lt 400 ]; then
 else
   PARITY="true"
 fi
-[ -n "$BUNDLE" ] && PARITY=$(jq -r 'if .evidence_parity then "true" else "false" end' "$BUNDLE")   # the bundle carries the spec
 
 # derive the rubric version from the rubric file (never hardcode — it drifts when the default bumps)
 RUBRIC_VER=$(grep -oE 'build-quality@[0-9]+' "$RUBRIC" | head -1)
