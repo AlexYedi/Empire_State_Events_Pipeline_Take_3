@@ -89,6 +89,7 @@ A removal only sticks if it reaches every file that *uses* the removed thing. `.
 | gtm-os as the measurement layer | `gtm-os(?!-hub)[^.\n]{0,40}(measure\|telemetry\|observab\|eval\|trace)` | 2026-06-26 | same (bare "gtm-os" is the live GTM-OS program / Linear team; gtm-os-hub is live too) |
 | Granola auto-fetch | `Granola[^.\n]{0,40}(fetch\b\|API\|MCP\|get_meeting)` | 2026-05-27 | manual transcript paste; OBS + ElevenLabs Scribe |
 | Clarify | `mcp__claude_ai_Clarify` | 2026-09-09 | HubSpot stays the CRM; OBS + Scribe for capture |
+| merge_topics.py (hard-delete merge) | `merge_topics(\.py)?` | 2026-09-27 (YED-47) | `substrate.py merge --table T --from A --into B --reason "…"` — human-only, reversible soft-merge (`--revert`); tombstones, never deletes (ADR-4 D3) |
 
 ## Git / repo
 | Constraint | Cause | Workaround | Since |

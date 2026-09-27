@@ -34,9 +34,10 @@ visible to sessions that have never spoken to each other.
 
 **2. The boundary is the one write path; the producer keeps a second, earlier check.** The first implementation
 gated `substrate.py` only. An adversarial pass asked whether the producer is the only door; it is not. Eight scripts
-import `spine_client` — **six write** (`spine_write`, `recompute_relevance`, `merge_topics`, `inbox_signal_write`,
-`backfill_people`, `substrate`) and two read (`retrieve`, `match_topic`). Gating the producer alone left the freeze
-bypassable by five other writers, including `merge_topics`, which hard-deletes. The boundary therefore sits in
+import `spine_client` — **six write** (`spine_write`, `recompute_relevance`, `merge_topics` — retired 2026-09-27 into
+`substrate.py merge` — `inbox_signal_write`, `backfill_people`, `substrate`) and two read (`retrieve`, `match_topic`).
+Gating the producer alone left the freeze bypassable by five other writers, including `merge_topics` (now retired),
+which hard-deleted. The boundary therefore sits in
 `spine_client.req()`, on the same argument ADR-9 makes about the PII guard: **one door, guarded once.**
 
 `substrate.py` nonetheless retains its **own** `freeze_check()`, which runs before any write-path code and exits 4.
