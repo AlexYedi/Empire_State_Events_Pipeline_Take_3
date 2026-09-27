@@ -8,6 +8,11 @@
 #   /post-event-content 3.8b  `substrate.py ensure-event --expect-claims` -> row PENDING
 #   /post-event-content 3.8c  `substrate.py stage-claims` success           -> row STAGED
 #   explicit acknowledgement  `substrate.py waive --reason "..."`           -> row WAIVED (logged)
+# and, since YED-205 (2026-09-27), the PRE-EVENT write, on a DISTINCT key `research:<page id>` (phase pre_event):
+#   /event-deep-research 4.2a `substrate.py expect-research`                -> row PENDING
+#   /event-deep-research 4.2c `substrate.py stage-research` success         -> row STAGED
+#   explicit acknowledgement  `substrate.py waive --phase pre_event ...`    -> row WAIVED (logged)
+# A row with no `phase` field predates YED-205 and is post-event.
 # If any row is PENDING (or a ledger line is unparseable — fail-closed), this hook:
 #   - first stop attempt (interactive): decision:block, handing the agent the fix;
 #   - already blocked once (stop_hook_active): persists a durable FAILED record to
@@ -54,6 +59,7 @@ fi
 PENDING=0
 CORRUPT=0
 PENDING_LIST=""
+PRE_LIST=""
 EVENTS_JSON="[]"
 scan_line() {
   local line="$1" obj marker event key
@@ -65,8 +71,14 @@ scan_line() {
     PENDING=$((PENDING+1))
     event=$(printf '%s' "$obj" | jq -r '.event // "(untitled event)"' 2>/dev/null)
     key=$(printf '%s' "$obj" | jq -r '.key // "?"' 2>/dev/null)
-    PENDING_LIST="${PENDING_LIST}  - ${event}  ·  notion ${key:0:8}
+    phase=$(printf '%s' "$obj" | jq -r '.phase // "post_event"' 2>/dev/null)
+    if [ "$phase" = "pre_event" ]; then
+      PRE_LIST="${PRE_LIST}  - ${event}  ·  ${key:0:17}
 "
+    else
+      PENDING_LIST="${PENDING_LIST}  - ${event}  ·  notion ${key:0:8}
+"
+    fi
     EVENTS_JSON=$(printf '%s' "$EVENTS_JSON" | jq -c --arg e "$event" --arg k "$key" '. + [{event:$e, key:$k}]' 2>/dev/null || printf '%s' "$EVENTS_JSON")
   fi
 }
@@ -97,15 +109,28 @@ normal move), or leave them pending and stage the claims once the freeze lifts: 
 Freeze definition: $FREEZE_FILE"
 fi
 
-FAILED_MSG="⚠️ SUBSTRATE GATE: FAILED — $PENDING event(s) reached the graph (3.8b) but their learnings were never staged as claims (3.8c):
+POST_MSG=""
+[ -n "$PENDING_LIST" ] && POST_MSG="POST-EVENT — reached the graph (3.8b) but the learnings were never staged as claims (3.8c):
 
-${PENDING_LIST}This is the 'decoupled quietly meant unobserved' failure the Deep Read gate exists for, on the knowledge graph. To resolve:
-  1. Run /post-event-content Step 3.8c for each event above:
+${PENDING_LIST}  1. Run /post-event-content Step 3.8c for each event above:
      .venv/bin/python .claude/scripts/substrate.py stage-claims --manifest <m.json> --brief <brief.md> --brief-ref notion:<brief id>
      (idempotent; the ledger flips to STAGED on success); OR
   2. If there is genuinely no brief to stage, acknowledge it (this is LOGGED, not a silent pass):
      .venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> --reason \"<why>\"
-  Do NOT report these events as complete while they are pending.${CORRUPT_NOTE}${FREEZE_NOTE}"
+"
+PRE_MSG=""
+[ -n "$PRE_LIST" ] && PRE_MSG="PRE-EVENT — the research was committed to Notion (Step 4) but never written to the graph (Step 4.2, YED-205):
+
+${PRE_LIST}  1. Run /event-deep-research Step 4.2c for each event above:
+     .venv/bin/python .claude/scripts/substrate.py stage-research --manifest <m.json> --evidence <evidence.md> --brief-ref notion:<research brief id>
+     (idempotent; the ledger flips to STAGED on success); OR
+  2. If it genuinely cannot be written, acknowledge it (LOGGED, not a silent pass):
+     .venv/bin/python .claude/scripts/substrate.py waive --phase pre_event --manifest <m.json> --reason \"<why>\"
+"
+FAILED_MSG="⚠️ SUBSTRATE GATE: FAILED — $PENDING graph write(s) opened this session never finished.
+
+${POST_MSG}${PRE_MSG}This is the 'decoupled quietly meant unobserved' failure the Deep Read gate exists for, on the knowledge graph.
+Do NOT report these events as complete while they are pending.${CORRUPT_NOTE}${FREEZE_NOTE}"
 
 if [ "$STOP_ACTIVE" != "true" ]; then
   printf '{"decision":"block","reason":%s}\n' "$(printf '%s' "$FAILED_MSG" | jq -Rsa .)"

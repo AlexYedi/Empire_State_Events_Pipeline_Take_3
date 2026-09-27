@@ -66,7 +66,10 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
    - **People ←** every researched person's career arc + POV + recent activity + that person's **Evidence Ledger**.
    - **Cross-Event Threads ←** the Prior-Context Pack's **Continuity Ledger** + **Graph Signals** (URL-tagged), plus any recurring-entity notes.
    - **The Frame ←** a short synthesis pointer (room, state of field, why-now, what Alex walks out able to discuss) — the renderer expands it.
-   Keep every provenance tier (`web-verified` + url / `notion-prior` / `email-signal`) intact on each row. A row without a URL stays in, tagged as-is — the renderer decides how to treat it and flags a `> Gap` if a web-verified fact lacks its URL.
+   Keep every provenance tier (`web-verified` + url / `notion-prior` / `email-signal`) intact on each row. **Keep each
+   `##### Evidence Ledger — <Name>` heading line verbatim above its rows** (YED-205): `/event-deep-research` Step 4.2
+   parses those headings to decide which company, person or topic each claim is about. A row that loses its heading
+   cannot be linked to its entity in the knowledge graph. A row without a URL stays in, tagged as-is — the renderer decides how to treat it and flags a `> Gap` if a web-verified fact lacks its URL.
 
 7. **Fold in the Prior-Context Pack (verify-first).** If a pack was passed:
    - Use the **Continuity Ledger** to build continuity into the Documentarian Angle — the arc ("watch the narrowing: reliability → improvement → memory") is a documentarian move no one else covering NYC AI can make. Anchor each continuity claim to its source brief.
