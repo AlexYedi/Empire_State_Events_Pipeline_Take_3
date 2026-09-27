@@ -53,4 +53,4 @@ Identify **same-class corrections recurring across builds** (e.g., "reintroduced
 
 ## Reuses / references
 - `.claude/references/value-action-registry.md` (the metrics + actions) · `.claude/evals/` (judge + calibration) · `build-session-contract.md` (telemetry) · `tag-outcome` (outcomes).
-- Can run alongside the content `weekly-recap`; this one is the *build-rigor* review.
+- Can run alongside the Sunday Upcoming Week roundup; this one is the *build-rigor* review.

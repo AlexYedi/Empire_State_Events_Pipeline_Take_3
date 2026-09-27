@@ -8,7 +8,7 @@ argument-hint: "[optional: window, e.g. 'last 2 weeks']"
 Run the **rigor-review** methodology. Methodology: `.claude/skills/rigor-review/SKILL.md`.
 
 ## Trigger
-Weekly, or when Alex types `/rigor-review`, says "rigor review", "did the system learn this week". Natural alongside `/weekly-recap`.
+Weekly, or when Alex types `/rigor-review`, says "rigor review", "did the system learn this week". Natural alongside the Sunday Upcoming Week roundup.
 
 ## Shape (single-thread, HITL, ≤10 min)
 1. **Pull** the week's signals — `build-sessions/*.jsonl` (+ the frozen `build-sessions.jsonl`), `.claude/evals/logs/*`, the DoD waiver log, this week's `/tag-outcome` results.
