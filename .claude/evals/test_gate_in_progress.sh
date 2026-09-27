@@ -72,6 +72,17 @@ rm -f "$EVENT_CLAIM_DIR/e.json"
 echo "{\"event\":\"E\",\"page_id\":\"p1\",\"marker\":\"pending\",\"ts\":\"$OLDZ\"}" > "$TMP/.claude/.state/$SID.deep_read_gate.jsonl"
 bash "$SW" >/dev/null 2>&1;  ck "(g) the later SessionStart sweep does not double-log it" '[ "$(rows "$DLOG" deep_read_gate_abandoned)" = 1 ]'
 
+echo "corrupt ts never crashes the sweep (PR #139, found by the Gemini seat)"
+rm -f "$DLOG" "$EVENT_CLAIM_DIR/e.json"
+printf '%s\n%s\n%s\n' \
+  '{"event":"E1","page_id":"q1","marker":"pending","ts":""}' \
+  '{"event":"E2","page_id":"q2","marker":"pending"}' \
+  "{\"event\":\"E3\",\"page_id\":\"q3\",\"marker\":\"pending\",\"ts\":\"$OLDZ\"}" > "$TMP/.claude/.state/$SID.deep_read_gate.jsonl"
+out=$(bash "$SW" 2>&1); rc=$?
+ck "(i) empty ts + missing ts + a valid old row → sweep exits 0, no shell error" '[ "$rc" = 0 ] && ! printf "%s" "$out" | grep -qi "bad math\|syntax error"'
+ck "(i) ...all three rows surfaced (corrupt ts reads as ancient; the row after them is still reached)" '[ "$(rows "$DLOG" deep_read_gate_abandoned)" = 3 ]'
+ck "(i) ...and the corrupt ones are labelled as such" 'printf "%s" "$out" | grep -q "no ts — corrupt row"'
+
 echo "gate that cannot run says so (YED-228 follow-up)"
 NOJQ="$TMP/nojq"; mkdir -p "$NOJQ"; for b in bash cat dirname date grep printf; do ln -sf "$(command -v $b)" "$NOJQ/$b" 2>/dev/null; done
 out=$(printf '{"session_id":"%s","stop_hook_active":false}' "$SID" | PATH="$NOJQ" "$NOJQ/bash" "$G" 2>/dev/null)
