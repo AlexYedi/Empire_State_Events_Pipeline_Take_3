@@ -81,6 +81,8 @@ while IFS= read -r ref; do
   if [ ! -e "$probe" ]; then
     case "$ref" in
       .claude/artifacts/*.jsonl|./.claude/artifacts/*.jsonl)
+        # a coarse pre-filter only (the glob also admits artifacts/sub/x.jsonl); the exact-line match
+        # against runtime_ledgers.py --list below is what enforces its anchored rule, so the two agree.
         if [ "$RUNTIME_LOADED" = 0 ]; then
           RUNTIME_LEDGERS=$(python3 "$(dirname "$0")/runtime_ledgers.py" --list 2>/dev/null); RUNTIME_LOADED=1
         fi
