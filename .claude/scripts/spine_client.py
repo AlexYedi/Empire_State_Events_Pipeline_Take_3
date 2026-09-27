@@ -26,7 +26,7 @@ Conventions preserved from the six writers this replaced: (status, parsed_json) 
 dockb's raise-on-HTTPError semantics. Exit codes: 2 = PIIViolation, 1 = selftest/check failure.
 """
 from __future__ import annotations
-import fnmatch, json, os, re, sys, urllib.error, urllib.parse, urllib.request
+import fnmatch, http.client, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 REF = "oicikjyzmxqfomrrqkvf"
 BASE = f"https://{REF}.supabase.co/rest/v1"
@@ -313,6 +313,25 @@ def freeze_block(method: str, path: str) -> None:
         "Source of truth: .claude/references/graph-freeze.json")
 
 
+# Transient-failure retry (YED-205 acceptance run, 2026-09-27). A stage-research run is ~250 sequential
+# REST calls; one multi-second network stall anywhere used to kill the whole run (3 of 4 attempts on the
+# Shortlist run died on a single `urlopen ... timed out`). Only requests that are safe to repeat are
+# retried: a plain-insert POST that timed out may already have landed, so it still fails loud.
+REQ_RETRIES = 3                  # total attempts
+REQ_BACKOFF = (1.0, 3.0)         # seconds before attempt 2, 3
+_TRANSIENT = (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException)
+
+
+def _retryable(method: str, path: str, prefer: str | None) -> bool:
+    """Idempotent-by-construction only: GET, PATCH (set-to-value), and upsert POSTs (`resolution=` in Prefer).
+    /rpc/ is excluded — an rpc may write. Everything else repeats nothing."""
+    if path.startswith("/rpc/"):
+        return False
+    if method in ("GET", "PATCH"):
+        return True
+    return method == "POST" and "resolution=" in (prefer or "")
+
+
 def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout: int = 30,
         raise_on_error: bool = False, extra_headers: dict | None = None):
     """(status, parsed_json_or_text). Every POST/PATCH/PUT body is guarded (except /rpc/ paths).
@@ -328,16 +347,25 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
     if extra_headers:
         headers.update(extra_headers)
     data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(BASE + path, data=data, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(r, timeout=timeout) as resp:
-            txt = resp.read().decode()
-            return resp.status, (json.loads(txt) if txt else None)
-    except urllib.error.HTTPError as e:
-        txt = e.read().decode()
-        if raise_on_error:
-            raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {txt[:500]}")
-        return e.code, txt
+    attempts = REQ_RETRIES if _retryable(method, path, prefer) else 1
+    for attempt in range(1, attempts + 1):
+        r = urllib.request.Request(BASE + path, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(r, timeout=timeout) as resp:
+                txt = resp.read().decode()
+                return resp.status, (json.loads(txt) if txt else None)
+        except urllib.error.HTTPError as e:            # a real HTTP answer: never retried (subclass of URLError)
+            txt = e.read().decode()
+            if raise_on_error:
+                raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {txt[:500]}")
+            return e.code, txt
+        except _TRANSIENT as e:                        # no answer at all: stall / reset / dropped socket
+            if attempt >= attempts:
+                raise
+            wait = REQ_BACKOFF[min(attempt, len(REQ_BACKOFF)) - 1]
+            sys.stderr.write(f"req: transient {type(e).__name__} ({str(e)[:80]}) on {method} {path[:90]} — "
+                             f"retry {attempt}/{attempts - 1} in {wait:g}s\n")
+            time.sleep(wait)
 
 
 def write(table: str, rows, prefer: str | None = "return=representation", *, patch_filter: str | None = None,
@@ -449,6 +477,49 @@ def selftest() -> bool:
         lambda: (_ for _ in ()).throw(PIIViolation("bypass param present")) if any("guard" in k for k in inspect.signature(req).parameters) else None, False)
     add("writer scan catches a JS fetch() POST to rest/v1",
         lambda: None if _SCRIPT_WRITE_RE.search('fetch("https://x.supabase.co/rest/v1/person", {method: "POST"})') else (_ for _ in ()).throw(PIIViolation("miss")), False)
+
+    # Transient retry (2026-09-27): the rule is pinned, and the loop is exercised against a stubbed socket.
+    add("retry rule: GET / PATCH / upsert-POST retry; plain POST and /rpc/ do not",
+        lambda: None if (_retryable("GET", "/person?x", None) and _retryable("PATCH", "/person?id=eq.1", "return=minimal")
+                         and _retryable("POST", "/claim?on_conflict=k", "resolution=ignore-duplicates,return=minimal")
+                         and not _retryable("POST", "/person", "return=representation")
+                         and not _retryable("POST", "/rpc/match_doc_chunks", "resolution=merge-duplicates"))
+        else (_ for _ in ()).throw(PIIViolation("retry rule drifted")), False)
+
+    def _retry_loop_case():
+        g = globals()
+        calls = {"n": 0}
+
+        class _Resp:
+            status = 200
+            def read(self): return b"[]"
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake_urlopen(r, timeout=None):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise urllib.error.URLError("timed out")
+            return _Resp()
+        # The freeze cases below arm a TEMP "active" marker at registration time, so a write-path call here
+        # would be refused at the door before it reaches the stubbed socket — same escape as `_absent()`.
+        saved = (g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"], g["FREEZE_PATH"])
+        g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"] = (0, 0), fake_urlopen, (lambda: "test-key")
+        g["FREEZE_PATH"] = os.path.join(ROOT, "__no_such_freeze__.json")
+        try:
+            st, body = req("GET", "/person?select=id&limit=1")
+            if not (st == 200 and body == [] and calls["n"] == 3):
+                raise PIIViolation(f"retry loop drifted: status={st} calls={calls['n']}")
+            calls["n"] = 0
+            try:
+                req("POST", "/person", [{"name": "Plain Insert"}], prefer="return=representation")
+                raise PIIViolation("plain POST retried")     # must NOT reach a 3rd call; must raise on the 1st
+            except urllib.error.URLError:
+                if calls["n"] != 1:
+                    raise PIIViolation(f"plain POST made {calls['n']} calls")
+        finally:
+            g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"], g["FREEZE_PATH"] = saved
+    add("retry loop: 2 stalls then success on GET; plain POST fails on the 1st stall", _retry_loop_case, False)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
