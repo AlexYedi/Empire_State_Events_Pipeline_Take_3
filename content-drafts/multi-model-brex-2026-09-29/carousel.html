@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Who Decides — The Multi-Model Future, Sept 29</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #059669;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+  h1 { font: 700 78px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 48px; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 56px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 70px; }
+  .acc { color: var(--accent); }
+
+  /* slide 1 — hook */
+  .hook { font: 700 132px/1.02 var(--serif); letter-spacing: -.02em; margin-top: auto; }
+  .hook .acc { text-decoration: underline; text-decoration-thickness: 8px; text-underline-offset: 14px; }
+  .sub { white-space: nowrap; font: 26px/1.4 var(--mono); color: var(--dim); margin-top: 56px; margin-bottom: 150px; border-top: 2px solid var(--line); padding-top: 32px; }
+
+  /* slide 2 — bars */
+  .bars { display: grid; gap: 56px; margin-top: 20px; }
+  .bar .k { font: 600 26px/1.2 var(--mono); color: var(--dim); margin-bottom: 16px; display: flex; justify-content: space-between; }
+  .bar.hi .k { color: var(--ink); }
+  .track { height: 96px; border: 2px dashed var(--line); border-radius: 10px; position: relative; overflow: hidden; }
+  .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px 0 0 8px; }
+  .fill.old { width: 13%; background: #8A8F98; }
+  .fill.new { width: 56%; background: var(--accent); }
+  .rest { position: absolute; left: 56%; right: 0; top: 0; bottom: 0; border-left: 2px solid var(--ink);
+          display: flex; align-items: center; justify-content: center; font: 600 22px/1.1 var(--mono); color: var(--ink); text-align: center; }
+  .inbar { position: absolute; left: 28px; top: 0; bottom: 0; display: flex; align-items: center; font: 700 44px/1 var(--serif); color: #fff; }
+  .scale { display: flex; justify-content: space-between; font: 20px/1 var(--mono); color: var(--dim); margin-top: 14px; }
+  .anno { font: 32px/1.35 var(--serif); margin-top: 64px; border-left: 6px solid var(--accent); padding: 8px 0 8px 26px; }
+  .anno .dim { color: var(--dim); }
+
+  /* slide 3 — request path */
+  .flow { display: flex; flex-direction: column; align-items: stretch; }
+  .box { border: 2px solid var(--line); border-radius: 14px; padding: 16px 24px; }
+  .box .r { font: 700 28px/1.1 var(--mono); letter-spacing: .08em; }
+  .box .c { font: 26px/1.25 var(--serif); margin-top: 6px; }
+  .box .co { font: 600 20px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
+  .box.hi { border-color: var(--accent); border-width: 3px; }
+  .box.hi .r, .box.hi .co { color: var(--accent); }
+  .box.doc { align-self: flex-start; border-style: dashed; padding: 12px 22px; }
+  .box.doc .c { margin: 0; color: var(--dim); }
+  .arrow { height: 34px; display: flex; justify-content: center; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-items: stretch; position: relative; }
+  .pair .box { margin: 0; }
+  .pair .gap { display: none; }
+  .esc { font: 600 20px/1.2 var(--mono); color: var(--ink); text-align: center; }
+  .bracket { margin-top: 18px; border: 2px solid var(--line); border-top: none; border-radius: 0 0 14px 14px; padding: 14px 24px 12px; text-align: center; }
+  .bracket .r { font: 700 26px/1.1 var(--mono); letter-spacing: .08em; }
+  .bracket .co { font: 600 20px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
+
+  /* slide 4 — split */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 10px; }
+  .col { border: 2px solid var(--line); border-radius: 18px; padding: 40px 34px; display: flex; flex-direction: column; min-height: 640px; }
+  .col h2 { font: 700 22px/1.3 var(--mono); letter-spacing: .08em; color: var(--dim); min-height: 60px; }
+  .col .from { font: 700 64px/1 var(--serif); color: var(--dim); margin-top: 56px; }
+  .col .ar { font: 700 110px/1 var(--serif); color: var(--accent); margin: 22px 0; }
+  .col .ar small { font: 600 22px/1 var(--mono); letter-spacing: .08em; vertical-align: middle; margin-left: 12px; }
+  .col .to { font: 700 88px/1 var(--serif); }
+  .col .cap { font: 26px/1.3 var(--mono); color: var(--dim); margin-top: auto; padding-top: 30px; border-top: 2px solid var(--line); }
+
+  /* slide 5 — fork */
+  .fork { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 20px; position: relative; }
+  .opt { border: 3px solid var(--accent); border-radius: 18px; padding: 48px 30px; min-height: 280px; }
+  .opt .who { white-space: nowrap; font: 700 50px/1.1 var(--serif); color: var(--accent); }
+  .opt .what { font: 32px/1.3 var(--serif); margin-top: 28px; }
+  .forkline { height: 90px; }
+  .ask { margin-top: auto; margin-bottom: 120px; font: 600 44px/1.25 var(--serif); border-top: 2px solid var(--line); padding-top: 36px; }
+</style>
+</head>
+<body>
+
+<!-- 1 · HOOK -->
+<section class="slide">
+  <div class="kicker">Panel preview</div>
+  <div class="hook">Who <span class="acc">decides</span> which model answers?</div>
+  <div class="sub">The Multi-Model Future · Brex × Extend · NYC · Sept 29</div>
+  <div class="foot"><span>1 / 5</span><span>swipe →</span></div>
+</section>
+
+<!-- 2 · EVIDENCE -->
+<section class="slide">
+  <div class="kicker">The share shift</div>
+  <h1>Open-weight: 13% → <span class="acc">56%</span></h1>
+  <div class="bars">
+    <div class="bar">
+      <div class="k"><span>April 2026</span><span>13%</span></div>
+      <div class="track"><div class="fill old"></div></div>
+    </div>
+    <div class="bar hi">
+      <div class="k"><span>August 2026</span><span class="acc">56%</span></div>
+      <div class="track"><div class="fill new"></div><div class="inbar">open-weight</div><div class="rest">closed<br>44%</div></div>
+      <div class="scale"><span>0%</span><span>50%</span><span>100%</span></div>
+    </div>
+  </div>
+  <div class="anno">Share of token volume on Vercel's AI Gateway going to open-weight models <span class="dim">(weights public, anyone can host).</span></div>
+  <div class="src">Source: Vercel AI Gateway Production Index, September 2026</div>
+  <div class="foot"><span>2 / 5</span><span></span></div>
+</section>
+
+<!-- 3 · MECHANISM -->
+<section class="slide" style="padding-top:84px">
+  <div class="kicker" style="margin-bottom:26px">The panel as a stack</div>
+  <h1 style="margin-bottom:28px">One request, four seats</h1>
+  <div class="flow">
+    <div class="box doc"><div class="c">Messy document (PDF, scan)</div></div>
+    <div class="arrow"><svg width="30" height="34" viewBox="0 0 30 34"><line x1="15" y1="0" x2="15" y2="24" stroke="#8A8F98" stroke-width="3"/><path d="M5 22 L15 33 L25 22" fill="#8A8F98"/></svg></div>
+    <div class="box">
+      <div class="r">INGEST</div>
+      <div class="c">Turns documents into structured data for agents</div>
+      <div class="co">Extend</div>
+    </div>
+    <div class="arrow"><svg width="30" height="34" viewBox="0 0 30 34"><line x1="15" y1="0" x2="15" y2="24" stroke="#8A8F98" stroke-width="3"/><path d="M5 22 L15 33 L25 22" fill="#8A8F98"/></svg></div>
+    <div class="box hi">
+      <div class="r">ROUTE</div>
+      <div class="c">Gateway picks a model per request</div>
+      <div class="co">Vercel AI Gateway</div>
+    </div>
+    <svg width="904" height="44" viewBox="0 0 904 44" style="display:block"><path d="M452 0 V14 H200 V34 M452 14 H704 V34" fill="none" stroke="#8A8F98" stroke-width="3"/><path d="M190 32 L200 43 L210 32 Z M694 32 L704 43 L714 32 Z" fill="#8A8F98"/></svg>
+    <div class="pair">
+      <div class="box" style="margin-right:12px">
+        <div class="r" style="font-size:24px">SMALL / OPEN-WEIGHT</div>
+        <div class="c">Easy work, cheap</div>
+      </div>
+      <div class="box" style="margin-left:12px">
+        <div class="r" style="font-size:24px">FRONTIER / CLOSED</div>
+        <div class="c">Hard work, expensive</div>
+      </div>
+    </div>
+    <div style="position:relative;height:84px">
+      <svg width="904" height="84" viewBox="0 0 904 84" style="position:absolute;left:0;top:0">
+        <path d="M300 0 V30 H604 V8" fill="none" stroke="#F5F3EE" stroke-width="2.5" stroke-dasharray="8 7"/>
+        <path d="M595 13 L604 1 L613 13 Z" fill="#F5F3EE"/>
+        <path d="M100 0 V72 M804 0 V72" fill="none" stroke="#8A8F98" stroke-width="3"/>
+        <path d="M90 70 L100 83 L110 70 Z M794 70 L804 83 L814 70 Z" fill="#8A8F98"/>
+      </svg>
+      <div class="esc" style="position:absolute;left:0;right:0;top:44px">escalate if unsure (cascade)</div>
+    </div>
+    <div class="box">
+      <div class="r">SERVE</div>
+      <div class="c">Inference host runs the models</div>
+      <div class="co">Baseten</div>
+    </div>
+    <div class="bracket">
+      <div class="r">PAY + GOVERN</div>
+      <div class="co">The buyer · Brex, now part of Capital One</div>
+    </div>
+  </div>
+  <div class="src" style="padding-bottom:62px">Roles per event invite and company sites; Brex × Capital One: Capital One newsroom, Apr 2026</div>
+  <div class="foot"><span>3 / 5</span><span></span></div>
+</section>
+
+<!-- 4 · COUNTERPOINT -->
+<section class="slide">
+  <div class="kicker">The counterpoint</div>
+  <h1>Cheaper tokens. Bigger bills.</h1>
+  <div class="split">
+    <div class="col">
+      <h2>PRICE PER MILLION TOKENS</h2>
+      <div class="from">$18.40</div>
+      <div class="ar">↓<small>DOWN</small></div>
+      <div class="to">$6.07</div>
+      <div class="cap">−67%, Q1'25 → Q1'26</div>
+    </div>
+    <div class="col">
+      <h2>AVERAGE ENTERPRISE AI BUDGET</h2>
+      <div class="from">$1.2M</div>
+      <div class="ar">↑<small>UP</small></div>
+      <div class="to">$7M</div>
+      <div class="cap">2024 → 2026</div>
+    </div>
+  </div>
+  <div class="src">Source: Correlation One, 2026 enterprise token-cost playbook</div>
+  <div class="foot"><span>4 / 5</span><span></span></div>
+</section>
+
+<!-- 5 · CTA -->
+<section class="slide">
+  <div class="kicker">The open question</div>
+  <h1>Who should own the router's judgment?</h1>
+  <svg class="forkline" width="904" height="90" viewBox="0 0 904 90"><path d="M452 0 V30 H226 V80 M452 30 H678 V80" fill="none" stroke="#059669" stroke-width="4"/><path d="M216 76 L226 89 L236 76 Z M668 76 L678 89 L688 76 Z" fill="#059669"/></svg>
+  <div class="fork">
+    <div class="opt"><div class="who">Engineering</div><div class="what">Cost, latency, quality</div></div>
+    <div class="opt"><div class="who">Finance + risk</div><div class="what">Budget, audit, compliance</div></div>
+  </div>
+  <div class="ask">What are you hoping this panel answers? Reply below.</div>
+  <div class="foot"><span>5 / 5</span><span></span></div>
+</section>
+
+</body>
+</html>

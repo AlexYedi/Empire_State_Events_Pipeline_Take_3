@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Data Stack, Redrawn — NY dbt Meetup, Sept 30 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #059669; --accent-ink: #34D399;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 36px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 44px; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 56px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-top: 24px; padding-bottom: 70px; }
+  .after .st { min-height: 128px; padding: 18px 30px; }
+  .after h1 { margin-bottom: 36px; }
+
+  /* slides 1–2 — the line (same frame) */
+  .line { display: flex; flex-direction: column; }
+  .st { border: 2px solid var(--line); border-radius: 16px; padding: 22px 30px; display: grid;
+        grid-template-columns: 330px 1fr; gap: 24px; align-items: center; min-height: 150px; }
+  .st .nm { font: 700 30px/1.1 var(--mono); letter-spacing: .06em; }
+  .st .does { font: 22px/1.3 var(--mono); color: var(--dim); margin-top: 10px; }
+  .st .who { font: 600 34px/1.2 var(--serif); color: #C9CCD1; }
+  .st .who small { display: block; font: 24px/1.3 var(--serif); color: var(--dim); margin-top: 6px; }
+  .arrow { height: 36px; display: flex; justify-content: flex-start; padding-left: 60px; }
+  .arrow svg { display: block; }
+  .caption { font: 600 32px/1.3 var(--serif); margin-top: 34px; color: var(--ink); }
+  .caption span { color: var(--dim); font-weight: 400; }
+  .box { border: 3px solid var(--accent); border-radius: 20px; padding: 18px 16px 16px; position: relative; }
+  .box .st { border-color: var(--line); }
+  .box .blabel { font: 600 22px/1.3 var(--mono); color: var(--accent-ink); margin: 0 6px 14px; }
+  .st.cons { border-color: var(--accent); }
+  .st .who.on { color: var(--ink); }
+  .tagt { display: inline-block; font: 700 20px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+          border: 2px solid var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 7px 9px; margin-right: 10px; vertical-align: middle; }
+  .tagt.ind { border-color: var(--dim); color: var(--ink); }
+
+  /* slide 3 — rows + bracket */
+  .moves { display: grid; grid-template-columns: 1fr 70px; gap: 0 18px; flex: 1; align-content: start; }
+  .mrows { display: flex; flex-direction: column; }
+  .mrow { border-top: 2px solid var(--line); padding: 30px 0 32px; }
+  .mrow:last-child { border-bottom: 2px solid var(--line); }
+  .mco { font: 700 38px/1.15 var(--serif); }
+  .mmove { font: 600 22px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 12px 0 16px; }
+  .mq { font: italic 32px/1.28 var(--serif); color: var(--ink); border-left: 5px solid var(--accent); padding-left: 20px; }
+  .mq .pre { font-style: normal; color: var(--dim); }
+  .brk { position: relative; }
+  .brk svg { position: absolute; inset: 0; }
+  .brk .bl { position: absolute; top: 50%; left: 58px; transform: translate(-50%,-50%) rotate(90deg); white-space: nowrap;
+             font: 700 24px/1 var(--mono); letter-spacing: .08em; color: var(--accent-ink); }
+
+  /* slide 4 — split */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 30px; }
+  .col { border: 2px solid var(--line); border-radius: 18px; padding: 40px 34px; display: flex; flex-direction: column; gap: 34px; }
+  .col h2 { font: 700 30px/1.2 var(--mono); letter-spacing: .1em; color: var(--accent-ink); }
+  .row .k { font: 20px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+  .row ul { list-style: none; display: grid; gap: 14px; }
+  .row li { font: 600 34px/1.2 var(--serif); padding-left: 26px; position: relative; }
+  .row li::before { content: ""; position: absolute; left: 0; top: 16px; width: 10px; height: 10px; background: var(--dim); border-radius: 2px; }
+  .neutral { font: 30px/1.4 var(--serif); color: var(--dim); margin-top: 10px; }
+
+  /* slide 5 — question + strip */
+  .q { font: 700 96px/1.04 var(--serif); letter-spacing: -.015em; margin-bottom: 30px; }
+  .sub { font: 32px/1.35 var(--serif); color: #C9CCD1; margin-bottom: 60px; max-width: 880px; }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .strip div { border: 2px solid var(--line); border-radius: 10px; padding: 16px 6px; text-align: center;
+               font: 700 20px/1 var(--mono); letter-spacing: .04em; color: var(--dim); }
+  .pins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 0; }
+  .pin { position: relative; padding-top: 34px; }
+  .pin::before { content: ""; position: absolute; top: 0; left: 50%; width: 2px; height: 34px; background: var(--accent); }
+  .ntag { border: 2px solid var(--accent); border-radius: 12px; padding: 16px 18px; background: rgba(5,150,105,.10); }
+  .ntag b { display: block; font: 700 30px/1.15 var(--serif); }
+  .ntag span { display: block; font: 22px/1.3 var(--mono); color: #C9CCD1; margin-top: 6px; }
+  .span-all { grid-column: 1 / -1; margin-top: 26px; }
+  .span-all .bar { height: 14px; border: 2px solid var(--accent); border-top: none; border-radius: 0 0 8px 8px; margin: 0 0 0; }
+  .span-all .pin::before { height: 26px; }
+  .span-all .pin { padding-top: 26px; }
+  .span-all .ntag { max-width: 620px; margin: 0 auto; }
+  .org { font: 24px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 36px; }
+</style>
+</head>
+<body>
+
+<!-- 1 · BEFORE -->
+<section class="slide">
+  <div class="kicker">NY dbt Meetup · Sept 30 · Before</div>
+  <h1>The data stack, before 2026</h1>
+  <div class="line">
+    <div class="st"><div><div class="nm">INGEST</div><div class="does">copy raw data in</div></div><div class="who">Fivetran</div></div>
+    <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#8A8F98" stroke-width="3" fill="none"/></svg></div>
+    <div class="st"><div><div class="nm">TRANSFORM</div><div class="does">reshape in the warehouse (ELT)</div></div><div class="who">dbt Labs</div></div>
+    <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#8A8F98" stroke-width="3" fill="none"/></svg></div>
+    <div class="st"><div><div class="nm">ORCHESTRATE</div><div class="does">run steps in order, retry failures</div></div><div class="who">Airflow · Prefect · Dagster</div></div>
+    <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#8A8F98" stroke-width="3" fill="none"/></svg></div>
+    <div class="st"><div><div class="nm">BI</div><div class="does">show the business</div></div><div class="who">Sigma · Looker · Tableau</div></div>
+  </div>
+  <div class="caption">Pick the best tool at each station. <span>Swap any of them out.</span></div>
+  <div class="foot"><span>1 / 5</span><span>vendors illustrative · swipe →</span></div>
+</section>
+
+<!-- 2 · AFTER -->
+<section class="slide after">
+  <div class="kicker">NY dbt Meetup · Sept 30 · After</div>
+  <h1>The same stack, eight weeks later</h1>
+  <div class="line">
+    <div class="box">
+      <div class="blabel"><span class="tagt">merged</span>Fivetran + dbt Labs · closed Jun 1, 2026 · ~$600M combined ARR</div>
+      <div class="st"><div><div class="nm">INGEST</div><div class="does">copy raw data in</div></div><div class="who on">Fivetran + dbt Labs</div></div>
+      <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#059669" stroke-width="3" fill="none"/></svg></div>
+      <div class="st"><div><div class="nm">TRANSFORM</div><div class="does">reshape in the warehouse (ELT)</div></div><div class="who on">Fivetran + dbt Labs</div></div>
+    </div>
+    <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#8A8F98" stroke-width="3" fill="none"/></svg></div>
+    <div class="st cons"><div><div class="nm">ORCHESTRATE</div><div class="does">run steps in order, retry failures</div></div>
+      <div class="who on"><span class="tagt">acquired</span>Prefect<small>acquired Dagster Labs, Jul 2026 · both products continue</small></div></div>
+    <div class="arrow"><svg width="30" height="36"><path d="M15 2 V30 M5 20 L15 32 L25 20" stroke="#8A8F98" stroke-width="3" fill="none"/></svg></div>
+    <div class="st"><div><div class="nm">BI</div><div class="does">show the business</div></div>
+      <div class="who on"><span class="tagt ind">independent</span>Sigma<small>$80M at $3B valuation, May 2026</small></div></div>
+  </div>
+  <div class="src">Sources: Fivetran press, 2026; Prefect, 2026; Sigma Computing, 2026</div>
+  <div class="foot"><span>2 / 5</span><span></span></div>
+</section>
+
+<!-- 3 · WHAT CHANGED -->
+<section class="slide">
+  <div class="kicker">What changed · in their own words</div>
+  <h1>Three moves, one stated reason: agents</h1>
+  <div class="moves">
+    <div class="mrows">
+      <div class="mrow"><div class="mco">Fivetran + dbt Labs</div><div class="mmove">Merger</div>
+        <div class="mq">“the data infrastructure for trusted AI agents”</div></div>
+      <div class="mrow"><div class="mco">Prefect + Dagster</div><div class="mmove">Acquisition</div>
+        <div class="mq">“Dagster defines outcomes, Prefect executes, FastMCP governs access”</div></div>
+      <div class="mrow"><div class="mco">Sigma</div><div class="mmove">Raise to stay independent</div>
+        <div class="mq"><span class="pre">repositioning toward</span> “agentic analytics”</div></div>
+    </div>
+    <div class="brk">
+      <svg width="70" height="100%" preserveAspectRatio="none" viewBox="0 0 70 100"><path d="M4 1 H22 V99 H4" stroke="#059669" stroke-width="3" fill="none" vector-effect="non-scaling-stroke"/></svg>
+      <div class="bl">Same destination, different routes</div>
+    </div>
+  </div>
+  <div class="src">Sources: Fivetran press release (Jun 1, 2026); Prefect acquisition announcement (Jul 2026); Sigma Series E announcement (May 2026)</div>
+  <div class="foot"><span>3 / 5</span><span></span></div>
+</section>
+
+<!-- 4 · THE TRADE -->
+<section class="slide">
+  <div class="kicker">What the practitioner inherits</div>
+  <h1>Rollup or independent: what each trades</h1>
+  <div class="split">
+    <div class="col">
+      <h2>ROLLUP</h2>
+      <div class="row"><div class="k">Gets</div><ul><li>Fewer integration seams</li><li>One contract, one renewal</li></ul></div>
+      <div class="row"><div class="k">Gives up</div><ul><li>Fewer exits if the roadmap drifts</li></ul></div>
+    </div>
+    <div class="col">
+      <h2>INDEPENDENT</h2>
+      <div class="row"><div class="k">Gets</div><ul><li>Best-of-breed choice at each station</li><li>Swap freedom</li></ul></div>
+      <div class="row"><div class="k">Gives up</div><ul><li>More integration work owned by the team</li></ul></div>
+    </div>
+  </div>
+  <div class="neutral">The field is split on which side wins. Neither is the verdict.</div>
+  <div class="foot"><span>4 / 5</span><span></span></div>
+</section>
+
+<!-- 5 · SO WHAT -->
+<section class="slide">
+  <div class="kicker">The open question</div>
+  <div class="q">Does any of this change your job?</div>
+  <div class="sub">The question for Wednesday’s New York dbt Meetup, a dbt Summit 2026 recap panel.</div>
+  <div class="strip"><div>INGEST</div><div>TRANSFORM</div><div>ORCHESTRATE</div><div>BI</div></div>
+  <div class="pins">
+    <div></div><div></div>
+    <div class="pin" style="grid-column: 3 / span 1;"></div>
+    <div class="pin"></div>
+  </div>
+  <div class="pins" style="grid-template-columns: 1fr 1fr; margin-top: 0;">
+    <div></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="ntag"><b>Eric Thomas</b><span>Prefect / Dagster Labs</span></div>
+      <div class="ntag"><b>Jake Hannan</b><span>Sigma</span></div>
+    </div>
+  </div>
+  <div class="span-all">
+    <div class="bar"></div>
+    <div class="pin"><div class="ntag"><b>Michael Carlone</b><span>Velir x Brooklyn Data · the whole line (implementation)</span></div></div>
+  </div>
+  <div class="org">Organized by Brooklyn Data · hosted by Sigma, NYC<br>Panelists: meetup.com/nyc-dbt-meetup</div>
+  <div class="foot"><span>5 / 5</span><span></span></div>
+</section>
+
+</body>
+</html>
