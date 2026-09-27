@@ -25,7 +25,7 @@ URL = "https://api.openai.com/v1/responses"
 MAX_OUTPUT_TOKENS = 16000        # a ceiling, not a forecast: 10000 truncated 3 of 18 bake-off runs
 BUDGET_OUTPUT_ESTIMATE = 9000    # what the PRE-CALL cap check assumes (observed use ~4-7k incl. reasoning).
 # Using the 16000 ceiling here made gpt-5.5 look like a $0.52 run and blocked the arm entirely. The real
-# protection is not this estimate: it is the monthly/lifetime caps, which are computed from ACTUAL ledger
+# protection is not this estimate: it is the monthly cap (and an opt-in lifetime cap), which are computed from ACTUAL ledger
 # spend after each call, plus prepaid credit with auto-recharge off. This check only stops a wild overrun.
 CRIT = list(jl.CRITERIA)
 SCHEMA = {  # strict mode: every property required, no extras. Key order = the order the model must work in.
