@@ -76,6 +76,30 @@ def main() -> int:
         finally:
             os.unlink(tmp)
 
+    # 4. YED-223: with --bundle, --context / --spec-file must be REFUSED, never silently dropped. The bundle's
+    #    bytes are what every seat scores; an extra flag that changes nothing is how a caller came to believe
+    #    it had repaired evidence parity (2026-09-24, YED-221 round 1).
+    import judge_lib as jl
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, dir=".claude/evals") as f:
+        json.dump(jl.build_bundle(art, "code", ".claude/evals/prompts/judge-system-v2.md",
+                                  ".claude/evals/rubrics/build-quality-v5.md", "x" * 500), f)
+        bpath = f.name
+    try:
+        for s in seats:
+            r = s["runner"]
+            if not os.path.isfile(r):
+                continue
+            for extra in (["--context", "more spec"], ["--spec-file", art]):
+                p = run(r, ["--bundle", bpath, *extra, "--dry-run"])
+                blob = (p.stdout + p.stderr).lower()
+                ck(f"{s['id']}: refuses {extra[0]} alongside --bundle", p.returncode != 0 and "--bundle" in blob,
+                   f"rc={p.returncode} {(p.stdout + p.stderr).strip()[:90]}")
+            p = run(r, ["--bundle", bpath, "--dry-run"])
+            ck(f"{s['id']}: a plain --bundle --dry-run still works", p.returncode == 0,
+               f"rc={p.returncode} {(p.stdout + p.stderr).strip()[:90]}")
+    finally:
+        os.unlink(bpath)
+
     print(f"{ok}/{n} adapter-contract cases pass")
     return 0 if ok == n else 1
 

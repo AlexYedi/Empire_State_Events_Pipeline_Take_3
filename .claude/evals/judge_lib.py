@@ -96,19 +96,37 @@ def _norm(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip().lower()
 
 
-def verify_quotes(defects: list, artifact_text: str) -> dict:
-    """Each defect's `quote` must be a whitespace-normalized verbatim substring of the artifact.
+# Formatting that a seat routinely drops or re-renders when it quotes, and that says nothing about whether the
+# text is real: markdown emphasis/code markers, and dash / colon variants. Stripped from BOTH sides, so it can
+# only make a real quote match — it never makes an invented sentence appear. (YED-223, 2026-09-27: a Sonnet seat
+# quoted `**One exception — …:**` without the asterisks and another rendered an em-dash as a colon; the exact
+# check called both fabricated, dropped the only voting seat, and forced a false FLAG on a pass artifact.)
+_FORMAT_RE = re.compile(r"[*_`]")
+_DASH_RE = re.compile(r"\s*(?:—|–|--|:)\s*")
 
-    A seat that invents a flaw can't quote it. Returns counts; the caller tags the run `evidence_unverified`
-    when more than 30% of quoted defects fail, which strips that seat's power to escalate for this run.
+
+def _norm_loose(t: str) -> str:
+    return _norm(_DASH_RE.sub(" ~ ", _FORMAT_RE.sub("", t)))
+
+
+def verify_quotes(defects: list, artifact_text: str) -> dict:
+    """Each defect's `quote` must appear in the artifact, modulo whitespace, case, markdown markers and
+    dash/colon variants (see _norm_loose). A seat that invents a flaw still can't quote it.
+
+    `unverified` / `evidence_unverified` use the formatting-tolerant match; `unverified_exact` keeps the old
+    whitespace-only count as a secondary field so drift in how seats quote stays visible. The caller tags the
+    run `evidence_unverified` when more than 30% of quoted defects fail, which strips that seat's power to
+    escalate (and, in the quorum, to vote) for this run.
     """
-    hay = _norm(artifact_text)
+    hay, hay_loose = _norm(artifact_text), _norm_loose(artifact_text)
     quoted = [d for d in defects or [] if isinstance(d, dict) and _norm(str(d.get("quote") or ""))]
-    bad = [d for d in quoted if _norm(str(d["quote"])) not in hay]
+    bad = [d for d in quoted if _norm_loose(str(d["quote"])) not in hay_loose]
+    bad_exact = [d for d in quoted if _norm(str(d["quote"])) not in hay]
     n = len(quoted)
     return {"quoted": n, "unverified": len(bad), "unverified_rate": round(len(bad) / n, 3) if n else 0.0,
             "evidence_unverified": bool(n) and len(bad) / n > 0.30,
-            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5]}
+            "unverified_quotes": [str(d["quote"])[:120] for d in bad][:5],
+            "unverified_exact": len(bad_exact), "match": "format-tolerant"}
 
 
 def must_cite_gaps(scored: dict) -> list[str]:
@@ -293,6 +311,15 @@ def _cli() -> int:
     json.dump(b, open(a.out, "w", encoding="utf-8"))
     print(f"bundle {b['bundle_sha256'][:12]} · artifact {b['artifact_sha256'][:12]} · {len(b['text'])} chars · "
           f"evidence_parity={b['evidence_parity']} · dangling={len(b['dangling_refs'])} → {a.out}")
+    if not b["evidence_parity"]:
+        # YED-223: parity is fixed HERE, at build time. No seat flag can repair it later — the adapters score the
+        # bundle's bytes verbatim and refuse --context/--spec-file alongside --bundle.
+        print("\n  ⚠️  EVIDENCE-PARITY WARNING: this bundle carries < 400 chars of spec/context.\n"
+              "      Every seat scoring it will log evidence_parity:false and be EXCLUDED from calibration,\n"
+              "      and cross-file defects (spec drift) are invisible to all of them.\n"
+              "      Fix: REBUILD the bundle with --spec-file <in-repo spec> (repeatable) and/or --context.\n"
+              "      Re-running a seat with extra flags cannot help; the seats refuse them with --bundle.\n",
+              file=sys.stderr)
     return 0
 
 

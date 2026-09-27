@@ -33,11 +33,12 @@ auto-resolved. Every seat scores the **same bytes**, and no seat ever sees anoth
 1. **Build ONE evidence bundle** (runs the Step 0 pre-passes and the privacy guard for you):
    `python3 .claude/evals/judge_lib.py bundle --artifact <path> --artifact-type <t> --spec-file <in-repo spec> [--context "<text>"] --out <scratchpad>/bundle.json`
    Spec files must be tracked files inside the repo. A gitignored, symlinked or out-of-repo file is refused (exit 3, no override); pass ad-hoc spec text with `--context` instead. Also write the bundle's `.text` to a `.txt` for the Sonnet seat.
+   **Evidence parity is fixed HERE, at build time** (YED-223). If the build prints an EVIDENCE-PARITY WARNING, **rebuild the bundle** with `--spec-file`/`--context` — never re-run a seat with extra flags: the adapters score the bundle's bytes verbatim and **refuse** `--context`/`--spec-file` alongside `--bundle` (exit 2). Build the artifact diff against the **merge-base** (`git diff $(git merge-base origin/main HEAD)..HEAD`), never two-dot against `origin/main` — a `main` that moved mid-run makes the diff show other people's merges as deletions (2026-09-27).
 2. **Run the three seats in parallel, all on that bundle:**
    - Gemini: `bash .claude/hooks/gemini-judge.sh --bundle <bundle.json> --label gemini-<slug>`
    - OpenAI: `bash .claude/hooks/openai-judge.sh --bundle <bundle.json> --label openai-<slug>` (try `--dry-run` first: free, shows the worst-case cost). Exit 3 = privacy guard, 4 = spend cap. A failed seat is a *missing* seat: never quietly carry on with fewer.
    - Sonnet: dispatch via the `Agent` tool (`model: sonnet`), give it ONLY the bundle `.txt` plus read access to the repo, and have it return `{checks_performed, defects[{line, quote, …}], criterion_scores, cap_flags}` with **no composite and no verdict**. Tell it not to read `.claude/evals/logs/`.
-3. **Log the Sonnet seat with the validated writer, never by hand:** save its JSON to a file, then
+3. **Log the Sonnet seat with the validated writer, never by hand:** (its quote check is format-tolerant since YED-223 — markdown markers and dash/colon variants are ignored on both sides, so a seat is no longer invalidated for quoting `**X — y**` as `X: y`; `unverified_exact` keeps the strict count) save its JSON to a file, then
    `python3 .claude/hooks/seat-log.py --artifact <path> --artifact-type <t> --verdict-file <json> --bundle <bundle.json> --label sonnet-<slug>`
    It stamps the real time, the content hash and the harness-computed score. (Hand-written rows on 2026-09-19 carried made-up timestamps and corrupted the scorecard.)
 4. **Merge:** `python3 .claude/evals/quorum_merge.py --artifact <path> --seat claude=<log> --seat gemini=<log> --seat openai=<log> [--mode autonomous]`

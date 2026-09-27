@@ -91,3 +91,9 @@ one ack covers both. `autonomous` mode never blocks — it records `failsafe_fla
 
 ## DoD
 Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-close`. Spec artifact = this file (mirror to ChatPRD/Notion). Adversarial pass = the quorum-circularity catch (already in writing, this session).
+
+## Bundle mode and quote verification (YED-223, 2026-09-27)
+
+**Evidence parity is a property of the bundle, fixed when `judge_lib.py bundle` builds it.** Every seat scores the bundle's bytes verbatim, so a seat flag cannot add evidence after the fact. The adapters therefore **refuse** `--context`/`--spec-file` together with `--bundle` (exit 2) instead of silently dropping them, and `judge_lib.py bundle` prints an unmissable warning when the bundle carries < 400 chars of spec. The fix for a parity-false bundle is always to rebuild it. Build diff artifacts against the merge-base, never two-dot against a moving `origin/main`.
+
+**Quote verification is format-tolerant.** A defect's `quote` must appear in the artifact after normalizing both sides for whitespace, case, markdown emphasis/code markers (`*`, `_`, backticks) and dash/colon variants (`—`, `–`, `--`, `:`). Stripping is symmetric, so it can only let a real quote match; it cannot make invented text appear. The strict count survives as `unverified_exact`. Motivating cases: a voting seat invalidated on 2026-09-27 for dropping `**` markers (forcing a false flag), and a 2026-09-24 shadow-seat run recorded as "2/2 fabricated" where one quote was real text minus `**` and the other quoted the previous version of the file. That run still correctly ends up `evidence_unverified`.
