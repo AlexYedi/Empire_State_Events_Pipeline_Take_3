@@ -1,0 +1,228 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>The Upcoming Week — NYC AI + data, Sept 28–Oct 4</title>
+<style>
+@page{size:1080px 1350px;margin:0}
+:root{--bg:#0F172A;--ink:#F5F7FA;--dim:#93A4C3;--faint:#6F7F9E;--line:#26324D;--card:#16213A;--accent:#4F7CFF;
+--serif:"Iowan Old Style","Palatino",Georgia,serif;--mono:Menlo,"SF Mono",Monaco,monospace}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{background:var(--bg);color:var(--ink)}
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--bg);font-family:var(--serif);padding:84px 72px 0 72px}
+.slide:not(:last-child){break-after:page;page-break-after:always}
+.kicker{font:600 24px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.kicker b{color:var(--accent);font-weight:600}
+h1{font:700 64px/1.06 var(--serif);letter-spacing:-.01em;margin-top:22px}
+h1 .a{color:var(--accent)}
+.foot{position:absolute;left:72px;right:72px;bottom:52px;display:flex;justify-content:space-between;align-items:flex-end;gap:32px;font:20px/1.4 var(--mono);color:var(--faint)}
+.foot .src{max-width:800px}
+.foot .pg{white-space:nowrap}
+.chips{display:flex;gap:14px;flex-wrap:wrap}
+.chip{font:600 20px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:2px solid var(--accent);border-radius:999px;padding:9px 16px}
+.chiplbl{font:20px/1 var(--mono);color:var(--dim);letter-spacing:.1em;text-transform:uppercase;align-self:center;margin-right:4px}
+
+/* S1 week map */
+.s1{padding-left:48px;padding-right:48px}.s1 .foot{left:48px;right:48px}
+.wk{display:grid;grid-template-columns:150px 164px 226px 234px 164px;grid-template-rows:40px repeat(6,minmax(104px,auto));gap:10px;margin-top:34px}
+.wk .dh{font:700 26px/44px var(--mono);color:var(--dim);text-align:left;padding-left:6px}
+.wk .dh.hot{color:var(--accent)}
+.wk .lh{font:600 20px/1.1 var(--mono);letter-spacing:.04em;color:var(--dim);display:flex;align-items:center}
+.wk .e{border:2px dashed var(--line);border-radius:12px}
+.wk .ev{background:#1B2B57;border:2px solid var(--accent);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;justify-content:center}
+.wk .ev .t{font:600 20px/1.1 var(--mono);color:#B9C9FF}
+.wk .ev .n{font:600 28px/1.06 var(--serif);color:var(--ink);margin-top:5px}
+.venues{margin-top:18px;font:20px/1.45 var(--mono);color:var(--dim)}
+.venues span{color:var(--ink)}
+
+/* S2 charts */
+.ch{margin-top:34px}
+.ch h3{font:600 22px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:16px}
+.bar{display:grid;grid-template-columns:300px 1fr;align-items:center;gap:16px;margin:10px 0}
+.bar .l{font:27px/1.15 var(--serif);color:var(--ink)}
+.bar .l small{display:block;font:20px/1.2 var(--mono);color:var(--dim);margin-top:4px}
+.track{position:relative;height:50px}
+.fill{height:50px;border-radius:6px;background:rgba(245,247,250,.28);display:flex;align-items:center}
+.fill.a{background:var(--accent)}
+.val{font:700 28px/50px var(--mono);color:var(--ink);position:absolute;top:0}
+.ann{font:26px/1.3 var(--serif);color:#D7DEEA;margin-top:14px;border-left:5px solid var(--accent);padding-left:18px}
+.gloss{margin-top:30px;background:var(--card);border-radius:14px;padding:18px 24px;font:24px/1.35 var(--serif);color:#D7DEEA}
+.gloss b{font-family:var(--mono);font-size:21px;color:var(--accent)}
+
+/* S3 architecture */
+.arch{display:grid;grid-template-columns:190px 70px 1fr;margin-top:36px;align-items:stretch}
+.agent{border:3px solid var(--accent);border-radius:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:18px;background:#1B2B57}
+.agent .n{font:700 34px/1.1 var(--serif)}
+.agent .s{font:20px/1.3 var(--mono);color:#B9C9FF;margin-top:12px}
+.arrows{position:relative}.arrows svg{position:absolute;inset:0;width:70px;height:100%}
+.homes{display:flex;flex-direction:column;gap:16px}
+.home{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:18px 22px}
+.home .h{font:700 29px/1.15 var(--serif)}
+.home .h i{font:600 22px var(--mono);font-style:normal;color:var(--accent);margin-right:10px}
+.home .d{font:24px/1.3 var(--serif);color:#D7DEEA;margin-top:6px}
+.home .tg{font:20px/1.3 var(--mono);color:var(--dim);margin-top:8px}
+.rail{margin-top:26px;border-top:4px solid var(--accent);padding-top:14px}
+.rail .rl{font:600 22px/1.3 var(--mono);color:var(--accent)}
+.rail .rl span{color:var(--ink);font-weight:400;font-family:var(--serif);font-size:25px}
+.ticks{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:12px}
+.ticks div{font:20px/1.3 var(--mono);color:#D7DEEA;border-left:3px solid var(--accent);padding-left:12px}
+.fn{margin-top:20px;font:24px/1.3 var(--serif);color:var(--dim)}
+.fn b{color:var(--ink)}
+
+/* S4 timeline */
+.tl{margin-top:34px;position:relative}
+.tl:before{content:"";position:absolute;left:209px;top:18px;bottom:30px;width:3px;background:var(--line)}
+.tk{display:grid;grid-template-columns:190px 40px 1fr;column-gap:0;padding:16px 0;align-items:start}
+.tk .d{font:700 22px/1.3 var(--mono);color:var(--dim);padding-top:4px}
+.dot{width:24px;height:24px;border-radius:50%;margin:7px 0 0 8px;position:relative;z-index:1}
+.dot.f{background:var(--accent);border:3px solid var(--accent)}
+.dot.h{background:var(--bg);border:3px solid var(--accent)}
+.tk .e{font:29px/1.22 var(--serif);color:var(--ink);padding-left:12px}
+.tk .r{display:block;font:600 20px/1.2 var(--mono);color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
+.legend{display:flex;gap:40px;margin-top:24px;font:20px/1 var(--mono);color:var(--dim);align-items:center}
+.legend span{display:flex;align-items:center;gap:12px}
+.legend .dot{margin:0}
+
+/* S5 landing */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:34px}
+.colh{font:700 22px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding-bottom:12px;border-bottom:2px solid var(--accent);margin-bottom:14px}
+.node{background:var(--card);border-radius:12px;padding:12px 18px}
+.node .n{font:700 30px/1.1 var(--serif)}
+.node .s{font:25px/1.25 var(--serif);color:#D7DEEA;margin-top:4px}
+.down{text-align:center;color:var(--accent);font:700 26px/30px var(--mono)}
+.also{margin-top:16px;font:22px/1.3 var(--mono);color:var(--dim)}
+.ind{display:grid;grid-template-columns:1fr 30px 150px;align-items:center;padding:22px 0;border-bottom:1px solid var(--line)}
+.ind .i{font:27px/1.2 var(--serif);color:#D7DEEA}
+.ind .ar{color:var(--accent);font:700 24px var(--mono)}
+.ind .c{font:700 29px/1.2 var(--serif);text-align:right}
+.stack{margin-top:44px;display:flex;align-items:center;justify-content:space-between;border:2px solid var(--line);border-radius:14px;padding:18px 20px;font:600 20px/1 var(--mono);color:var(--dim);letter-spacing:.02em}
+.stack .ar{color:var(--accent)}
+.stack .end{color:var(--bg);background:var(--accent);padding:8px 10px;border-radius:8px}
+</style></head><body>
+
+<!-- SLIDE 1 — week map: day x stack layer -->
+<section class="slide s1">
+  <div class="kicker">The Upcoming Week · NYC AI + data · Sept 28–Oct 4</div>
+  <h1>One week, <span class="a">the whole AI stack</span></h1>
+  <div class="wk">
+    <div></div><div class="dh">MON</div><div class="dh hot">TUE</div><div class="dh">WED</div><div class="dh">THU</div>
+
+    <div class="lh">APPLICATIONS</div>
+    <div class="ev"><div class="t">6:00pm</div><div class="n">The Shortlist: Founder Showcase</div></div>
+    <div class="e"></div><div class="e"></div>
+    <div class="ev"><div class="t">6:00pm</div><div class="n">AI Demos #11: Media</div></div>
+
+    <div class="lh">ANALYTICS</div>
+    <div class="e"></div>
+    <div class="ev"><div class="t">5:30pm</div><div class="n">Metabase × Datadog</div></div>
+    <div class="e"></div><div class="e"></div>
+
+    <div class="lh">DATA</div>
+    <div class="e"></div><div class="e"></div>
+    <div class="ev"><div class="t">5:30pm</div><div class="n">NY dbt Meetup</div></div>
+    <div class="e"></div>
+
+    <div class="lh">MEMORY</div>
+    <div class="e"></div><div class="e"></div>
+    <div class="ev"><div class="t">9:00am–4:00pm</div><div class="n">MongoDB.local NYC</div></div>
+    <div class="e"></div>
+
+    <div class="lh">MODELS</div>
+    <div class="e"></div>
+    <div class="ev"><div class="t">6:30pm</div><div class="n">The Multi-Model Future</div></div>
+    <div class="e"></div><div class="e"></div>
+
+    <div class="lh">COMPUTE</div>
+    <div class="e"></div>
+    <div class="ev"><div class="t">5:30pm</div><div class="n">Token Economics (VentureBeat)</div></div>
+    <div class="e"></div><div class="e"></div>
+  </div>
+  <div class="venues">Venues: MON <span>Betaworks</span> · TUE <span>Datadog NYC, NYT Bldg</span> (Metabase × Datadog) · WED <span>Pier&nbsp;36</span> (MongoDB) · <span>Sigma, 1 Madison Ave</span> (dbt) · THU <span>The Refinery at Domino</span></div>
+  <div class="foot"><div class="src">All times ET. Seven rooms; links in the first comment.<br>Source: event invites (Luma, Meetup), 2026.</div><div class="pg">1 / 5</div></div>
+</section>
+
+<!-- SLIDE 2 — compute + models: cost numbers -->
+<section class="slide">
+  <div class="kicker"><b>Layers 1–2</b> · Compute + models</div>
+  <h1>What buyers weigh <span class="a">vs. what they track</span></h1>
+  <div class="ch">
+    <h3>What drives AI infrastructure purchases</h3>
+    <div class="bar"><div class="l">Integration</div><div class="track"><div class="fill a" style="width:57.4%"></div><div class="val" style="left:calc(57.4% + 14px)">41%</div></div></div>
+    <div class="bar"><div class="l">Total cost of ownership</div><div class="track"><div class="fill" style="width:49%"></div><div class="val" style="left:calc(49% + 14px)">35%</div></div></div>
+    <div class="bar"><div class="l">Cost-per-token<small>ranks last</small></div><div class="track"><div class="fill" style="width:11.2%"></div><div class="val" style="left:calc(11.2% + 14px)">8%</div></div></div>
+    <div class="ann">Only 44% of enterprises rigorously track compute cost or ROI.</div>
+  </div>
+  <div class="ch" style="margin-top:40px">
+    <h3>Open-weight share of Vercel AI Gateway tokens</h3>
+    <div class="bar"><div class="l">Dec 2025</div><div class="track"><div class="fill" style="width:9%"></div><div class="val" style="left:calc(9% + 14px)">&lt;10%</div></div></div>
+    <div class="bar"><div class="l">Aug 2026</div><div class="track"><div class="fill a" style="width:50.4%"></div><div class="val" style="left:calc(50.4% + 14px)">56%</div></div></div>
+    <div class="ann">Price per token fell 23.2% in August, the third straight monthly drop.</div>
+  </div>
+  <div class="gloss"><b>Open-weight</b> = a model whose weights anyone can download and run. <b>TCO</b> = the full cost of running it, not just the per-call price.</div>
+  <div class="chips" style="margin-top:26px"><span class="chiplbl">Rooms</span><span class="chip">TUE · Token Economics</span><span class="chip">TUE · The Multi-Model Future</span></div>
+  <div class="foot"><div class="src">Sources: VentureBeat Pulse, AI compute gap (June 2026, n=107); Vercel AI Gateway Production Index (Sept 2026).</div><div class="pg">2 / 5</div></div>
+</section>
+
+<!-- SLIDE 3 — memory + analytics: three homes for context -->
+<section class="slide">
+  <div class="kicker"><b>Layers 3–5</b> · Memory, data, analytics</div>
+  <h1>Three homes for <span class="a">an agent's context</span></h1>
+  <div class="arch">
+    <div class="agent"><div class="n">AI agent</div><div class="s">the model = reasoning</div></div>
+    <div class="arrows"><svg viewBox="0 0 70 600" preserveAspectRatio="none"><g stroke="#4F7CFF" stroke-width="4" fill="none"><path d="M0 300 C35 300 35 100 64 100"/><path d="M0 300 L64 300"/><path d="M0 300 C35 300 35 500 64 500"/></g></svg></div>
+    <div class="homes">
+      <div class="home"><div class="h"><i>1</i>Operational database as memory</div><div class="d">Document store + vector search + saved checkpoints, so agents recall across sessions.</div><div class="tg">MongoDB Atlas + Google Cloud Gemini · WED</div></div>
+      <div class="home"><div class="h"><i>2</i>Semantic layer over operational data</div><div class="d">Selected data, vectorized, reached through governed interfaces; answers point back to the source.</div><div class="tg">gravity9, "The ODL Is Dead" · WED</div></div>
+      <div class="home"><div class="h"><i>3</i>Governed metric definitions</div><div class="d">One agreed meaning per metric, queried by agents.</div><div class="tg">Metabase Data Studio · dbt Semantic Layer · TUE / WED</div></div>
+    </div>
+  </div>
+  <div class="rail">
+    <div class="rl">MCP <span>= a standard plug linking AI assistants to tools and data</span></div>
+    <div class="ticks"><div>Metabase MCP server (v60, Apr 2026)</div><div>MongoDB Atlas Managed MCP Server (GA Aug 13, 2026)</div><div>dbt MCP server</div></div>
+  </div>
+  <div class="fn"><b>Context rot</b> = answers degrading as an agent's prompt fills with too much history.</div>
+  <div class="foot"><div class="src">Sources: MongoDB.local NYC agenda; Metabase release notes (metabase.com/releases-ai); SD Times (Aug 13, 2026); docs.getdbt.com.</div><div class="pg">3 / 5</div></div>
+</section>
+
+<!-- SLIDE 4 — deal timeline -->
+<section class="slide">
+  <div class="kicker"><b>Why these stages</b> · 18 months of deals</div>
+  <h1>The deals behind <span class="a">this week's panels</span></h1>
+  <div class="tl">
+    <div class="tk"><div class="d">APR 23, 2025</div><div class="dot f"></div><div class="e">Datadog acquires Metaplane (co-founded by Kevin Hu)<span class="r">TUE · Metabase × Datadog</span></div></div>
+    <div class="tk"><div class="d">APR 7, 2026</div><div class="dot f"></div><div class="e">Capital One completes its acquisition of Brex<span class="r">TUE · Multi-Model</span></div></div>
+    <div class="tk"><div class="d">MAY 2026</div><div class="dot h"></div><div class="e">Sigma raises $80M Series E at a $3B valuation<span class="r">WED · dbt</span></div></div>
+    <div class="tk"><div class="d">JUN 1, 2026</div><div class="dot f"></div><div class="e">Fivetran + dbt Labs complete their merger (~$600M combined ARR)<span class="r">WED · dbt</span></div></div>
+    <div class="tk"><div class="d">JUL 13, 2026</div><div class="dot f"></div><div class="e">Prefect acquires Dagster Labs<span class="r">WED · dbt</span></div></div>
+    <div class="tk"><div class="d">AUG 2026</div><div class="dot f"></div><div class="e">Stripe agrees to acquire OpenRouter (price not disclosed)<span class="r">WED · MongoDB.local</span></div></div>
+    <div class="tk"><div class="d">SEP 2026</div><div class="dot h"></div><div class="e">Profound raises $180M Series D at $1.8B<span class="r">THU · AI Demos</span></div></div>
+  </div>
+  <div class="legend"><span><i class="dot f"></i>acquisition or merger</span><span><i class="dot h"></i>independent raise</span></div>
+  <div class="foot"><div class="src">Sources: Datadog IR; Capital One newsroom; Sigma; Fivetran press; Prefect; Stripe newsroom; Profound blog.</div><div class="pg">4 / 5</div></div>
+</section>
+
+<!-- SLIDE 5 — where the stack lands -->
+<section class="slide">
+  <div class="kicker"><b>Layer 6</b> · Applications</div>
+  <h1>Where the <span class="a">stack lands</span></h1>
+  <div class="two">
+    <div>
+      <div class="colh">THU · AI Demos #11: Media</div>
+      <div class="node"><div class="n">Markup AI</div><div class="s">content checks before publishing</div></div>
+      <div class="down">↓</div>
+      <div class="node"><div class="n">Kargo</div><div class="s">ad distribution, incl. CTV and branded placements inside ChatGPT</div></div>
+      <div class="down">↓</div>
+      <div class="node"><div class="n">Profound</div><div class="s">visibility inside AI answers</div></div>
+      <div class="down">↓</div>
+      <div class="node"><div class="n">ElevenLabs</div><div class="s">AI voice</div></div>
+      <div class="also">Also demoing: Air, Minerva</div>
+    </div>
+    <div>
+      <div class="colh">MON · The Shortlist</div>
+      <div class="ind"><div class="i">Healthcare billing</div><div class="ar">→</div><div class="c">Amperos</div></div>
+      <div class="ind"><div class="i">Pharma marketing compliance</div><div class="ar">→</div><div class="c">Solstice</div></div>
+      <div class="ind"><div class="i">Public-sector hiring</div><div class="ar">→</div><div class="c">Holly</div></div>
+      <div class="ind"><div class="i">Consumer-goods data</div><div class="ar">→</div><div class="c">Pascal</div></div>
+      <div class="ind"><div class="i">Legal services</div><div class="ar">→</div><div class="c">Soxton</div></div>
+    </div>
+  </div>
+  <div class="stack"><span>compute</span><span class="ar">→</span><span>models</span><span class="ar">→</span><span>memory</span><span class="ar">→</span><span>data</span><span class="ar">→</span><span>analytics</span><span class="ar">→</span><span class="end">applications</span></div>
+  <div class="foot"><div class="src">Sources: AI Demos #11 and The Shortlist invites; company sites (Kargo, Profound, ElevenLabs, Markup AI); The Shortlist newsletter.</div><div class="pg">5 / 5</div></div>
+</section>
+</body></html>

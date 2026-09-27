@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One Content Supply Chain — NYC AI Demos #11</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #D97706;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+  h1 { font: 700 78px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 44px; }
+  h1 .a { color: var(--accent); }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 56px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 70px; }
+
+  /* slide 1 */
+  .hero { font: 700 112px/1.02 var(--serif); letter-spacing: -.015em; margin-top: 90px; }
+  .hero .a { color: var(--accent); }
+  .sub { font: 26px/1.4 var(--mono); color: var(--dim); margin-top: 48px; }
+  .chainrow { margin-top: auto; margin-bottom: 130px; }
+  .links { display: flex; align-items: center; justify-content: space-between; }
+  .chip { font: 600 28px/1 var(--mono); border: 2px solid var(--line); border-radius: 12px; padding: 18px 14px; white-space: nowrap; }
+  .arr { font: 700 32px/1 var(--mono); color: var(--accent); }
+  .base { margin-top: 22px; border: 2px solid var(--line); border-radius: 12px; padding: 18px; text-align: center;
+          font: 600 28px/1 var(--mono); }
+
+  /* slide 2 */
+  .note2 { font: 30px/1.35 var(--serif); margin-top: 26px; }
+  .note2 b { font-weight: 700; }
+  .cap { font: 22px/1.4 var(--mono); color: var(--dim); margin-top: 16px; }
+
+  /* slide 3 */
+  .flow { display: flex; flex-direction: column; }
+  .link { display: grid; grid-template-columns: 250px 1fr 230px; align-items: center; gap: 20px;
+          border: 2px solid var(--line); border-radius: 14px; padding: 16px 22px; }
+  .stage { font: 700 21px/1.2 var(--mono); letter-spacing: .08em; color: var(--dim); }
+  .co { font: 700 32px/1.1 var(--serif); }
+  .role { font: 26px/1.2 var(--serif); color: #C9CCD1; margin-top: 4px; }
+  .buyer { font: 22px/1.25 var(--mono); color: var(--dim); text-align: right; }
+  .buyer span { display: block; font-size: 20px; letter-spacing: .08em; }
+  .down { text-align: center; color: var(--accent); font: 700 28px/1 var(--mono); height: 30px; line-height: 30px; }
+  .data { margin-top: 18px; margin-bottom: 18px; border: 2px dashed var(--dim); border-radius: 14px; padding: 16px 22px;
+          display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .data .t { font: 26px/1.25 var(--serif); }
+  .data .t b { font: 700 21px/1 var(--mono); letter-spacing: .08em; color: var(--dim); margin-right: 10px; }
+  .pill { font: 600 20px/1 var(--mono); color: var(--dim); border: 1.5px solid var(--dim); border-radius: 6px; padding: 7px 9px; white-space: nowrap; }
+
+  /* slide 4 */
+  .legend { list-style: none; display: grid; gap: 22px; margin-top: 10px; }
+  .legend li { display: grid; grid-template-columns: 56px 1fr; align-items: baseline; font: 28px/1.25 var(--serif); }
+  .legend li::before { content: attr(data-n); font: 700 30px/1 var(--mono); color: var(--accent); }
+  .legend b { font-weight: 700; }
+  .counter { margin-top: 34px; border-top: 2px solid var(--line); border-bottom: 2px solid var(--line); padding: 24px 0;
+             font: 28px/1.3 var(--serif); color: #C9CCD1; }
+  .counter b { color: var(--ink); }
+
+  /* slide 5 */
+  .fork { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 50px; }
+  .opt { border: 2px solid var(--accent); border-radius: 18px; padding: 48px 40px; font: 600 56px/1.15 var(--serif); min-height: 440px; display: flex; flex-direction: column; justify-content: space-between; }
+  .opt .k { font: 600 21px/1 var(--mono); letter-spacing: .1em; color: var(--accent); margin-bottom: 20px; }
+  .ask { margin-top: auto; margin-bottom: 130px; font: 40px/1.3 var(--serif); color: var(--ink); border-left: 6px solid var(--accent); padding-left: 26px; }
+</style>
+</head>
+<body>
+
+<!-- 1 · HOOK -->
+<section class="slide">
+  <div class="kicker">Pre-event · the lineup as one system</div>
+  <div class="hero">Six demos. One content supply <span class="a">chain.</span></div>
+  <div class="sub">NYC AI Demos #11 · Media · The Refinery at Domino, Brooklyn · Oct 1</div>
+  <div class="chainrow">
+    <div class="links">
+      <span class="chip">Markup AI</span><span class="arr">→</span>
+      <span class="chip">Air</span><span class="arr">→</span>
+      <span class="chip">Kargo</span><span class="arr">→</span>
+      <span class="chip">Profound</span><span class="arr">→</span>
+      <span class="chip">ElevenLabs</span>
+    </div>
+    <div class="base">Minerva</div>
+  </div>
+  <div class="foot"><span>1 / 5</span><span>swipe →</span></div>
+</section>
+
+<!-- 2 · EVIDENCE -->
+<section class="slide">
+  <div class="kicker">Where the capital is going</div>
+  <h1>AI-search visibility: $1B → $1.8B in 7 months</h1>
+  <svg width="904" height="560" viewBox="0 0 904 560" role="img" aria-label="Profound valuation: $1B at Feb 2026 Series C versus $1.8B at Sept 2026 Series D">
+    <line x1="40" y1="400" x2="864" y2="400" stroke="#2A2F36" stroke-width="2"/>
+    <!-- scale: 1.8B = 340px -->
+    <rect x="130" y="211" width="220" height="189" fill="#8A8F98" rx="4"/>
+    <rect x="554" y="60" width="220" height="340" fill="#D97706" rx="4"/>
+    <text x="240" y="190" fill="#F5F3EE" font-family="Iowan Old Style, Georgia, serif" font-size="56" font-weight="700" text-anchor="middle">$1B</text>
+    <text x="664" y="40" fill="#D97706" font-family="Iowan Old Style, Georgia, serif" font-size="56" font-weight="700" text-anchor="middle">$1.8B</text>
+    <text x="240" y="444" fill="#F5F3EE" font-family="Menlo" font-size="24" font-weight="700" text-anchor="middle">Feb 2026 · Series C</text>
+    <text x="240" y="480" fill="#8A8F98" font-family="Menlo" font-size="22" text-anchor="middle">$96M raised</text>
+    <text x="240" y="512" fill="#8A8F98" font-family="Menlo" font-size="22" text-anchor="middle">$1B valuation</text>
+    <text x="664" y="444" fill="#F5F3EE" font-family="Menlo" font-size="24" font-weight="700" text-anchor="middle">Sept 2026 · Series D</text>
+    <text x="664" y="480" fill="#8A8F98" font-family="Menlo" font-size="22" text-anchor="middle">$180M raised</text>
+    <text x="664" y="512" fill="#8A8F98" font-family="Menlo" font-size="22" text-anchor="middle">$1.8B valuation</text>
+  </svg>
+  <div class="note2"><b>Profound:</b> software that tracks whether AI chatbots cite a brand (AEO / GEO).</div>
+  <div class="cap">Named in Gartner and Forrester AEO reports, Sept 2026.</div>
+  <div class="src">Sources: Fortune, Feb 24 2026; The AI Insider, Sept 16 2026</div>
+  <div class="foot"><span>2 / 5</span><span></span></div>
+</section>
+
+<!-- 3 · MECHANISM -->
+<section class="slide">
+  <div class="kicker">The chain, with the buyer under each link</div>
+  <h1>Five links, five buyers</h1>
+  <div class="flow">
+    <div class="link"><div class="stage">CHECK</div><div><div class="co">Markup AI</div><div class="role">brand + compliance review pre-publish</div></div><div class="buyer"><span>BUYER</span>Brand / legal</div></div>
+    <div class="down">↓</div>
+    <div class="link"><div class="stage">CREATE + STORE</div><div><div class="co">Air</div><div class="role">asset library (DAM) + AI editing</div></div><div class="buyer"><span>BUYER</span>Creative ops</div></div>
+    <div class="down">↓</div>
+    <div class="link"><div class="stage">DISTRIBUTE</div><div><div class="co">Kargo</div><div class="role">mobile, CTV, inside ChatGPT</div></div><div class="buyer"><span>BUYER</span>Media</div></div>
+    <div class="down">↓</div>
+    <div class="link"><div class="stage">GET FOUND</div><div><div class="co">Profound</div><div class="role">is the brand cited by AI?</div></div><div class="buyer"><span>BUYER</span>Marketing / search</div></div>
+    <div class="down">↓</div>
+    <div class="link"><div class="stage">VOICE</div><div><div class="co">ElevenLabs</div><div class="role">synthetic voice and audio</div></div><div class="buyer"><span>BUYER</span>Production</div></div>
+  </div>
+  <div class="data"><div class="t"><b>DATA</b>Minerva (likely): agents that clean + analyze marketing data</div><span class="pill">IDENTITY TO CONFIRM</span></div>
+  <div class="src">Lineup per event invite (luma.com/nyc11); roles per company sites; buyer mapping is the author's read</div>
+  <div class="foot"><span>3 / 5</span><span></span></div>
+</section>
+
+<!-- 4 · COUNTERPOINT -->
+<section class="slide">
+  <div class="kicker">The counterpoint</div>
+  <h1>The links are reaching into each other</h1>
+  <svg width="904" height="330" viewBox="0 0 904 330" role="img" aria-label="Five-company chain with three crossover arrows">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#D97706"/>
+      </marker>
+    </defs>
+    <!-- boxes: width 164, gap 21 -->
+    <g font-family="Menlo" font-size="21" font-weight="700" fill="#F5F3EE" text-anchor="middle">
+      <rect x="2" y="130" width="164" height="70" rx="10" fill="none" stroke="#2A2F36" stroke-width="2"/><text x="84" y="172">Markup AI</text>
+      <rect x="187" y="130" width="164" height="70" rx="10" fill="none" stroke="#2A2F36" stroke-width="2"/><text x="269" y="172">Air</text>
+      <rect x="372" y="130" width="164" height="70" rx="10" fill="none" stroke="#2A2F36" stroke-width="2"/><text x="454" y="172">Kargo</text>
+      <rect x="557" y="130" width="164" height="70" rx="10" fill="none" stroke="#D97706" stroke-width="2"/><text x="639" y="172">Profound</text>
+      <rect x="742" y="130" width="160" height="70" rx="10" fill="none" stroke="#2A2F36" stroke-width="2"/><text x="822" y="172">ElevenLabs</text>
+    </g>
+    <!-- 1: Markup AI -> Profound (above) -->
+    <path d="M84,126 C150,0 690,0 690,122" fill="none" stroke="#D97706" stroke-width="4" marker-end="url(#ah)"/>
+    <circle cx="387" cy="32" r="22" fill="#111418" stroke="#D97706" stroke-width="3"/><text x="387" y="40" fill="#D97706" font-family="Menlo" font-size="22" font-weight="700" text-anchor="middle">1</text>
+    <!-- 3: Kargo -> Profound (above, short) -->
+    <path d="M480,126 C505,80 570,80 590,122" fill="none" stroke="#D97706" stroke-width="4" marker-end="url(#ah)"/>
+    <circle cx="536" cy="92" r="22" fill="#111418" stroke="#D97706" stroke-width="3"/><text x="536" y="100" fill="#D97706" font-family="Menlo" font-size="22" font-weight="700" text-anchor="middle">3</text>
+    <!-- 2: Profound -> Air (below) -->
+    <path d="M639,204 C600,320 320,320 272,208" fill="none" stroke="#D97706" stroke-width="4" marker-end="url(#ah)"/>
+    <circle cx="455" cy="290" r="22" fill="#111418" stroke="#D97706" stroke-width="3"/><text x="455" y="298" fill="#D97706" font-family="Menlo" font-size="22" font-weight="700" text-anchor="middle">2</text>
+  </svg>
+  <ul class="legend">
+    <li data-n="1"><span><b>Markup AI → Profound's link:</b> scores AI-search readiness before publish</span></li>
+    <li data-n="2"><span><b>Profound → Air's link:</b> AI Marketer now generates images (Sept 2026)</span></li>
+    <li data-n="3"><span><b>Kargo → Profound's link:</b> places branded content inside ChatGPT answers</span></li>
+  </ul>
+  <div class="counter"><b>Yet</b> enterprises run a median of <b>14 generative models</b> (a16z). Specialists persist at the model layer.</div>
+  <div class="src">Sources: markup.ai; tryprofound.com/blog, Sept 2026; blog.kargo.com, Jun 2026; a16z State of Generative Media 2026</div>
+  <div class="foot"><span>4 / 5</span><span></span></div>
+</section>
+
+<!-- 5 · CTA -->
+<section class="slide">
+  <div class="kicker">The open question</div>
+  <h1>Which link keeps the human sign-off?</h1>
+  <div class="fork">
+    <div class="opt"><div class="k">PATH A</div>One platform, one buyer</div>
+    <div class="opt"><div class="k">PATH B</div>Five tools, sold five times</div>
+  </div>
+  <div class="ask">What are you hoping these demos answer? Reply below.</div>
+  <div class="foot"><span>5 / 5</span><span></span></div>
+</section>
+
+</body>
+</html>

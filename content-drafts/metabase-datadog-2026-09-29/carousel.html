@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Loud or Silent Failure — Metabase x Datadog, Sept 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #059669; --gray: #64748B;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+  h1 { font: 700 78px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 40px; }
+  .sub { font: italic 40px/1.25 var(--serif); color: #C9CCD1; margin-bottom: 40px; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 56px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-top: 24px; padding-bottom: 70px; }
+
+  /* slide 2 — paired bars */
+  .model { border-top: 2px solid var(--line); padding-top: 30px; margin-bottom: 44px; }
+  .model h3 { font: 700 34px/1.2 var(--serif); margin-bottom: 24px; }
+  .bar { display: grid; grid-template-columns: 250px 1fr; align-items: center; gap: 20px; margin-bottom: 18px; }
+  .bar .k { font: 22px/1.2 var(--mono); color: var(--dim); }
+  .bar.hi .k { color: var(--accent); }
+  .track { position: relative; height: 64px; }
+  .fill { height: 64px; border-radius: 6px; background: var(--gray); display: flex; align-items: center; justify-content: flex-end; padding-right: 18px;
+          font: 700 32px/1 var(--mono); color: #F5F3EE; }
+  .bar.hi .fill { background: var(--accent); }
+  .annot { font: 28px/1.35 var(--serif); color: #C9CCD1; margin-top: 4px; }
+
+  /* slide 3 — lanes */
+  .lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .lane h2 { font: 700 26px/1.2 var(--mono); letter-spacing: .06em; color: var(--dim); margin-bottom: 18px; text-transform: uppercase; }
+  .lane.hi h2 { color: var(--accent); }
+  .step { border: 2px solid var(--line); border-radius: 14px; padding: 20px 22px; font: 28px/1.22 var(--serif); height: 104px; display: flex; align-items: center; }
+  .arrow { text-align: center; font: 30px/1 var(--mono); color: var(--dim); padding: 8px 0; }
+  .step.warn { border-style: dashed; color: #C9CCD1; }
+  .step.end { font-weight: 700; height: 116px; }
+  .lane:not(.hi) .step.end { border-color: var(--gray); background: #1A1E24; }
+  .lane.hi .step.end { border-color: var(--accent); color: var(--accent); background: rgba(5,150,105,.10); }
+  .note { border-left: 6px solid var(--accent); padding: 16px 24px; font: 600 34px/1.25 var(--serif); margin-top: 36px; }
+
+  /* slide 4 — stats */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .stat { border-top: 2px solid var(--line); padding-top: 30px; }
+  .num { font: 700 150px/1 var(--serif); color: var(--accent); letter-spacing: -.02em; }
+  .lab { font: 30px/1.3 var(--serif); margin-top: 18px; }
+  .strip { margin-top: 56px; border: 2px solid var(--line); border-radius: 14px; padding: 28px 30px; font: 600 36px/1.25 var(--serif); }
+  .strip b { color: var(--accent); }
+
+  /* slide 5 — pipeline */
+  .who { font: 26px/1.3 var(--serif); }
+  .who b { display: block; font: 700 30px/1.2 var(--serif); }
+  .who span { color: var(--dim); font: 22px/1.3 var(--mono); display: block; margin-top: 6px; }
+  .close { margin-top: auto; margin-bottom: 110px; font: 700 50px/1.15 var(--serif); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- 1 · HOOK -->
+<section class="slide">
+  <div class="kicker">Metabase x Datadog · NYC · Sep 29</div>
+  <h1>Is the dashboard dead?</h1>
+  <div class="sub">Or the only number left we can check?</div>
+  <svg width="904" height="620" viewBox="0 0 904 620" role="img" aria-label="Two paths, chat with your data and a governed semantic layer, converge on the number you act on">
+    <rect x="20" y="30" width="400" height="120" rx="16" fill="none" stroke="#8A8F98" stroke-width="2"/>
+    <text x="220" y="102" fill="#F5F3EE" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="34" font-weight="700" text-anchor="middle">Chat with your data</text>
+    <rect x="484" y="30" width="400" height="120" rx="16" fill="none" stroke="#8A8F98" stroke-width="2"/>
+    <text x="684" y="84" fill="#F5F3EE" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="34" font-weight="700" text-anchor="middle">Governed</text>
+    <text x="684" y="124" fill="#F5F3EE" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="34" font-weight="700" text-anchor="middle">semantic layer</text>
+    <path d="M220,150 C220,300 452,300 452,420" fill="none" stroke="#8A8F98" stroke-width="4"/>
+    <path d="M684,150 C684,300 452,300 452,420" fill="none" stroke="#8A8F98" stroke-width="4"/>
+    <polygon points="440,410 464,410 452,432" fill="#8A8F98"/>
+    <rect x="202" y="440" width="500" height="130" rx="16" fill="rgba(5,150,105,.12)" stroke="#059669" stroke-width="4"/>
+    <text x="452" y="518" fill="#059669" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="38" font-weight="700" text-anchor="middle">The number you act on</text>
+  </svg>
+  <div class="foot"><span>1 / 5</span><span>Data, Dashboards, and Drinks · swipe →</span></div>
+</section>
+
+<!-- 2 · EVIDENCE -->
+<section class="slide">
+  <div class="kicker">The accuracy gap</div>
+  <h1>Same questions. Two paths.</h1>
+  <div class="model">
+    <h3>Claude Sonnet 4.6</h3>
+    <div class="bar"><div class="k">Text-to-SQL</div><div class="track"><div class="fill" style="width:90%">90%</div></div></div>
+    <div class="bar hi"><div class="k">Semantic layer</div><div class="track"><div class="fill" style="width:98.2%">98.2%</div></div></div>
+  </div>
+  <div class="model">
+    <h3>GPT-5.3 Codex</h3>
+    <div class="bar"><div class="k">Text-to-SQL</div><div class="track"><div class="fill" style="width:84.1%">84.1%</div></div></div>
+    <div class="bar hi"><div class="k">Semantic layer</div><div class="track"><div class="fill" style="width:100%">100%</div></div></div>
+  </div>
+  <div class="annot">Accuracy on identical business questions.</div>
+  <div class="src">Source: dbt Labs, Semantic Layer vs. Text-to-SQL benchmark, Apr 2026</div>
+  <div class="foot"><span>2 / 5</span><span></span></div>
+</section>
+
+<!-- 3 · MECHANISM -->
+<section class="slide">
+  <div class="kicker">Why the failure mode matters more than the score</div>
+  <h1>Silent failure vs. loud failure</h1>
+  <div class="lanes">
+    <div class="lane">
+      <h2>Text-to-SQL</h2>
+      <div class="step">Plain-English question</div>
+      <div class="arrow">↓</div>
+      <div class="step">AI writes a new query</div>
+      <div class="arrow">↓</div>
+      <div class="step warn">Wrong join</div>
+      <div class="arrow">↓</div>
+      <div class="step end">Confident number ✓<br>no alert</div>
+    </div>
+    <div class="lane hi">
+      <h2>Semantic layer</h2>
+      <div class="step">Plain-English question</div>
+      <div class="arrow">↓</div>
+      <div class="step">AI picks from approved metrics</div>
+      <div class="arrow">↓</div>
+      <div class="step warn">Metric not defined</div>
+      <div class="arrow">↓</div>
+      <div class="step end">⚠ Error:<br>can't answer</div>
+    </div>
+  </div>
+  <div class="note">A wrong number nobody questions travels further than no number.</div>
+  <div class="src">Source: dbt Labs, Apr 2026 (silent vs. loud failure framing)</div>
+  <div class="foot"><span>3 / 5</span><span></span></div>
+</section>
+
+<!-- 4 · COUNTERPOINT -->
+<section class="slide">
+  <div class="kicker">The counterpoint</div>
+  <h1>The fix isn't free</h1>
+  <div class="stats">
+    <div class="stat">
+      <div class="num">31%</div>
+      <div class="lab">best model on Spider 2.0, a text-to-SQL test built on realistic enterprise databases</div>
+    </div>
+    <div class="stat">
+      <div class="num">60%</div>
+      <div class="lab">of MCP-only agentic analytics projects Gartner expects to fail by 2028 without a semantic layer</div>
+    </div>
+  </div>
+  <div class="strip"><b>But</b> someone still has to write and maintain every metric definition.</div>
+  <div class="src">Sources: Spider 2.0 via arXiv 2507.14372 (2025); Gartner Market Guide for Agentic Analytics, Feb 2026 (via Cube)</div>
+  <div class="foot"><span>4 / 5</span><span></span></div>
+</section>
+
+<!-- 5 · CTA -->
+<section class="slide">
+  <div class="kicker">Three seats on one pipeline</div>
+  <h1>Where does trust break first?</h1>
+  <svg width="904" height="230" viewBox="0 0 904 230" role="img" aria-label="Pipeline from ingestion to model or agent to the dashboard a human reads, with KH at ingestion, VP at the dashboard layer, and RK spanning the whole pipe">
+    <path d="M30,24 L30,8 L874,8 L874,24" fill="none" stroke="#059669" stroke-width="3"/>
+    <rect x="402" y="-2" width="100" height="26" fill="#111418"/>
+    <text x="452" y="18" fill="#059669" font-family="Menlo" font-size="22" font-weight="700" text-anchor="middle">RK</text>
+    <line x1="30" y1="90" x2="874" y2="90" stroke="#2A2F36" stroke-width="6"/>
+    <polygon points="874,78 898,90 874,102" fill="#2A2F36"/>
+    <rect x="20" y="62" width="200" height="56" rx="10" fill="#111418" stroke="#8A8F98" stroke-width="2"/>
+    <rect x="342" y="62" width="220" height="56" rx="10" fill="#111418" stroke="#8A8F98" stroke-width="2"/>
+    <rect x="684" y="62" width="200" height="56" rx="10" fill="#111418" stroke="#8A8F98" stroke-width="2"/>
+    <text x="120" y="98" fill="#F5F3EE" font-family="Menlo" font-size="21" text-anchor="middle">Ingestion</text>
+    <text x="452" y="98" fill="#F5F3EE" font-family="Menlo" font-size="21" text-anchor="middle">Model / agent</text>
+    <text x="784" y="98" fill="#F5F3EE" font-family="Menlo" font-size="21" text-anchor="middle">Dashboard</text>
+    <text x="784" y="146" fill="#8A8F98" font-family="Menlo" font-size="20" text-anchor="middle">(a human reads)</text>
+    <circle cx="120" cy="190" r="32" fill="#059669"/><text x="120" y="199" fill="#111418" font-family="Menlo" font-size="24" font-weight="700" text-anchor="middle">KH</text>
+    <line x1="120" y1="118" x2="120" y2="158" stroke="#059669" stroke-width="3"/>
+    <circle cx="784" cy="194" r="32" fill="#059669"/><text x="784" y="203" fill="#111418" font-family="Menlo" font-size="24" font-weight="700" text-anchor="middle">VP</text>
+    
+  </svg>
+  <div style="display:grid;gap:28px;margin-top:34px">
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:18px;border-top:2px solid var(--line);padding-top:24px">
+      <div style="font:700 34px/1.2 var(--mono);color:var(--accent)">KH</div>
+      <div class="who"><b>Kevin Hu · Data Observability at Datadog <span style="display:inline;white-space:nowrap;font:inherit;color:inherit;margin:0">(ex-Metaplane)</span></b><span>watching the data upstream</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:18px;border-top:2px solid var(--line);padding-top:24px">
+      <div style="font:700 34px/1.2 var(--mono);color:var(--accent)">RK</div>
+      <div class="who"><b>Rebecca Keable · Head of Data, Forage</b><span>building the whole pipe from zero</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:18px;border-top:2px solid var(--line);padding-top:24px">
+      <div style="font:700 34px/1.2 var(--mono);color:var(--accent)">VP</div>
+      <div class="who"><b>Vamsi Peri · VP Engineering, Metabase</b><span>the layer people ask questions through</span></div>
+    </div>
+  </div>
+  <div class="close">Tuesday's open conversation. What would you ask?</div>
+  <div class="foot"><span>5 / 5</span><span>Data, Dashboards, and Drinks · Sep 29, 2026</span></div>
+</section>
+
+</body>
+</html>
