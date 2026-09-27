@@ -1,11 +1,11 @@
 ---
 name: role-radar
-description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby via curl — primary; + RSS.app saved-search feeds, Apollo-at-targets, Dice secondary), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban. Notion-only, manual trigger, human-in-the-loop. No LinkedIn scraping."
+description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby/Workable via curl — primary; + Apollo-at-targets, credit-gated, optional), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban. Notion-only, manual trigger, human-in-the-loop. No LinkedIn scraping."
 ---
 
 # Role Radar Skill
 
-You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed to new partners and scraping the account is ruled out, so we aggregate roles from legitimate sources (ATS boards APIs + RSS + Apollo + Dice), score them against Alex's **Target-Role ICP**, and track application status in Notion.
+You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed to new partners and scraping the account is ruled out, so we aggregate roles from legitimate sources (the ATS boards APIs, plus Apollo at named targets when asked), score them against Alex's **Target-Role ICP**, and track application status in Notion.
 
 **The target — source of truth is `.claude/references/me-model.md` §1.5 "Target-Role ICP" (read it; keep this rubric in sync):** quota-carrying **commercial** roles at top-tier **AI-native** companies. **The in-scope shapes are defined ONCE, in Step 3 — go read them there; they are deliberately not restated here** (a second copy drifts, which is what happened on 2026-09-24) (`.claude/references/target-companies.md`). Deep GTM + systems + AI-building is the **differentiator, not the job title**. **Score by the role's MECHANISM (what the JD says it does), not its title.** The decisive filter is **leverage vs. "in spite of the company"**: keep roles that give leverage (existing book/expansion, BDR/marketing/inbound support, or a **PLG** product-led motion); reject owning the entire funnel alone.
 
@@ -14,27 +14,25 @@ This is one of three **signal scanners** feeding the Empire State pipeline (alon
 **Why this exists (concept primer for Alex):** a job tracker is just a small CRM with a scoring function on the front. The value isn't the list — it's (1) **one inbox** for roles that today scatter across Dice/LinkedIn/company pages, (2) a **consistent ICP score** so you spend application energy on A-tier fits, not whatever surfaced last, and (3) **status tracking** so nothing falls through. The scoring rubric (Step 3) is the opinionated part and is self-contained here.
 
 **Ground rules (Empire State conventions):**
-- **Ethics:** Public APIs, RSS, official endpoints only. No LinkedIn scraping. RSS.app reads a *feed you generated from a saved search* — it never touches your account.
+- **Ethics:** Public ATS APIs and official endpoints only. No LinkedIn scraping.
 - **Human-in-the-loop:** Present scored roles for review before any Notion write.
-- **Credit discipline:** Apollo and Clay are credit-metered. Confirm spend explicitly (exact wording below). Dice MCP is free.
-- **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk read per run (Content Hash + Tier + Status + Notes for every row, paginated with LIMIT/OFFSET, ~100 rows a page), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
+- **Credit discipline:** Apollo and Clay are credit-metered. Confirm spend explicitly (exact wording below).
+- **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk pass per run (Content Hash + Tier + Status + Notes for every row — a few LIMIT/OFFSET pages of the same query, ~100 rows each), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
 - **No fabricated numbers / honest gaps:** if a source errors, say so.
 
-**Scope:** ATS boards APIs (primary) + RSS.app + Apollo-at-targets + Dice (secondary); Notion-only; manual trigger. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
+**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used in any scan to date — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 31-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
 
 ---
 
 ## Inputs
 - **(Optional) Role focus** — defaults to Alex's target archetypes (below). May narrow, e.g. "just GTM engineer + RevOps".
 - **(Optional) Location** — default **New York City** + **Remote (US)**.
-- **(Optional) Recency** — Dice `posted_date`: `ONE`/`THREE`/`SEVEN` days. Default `SEVEN`.
-- **(Optional) RSS.app feed URLs** — Alex pastes feed URLs he generated from saved LinkedIn searches (see Setup).
+- **(Optional) Recency** — default last 7 days on the ATS `posted` date (Ashby/Lever/Workable); Greenhouse rows have no posted date and are treated as UNKNOWN freshness.
 
 ---
 
 ## Step 0 — One-time setup (first run only)
 1. **Roles DB:** the Notion **Roles** database EXISTS (created 2026-09-08) — data source `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`, under the NYC AI Event Content Hub. `notion-fetch` it to confirm the live schema before writes (schema also in Step 4). If it were ever missing, recreate via `notion-create-database` with the Step 4 schema (HITL).
-2. **RSS.app feeds (optional, recommended):** tell Alex once — in RSS.app, paste a saved LinkedIn job-search URL to generate an RSS feed; save the feed URL(s) and pass them to this skill. This is the legitimate LinkedIn bridge; the feed is read, the account is never automated.
 
 ---
 
@@ -45,17 +43,17 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 `.claude/references/target-companies.md` ({ATS vendor, board token/slug} per company).
 
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
-Read the **company→ATS registry** in `.claude/references/target-companies.md` (**31 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic; all endpoints re-verified live that day). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
+Read the **company→ATS registry** in `.claude/references/target-companies.md` (**31 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic; the per-board live-verification dates are recorded in that registry file, not asserted here). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
 - **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai, formationbio`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
-  → `jq '.jobs[] | {id, title, url:.absolute_url, loc:.location.name, updated:.updated_at}'`
+  → `jq '.jobs[] | {id, title, url:.absolute_url, loc:(.location.name // ""), updated:.updated_at}'`
   ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt`, Lever `createdAt` and Workable `published_on` are true posted dates** and may be used normally.
 - **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip, runway-ml, profound, modal, taktile, reflectionai, mirage, traversal, generalintuition-medal`):
   `curl -s "https://api.ashbyhq.com/posting-api/job-board/{board}"`
-  → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:.location, posted:.publishedAt, remote:.isRemote}'`
+  → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:(.location // ""), posted:.publishedAt, remote:.isRemote}'`
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
-  → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:.categories.location, posted:.createdAt}'`
+  → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:(.categories.location // ""), posted:((.createdAt/1000)|todate|.[:10])}'` (Lever's `createdAt` is epoch **milliseconds** — convert before it reaches `Posted Date`; caught by the Gemini seat 2026-09-27)
 - **Workable** (`huggingface`) — added 2026-09-21 so Hugging Face stops being invisible to every scan:
   `curl -s "https://apply.workable.com/api/v1/widget/accounts/{account}?details=true"`
   → `jq '.jobs[] | {id:.shortcode, title, url:.shortlink, loc:((.city // "") + " " + (.country // "")), posted:.published_on, remote:.telecommuting}'`
@@ -63,31 +61,25 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
 
 - **Filter to commercial titles BEFORE scoring** — keep title matches for Customer Success / CSM / Account Manager / Account Director / Account Executive / **Engagement Manager** / **Sales Director / Sales Lead / Sales Leader / Enterprise Sales Director / VP Sales / Head of Sales** / **`Growth Strategist|Growth Account|Growth AE|Scaled Growth` (never bare `Growth` — see the drop-list bullet)** / **Named Account / Client Director / Client Partner / Relationship Manager**; drop eng/product/design/recruiting/finance/marketing-IC (`grep -iE` on the projected title). **The keep-list is intentionally INCLUSIVE of leadership-signal titles (Sales Director, Head of Sales, Manager-of-function): they pass the title filter on purpose so IC / player-coach roles that happen to carry those titles aren't silently dropped — the v2.2 IC-vs-people-management gate in Step 3 then reads the JD and demotes the pure-leadership ones to C.** (This closes two real misses: "Enterprise Sales Director" @ Sierra and "Engagement Manager" @ Snorkel, both dropped by the old narrower list.) The description (`.content` / `.descriptionPlain`) is what Step 3 scores by *mechanism* — fetch it only for title-passing rows.
 - **The drop-list runs AFTER the keep-list and WINS (fixed 2026-09-20).** A title that matched a keep term is still dropped when it also matches
-  `Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen`
+  `Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen|Technical Account Manager`
+  **`Technical Account Manager` added 2026-09-27 (Alex: "technical account manager is out")** — it passed the keep-list on "Account Manager" and no drop term caught it; the build-quality judge (Sonnet seat) found it still named as an ideal IC title in the v2.2 examples after the 09-24 purge. A TAM is a technical seat, not a book (Vercel's Sr TAM JD: "will not carry a sales quota").
   **There is no protected set. The drop-list simply wins.**
   ⚠️ **A PROTECTED carve-out for `Solutions Engineer|Sales Engineer|Solutions Consultant` used to live here and was REMOVED 2026-09-24 (Alex).** Ruling, verbatim: *"solutions engineer is way outside my skill set or proposed focus … make sure we are not going technical with any roles."* The carve-out existed to stop the bare `Engineer` drop term from killing Solutions Engineer — but that title is no longer wanted, so the bare `Engineer` drop is now **correct behaviour, not a regression.** Do not re-add the carve-out without a new ruling.
   **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
 - **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup; for Workable the id is `.shortcode`); freshness = `posted` for **Ashby, Lever and Workable**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
-- **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a scored TSV so raw JSON never touches parent context).
+- **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a **projected** TSV (title, id, url, location, posted, comp band) so raw JSON never touches parent context — scoring happens in Step 3, after Step 2 has removed already-tracked rows, so no subagent scores a role the DB already holds).
 - **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 9 additions + the Workable shape re-verified live 2026-09-21; General Intuition verified live 2026-09-24.**
 
-### 1b. RSS.app feeds from saved LinkedIn searches (manual paste — optional)
-- For each feed URL Alex provides, `WebFetch` it; extract title, company, location, link, pubDate.
-- Flag any feed that returns empty/broken (LinkedIn markup changes can break RSS.app feeds — best-effort, not a spine).
-
-### 1c. Apollo job-postings at named targets (credit-gated — optional)
-- Only if Alex wants roles at specific targets *not* on the big-3 ATS. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
+### 1b. Apollo job-postings at named targets (credit-gated — optional)
+- Only if Alex wants roles at specific targets *not* on the big-4 ATS. **Off by default** — the scan runs the boards; Apollo is a per-request add-on. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
 - **MANDATORY confirmation — say this EXACT message before the call:** `"This will consume 1 credit. Do you want to proceed?"` If pulling N companies, confirm the TOTAL: "This will consume N credits. Do you want to proceed?" Do not proactively show the balance. Do not call without explicit approval. Apollo may be blocked on the free plan → report and skip.
 
-### 1d. Dice — `mcp__claude_ai_Dice__search_jobs` (free, SECONDARY keyword sweep)
-- Keyword-noisy and skews contract/staffing/IT — a supplementary net, not the spine. Keywords for the target shapes: `"Customer Success Manager"`, `"Account Director"`, `"Enterprise Account Manager"`, `"Growth Strategist"`, `"Enterprise Account Executive"`. Set `location`, `workplace_types=["Remote","Hybrid","On-Site"]`, `posted_date="SEVEN"`. Capture title, company, location, workplace, `detailsPageUrl` + `companyPageUrl`, posted date.
-- **MANDATORY AI disclosure (Dice tool requirement):** *"These job listings were found using AI-powered search. Verify details directly with employers before applying."*
 
 ---
 
 ## Step 2 — Dedupe
-- **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Dice/RSS/Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
+- **Natural key** for ATS-API roles = **`{ats_vendor}:{ats_job_id}`** (stable across re-runs). For Apollo roles with no ATS id, fall back to `content_hash` = lowercased, whitespace-collapsed `title + "|" + company`.
 - Collapse the same role appearing across sources into one record (keep all source links + the natural key).
 - Dedupe against the Roles DB: one bulk SQL read of `Content Hash` (see the plan constraint above), or `notion-search` scoped to the Roles data source by the natural key / `title company`; `notion-fetch` to confirm.
 - **Fallback dedup on `title|company` (added 2026-09-27, YED-224).** Rows written before ATS keying carry `Content Hash = title|company`, and a natural-key check alone cannot see them. After the natural-key pass, compare each candidate's normalized `title|company` (lower-case, whitespace-collapsed, company alias-tolerant) against the DB. A hit means the legacy row IS this posting → **re-key that row** (write the ATS key into `Content Hash`, plus `Source`, `URL`, `Posted Date`) instead of creating a second row. Why: the 09-19 scan wrote ~20 title-hash rows; the 09-24 scan duplicated five of them by ATS key, and the 09-27 scan would have re-added Runway's Strategic Enterprise AE as "new". Re-posts (same title+company, old id gone, new id live — Writer did this to four roles on 09-22) are handled the same way: re-key, don't duplicate. **Freshness = the ATS `posted_at` for Ashby, Lever and Workable; UNKNOWN for Greenhouse** (Step 1 caveat — `updated_at` is last-modified, not a posted date). Skip roles already tracked unless status/materially changed.
@@ -114,7 +106,7 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 > already guards (bare `Growth` passed "Growth Marketing Manager" on 2026-09-19); the grep narrows
 > the candidates, the book test decides them.
 >
-> **No technical roles.** Solutions Engineer, Sales Engineer and Solutions Consultant are **OUT** — they
+> **No technical roles.** Solutions Engineer, Sales Engineer, Solutions Consultant **and (ruled 2026-09-27) Technical Account Manager** are **OUT** — the first three
 > were removed from the keep-list, the drop-list carve-out and the scoring table on 2026-09-24. A
 > pre-sales/technical-win seat is not a book.
 >
@@ -155,7 +147,7 @@ Three refinements sit on top of the table above. **Every override-by-exemption c
 
 **The single test: does the role carry a personal book / quota / accounts?** Yes → in (IC or player-coach). No, it's purely running a team → out.
 
-- **IC = ideal (mechanism scored normally), title notwithstanding:** Account Manager, Customer Success Manager, Engagement Manager, Technical Account Manager, Account Director, an IC Sales Director. Here "Manager/Director" modifies the *accounts/book* owned.
+- **IC = ideal (mechanism scored normally), title notwithstanding:** Account Manager, Customer Success Manager, Engagement Manager, Account Director, an IC Sales Director. *(Technical Account Manager was listed here until 2026-09-27; it is a technical seat and is OUT — see the drop-list.)* Here "Manager/Director" modifies the *accounts/book* owned.
 - **Player-coach / team-lead / senior-IC "Lead" = ALSO desirable (keep as IC):** a role that **retains a personal book/quota** while also guiding others ("Account Executive Lead", "Account Manager Lead") is the exact direct-impact-and-grow path Alex wants. Guiding others is fine; the disqualifier is *pure* people-management with **no** book.
 - **Pure people-management = drop to C or REJECT (regardless of other dimensions):** the role's primary job is managing a *team* with **no personal book/quota** — hire / coach / develop reps, own the team's number, carry direct reports as the job. Applies even when company + mechanism otherwise score high.
 - **Syntactic tell (raises the question only — the JD's book test answers it):** **"[Function] Manager/Director"** (function as adjective — "Customer Success Manager", "Account Director") = usually IC; **"Manager, [Function]" / "Head of [Function]" / "Director of [Function]" / "VP …" / "Sales Manager"** = usually pure people-management → but confirm against the personal-book test, since a "Manager, X" can occasionally be a player-coach with a book (keep) and a "Lead" can occasionally be pure team-lead (still fine per above).
@@ -165,7 +157,7 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
 ### Rubric v2.3 — comp floor & level flexibility (added 2026-09-09 — Alex)
 
 - **Comp gate = the OTE floor in `me-model.md` §1.5** (auto-reject below; the numbers and bands live only there, since comp targets stay private). Within range, use the me-model's **ideal / strong / fully-acceptable bands, and do NOT penalize the fully-acceptable band.** Comp is a floor + a tiebreaker, never a linear "higher = better"; weigh it against company growth/opportunity (a floor-level seat at a top-tier rocketship can beat an ideal-band seat at a laggard). When comp isn't posted, **don't infer a reject** — treat as unknown and score on mechanism.
-- **Posted RANGE vs. the floor — RULED 2026-09-27 (Alex, YED-210): test the MIDPOINT.** A posting that publishes a range clears the comp gate when `(low + high) / 2 ≥ floor`; a midpoint below the floor is the auto-reject, exactly as a single number below it would be. **Exactly at the floor CLEARS it** (the test is ≥, not >). **One exception — the emerging-seller signal:** when the JD pitches the seat at an early-career / emerging seller (ex-SDR/BDR, "ideal next step into full-cycle ownership", "first closing role"), the realistic offer is the bottom of the band, so test the **LOW end** against the floor instead of the midpoint and write the exception in `Notes`. No other point in the range is ever used (top-of-range was rejected as too easy to stretch; bottom-of-range as rejecting strong seats over a wide band). **One-sided range ("up to $X", "as much as $X", no low end published) — ruled 2026-09-27 (Alex): score it as `X − $20K` and test THAT against the floor;** write the assumed figure in `Notes` so the row shows it was derived, not posted. A posting with no number at all is still "comp not posted" (above): score on mechanism, never infer a reject. **Salary-only / base-only range — ruled 2026-09-27 (Alex): test the TOP of the range.** When the posting labels the band as salary or base ("base salary range … before variable compensation", "annual salary", or an Ashby band that separately says "Offers Commission"), the number is not OTE and the midpoint understates the seat, so test the **high end** against the floor; write the label and the number used in `Notes`. An explicit OTE band keeps the midpoint. An **unlabelled** band is treated as OTE (midpoint) — the stricter read; say so in `Notes` so a recruiter answer can flip it. Where a structured ATS field and the JD body disagree, the JD body is the posting. *Applied on ruling day to that morning's drops: four rows came back (three of them clearing exactly at the floor), the rest stayed dropped; arithmetic is in each row's `Notes`.* The floor number itself still lives only in `me-model.md` §1.5. *Applied on ruling day to the three rows that had been held since 09-19/09-24 — one cleared to A, two dropped; the arithmetic is in each row's `Notes` and on YED-210, not here.* A range is therefore **no longer a Held case**; the Held bucket remains for the next genuinely undefined state.
+- **Posted RANGE vs. the floor — RULED 2026-09-27 (Alex, YED-210): test the MIDPOINT.** A posting that publishes a range clears the comp gate when `(low + high) / 2 ≥ floor`; a midpoint below the floor is the auto-reject, exactly as a single number below it would be. **Exactly at the floor CLEARS it** (the test is ≥, not >). **One exception — the emerging-seller signal:** when the JD pitches the seat at an early-career / emerging seller (ex-SDR/BDR, "ideal next step into full-cycle ownership", "first closing role"), the realistic offer is the bottom of the band, so test the **LOW end** against the floor instead of the midpoint and write the exception in `Notes`. No other point in the range is ever used (top-of-range was rejected as too easy to stretch; bottom-of-range as rejecting strong seats over a wide band). **When two rules apply at once** (e.g. a base-only band on an emerging-seller JD), use the **lower** resulting figure — the conservative read — and write both figures in `Notes`; a default, not a ruling, so Alex can flip it per row. **One-sided range ("up to $X", "as much as $X", no low end published) — ruled 2026-09-27 (Alex): score it as `X − $20K` and test THAT against the floor;** write the assumed figure in `Notes` so the row shows it was derived, not posted. A posting with no number at all is still "comp not posted" (above): score on mechanism, never infer a reject. **Salary-only / base-only range — ruled 2026-09-27 (Alex): test the TOP of the range.** When the posting labels the band as salary or base ("base salary range … before variable compensation", "annual salary", or an Ashby band that separately says "Offers Commission"), the number is not OTE and the midpoint understates the seat, so test the **high end** against the floor; write the label and the number used in `Notes`. An explicit OTE band keeps the midpoint. An **unlabelled** band is treated as OTE (midpoint) — the stricter read; say so in `Notes` so a recruiter answer can flip it. Where a structured ATS field and the JD body disagree, the JD body is the posting. *Applied on ruling day to that morning's drops: four rows came back (three of them clearing exactly at the floor), the rest stayed dropped; arithmetic is in each row's `Notes`.* The floor number itself still lives only in `me-model.md` §1.5. *Applied on ruling day to the three rows that had been held since 09-19/09-24 — one cleared to A, two dropped; the arithmetic is in each row's `Notes` and on YED-210, not here.* A range is therefore **no longer a Held case**; the Held bucket remains for the next genuinely undefined state.
 - **Level flexibility — Mid-Market is IN at top-tier companies** *(wired into the Role-mechanism row of the scoring table via its segment note; change both together).* Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
@@ -177,7 +169,7 @@ If the Roles DB doesn't exist, present this proposed schema and create it via `n
 **Roles DB schema**
 - `Role Title` (title)
 - `Company` (text)
-- `Source` (select: greenhouse / lever / ashby / **workable** / rssapp_li / apollo / dice / manual) — **`workable` was added to the live Notion select 2026-09-24**; it was missing since Workable support shipped on 09-21, so a Hugging Face row had no valid `Source` value to write. Caught by the build-quality judge, round 2.
+- `Source` (select: greenhouse / lever / ashby / **workable** / apollo / manual — `rssapp_li` and `dice` remain in the live Notion select for historical rows only and are never written since the 2026-09-27 removal) — **`workable` was added to the live Notion select 2026-09-24**; it was missing since Workable support shipped on 09-21, so a Hugging Face row had no valid `Source` value to write. Caught by the build-quality judge, round 2.
 - `Location` (text) · `Workplace` (select: remote / hybrid / onsite)
 - `URL` (url) · `Company URL` (url)
 - `ICP Score` (number) · `ICP Tier` (select: A / B / C / drop)
@@ -198,13 +190,13 @@ Then present the ranked roles:
 ### B-tier ... ### C-tier (collapsed counts) ... ### Dropped ({n}, reasons)
 
 ### Held — needs your ruling ({n})
-- **{Role}** @ {Company} — **no tier** — {the undefined case — one the rubric has no rule for} — {what it would score on mechanism alone}
+- **{Role}** @ {Company} — **no tier** — {the undefined case — one the rubric has no rule for} — {what it would score on mechanism alone} — **Linear: {YED-nnn, filed this turn}**
 ```
 **Freshness marker per row:** a Greenhouse row has **no posted date** (Step 1 caveat), so never let the `last {recency}` header imply one. Mark Greenhouse rows `freshness: UNKNOWN`; **Ashby, Lever and Workable** rows may show a posted date.
 
 **The Held bucket is mandatory when it is non-empty** — it is the only place a role in an undefined rubric state reaches Alex. A held role is never silently ranked and never silently dropped. The posted-range-vs-floor case was ruled 2026-09-27 (v2.3 midpoint rule, YED-210) and is no longer a Held case; the bucket exists for the next undefined state, and every new one gets a Linear issue the same turn.
 
-End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**. STOP for approval.
+End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**. STOP for approval.
 
 ---
 
@@ -226,14 +218,13 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 ---
 
 ## Failure modes
-- **Dice thin / off-target** — vary keywords; widen `posted_date` to `SEVEN`; drop the location filter for remote-heavy archetypes.
-- **RSS.app feed broken** — note it; LinkedIn markup churn breaks these periodically. Best-effort source.
-- **Apollo org not found / API blocked** — Apollo may be blocked on the free plan; if the call fails, report honestly and fall back to Dice + RSS.app. Never fabricate roles.
+- **An ATS board errors, times out or rate-limits** (curl non-200, empty `jobs[]`, JSON parse failure) — retry once with a longer `--max-time`; if it still fails, list the company under the Step 4 "N companies returned 0 rows" gap line by name. Never treat a failed board as "no roles".
+- **Apollo org not found / API blocked** — Apollo may be blocked on the free plan; if the call fails, report honestly and run on the ATS boards alone. Never fabricate roles.
 - **Roles DB schema drift** — `notion-fetch` the data source; live schema wins.
 
 ## Confidence & honest gaps
-- **Strong (high):** aggregation + consistent ICP scoring + status tracking across Dice/RSS/Apollo.
-- **Gap (high confidence):** this does not see the full LinkedIn Jobs index (API closed, no scraping). RSS.app of saved searches is the legitimate partial bridge; TheirStack (paid) widens coverage later. Name the gap; don't imply full LinkedIn coverage.
+- **Strong (high):** aggregation + consistent ICP scoring + status tracking across the 31 ATS boards (+ Apollo when asked).
+- **Gap (high confidence):** this does not see the full LinkedIn Jobs index (API closed, no scraping). RSS.app of saved searches was the intended partial bridge and was removed 2026-09-27 unused; TheirStack (paid) is the option if coverage ever becomes the constraint. Name the gap; don't imply full LinkedIn coverage.
 
 ## Reuses / references
 - **`.claude/references/me-model.md` §1.5 "Target-Role ICP"** — the source of truth this rubric mirrors (keep in sync).
@@ -241,4 +232,4 @@ End with: AI-disclosure line (if Dice used) + **"Add which roles to the Roles DB
 - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
 - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
 - Graph-producer (deferred v1.1): `trend-radar/SKILL.md` Step 5.5 pattern + `.claude/references/market-intel-spine.md`.
-- Tools — `mcp__claude_ai_Dice__search_jobs`, `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`, `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
+- Tools — `curl` + `jq` (ATS boards), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
