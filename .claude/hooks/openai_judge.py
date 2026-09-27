@@ -192,7 +192,7 @@ def main() -> int:
         return fail(f"malformed verdict: {e}")
 
     art_text = open(art, encoding="utf-8").read()
-    qv = jl.verify_quotes(scored.get("defects") or [], art_text)
+    qv = jl.verify_quotes(scored.get("defects") or [], art_text, atype)
     gaps = jl.must_cite_gaps(scored)
     jl.ledger_append(**base, ok=True)
 
