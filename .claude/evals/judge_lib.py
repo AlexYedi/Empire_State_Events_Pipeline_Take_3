@@ -240,7 +240,7 @@ def check_budget(provider: str, model: str, est_input_tokens: int, max_output_to
     """Called BEFORE the request, with the worst case. Raises BudgetExceeded; returns the worst-case cost."""
     worst = cost_usd(model, est_input_tokens, max_output_tokens)
     per_run = float(os.environ.get("JUDGE_MAX_USD_PER_RUN", "0.50"))
-    m_cap = float(os.environ.get("JUDGE_MONTHLY_CAP_USD", "8"))
+    m_cap = float(os.environ.get("JUDGE_MONTHLY_CAP_USD", "20"))   # $8 -> $20, Alex 2026-09-27 (Sept hit $7.95 on one failed seat run)
     t_cap = float(os.environ.get("JUDGE_TOTAL_CAP_USD", "45"))
     month, total = spent(provider)
     if worst > per_run:
