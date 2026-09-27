@@ -31,6 +31,7 @@ Ask the same question of any NEW metric before trusting it: what does this score
 - judge–human agreement (from `alex_ack`) — **is it ≥ +0.10 above the always-pass baseline on the same rows?** Raw agreement alone means nothing (YED-212)
 - **ack hygiene (the labeler is a rater too):** what share of escalations did Alex simply agree with, and how fast? A reflexive-agree pattern turns the ground truth into a constant and makes every κ undefined
 - acted-on outcome vs goal — trending which way?
+- **identity hygiene (YED-47, added 2026-09-27):** run `.venv/bin/python .claude/scripts/identity_probe.py` (read-only). Two registry rows: *identity ambiguity* (distinct ledger entries in 30d; **≥10 reopens the parked DDL half** — the `name_norm` / `entity_alias` / `entity_merge` issue) and *identity duplicates* (exact dupes + qualifier twins + host/LinkedIn collisions + tombstones-with-edges; **any pair → propose it with `substrate.py merge … --dry-run`; Alex approves every merge**, never the agent). Null baseline: an absent or empty ledger over **0 producer sessions** is "no data", not "clean" — read it beside the session count the probe prints.
 For each that crosses its threshold, take the registry's named **action**.
 
 ## Step 2.5 — Container-rule audit (added 2026-09-18)
