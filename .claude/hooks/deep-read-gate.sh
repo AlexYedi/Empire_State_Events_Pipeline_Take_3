@@ -11,6 +11,13 @@
 #     durable FAILED record + surface a loud systemMessage, then allow the stop (the
 #     autonomous / can't-resolve "report FAILED" path — never traps the session).
 #
+# Stop fires PER TURN, not per run (2026-09-27 correction — see _run_in_progress.sh). A pending row
+# is therefore NOT a failure while this session holds a live event claim (event-claim.py): the run
+# is in progress and the Deep Read simply hasn't rendered yet. The gate evaluates for real at the
+# first turn end after the claim is released (Step 6) or expires. A `_pending`/empty session id has
+# no claim to check and keeps the strict path. Failure rows are written at most once per
+# (session, event set) — the 9 false rows of session b7b796e0 are what this prevents.
+#
 # Fails CLOSED by design (adversarial-review hardened):
 #   - a `pending` row (default at Scan-head commit, flipped only on successful Step 4.5),
 #   - an unparseable ledger line (corruption never reads as "clean/empty"),
@@ -51,6 +58,9 @@ if [ -f "$SETTINGS_LOCAL" ]; then
 fi
 
 command -v jq >/dev/null 2>&1 || exit 0
+
+# shellcheck source=_run_in_progress.sh
+. "$(dirname "${BASH_SOURCE[0]}")/_run_in_progress.sh"
 
 # Resolve which ledger file(s) to enforce.
 LEDGERS=()
@@ -99,6 +109,9 @@ done
 
 [ "${PENDING:-0}" -eq 0 ] && exit 0   # all rendered or waived, no corruption → gate passes, silent
 
+# In progress: this session still holds its event claim → pending is expected, not a skip. Silent.
+run_in_progress "$SESSION_ID" && exit 0
+
 CORRUPT_NOTE=""
 [ "${CORRUPT:-0}" -gt 0 ] && CORRUPT_NOTE="
 (Includes $CORRUPT unparseable ledger line(s), counted as pending — fail-closed.)"
@@ -120,10 +133,12 @@ else
   # Already blocked once — the run IS closing with pending. Persist a DURABLE record so the
   # failure survives the transcript (review finding #2b), then surface it and allow the stop.
   mkdir -p "$(dirname "$FAIL_LOG")" 2>/dev/null
-  jq -cn --arg s "${SESSION_ID:-_empty}" --arg t "$NOW" \
-        --argjson n "${PENDING:-0}" --argjson c "${CORRUPT:-0}" --argjson ev "$EVENTS_JSON" \
-    '{event:"deep_read_gate_failed", session:$s, ts:$t, pending:$n, corrupt:$c, events:$ev}' \
-    >> "$FAIL_LOG" 2>/dev/null
+  if ! already_logged "$FAIL_LOG" "deep_read_gate_failed" "${SESSION_ID:-_empty}" "$EVENTS_JSON"; then
+    jq -cn --arg s "${SESSION_ID:-_empty}" --arg t "$NOW" \
+          --argjson n "${PENDING:-0}" --argjson c "${CORRUPT:-0}" --argjson ev "$EVENTS_JSON" \
+      '{event:"deep_read_gate_failed", session:$s, ts:$t, pending:$n, corrupt:$c, events:$ev}' \
+      >> "$FAIL_LOG" 2>/dev/null
+  fi
   ESCAPED=$(printf '%s' "$FAILED_MSG" | jq -Rsa .)
   printf '{"systemMessage":%s}\n' "$ESCAPED"
 fi
