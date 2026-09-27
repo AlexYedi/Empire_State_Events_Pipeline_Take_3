@@ -17,7 +17,8 @@ RULE (all must hold, else the reference still flags):
      either a literal containing `<name>.jsonl`, or a variable bound to one — directly
      (`LOG = os.path.join(ROOT, ".claude", "artifacts", "<name>.jsonl")`, `LOG=".claude/artifacts/<name>.jsonl"`)
      or through simple aliases (`path = LOG`, `X="$LOG"`, up to 4 hops).
-  3. NO tracked writer opens that ledger in a truncating mode (`open(<target>, "w")`, `> <target>`) — the
+  3. NO tracked writer overwrites that ledger (`open(<target>, "w")`, `> <target>`, and — matched greedily per
+     line — pathlib write_text/write_bytes, shutil copy/move, os.replace). Syntactic, not exhaustive — the
      spec says "only in append mode" (judge round 3). The name must sit DIRECTLY under artifacts/: a writer
      to artifacts/sub/x.jsonl never excuses artifacts/x.jsonl.
   Name-scoped (judge round 2, 2026-09-27): the first version tested whether the FILE appended anything, so a
@@ -102,7 +103,10 @@ def _resolve(target, binds, is_sh, depth=0):
 # ASYMMETRY (judge round 4): missing an append makes a ledger FLAG (safe); missing a truncation would
 # EXCUSE it (unsafe). So truncation detection is deliberately greedy: any line holding a Python "w"-mode
 # open() also contributes every ledger name it spells out inline (e.g. open(os.path.join(..., "x.jsonl"), "w")).
-PY_TRUNC_LINE_RE = re.compile(r"""open\(.*,\s*(?:mode\s*=\s*)?["']w[b+t]*["']""")
+PY_TRUNC_LINE_RE = re.compile(r"""open\(.*,\s*(?:mode\s*=\s*)?["']w[b+t]*["']|\.write_(?:text|bytes)\(|shutil\.(?:copy\w*|move)\(|os\.replace\(""")
+# ^ judge round 5: pathlib write_text/write_bytes, shutil copy/move and os.replace also overwrite a file.
+#   Coverage is still syntactic — a truncation spelled some other way would be missed, and that is the
+#   unsafe direction; the selftest pins each form listed here.
 
 
 def _targets(text, is_sh, rx, greedy_line_rx=None):
@@ -201,6 +205,10 @@ def selftest():
                        'with open(I, "a") as f:\n    pass\n',
         "inline_w.py": 'with open(os.path.join(ROOT, ".claude", "artifacts", "inline-truncated.jsonl"), "w") as f:\n'
                        '    pass\n',
+        # appended via a constant, overwritten via pathlib inline -> must not be excused (judge round 5)
+        "pl_a.py": 'P2 = os.path.join(ROOT, ".claude", "artifacts", "pathlib-truncated.jsonl")\n'
+                   'with open(P2, "a") as f:\n    pass\n',
+        "pl_w.py": 'Path(os.path.join(ROOT, ".claude", "artifacts", "pathlib-truncated.jsonl")).write_text("")\n',
         # a write target built at runtime cannot be resolved -> must NOT excuse anything
         "dynamic.py": 'name = pick()\nwith open(os.path.join(ROOT, ".claude", "artifacts", name), "a") as f:\n    pass\n',
     }
@@ -222,6 +230,7 @@ def selftest():
         (A + "also-truncated.jsonl", False, "appended in one file, truncated in another"),
         (A + "cmp-bound.jsonl", False, "Q == L is a comparison, not a binding of Q"),
         (A + "inline-truncated.jsonl", False, "truncated via an inline os.path.join open(..., 'w')"),
+        (A + "pathlib-truncated.jsonl", False, "overwritten via pathlib write_text"),
     ]
     fails = 0
     for ref, want, why in cases:
@@ -237,7 +246,8 @@ def selftest():
     live_checks = 0
     for neg in ("gate-failures.jsonl", "shell-fails.jsonl", "read-only.jsonl", "overwritten.jsonl",
                 "mixed-appended.jsonl", "mixed-read-only.jsonl", "aliased.jsonl", "sh-default.jsonl",
-                "nested-only.jsonl", "also-truncated.jsonl", "cmp-bound.jsonl", "inline-truncated.jsonl"):
+                "nested-only.jsonl", "also-truncated.jsonl", "cmp-bound.jsonl", "inline-truncated.jsonl",
+                "pathlib-truncated.jsonl"):
         live_checks += 1
         if neg in live:
             fails += 1
