@@ -13,7 +13,9 @@
 # mode the sweep looks ONLY at the ending session's ledgers, with no age threshold and without the live-claim
 # exemption — the session is ending, so a claim it never released no longer means "in progress" — and logs its
 # pending rows as abandoned at the moment of death instead of at the next SessionStart >4h later. `reason=resume`
-# is skipped: the same conversation continues. Log-once keys make the later SessionStart sweep a no-op for them.
+# is skipped: the same conversation continues; so is an empty session_id (nothing to attribute). Log-once keys make
+# the later SessionStart sweep a no-op for them. The report text is still printed in this mode, but SessionEnd
+# stdout is not shown to anyone — the durable record is the `*_gate_abandoned` row in the failures log.
 #
 # Always exit 0. Plain-text stdout (same convention as graph-sessionstart.sh).
 
@@ -51,7 +53,12 @@ sweep() {   # sweep <ledger-glob-suffix> <log> <event-name> <id-field>
       marker=$(printf '%s' "$obj" | jq -r '.marker // ""')
       [ "$marker" = "pending" ] || continue
       ts=$(printf '%s' "$obj" | jq -r '.ts // ""')
-      age=$(( NOW_S - $( printf '%s' "$ts" | jq -Rr 'fromdate? // 0' 2>/dev/null || echo 0) ))
+      # An empty/missing/unparseable ts reads as epoch 0 → ancient → surfaced as abandoned (a ledger row our tools
+      # wrote always has a ts, so its absence means corruption). Never let it reach $(( )) empty: an empty operand
+      # is a syntax error that aborts the whole sweep in a non-interactive shell (found by the Gemini seat, PR #139).
+      tsn=$( printf '%s' "$ts" | jq -Rr 'fromdate? // empty' 2>/dev/null ); [[ "$tsn" =~ ^[0-9]+$ ]] || tsn=0
+      age=$(( NOW_S - tsn ))
+      [ -z "$ts" ] && ts="(no ts — corrupt row)"
       [ "$age" -ge "$MIN_AGE" ] || continue
       id=$(printf '%s' "$obj" | jq -r ".$idf // \"?\"")
       label=$(printf '%s' "$obj" | jq -r '.event // "(untitled event)"')
