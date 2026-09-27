@@ -99,7 +99,13 @@ def _resolve(target, binds, is_sh, depth=0):
     return found
 
 
-def _targets(text, is_sh, rx):
+# ASYMMETRY (judge round 4): missing an append makes a ledger FLAG (safe); missing a truncation would
+# EXCUSE it (unsafe). So truncation detection is deliberately greedy: any line holding a Python "w"-mode
+# open() also contributes every ledger name it spells out inline (e.g. open(os.path.join(..., "x.jsonl"), "w")).
+PY_TRUNC_LINE_RE = re.compile(r"""open\(.*,\s*(?:mode\s*=\s*)?["']w[b+t]*["']""")
+
+
+def _targets(text, is_sh, rx, greedy_line_rx=None):
     binds = _bindings(text, is_sh)
     out = set()
     for line in text.splitlines():
@@ -107,6 +113,8 @@ def _targets(text, is_sh, rx):
             continue
         for m in rx.finditer(line):
             out |= _resolve(m.group(2) if is_sh else m.group(1), binds, is_sh)
+        if greedy_line_rx is not None and greedy_line_rx.search(line):
+            out |= set(DIRECT_RE.findall(line))
     return out
 
 
@@ -117,7 +125,8 @@ def ledgers_from_texts(texts):
     for path, text in texts.items():
         is_sh = path.endswith(".sh")
         appended |= _targets(text, is_sh, SH_APPEND_RE if is_sh else PY_APPEND_RE)
-        truncated |= _targets(text, is_sh, SH_TRUNC_RE if is_sh else PY_TRUNC_RE)
+        truncated |= _targets(text, is_sh, SH_TRUNC_RE if is_sh else PY_TRUNC_RE,
+                              None if is_sh else PY_TRUNC_LINE_RE)
     return appended - truncated
 
 
@@ -187,6 +196,11 @@ def selftest():
         # `X == Y` is a comparison and must not bind X
         "cmp.py": 'L = os.path.join(ROOT, ".claude", "artifacts", "cmp-bound.jsonl")\n'
                   'if Q == L:\n    pass\nwith open(Q, "a") as f:\n    pass\n',
+        # appended via a constant, truncated INLINE elsewhere -> the greedy truncation pass must catch it
+        "inline_a.py": 'I = os.path.join(ROOT, ".claude", "artifacts", "inline-truncated.jsonl")\n'
+                       'with open(I, "a") as f:\n    pass\n',
+        "inline_w.py": 'with open(os.path.join(ROOT, ".claude", "artifacts", "inline-truncated.jsonl"), "w") as f:\n'
+                       '    pass\n',
         # a write target built at runtime cannot be resolved -> must NOT excuse anything
         "dynamic.py": 'name = pick()\nwith open(os.path.join(ROOT, ".claude", "artifacts", name), "a") as f:\n    pass\n',
     }
@@ -207,6 +221,7 @@ def selftest():
         (A + "nested-only.jsonl", False, "only a NESTED artifacts/sub/ ledger is appended"),
         (A + "also-truncated.jsonl", False, "appended in one file, truncated in another"),
         (A + "cmp-bound.jsonl", False, "Q == L is a comparison, not a binding of Q"),
+        (A + "inline-truncated.jsonl", False, "truncated via an inline os.path.join open(..., 'w')"),
     ]
     fails = 0
     for ref, want, why in cases:
@@ -222,7 +237,7 @@ def selftest():
     live_checks = 0
     for neg in ("gate-failures.jsonl", "shell-fails.jsonl", "read-only.jsonl", "overwritten.jsonl",
                 "mixed-appended.jsonl", "mixed-read-only.jsonl", "aliased.jsonl", "sh-default.jsonl",
-                "nested-only.jsonl", "also-truncated.jsonl", "cmp-bound.jsonl"):
+                "nested-only.jsonl", "also-truncated.jsonl", "cmp-bound.jsonl", "inline-truncated.jsonl"):
         live_checks += 1
         if neg in live:
             fails += 1
