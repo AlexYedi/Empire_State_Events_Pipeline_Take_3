@@ -45,6 +45,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hooks"))
+import runtime_ledgers  # noqa: E402 — the ONE runtime-ledger rule, shared with check-refs.sh (YED-227)
+
 ROOT = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 OUT_DIR = os.path.join(ROOT, ".claude", ".state", "system-graph")
 EXTRACTOR_VERSION = "1"
@@ -281,6 +284,8 @@ def build():
         # the recall side is watched by the Increment 3 ledger's `false-positive` acks, not here.
         if norm and norm in ignored:
             cls = "runtime"          # generated at run time; absence is normal
+        elif not exists and norm and runtime_ledgers.is_runtime_ledger(norm):
+            cls = "runtime"          # append-only ledger, created on first write (YED-227; shared rule)
         elif src_is_proposed:
             cls = "proposed"         # a not-yet-built path in a plan is a plan, not a broken link
         elif HISTORICAL_RE.search(context):
@@ -438,10 +443,53 @@ def selftest():
     return failures == 0
 
 
+def selftest_runtime_ledgers():
+    """YED-227: check-refs.sh must skip an append-only ledger, and still flag a READ-only one and a typo —
+    in a throwaway git repo, so the case always runs (it used to skip itself whenever no real ledger
+    happened to be absent — judge round 2). Both tools share runtime_ledgers.py; this pins that
+    check-refs.sh actually calls it and honours its name-scoped rule."""
+    import shutil
+    import tempfile
+    sh = os.path.join(ROOT, ".claude", "hooks", "check-refs.sh")
+    helper = os.path.join(ROOT, ".claude", "hooks", "runtime_ledgers.py")
+    A = ".claude/" + "artifacts/"   # concatenated: fixture paths must never be literal refs in this file
+    tmp = tempfile.mkdtemp(prefix="yed227-")
+    try:
+        os.makedirs(os.path.join(tmp, ".claude", "hooks"))
+        os.makedirs(os.path.join(tmp, ".claude", "scripts"))
+        for f in (sh, helper):
+            shutil.copy(f, os.path.join(tmp, ".claude", "hooks"))
+        with open(os.path.join(tmp, ".claude", "scripts", "writer.py"), "w") as f:
+            f.write('APPENDED = os.path.join(ROOT, ".claude", "artifacts", "it-appended.jsonl")\n'
+                    'READ_ONLY = os.path.join(ROOT, ".claude", "artifacts", "it-read-only.jsonl")\n'
+                    'with open(APPENDED, "a") as f:\n    f.write(x)\n'
+                    'for line in open(READ_ONLY):\n    pass\n')
+        art = os.path.join(tmp, "artifact.md")
+        with open(art, "w") as f:
+            f.write(f"cites {A}it-appended.jsonl and {A}it-read-only.jsonl and {A}it-typo.jsonl\n")
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=tmp, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        for cmd in (["git", "init", "-q"], ["git", "add", "-A"], ["git", "commit", "-qm", "fixture"]):
+            subprocess.run(cmd, cwd=tmp, capture_output=True, env=env)
+        p = subprocess.run(["bash", os.path.join(tmp, ".claude", "hooks", "check-refs.sh"),
+                            "--artifact", art], capture_output=True, text=True, cwd=tmp, env=env)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    got = {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+    want = {A + "it-read-only.jsonl", A + "it-typo.jsonl"}
+    ok = got == want
+    print(f"runtime-ledger integration: {'OK' if ok else 'FAIL'} — flagged {sorted(got)}"
+          f"{'' if ok else f' (expected {sorted(want)})'}", file=sys.stderr)
+    return ok
+
+
 def main():
     args = sys.argv[1:]
     if "--selftest" in args:
-        sys.exit(0 if selftest() else 1)
+        ok = selftest()
+        ok = runtime_ledgers.selftest() and ok
+        ok = selftest_runtime_ledgers() and ok
+        sys.exit(0 if ok else 1)
     nodes, edges, meta = build()
     write(nodes, edges, meta)
     c = meta["counts"]
