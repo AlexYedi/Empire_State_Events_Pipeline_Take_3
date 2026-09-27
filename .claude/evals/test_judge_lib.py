@@ -77,13 +77,24 @@ with tempfile.TemporaryDirectory() as d:
         jl.check_budget("openai", "not-a-model", 1, 1); ck("budget: unpriced model refused", False)
     except jl.BudgetExceeded:
         ck("budget: unpriced model refused", True)
-    jl.ledger_append(provider="openai", cost_usd=44.9)
+    os.environ.pop("JUDGE_TOTAL_CAP_USD", None); os.environ.pop("JUDGE_MONTHLY_CAP_USD", None)
+    with open(jl.LEDGER, "a") as f:                  # $44.90 spent in an EARLIER month: counts toward lifetime only
+        f.write(json.dumps({"ts": "2020-01-15T00:00:00Z", "provider": "openai", "cost_usd": 44.9}) + "\n")
+    ck("budget: no lifetime cap by default (lifted 2026-09-27) — old spend does not block",
+       jl.check_budget("openai", "gpt-5.4", 20000, 16000) > 0)
+    os.environ["JUDGE_TOTAL_CAP_USD"] = "45"
     try:
-        jl.check_budget("openai", "gpt-5.4", 20000, 16000); ck("budget: lifetime cap enforced", False)
+        jl.check_budget("openai", "gpt-5.4", 20000, 16000); ck("budget: opt-in lifetime cap still enforced", False)
     except jl.BudgetExceeded:
-        ck("budget: lifetime cap enforced", True)
+        ck("budget: opt-in lifetime cap still enforced", True)
+    os.environ.pop("JUDGE_TOTAL_CAP_USD", None)
+    jl.ledger_append(provider="openai", cost_usd=19.9)   # THIS month
+    try:
+        jl.check_budget("openai", "gpt-5.4", 20000, 16000); ck("budget: $20 monthly cap enforced", False)
+    except jl.BudgetExceeded:
+        ck("budget: $20 monthly cap enforced", True)
     jl.ledger_append(provider="google", cost_usd=999)
-    ck("budget: another provider's spend is not counted", jl.spent("openai")[1] == 44.9)
+    ck("budget: another provider's spend is not counted", round(jl.spent("openai")[1], 2) == 64.8)
 
 print(f"{ok}/{n} judge_lib cases pass")
 sys.exit(0 if ok == n else 1)

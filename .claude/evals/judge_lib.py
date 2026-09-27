@@ -9,7 +9,8 @@ Spec: .claude/proposals/third-judge-seat-openai.md. This file owns:
   build_bundle()   ONE evidence bundle per run, identical for every seat, with a sha256 so a merge can prove it.
   verify_quotes()  a defect must quote the artifact verbatim; a fabricated quote is a format failure.
   privacy_guard()  nothing gitignored, outside the repo, or secret-looking is ever sent to a provider.
-  ledger / caps    every paid API attempt is recorded; per-run, monthly and lifetime caps are enforced here.
+  ledger / caps    every paid API attempt is recorded; per-run and monthly caps are enforced here (a lifetime
+                   cap is opt-in via JUDGE_TOTAL_CAP_USD; the $45 default was lifted by Alex 2026-09-27).
 
 Seats never compute their own composite or verdict. Seats never see each other's output: nothing here accepts one.
 """
@@ -241,13 +242,16 @@ def check_budget(provider: str, model: str, est_input_tokens: int, max_output_to
     worst = cost_usd(model, est_input_tokens, max_output_tokens)
     per_run = float(os.environ.get("JUDGE_MAX_USD_PER_RUN", "0.50"))
     m_cap = float(os.environ.get("JUDGE_MONTHLY_CAP_USD", "20"))   # $8 -> $20, Alex 2026-09-27 (Sept hit $7.95 on one failed seat run)
-    t_cap = float(os.environ.get("JUDGE_TOTAL_CAP_USD", "45"))
+    # Lifetime cap: OFF by default (Alex, 2026-09-27). The $45 default mirrored a one-time $50 prepaid OpenAI
+    # credit; the $20 monthly cap is now the governor. Set JUDGE_TOTAL_CAP_USD to re-impose one.
+    t_env = os.environ.get("JUDGE_TOTAL_CAP_USD", "").strip()
+    t_cap = float(t_env) if t_env else None
     month, total = spent(provider)
     if worst > per_run:
         raise BudgetExceeded(f"worst case ${worst:.3f} > per-run cap ${per_run:.2f} ({model})")
     if month + worst > m_cap:
         raise BudgetExceeded(f"month ${month:.2f} + ${worst:.3f} would pass the monthly cap ${m_cap:.2f}")
-    if total + worst > t_cap:
+    if t_cap is not None and total + worst > t_cap:
         raise BudgetExceeded(f"lifetime ${total:.2f} + ${worst:.3f} would pass the lifetime cap ${t_cap:.2f}")
     return worst
 

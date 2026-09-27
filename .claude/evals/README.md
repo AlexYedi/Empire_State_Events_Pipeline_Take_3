@@ -62,7 +62,7 @@ Spec: `.claude/proposals/third-judge-seat-openai.md`. How to run it: the `judge-
 | `judge_lib.py` | what every seat shares: the scorer (parity-tested against the jq in `gemini-judge.sh`), the one evidence bundle + its sha256, verbatim quote verification, the privacy guard, the spend ledger + caps |
 | `quorum_merge.py` | the N-seat merge. Voting seats decide, advisory seats can only add caution, shadow seats are recorded and hidden until Alex acks. A split is never auto-resolved |
 | `calibration_stats.py --gate` | each seat's *effective* status: configured, lowered one rung if a demotion rule fires on its last 20 prospective runs since `since` |
-| `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 8 · `JUDGE_TOTAL_CAP_USD` 45 |
+| `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 20 · `JUDGE_TOTAL_CAP_USD` unset = no lifetime cap (was 8 and 45; changed by Alex 2026-09-27) |
 | `controls.py` · `controls/manifest.json` | the control set: real labelled artifact states by git blob. `run` judges them and scores against the label |
 | `.claude/hooks/run-canaries.sh` · `controls/state.json` | the SCHEDULED half: a 3-item sample per seat (~$0.13), recorded per seat with the resolved model id. `--full` runs the whole set |
 | `test_judge_lib.py` · `test_quorum_nseat.py` · `test_canary_gate.py` · `test_quorum_scenarios.py` | 23 + 40 + 7 + 6 offline cases; run all four before changing any of the above |
