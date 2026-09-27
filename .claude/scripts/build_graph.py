@@ -209,7 +209,13 @@ def walk_artifacts():
                     rels.append(os.path.relpath(os.path.join(dirpath, fn), ROOT))
     if os.path.isfile(os.path.join(ROOT, "CLAUDE.md")):
         rels.append("CLAUDE.md")
-    return sorted(set(r.replace(os.sep, "/") for r in rels))
+    rels = sorted(set(r.replace(os.sep, "/") for r in rels))
+    # YED-236: never index a gitignored file. The graph feeds the PUBLIC hub's System Map; indexing
+    # what's on disk leaked private, deliberately-untracked files (me-model, target-companies, the
+    # inbox lists) into it whenever the graph was built from a working checkout. The graph must be
+    # the same whether it's built from a clean clone or from Alex's checkout.
+    ignored = gitignored(rels)
+    return [r for r in rels if r not in ignored]
 def adr_status(text: str):
     """The whole Status LINE, not its first word. Two reasons, both found the hard way: the first
     word is often a bold marker (`**Accepted`), which the old word-capture missed entirely; and an
@@ -272,7 +278,9 @@ def build():
             exists, norm = os.path.exists(os.path.expanduser(path)), None
         else:
             norm = path[2:] if path.startswith("./") else path
-            exists = os.path.exists(os.path.join(ROOT, norm))
+            # YED-236: a gitignored target counts as absent, so a local build matches a clean clone
+            # (and the private file's existence never reaches the public graph).
+            exists = os.path.exists(os.path.join(ROOT, norm)) and norm not in ignored
         subtype = nodes.get(src, {}).get("subtype")
         src_is_proposed = subtype == "proposal" or adr_proposed.get(src, False)
 
