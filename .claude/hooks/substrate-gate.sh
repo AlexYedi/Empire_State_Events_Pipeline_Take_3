@@ -22,6 +22,10 @@
 # kept separate so the judged Deep Read gate is not modified. Backfill runs do not use
 # --expect-claims and never create rows here.
 #
+# Stop fires PER TURN, not per run (2026-09-27 — see _run_in_progress.sh). A pending row is not a
+# failure while this session holds a live event claim; the gate evaluates for real at the first turn
+# end after the claim is released or expires. Failure rows are written once per (session, event set).
+#
 # Disable (emergency only): add "substrate-gate" to .hooks.disable in .claude/settings.local.json.
 # Output contract: JSON on stdout. Always exit 0.
 
@@ -43,6 +47,9 @@ if [ -f "$SETTINGS_LOCAL" ] && jq -e '.hooks.disable | index("substrate-gate")' 
 fi
 
 command -v jq >/dev/null 2>&1 || exit 0
+
+# shellcheck source=_run_in_progress.sh
+. "$(dirname "${BASH_SOURCE[0]}")/_run_in_progress.sh"
 
 LEDGERS=()
 if [ -n "$SESSION_ID" ]; then
@@ -87,6 +94,9 @@ for L in "${LEDGERS[@]}"; do
 done
 
 [ "${PENDING:-0}" -eq 0 ] && exit 0
+
+# In progress: this session still holds its event claim → pending is expected, not a skip. Silent.
+run_in_progress "$SESSION_ID" && exit 0
 
 CORRUPT_NOTE=""
 [ "${CORRUPT:-0}" -gt 0 ] && CORRUPT_NOTE="
@@ -136,10 +146,12 @@ if [ "$STOP_ACTIVE" != "true" ]; then
   printf '{"decision":"block","reason":%s}\n' "$(printf '%s' "$FAILED_MSG" | jq -Rsa .)"
 else
   mkdir -p "$(dirname "$FAIL_LOG")" 2>/dev/null
-  jq -cn --arg s "${SESSION_ID:-_empty}" --arg t "$NOW" \
-        --argjson n "${PENDING:-0}" --argjson c "${CORRUPT:-0}" --argjson ev "$EVENTS_JSON" \
-    '{event:"substrate_gate_failed", session:$s, ts:$t, pending:$n, corrupt:$c, events:$ev}' \
-    >> "$FAIL_LOG" 2>/dev/null
+  if ! already_logged "$FAIL_LOG" "substrate_gate_failed" "${SESSION_ID:-_empty}" "$EVENTS_JSON"; then
+    jq -cn --arg s "${SESSION_ID:-_empty}" --arg t "$NOW" \
+          --argjson n "${PENDING:-0}" --argjson c "${CORRUPT:-0}" --argjson ev "$EVENTS_JSON" \
+      '{event:"substrate_gate_failed", session:$s, ts:$t, pending:$n, corrupt:$c, events:$ev}' \
+      >> "$FAIL_LOG" 2>/dev/null
+  fi
   printf '{"systemMessage":%s}\n' "$(printf '%s' "$FAILED_MSG" | jq -Rsa .)"
 fi
 

@@ -478,6 +478,16 @@ CORRESPONDENCE_RE = re.compile(r"\b(thread|replied|reply|emailed|e-?mailed|inbox
                                r"last (?:reply|message|contact)|our (?:call|chat|conversation)|Alex)\b", re.I)
 LEDGER_ROW_RE = re.compile(r"^\s*[-*]\s*claim\s*:\s*(.+)$", re.I)
 LEDGER_FIELD_SPLIT = re.compile(r"\s*\|\s*(?=(?:tier|source|url|date)\s*:)", re.I)
+# Table shape of the same ledger (accepted since 2026-09-27; the bullet shape stays the contract).
+TABLE_ROW_RE = re.compile(r"^\s*\|.*\|\s*$")
+TABLE_SEP_RE = re.compile(r"^\s*\|?(\s*:?-{2,}:?\s*\|)+\s*:?-{0,}:?\s*\|?\s*$")
+TABLE_TIER_RE = re.compile(r"^\s*(web[-_ ]verified|email[-_ ]signal|notion[-_ ]prior|inference)\b\s*(.*?)\s*$", re.I)
+
+
+def _split_table_row(line: str) -> list[str]:
+    """Cells of a markdown table row, splitting on UNESCAPED pipes only (a claim may contain `\\|`)."""
+    cells = re.split(r"(?<!\\)\|", line.strip())
+    return [c.strip().replace("\\|", "|") for c in cells[1:-1]]
 TIER_MAP = {"web-verified": "web_verified", "web_verified": "web_verified",
             "email-signal": "email_signal", "email_signal": "email_signal",
             "notion-prior": "notion_prior", "notion_prior": "notion_prior"}
@@ -516,16 +526,38 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
         if re.match(r"^#{1,6}\s", line):            # any other heading ends the current ledger
             entity = None
             continue
-        m = LEDGER_ROW_RE.match(line)
-        if not m or not entity:
-            if m:
-                skip("row_outside_a_ledger")
-            continue
-        parts = LEDGER_FIELD_SPLIT.split(m.group(1))
-        fields = {"claim": clean_md(parts[0])}
-        for p in parts[1:]:
-            k, _, v = p.partition(":")
-            fields[k.strip().lower()] = v.strip()
+        if entity and TABLE_ROW_RE.match(line):
+            # Table shape (2026-09-27, Shortlist acceptance run): the specialists and the synthesizer
+            # emitted `| claim | tier | source | url | date |` tables, and the contract's fallback
+            # ("pass the raw returns") could not help because those were tables too → 0 admissible
+            # rows, LOUD FAILURE, 203 rows converted by hand. Same fields, same rules; only the shape
+            # differs. A tier cell may carry a qualifier ("web-verified (company-reported)") — the
+            # leading tier token decides, the qualifier is kept on the source.
+            if TABLE_SEP_RE.match(line):
+                continue
+            cells = _split_table_row(line)
+            if len(cells) < 5:
+                skip("table_row_short")
+                continue
+            if cells[0].lower() == "claim":          # header row
+                continue
+            claim_c, tier_c, source_c, url_c, date_c = cells[:5]
+            tm = TABLE_TIER_RE.match(tier_c)
+            tier_tok = re.sub(r"[ _]", "-", tm.group(1).lower()) if tm else tier_c.lower()
+            qual = tm.group(2).strip(" ()—–-") if tm else ""
+            fields = {"claim": clean_md(claim_c), "tier": tier_tok,
+                      "source": (f"{source_c} [{qual}]" if qual else source_c), "url": url_c, "date": date_c}
+        else:
+            m = LEDGER_ROW_RE.match(line)
+            if not m or not entity:
+                if m:
+                    skip("row_outside_a_ledger")
+                continue
+            parts = LEDGER_FIELD_SPLIT.split(m.group(1))
+            fields = {"claim": clean_md(parts[0])}
+            for p in parts[1:]:
+                k, _, v = p.partition(":")
+                fields[k.strip().lower()] = v.strip()
         tier = TIER_MAP.get((fields.get("tier") or "").strip().lower())
         url = _public_url(fields.get("url"))
         text = fields["claim"].strip(" .")
@@ -1732,6 +1764,23 @@ RESEARCH_SAMPLE = """
 """
 
 
+TABLE_SAMPLE = r"""
+##### Evidence Ledger — Holly
+| claim | tier | source | url | date |
+|---|---|---|---|---|
+| $2.2M pre-seed led by J2 Ventures | web-verified | BusinessWire | https://www.businesswire.com/holly | 2025-01-09 |
+| Serves A \| B county agencies | web-verified (company-reported) | Holly site | https://www.hollygov.com/about | 2026-09-27 |
+| Positioned as govtech HR per prior brief | notion-prior | prior brief | n/a | 2026-08-24 |
+"""
+MIXED_SAMPLE = """
+##### Evidence Ledger — Pascal
+- claim: Founded by Rick Huang and Matt Ko | tier: web-verified | source: About page | url: https://teampascal.com/company/about/ | date: 2026-09-27
+| Founding Engineer role open in NYC | web-verified | Ashby | https://jobs.ashbyhq.com/teampascal | 2026-09-25 |
+### People at-a-glance
+| Rick Huang | Co-Founder | Pascal | https://www.linkedin.com/in/huangr/ | 2026-09-27 |
+"""
+
+
 def _research_selftest(ok) -> None:
     """YED-205, offline, against _FakeGraph + a sample Evidence Set in the specialists' documented format."""
     items, skipped = parse_ledger(RESEARCH_SAMPLE)
@@ -1741,6 +1790,18 @@ def _research_selftest(ok) -> None:
     ok("ledger: claim text is self-contained '<Entity>: <claim>'",
        "Soxton.AI: Raised a $4M seed led by Primary in August 2026" in by)
     ok("ledger: private email-signal (no URL) skipped + counted", skipped.get("email_signal_private") == 1)
+    # Table shape (2026-09-27): the Shortlist acceptance run's specialists emitted tables → 0 admissible rows.
+    t_items, t_skipped = parse_ledger(TABLE_SAMPLE)
+    ok("ledger (table): header + separator rows are not rows; 2 admissible, notion-prior skipped",
+       len(t_items) == 2 and t_skipped.get("notion_prior") == 1
+       and "empty_or_template" not in t_skipped and "table_row_short" not in t_skipped)
+    ok("ledger (table): a tier qualifier is folded into source; the leading tier token decides",
+       any(i["tier"] == "web_verified" and "[company-reported]" in (i["source"] or "") for i in t_items))
+    ok("ledger (table): an escaped pipe inside a claim does not split the row",
+       any("Serves A | B county agencies" in i["text"] for i in t_items))
+    m_items, _ = parse_ledger(MIXED_SAMPLE)
+    ok("ledger (mixed): bullet and table rows under one heading both parse; a table row after the ledger ends is ignored",
+       len(m_items) == 2 and all(i["entity"] == "Pascal" for i in m_items))
     ok("ledger: notion-prior skipped + counted", skipped.get("notion_prior") == 1)
     ok("ledger: web-verified without a URL skipped + counted", skipped.get("web_verified_missing_url") == 1)
     ok("ledger: the template placeholder row is never a claim", skipped.get("empty_or_template") == 1)
