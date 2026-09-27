@@ -43,12 +43,24 @@ jobs:
           MI_SUPABASE_ANON_KEY: ${{ secrets.MI_SUPABASE_ANON_KEY }}
           PSQL_BIN: psql
         run: python3 supabase/scripts/healthcheck_2b.py
-      - name: Open an issue on failure
+      # One open issue, not one per night (2026-09-27): a failure that persists used to open a new issue every
+      # run — 9 in 9 nights (#80…#140) for a single cause (YED-230). Now: if an open "MI 2b health-check FAILED"
+      # issue exists, add tonight's run as a comment on it; open a new issue only when none is open (i.e. the
+      # first failure after the last one was closed). Closing that issue re-arms the alert.
+      - name: Open or update the failure issue
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh issue create \
-            --title "MI 2b health-check FAILED ($(date -u +%Y-%m-%d))" \
-            --body "The nightly post-swap health-check failed — the consolidated MI graph lost coherence or a read path broke. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
-            || echo "issue-create failed; check the Actions run directly"
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "MI 2b health-check FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "MI 2b health-check FAILED (since $TODAY)" \
+              --body "The nightly post-swap health-check failed — the consolidated MI graph lost coherence or a read path broke. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
