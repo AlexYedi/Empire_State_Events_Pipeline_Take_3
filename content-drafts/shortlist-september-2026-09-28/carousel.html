@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Seat or Outcome — The Shortlist, Sept 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #D97706;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+  h1 { font: 700 78px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 48px; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 56px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 70px; }
+
+  /* slide 1 — split frame */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; margin-bottom: 110px; }
+  .col { border: 2px solid var(--line); border-radius: 18px; padding: 40px 36px; display: flex; flex-direction: column; gap: 30px; }
+  .col.hi { border-color: var(--accent); }
+  .col h2 { font: 700 26px/1.2 var(--mono); letter-spacing: .08em; color: var(--dim); }
+  .col.hi h2 { color: var(--accent); }
+  .row .k { font: 20px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .row .v { font: 600 38px/1.18 var(--serif); }
+  .col:not(.hi) .v { color: #C9CCD1; }
+
+  /* slide 2 — matrix */
+  table { width: 100%; border-collapse: collapse; }
+  th { font: 600 21px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent);
+       text-align: left; padding: 0 16px 18px 0; vertical-align: bottom; border-bottom: 2px solid var(--accent); }
+  td { font: 27px/1.22 var(--serif); padding: 16px 14px 16px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.co { font: 700 28px/1.18 var(--serif); width: 190px; }
+  tr.outlier td { color: var(--dim); }
+  .tag { display: inline-block; font: 600 17px/1 var(--mono); letter-spacing: .08em; color: var(--accent);
+         border: 1.5px solid var(--accent); border-radius: 6px; padding: 6px 8px; margin-top: 10px; }
+
+  /* slide 3 — diagram */
+  .chart { border: 2px solid var(--line); border-radius: 18px; padding: 28px 34px 24px; margin-bottom: 26px; }
+  .chart.hi { border-color: var(--accent); }
+  .chart h3 { font: 700 26px/1.2 var(--mono); letter-spacing: .06em; color: var(--dim); margin-bottom: 8px; }
+  .chart.hi h3 { color: var(--accent); }
+  .note { border-left: 6px solid var(--accent); padding: 18px 26px; font: 600 36px/1.25 var(--serif); margin-top: 8px; }
+
+  /* slide 4 — stats */
+  .stats { display: grid; gap: 34px; flex: 1; align-content: start; }
+  .stat { border-top: 2px solid var(--line); padding-top: 30px; }
+  .num { font: 700 150px/1 var(--serif); color: var(--accent); letter-spacing: -.02em; }
+  .lab { font: 36px/1.28 var(--serif); margin-top: 16px; max-width: 860px; }
+  .lab b { font-weight: 700; }
+  .verb { font: 30px/1.35 var(--mono); color: var(--dim); margin-top: 44px; }
+  .verb em { color: var(--ink); font-style: normal; border-bottom: 3px solid var(--accent); }
+
+  /* slide 5 — checklist */
+  ol.tests { list-style: none; counter-reset: t; display: grid; gap: 44px; margin-top: 8px; }
+  ol.tests li { counter-increment: t; display: grid; grid-template-columns: 90px 1fr; align-items: baseline;
+                font: 600 50px/1.18 var(--serif); }
+  ol.tests li::before { content: counter(t); font: 700 64px/1 var(--mono); color: var(--accent); }
+  .close { margin-top: auto; margin-bottom: 110px; font: 700 58px/1.15 var(--serif); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- 1 · HOOK -->
+<section class="slide">
+  <div class="kicker">The Shortlist · Sept 28 · Services-as-software</div>
+  <h1>Seat or outcome: what are you buying?</h1>
+  <div class="split">
+    <div class="col">
+      <h2>SOFTWARE (SaaS)</h2>
+      <div class="row"><div class="k">You buy</div><div class="v">A tool + a seat</div></div>
+      <div class="row"><div class="k">Priced</div><div class="v">Per seat</div></div>
+      <div class="row"><div class="k">Who does the work</div><div class="v">Your team</div></div>
+      <div class="row"><div class="k">Who owns a bad result</div><div class="v">You</div></div>
+    </div>
+    <div class="col hi">
+      <h2>SERVICES-AS-SOFTWARE</h2>
+      <div class="row"><div class="k">You buy</div><div class="v">The finished result</div></div>
+      <div class="row"><div class="k">Priced</div><div class="v">Per outcome</div></div>
+      <div class="row"><div class="k">Who does the work</div><div class="v">AI agents, checked by experts</div></div>
+      <div class="row"><div class="k">Who owns a bad result</div><div class="v">The vendor</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>1 / 5</span><span>swipe →</span></div>
+</section>
+
+<!-- 2 · EVIDENCE -->
+<section class="slide">
+  <div class="kicker">The lineup</div>
+  <h1>One room, five industries, one trade</h1>
+  <table>
+    <tr><th></th><th>What it replaces</th><th>Who checks the work</th><th>Who buys</th></tr>
+    <tr><td class="co">Amperos Health</td><td>Billing staff chasing insurers by phone; the scripted-bot first wave</td><td>Billing specialists take the edge cases</td><td>Hospital &amp; clinic finance</td></tr>
+    <tr><td class="co">Solstice Health</td><td>A ~3-month agency → brand → review-committee loop</td><td>Its own reviewers, before the committee</td><td>Pharma brand teams</td></tr>
+    <tr><td class="co">Holly</td><td>HR staff hand-researching peer pay, months per role</td><td>Agency HR reviews the draft</td><td>Public-agency HR</td></tr>
+    <tr><td class="co">Soxton</td><td>Hourly billing for routine founder paperwork</td><td>A licensed lawyer, every draft</td><td>Pre-launch founders</td></tr>
+    <tr class="outlier"><td class="co">Pascal</td><td>Retailer-portal exports re-keyed into spreadsheets</td><td>Not a regulated service<br><span class="tag">TESTS THE THEME</span></td><td>Consumer-goods brands</td></tr>
+  </table>
+  <div class="src">Sources: AlleyWatch; Becker's Hospital Review; TechFundingNews; Harvard Innovation Labs; BusinessWire; Pascal (company page). 2023–26.</div>
+  <div class="foot"><span>2 / 5</span><span></span></div>
+</section>
+
+<!-- 3 · MECHANISM -->
+<section class="slide">
+  <div class="kicker">Why the margins are supposed to work</div>
+  <h1>One more client, one more hire?</h1>
+  <div class="chart">
+    <h3>TRADITIONAL SERVICE FIRM</h3>
+    <svg width="100%" height="250" viewBox="0 0 860 250" role="img" aria-label="Cost rises in a step with every new client">
+      <line x1="40" y1="220" x2="840" y2="220" stroke="#2A2F36" stroke-width="2"/>
+      <line x1="40" y1="20" x2="40" y2="220" stroke="#2A2F36" stroke-width="2"/>
+      <polyline fill="none" stroke="#8A8F98" stroke-width="6" stroke-linejoin="round"
+        points="40,200 190,200 190,160 340,160 340,120 490,120 490,80 640,80 640,40 790,40"/>
+      <text x="520" y="196" fill="#8A8F98" font-family="Menlo" font-size="20">+1 client → +1 salary</text>
+      <text x="820" y="244" fill="#8A8F98" font-family="Menlo" font-size="18" text-anchor="end">clients served →</text>
+      <text x="50" y="18" fill="#8A8F98" font-family="Menlo" font-size="18">cost</text>
+    </svg>
+  </div>
+  <div class="chart hi">
+    <h3>SERVICES-AS-SOFTWARE</h3>
+    <svg width="100%" height="250" viewBox="0 0 860 250" role="img" aria-label="Cost stays nearly flat as outcomes grow">
+      <line x1="40" y1="220" x2="840" y2="220" stroke="#2A2F36" stroke-width="2"/>
+      <line x1="40" y1="20" x2="40" y2="220" stroke="#2A2F36" stroke-width="2"/>
+      <path d="M40,200 C300,188 560,178 790,170" fill="none" stroke="#D97706" stroke-width="6"/>
+      <text x="790" y="150" fill="#D97706" font-family="Menlo" font-size="20" text-anchor="end">+1 outcome → compute + a sliver of expert review</text>
+      <text x="820" y="244" fill="#8A8F98" font-family="Menlo" font-size="18" text-anchor="end">outcomes delivered →</text>
+      <text x="50" y="18" fill="#8A8F98" font-family="Menlo" font-size="18">cost</text>
+    </svg>
+  </div>
+  <div class="note">What doesn't flatten: liability. Someone still owns the error.</div>
+  <div class="foot"><span>3 / 5</span><span>illustrative, not to scale</span></div>
+</section>
+
+<!-- 4 · COUNTERPOINT -->
+<section class="slide">
+  <div class="kicker">The evidence so far</div>
+  <h1>Staffing reduced, not eliminated</h1>
+  <div class="stats">
+    <div class="stat">
+      <div class="num">~½</div>
+      <div class="lab">the staffing a traditional integrator uses: <b>Humanize</b>, implementing SAP, Salesforce and ServiceNow</div>
+    </div>
+    <div class="stat">
+      <div class="num">70%</div>
+      <div class="lab">of $18B+ in annual loan factoring automated: <b>KUNGFU.AI</b> for Triumph Financial</div>
+    </div>
+  </div>
+  <div class="verb">Both are 2026 Services-as-Software Award winners. Note the verb: <em>reduced</em>.</div>
+  <div class="src">Source: HFS Research, 2026 Services-as-Software Award winners.</div>
+  <div class="foot"><span>4 / 5</span><span></span></div>
+</section>
+
+<!-- 5 · CTA -->
+<section class="slide">
+  <div class="kicker">Carry these into Monday's room</div>
+  <h1>Three tests</h1>
+  <ol class="tests">
+    <li>Is it priced per result, or per seat with a new name?</li>
+    <li>When the AI is wrong, who signs for it?</li>
+    <li>As volume grows, does review time shrink, or scale with it?</li>
+  </ol>
+  <div class="close">Which of the five passes all three?</div>
+  <div class="foot"><span>5 / 5</span><span>The Shortlist · Betaworks · Sept 28</span></div>
+</section>
+
+</body>
+</html>
