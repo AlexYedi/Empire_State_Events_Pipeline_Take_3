@@ -89,7 +89,9 @@ led to the drop-don't-re-route rule in pre-mortem item 4.
 The checker was validated against a planted bad fixture: a premise-shaped UNVERIFIED question, an invented
 anchor, an invented target, and a missing trust tag. It failed all 3 questions, and it still fails the v1 inserted-word anchor.
 
-**Acceptance run: owed by a FRESH session.** Inputs are staged, gitignored, in this worktree at
+**Acceptance run: DONE 2026-09-27 — PASS.** Registered agent, fresh session, Apollo substrate-only: checker 6/6, 0 FAIL, 4 of 6 questions aimed at Seo/Boerner. Ran on `main` with rebuilt inputs (the worktree and its staged inputs were already gone after the 09-25 merge; 66 claims vs 52 because the 09-25 Top Questions backfill landed in between). Two wording-level notes went to YED-222; the Apollo GraphQL/Apollo.io claim-id gap went to YED-47. Evidence: the acceptance comment on YED-217. The steps below are kept as the record of how it was run.
+
+**Original run card (as staged 2026-09-25).** Inputs are staged, gitignored, in this worktree at
 `.claude/.state/yed-217/` (the raw pull holds personal job-search rows, so it is not committed):
 
 1. Open a new Claude Code session **in `esep-wt-conditioner`** (the edited agent must be on disk at startup).
