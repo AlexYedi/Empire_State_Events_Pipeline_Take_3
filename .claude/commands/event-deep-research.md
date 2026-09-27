@@ -101,7 +101,7 @@ For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block fr
 
 **Mandatory (fidelity fix, 2026-06-23):** the verbatim description is item (1) for a reason — it goes in EVERY specialist dispatch, ahead of the entity list. Do NOT paraphrase it into the prompt and drop the original. If the parent only hands subagents the summarized entity list, the run repeats the defect where talk-abstract nuance and named-but-unsummarized themes never reach research. The Step 2.5 synthesizer also receives the raw invite — keep that.
 
-**Return contract (added 2026-08-21 — YED-136):** each specialist now returns, alongside its prose blocks, (a) a **historical spine** (topic lineage / company founding→funding→evolution arc / person career arc — facts + dates), (b) **mechanism + jargon** material for the novice on-ramp, and (c) a per-entity **Evidence Ledger** — every specific/recent/contestable claim as a `tier · source · url · date` row. These feed the Deep Read render loop (Step 4.5); the URLs are mandatory for `web-verified` rows (the spike caught that missing URLs break endnotes). Preserve them when handing returns to the synthesizer.
+**Return contract (added 2026-08-21 — YED-136):** each specialist now returns, alongside its prose blocks, (a) a **historical spine** (topic lineage / company founding→funding→evolution arc / person career arc — facts + dates), (b) **mechanism + jargon** material for the novice on-ramp, and (c) a per-entity **Evidence Ledger** under a heading exactly `##### Evidence Ledger — <Entity Name>`, one **bullet** per specific/recent/contestable claim in exactly this shape — `- claim: <≤15 words> | tier: web-verified | source: <site> | url: <full URL> | date: <YYYY-MM-DD>` — with tier ∈ `web-verified` / `email-signal` / `notion-prior` / `inference`. **Ask for this bullet form verbatim in every dispatch; do not ask for a table.** (Step 4.2's parser tolerates a `| claim | tier | source | url | date |` table as a fallback since 2026-09-27, after a run where every specialist emitted tables and the graph write found 0 admissible rows — but the bullet is the contract.) These feed the Deep Read render loop (Step 4.5); the URLs are mandatory for `web-verified` rows (the spike caught that missing URLs break endnotes). Preserve them when handing returns to the synthesizer.
 
 Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
 
@@ -158,7 +158,7 @@ Returns the confirmation block from Step 4g. The Event page + `research_brief` C
 .claude/hooks/deep-read-ledger.sh add "<event title>" "<Event page id or URL>"
 ```
 
-This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The Stop-hook gate (`deep-read-gate.sh`) fails the run at close if any row is still pending — so a silently-skipped Deep Read cannot close green. Skipping this `add` is the one way to defeat the gate; it is as mandatory as the Notion write it sits beside.
+This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The Stop-hook gate (`deep-read-gate.sh`) fails the run **at the first turn end after the event claim is released (Step 6) or expires** if any row is still pending — so a silently-skipped Deep Read cannot close green. While this session holds the claim, a pending row is in-progress and the gate stays silent (Stop fires per turn, not per run — corrected 2026-09-27, see `.claude/hooks/_run_in_progress.sh`). Skipping this `add` is the one way to defeat the gate; it is as mandatory as the Notion write it sits beside.
 
 ## Step 4.2 — Write the research to the knowledge graph (this conversation — YED-205, gated)
 
@@ -221,8 +221,9 @@ If it genuinely cannot be written, the only other exit is a logged waive:
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
-**Gate note (YED-205):** Step 4.2's graph write is gated the same way. `substrate-gate.sh` fails the run at close while a
-`research:<page id>` row is pending. Resolve it with Step 4.2c or a logged `waive --phase pre_event`.
+**Gate note (YED-205):** Step 4.2's graph write is gated the same way. `substrate-gate.sh` fails the run at the first turn end
+after the event claim is released or expires while a `research:<page id>` row is pending; while the claim is live the row is
+in-progress and the gate is silent. Resolve it with Step 4.2c or a logged `waive --phase pre_event`.
 
 ## Step 5 — HubSpot writes (this conversation)
 
