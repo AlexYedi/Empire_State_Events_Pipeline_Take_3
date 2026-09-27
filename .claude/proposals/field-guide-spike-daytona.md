@@ -1,5 +1,7 @@
 # Field Guide — Validation Spike (Daytona AI Builders)
 
+**Status (added 2026-09-27, YED-199 close):** historical validation spike, not a proposal — the `field-guide-renderer` it tested shipped (ADR-5 Deep Read; YED-139 render gate). No open decision lives here.
+
 **What this is:** two Field Guide sections rendered by the new `field-guide-renderer` (Opus) from the **real** Daytona AI Builders evidence (drawn from the existing June structured brief). This is the build-better-not-faster gate: prove the renderer's prose beats the June bullet-lattice *before* wiring the pipeline around it. Read these as you'd read them on the commute — the question is whether they clear the "cram-for-the-final, walk-in-grounded" bar.
 
 **Compare against** the source brief's lattice version of the same material: `Event Content/Pre-Event Briefs (Jun 16-25 2026)/5 - Daytona AI Builders (2026-06-23).md` (Topic 1 + the Daytona company block).
