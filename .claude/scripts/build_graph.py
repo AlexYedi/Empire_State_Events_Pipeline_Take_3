@@ -45,6 +45,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hooks"))
+import runtime_ledgers  # noqa: E402 — the ONE runtime-ledger rule, shared with check-refs.sh (YED-227)
+
 ROOT = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 OUT_DIR = os.path.join(ROOT, ".claude", ".state", "system-graph")
 EXTRACTOR_VERSION = "1"
@@ -281,6 +284,8 @@ def build():
         # the recall side is watched by the Increment 3 ledger's `false-positive` acks, not here.
         if norm and norm in ignored:
             cls = "runtime"          # generated at run time; absence is normal
+        elif not exists and norm and runtime_ledgers.is_runtime_ledger(norm):
+            cls = "runtime"          # append-only ledger, created on first write (YED-227; shared rule)
         elif src_is_proposed:
             cls = "proposed"         # a not-yet-built path in a plan is a plan, not a broken link
         elif HISTORICAL_RE.search(context):
@@ -438,10 +443,41 @@ def selftest():
     return failures == 0
 
 
+def selftest_runtime_ledgers():
+    """YED-227: check-refs.sh must skip a runtime ledger and still flag a typo'd one — both tools share
+    runtime_ledgers.py, so this also pins that check-refs.sh actually calls it."""
+    sh = os.path.join(ROOT, ".claude", "hooks", "check-refs.sh")
+    live = sorted(runtime_ledgers.runtime_ledger_names())
+    missing_live = [n for n in live if not os.path.exists(os.path.join(ROOT, ".claude", "artifacts", n))]
+    if not os.path.exists(sh) or not missing_live:
+        print("note: no absent runtime ledger on disk right now — check-refs integration case skipped",
+              file=sys.stderr)
+        return True
+    import tempfile
+    ledger = f".claude/artifacts/{missing_live[0]}"
+    typo = ".claude/" + "artifacts/yed-227-deliberate-typo-ledger.jsonl"  # concatenated: never a literal ref
+    fd, tmp = tempfile.mkstemp(suffix=".md")
+    with os.fdopen(fd, "w") as f:
+        f.write(f"appends to {ledger}\nand also cites {typo}\n")
+    try:
+        p = subprocess.run(["bash", sh, "--artifact", tmp], capture_output=True, text=True, cwd=ROOT)
+    finally:
+        os.unlink(tmp)
+    got = {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
+    ok = got == {typo}
+    if not ok:
+        print(f"FAIL  check-refs runtime-ledger case: expected only {typo}, got {sorted(got)}",
+              file=sys.stderr)
+    return ok
+
+
 def main():
     args = sys.argv[1:]
     if "--selftest" in args:
-        sys.exit(0 if selftest() else 1)
+        ok = selftest()
+        ok = runtime_ledgers.selftest() and ok
+        ok = selftest_runtime_ledgers() and ok
+        sys.exit(0 if ok else 1)
     nodes, edges, meta = build()
     write(nodes, edges, meta)
     c = meta["counts"]
