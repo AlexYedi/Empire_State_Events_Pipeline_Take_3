@@ -240,6 +240,29 @@ a MED-confidence quote to paraphrase-or-cut, which documentarian cut is the post
 material — never a generic "what's the angle?" (prep-then-ask). Skip cleanly if there's no real
 fork; keep the loop open; persist to `## Author Steer` (Sharpen). Skippable.
 
+## Prior posts on this theme (before drafting — YED-208)
+
+Your standing rule is to link new recaps back to your own earlier posts on the same theme, through the Learn-More Set
+plus one inline. The graph now does the remembering. Before drafting the Tier 2 posts, write a seed file and run the
+`content` lens:
+```
+# .claude/.state/research/<slug>.content-seed.json
+{"entities": [<the event's topics, people and companies>], "text": "<the post_event_brief's thesis + top insights>",
+ "window_days": 730}
+.venv/bin/python .claude/scripts/retrieve.py --lens content --seed .claude/.state/research/<slug>.content-seed.json
+```
+Use its **"What you've already said"** section:
+   - **Back-link only where a prior post genuinely extends this one's thesis.** No quota; zero is a valid answer.
+     A link that exists only to be a link is filler.
+   - **Use the pack's URLs verbatim. Never invent, guess or reconstruct a post URL.** If the pack has none, there are
+     none. The graph holds only posts marked `published` in Notion with a `Published URL`.
+   - **Placement:** the strongest one inline, as a callback to how your thinking has moved ("in August I argued X;
+     tonight's room pushed on that"). Up to two more go in the Learn-More Set / first comment. The evolving thesis
+     is the documentarian moat; a list of old links is not.
+   - If the command fails or the graph is unreachable, say so in one line and draft without back-links. Never block.
+   - **The pre→post bridge comes first:** if this event's own pre-event post is in the list, that bridge (below) is the
+     inline callback, and other prior posts go to the Learn-More Set.
+
 ## What to Produce
 
 When Alex gives you event input, produce:

@@ -35,6 +35,26 @@ Propose: **`hit`** (met/exceeded Target) · **`partial`** (real outcome, below T
 - `Outcome Value` (text) = the realized signal + source, e.g. `"[LinkedIn] 620 impressions vs 500 target"`, `"[HubSpot] connected + coffee booked 6/24"`.
 - `Outcome Date` (date) = today (expanded `date:Outcome Date:start` format per `notion-write-gotchas.md`).
 
+## Step 4.5 — Publish-sync to the knowledge graph (YED-208; runs every time, not only for the backlog)
+The graph's `published` events are what the `content` lens uses to back-link your prior posts, so every post marked
+`published` in Notion must reach the graph. This step is idempotent. Spec: `.claude/notes/yed-208-spec-2026-09-27.md`.
+1. **What's already there:** `.venv/bin/python .claude/scripts/substrate.py published-refs` prints the Notion page
+   ids (undashed) already in the graph.
+2. **What should be there:** query Content Drafts for `Content Status = published` (all of them, not just this
+   ritual's backlog), with their `Published URL`, `Goal`, `Target`, `Outcome`, `Outcome Value`, `Outcome Date`,
+   `Title`, `Content Type`, and `Event` / `Topics` / `People` relations.
+3. **Build `.claude/.state/publish-sync.json`:** `{"posts": [...]}`, one entry per published post with a URL.
+   - **New posts** (not in `published-refs`): `notion-fetch` the page and pass its body as `body_md`.
+   - **Posts already in the graph:** omit `body_md`; the verb then only refreshes the outcome you just graded.
+   - `event_notion_ids` = every page id in the post's `Event` relation (a roundup covers several). Pass the
+     `Outcome Value` too: when it carries `Posted YYYY-MM-DD` (the LinkedIn export line), that becomes the publish
+     date. Otherwise the earliest covered event's date stands in, since Notion has no published-date property.
+   - `topics` / `people`: `[{"notion_page_id"}]` from the relations; a name is optional. ID-only entries resolve by
+     page id and are never created nameless. **Never** email, phone or bio (ADR-9).
+4. **Run:** `.venv/bin/python .claude/scripts/substrate.py publish --manifest .claude/.state/publish-sync.json`.
+   Report its line: `publish: N/M posts in the graph · skipped K`. Posts without a URL are skipped by design. A post
+   refused by the ADR-9 guard is named in the output: fix the text in Notion, then re-run.
+
 ## Step 5 — Close out
 Summarize: hit / partial / miss / still-pending counts, and any trend vs prior runs ("reach goals 3/4 hit this cycle"). This feeds the north-star (US-6 Hub dashboard) and is a natural sub-step of the weekly review (US-7).
 

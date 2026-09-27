@@ -23,6 +23,11 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                   post-event ensure-event attaches these claims when the attended row appears.
                   Spec: .claude/notes/yed-205-spec-2026-09-27.md
+  publish         --manifest pub.json   (YED-208) published Content Drafts -> event(kind='published', url) +
+                  documents(linkedin_post, public_ok) + one embedded chunk per post VARIANT + artifact_outcome.
+                  A post already in the graph with no new body only refreshes its outcome. Spec:
+                  .claude/notes/yed-208-spec-2026-09-27.md
+  published-refs  print the Notion page ids of posts already in the graph (for /tag-outcome's publish-sync)
   merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
                   HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
                   engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
@@ -130,7 +135,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
 # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
 # --dry-run is exempted at the call site, not here.
 FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research")
+                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research", "publish")
 
 
 def freeze_state() -> dict | None:
@@ -482,6 +487,47 @@ TIER_MAP = {"web-verified": "web_verified", "web_verified": "web_verified",
             "email-signal": "email_signal", "email_signal": "email_signal",
             "notion-prior": "notion_prior", "notion_prior": "notion_prior"}
 RESEARCH_CONF = {"web_verified": 0.7, "email_signal": 0.5}
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-208 — published posts. A published Content Draft page mixes PUBLIC post text (the variants) with PRIVATE
+# working notes (a preamble that can name an excluded confidential round, visual briefs, steering). Only the
+# variant sections are ever embedded, and they still pass redact_body. Pure; covered by --selftest.
+# ---------------------------------------------------------------------------------------------
+# Layouts seen across the 41 published drafts (2026-09-27): '## Variant A — …', '# VARIANT A — …' (H1), '## Copy (ready to
+# post)', '## ⭐ SHIP THIS — Primary', '## LinkedIn — Pre-Event Post', '## Primary / Alternate / Option / Version …'.
+POST_SECTION_RE = re.compile(r"^[^\w]*(variant\b|post\b|linkedin\b|final\b|published\b|copy\b|ship this\b|primary\b|"
+                             r"alternate\b|alt\b|option\b|version\b)", re.I)
+POST_SKIP_RE = re.compile(r"(visual|carousel brief|first comment|comment|steer|notes?\b|brief\b|questions?)", re.I)
+CHUNK_CHARS = 1800           # ~400 tokens: inside bge-small's 512-token window
+MAX_POST_CHUNKS = 3
+
+
+def post_chunks(body_md: str) -> list[dict]:
+    """Published draft markdown -> [{'label', 'text'}], one per variant section (<= MAX_POST_CHUNKS). Only '##'/'###'
+    sections whose heading names a post variant are taken; a draft with no such heading falls back to its body with
+    the pre-heading preamble and any note/brief/comment sections removed. Everything passes redact_body."""
+    body = redact_body(body_md or "")
+    secs, cur, buf, pre = [], None, [], True
+    for line in body.splitlines():
+        h = re.match(r"^#{1,3}\s+(.+?)\s*$", line)
+        if h:
+            if cur is not None:
+                secs.append((cur, "\n".join(buf)))
+            cur, buf, pre = h.group(1).strip(), [], False
+        elif not pre:
+            buf.append(line)
+    if cur is not None:
+        secs.append((cur, "\n".join(buf)))
+    picked = [(t, b) for t, b in secs if POST_SECTION_RE.match(clean_md(t).strip('"“ ')) and not POST_SKIP_RE.search(t.split("—")[0])]
+    if not picked:                                   # no variant headings: every non-note section, preamble dropped
+        picked = [(t, b) for t, b in secs if not POST_SKIP_RE.search(t)]
+    out = []
+    for t, b in picked[:MAX_POST_CHUNKS]:
+        text = clean_md(b)
+        if len(text) >= 80:
+            out.append({"label": clean_md(t)[:80], "text": text[:CHUNK_CHARS]})
+    return out
 
 
 def research_source_key(notion_event_id: str) -> str:
@@ -1361,6 +1407,119 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
     return 0
 
 
+def publish_posts(g: Graph, manifest: dict) -> int:
+    """YED-208 — the `published` producer. Spec: .claude/notes/yed-208-spec-2026-09-27.md.
+    Manifest: {"posts": [{"notion_page_id", "title", "content_type", "published_url", "published_date", "event_date",
+               "goal", "target", "outcome", "outcome_value", "outcome_date",
+               "event_notion_ids": [<every covered event's page id; a roundup covers several>],
+               "topics": [{"name"?, "notion_page_id"}], "people": [{"name"?, "notion_page_id", "company"?}],
+               "body_md": "<page markdown; optional for a post already in the graph>" | "body_path": "<file>"}]}
+    Id-only relations (the Notion SQL export gives page ids, not names) resolve by page id and are never created
+    nameless. Publish date: explicit published_date, else 'Posted YYYY-MM-DD' in the LinkedIn-export Outcome Value,
+    else the earliest covered event's date.
+    Per post: ensure event(kind='published') -> edges (own topics + people + the covered event's topics) ->
+    document(linkedin_post, public_ok) + variant chunks -> artifact_outcome (upsert). One post's PII refusal is
+    counted and skipped; it never aborts the others."""
+    posts = manifest.get("posts") or []
+    if not posts:
+        sys.stderr.write("publish: manifest has no posts\n")
+        return 3
+    done = 0
+    for p in posts:
+        title = (p.get("title") or "").strip()
+        if not p.get("published_url"):
+            g.stats.bump("post", "skipped_no_url")
+            continue
+        if not p.get("notion_page_id"):
+            g.stats.bump("post", "skipped_no_page_id")
+            continue
+        pid = pid_variants(p["notion_page_id"])[0]
+        if not p.get("body_md") and p.get("body_path"):      # a file keeps big bodies out of the manifest
+            p = {**p, "body_md": open(p["body_path"], encoding="utf-8").read()}
+        try:
+            chunks = post_chunks(p.get("body_md") or "")
+            for c in chunks:                          # guard the text FIRST: a refused post writes nothing at all
+                guard("doc_chunks", {"content": c["text"], "locator": {"variant": c["label"]}})
+            covered_ids = [x for x in (p.get("event_notion_ids") or ([p["event_notion_id"]] if p.get("event_notion_id") else [])) if x]
+            covered = [r for r in (g.by_pid("event", x, select="id,event_date") for x in covered_ids) if r]
+            g.stats.bump("post", "covered_event_not_in_graph", len(covered_ids) - len(covered))
+            # Notion has no published-date property. Never the outcome-grading date.
+            posted = re.search(r"Posted (\d{4}-\d{2}-\d{2})", p.get("outcome_value") or "")
+            when = (p.get("published_date") or (posted.group(1) if posted else None) or p.get("event_date")
+                    or min((str(r.get("event_date"))[:10] for r in covered if r.get("event_date")), default=None))
+            ev = {"notion_page_id": pid, "title": title, "kind": "published", "url": p["published_url"], "event_date": when}
+            eid = g.ensure_event({"event": ev, "entities": []})
+            want = [("topic", g.ensure_topic(t), "tagged_topic") for t in p.get("topics", []) if t.get("name") or t.get("notion_page_id")]
+            for x in p.get("people", []):
+                if x.get("name"):
+                    want.append(("person", g.ensure_person(x), "subject"))
+                else:                                 # id-only: resolve, never create a nameless person
+                    row = g.by_pid("person", x.get("notion_page_id"), select="*")
+                    want.append(("person", row["id"] if row else None, "subject"))
+                    g.stats.bump("person", "matched" if row else "skipped_id_only_absent")
+            for c in covered:                         # decision 3: inherit every covered event's topics
+                for r in g.get(f"/event_entity?event_id=eq.{c['id']}&entity_type=eq.topic&select=entity_id"):
+                    want.append(("topic", r["entity_id"], "tagged_topic"))
+            have = set()
+            if not str(eid).startswith("dry:"):
+                have = {(r["entity_type"], r["entity_id"], r["role"])
+                        for r in g.get(f"/event_entity?event_id=eq.{eid}&select=entity_type,entity_id,role")}
+            rows = [{"event_id": eid, "entity_type": t, "entity_id": i, "role": role}
+                    for t, i, role in dict.fromkeys(want) if i and (t, i, role) not in have]
+            if rows:
+                g.stats.bump("event_entity", "created", len(rows))
+                g.post("event_entity", rows, prefer="resolution=ignore-duplicates,return=minimal",
+                       on_conflict="event_id,entity_type,entity_id,role")
+            ref = f"notion:{pid}"
+            cur = g.get(f"/documents?external_ref=eq.{q(ref)}&is_current=is.true&select=id&limit=1")
+            if p.get("body_md") and not chunks:
+                g.stats.bump("post", "no_post_text_found")
+            if chunks or not cur:
+                body = "\n\n".join(c["text"] for c in chunks) or title
+                doc_id = g.ensure_document({
+                    "external_ref": ref, "title": title, "source_type": "linkedin_post", "body_text": body,
+                    "doc_date": (when or "")[:10] or None, "produced_by": "linkedin",
+                    "visibility": "public_ok", "notion_page_id": pid,
+                    "metadata": {"published_url": p["published_url"], "content_type": p.get("content_type"),
+                                 "about_event_notion_ids": [pid_variants(x)[0] for x in covered_ids] or None,
+                                 "variants": len(chunks)}}, event_id=eid)
+                if chunks and not str(doc_id).startswith("dry:"):
+                    have_ix = {r["chunk_index"] for r in g.get(f"/doc_chunks?document_id=eq.{doc_id}&select=chunk_index")}
+                    new = [(i, c) for i, c in enumerate(chunks) if i not in have_ix]
+                    if new:
+                        vecs = g.embed([f"{title}\n{c['text']}" for _, c in new])
+                        g.post("doc_chunks", [{"document_id": doc_id, "chunk_index": i, "content": c["text"],
+                                               "embedding": v, "token_count": len(c["text"]) // 4,
+                                               "locator": {"variant": c["label"], "url": p["published_url"]}}
+                                              for (i, c), v in zip(new, vecs)],
+                               prefer="resolution=ignore-duplicates,return=minimal", on_conflict="document_id,chunk_index")
+                        g.stats.bump("doc_chunks", "created", len(new))
+            else:
+                doc_id = cur[0]["id"]
+                g.stats.bump("documents", "matched")
+            outcome = {k: v for k, v in {
+                "document_id": doc_id, "goal": p.get("goal"), "target": p.get("target"),
+                "outcome": p.get("outcome") if p.get("outcome") in ("hit", "partial", "miss", "pending", "na") else None,
+                "outcome_value": p.get("outcome_value"), "outcome_date": p.get("outcome_date"), "source": "notion_sync",
+            }.items() if v not in (None, "")}
+            if len(outcome) > 2 and not str(doc_id).startswith("dry:"):
+                g.post("artifact_outcome", outcome, prefer="resolution=merge-duplicates,return=minimal",
+                       on_conflict="document_id")
+                g.stats.bump("artifact_outcome", "upserted")
+            done += 1
+        except PIIViolation as e:
+            g.stats.bump("post", "refused_pii")
+            sys.stderr.write(f"  ⚠️  post {title[:60]!r} refused by the ADR-9 guard, skipped: {e}\n")
+    print(f"publish: {done}/{len(posts)} posts in the graph · skipped {len(posts) - done}")
+    return 0
+
+
+def published_refs(g: Graph) -> list[str]:
+    """Undashed Notion page ids of every published post already in the graph."""
+    rows = g.get("/documents?source_type=eq.linkedin_post&is_current=is.true&select=external_ref&limit=2000")
+    return sorted({r["external_ref"].split(":", 1)[1] for r in rows if str(r.get("external_ref", "")).startswith("notion:")})
+
+
 def source_key_for_topic_questions(notion_topic_id: str) -> str:
     return sha("notion_topic_questions:" + pid_variants(notion_topic_id)[0])
 
@@ -1526,6 +1685,7 @@ class _FakeGraph(Graph):
         super().__init__(dry_run=False, stats=Stats())
         self.quiet = True
         self.t: dict[str, list[dict]] = {k: [] for k in ("company", "person", "topic", "event", "event_entity",
+                                                          "doc_chunks", "artifact_outcome",
                                                           "claim_entity", "document_entity", "documents", "claim")}
         self.n = 0
 
@@ -1830,6 +1990,92 @@ def _research_selftest(ok) -> None:
     ok("attend: another event's research claims are never touched", "event_id" not in other.t["claim"][0])
 
 
+PUBLISHED_SAMPLE = """> Post-event recap. Internal: Acme's confidential Series B was excluded. Variant A is long-form.
+## Variant A — "Six founders" (portrait gallery)
+Six founders stood up at The Shortlist's August showcase and explained why they couldn't not build what they built.
+North builds a financial operating system for cloud and AI spend; Antimetal wants production that runs itself.
+## Variant B — "The room" (thematic essay)
+Watch six founders pitch back-to-back and you stop hearing product descriptions and start hearing worldviews about AI that operates.
+## First comment — careers links
+Every founder is hiring. North careers page and Antimetal careers page, in order.
+## Visual Brief — 8-slide carousel
+Cover then six company cards then a synthesis slide, amber accent on a dark editorial ground, rendered to PDF.
+"""
+
+
+def _publish_selftest(ok) -> None:
+    """YED-208, offline."""
+    ch = post_chunks(PUBLISHED_SAMPLE)
+    ok("post: one chunk per variant section (A, B); comment + visual brief never embedded",
+       [c["label"][:9] for c in ch] == ["Variant A", "Variant B"] and not any("careers" in c["text"] or "amber" in c["text"] for c in ch))
+    ok("post: the private preamble (confidential round) never enters a chunk", not any("Series B" in c["text"] for c in ch))
+    ok("post: no variant headings -> non-note sections, preamble still dropped",
+       [c["label"] for c in post_chunks("> internal notes, Series B excluded\n## The recap\n" + "A room full of builders talking about agent memory and retrieval. " * 3)] == ["The recap"])
+    ok("post: a too-short body yields nothing (no junk chunk)", post_chunks("## Variant A\nshort") == [])
+    body = " ".join(["The room argued about agent memory and who owns it."] * 3)
+    ok("post: real layouts — H1 '# VARIANT A', '## ⭐ SHIP THIS — Primary', '## Copy (ready to post)' are all post text",
+       [c["label"][:9] for c in post_chunks(f"# VARIANT A — x\n{body}\n## ⭐ SHIP THIS — Primary\n{body}\n## Copy (ready to post)\n{body}")]
+       == ["VARIANT A", "⭐ SHIP TH", "Copy (rea"])
+    ok("post: a page with NO headings yields nothing (its text can't be told from the private preamble)",
+       post_chunks("Content Type: roundup · internal note\n" + body) == [])
+    fg = _FakeGraph()
+    covered = fg.post("event", {"title": "Aug showcase", "kind": "attended", "notion_page_id": "c" * 32})[0]["id"]
+    t_ai = fg.post("topic", {"name": "AI Operations"})[0]["id"]
+    fg.post("event_entity", {"event_id": covered, "entity_type": "topic", "entity_id": t_ai, "role": "tagged_topic"})
+    m = {"posts": [
+        {"notion_page_id": "a" * 32, "title": "The Shortlist Aug — Recap", "content_type": "linkedin_post_post",
+         "published_url": "https://www.linkedin.com/posts/alexyedi_x", "event_date": "2026-08-24",
+         "goal": "reach", "target": "Reach + credibility", "outcome": "hit", "outcome_value": "1121 impressions",
+         "outcome_date": "2026-09-14", "event_notion_ids": ["c" * 32],
+         "topics": [{"name": "Founder Hiring"}], "people": [{"name": "Andrew Yeung"}], "body_md": PUBLISHED_SAMPLE},
+        {"notion_page_id": "b" * 32, "title": "No URL post", "published_url": None, "body_md": PUBLISHED_SAMPLE}]}
+    rc = publish_posts(fg, m)
+    pub = [e for e in fg.t["event"] if e["kind"] == "published"]
+    ok("publish: one published event with the post URL; the URL-less post skipped + counted",
+       rc == 0 and len(pub) == 1 and pub[0]["url"].startswith("https://www.linkedin.com")
+       and fg.stats.c["post"].get("skipped_no_url") == 1)
+    ok("publish: event dated by the covered event, never the outcome-grading date", pub[0].get("event_date") == "2026-08-24")
+    edges = {(e["entity_type"], e["role"]) for e in fg.t["event_entity"] if e["event_id"] == pub[0]["id"]}
+    inherited = any(e["entity_id"] == t_ai and e["event_id"] == pub[0]["id"] for e in fg.t["event_entity"])
+    ok("publish: edges = own topic + person (subject) + the COVERED event's topic (inherited)",
+       edges == {("topic", "tagged_topic"), ("person", "subject")} and inherited)
+    doc = fg.t["documents"][0]
+    ok("publish: linkedin_post document, public_ok, URL in metadata, tied to the published event",
+       doc["source_type"] == "linkedin_post" and doc["visibility"] == "public_ok"
+       and doc["metadata"]["published_url"].startswith("https://") and doc["event_id"] == pub[0]["id"])
+    ok("publish: 2 embedded chunks (one per variant) with the URL in the locator",
+       len(fg.t["doc_chunks"]) == 2 and all(c["locator"]["url"].startswith("https://") for c in fg.t["doc_chunks"]))
+    ok("publish: artifact_outcome carries goal/target/outcome", fg.t["artifact_outcome"][0]["outcome"] == "hit"
+       and fg.t["artifact_outcome"][0]["goal"] == "reach")
+    ok("publish: NO attended row created, and research attach never fires for a published row",
+       sum(e["kind"] == "attended" for e in fg.t["event"]) == 1)
+    snap = {k: len(v) for k, v in fg.t.items()}
+    fg.stats = Stats()
+    publish_posts(fg, m)
+    ok("publish: re-run creates nothing", fg.stats.created() == 0 and {k: len(v) for k, v in fg.t.items()} == snap)
+    fg.stats = Stats()
+    publish_posts(fg, {"posts": [{**m["posts"][0], "body_md": None, "outcome": "partial"}]})
+    ok("publish: an already-published post with no body only refreshes its outcome (no new doc / chunks)",
+       fg.stats.c.get("documents", {}).get("matched") == 1 and len(fg.t["documents"]) == 1 and len(fg.t["doc_chunks"]) == 2)
+    ok("published-refs: lists the post's Notion page id", published_refs(fg) == ["a" * 32])
+    ok("publish: 'Posted YYYY-MM-DD' in the LinkedIn-export outcome note beats the event date",
+       (lambda f: (publish_posts(f, {"posts": [{**m["posts"][0], "notion_page_id": "e" * 32, "body_md": None,
+                                                "outcome_value": "[LinkedIn export] 900 impressions. Posted 2026-08-25. Grade: hit."}]}),
+                   [e for e in f.t["event"] if e["kind"] == "published"][0]["event_date"])[1])(_FakeGraph()) == "2026-08-25")
+    idp = _FakeGraph()
+    known = idp.post("person", {"name": "Known Person", "notion_page_id": "f" * 32})[0]["id"]
+    publish_posts(idp, {"posts": [{**m["posts"][0], "body_md": None, "event_notion_ids": [],
+                                   "people": [{"notion_page_id": "f" * 32}, {"notion_page_id": "9" * 32}]}]})
+    ok("publish: id-only people resolve by page id; an unknown one is skipped, never created nameless",
+       len(idp.t["person"]) == 1 and any(e["entity_id"] == known and e["role"] == "subject" for e in idp.t["event_entity"])
+       and idp.stats.c["person"].get("skipped_id_only_absent") == 1)
+    pii = _FakeGraph()
+    publish_posts(pii, {"posts": [{**m["posts"][0], "notion_page_id": "d" * 32, "event_notion_ids": [],
+                                   "body_md": "## Variant A\n" + "Reach me at jane.doe@example.com for the deck and the intro list. " * 3}]})
+    ok("publish: a post whose text trips the ADR-9 guard is refused + counted, writes NOTHING, never crashes the run",
+       pii.stats.c["post"].get("refused_pii") == 1 and not any(pii.t.values()))
+
+
 def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
     """A dry-run view over the same in-memory tables (reads real, writes suppressed)."""
     d = _FakeGraph()
@@ -2013,7 +2259,8 @@ def selftest() -> bool:
     ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
     ok("freeze: every mutating verb is covered",
        set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research"})
+                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research",
+                              "publish"})
     _saved_freeze = FREEZE_PATH
     try:                                              # unreadable marker must fail CLOSED
         globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
@@ -2035,6 +2282,8 @@ def selftest() -> bool:
     _identity_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
+    # ---- the published producer (YED-208) ----------------------------------------------------------
+    _publish_selftest(ok)
 
     fail = 0
     for name, good in checks:
@@ -2051,7 +2300,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "expect-research", "stage-research"])
+                                     "expect-research", "stage-research", "publish", "published-refs"])
     ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
     ap.add_argument("--phase", choices=["post_event", "pre_event"], default="post_event",
                     help="(waive) which gate row: post_event (default) or pre_event (the research row)")
@@ -2094,6 +2343,16 @@ def main(argv: list[str]) -> int:
         return 0 if items else 3
     stats = Stats()
     g = Graph(a.dry_run, stats)
+    if a.verb == "published-refs":
+        print("\n".join(published_refs(g)))
+        return 0
+    if a.verb == "publish":
+        if not a.manifest:
+            ap.error("publish needs --manifest")
+        rc = publish_posts(g, json.load(open(a.manifest, encoding="utf-8")))
+        print(("DRY-RUN " if a.dry_run else "") + f"publish: created={stats.created()}")
+        print(stats.report())
+        return rc
     if a.verb == "merge":
         if not (a.table and a.merge_from):
             ap.error("merge needs --table and --from (+ --into and --reason, or --revert)")

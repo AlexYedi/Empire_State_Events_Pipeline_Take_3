@@ -273,7 +273,10 @@ def freeze_active() -> dict | None:
 # Deliberately an ALLOWLIST, not a blanket `/rpc/` pass-through: the PII guard above exempts all of
 # /rpc/ on the assumption that RPCs write nothing, and a future write-RPC would inherit that
 # assumption silently. Here an unknown RPC is REFUSED — add it below once confirmed read-only.
-READ_ONLY_RPCS = ("entity_neighborhood", "match_claims_hybrid")
+READ_ONLY_RPCS = ("entity_neighborhood", "match_claims_hybrid",
+                  # YED-208, verified 2026-09-27: pg_proc.provolatile = 's' (STABLE). Postgres forbids a STABLE
+                  # function from modifying the database, so this is a read by construction. retrieve.py --lens content.
+                  "match_doc_chunks")
 
 
 def freeze_block(method: str, path: str) -> None:
@@ -313,6 +316,9 @@ def freeze_block(method: str, path: str) -> None:
         "Source of truth: .claude/references/graph-freeze.json")
 
 
+READ_RETRIES = 3   # transport retries for reads only; see req()
+
+
 def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout: int = 30,
         raise_on_error: bool = False, extra_headers: dict | None = None):
     """(status, parsed_json_or_text). Every POST/PATCH/PUT body is guarded (except /rpc/ paths).
@@ -328,16 +334,30 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
     if extra_headers:
         headers.update(extra_headers)
     data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(BASE + path, data=data, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(r, timeout=timeout) as resp:
-            txt = resp.read().decode()
-            return resp.status, (json.loads(txt) if txt else None)
-    except urllib.error.HTTPError as e:
-        txt = e.read().decode()
-        if raise_on_error:
-            raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {txt[:500]}")
-        return e.code, txt
+    # Transport retry for READS only (2026-09-27, YED-208 backfill): a steady fraction of connections stalled ~8s or
+    # failed outright on this network, and one stall aborted a 41-post run. A read changes nothing, so retrying it is
+    # safe; a READ_ONLY_RPCS call is a read by the same rule. Writes are NEVER retried here, because a write that timed
+    # out may have committed. Recovery for writes is re-running the verb, which is idempotent by design. HTTP errors
+    # (4xx/5xx) are answers, not transport failures, and are never retried.
+    reads = method == "GET" or (method == "POST" and path.startswith("/rpc/")
+                                and path[len("/rpc/"):].split("?", 1)[0] in READ_ONLY_RPCS)
+    attempts = READ_RETRIES if reads else 1
+    for attempt in range(1, attempts + 1):
+        r = urllib.request.Request(BASE + path, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(r, timeout=timeout) as resp:
+                txt = resp.read().decode()
+                return resp.status, (json.loads(txt) if txt else None)
+        except urllib.error.HTTPError as e:
+            txt = e.read().decode()
+            if raise_on_error:
+                raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {txt[:500]}")
+            return e.code, txt
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError):
+            if attempt == attempts:
+                raise
+            import time as _t
+            _t.sleep(0.5 * attempt)
 
 
 def write(table: str, rows, prefer: str | None = "return=representation", *, patch_filter: str | None = None,
@@ -508,6 +528,34 @@ def selftest() -> bool:
         finally:
             globals()["FREEZE_PATH"] = _fd.name
     add("freeze: absent marker means writes are open", _absent, False)
+
+    # ---- transport retry: reads retried, writes never (2026-09-27) -----------------------------
+    # Each case swaps urlopen + the freeze marker INSIDE its own thunk and restores both, because the cases run
+    # lazily in the loop below, after the freeze cases above have pointed FREEZE_PATH at a live TEST freeze.
+    def _retry_case(method, path, expect_calls):
+        calls = {"n": 0}
+        real_open, real_key, real_fp = urllib.request.urlopen, globals().get("_KEY"), globals()["FREEZE_PATH"]
+
+        def fake_open(r, timeout=30):
+            calls["n"] += 1
+            raise urllib.error.URLError("simulated stall")
+        urllib.request.urlopen = fake_open
+        globals()["_KEY"] = "test-key"
+        globals()["FREEZE_PATH"] = os.path.join(ROOT, "__no_such_freeze__.json")
+        try:
+            try:
+                req(method, path, {"name": "retry-test"} if method == "POST" else None)
+            except urllib.error.URLError:
+                pass
+        finally:
+            urllib.request.urlopen = real_open
+            globals()["_KEY"] = real_key
+            globals()["FREEZE_PATH"] = real_fp
+        if calls["n"] != expect_calls:
+            raise PIIViolation(f"{method} {path}: {calls['n']} attempts, expected {expect_calls}")
+    add("transport: a GET is retried on a stalled connection", lambda: _retry_case("GET", "/event", READ_RETRIES), False)
+    add("transport: a read-only RPC is retried", lambda: _retry_case("POST", "/rpc/match_doc_chunks", READ_RETRIES), False)
+    add("transport: a WRITE is never retried (it may have committed)", lambda: _retry_case("POST", "/topic", 1), False)
 
     failures = 0
     for name, fn, expect in cases:

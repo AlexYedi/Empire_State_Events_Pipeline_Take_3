@@ -57,6 +57,25 @@ Alex provides one of:
 5. **Check for an `## Author Steer — [date]` block** on the Event page (from the `steering-interview` skill). If present, honor it: answer #1 steers the content/angle/what-to-avoid, #2 steers structure/format, #4 is context to keep top of mind. If no steer block exists and Alex is present, offer to run `steering-interview` first ("anything you want to steer before I draft? or skip").
 6. **Build the provenance exclusion list + apply it as a standing rule (v1.2, YED-132).** From the Verification Flags + `prior_context_pack` items collected in (3), assemble this run's **do-not-assert list**. Standing rule for Steps 2–6: **no item on the exclusion list appears in public copy as a stated fact.** For each, choose exactly one — (a) **drop it** (default; a `do-not-cite` benchmark like unverified deliverability stats is dropped, never paraphrased); (b) **attribute it explicitly** to its primary source, and only if one exists ("Attention's own release says…"); or (c) **soften to Alex's own observation**, never a factual claim about the firm/person (CLAUDE.md Rule 12). Thesis/positioning claims default to (b) or (c), never bare assertion. Surface the honored exclusions at the Step 7 write — a one-line `Excluded per provenance: […]` — so Alex sees what was kept out and why.
 
+7. **Pull your prior posts on this theme (Step 1.8, YED-208).** Mechanizes the standing "cross-reference prior
+   posts" rule. Write a seed file and run the `content` lens:
+   ```
+   # .claude/.state/research/<slug>.content-seed.json
+   {"entities": [<the event's topics, people and companies: {"type","name","notion_page_id"}>],
+    "text": "<the event description + the angle you're drafting toward>", "window_days": 730}
+   .venv/bin/python .claude/scripts/retrieve.py --lens content --seed .claude/.state/research/<slug>.content-seed.json
+   ```
+   Read its **"What you've already said"** section (date · title · URL · outcome · why it matched) and carry it into
+   Steps 2–3:
+   - **Back-link only where a prior post genuinely extends this one's thesis.** No quota; zero is a valid answer.
+     A link that exists only to be a link is filler.
+   - **Use the pack's URLs verbatim. Never invent, guess or reconstruct a post URL.** If the pack has none, there are
+     none. The graph holds only posts marked `published` in Notion with a `Published URL`.
+   - **Placement:** the strongest one inline, as a callback to how your thinking has moved ("in August I argued X;
+     tonight's room pushed on that"). Up to two more go in the Learn-More Set / first comment. The evolving thesis
+     is the documentarian moat; a list of old links is not.
+   - If the command fails or the graph is unreachable, say so in one line and draft without back-links. Never block.
+
 ---
 
 ## Step 1.9: Sharpen steer (steering-interview Touch 2) — before any generation
