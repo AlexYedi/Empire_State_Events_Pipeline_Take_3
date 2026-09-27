@@ -28,6 +28,7 @@ Ask the same question of any NEW metric before trusting it: what does this score
 - build-quality scores < 0.70 — were they reworked?
 - corrective-rounds ÷ value — trend up?
 - DoD waiver-rate — climbing / clustering on builds?
+- **gate failures (YED-228, added 2026-09-27):** count `*_gate_failed` and `*_gate_abandoned` rows in `.claude/artifacts/deep-read-gate-failures.jsonl` and `substrate-gate-failures.jsonl` — **excluding superseded rows**: a `gate_false_positive_correction` row voids every earlier failure row from the same `session` (the logs are append-only, so corrections never delete). Filter: `jq -s '(map(select(.event=="gate_false_positive_correction")) | map({(.session): .ts}) | add // {}) as $c | map(select((.event|test("_gate_(failed|abandoned)$")) and (($c[.session] // "") < .ts or ($c[.session] == null))))' <log>`. Before YED-228 the gates logged one false row per turn of an in-progress run (9 in session b7b796e0, all superseded); after it, any live row is a real skip or an abandoned run — each one gets a named cause in Step 4.
 - judge–human agreement (from `alex_ack`) — **is it ≥ +0.10 above the always-pass baseline on the same rows?** Raw agreement alone means nothing (YED-212)
 - **ack hygiene (the labeler is a rater too):** what share of escalations did Alex simply agree with, and how fast? A reflexive-agree pattern turns the ground truth into a constant and makes every κ undefined
 - acted-on outcome vs goal — trending which way?

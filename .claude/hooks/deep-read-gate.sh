@@ -11,12 +11,8 @@
 #     durable FAILED record + surface a loud systemMessage, then allow the stop (the
 #     autonomous / can't-resolve "report FAILED" path — never traps the session).
 #
-# Stop fires PER TURN, not per run (2026-09-27 correction — see _run_in_progress.sh). A pending row
-# is therefore NOT a failure while this session holds a live event claim (event-claim.py): the run
-# is in progress and the Deep Read simply hasn't rendered yet. The gate evaluates for real at the
-# first turn end after the claim is released (Step 6) or expires. A `_pending`/empty session id has
-# no claim to check and keeps the strict path. Failure rows are written at most once per
-# (session, event set) — the 9 false rows of session b7b796e0 are what this prevents.
+# Stop fires per turn; the gate treats pending as in-progress while the event claim is live; it fails at the
+# first turn end after the claim is released or expires (2026-09-27, YED-228 — see _run_in_progress.sh).
 #
 # Fails CLOSED by design (adversarial-review hardened):
 #   - a `pending` row (default at Scan-head commit, flipped only on successful Step 4.5),
@@ -39,7 +35,11 @@
 
 set -uo pipefail
 
-cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || exit 0
+# A gate that cannot run must say so (YED-228 follow-up): a missing jq or an unreachable project dir used to
+# `exit 0` silently, turning the gate into a no-op nobody could see. Static JSON — jq may be the thing missing.
+cant_run() { printf '{"systemMessage":"⚠️ %s: gate could NOT run (%s) — pending Deep Read / graph-write rows are UNCHECKED this turn."}\n' "$1" "$2"; exit 0; }
+
+cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" || cant_run "deep-read-gate" "project dir unreachable"
 
 INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
@@ -57,7 +57,7 @@ if [ -f "$SETTINGS_LOCAL" ]; then
   fi
 fi
 
-command -v jq >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || cant_run "deep-read-gate" "jq not installed"
 
 # shellcheck source=_run_in_progress.sh
 . "$(dirname "${BASH_SOURCE[0]}")/_run_in_progress.sh"
