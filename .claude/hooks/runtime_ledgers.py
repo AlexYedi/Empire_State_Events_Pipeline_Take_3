@@ -17,6 +17,9 @@ RULE (all must hold, else the reference still flags):
      either a literal containing `<name>.jsonl`, or a variable bound to one — directly
      (`LOG = os.path.join(ROOT, ".claude", "artifacts", "<name>.jsonl")`, `LOG=".claude/artifacts/<name>.jsonl"`)
      or through simple aliases (`path = LOG`, `X="$LOG"`, up to 4 hops).
+  3. NO tracked writer opens that ledger in a truncating mode (`open(<target>, "w")`, `> <target>`) — the
+     spec says "only in append mode" (judge round 3). The name must sit DIRECTLY under artifacts/: a writer
+     to artifacts/sub/x.jsonl never excuses artifacts/x.jsonl.
   Name-scoped (judge round 2, 2026-09-27): the first version tested whether the FILE appended anything, so a
   file appending to ledger A and merely READING ledger B excused B — contra YED-227 decisions 1 and 4. Now B
   is excused only if an append-open's own target resolves to B. A target that cannot be resolved (built at
@@ -49,6 +52,11 @@ WRITER_DIRS = (".claude/scripts", ".claude/hooks")
 # append-open targets
 PY_APPEND_RE = re.compile(r"""open\(\s*([^,()]+?)\s*,\s*(?:mode\s*=\s*)?["']a[b+t]*["']""")
 SH_APPEND_RE = re.compile(r""">>\s*("?)(\$\{?[A-Za-z_]\w*\}?|[^\s"';|&]+)\1""")
+# truncating writes to the same targets: a ledger written this way anywhere is NOT append-only (decision 1)
+PY_TRUNC_RE = re.compile(r"""open\(\s*([^,()]+?)\s*,\s*(?:mode\s*=\s*)?["']w[b+t]*["']""")
+SH_TRUNC_RE = re.compile(r"""(?<![>&0-9])>(?!>)\s*("?)(\$\{?[A-Za-z_]\w*\}?|[^\s"';|&]+)\1""")
+# a ledger basename that sits DIRECTLY under artifacts/, in literal or os.path.join form
+DIRECT_RE = re.compile(r"""artifacts(?:/|["']\s*,\s*["'])([A-Za-z0-9._-]+\.jsonl)""")
 # variable bindings (py `X = ...` / sh `X=...`), a line-level view — good enough for module constants
 PY_ASSIGN_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*=\s*(.+?)\s*$")
 SH_ASSIGN_RE = re.compile(r"^\s*(?:local\s+|export\s+)?([A-Za-z_]\w*)=(.+?)\s*$")
@@ -63,7 +71,7 @@ def _bindings(text, is_sh):
         if line.lstrip().startswith("#"):
             continue
         m = rx.match(line)
-        if m and "==" not in line.split("=", 1)[0]:
+        if m and not m.group(2).lstrip().startswith("="):   # `X == Y` is a comparison, not a binding
             out.setdefault(m.group(1), []).append(m.group(2).strip().strip('"').strip("'"))
     return out
 
@@ -73,8 +81,8 @@ def _resolve(target, binds, is_sh, depth=0):
     if depth > 4:
         return set()
     target = target.strip().strip('"').strip("'")
-    lit = set(n for n in NAME_RE.findall(target) if "artifacts" in target or target.startswith(".claude"))
-    if lit:
+    lit = set(DIRECT_RE.findall(target))   # only a name DIRECTLY under artifacts/ — never artifacts/sub/x.jsonl
+    if lit or NAME_RE.search(target):
         return lit
     if is_sh:
         m = SH_VAR_RE.match(target)
@@ -84,27 +92,33 @@ def _resolve(target, binds, is_sh, depth=0):
     found = set()
     for var in names:
         for rhs in binds.get(var, []):
-            if NAME_RE.search(rhs) and "artifacts" in rhs:
-                found.update(NAME_RE.findall(rhs))
+            if NAME_RE.search(rhs):
+                found.update(DIRECT_RE.findall(rhs))
             else:
                 found |= _resolve(rhs, binds, is_sh, depth + 1)
     return found
 
 
+def _targets(text, is_sh, rx):
+    binds = _bindings(text, is_sh)
+    out = set()
+    for line in text.splitlines():
+        if line.lstrip().startswith("#"):
+            continue
+        for m in rx.finditer(line):
+            out |= _resolve(m.group(2) if is_sh else m.group(1), binds, is_sh)
+    return out
+
+
 def ledgers_from_texts(texts):
-    """{path: text} -> set of ledger basenames that some append-open WRITES TO (name-scoped)."""
-    names = set()
+    """{path: text} -> ledger basenames that some append-open WRITES TO and that NO tracked writer
+    truncates ('w' / '>'). Name-scoped: each write's own target is resolved to its ledger."""
+    appended, truncated = set(), set()
     for path, text in texts.items():
         is_sh = path.endswith(".sh")
-        binds = _bindings(text, is_sh)
-        rx = SH_APPEND_RE if is_sh else PY_APPEND_RE
-        for line in text.splitlines():
-            if line.lstrip().startswith("#"):
-                continue
-            for m in rx.finditer(line):
-                target = m.group(2) if is_sh else m.group(1)
-                names |= _resolve(target, binds, is_sh)
-    return names
+        appended |= _targets(text, is_sh, SH_APPEND_RE if is_sh else PY_APPEND_RE)
+        truncated |= _targets(text, is_sh, SH_TRUNC_RE if is_sh else PY_TRUNC_RE)
+    return appended - truncated
 
 
 SELF = ".claude/hooks/runtime_ledgers.py"
@@ -163,6 +177,16 @@ def selftest():
                     'path = LEDGER\nwith open(path, "a", encoding="utf-8") as f:\n    f.write(x)\n',
         # shell default-expansion alias, as dod-close.sh-style writers do
         "alias.sh": 'D=".claude/" + "artifacts/sh-default.jsonl"\nLOG="${OVERRIDE:-$D}"\necho x >> "$LOG"\n',
+        # a NESTED ledger must not excuse the same basename directly under artifacts/
+        "nested.py": 'N = os.path.join(ROOT, ".claude", "artifacts", "sub", "nested-only.jsonl")\n'
+                     'with open(N, "a") as f:\n    pass\n',
+        # appended in one file, TRUNCATED in another -> not append-only (decision 1: "only in append mode")
+        "trunc_a.py": 'T = os.path.join(ROOT, ".claude", "artifacts", "also-truncated.jsonl")\n'
+                      'with open(T, "a") as f:\n    pass\n',
+        "trunc_w.sh": 'T="' + A + 'also-truncated.jsonl"\necho x > "$T"\n',
+        # `X == Y` is a comparison and must not bind X
+        "cmp.py": 'L = os.path.join(ROOT, ".claude", "artifacts", "cmp-bound.jsonl")\n'
+                  'if Q == L:\n    pass\nwith open(Q, "a") as f:\n    pass\n',
         # a write target built at runtime cannot be resolved -> must NOT excuse anything
         "dynamic.py": 'name = pick()\nwith open(os.path.join(ROOT, ".claude", "artifacts", name), "a") as f:\n    pass\n',
     }
@@ -179,6 +203,10 @@ def selftest():
         (A + "mixed-appended.jsonl", True, "appended in a file that also reads another ledger"),
         (A + "mixed-read-only.jsonl", False, "same file, only READ — the round-2 defect"),
         (A + "aliased.jsonl", True, "one alias hop (path = LEDGER)"),
+        (A + "sh-default.jsonl", True, "shell default-expansion alias"),
+        (A + "nested-only.jsonl", False, "only a NESTED artifacts/sub/ ledger is appended"),
+        (A + "also-truncated.jsonl", False, "appended in one file, truncated in another"),
+        (A + "cmp-bound.jsonl", False, "Q == L is a comparison, not a binding of Q"),
     ]
     fails = 0
     for ref, want, why in cases:
@@ -193,7 +221,8 @@ def selftest():
     live = runtime_ledger_names()
     live_checks = 0
     for neg in ("gate-failures.jsonl", "shell-fails.jsonl", "read-only.jsonl", "overwritten.jsonl",
-                "mixed-appended.jsonl", "mixed-read-only.jsonl", "aliased.jsonl"):
+                "mixed-appended.jsonl", "mixed-read-only.jsonl", "aliased.jsonl", "sh-default.jsonl",
+                "nested-only.jsonl", "also-truncated.jsonl", "cmp-bound.jsonl"):
         live_checks += 1
         if neg in live:
             fails += 1
