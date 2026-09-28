@@ -741,7 +741,7 @@ class Graph:
 
     def _remember(self, table: str, name: str, rid: str) -> str:
         self._made[(table, norm_text(name))] = rid
-        self._made_names = getattr(self, "_made_names", []) + [(table, name)]   # display casing, for review output
+        self.__dict__.setdefault("_made_names", []).append((table, name))   # display casing, for review output
         return rid
 
     def embed(self, texts: list[str]) -> list[str]:
@@ -757,7 +757,7 @@ class Graph:
         """Drop only the written table's cached reads (a company write can't change an event read)."""
         cache = getattr(self, "_rcache", None)
         if cache:
-            for k in [k for k in cache if k.startswith(f"/{table}?")]:
+            for k in [k for k in cache if k == f"/{table}" or k.startswith(f"/{table}?")]:
                 del cache[k]
 
     def get(self, path: str) -> list:
