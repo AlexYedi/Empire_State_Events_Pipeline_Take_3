@@ -5,7 +5,7 @@ Relevance recompute for the Market-Intelligence graph (YED-115 prereq 2).
 Pure math, no LLM, no API tokens — reads the graph over REST, computes a
 `relevance_score` per topic, and writes back only the topics whose score changed.
 This is what turns the graph from a flat list into an *evolving viewpoint*: the
-dashboard + /morning-refresh rank by real relevance instead of raw engagement_count.
+dashboard ranks by real relevance instead of raw engagement_count.
 
     relevance = recency_decay(last_engaged_at)      # recent signals weigh more (half-life)
               * engagement_weight(engagement_count)   # more signals -> higher (log-scaled)
@@ -20,7 +20,7 @@ Usage:
     python3 .claude/scripts/recompute_relevance.py --top 25   # show N in the report (default 15)
 
 Reads SUPABASE_API_KEY from .env (never printed). REST-only, so no DDL / dashboard step.
-Idempotent: same data -> same scores. Safe to re-run (and to call from /morning-refresh).
+Idempotent: same data -> same scores. Safe to re-run.
 """
 import json, math, os, sys, urllib.request, urllib.error
 from datetime import datetime, timezone

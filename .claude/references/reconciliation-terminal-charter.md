@@ -6,7 +6,7 @@
 
 ## Rule 0 — The precondition (without this, the charter does nothing)
 All other Claude Code / terminal sessions on this repo and its worktrees must be QUIESCED before the reconciliation terminal acts. Quiesced = each other session has committed + pushed its branch and is idle. A single reconciliation terminal running alongside live writers hits the same moving-target problem. If another session is live, the reconciliation terminal goes read-only and reports only. Verify:
-`git worktree list` · `git -C <wt> status --short` (only build-sessions.jsonl churn = at rest) · `git rev-parse --abbrev-ref HEAD` (main checkout must be on `main`, not a feature branch) · re-check a branch tip twice — if it moved, a session is live.
+`git worktree list` · `git -C <wt> status --short` (empty = at rest; telemetry is gitignored since YED-229) · `git rev-parse --abbrev-ref HEAD` (main checkout must be on `main`, not a feature branch) · re-check a branch tip twice — if it moved, a session is live.
 
 ## Rule 1 — This terminal MERGES and SYNCS; it does not BUILD
 Allowed: `gh pr merge` (server-side), `fetch`, `pull --ff-only`, ref-only `git branch -f <non-checked-out> origin/main` (FF only), `worktree remove`/`branch -d` of merged branches, `gh pr create` for a branch at a stop point.
@@ -22,12 +22,12 @@ All branch work on origin before a merge (`rev-list --left-right --count origin/
 1. Confirm a real stop point (complete, or remaining work inert-by-design — e.g. staging-only writes with no consumer). Mid-feature + not inert → hold.
 2. Bury dead work: Clarify is REJECTED — no `clarify-*.md` and no `ADR-6-crm-boundary-clarify.md` reach main ([[project_crm_capture_decision_2026-09-09]]). Merging current main in usually buries it automatically; verify `git ls-files 'clarify*' '**/clarify*'` empty on tip.
 3. `gh pr create` (if none) → wait `MERGEABLE/CLEAN` → `gh pr merge <n> --merge --delete-branch`.
-4. Sync main: discard telemetry churn, `git pull --ff-only origin main`.
-5. Remove converged worktree (`worktree remove --force`) + delete local branch (`--force` safe when only build-sessions.jsonl / .venv dirt).
+4. Sync main: `git pull --ff-only origin main`.
+5. Remove converged worktree (`worktree remove --force`) + delete local branch (`--force` safe when only `.venv` dirt).
 6. Continuation branches cut from true `origin/main`, never stale local main.
 
 ## Rule 5 — Environment gotchas
-git network is blocked by the default Bash sandbox (`curl` works, `git fetch/push` times out ~75s) → run network git with the sandbox disabled; `timeout` absent on macOS (bound probes with `curl --max-time`). `build-sessions.jsonl` churn is auto (Stop hook) — `git checkout --` it, never chase it. Worktrees lack `.env` ([[project_worktree_env_missing_2026-09-08]]). Media stays out of git (audio→R2 esep-library, images/transcripts→Drive; only final PDFs/markdown tracked).
+git network is blocked by the default Bash sandbox (`curl` works, `git fetch/push` times out ~75s) → run network git with the sandbox disabled; `timeout` absent on macOS (bound probes with `curl --max-time`). Telemetry shards live in gitignored `.claude/.state/telemetry/` since YED-229 (2026-09-28): no churn to discard. Worktrees lack `.env` ([[project_worktree_env_missing_2026-09-08]]). Media stays out of git (audio→R2 esep-library, images/transcripts→Drive; only final PDFs/markdown tracked).
 
 ## Rule 6 — Attribution
 End commit messages + PR descriptions with the session's required Co-Authored-By / generated-with lines.
