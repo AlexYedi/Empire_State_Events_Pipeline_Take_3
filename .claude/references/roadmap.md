@@ -118,7 +118,7 @@ to no-go. Confidence in the sequence: 65% (n=7–9 per cell; three of four Now t
 
 ## 9. Decision log (dated; append, never edit)
 
-- **2026-09-28 — Roadmap v3 adopted (this file).** P3 loop killed; A1 closes partially met (post-event writes to the spine, YED-160; roles producer deferred to the Dec 12 go/no-go); Dec 12 go/no-go criteria in §4; analytics = Vercel Web Analytics (PostHog removed).
+- **2026-09-28 — Roadmap v3 adopted (this file).** P3 loop killed; A1 met in reduced form: live producers are post-event claims (YED-160), research-brief claims and roles (role-radar Step 5.5, YED-149, the largest); the inbox (ADR-11) and trend producers are retired; Dec 12 go/no-go criteria in §4; analytics = Vercel Web Analytics (PostHog removed).
 - **2026-09-28 — Carry-overs** live in Linear (label `carry-over`, due date, Who/What/When/Why/Context), rendered on the hub `/ops/todos`.
 - **2026-09-28 — Recorded speech never public;** affected history purged.
 - **2026-09-28 — Rooms shipped** on the hub, with Vercel Web Analytics.
