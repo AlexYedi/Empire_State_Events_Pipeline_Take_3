@@ -120,7 +120,10 @@ def neighborhood(ids: list[str], since: str | None) -> tuple[dict, str]:
                 for r in get(f"/{t}?id=in.({','.join(want[i:i + 80])})&select=id,name") or []:
                     names[r["id"]] = r["name"]
         edges = [{**r, "name": names.get(r["entity_id"])} for r in ee]
-    return {"events": events, "edges": edges, "documents": [], "claims": []}, "rest-fallback (0010 not applied)"
+    # hiring=[] (not None): this path already excluded the job lens in its query, so there is nothing to count here —
+    # isolate_job_lens must not label it "client-side, counts partial" (judge, 2026-09-27).
+    return ({"events": events, "edges": edges, "documents": [], "claims": [], "hiring": [], "_hiring_path": "rest-fallback"},
+            "rest-fallback (0010 not applied)")
 
 
 def claim_layer_live() -> bool:
@@ -158,7 +161,8 @@ def isolate_job_lens(nb: dict, seed_companies: dict[str, str]) -> tuple[dict, li
     same filter runs here and the counts are partial (only roles that fit under the old limit). Pure."""
     job = {e["id"] for e in nb.get("events", []) if e.get("kind") in JOB_LENS_KINDS}
     hiring = nb.get("hiring")
-    path = "rpc (0011)" if hiring is not None else "client-side (0011 not applied: counts partial, crowding possible)"
+    path = ("rest-fallback (no hiring counts)" if nb.get("_hiring_path") == "rest-fallback" else
+            "rpc (0011)" if hiring is not None else "client-side (0011 not applied: counts partial, crowding possible)")
     if hiring is None:
         per: dict[str, dict] = {}
         roles = {e["id"]: e for e in nb.get("events", []) if e.get("kind") == "role_posted"}
@@ -322,6 +326,9 @@ def selftest() -> bool:
         ("rpc hiring wins + labelled", rpc_path == "rpc (0011)" and rpc_hiring[0]["roles"] == 6),
         ("count line format", hiring_lines(rpc_hiring) == ["- **Harvey** — 6 tracked roles (A:2 B:4), latest posted 2026-09-22"]),
         ("no seed company -> no hiring lines", isolate_job_lens(nb, {})[1] == []),
+        ("rest-fallback path is labelled as such, never 'partial'",
+         isolate_job_lens({**nb, "hiring": [], "_hiring_path": "rest-fallback"}, {"co1": "Harvey"})[2]
+         == "rest-fallback (no hiring counts)"),
     ]
     for name, good in checks:
         print(f"  {'✓' if good else '✗'} {name}")

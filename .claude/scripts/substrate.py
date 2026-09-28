@@ -1533,8 +1533,13 @@ def ensure_roles(g: Graph, rows: list[dict], aliases: dict[str, str] | None = No
         edged |= {x["event_id"] for x in g.get(f"/event_entity?entity_type=eq.company&event_id=in.({','.join(ids[i:i + 80])})"
                                                f"&select=event_id")}
     by_ats = {(e.get("metadata") or {}).get("ats_key"): pid for pid, e in existing.items()}
+    refused = 0
     for r in rows:
         m, why = role_manifest(r, aliases)
+        if why == "no_page_id":                  # spec decision 1: a hard failure, not a quiet skip
+            print(f"REFUSED no page id: {r.get('Role Title')!r} at {r.get('Company')!r} (url={r.get('url')!r})")
+            refused += 1
+            continue
         if why:
             skipped[why] = skipped.get(why, 0) + 1
             continue
@@ -1558,6 +1563,10 @@ def ensure_roles(g: Graph, rows: list[dict], aliases: dict[str, str] | None = No
     new_cos = sorted(n for (t, n) in g._made if t == "company")
     if new_cos:   # the review surface: a would-create company that already exists under another name is a duplicate
         print(f"{'would create' if g.dry else 'created'} {len(new_cos)} companies: {', '.join(new_cos)}")
+    if refused:
+        g.stats.bump("role", "refused_no_page_id", refused)
+        print(f"ensure-roles: {refused} row(s) REFUSED for a missing/invalid page id — every other row was processed; exit 3")
+        return 3
     return 0
 
 
@@ -1991,6 +2000,8 @@ def _roles_selftest(ok) -> None:
     ok("roles: role_posted without a page id -> refused", refused)
     fg.stats = Stats()
     ensure_roles(fg, [row("9", "Account Executive", "Harvey", "ashby:10")])   # ashby:10 already lives on page 1…
+    ok("roles: a row with no page id fails the run (exit 3), nothing written for it",
+       ensure_roles(fg, [{**row("x", "AE", "Harvey", "ashby:99"), "url": "not-a-page"}]) == 3)
     ok("roles: same ATS key on a different page id -> refused, nothing written",
        fg.stats.c["role"].get("skipped_ats_key_on_other_page") == 1 and fg.stats.created() == 0)
     fg.ensure_event({"event": {**role_manifest(row("6", "CSM", "Harvey", "ashby:15"))[0]["event"]},
