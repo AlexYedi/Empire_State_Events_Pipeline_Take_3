@@ -38,7 +38,8 @@ to proceed anyway, widen the window, or wait for more calls.
 When Granola wasn't recording or transcripts come from another source
 (Gong export, Fathom export, manual notes), Alex pastes them directly into
 the conversation. Run the existing 7-layer framework against the pasted
-material. Sources today: the OBS + ElevenLabs Scribe capture lane (`/ingest-recording`), a publisher's
+material. Sources today: a Supercut recording's transcript (`.claude/references/supercut.md`), ElevenLabs Scribe
+on any audio file (`/ingest-recording`), a publisher's
 on-demand transcript, or files already saved under `event-transcripts/`.
 
 ---
