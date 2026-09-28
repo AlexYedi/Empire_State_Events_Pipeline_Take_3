@@ -145,15 +145,7 @@ Evidence Ledger row, with `web_verified` for rows with a URL and `email_signal` 
 attended row and attaches these claims to it automatically. Private-correspondence rows (email-signal, no URL) and
 `notion-prior` rows are skipped and counted, never written. All writes go through `spine_client` (ADR-9).
 
-**4.2a Open the ledger row (right after Step 4's Event page write).** Write the manifest
-file (4.2b) first: every `substrate.py` verb reads it, including this one. Then:
-```
-.venv/bin/python .claude/scripts/substrate.py expect-research --manifest .claude/.state/research/<slug>.manifest.json
-```
-This opens a PENDING row keyed `research:<page id>` (distinct from the post-event row). The row is **informational**:
-a pending row does not block close — report it in Step 6. It writes nothing to the graph.
-
-**4.2b Write two files** under `.claude/.state/research/` (gitignored; `<slug>` = the event title, kebab-cased):
+**4.2a Write two files (right after Step 4's Event page write)** under `.claude/.state/research/` (gitignored; `<slug>` = the event title, kebab-cased):
 - `<slug>.manifest.json`: `{"event": {"notion_page_id": "<Event page id from 4g>", "title": "…", "event_date": "YYYY-MM-DD"},
   "entities": [...]}`. One entry per researched entity, from the triage plan + the 4g confirmation:
   company `{"type":"company","name","website","linkedin_url","notion_page_id"}` · person
@@ -162,18 +154,17 @@ a pending row does not block close — report it in Step 6. It writes nothing to
 - `<slug>.evidence.md`: the synthesizer's **Evidence Set**, verbatim. If its `##### Evidence Ledger — <Name>` headings
   were lost, write the four specialist returns concatenated instead; their ledgers carry the same headings.
 
-**4.2c Stage it:**
+**4.2b Stage it:**
 ```
 .venv/bin/python .claude/scripts/substrate.py stage-research --manifest .claude/.state/research/<slug>.manifest.json \
     --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g>
 ```
-Success flips the ledger row to STAGED. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
-ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, leave
-the row pending and tell Alex (list it in the Step 6 summary as an incomplete).
+Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
+ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, tell
+Alex (list it in the Step 6 summary as an incomplete).
 
-**4.2d Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
-If it genuinely cannot be written, the only other exit is a logged waive:
-`.venv/bin/python .claude/scripts/substrate.py waive --phase pre_event --manifest <m.json> --reason "<why>"`.
+**4.2c Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
+If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 
 ## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)
 
@@ -188,8 +179,7 @@ If it genuinely cannot be written, the only other exit is a logged waive:
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
-**Ledger note (YED-205):** a pending `research:<page id>` row from Step 4.2 is checked at Step 6.5; resolve it with Step
-4.2c or a logged `waive --phase pre_event`.
+**Graph note (YED-205):** a Step 4.2 that did not stage is reported at Step 6.5; resolve it by re-running Step 4.2b.
 
 ## Step 5 — HubSpot writes (this conversation)
 
@@ -209,7 +199,7 @@ Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot 
 
 Before declaring the run complete, run the authoritative marker check. This step is the **only** Deep Read / graph-write gate — do not skip it. It reads the *real* Notion state:
 
-1. **Enumerate touched Event pages** — from this run's own record. Also report any `research:<page id>` row from Step 4.2 still pending.
+1. **Enumerate touched Event pages** — from this run's own record. Also report whether Step 4.2 staged (its 4.2c line, or the reason it did not).
 2. **Re-fetch each marker** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->` marker. Notion is the truth.
 3. **Verdict:**
    - **All `rendered` (or explicitly waived)** → run passes; report Deep Read ✅.

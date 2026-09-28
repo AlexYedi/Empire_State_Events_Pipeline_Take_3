@@ -19,8 +19,8 @@ MACHINE-GLOBAL at ~/.claude/event-claims/, outside any worktree, visible to ever
 ALTERNATIVES WEIGHED (acceptance #2):
   * A property on the Notion Event page — survives across machines, but costs an MCP round-trip per check and
     CANNOT cover the window that actually failed: at Step 1 the Event page often does not exist yet. Rejected.
-  * A committed marker (as the graph freeze does) — the freeze is a deliberate, hours-to-days state change worth
-    a commit; a pipeline claim is ephemeral and per-run, so committing one would add push/pull races and noise
+  * A committed marker (as the graph freeze did, until its 2026-09-28 retirement) — the freeze was a deliberate,
+    hours-to-days state change worth a commit; a pipeline claim is ephemeral and per-run, so committing one would add push/pull races and noise
     to every event. Rejected.
   * Rely on the existing dedup search — that is what failed: it is advisory, and it only catches a collision
     once the other session has already written. Rejected.

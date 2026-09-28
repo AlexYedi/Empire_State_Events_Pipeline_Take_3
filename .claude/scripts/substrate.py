@@ -16,7 +16,6 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
   stage-claims    --brief b.md --manifest m.json [--brief-ref notion:<id>] [--approve]
                   parse a post_event_brief's learnings sections into `claim` rows (first_hand),
                   embed them (local bge-small, same space as doc_chunks), link speakers
-  expect-research --manifest m.json   (YED-205) open the PRE-EVENT gate row `research:<page id>` — no graph write
   stage-research  --manifest m.json --evidence ev.md --brief-ref notion:<research brief id>
                   (YED-205) the pre-event write: roster entities + the research_brief document + one claim per
                   Evidence Ledger row (web-verified w/ URL -> web_verified; email-signal w/ public URL -> email_signal;
@@ -112,64 +111,6 @@ SHOWCASE_LABELS = {
 DO_NOT_PUBLISH_RE = re.compile(r"rule\s*12|unsourced|do(?:n'?t| not) publish|never publish|never repeat", re.I)
 CONFIDENTIAL_RE = re.compile(r"stays in the room|confidential|⛔|off the record", re.I)
 CONF_RE = re.compile(r"\b(HIGH|MED)\b")
-
-
-# ---------------------------------------------------------------------------------------------
-# Substrate gate ledger. /post-event-content 3.8b calls `ensure-event --expect-claims` -> a PENDING
-# row; 3.8c `stage-claims` success flips it to STAGED; `waive` records a deliberate skip. The Stop
-# hook that enforced it (substrate-gate.sh) was unwired in the 2026-09-28 complexity reset, so the
-# ledger is INFORMATIONAL: the commands report 3.8b/c status by hand. Backfill calls ensure-event
-# WITHOUT --expect-claims (most backfilled events have no brief), so it never creates gate rows.
-# ---------------------------------------------------------------------------------------------
-STATE_DIR = os.path.join(ROOT, ".claude", ".state")
-GATE_FAIL_LOG = os.path.join(ROOT, ".claude", "artifacts", "substrate-gate-failures.jsonl")
-
-def _ledger_path() -> str:
-    sid = os.environ.get("CLAUDE_CODE_SESSION_ID") or "_pending"
-    return os.path.join(STATE_DIR, f"{sid}.substrate_gate.jsonl")
-
-
-def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *, keep_if: tuple = (),
-                phase: str = "post_event") -> None:
-    """Upsert one row by key. keep_if: markers that must not be downgraded (idempotent add).
-    phase: 'post_event' (key = Notion event page id) or 'pre_event' (key = 'research:' + page id — a DISTINCT key,
-    because the gate never downgrades STAGED: a shared key would let a staged pre-event row satisfy the post-event
-    gate). `phase` names which step a leftover PENDING row belongs to."""
-    import datetime
-    path = _ledger_path()
-    os.makedirs(STATE_DIR, exist_ok=True)
-    rows, kept = [], None
-    if os.path.exists(path):
-        for line in open(path, encoding="utf-8"):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                r = json.loads(line)
-            except ValueError:
-                rows.append(line)                     # preserve corrupt lines verbatim (gate counts them)
-                continue
-            if isinstance(r, dict) and r.get("key") == key:
-                kept = r
-                continue
-            rows.append(line)
-    if kept and kept.get("marker") in keep_if:
-        rows.append(json.dumps(kept))
-    else:
-        row = {"key": key, "event": title, "marker": marker, "phase": phase,
-               "ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
-        if reason:
-            row["reason"] = reason
-        rows.append(json.dumps(row))
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write("\n".join(rows) + "\n")
-    os.replace(tmp, path)
-    if marker == "waived":
-        os.makedirs(os.path.dirname(GATE_FAIL_LOG), exist_ok=True)
-        with open(GATE_FAIL_LOG, "a", encoding="utf-8") as f:
-            f.write(json.dumps({"event": "substrate_gate_waived", "key": key, "title": title,
-                                "reason": reason, "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending")}) + "\n")
 
 
 class Stats:
@@ -434,10 +375,6 @@ RESEARCH_CONF = {"web_verified": 0.7, "email_signal": 0.5}
 def research_source_key(notion_event_id: str) -> str:
     """One source_key per researched event. Post-event ensure-event recomputes it to attach these claims."""
     return sha("research:" + pid_variants(notion_event_id)[0])
-
-
-def research_gate_key(notion_event_id: str) -> str:
-    return "research:" + pid_variants(notion_event_id)[0]
 
 
 def _public_url(u: str | None) -> str | None:
@@ -1288,10 +1225,10 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
     Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
     claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
     already exists for this page (a re-run after attendance), claims attach to it. Returns 3 on zero claims
-    (loud; the gate stays PENDING), 5 when the manifest lacks the Notion event page id (4 is retired: it was the graph freeze's)."""
+    (loud), 5 when the manifest lacks the Notion event page id (4 is retired: it was the graph freeze's)."""
     ev = manifest.get("event") or {}
     if not ev.get("notion_page_id"):
-        sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims + the gate)\n")
+        sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims)\n")
         return 5
     items, skipped = parse_ledger(md)
     for why, n in sorted(skipped.items()):
@@ -1353,7 +1290,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
     by_tier: dict[str, int] = {}
     for it in items:
         by_tier[it["tier"]] = by_tier.get(it["tier"], 0) + 1
-    # the exact Step 4.2d line, so the command can paste it into the Step 6 summary unchanged
+    # the exact Step 4.2c line, so the command can paste it into the Step 6 summary unchanged
     print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}")
@@ -2010,8 +1947,6 @@ def _research_selftest(ok) -> None:
        len(leak) == 1 and leak[0]["text"].endswith("seed extension") and why.get("email_signal_private") == 2)
     ok("roster: same name in two types -> None (never guessed)",
        roster_match("Holly", [("company", "Holly", "c9"), ("topic", "Holly", "t9")]) is None)
-    ok("gate: pre-event key is DISTINCT from the post-event key", research_gate_key("a" * 32) != pid_variants("a" * 32)[0]
-       and research_gate_key("a" * 32).startswith("research:"))
     # ---- end to end on the fake graph --------------------------------------------------------------
     fg = _FakeGraph()
     pid = "3ded3699c2db816a828ec6410801d5de"
@@ -2170,37 +2105,6 @@ def selftest() -> bool:
         ok("guard still accepts person.bio (substrate simply never sends it)", True)
     except PIIViolation:
         ok("guard still accepts person.bio (substrate simply never sends it)", False)
-    # gate ledger, in a throwaway session (no network). The Stop hook that read it is unwired (2026-09-28);
-    # what is pinned here is the ledger's own contract: STAGED/WAIVED are never downgraded by a re-run.
-    saved = os.environ.get("CLAUDE_CODE_SESSION_ID")
-    os.environ["CLAUDE_CODE_SESSION_ID"] = "substrate-selftest"
-    try:
-        def marker(key: str):
-            for line in open(_ledger_path(), encoding="utf-8"):
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                if r.get("key") == key:
-                    return r.get("marker")
-        k, t = "0" * 32, "gate selftest event"
-        ledger_mark(k, t, "pending")
-        ok("gate: expect opens a PENDING row", marker(k) == "pending")
-        ledger_mark(k, t, "staged")
-        ledger_mark(k, t, "pending", keep_if=("staged", "waived"))
-        ok("gate: re-running ensure-event never downgrades STAGED", marker(k) == "staged")
-        with open(_ledger_path(), "a", encoding="utf-8") as f:
-            f.write("{not json\n")
-        ledger_mark(k, t, "staged")
-        ok("gate: a corrupt ledger line is preserved verbatim, not dropped",
-           "{not json" in open(_ledger_path(), encoding="utf-8").read())
-    finally:
-        if os.path.exists(_ledger_path()):
-            os.remove(_ledger_path())
-        if saved is None:
-            os.environ.pop("CLAUDE_CODE_SESSION_ID", None)
-        else:
-            os.environ["CLAUDE_CODE_SESSION_ID"] = saved
     # ---- question claims (YED-218) -----------------------------------------------------------
     ok("questions: 'Top Questions' heading -> question claims",
        [i["claim_type"] for i in parse_brief("## Top Questions\n1. When your eval harness disagrees with "
@@ -2252,12 +2156,10 @@ def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
+    ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "expect-research", "stage-research", "ensure-roles"])
+                                     "stage-research", "ensure-roles"])
     ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
-    ap.add_argument("--phase", choices=["post_event", "pre_event"], default="post_event",
-                    help="(waive) which gate row: post_event (default) or pre_event (the research row)")
     ap.add_argument("--table", choices=["company", "person", "topic"], help="(merge) entity table")
     ap.add_argument("--from", dest="merge_from", metavar="ID|NAME", help="(merge) the row to tombstone")
     ap.add_argument("--into", dest="merge_into", metavar="ID|NAME", help="(merge) the row that survives")
@@ -2266,11 +2168,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--manifest-dir", help="(backfill) a directory of *.event.json / *.entities.json manifests "
                                            "from supabase/scripts/build_manifests.py — the SAME ensure-event / "
                                            "ensure-entity code, run over a list (there is no separate backfill path)")
-    ap.add_argument("--expect-claims", action="store_true",
-                    help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
-                         "stage-claims closes (informational since the Stop hook was unwired 2026-09-28)")
-    ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged · "
-                                     "(merge) why these two rows are one thing — logged; REQUIRED for a live merge")
+    ap.add_argument("--reason", help="(merge) why these two rows are one thing — logged; REQUIRED for a live merge")
     ap.add_argument("--brief")
     ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
     ap.add_argument("--approve", action="store_true",
@@ -2319,7 +2217,7 @@ def main(argv: list[str]) -> int:
             before = stats.created()
             mm = json.load(open(os.path.join(a.manifest_dir, fn), encoding="utf-8"))
             if fn.endswith(".event.json"):
-                g.ensure_event(mm)                       # no --expect-claims: backfill opens no gate rows
+                g.ensure_event(mm)
             else:
                 for e in mm.get("entities", []):
                     g.ensure_entity(e)
@@ -2345,39 +2243,17 @@ def main(argv: list[str]) -> int:
         return rc
     rc = 0
     ev = m.get("event") or {}
-    gate_key = (pid_variants(ev.get("notion_page_id")) or [None])[0]
     if a.verb == "ensure-entity":
         for e in m.get("entities", []):
             g.ensure_entity(e)
     elif a.verb == "backfill-questions":
         return backfill_questions(g, m)
-    elif a.verb == "waive":
-        if not (gate_key and a.reason):
-            ap.error("waive needs a manifest with event.notion_page_id and --reason")
-        if a.phase == "pre_event":
-            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "waived", a.reason, phase="pre_event")
-        else:
-            ledger_mark(gate_key, ev.get("title", ""), "waived", a.reason)
-        print(f"waived: {ev.get('title')} — {a.reason} (logged to substrate-gate-failures.jsonl)")
-        return 0
-    elif a.verb == "expect-research":
-        if not gate_key:
-            ap.error("expect-research needs a manifest with event.notion_page_id")
-        if not a.dry_run:
-            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "pending",
-                        keep_if=("staged", "waived"), phase="pre_event")
-        print(f"expect-research: gate row research:{gate_key[:8]} PENDING — stage-research closes it")
-        return 0
     elif a.verb == "stage-research":
         if not a.evidence:
             ap.error("stage-research needs --evidence")
         rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref)
-        if rc == 0 and not a.dry_run and gate_key:
-            ledger_mark(research_gate_key(gate_key), ev.get("title", ""), "staged", phase="pre_event")
     elif a.verb == "ensure-event":
         g.ensure_event(m)
-        if a.expect_claims and not a.dry_run and gate_key:
-            ledger_mark(gate_key, ev.get("title", ""), "pending", keep_if=("staged", "waived"))
     elif a.verb == "ensure-document":
         eid = None
         if m.get("event"):
@@ -2408,8 +2284,6 @@ def main(argv: list[str]) -> int:
         if not a.brief:
             ap.error("stage-claims needs --brief")
         rc = stage_claims(g, open(a.brief, encoding="utf-8").read(), m, brief_ref=a.brief_ref, approve=a.approve)
-        if rc == 0 and not a.dry_run and gate_key:
-            ledger_mark(gate_key, ev.get("title", ""), "staged")
     print(("DRY-RUN " if a.dry_run else "") + f"{a.verb}: created={stats.created()}")
     print(stats.report())
     if a.json:
