@@ -3,7 +3,7 @@
 **Purpose.** How this workspace uses Linear so it stays the single source of truth for "what's open"
 without ceremony that a solo builder doesn't need. Distilled from the Linear Method
 (linear.app/method), how Linear builds product, and Alex's existing conventions (YED-26 codification,
-`head-of-product-engineering`, `prioritizing-roadmap`). Pairs with `.claude/references/prd-template.md`.
+`alex:head-of-product-engineering`, `alex:prioritizing-roadmap`). Pairs with `.claude/references/prd-template.md`.
 
 ## The primitives — and how we use them
 
@@ -70,5 +70,5 @@ link) is the audit when one is wanted; this sentence is the fix.
 
 ## Sources
 Linear Method (linear.app/method) · Linear conceptual model (linear.app/docs) · "How Linear builds
-product" (Lenny) · CLAUDE.md YED-26 codification · `head-of-product-engineering` (one-issue-per-story +
-`blockedBy`) · `prioritizing-roadmap` (conviction vs. hypothesis, seasons, kill low-usage).
+product" (Lenny) · CLAUDE.md YED-26 codification · `alex:head-of-product-engineering` (one-issue-per-story +
+`blockedBy`) · `alex:prioritizing-roadmap` (conviction vs. hypothesis, seasons, kill low-usage).

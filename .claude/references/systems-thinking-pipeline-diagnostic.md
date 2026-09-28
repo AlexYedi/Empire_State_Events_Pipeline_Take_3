@@ -1,8 +1,6 @@
-# Applications to Software and Product — Empire State Events Pipeline
+# Systems-thinking diagnostic — Empire State Events Pipeline
 
-This file is the **project-specific** applications layer. The general-purpose translation of Meadows' frameworks to product, engineering, and GTM work lives in the global library at:
-
-> `~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/references/applications-to-product-and-engineering.md`
+This file is the **project-specific** applications layer (moved here from the pruned project copy of the systems-thinking skill, 2026-09-28). The canonical frameworks live in the `alex:systems-thinking` plugin skill; its general-purpose translation to product, engineering, and GTM work is that skill's `references/applications-to-product-and-engineering.md`.
 
 That global file covers software architecture as stock-and-flow, technical debt as reinforcing loop, code review as balancing loop, information flows in software systems, engineering team archetypes (Drift to Low Performance, Shifting the Burden, Tragedy of the Commons), product management (Goodhart's Law, roadmap prioritization, vision-as-paradigm), GTM (Success to the Successful, Escalation, pricing as feedback policy), AI products (bounded rationality of LLMs, build for the slope), and content systems (stocks-flows of audience attention, content as reinforcing loop with delay, drift in cadence).
 
@@ -66,7 +64,7 @@ A worked diagnostic, applied to Alex's own pipeline. Use this whenever the syste
 
 ### Counterintuitive direction warning
 
-The *intuitive* fix is to add a "publishing automation skill" or scheduling tool that drafts faster. **That is the Shifting-the-Burden trap deepening.** It would relieve symptoms while atrophying Alex's actual publishing muscle further. Per `system-archetypes.md` §6: "If you are the intervenor, work in such a way as to *restore or enhance the system's own ability to solve its problems, then remove yourself.*" The intervention should make Alex *publish more*, not make the skills *draft more*.
+The *intuitive* fix is to add a "publishing automation skill" or scheduling tool that drafts faster. **That is the Shifting-the-Burden trap deepening.** It would relieve symptoms while atrophying Alex's actual publishing muscle further. Per `alex:systems-thinking` `references/system-archetypes.md` §6: "If you are the intervenor, work in such a way as to *restore or enhance the system's own ability to solve its problems, then remove yourself.*" The intervention should make Alex *publish more*, not make the skills *draft more*.
 
 ---
 
@@ -101,4 +99,4 @@ Each re-run should produce a fresh artifact at `.claude/artifacts/systems-analys
 - The `alex:systems-analyst` plugin agent (the project copy was pruned 2026-09-28) — invoke for delegated runs of this analysis (note: agent registration may require a fresh conversation per `.claude/WORKFLOWS.md`)
 - Test artifact at `.claude/artifacts/systems-analyst-test-2026-05-04.md` — first eight-phase run with full output
 - Workflow card at `.claude/references/systems-thinking-workflow.md` — three-mode (Analyzing/Planning/Building) framing
-- Global applications file at `~/Documents/GitHub/alex-agents-skills/Product/systems-thinking/references/applications-to-product-and-engineering.md` — for general-purpose product/engineering/GTM applications
+- `alex:systems-thinking` (plugin skill) — canonical frameworks, Three-Horizon Iteration Framework, and `references/applications-to-product-and-engineering.md` for general-purpose applications
