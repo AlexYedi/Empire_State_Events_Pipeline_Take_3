@@ -1,83 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind moved to ~/.claude/settings.json via YED-29 (universal discipline). What remains here is project-specific: (1) v2-trigger detection/logging for Empire State's pipeline-specific skills. Two detectors feed one shared state file (.claude/.state/<session>.relevant_skills) which the Stop hook logs: PostToolUse:Skill catches natural-language SKILL invocations (v2-trigger-detect.sh); UserPromptExpansion catches SLASH COMMAND invocations (v2-cmd-detect.sh, added 2026-05-24 to fix the slash-command blind spot \u2014 slash commands never emit PostToolUse:Skill). (2) YED-139 Deep Read marker gate: the pipeline writes a per-session ledger via deep-read-ledger.sh (row PENDING at Scan-head commit, flipped RENDERED on Step 4.5); the Stop hook deep-read-gate.sh fails the run (decision:block interactive / loud FAILED autonomous) if any Event closed with an unrendered Deep Read. Disable either Stop hook via .claude/settings.local.json {\"hooks\":{\"disable\":[\"deep-read-gate\"]}}. (2b) YED-160 substrate gate (ADR-10): same contract as (2) for the knowledge graph \u2014 substrate.py writes a per-session ledger (PENDING when /post-event-content 3.8b lands an event with --expect-claims, STAGED when 3.8c stages its claims); substrate-gate.sh fails the run if any event reached the graph without its learnings. Disable via {\"hooks\":{\"disable\":[\"substrate-gate\"]}}. (3) ADR-8 system-graph drift router: graph-sessionstart.sh rebuilds the derived graph at session start and injects up to 5 actionable dangling-reference findings (the TRIGGER that makes the rigor layer watch instead of only record); graph-stop.sh rebuilds after edits land and names any dangling ref the session just introduced. Both advisory-only, never blocking, stdlib-only (no .env needed). Disable via .claude/settings.local.json {\"hooks\":{\"disable\":[\"graph-sessionstart\"]}}. (4) YED-172 A/B callout: ab-reminder.sh runs at SessionStart while the A/B is live (2026-09-20..09-26) and names the pending event(s) + the run card; it goes silent per event once that event's scorecard lands in .claude/evals/logs/*ab-yed172*<slug>*, and silent entirely after the due date \u2014 no disable step to remember. Test any date: AB_TODAY=YYYY-MM-DD bash .claude/hooks/ab-reminder.sh. (5) Gate sweep (YED-228): gate-sweep-sessionstart.sh runs at SessionStart (logs + prints pending gate rows older than 4h whose session holds no live event claim) and at SessionEnd with --session-end (logs the ending session's pending rows as abandoned at the moment of death; reason=resume skipped). Both log once per row.",
+  "//": "SessionStart linear-priorities + PostToolUse:Edit|Write repo-touch-tally + Stop repo-touch-remind live in ~/.claude/settings.json via YED-29 (universal discipline) — out of scope here. UNWIRED 2026-09-29 (YED-229, per the 2026-09-28 complexity review: the meta layer — hooks, telemetry, gates — produced most of the repo's churn and mostly recorded its own noise): v2-trigger-detect.sh (PostToolUse:Skill) + v2-cmd-detect.sh (UserPromptExpansion) + v2-trigger-log.sh (Stop) — the YED-27 skill/command trigger-logging trio; deep-read-gate.sh + substrate-gate.sh (Stop) — the YED-139/YED-160 run-close gates built on _run_in_progress.sh; gate-sweep-sessionstart.sh (SessionStart + SessionEnd --session-end) — the YED-228 sweep for the two gates above, same _run_in_progress.sh dependency, nothing left to sweep once its gates are unwired; graph-sessionstart.sh + graph-stop.sh (SessionStart/Stop) — the ADR-8 system-graph drift router; ab-reminder.sh (SessionStart) — the time-boxed YED-172 A/B callout; build-journal-refresh.sh (Stop) — the YED-119 journal auto-refresh nudge. None of these scripts were deleted (a separate prune pass decides that); they're simply not invoked from this file anymore — re-wire by adding a hook entry back. What remains wired: the event-claim single-writer guard (.claude/hooks/event-claim.py) is invoked INLINE from /event-deep-research and /post-event-content — never a settings.json hook — so it is unaffected by this pass. build-session-emit.sh (Stop) is the one hook still wired: the build-session telemetry emitter (YED-88), now writing to the gitignored .claude/.state/telemetry/build-sessions/ instead of a tracked artifacts/ path (YED-229 Part 1) — kept because it's the source-of-truth record the rigor-review loop and Hub telemetry depend on, and it no longer churns git.",
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-trigger-detect.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptExpansion": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-cmd-detect.sh"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/deep-read-gate.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/substrate-gate.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/v2-trigger-log.sh"
-          },
-          {
-            "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/build-session-emit.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/build-journal-refresh.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/graph-stop.sh"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/graph-sessionstart.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ab-reminder.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate-sweep-sessionstart.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate-sweep-sessionstart.sh --session-end"
           }
         ]
       }
