@@ -165,7 +165,7 @@ and `content-anti-patterns.md`.
   question. Never ask a generic Touch-2 question.
 - **Persist verbatim, then route** — capture is worthless if it isn't threaded into the same run AND
   left for `update-voice-and-style` to mine.
-- **Never blocks a running pipeline's own writes/gates** (CLAUDE.md invocation policy, layer B).
+- **Never blocks a running pipeline's own writes/gates** (CLAUDE.md §5: the invocation defaults decide only whether a workflow starts).
 - **Validation:** edits to this skill (and the commands that call it) need a **fresh conversation**
-  to smoke-test — the skill/agent registry loads at conversation start (CLAUDE.md § SDK runtime
-  constraints). Auto-fire cannot be trusted until validated in a fresh session.
+  to smoke-test — the skill/agent registry loads at conversation start (CLAUDE.md §4
+  invariant 7). Auto-fire cannot be trusted until validated in a fresh session.

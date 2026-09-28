@@ -80,3 +80,9 @@ Passing the URL that `notion-query-data-sources` and `notion-fetch` hand back fa
 Also: `notion-update-page` params are **flat**, not wrapped in a `data` object (unlike
 `notion-query-data-sources`, which requires `{"data": {...}}`). And `update_content` takes a
 `content_updates` array of `{old_str, new_str}` — not top-level `old_str`/`new_str`.
+
+## (p) Draft copy is plain paragraphs, never code blocks (2026-09-27)
+Post, first-comment, connection-note and DM copy in Content Drafts is written as plain paragraph text,
+separated by blank lines (line breaks survive copy-paste fine). Never wrap it in code blocks or quote-as-code:
+they render as monospace blocks that are hard to read and hard to comment on inline, and Alex reviews by inline
+comment. Metadata (char counts, sources, self-checks) can sit around the copy as bold labels or bullets.

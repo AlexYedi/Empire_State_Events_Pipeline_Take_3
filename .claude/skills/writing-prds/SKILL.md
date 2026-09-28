@@ -56,7 +56,7 @@ Justify the timing of this investment against other opportunities. If you can't 
 
 ## Output Handling — auto-persist via ChatPRD MCP (added 2026-05-24)
 
-Per CLAUDE.md MCP automation rule #1, when this skill produces an actual PRD
+Per CLAUDE.md §5 automation defaults, when this skill produces an actual PRD
 (not just guidance or questions), auto-persist the document via
 `mcp__claude_ai_ChatPRD__create_document`. ChatPRD is the system of record for
 PRDs; the conversation output is the draft moment.

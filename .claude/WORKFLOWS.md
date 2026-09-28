@@ -181,7 +181,7 @@ If a workflow goes sideways:
 1. Check the command file in `.claude/commands/<workflow>.md`
 2. Check the agent contract in `.claude/agents/<category>/<agent>.md`
 3. Check the underlying skill in `.claude/skills/<skill>/SKILL.md`
-4. Check CLAUDE.md § Project Architecture for schema + DB IDs
+4. Check `.claude/references/notion-schema.md` for schema and CLAUDE.md §3 for DB IDs
 
 The command file is the orchestration shape. The skill is the methodology. The agent is the role contract. They compose; if one drifts from the others, fix the drift.
 

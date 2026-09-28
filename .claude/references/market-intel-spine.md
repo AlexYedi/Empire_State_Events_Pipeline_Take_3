@@ -74,7 +74,7 @@ Each row's `notion_page_id` links to the human-readable Notion view. Notion rema
 
 ## Reversal note
 Reintroducing Supabase reverses the earlier measurement-layer tombstone. Ratified by Alex 2026-06-28 and
-re-scoped in CLAUDE.md `<measurement_rigor_layer>`: the ban applies to the *measurement/eval* layer only;
+re-scoped (now CLAUDE.md §3 + §4 invariant 2; history in `docs/history.md`): the ban applies to the *measurement/eval* layer only;
 Supabase is the sanctioned **market-intelligence system of record**.
 
 ## Write path (ADR-9 — accepted 2026-09-13, YED-81)

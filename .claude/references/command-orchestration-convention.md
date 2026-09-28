@@ -33,7 +33,7 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
 6. **Output destination — NAME IT.** Every command states where the result lands and how:
    - **Conversation** (default for analysis/briefs — the honest lean default; don't invent a write).
    - **Claude design** for `deck` format: a self-contained 4:5 HTML/SVG design exported to PDF, per
-     `.claude/skills/content-patterns/visual-briefs.md` → `## Execution` (CLAUDE.md rule 13; Gemini for
+     `.claude/skills/content-patterns/visual-briefs.md` → `## Execution` (Gemini for
      pictorial imagery).
    - **Notion** for artifacts that enter the review loop — parent-thread MCP only
      ([[project_notion_writes_must_be_parent_thread]]); `notion-search`, never
