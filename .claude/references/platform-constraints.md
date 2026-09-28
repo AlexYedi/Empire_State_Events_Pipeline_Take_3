@@ -37,7 +37,9 @@
 ## Vendors
 | Constraint | Cause | Workaround | Since |
 |---|---|---|---|
-| Apollo API blocked on the free plan (`API_INACCESSIBLE` on people endpoints; only `/users/api_profile` works) | plan tier | credits only spendable in the web UI; skill Step 6 skipped; upgrade is a standalone web-UI evaluation | 2026-04-09 |
+| Apollo free plan: **people data blocked**. `people/match`, `mixed_people/api_search`, `mixed_companies/search` and `organizations/{id}` all return 403 `API_INACCESSIBLE` ("not included in your Free plan"). **Works:** `GET organizations/enrich?domain=` (firmographics, ~267 technologies, parent-org ID), `contacts/search` over your own saved contacts, and `labels`. Free = 900 credits/seat/yr, granted monthly | plan tier. It is **not** key scoping: the same endpoints are blocked on all three scoped keys (`APOLLO_GTM_CONTACT_API`, `APOLLO_GTM_ORG_API`, `APOLLO_GTM_OBJECTS`) | use Apollo for company lookup only; people data needs Basic ($49/mo annual), the cheapest paid tier; master key / sequences need Organization ($119/user, 3-seat minimum). Upgrade stays a standalone decision | 2026-04-09, re-verified live 2026-09-27 (YED-234) |
+| Clay free plan: 500 actions + 100 data credits/mo, 200 rows/table. **Connector works:** `search-companies` returns firmographics without enrichment; `add-company-data-points` (e.g. Tech Stack) works but the connector doesn't report credit cost and tech-stack output is noisy. Search DSL: no `location` field; `is_similar_to` only on job titles / `products_and_services`. Audiences, webhooks, HTTP API columns, signals and HubSpot sync are Growth ($495/mo) | plan tier + connector surface | enrich selectively; check spend on Clay's usage page. `CLAY_GTM_API` authenticates (403 "Insufficient permissions" on `/v3/me`, vs 401 when invalid) but the developer-API endpoints and CLI install are **unmapped**; map them from https://developers.clay.com/ (the HTTP API integration doc, https://university.clay.com/docs/http-api-integration-overview, covers the Growth-plan table-column feature, not the developer API). Other vendor API docs: Apollo https://docs.apollo.io/reference/apollo-api · Sumble https://docs.sumble.com/api/api. Spending Clay credits = Alex's call (Tier 3) | 2026-09-27 |
+| Sumble free API works: `POST https://api.sumble.com/v9/organizations`, Bearer `SUMBLE_GTM_API`; 500 credits/mo (1 per matched org + 1 per paid attribute; `id/name/slug/url` free); 402 before any unaffordable call; first page of search results only. Returns `parent_id`/`subsidiary_ids` (a real hierarchy), teams, technographics. **Data quality:** duplicate subsidiaries, junk records, stale M&A (Brex had no parent despite the Capital One acquisition on 2026-04-07) | vendor data | treat as a source to verify, not truth; record source + as-of date per fact (YED-234). The Claude connector for Sumble is paid-only; use the REST API. Pro $99/mo | 2026-09-27 |
 | Granola app is a waitlist placeholder on Alex's device — records nothing | vendor | NEVER fire the Granola API/MCP; `/post-event-content` is manual-upload anchored; OBS + ElevenLabs Scribe is the capture lane | 2026-05-27 |
 | Clarify API is summary-only (no raw transcript/recording/slides) | vendor | Clarify REJECTED — do not re-propose | 2026-09-09 |
 | HubSpot Static Lists unavailable via MCP | MCP surface | event association via Notes on the Contact | 2026-04-09 |
@@ -54,6 +56,12 @@
 
 - **Unauthenticated fetch of any LinkedIn URL returns HTTP 999.** This is a block, not evidence of
   absence — never record "profile not found" or infer a person doesn't exist from a 999.
+- **Worse than the 999: WebFetch can return FABRICATED LinkedIn content (2026-09-27).** Behind the login
+  wall, the fetch summarizer invented a "recent posts" list for a speaker, with dates after the fetch
+  date. Search snippets also conflate "Clay partner" with "worked at Clay": Andreas Wernicke was listed
+  as a former Clay employee, and Alex confirmed he never was (he led Clay Club NY as a non-employee).
+  Rule: a LinkedIn-sourced employer, tenure, or post claim is `UNVERIFIED` until confirmed by a fetched
+  post URL, the person's own non-LinkedIn page, the Chrome MCP read path below, or Alex.
 - **The working read path is the Claude-in-Chrome MCP against Alex's already-authenticated session.**
   Verified 2026-09-21: navigated to `/messaging/`, opened a thread, read the full exchange. This is how
   to check what a message actually says instead of drafting blind.
