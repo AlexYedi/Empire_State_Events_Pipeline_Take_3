@@ -26,7 +26,7 @@ This command runs when:
 ## Required inputs
 
 1. **Event invite text** — pasted invite description, or natural-language description with speaker/host/topic cues
-2. **(Optional) Google Calendar Event ID** — if the input includes a `Google Calendar Event ID:` line (as `/check-new-events` always passes), capture it and forward to `notion-writer` for the Events DB row. This is the deterministic join key to Granola for `/post-event-content`.
+2. **(Optional) Google Calendar Event ID** — if the input includes a `Google Calendar Event ID:` line (as `/check-new-events` always passes), capture it and write it to the Events DB row in Step 4 (inline). This is the deterministic join key to Granola for `/post-event-content`.
 3. **(Optional) Stated focus** — if Alex says "I'm going to find a hiring manager" or "I want to test my POV on agentic systems", pass that downstream so Success Signals are tailored
 
 
@@ -80,7 +80,7 @@ Before fan-out, load what the pipeline already knows about these entities so res
    - **Then proceed** with Alex's preferred pack (or both merged on a tie) — prep is never worse than today.
    - `retrieve.py` exit 5 (loud failure) on an event = that event counts as an **A win**, logged, not hidden.
 2. **1.7b Condition (delegated):** dispatch `knowledge-conditioning` with the `VERBATIM SOURCE` block + triage plan + the raw pulls **for this arm only** (see the A/B block above — during the window this step runs TWICE, once per arm; after YED-172 closes it runs once with the winning source). It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged (`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity cards, Graph Signals, and an Audit. Text-in / text-out; no I/O.
-3. **1.7c Persist (this thread):** write the pack as a `prior_context_pack` Content Draft (`Platform: notion_only`, icon 🗃️) so "what prior knowledge fed this brief" is auditable. `notion-writer` relinks it + mirrors a `## Prior-Context Pack` section onto the Event page in Step 4.
+3. **1.7c Persist (this thread):** write the pack as a `prior_context_pack` Content Draft (`Platform: notion_only`, icon 🗃️) so "what prior knowledge fed this brief" is auditable. Step 4 (inline) relinks it + mirrors a `## Prior-Context Pack` section onto the Event page.
 
 **First-touch event (no prior record for any entity):** skip 1.7b/1.7c, note it, and run Step 2 from scratch. The graph read commonly returns empty until event-research write-back ships — expected, not a failure.
 
@@ -134,16 +134,12 @@ Alex may request:
 
 Iterate until Alex says "write it" / "proceed" / "looks good".
 
-## Step 4 — Notion writes (delegated)
+## Step 4 — Notion writes (this conversation)
 
-Invoke notion-writer subagent:
+Notion writes run inline in the parent thread (subagents have no claude.ai connectors) — do NOT dispatch the `notion-writer` agent (it fails on write; 2026-06-10, `platform-constraints.md`).
+Inputs: approved brief + triage plan + raw invite text + today's date + Google Calendar Event ID (if captured in Step 1).
 
-```
-subagent_type: notion-writer
-prompt: [approved brief + triage plan + raw invite text + today's date + Google Calendar Event ID (if captured in Step 1)]
-```
-
-notion-writer executes Steps 4a–4g of `.claude/skills/event-research/SKILL.md`:
+Execute Steps 4a–4g of `.claude/skills/event-research/SKILL.md` inline, in dependency order:
 - Companies (parallel-safe with Topics) → capture URLs
 - Topics (parallel-safe with Companies) → capture URLs
 - People (uses Company URLs) → capture URLs
@@ -152,13 +148,13 @@ notion-writer executes Steps 4a–4g of `.claude/skills/event-research/SKILL.md`
 
 Returns the confirmation block from Step 4g. The Event page + `research_brief` Content Draft now hold the **Scan head** plus an empty `## Deep Read` section carrying `<!-- deep_read_rendered: pending -->` — Step 4.5 fills it.
 
-**Record the Deep Read ledger row (YED-139 — mandatory, do not skip).** The moment notion-writer returns the Event page URL/ID, register it in the per-session Deep Read gate ledger, defaulting to PENDING:
+**Record the Deep Read ledger row (YED-139 — mandatory, do not skip).** The moment Step 4 has the Event page URL/ID, register it in the per-session Deep Read ledger, defaulting to PENDING:
 
 ```
 .claude/hooks/deep-read-ledger.sh add "<event title>" "<Event page id or URL>"
 ```
 
-This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The Stop-hook gate (`deep-read-gate.sh`) fails the run **at the first turn end after the event claim is released (Step 6) or expires** if any row is still pending — so a silently-skipped Deep Read cannot close green. While this session holds the claim, a pending row is in-progress and the gate stays silent (Stop fires per turn, not per run — corrected 2026-09-27, see `.claude/hooks/_run_in_progress.sh`). Skipping this `add` is the one way to defeat the gate; it is as mandatory as the Notion write it sits beside.
+This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The ledger is **informational**: the `deep-read-gate.sh` Stop hook was unwired 2026-09-28 (complexity reset; only `build-session-emit.sh` is wired), so nothing blocks close automatically. The ledger feeds the manual Step 6.5 check, which is now the only Deep Read gate — skipping this `add` just makes that check rely on Notion alone.
 
 ## Step 4.2 — Write the research to the knowledge graph (this conversation — YED-205, gated)
 
@@ -170,13 +166,14 @@ Evidence Ledger row, with `web_verified` for rows with a URL and `email_signal` 
 attended row and attaches these claims to it automatically. Private-correspondence rows (email-signal, no URL) and
 `notion-prior` rows are skipped and counted, never written. All writes go through `spine_client` (ADR-9).
 
-**4.2a Open the gate (with the Deep Read ledger `add`, right after notion-writer returns).** Write the manifest
+**4.2a Open the ledger row (with the Deep Read ledger `add`, right after Step 4's Event page write).** Write the manifest
 file (4.2b) first: every `substrate.py` verb reads it, including this one. Then:
 ```
 .venv/bin/python .claude/scripts/substrate.py expect-research --manifest .claude/.state/research/<slug>.manifest.json
 ```
-This opens a PENDING row keyed `research:<page id>` (distinct from the post-event row). The `substrate-gate.sh` Stop hook
-fails the run while it is pending, so a skipped Step 4.2 cannot close green. It writes nothing to the graph.
+This opens a PENDING row keyed `research:<page id>` (distinct from the post-event row). The row is **informational**:
+the `substrate-gate.sh` Stop hook was unwired 2026-09-28, so a pending row no longer blocks close — report it in Step 6
+instead. It writes nothing to the graph.
 
 **4.2b Write two files** under `.claude/.state/research/` (gitignored; `<slug>` = the event title, kebab-cased):
 - `<slug>.manifest.json`: `{"event": {"notion_page_id": "<Event page id from 4g>", "title": "…", "event_date": "YYYY-MM-DD"},
@@ -192,10 +189,10 @@ fails the run while it is pending, so a skipped Step 4.2 cannot close green. It 
 .venv/bin/python .claude/scripts/substrate.py stage-research --manifest .claude/.state/research/<slug>.manifest.json \
     --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g>
 ```
-Success flips the gate row to STAGED. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
+Success flips the ledger row to STAGED. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
 ledger rows (loud; re-run with the raw specialist returns), **4** = graph-write freeze active (leave it pending, or waive
 citing the freeze), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, leave
-the row pending and tell Alex. The gate will hold the run open, which is correct.
+the row pending and tell Alex (list it in the Step 6 summary as an incomplete).
 
 **4.2d Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
 If it genuinely cannot be written, the only other exit is a logged waive:
@@ -212,8 +209,8 @@ If it genuinely cannot be written, the only other exit is a logged waive:
    ```
    .claude/hooks/deep-read-ledger.sh rendered "<Event page id or URL>"
    ```
-   This clears the pending state the Stop-hook gate checks. Do it only after the Notion append actually succeeded.
-5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. **Leave the ledger row `pending`** (do NOT flip it) — the Stop-hook gate will FAIL the run at close, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record the acknowledgement so the gate reports it as waived rather than failed:
+   This clears the pending state the Step 6.5 check reads. Do it only after the Notion append actually succeeded.
+5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. **Leave the ledger row `pending`** (do NOT flip it) — Step 6.5 will report the run incomplete, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record the acknowledgement so the ledger shows it as waived rather than pending:
    ```
    .claude/hooks/deep-read-ledger.sh waive "<Event page id or URL>" "<reason, e.g. renderer unregistered this session>"
    ```
@@ -221,9 +218,9 @@ If it genuinely cannot be written, the only other exit is a logged waive:
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
-**Gate note (YED-205):** Step 4.2's graph write is gated the same way. `substrate-gate.sh` fails the run at the first turn end
-after the event claim is released or expires while a `research:<page id>` row is pending; while the claim is live the row is
-in-progress and the gate is silent. Resolve it with Step 4.2c or a logged `waive --phase pre_event`.
+**Ledger note (YED-205):** Step 4.2's graph write has the same informational ledger. The `substrate-gate.sh` Stop hook that
+used to fail the run on a pending `research:<page id>` row was unwired 2026-09-28; check it manually at Step 6.5 and resolve
+it with Step 4.2c or a logged `waive --phase pre_event`.
 
 ## Step 5 — HubSpot writes (this conversation)
 
@@ -241,16 +238,14 @@ Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot 
 
 ## Step 6.5 — Deep Read gate (run close — YED-139)
 
-Before declaring the run complete, run the authoritative marker check (this is the in-conversation half of the gate — it reads the *real* Notion state, complementing the Stop-hook ledger check):
+Before declaring the run complete, run the authoritative marker check. Since the Stop-hook gates were unwired (2026-09-28) this step is the **only** Deep Read / graph-write gate — do not skip it. It reads the *real* Notion state:
 
-1. **Enumerate touched Event pages** — from the ledger (`.claude/hooks/deep-read-ledger.sh list`) plus this run's own record.
+1. **Enumerate touched Event pages** — from the ledger (`.claude/hooks/deep-read-ledger.sh list`) plus this run's own record. Also report any `research:<page id>` row from Step 4.2 still pending.
 2. **Re-fetch each marker** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->` marker. This catches any drift between the ledger and Notion (the ledger is a local echo; Notion is the truth).
 3. **Verdict:**
    - **All `rendered` (or explicitly waived)** → run passes; report Deep Read ✅.
    - **Any `pending`** → the run is **NOT complete**. Interactive: **block close** — present the pending event(s), offer the idempotent Step 4.5 re-run, and do not report the run as done. Autonomous/batch: report the run **FAILED** with the pending list (never a silent pass).
-4. Reconcile the ledger with what you found (flip `rendered` / `waive` as appropriate) so the Stop-hook gate agrees with the authoritative Notion state.
-
-This step and the Stop-hook `deep-read-gate.sh` are belt-and-suspenders: the hook fires even if this step is skipped; this step reads real Notion state and gives the interactive block.
+4. Reconcile the ledger with what you found (flip `rendered` / `waive` as appropriate) so it agrees with the authoritative Notion state.
 
 ---
 
@@ -274,9 +269,8 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 - **Specialist returns thin output** — re-invoke that one specialist from this thread with deeper scope or more specific direction. Re-dispatch synthesizer with updated returns. Don't restart the whole orchestration.
 - **Parent times out during fan-out** — split: dispatch company-researcher + person-researcher in one batch, topic-landscape-analyst + competitive-signal-scanner in another, then dispatch synthesizer with all four returns merged.
 - **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
-- **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per `notion-write-gotchas.md` (e), verify with notion-fetch on the data_source URL if it persists.
-- **notion-writer fails with "Prompt is too long"** — its `tools:` whitelist may have drifted to inherit too much. Verify `.claude/agents/ops/notion-writer.md` frontmatter still scopes `tools:` to Notion MCP + Read only.
-- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending` (and the ledger row `pending` — do not flip it), and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 gate + the Stop-hook `deep-read-gate.sh` will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
+- **A Notion write hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per `notion-write-gotchas.md` (e), verify with notion-fetch on the data_source URL if it persists.
+- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending` (and the ledger row `pending` — do not flip it), and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 check will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
 - **A `field-guide-renderer` call returns a `> Gap:` note** (e.g. a `web-verified` fact missing its URL) — keep it in the output, surface it to Alex; it marks a citation to complete before public reuse. Trace it back to the specialist's Evidence Ledger / Step 1.7 URL capture.
 
 ## Why fan-out runs in the parent thread (architectural note)
@@ -292,6 +286,6 @@ The orchestration shape is defined here. The actual research / write methodology
 - `.claude/agents/research/event-research-synthesizer.md` — synthesizer contract (text-in, brief-out)
 - `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts (now w/ historical spine + novice on-ramp + Evidence Ledger)
 - `.claude/agents/content/field-guide-renderer.md` — Deep Read renderer contract (Opus, section-by-section + stitch, endnotes)
-- `.claude/agents/ops/notion-writer.md` — Notion write contract
+- `.claude/agents/ops/notion-writer.md` — Notion write contract (reference only; do not dispatch — Notion writes run inline in the parent thread (subagents have no claude.ai connectors))
 - `docs/adr/ADR-5-event-field-guide.md` + `.claude/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
 - `.claude/references/notion-schema.md` (Notion/HubSpot schemas, write order) · `notion-write-gotchas.md` · CLAUDE.md §4 (SDK constraints)

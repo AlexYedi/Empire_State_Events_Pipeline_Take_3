@@ -229,10 +229,10 @@ input:
 - **Content Draft:** `Content Type: prior_context_pack`, `Platform: notion_only`,
   `Event Phase: pre_event`, `Content Status: needs_review`, icon 🗃️; body = the full pack
   (page-index callout per gotcha `i`). Relations to Event/People/Topics are set once the
-  Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and let
-  `notion-writer` relink + mirror it in Step 4.
-- The Event-page mirror (a `## Prior-Context Pack` section) is appended by `notion-writer`
-  in Step 4 (see 4e).
+  Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and relink +
+  mirror it in Step 4 (Notion writes run inline in the parent thread (subagents have no claude.ai connectors)).
+- The Event-page mirror (a `## Prior-Context Pack` section) is appended inline in
+  Step 4 (see 4e).
 
 Then move to Step 2 — pass each specialist its relevant pack slice, and the Continuity
 Ledger + Graph Signals to the synthesizer (Step 2.5).

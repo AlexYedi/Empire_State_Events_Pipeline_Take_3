@@ -8,10 +8,10 @@
 | | **Freeze** | **Substrate gate** |
 |---|---|---|
 | Question | *May this write happen at all?* | *Did a write that happened finish?* |
-| Declared in | `.claude/references/graph-freeze.json` | nothing — it is always on |
-| Enforced in | `spine_client.req()` | `.claude/hooks/substrate-gate.sh` (Stop hook) |
-| Fires | before the PII guard, before the socket | at session Stop, on any `PENDING` ledger row |
-| Failure | `GraphFrozen` raised, nothing written | Stop blocked, run cannot close green |
+| Declared in | `.claude/references/graph-freeze.json` | nothing — the ledger rows are always written |
+| Enforced in | `spine_client.req()` | **not enforced since 2026-09-28** — `.claude/hooks/substrate-gate.sh` was unwired (complexity reset); the ledger is informational and checked manually at the pipeline's close step |
+| Fires | before the PII guard, before the socket | (was: at session Stop, on any `PENDING` ledger row) |
+| Failure | `GraphFrozen` raised, nothing written | (was: Stop blocked) — now a pending row reported at close |
 
 A write during a freeze is refused **before** `ensure-event` reaches the graph, so no `PENDING` gate row is ever
 opened. That ordering is the whole reconciliation: honouring the freeze can no longer trip the gate.

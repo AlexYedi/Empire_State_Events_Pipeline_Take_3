@@ -293,7 +293,7 @@ Don't ask for more. Produce from what you have.
 - **Granola** → primary source. Pulled automatically via `/post-event-content` slash command (Mode A above). Provides AI summary + diarized transcript + attendee list. Replaces manual transcript paste.
 - **Wispr Flow** → optional supplement when Granola wasn't recording, or for the Uber/subway-home dictation of "things I didn't say out loud but want in the post" (interior color the room transcript can't capture)
 - **Claude** → outreach and post drafts (this workflow, with Mode A or Mode B input)
-- **Notion** → all drafts land in Content Drafts DB via `notion-writer` agent (status: `needs_review`)
+- **Notion** → all drafts land in Content Drafts DB (status: `needs_review`); Notion writes run inline in the parent thread (subagents have no claude.ai connectors)
 - **n8n** → not used (event pipeline is Claude-skill-first, not middleware)
 - **PostHog** → future: track which posts drive profile visits and connection requests
 

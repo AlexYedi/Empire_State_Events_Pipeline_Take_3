@@ -17,7 +17,7 @@ with `notion-fetch` on the data_source URL before any batch create (see
   aren't gated by physical attendance).
   Google Calendar Event ID is the raw `event.id` from the GCal MCP response (NOT iCalUID).
   Equals Granola's `calendar_event.calendar_event_id` field — deterministic join for transcript pulls.
-  Populated automatically by `/check-new-events` → `/event-deep-research` → `notion-writer`.
+  Populated automatically by `/check-new-events` → `/event-deep-research` Step 4 (inline Notion write).
   Empty for events created before 2026-05-21 — `/post-event-content` falls back to title+date match
   when the property is empty (dual-path resolution).
 - **People** (11 props): Name (title), Current Title (text), Email (email), Phone Number (phone),

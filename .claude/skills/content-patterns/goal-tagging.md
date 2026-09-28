@@ -1,6 +1,6 @@
 # Goal-tagging convention (Content Drafts) — assigned goal at creation
 
-Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal** + **Target** *at creation*, so the measurement layer can later grade **outcome vs. assigned goal** (the acted-on-value north-star). Imported by the content skills (`pre-event-content`, `content-correspondent`, `pattern-synthesis`) and applied by `notion-writer` when it creates the row.
+Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal** + **Target** *at creation*, so the measurement layer can later grade **outcome vs. assigned goal** (the acted-on-value north-star). Imported by the content skills (`pre-event-content`, `content-correspondent`, `pattern-synthesis`) and applied by whoever creates the row (Notion writes run inline in the parent thread (subagents have no claude.ai connectors)).
 
 ## Notion fields (Content Drafts DB `6c24c9f5…`)
 - **Goal** (select): `reach` · `engagement` · `connection` · `meeting` · `hybrid` · `internal`
@@ -22,7 +22,7 @@ Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal**
 
 ## How it's set
 1. The content skill picks the Goal (override the default when Alex states an intent via `steering-interview`).
-2. `notion-writer` sets `Goal` + `Target` on Content Draft creation; if no goal was passed, it applies the default-by-Content-Type above.
+2. The Content Draft create (inline in the parent thread) sets `Goal` + `Target`; if no goal was passed, it applies the default-by-Content-Type above.
 
 ## Outcome side (US-5) — closing the loop
 After an artifact publishes, `/tag-outcome` records the **realized outcome vs the Goal/Target** on the same row:
