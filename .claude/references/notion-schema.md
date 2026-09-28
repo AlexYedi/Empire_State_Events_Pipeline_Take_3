@@ -34,7 +34,7 @@ with `notion-fetch` on the data_source URL before any batch create (see
   Use Cases & Practical Applications (text), Top Questions (text), Last Updated (date),
   relations to Events/People/Content Drafts (renamed from `Linkedin Post Drafts` 2026-05-20 via YED-38
   for cross-DB property-name consistency)
-- **Content Drafts** (13 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
+- **Content Drafts** (14 props): Title (title), Content Type (select: research_brief/linkedin_dm_speaker/
   linkedin_dm_host/linkedin_post_pre/linkedin_post_post/prepared_questions/linkedin_post_synthesis/
   post_event_brief), Event Phase (select: pre_event/during_event/post_event), Content Status (select:
   needs_review/approved/scheduled/published/archived), Platform (select: linkedin/slack/notion_only),
@@ -42,6 +42,8 @@ with `notion-fetch` on the data_source URL before any batch create (see
   Target (text — the concrete target for the Goal),
   Outcome (select: hit/partial/miss/pending/na — added 2026-06-26, YED-91), Outcome Value (text),
   Outcome Date (date), Published URL (url),
+  Themes (multi-select — added 2026-09-28, YED-208: the back-catalog index for prior-post callbacks; fixed list in
+  `content-style-guide.md` → Variants and prior-post callbacks; post drafts only, roundups untagged),
   relations to Event/People/Topics/Project Ideas
   Note: Goal + Target are the **assigned-goal** (set at creation); Outcome/Outcome Value/Outcome Date are the
   **realized outcome** (set post-publish by `/tag-outcome`). Together = the acted-on-value north-star.
