@@ -223,7 +223,7 @@ Every slide in every carousel must specify:
 
 ## Execution — Claude design (default) + Gemini (pictorial)
 
-**Default = Claude design (HTML/SVG via the Artifact tool).** Author the carousel/single
+**Default = Claude design (HTML/SVG → headless Chrome).** Author the carousel/single
 as one self-contained HTML file — a `.slide` frame per slide at 4:5 (1080×1350), dark
 editorial ground, one meaning-bearing accent, real typographic hierarchy, and
 hand-authored inline SVG for diagrams / arrows / timelines. Load `artifact-design`
