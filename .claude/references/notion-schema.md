@@ -24,7 +24,8 @@ with `notion-fetch` on the data_source URL before any batch create (see
   LinkedIn URL (url), Known POV / Bio (text), Notes (text), Role Context (multi-select:
   speaker/host/organizer/attendee/contact), Last Researched (date),
   relations to Events/Company/Content Drafts
-- **Companies** (9 props): Company Name (title), Description (text), Website (url), Industry / Space
+- **Companies** (9 props): Company Name (title), Description (text — `Value prop: …` once the record has a
+  Value Frame; the frame itself is the first `## Value Frame` body section, YED-233; no separate property), Website (url), Industry / Space
   (multi-select: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure),
   Funding Stage (select: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G,
   Series H, Series I, Public — NO "Pre-IPO" option; use latest Series letter for late-stage private cos),
