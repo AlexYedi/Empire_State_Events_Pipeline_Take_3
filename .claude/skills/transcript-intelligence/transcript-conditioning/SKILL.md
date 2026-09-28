@@ -58,7 +58,7 @@ content-correspondent (Mode B) consumes this in place of the raw transcript: the
 
 ## Discipline
 
-- **Rule 12 (CLAUDE.md):** a transcript is a PRIMARY source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use.
+- **Source-check rule (CLAUDE.md §6, the old "Rule 12"):** a transcript is a PRIMARY source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use.
 - **Never guess a proper noun into a public post.** If the glossary can't resolve it confidently, cut it.
 - **Never promote a MED/low-confidence line to a verbatim quote.** Paraphrase and soften, or drop.
 
@@ -68,4 +68,4 @@ content-correspondent (Mode B) consumes this in place of the raw transcript: the
 
 **Wired 2026-05-27:** now an explicit step in the post-event flow — `/post-event-content` **Step 3.5** runs conditioning on the fetched (or manually-pasted) transcript before content-correspondent drafts, grounded in the event's Notion roster + pre-event brief. content-correspondent **Mode B** carries the "condition first if labels/proper-nouns are unreliable" pointer. (Both wire-up TODOs from the v1 scaffold are now done.)
 
-**Validation rule:** skill discovery is session-frozen (see CLAUDE.md SDK constraints) — test invocation in a FRESH conversation. The wiring is first exercised on the next `/post-event-content` run.
+**Validation rule:** skill discovery is session-frozen (CLAUDE.md §4 invariant 7) — test invocation in a FRESH conversation. The wiring is first exercised on the next `/post-event-content` run.

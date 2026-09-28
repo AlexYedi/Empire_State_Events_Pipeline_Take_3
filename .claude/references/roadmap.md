@@ -132,6 +132,6 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 - **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Job-Search Engine · Empire State Hub · Empire State Events · Build-Rigor & Measurement.
 - **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `signal-taxonomy.md` (→ v2 in P2).
-- **Rigor:** `value-action-registry.md` · `cross-provider-judge.md` · `build-session-contract.md` · DoD in `CLAUDE.md` · `prd-template.md` · `linear-convention.md`.
+- **Rigor:** `value-action-registry.md` · `judge.md` · `build-session-contract.md` · DoD in `CLAUDE.md` · `prd-template.md` · `linear-convention.md`.
 - **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
-- **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md "Git conventions" · **Workflows:** `.claude/WORKFLOWS.md`.
+- **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.

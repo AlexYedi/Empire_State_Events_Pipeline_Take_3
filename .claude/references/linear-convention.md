@@ -17,8 +17,8 @@ without ceremony that a solo builder doesn't need. Distilled from the Linear Met
 
 ## Rules (the load-bearing few)
 
-1. **Triage is the single source of truth for "what's open."** CLAUDE.md blocks are transitional
-   duplicates, never new state. A SessionStart hook pulls live priorities (YED-26/29).
+1. **Triage is the single source of truth for "what's open."** CLAUDE.md never mirrors
+   issue state. A SessionStart hook pulls live priorities (YED-26/29).
 2. **Appetite, not estimates.** Use the bands `<3d · 3-7d · 1-2wk · 2wk+` (already the ideation
    timeline bands) — never story points. Fixed time, flexed scope.
 3. **PRD ↔ issues, bidirectional.** The PRD lists "Depends on" lines → wire them as `blockedBy` so the

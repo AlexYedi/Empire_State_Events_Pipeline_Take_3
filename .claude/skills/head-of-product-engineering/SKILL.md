@@ -178,7 +178,7 @@ A dependency can be satisfied by a skip-citation, but the downstream workflow mu
 
 If Notion and Linear MCPs are available in the current session:
 
-1. **Notion — Project Ideas DB:** create or update the row for this project. Use the project name as the row title. Populate the structured properties (per Project Ideas schema in CLAUDE.md). In the row's page body, write the following blocks **in this order**:
+1. **Notion — Project Ideas DB:** create or update the row for this project. Use the project name as the row title. Populate the structured properties (per the Project Ideas schema in `.claude/references/notion-schema.md`). In the row's page body, write the following blocks **in this order**:
 
     1. **Page-index callout** (always first). Format: blockquote with 📑 emoji, bold "Page index", bullet list of the H1 sections on the page (PRD, Orchestration Log summary, Future-State Register, Evolution Log if n+1, plus any toggled archives), each with a one-line description. End the callout with the italic tip: *"Place cursor below this callout and type `/toc` to add Notion's interactive auto-updating table of contents — one-time per page."* (Markdown TOC syntax is not supported by the Notion MCP — see "Notion delivery gotchas" below — so the page-index callout is the static fallback and `/toc` is a one-time manual step.)
     2. **Context callouts** (optional, contextual). E.g., redesign banners on n+1 turns where the architecture has materially changed.
@@ -249,7 +249,7 @@ If Notion and Linear MCPs are available in the current session:
 
 - **Markdown TOC syntax does NOT work via the Notion MCP.** Tested and rejected: `[[toc]]`, `[TOC]`, `+++`, `<toc/>`, `<table_of_contents/>` — all land as escaped literal text. Only workaround is the static page-index callout above plus the `/toc` slash command in the Notion UI (one-time per page, then auto-updates).
 - **Toggle/collapsible sections use `<details><summary>...</summary>...</details>` HTML.** Notion-specific `+++ title ... +++` syntax does NOT work. The `<details>` tag is the only allowlisted HTML form for toggles.
-- **Multi-select properties take a JSON-array-string, not a comma-string or native array.** See CLAUDE.md "Notion create-pages gotchas" for full list.
+- **Multi-select properties take a JSON-array-string, not a comma-string or native array.** See `.claude/references/notion-write-gotchas.md` for the full list.
 - **Tables**: write as standard markdown `|`-table; Notion auto-converts to native `<table header-row="true">` block on write. Rendered tables sort/filter/resize natively in Notion.
 - **Auto-escaping of `<`**: `<5min` becomes `\<5min` in the stored markdown but renders correctly. Cosmetic only.
 

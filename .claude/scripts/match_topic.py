@@ -3,7 +3,7 @@
 Fuzzy topic-matcher for the Market-Intelligence graph (YED-115 — match-before-create helper).
 
 Given a candidate topic name, returns the closest EXISTING graph topics by string/token similarity —
-so the match-before-create step (in /scan-trends, /morning-refresh) surfaces "did you mean this existing
+so a match-before-create step (originally /scan-trends and /morning-refresh, both pruned 2026-09-28) surfaces "did you mean this existing
 topic?" candidates instead of blindly minting a duplicate. Reduces the fragmentation the 2026-08-06 run
 exposed (9 of 10 topics created new because names didn't exactly match the 153-topic taxonomy).
 

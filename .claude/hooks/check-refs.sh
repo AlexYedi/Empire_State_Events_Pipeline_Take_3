@@ -7,7 +7,7 @@
 # (`://`), or a template/regex delimiter immediately after the path (`{slug}`, `\d+`, `.(json|md)`) — so a false
 # "dangling" never wrongly caps a good artifact. It errs toward under-flagging (safe): if a run is ambiguous it is
 # skipped, never guessed.
-# Spec: .claude/references/cross-provider-judge.md.
+# Spec: .claude/references/judge.md.
 # The extraction rules here are shared VERBATIM with .claude/scripts/build_graph.py (ADR-8 D2) — change both.
 #
 # Usage: check-refs.sh --artifact <path>

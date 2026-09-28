@@ -38,3 +38,12 @@ Per the 2026-06-26 decision (lean foundation, defer the platform): the **OTEL co
 
 ## Emitter
 `.claude/hooks/build-session-emit.sh` (Stop hook). Writes the authoritative JSONL always; POSTs to PostHog `/capture/` only if `$POSTHOG_PROJECT_TOKEN` is set. Disable via `settings.local.json` → `{"hooks":{"disable":["build-session-emit"]}}`.
+
+## PostHog projection (moved from CLAUDE.md 2026-09-28)
+Canonical var set, the same in both repos' env files: `POSTHOG_PROJECT_TOKEN` (`phc_`, capture) ·
+`POSTHOG_PERSONAL_API_KEY` (`phx_`, query/read; must be scoped to the project + `query:read`) ·
+`POSTHOG_PROJECT_API_KEY` (all-access spare) · `POSTHOG_PROJECT_ID=524367` · `POSTHOG_HOST`. The emitter
+captures with the project token; the hub dashboard reads with the personal key. Project **524367
+(`empire_state_events`)** is the dedicated build-telemetry surface (pipeline writes, hub reads); project
+**466893 (`empire state hub`)** is reserved for future hub *web* analytics, not this loop. A project-secret
+`phs_` key is rejected by the query API (`platform-constraints.md`).

@@ -95,6 +95,26 @@ with `notion-fetch` on the data_source URL before any batch create (see
 - Fresh account (created April 5, 2026), full read/write on Contacts, Companies, Notes, Deals
 - HubSpot owner ID: 90413044
 
+## Write order (moved from CLAUDE.md 2026-09-28)
+
+Relations are bidirectional: setting one side auto-populates the other. Relation fields need page URLs from
+pages created earlier, so order matters. `notion-create-pages` returns page URLs; those URLs ARE the IDs for
+relation fields.
+
+```
+Notion
+  1. Companies (no dependencies)             → capture page URLs   ┐ 1 and 2 can
+  2. Topics (no dependencies)                → capture page URLs   ┘ run in parallel
+  3. People (Company relation ← step 1)      → capture page URLs
+  4. Event (People / Companies / Topics relations ← steps 1–3)
+  5. Content Draft (Event / People / Topics relations); Event.Content Drafts auto-populates
+
+HubSpot (post-event, gated, create-once; search name + company first)
+  1. Company records (standard fields)
+  2. Contact records + association to the Company
+  3. Note on each Contact (event name + role + talking points in the body)
+```
+
 ## Apollo (Not integrated — separate evaluation)
 
 - Not part of the event research pipeline. Alex evaluates Apollo independently via web UI
