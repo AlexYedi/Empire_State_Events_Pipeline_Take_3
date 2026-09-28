@@ -37,7 +37,6 @@ from spine_client import q, req  # noqa: E402
 from substrate import JOB_LENS_KINDS, norm_text, pid_variants  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-DOCKB = os.path.join(ROOT, ".claude", "skills", "doc-knowledge-base")
 
 LENSES = {  # the weights ARE the lens. w_use is 0 everywhere until >=20 outcome rows (decision 5)
     "event": {"sem": .30, "rel": .35, "rec": .15, "prov": .10, "conf": .10, "use": 0.0, "budget": 6000},
@@ -134,7 +133,6 @@ def claim_layer_live() -> bool:
 
 
 def semantic_claims(text: str, ids: list[str], n: int) -> list[dict]:
-    sys.path.insert(0, DOCKB)
     from dockb_common import embed_query, vec_literal
     st, body = rpc("match_claims_hybrid", {"query_embedding": vec_literal(embed_query(text)), "query_text": text,
                                            "match_count": n, "filter_entity_ids": None})

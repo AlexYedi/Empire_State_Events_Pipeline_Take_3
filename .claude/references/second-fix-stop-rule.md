@@ -43,11 +43,7 @@ Using `general-purpose` for design work is the smell, not `general-purpose` itse
 
 ## Enforcement (honest about its strength)
 
-- **Nudge, not gate:** `.claude/hooks/second-fix-nudge.sh` (PreToolUse) injects a reminder when a Linear
-  issue is *created* or a judge dispatch is labelled round ≥3 / re-judge. It never blocks.
-  **Status: written, NOT wired and untested** — the agent's auto-mode classifier (correctly) refuses to let
-  the agent register its own hooks. Alex wires it: `chmod +x` the script and add a `PreToolUse` entry,
-  matcher `mcp__linear__save_issue|Agent|Task`, to `.claude/settings.json`. Until then the rule is prose only. Tracked: YED-237.
+- **Prose only.** The optional nudge hook was removed 2026-09-28; restore from git history if YED-237's trigger fires.
 - **Recount (by hand, when asked):** look for any component fixed ≥3 times in a week with no architect
   review in between (`git log` per path). That's the evidence of whether this rule works. If it doesn't change behaviour within
-  ~3 weeks, promote the nudge to an `ask` gate — don't add more prose.
+  ~3 weeks, that is YED-237's trigger — don't add more prose.
