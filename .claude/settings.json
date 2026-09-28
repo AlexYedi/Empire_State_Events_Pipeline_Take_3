@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "//": "Only build-session-emit.sh is wired (telemetry → gitignored .claude/.state/telemetry/). All other project hooks were unwired 2026-09-28 (YED-229, complexity reset); scripts remain on disk. event-claim.py runs inline from the pipeline commands, not from here. User-scope hooks live in ~/.claude/settings.json.",
+  "//": "Only build-session-emit.sh is wired (telemetry → gitignored .claude/.state/telemetry/). All other project hooks were unwired 2026-09-28 (YED-229, complexity reset) and their scripts deleted (second-fix-nudge.sh stays until Alex wires it, YED-237); the rest of .claude/hooks/ runs by hand or from the judge. event-claim.py runs inline from the pipeline commands, not from here. User-scope hooks live in ~/.claude/settings.json.",
   "hooks": {
     "Stop": [
       {

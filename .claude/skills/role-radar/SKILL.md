@@ -213,7 +213,7 @@ End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**
 ## Step 5.5 — Mirror the written roles into the MI graph (YED-149)
 
 Every Roles row written or re-keyed in Step 5 becomes one `role_posted` event in the graph, plus a `company —subject→`
-edge. Spec + the reasoning behind every rule: `.claude/notes/yed-149-spec-2026-09-27.md`. Runs inline in this thread
+edge. Spec + the reasoning behind every rule: `docs/archive/notes/yed-149-spec-2026-09-27.md`. Runs inline in this thread
 (REST through `spine_client`; never the Supabase MCP). Additive, never a gate: if `SUPABASE_API_KEY` is unset, print
 `graph write skipped: SUPABASE_API_KEY not set` in Step 6 and stop here.
 
@@ -262,5 +262,5 @@ nowhere (migration 0011 + `retrieve.py`).
 - **`.claude/references/target-companies.md`** — the target-company list + company→ATS registry (board tokens).
 - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
 - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
-- Graph-producer (Step 5.5): `substrate.py ensure-roles` · spec `.claude/notes/yed-149-spec-2026-09-27.md` · `.claude/references/market-intel-spine.md`.
+- Graph-producer (Step 5.5): `substrate.py ensure-roles` · spec `docs/archive/notes/yed-149-spec-2026-09-27.md` · `.claude/references/market-intel-spine.md`.
 - Tools — `curl` + `jq` (ATS boards), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.

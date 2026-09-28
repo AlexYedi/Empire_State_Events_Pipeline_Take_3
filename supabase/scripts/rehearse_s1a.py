@@ -4,7 +4,7 @@ rehearse_s1a.py — prove migration 0009 (Knowledge Substrate S1a, ADR-10) on th
 Phantom-Test-Case twin before anyone pastes it into prod.
 
 Spec: supabase/SUBSTRATE_S1A_REHEARSAL_RUNBOOK.md · ADR-10 · review
-.claude/notes/knowledge-substrate-review-2026-09-18.md (finding 1).
+docs/archive/notes/knowledge-substrate-review-2026-09-18.md (finding 1).
 
 The gate this script enforces (all must pass, in order):
   0  preflight   twin reachable; prerequisites present (documents / doc_chunks /

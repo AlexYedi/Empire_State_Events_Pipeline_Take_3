@@ -93,7 +93,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 
 ## Reference
 
-The authoritative methodology is in `.claude/skills/event-research/SKILL.md` Steps 2 and 3, and the two-layer contract is `docs/adr/ADR-5-event-field-guide.md` + `.claude/proposals/event-field-guide.md`. Read them before synthesizing — they define the Scan-head/Deep-Read split and the Evidence Set's role.
+The authoritative methodology is in `.claude/skills/event-research/SKILL.md` Steps 2 and 3, and the two-layer contract is `docs/adr/ADR-5-event-field-guide.md` + `docs/archive/proposals/event-field-guide.md`. Read them before synthesizing — they define the Scan-head/Deep-Read split and the Evidence Set's role.
 
 ## Output
 
