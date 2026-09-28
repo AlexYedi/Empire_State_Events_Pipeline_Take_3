@@ -7,7 +7,7 @@ are read by a human on request, never by code that decides a verdict. It also co
 
 Raw judge-vs-Alex agreement is the metric the gate used, and it is misleading: if Alex flags 3 of 18
 artifacts, a seat that says "pass" to everything scores 83% — which is exactly what the Gemini seat
-scored (triage: .claude/notes/gemini-judge-triage-2026-09-19.md). This reports, per seat:
+scored (triage: docs/archive/notes/gemini-judge-triage-2026-09-19.md). This reports, per seat:
 
   agreement        raw % vs Alex's verdict          (the old, inflatable number)
   always-pass      what a constant "pass" would score on the SAME rows (the baseline to beat)
