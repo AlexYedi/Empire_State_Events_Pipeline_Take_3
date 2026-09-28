@@ -7,6 +7,7 @@ the other lenses are six weights each and land once this one has proven out on a
 
     .venv/bin/python .claude/scripts/retrieve.py --lens event --seed seed.json [--budget-tokens 6000]
                      [--out pack.md] [--json]
+    .venv/bin/python .claude/scripts/retrieve.py --selftest      (offline: job-lens isolation, YED-149)
 
 seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
             "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365}
@@ -31,7 +32,7 @@ import argparse, datetime as dt, json, math, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from spine_client import q, req  # noqa: E402
-from substrate import norm_text, pid_variants  # noqa: E402
+from substrate import JOB_LENS_KINDS, norm_text, pid_variants  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 DOCKB = os.path.join(ROOT, ".claude", "skills", "doc-knowledge-base")
@@ -105,6 +106,7 @@ def neighborhood(ids: list[str], since: str | None) -> tuple[dict, str]:
     events = []
     if eids:
         flt = f"&event_date=gte.{since}" if since else ""
+        flt += f"&kind=not.in.({','.join(JOB_LENS_KINDS)})"      # YED-149: the job lens never fills the ledger
         events = get(f"/event?id=in.({','.join(eids)}){flt}&select=id,title,kind,event_date,source,url"
                      f"&order=event_date.desc&limit=60") or []
     edges = []
@@ -149,6 +151,41 @@ def score_claims(claims: list[dict], seed_ids: set[str], nb_event_ids: set[str],
     return sorted(claims, key=lambda c: -c["_score"])
 
 
+def isolate_job_lens(nb: dict, seed_companies: dict[str, str]) -> tuple[dict, list[dict], str]:
+    """YED-149 (Alex, option 1): job-lens kinds never reach a brief's ledger — the seed companies get one COUNT line
+    each instead ("Harvey — 6 tracked roles"), and applications/interviews appear nowhere. Migration 0011 does this
+    server-side (before the `limit`, so roles can't crowd events out) and returns `hiring`; before 0011 lands the
+    same filter runs here and the counts are partial (only roles that fit under the old limit). Pure."""
+    job = {e["id"] for e in nb.get("events", []) if e.get("kind") in JOB_LENS_KINDS}
+    hiring = nb.get("hiring")
+    path = "rpc (0011)" if hiring is not None else "client-side (0011 not applied: counts partial, crowding possible)"
+    if hiring is None:
+        per: dict[str, dict] = {}
+        roles = {e["id"]: e for e in nb.get("events", []) if e.get("kind") == "role_posted"}
+        for x in nb.get("edges", []):
+            if x["event_id"] in roles and x["entity_type"] == "company" and x["entity_id"] in seed_companies:
+                h = per.setdefault(x["entity_id"], {"company_id": x["entity_id"], "name": seed_companies[x["entity_id"]],
+                                                    "roles": 0, "latest_posted": None})
+                h["roles"] += 1
+                d = roles[x["event_id"]].get("event_date")
+                h["latest_posted"] = max(filter(None, (h["latest_posted"], d)), default=None)
+        hiring = list(per.values())
+    kept = {**nb, "events": [e for e in nb.get("events", []) if e["id"] not in job],
+            "edges": [x for x in nb.get("edges", []) if x["event_id"] not in job],
+            "claims": [c for c in nb.get("claims", []) if c.get("event_id") not in job]}
+    return kept, hiring, path
+
+
+def hiring_lines(hiring: list[dict]) -> list[str]:
+    out = []
+    for h in sorted(hiring, key=lambda r: (-int(r.get("roles") or 0), r.get("name") or "")):
+        tiers = " ".join(f"{t}:{h[k]}" for t, k in (("A", "tier_a"), ("B", "tier_b"), ("C", "tier_c")) if h.get(k))
+        latest = f", latest posted {str(h['latest_posted'])[:10]}" if h.get("latest_posted") else ""
+        out.append(f"- **{h['name']}** — {h['roles']} tracked role{'s' if int(h['roles']) != 1 else ''}"
+                   f"{f' ({tiers})' if tiers else ''}{latest}")
+    return out
+
+
 def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     w = LENSES[lens]
     found, missing = resolve(seed.get("entities", []))
@@ -157,6 +194,7 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     if seed.get("window_days"):
         since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=int(seed["window_days"]))).strftime("%Y-%m-%dT00:00:00Z")
     nb, mode = neighborhood(ids, since) if ids else ({"events": [], "edges": [], "documents": [], "claims": []}, "no seeds")
+    nb, hiring, job_path = isolate_job_lens(nb, {f["id"]: f["name"] for f in found if f["type"] == "company"})
     live = claim_layer_live()
     claims = {c["id"]: {**c, "_direct": True} for c in nb.get("claims", [])}
     if live and seed.get("text"):
@@ -193,8 +231,10 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     tcards = ["## Topics recurring across these occasions", ""] + [
         f"- {name} — {len(evs)} occasions" for name, evs in sorted(topics.items(), key=lambda kv: -len(kv[1]))[:15]]
 
+    hire = (["## Hiring at seed companies — job lens, counts only", ""] + hiring_lines(hiring)) if hiring else []
+
     # ---- claims under the token budget ------------------------------------------------------------
-    used = sum(tokens("\n".join(s)) for s in (ledger, cards, tcards))
+    used = sum(tokens("\n".join(s)) for s in (ledger, cards, tcards, hire))
     def render(c: dict) -> str:
         flag = " ⚠ do-not-publish" if (c.get("metadata") or {}).get("do_not_publish") else ""
         ev = ev_by_id.get(c.get("event_id"))
@@ -233,14 +273,16 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     audit = {"lens": lens, "mode": mode, "claims_layer": "live" if live else "not migrated (S1a pending)",
              "seeds_resolved": len(found), "seeds_unresolved": missing, "events": len(nb["events"]),
              "edges": len(nb["edges"]), "claims_candidates": len(ranked), "claims_kept": len(kept),
-             "claims_cut": len(cut), "tokens": used, "budget": budget}
+             "claims_cut": len(cut), "tokens": used, "budget": budget,
+             "hiring_companies": len(hiring), "job_lens_filter": job_path}
     audit_line = (f"AUDIT · lens={lens} · seeds={len(found)} resolved/{len(missing)} unresolved · "
                   f"events={audit['events']} · claims {len(kept)} kept/{len(cut)} cut · docs={len(nb.get('documents', []))} · "
-                  f"tokens {used}/{budget} · graph={mode} · claims-layer={audit['claims_layer']}")
+                  f"tokens {used}/{budget} · graph={mode} · claims-layer={audit['claims_layer']} · "
+                  f"job-lens filter={job_path}")
     lines += [f"_{audit_line}_", ""]
     if missing:
         lines += [f"**Unresolved seeds (reported, not guessed):** {', '.join(missing)}", ""]
-    lines += ledger + [""] + cards + [""] + tcards + [""] + cl + [""]
+    lines += ledger + [""] + cards + [""] + tcards + [""] + (hire + [""] if hire else []) + cl + [""]
 
     # ---- loud failure (review finding 6) --------------------------------------------------------
     rc = 0
@@ -258,7 +300,39 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     return "\n".join(lines), {**audit, "audit_line": audit_line}, rc
 
 
+def selftest() -> bool:
+    """Offline (no network): the job-lens isolation contract (YED-149)."""
+    nb = {"events": [{"id": "e1", "kind": "attended", "title": "Demo Night", "event_date": "2026-09-01"},
+                     {"id": "r1", "kind": "role_posted", "title": "AE — Harvey", "event_date": "2026-09-20"},
+                     {"id": "r2", "kind": "role_posted", "title": "CSM — Harvey", "event_date": "2026-09-22"},
+                     {"id": "a1", "kind": "application", "title": "Applied — Harvey", "event_date": "2026-09-23"}],
+          "edges": [{"event_id": i, "entity_type": "company", "entity_id": "co1", "role": "subject", "name": "Harvey"}
+                    for i in ("e1", "r1", "r2", "a1")],
+          "claims": [{"id": "c1", "event_id": "a1"}, {"id": "c2", "event_id": "e1"}], "documents": []}
+    kept, hiring, path = isolate_job_lens(nb, {"co1": "Harvey"})
+    rpc_kept, rpc_hiring, rpc_path = isolate_job_lens({**nb, "hiring": [{"name": "Harvey", "roles": 6, "tier_a": 2,
+                                                                          "tier_b": 4, "latest_posted": "2026-09-22"}]}, {})
+    checks = [
+        ("no job-lens kind in the ledger", [e["id"] for e in kept["events"]] == ["e1"]),
+        ("job-lens edges + claims dropped", {x["event_id"] for x in kept["edges"]} == {"e1"}
+         and [c["id"] for c in kept["claims"]] == ["c2"]),
+        ("client-side count: roles only, never applications", hiring == [{"company_id": "co1", "name": "Harvey", "roles": 2,
+                                                                          "latest_posted": "2026-09-22"}]),
+        ("client-side path is labelled partial", path.startswith("client-side")),
+        ("rpc hiring wins + labelled", rpc_path == "rpc (0011)" and rpc_hiring[0]["roles"] == 6),
+        ("count line format", hiring_lines(rpc_hiring) == ["- **Harvey** — 6 tracked roles (A:2 B:4), latest posted 2026-09-22"]),
+        ("no seed company -> no hiring lines", isolate_job_lens(nb, {})[1] == []),
+    ]
+    for name, good in checks:
+        print(f"  {'✓' if good else '✗'} {name}")
+    fail = sum(1 for _, g in checks if not g)
+    print(f"selftest: {len(checks) - fail}/{len(checks)} pass")
+    return fail == 0
+
+
 def main(argv: list[str]) -> int:
+    if "--selftest" in argv:
+        return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--lens", choices=sorted(LENSES), default="event")
     ap.add_argument("--seed", required=True)
