@@ -26,7 +26,7 @@ Conventions preserved from the six writers this replaced: (status, parsed_json) 
 dockb's raise-on-HTTPError semantics. Exit codes: 2 = PIIViolation, 1 = selftest/check failure.
 """
 from __future__ import annotations
-import fnmatch, http.client, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
+import fnmatch, http.client, json, os, re, ssl, sys, time, urllib.error, urllib.parse, urllib.request
 
 REF = "oicikjyzmxqfomrrqkvf"
 BASE = f"https://{REF}.supabase.co/rest/v1"
@@ -319,7 +319,68 @@ def freeze_block(method: str, path: str) -> None:
 # retried: a plain-insert POST that timed out may already have landed, so it still fails loud.
 REQ_RETRIES = 3                  # total attempts
 REQ_BACKOFF = (1.0, 3.0)         # seconds before attempt 2, 3
-_TRANSIENT = (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException)
+# ssl.SSLError is a plain OSError (not a ConnectionError): without it a TLS drop on a reused socket escaped as a raw
+# traceback (judge, 2026-09-27). urllib used to wrap these into URLError for us; http.client does not.
+_TRANSIENT = (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException, ssl.SSLError)
+
+# Persistent connection (YED-149 diagnosis, 2026-09-27, measured): ~10% of FRESH TCP connects from Alex's network
+# hang on the SYN — to every host, not just Supabase — and each hang cost the full 30s timeout. One urllib connection
+# per call turned a 200-role dry run (455 calls) into ~24 min, 93% of it stalls; over one reused connection the same
+# calls took 65s with 0 stalls. So retry-safe calls (GET / set-PATCH / upsert) reuse ONE keep-alive connection, and a
+# dropped one is closed and rebuilt by the retry loop. A NON-retryable call (plain insert, /rpc/) always gets its own
+# fresh connection, exactly as before: if a reused socket died mid-send we could not know whether the insert landed.
+CONNECT_TIMEOUT = 10             # a stalled SYN now costs 10s once, not 30s per call
+# Single-threaded by design: every caller is a sequential CLI loop in the parent thread (fan-out never writes).
+# _CONN is shared module state with no lock — do not call req() from threads without adding one.
+
+
+class NotSent(ConnectionError):
+    """The connection never opened, so not one byte of the request left this machine. Retrying is safe for ANY
+    method, including a plain insert: nothing can have landed (first live backfill died on exactly this, 2026-09-27)."""
+_CONN: http.client.HTTPSConnection | None = None
+
+
+def _drop_conn() -> None:
+    global _CONN
+    if _CONN is not None:
+        try:
+            _CONN.close()
+        except Exception:
+            pass
+    _CONN = None
+
+
+def _send(method: str, path: str, data, headers: dict, timeout: int, reuse: bool) -> tuple[int, str]:
+    """One HTTP exchange -> (status, body text). Every connect-time failure is raised as NotSent; a failure after
+    connect raises the underlying _TRANSIENT error (or a non-transient one, which req() does not retry).
+    The only socket code in this file; the retry selftest stubs it, the lifecycle selftest drives it with a fake
+    HTTPSConnection."""
+    global _CONN
+    host = f"{REF}.supabase.co"
+    conn = _CONN if reuse else None
+    if conn is None:
+        conn = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
+        try:
+            conn.connect()
+        except OSError as e:     # ANY connect failure — SYN stall, DNS (gaierror), TLS handshake, no route — sent nothing
+            conn.close()
+            raise NotSent(f"connect failed before sending: {type(e).__name__}: {e}") from e
+        if reuse:
+            _CONN = conn
+    conn.sock.settimeout(timeout)
+    try:
+        conn.request(method, "/rest/v1" + path, body=data, headers=headers)
+        resp = conn.getresponse()
+        return resp.status, resp.read().decode()
+    except Exception:
+        if reuse:
+            _drop_conn()
+        else:
+            conn.close()
+        raise
+    finally:
+        if not reuse:
+            conn.close()
 
 
 def _retryable(method: str, path: str, prefer: str | None) -> bool:
@@ -347,21 +408,21 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
     if extra_headers:
         headers.update(extra_headers)
     data = json.dumps(body).encode() if body is not None else None
-    attempts = REQ_RETRIES if _retryable(method, path, prefer) else 1
+    retryable = _retryable(method, path, prefer)
+    attempts = REQ_RETRIES           # a non-retryable call still retries a NotSent failure (see NotSent), nothing else
     for attempt in range(1, attempts + 1):
-        r = urllib.request.Request(BASE + path, data=data, method=method, headers=headers)
         try:
-            with urllib.request.urlopen(r, timeout=timeout) as resp:
-                txt = resp.read().decode()
-                return resp.status, (json.loads(txt) if txt else None)
-        except urllib.error.HTTPError as e:            # a real HTTP answer: never retried (subclass of URLError)
-            txt = e.read().decode()
-            if raise_on_error:
-                raise RuntimeError(f"Supabase {method} {path} -> {e.code}: {txt[:500]}")
-            return e.code, txt
+            code, txt = _send(method, path, data, headers, timeout, reuse=retryable)
+            if code >= 400:                            # a real HTTP answer: never retried
+                if raise_on_error:
+                    raise RuntimeError(f"Supabase {method} {path} -> {code}: {txt[:500]}")
+                return code, txt
+            return code, (json.loads(txt) if txt else None)
         except _TRANSIENT as e:                        # no answer at all: stall / reset / dropped socket
-            if attempt >= attempts:
-                sys.stderr.write(f"req: gave up after {attempts} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
+            # A non-retryable call may have landed unless nothing was sent: fail loud on the first stall, as before.
+            giving_up = attempt >= attempts or (not retryable and not isinstance(e, NotSent))
+            if giving_up:
+                sys.stderr.write(f"req: gave up after {attempt} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
                                  f"{str(e)[:120]}. Nothing after this call ran; a re-run is idempotent (upserts "
                                  f"and GETs), and any gate row stays PENDING until it succeeds.\n")
                 raise
@@ -493,21 +554,16 @@ def selftest() -> bool:
         g = globals()
         calls = {"n": 0}
 
-        class _Resp:
-            status = 200
-            def read(self): return b"[]"
-            def __enter__(self): return self
-            def __exit__(self, *a): return False
-
-        def fake_urlopen(r, timeout=None):
+        def fake_send(method, path, data, headers, timeout, reuse):
             calls["n"] += 1
+            calls.setdefault("reuse", []).append(reuse)
             if calls["n"] < 3:
-                raise urllib.error.URLError("timed out")
-            return _Resp()
+                raise NotSent("connect failed") if calls.get("notsent") else urllib.error.URLError("timed out")
+            return 200, "[]"
         # The freeze cases below arm a TEMP "active" marker at registration time, so a write-path call here
         # would be refused at the door before it reaches the stubbed socket — same escape as `_absent()`.
-        saved = (g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"], g["FREEZE_PATH"])
-        g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"] = (0, 0), fake_urlopen, (lambda: "test-key")
+        saved = (g["REQ_BACKOFF"], g["_send"], g["load_key"], g["FREEZE_PATH"])
+        g["REQ_BACKOFF"], g["_send"], g["load_key"] = (0, 0), fake_send, (lambda: "test-key")
         g["FREEZE_PATH"] = os.path.join(ROOT, "__no_such_freeze__.json")
         try:
             st, body = req("GET", "/person?select=id&limit=1")
@@ -532,9 +588,78 @@ def selftest() -> bool:
             except urllib.error.URLError:
                 if calls["n"] != 1:
                     raise PIIViolation(f"plain POST made {calls['n']} calls")
+                if calls["reuse"][-1] is not False:
+                    raise PIIViolation("plain POST went over the shared keep-alive connection")
+            # ...but a plain POST whose connection never opened IS retried: nothing was sent.
+            calls["n"], calls["notsent"] = 0, True
+            st, _ = req("POST", "/person", [{"name": "Plain Insert"}], prefer="return=representation")
+            if not (st == 200 and calls["n"] == 3):
+                raise PIIViolation(f"NotSent plain POST not retried: calls={calls['n']}")
         finally:
-            g["REQ_BACKOFF"], urllib.request.urlopen, g["load_key"], g["FREEZE_PATH"] = saved
-    add("retry loop: 2 stalls then success on GET; plain POST fails on the 1st stall", _retry_loop_case, False)
+            g["REQ_BACKOFF"], g["_send"], g["load_key"], g["FREEZE_PATH"] = saved
+    add("retry loop: 2 stalls then success on GET; plain POST fails on the 1st stall unless nothing was sent",
+        _retry_loop_case, False)
+
+    def _send_lifecycle_case():
+        """Drives the real _send() with a fake HTTPSConnection: reuse, drop-on-error, fresh-for-non-retryable, and
+        every connect-time OSError (DNS, TLS, SYN stall) surfacing as NotSent."""
+        import socket
+        g, made = globals(), []
+
+        class _R:
+            status = 200
+            def read(self): return b"[]"
+
+        class _Sock:
+            def settimeout(self, t): pass
+
+        class _Conn:
+            fail_connect = None
+            fail_request = None
+            def __init__(self, host, port, timeout=None):
+                self.closed, self.sock = False, None
+                made.append(self)
+            def connect(self):
+                if _Conn.fail_connect:
+                    raise _Conn.fail_connect
+                self.sock = _Sock()
+            def request(self, *a, **k):
+                if _Conn.fail_request:
+                    raise _Conn.fail_request
+            def getresponse(self): return _R()
+            def close(self): self.closed = True
+
+        saved = (http.client.HTTPSConnection, g["_CONN"])
+        http.client.HTTPSConnection, g["_CONN"] = _Conn, None
+        try:
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            if len(made) != 1:
+                raise PIIViolation(f"keep-alive not reused: {len(made)} connections for 2 GETs")
+            _send("POST", "/x", b"{}", {}, 30, reuse=False)
+            if len(made) != 2 or not made[-1].closed or g["_CONN"] is not made[0]:
+                raise PIIViolation("non-retryable call touched the shared connection or left its own open")
+            _Conn.fail_request = ConnectionResetError("reset")
+            try:
+                _send("GET", "/x", None, {}, 30, reuse=True)
+                raise PIIViolation("request failure did not raise")
+            except ConnectionResetError:
+                if g["_CONN"] is not None or not made[0].closed:
+                    raise PIIViolation("a failed shared connection was not dropped")
+            _Conn.fail_request = None
+            for err in (socket.gaierror(8, "nodename nor servname"), ssl.SSLError(1, "handshake"),
+                        TimeoutError("timed out"), OSError(65, "no route")):
+                _Conn.fail_connect = err
+                try:
+                    _send("POST", "/x", b"{}", {}, 30, reuse=False)
+                    raise PIIViolation(f"{type(err).__name__} at connect did not raise")
+                except NotSent:
+                    pass
+            _Conn.fail_connect = None
+        finally:
+            http.client.HTTPSConnection, g["_CONN"] = saved
+    add("_send lifecycle: one shared conn, non-retryable isolated + closed, dropped on error, any connect OSError -> NotSent",
+        _send_lifecycle_case, False)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 

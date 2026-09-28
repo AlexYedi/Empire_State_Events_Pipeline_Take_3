@@ -1,6 +1,6 @@
 ---
 name: role-radar
-description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby/Workable via curl — primary; + Apollo-at-targets, credit-gated, optional), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban. Notion-only, manual trigger, human-in-the-loop. No LinkedIn scraping."
+description: "Signal scanner — job search & tracking. Aggregates roles from legitimate sources (ATS boards APIs — Greenhouse/Lever/Ashby/Workable via curl — primary; + Apollo-at-targets, credit-gated, optional), dedupes on the ATS job-id, scores each against Alex's Target-Role ICP (me-model §1.5), and lands them in a Notion Roles DB as a status Kanban, mirrored to the MI graph as role_posted events (Step 5.5). Manual trigger, human-in-the-loop. No LinkedIn scraping."
 ---
 
 # Role Radar Skill
@@ -20,7 +20,7 @@ This is one of three **signal scanners** feeding the Empire State pipeline (alon
 - **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk pass per run (Content Hash + Tier + Status + Notes for every row — a few LIMIT/OFFSET pages of the same query, ~100 rows each), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
 - **No fabricated numbers / honest gaps:** if a source errors, say so.
 
-**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used in any scan to date — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 31-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI spine) and scheduled ingestion are **deferred to v1.1** (Linear "Job-Search Engine" YED-149) — roles first prove out in the Notion Roles DB before writing the shared graph.
+**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used in any scan to date — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 31-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI graph) is **live as Step 5.5** (YED-149, 2026-09-27 — shipped once the Roles DB proved its dedup: 203 rows, 0 duplicate ATS keys). Scheduled ingestion stays deferred.
 
 ---
 
@@ -210,6 +210,37 @@ End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**
 
 ---
 
+## Step 5.5 — Mirror the written roles into the MI graph (YED-149)
+
+Every Roles row written or re-keyed in Step 5 becomes one `role_posted` event in the graph, plus a `company —subject→`
+edge. Spec + the reasoning behind every rule: `.claude/notes/yed-149-spec-2026-09-27.md`. Runs inline in this thread
+(REST through `spine_client`; never the Supabase MCP). Additive, never a gate: if `SUPABASE_API_KEY` is unset, print
+`graph write skipped: SUPABASE_API_KEY not set` in Step 6 and stop here.
+
+1. **Pull the rows just written, SQL shape.** `notion-query-data-sources` on the Roles data source, selecting
+   `url, "Role Title", "Company", "Content Hash", "ICP Tier", "ICP Score", "date:Posted Date:start", "Source",
+   "userDefined:URL", "Status", "Location", "Workplace"` and filtering to this run's pages. **Never select `Notes`**:
+   Alex's free text stays in Notion.
+2. **Write them to a scratch file** as `{"roles": [<rows verbatim>]}` (in the session scratchpad, never the repo).
+3. **Dry-run, then live:**
+   `.venv/bin/python .claude/scripts/substrate.py ensure-roles --manifest <file> --aliases-from .claude/references/target-companies.md --dry-run`,
+   then the same without `--dry-run`. `--aliases-from` maps board slugs and registry names (`claylabs`, `cursor`) to
+   the name the graph already uses (`Clay`, `Cursor (Anysphere)`). Read the dry run's `would create N companies:`
+   line first. A listed company that already exists in the graph under another name (e.g. `Modal` vs `Modal Labs`)
+   is a duplicate in the making: add `"company_aliases": {"modal": "Modal Labs"}` to the manifest (or fix the
+   registry name), re-run the dry run, and only then write. A `REFUSED <ats key>` line means the same posting sits
+   on two Notion pages; resolve that in Notion.
+4. **Rules the verb enforces (don't re-implement them):** the Roles page id is the only idempotency key (a rescan
+   creates 0; a missing page id is refused); ICP Tier `drop` is skipped and counted; Greenhouse rows get no
+   `event_date`; `confidence = 1.0`; topics are never minted from this path.
+5. Step 6 summary line: `Graph: N role events (created X · matched Y · skipped drop Z)`.
+
+What the graph does with them: `/event-deep-research`'s Context Pack **never lists roles in the ledger**. A seed
+company gets one count line instead ("Harvey — 6 tracked roles (A:2 B:4)"), and applications/interviews appear
+nowhere (migration 0011 + `retrieve.py`).
+
+---
+
 ## Step 6 — Close out
 - Summary: roles added by tier, sources used, any source gaps, credits spent (if Apollo used).
 - **Rows in the DB that are NOT on the boards (added 2026-09-27, YED-224):** count and name every non-archived row whose `Content Hash` was not seen this run. Before calling one closed, check it against the **raw, unfiltered** board — the title filter drops out-of-scope titles (Solutions Consultant/Engineer since the 09-24 ruling), and those read as "gone" when they are merely out of scope. Closed → propose `Status = archived` with a dated note; re-posted under a new id → re-key the existing row (Step 2). Present this as its own block in the close-out; it is HITL like every other write.
@@ -231,5 +262,5 @@ End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**
 - **`.claude/references/target-companies.md`** — the target-company list + company→ATS registry (board tokens).
 - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
 - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
-- Graph-producer (deferred v1.1): `trend-radar/SKILL.md` Step 5.5 pattern + `.claude/references/market-intel-spine.md`.
+- Graph-producer (Step 5.5): `substrate.py ensure-roles` · spec `.claude/notes/yed-149-spec-2026-09-27.md` · `.claude/references/market-intel-spine.md`.
 - Tools — `curl` + `jq` (ATS boards), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
