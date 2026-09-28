@@ -23,7 +23,8 @@ def jq_score(v, atype, dangling):
 
 
 def V(scores, **flags):
-    f = {"confidence_honesty_violation": False, "spec_drift": False, "command_skeleton_absent": False, "density_padding": False}
+    f = {"confidence_honesty_violation": False, "spec_drift": False, "command_skeleton_absent": False, "density_padding": False,
+         "privacy_layer_defect": False}
     f.update(flags)
     return {"criterion_scores": [{"id": c, "score": s, "reasoning": "r"} for c, s in zip(jl.CRITERIA, scores)],
             "defects": [], "checks_performed": ["x"], "cap_flags": f}
@@ -38,7 +39,11 @@ FIX = [("flat ceiling", V([1, 1, 1, 1, 1]), "skill", False), ("nits", V([.85, .9
        ("skeleton flag ignored off-type", V([.9, .9, .9, .9, .9], command_skeleton_absent=True), "skill", False),
        ("density only on deep_read", V([.9, .9, .9, .9, .9], density_padding=True), "deep_read", False),
        ("density ignored off-type", V([.9, .9, .9, .9, .9], density_padding=True), "skill", False),
-       ("out of range clamps", V([1.4, -0.2, .9, .9, .9]), "skill", False)]
+       ("out of range clamps", V([1.4, -0.2, .9, .9, .9]), "skill", False),
+       # @6 (YED-231): a confirmed defect in any privacy layer flags, whatever the backstop
+       ("privacy-layer cap flags a strong artifact", V([.95, .95, .95, .95, .95], privacy_layer_defect=True), "code", False),
+       ("YED-236 regression: 0.784 pass -> flag", V([.75, .72, .85, .9, .65], privacy_layer_defect=True), "code", False),
+       ("privacy flag off = @5 arithmetic", V([.75, .72, .85, .9, .65]), "code", False)]
 ok = n = 0
 
 
@@ -53,6 +58,23 @@ for name, v, atype, dang in FIX:
     same = all(a[k] == b[k] for k in ("weighted_score", "raw_score", "verdict", "flat_ceiling")) and \
         [c["score"] for c in a["criterion_scores"]] == [c["score"] for c in b["criterion_scores"]]
     ck(f"score parity python==jq: {name}  ({a['weighted_score']} {a['verdict']})", same)
+
+# quorum-merge.sh keeps a THIRD copy of the composite arithmetic (its Claude-seat recompute). Bind it to judge_lib
+# too (judge on the @6 build, 2026-09-28): extracted at test time, compared on every fixture it is defined for.
+# It applies no dangling cap and applies density/skeleton regardless of artifact type, so those fixtures are skipped.
+qsrc = open(".claude/hooks/quorum-merge.sh", encoding="utf-8").read()
+qm = re.search(r"CV=\$\(printf '%s' \"\$CV\" \| jq -c '\n(.*?)'\)\n", qsrc, re.S)
+ck("quorum-merge.sh recompute jq found", bool(qm))
+if qm:
+    for name, v, atype, dang in FIX:
+        fl = v["cap_flags"]
+        if dang or fl.get("density_padding") or fl.get("command_skeleton_absent"):
+            continue
+        r = subprocess.run(["jq", "-c", qm.group(1)], input=json.dumps(v), capture_output=True, text=True)
+        q = json.loads(r.stdout) if r.returncode == 0 else {}
+        a = jl.score(v, atype, dang)
+        ck(f"score parity python==quorum-merge.sh: {name}  ({a['weighted_score']} {a['verdict']})",
+           q.get("weighted_score") == a["weighted_score"] and q.get("verdict") == a["verdict"])
 
 for bad in ({"criterion_scores": []}, V([1, 1, 1, 1, None])):
     try:
