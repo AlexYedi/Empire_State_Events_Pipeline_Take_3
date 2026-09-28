@@ -45,9 +45,11 @@ SCHEMA = {  # strict mode: every property required, no extras. Key order = the o
             "properties": {"id": {"type": "string", "enum": CRIT}, "score": {"type": "number"},
                            "reasoning": {"type": "string"}}}},
         "cap_flags": {"type": "object", "additionalProperties": False,
-                      "required": ["confidence_honesty_violation", "spec_drift", "command_skeleton_absent", "density_padding"],
+                      "required": ["confidence_honesty_violation", "spec_drift", "command_skeleton_absent", "density_padding",
+                                   "privacy_layer_defect"],
                       "properties": {k: {"type": "boolean"} for k in
-                                     ("confidence_honesty_violation", "spec_drift", "command_skeleton_absent", "density_padding")}},
+                                     ("confidence_honesty_violation", "spec_drift", "command_skeleton_absent", "density_padding",
+                                      "privacy_layer_defect")}},
     },
 }
 
@@ -108,7 +110,7 @@ def main() -> int:
     ap.add_argument("--calibration-set", default="prospective"); ap.add_argument("--context", default="")
     ap.add_argument("--spec-file", action="append", default=[])
     ap.add_argument("--model", default=None); ap.add_argument("--reasoning-effort", default=None)
-    ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v5.md")
+    ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v6.md")
     ap.add_argument("--system", default=".claude/evals/prompts/judge-system-v2.md")
     ap.add_argument("--label", default=""); ap.add_argument("--bundle", default="")
     ap.add_argument("--artifact-blob", default="", help="git blob sha proving this file is repo history (controls)")
