@@ -108,7 +108,7 @@ CTA (varies by content type) — See Content Type CTAs below.
 ## Formatting
 
 - **Hashtags:** 2-5 per post, relevant and specific (e.g., #AgenticAI, #DataReadiness, not just #AI)
-- **Tagging:** Never tag people or companies — doesn't translate across platforms. Alex formats manually.
+- **Tagging (revised 2026-09-27):** Name every speaker, host, organizer and community person the post is about, in pre-event AND post-event posts. Tagging them is giving back: it promotes them in their community and elevates the event. Weave the names in naturally, never as a dump. Write plain names in the draft; Alex applies the @-mentions manually, because @-syntax doesn't carry across platforms.
 - **Emoji:** Sparingly but present. Use as structural markers or emphasis, not decoration.
 - **Length by type (character counts include spaces, line breaks, and emojis — LinkedIn counts everything):**
   - The Upcoming Week: Long-form roundup — target 1,300–2,200 chars, **hard cap 3,000**
