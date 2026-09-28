@@ -5,7 +5,7 @@ Non-obvious property-format and markdown-flavor rules for `notion-create-pages` 
 as escaped literal text. Follow them mechanically; the API error messages are the source
 of truth if anything drifts.
 
-Primary consumers: the `notion-writer` agent and the pipeline command files. Extracted from
+Primary consumers: the pipeline command files (Notion writes run inline in the parent thread (subagents have no claude.ai connectors); the `notion-writer` agent is not dispatched). Extracted from
 CLAUDE.md 2026-06-02 to keep always-loaded context lean — content is unchanged.
 
 ## create-pages property-format rules (2026-04-18 — learned live on FDE event writes)
@@ -65,7 +65,7 @@ m. **`notion-update-page` `insert_content`/`update_content` mangles `\n` escapes
 Notion is the **private review surface**. It may hold contact PII on People — `Email`, `Phone Number`,
 `Notes` — **only when Alex provided it** (a card, an intro, a reply). **Never write research- or
 scrape-derived Email/Phone** from a brief, a roster, a transcript, or an inbox distill; the write-back skills
-(`notion-writer`, `/post-event-content` Step 3.8, `inbox-miner`) map `Name · Current Title · Role Context ·
+(`/event-deep-research` Step 4, `/post-event-content` Step 3.8, `inbox-miner`) map `Name · Current Title · Role Context ·
 Known POV/Bio · LinkedIn URL · Events` and leave Email/Phone/Notes untouched. `Notes` is never mirrored to the
 spine or the hub. Contact detail for a real relationship belongs in **HubSpot** via the gated post-event step
 (YED-142), which is one-way — nothing reads HubSpot back into the graph.

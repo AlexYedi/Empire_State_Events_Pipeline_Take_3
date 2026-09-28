@@ -159,7 +159,7 @@ End with: **"Approve which signals to write? (all / numbers / none)"**. This gat
 
 ## B5 — Write approved signals (REST + Notion — mirrors trend-radar Step 5.5)
 
-**Pre-flight (do FIRST):** confirm `SUPABASE_API_KEY` is set in `.env`. If absent/empty → **hard-fail loudly**, write nothing, and **do NOT label** (silent write-loss guard, ADR-7 R4). Never use the Supabase MCP (wrong account). Base `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`; headers `apikey`/`Authorization: Bearer`/`Content-Type`/`Prefer: return=representation`.
+**Pre-flight (do FIRST):** confirm `SUPABASE_API_KEY` is set in `.env`. If absent/empty → **hard-fail loudly**, write nothing, and **do NOT label** (silent write-loss guard, ADR-7 R4). The Supabase MCP is for read-only inspection only; all writes go through `spine_write.py` / `spine_client` (ADR-9). Base `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1`; headers `apikey`/`Authorization: Bearer`/`Content-Type`/`Prefer: return=representation`.
 
 For each approved signal:
 1. **Upsert company** on the slug: read with a REST `GET`, then write through the one guarded path (ADR-9). If the row exists: `spine_write.py company --patch 'id=eq.<id>' --json '{engagement_count:+1, last_engaged_at}'`. If not: `spine_write.py company --json '{name, source:"inbox_miner", last_engaged_at, engagement_count:1}'`. (`inbox_signal_write.py` `upsert_company()` has the same effect; it calls `spine_client` directly, not this CLI.) Leave `relevance_score` 0. Capture `id`.
