@@ -68,7 +68,7 @@ For each event, extract the structured fields using natural-language understandi
 - **URL** — first http(s) URL in the block or description (optional)
 - **Intent** — one of `attend`, `documentary`, `both` (optional; default to `attend` if absent)
 
-Required fields: Speakers, Host, Topics. If any of these are missing or empty (from the PIPELINE block or, failing that, the raw description), log the event as a parse warning and exclude it from processing — surface it at the end of the run.
+Required fields: Speakers, Host, Topics — except for `source: raw-description`, where only Host + Topics are required (mixers and leaderless collectives list no speakers; pass `Speaker: none listed` to `/event-deep-research`, which accepts speaker-less invites). If a required field is missing or empty, log the event as a parse warning and exclude it from processing — surface it at the end of the run.
 
 **Also capture the Google Calendar event ID** from the GCal MCP response's `id` field (NOT the iCalUID — use the `id` field). This is the stable join key for downstream content (and matches `calendar_event_id` on the disabled Granola API path, should it return). Pass it through to `/event-deep-research` as a field named `Google Calendar Event ID` so it lands on the Notion Event row.
 

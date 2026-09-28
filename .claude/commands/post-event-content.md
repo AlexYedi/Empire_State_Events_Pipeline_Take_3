@@ -26,7 +26,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 This command runs when:
 - Alex types `/post-event-content [event name]`
 - Alex says "post-event content for [event]" / "draft the post for last night's [event]" / "write up [event] from Supercut"
-- Alex says "run post-event-content speaker deep-dives for [event]" → Step 1.0 + Step 1, then Step 5.6 only
+- Alex says "run post-event-content speaker deep-dives for [event]" → Step 1.0 + Step 1 + Step 2 (read-only transcript intake), then Step 5.6 only
 
 If the user invokes `content-correspondent` directly with raw pasted material, defer to that skill's existing path — this command adds Notion event-resolution + transcript intake + roster-grounded conditioning.
 
@@ -414,7 +414,8 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
    (note `later` in the summary). No default run.
 2. **Standalone on a past event** ("run post-event-content speaker deep-dives for <event>"): allowed for any
    event whose Notion page has a `post_event_brief` + a transcript. Run Step 1.0 (claim) and Step 1 (resolve)
-   first, then jump here; skip Steps 2–5.5. Release the claim when done.
+   first, then Step 2 read-only (reuse the local `event-transcripts/YYYY-MM-DD_<Event>.md` if present, else
+   2A/2B/2C), then jump here; skip Steps 3–5.5. Release the claim when done.
 3. **Build slices** (parent) → **fan out** one `general-purpose` drafting agent per presenter, in parallel, in
    one message; text + web only, working files under gitignored `.claude/.state/deep-dives/<event-slug>/`.
 4. **Collect**, re-invoke any thin return alone, then **write to Notion inline** (CLAUDE.md invariant 5): one
