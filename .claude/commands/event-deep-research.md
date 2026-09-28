@@ -66,20 +66,7 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 Before fan-out, load what the pipeline already knows about these entities so research **compounds** instead of restarting from web search every run. Run **Step 1.7 of `.claude/skills/event-research/SKILL.md`**:
 
 1. **1.7a Retrieve (this thread — MCP reads must run in the parent):** for entities **with a prior record** (from the Step 1.5b dedup — pure-NEW entities are skipped here and researched from scratch in Step 2), pull prior Event brief bodies, People/Companies page bodies, Topics `Current Events` (newsletter/trend notes), Gmail correspondence + `label:Content/newsletters newer_than:14d`, and Supabase graph `market` signals over REST (`SUPABASE_API_KEY` from `.env`, **never** the MCP — see `.claude/references/market-intel-spine.md`). **Follow the enforced cost-guard procedure in SKILL Step 1.7a:** skip-no-prior → rank (event-series brief > returning people > companies with recent developments > topics) → hard-cap **N=8** → emit the mandatory audit line (`pulled · skipped-no-prior · capped/not-pulled · graph`) before dispatching the conditioner. **The graph read is best-effort:** `curl --max-time 8`; on non-2xx / timeout / empty, record `graph: no signals` and continue — never block or retry-loop.
-   **1.7a-S — Substrate pack (A/B window, ADR-10 · YED-170/172).** In addition to the pull above, run the substrate retrieval interface over the same entities and invite text:
-   ```
-   .venv/bin/python .claude/scripts/retrieve.py --lens event --seed <seed.json> --out <pack.md>
-   ```
-   `seed.json` = `{"entities": [{"type","name","notion_page_id"} … every Person/Company/Topic from Step 1],
-   "text": "<VERBATIM SOURCE>", "focus": "<Alex's stated focus>", "window_days": 365}`. It returns a Context Pack (Continuity Ledger of prior occasions with these people/companies/topics, returning faces, recurring topics, scored first-hand claims) under a 6k-token budget, and prints its own audit line — copy it into this step's audit output. **Exit 5 = LOUD failure** (the graph holds claims for these entities but the pack kept none): report it, do not proceed as if there were no prior knowledge. Before migrations 0009/0010 land it runs a REST fallback (events + roster only) and says so — expected, not a failure.
-   **A/B — TWO SEPARATE ARMS, BLIND (until YED-172 closes; protocol: `.claude/notes/ab-protocol-yed172-2026-09-19.md`).** Do **not** hand the conditioner both inputs at once — one pack built from both sources cannot produce a winner, and that was the flaw in the first wiring of this step (corrected 2026-09-19). Instead:
-   - **Arm A (legacy):** dispatch `knowledge-conditioning` with the 1.7a pull **only** → Pack A.
-   - **Arm B (substrate):** dispatch `knowledge-conditioning` again, same prompt / same `VERBATIM SOURCE` / same triage plan / same stated focus, with the 1.7a-S pack **only** → Pack B.
-   - **Blind:** coin-flip the labels (`python3 -c "import random;print(random.choice(['A=X,B=Y','A=Y,B=X']))"`), write the key to `.claude/.state/<session>.ab_key`, and strip every arm tell from both packs (audit lines, `graph=rpc`, `claims-layer`, `c:<id>` claim ids, "legacy"/"substrate" wording) before Alex sees them.
-   - **Score** per the protocol's pre-registered rubric (use-in-room 1–5 · error count · new-to-me 1–5 · changed-my-plan · overall preference) — Alex + a Sonnet seat, **not** the Gemini seat (advisory, YED-206). Reveal the key only after both have scored; log both scorecards to `.claude/evals/logs/<date>-ab-yed172-<event>.jsonl`.
-   - **Then proceed** with Alex's preferred pack (or both merged on a tie) — prep is never worse than today.
-   - `retrieve.py` exit 5 (loud failure) on an event = that event counts as an **A win**, logged, not hidden.
-2. **1.7b Condition (delegated):** dispatch `knowledge-conditioning` with the `VERBATIM SOURCE` block + triage plan + the raw pulls **for this arm only** (see the A/B block above — during the window this step runs TWICE, once per arm; after YED-172 closes it runs once with the winning source). It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged (`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity cards, Graph Signals, and an Audit. Text-in / text-out; no I/O.
+2. **1.7b Condition (delegated):** dispatch `knowledge-conditioning` with the `VERBATIM SOURCE` block + triage plan + the 1.7a raw pulls. It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged (`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity cards, Graph Signals, and an Audit. Text-in / text-out; no I/O.
 3. **1.7c Persist (this thread):** write the pack as a `prior_context_pack` Content Draft (`Platform: notion_only`, icon 🗃️) so "what prior knowledge fed this brief" is auditable. Step 4 (inline) relinks it + mirrors a `## Prior-Context Pack` section onto the Event page.
 
 **First-touch event (no prior record for any entity):** skip 1.7b/1.7c, note it, and run Step 2 from scratch. The graph read commonly returns empty until event-research write-back ships — expected, not a failure.
@@ -136,7 +123,7 @@ Iterate until Alex says "write it" / "proceed" / "looks good".
 
 ## Step 4 — Notion writes (this conversation)
 
-Notion writes run inline in the parent thread (subagents have no claude.ai connectors) — do NOT dispatch the `notion-writer` agent (it fails on write; 2026-06-10, `platform-constraints.md`).
+Notion writes run inline in the parent thread (subagents have no claude.ai connectors; CLAUDE.md invariant 5). Property mapping: `.claude/references/notion-schema.md`.
 Inputs: approved brief + triage plan + raw invite text + today's date + Google Calendar Event ID (if captured in Step 1).
 
 Execute Steps 4a–4g of `.claude/skills/event-research/SKILL.md` inline, in dependency order:
@@ -148,32 +135,23 @@ Execute Steps 4a–4g of `.claude/skills/event-research/SKILL.md` inline, in dep
 
 Returns the confirmation block from Step 4g. The Event page + `research_brief` Content Draft now hold the **Scan head** plus an empty `## Deep Read` section carrying `<!-- deep_read_rendered: pending -->` — Step 4.5 fills it.
 
-**Record the Deep Read ledger row (YED-139 — mandatory, do not skip).** The moment Step 4 has the Event page URL/ID, register it in the per-session Deep Read ledger, defaulting to PENDING:
-
-```
-.claude/hooks/deep-read-ledger.sh add "<event title>" "<Event page id or URL>"
-```
-
-This is co-located with the Scan-head commit on purpose: the row is written **pending by default** and only flips to `rendered` on a successful Step 4.5 (below). The ledger is **informational**: the `deep-read-gate.sh` Stop hook was unwired 2026-09-28 (complexity reset; only `build-session-emit.sh` is wired), so nothing blocks close automatically. The ledger feeds the manual Step 6.5 check, which is now the only Deep Read gate — skipping this `add` just makes that check rely on Notion alone.
-
 ## Step 4.2 — Write the research to the knowledge graph (this conversation — YED-205, gated)
 
 **Why:** the pre-event research is the richest thing this pipeline produces, and until YED-205 none of it reached the
-graph that `/interview-prep`, retrieval and post-event runs read. Spec + decisions: `.claude/notes/yed-205-spec-2026-09-27.md`.
+graph that `/interview-prep`, retrieval and post-event runs read. Spec + decisions: `docs/archive/notes/yed-205-spec-2026-09-27.md`.
 **What it writes:** the researched companies/people/topics, the `research_brief` document row, and one **claim** per
 Evidence Ledger row, with `web_verified` for rows with a URL and `email_signal` for rows pointing at a public URL (a lead).
 **What it never writes:** an event row. You have not attended yet (ADR-10 D9); `/post-event-content` 3.8b creates the
 attended row and attaches these claims to it automatically. Private-correspondence rows (email-signal, no URL) and
 `notion-prior` rows are skipped and counted, never written. All writes go through `spine_client` (ADR-9).
 
-**4.2a Open the ledger row (with the Deep Read ledger `add`, right after Step 4's Event page write).** Write the manifest
+**4.2a Open the ledger row (right after Step 4's Event page write).** Write the manifest
 file (4.2b) first: every `substrate.py` verb reads it, including this one. Then:
 ```
 .venv/bin/python .claude/scripts/substrate.py expect-research --manifest .claude/.state/research/<slug>.manifest.json
 ```
 This opens a PENDING row keyed `research:<page id>` (distinct from the post-event row). The row is **informational**:
-the `substrate-gate.sh` Stop hook was unwired 2026-09-28, so a pending row no longer blocks close — report it in Step 6
-instead. It writes nothing to the graph.
+a pending row does not block close — report it in Step 6. It writes nothing to the graph.
 
 **4.2b Write two files** under `.claude/.state/research/` (gitignored; `<slug>` = the event title, kebab-cased):
 - `<slug>.manifest.json`: `{"event": {"notion_page_id": "<Event page id from 4g>", "title": "…", "event_date": "YYYY-MM-DD"},
@@ -205,22 +183,14 @@ If it genuinely cannot be written, the only other exit is a logged waive:
 1. **Assemble slices (4.5a)** from the synthesizer's `## Evidence Set` (held from Step 2.5) — one URL-carrying evidence slice per Deep-Read section + event meta + Alex's focus + novice level.
 2. **Render section-by-section (4.5b)** — dispatch `field-guide-renderer` (Opus) **once per section**, in order: The Frame → Primer/Landscape → Companies → People → Cross-Event Threads. Skip a section whose evidence slice is empty (no people → skip People; first-touch → skip Cross-Event Threads). **One section per call** — never ask for the whole Deep Read at once. Surface any `> Gap:` notes the renderer flags.
 3. **Stitch (4.5c)** — dispatch `field-guide-renderer` in `stitch` mode with all rendered sections → the final Deep Read (opener + smoothed transitions + consolidated endnotes; no fact/citation added or removed).
-4. **Append (4.5d)** — inline `notion-update-page` (real newlines, gotcha m): replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content Draft with the stitched Deep Read; flip the marker to `<!-- deep_read_rendered: [today] -->`. Idempotent — a re-run replaces only that section. **On success, flip the ledger row too (YED-139):**
-   ```
-   .claude/hooks/deep-read-ledger.sh rendered "<Event page id or URL>"
-   ```
-   This clears the pending state the Step 6.5 check reads. Do it only after the Notion append actually succeeded.
-5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. **Leave the ledger row `pending`** (do NOT flip it) — Step 6.5 will report the run incomplete, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record the acknowledgement so the ledger shows it as waived rather than pending:
-   ```
-   .claude/hooks/deep-read-ledger.sh waive "<Event page id or URL>" "<reason, e.g. renderer unregistered this session>"
-   ```
+4. **Append (4.5d)** — inline `notion-update-page` (real newlines, gotcha m): replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content Draft with the stitched Deep Read; flip the marker to `<!-- deep_read_rendered: [today] -->`. Idempotent — a re-run replaces only that section.
+5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. Step 6.5 will report the run incomplete, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record it in the Step 6 summary as waived (with the reason) rather than pending.
    In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
 
 **Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
 
-**Ledger note (YED-205):** Step 4.2's graph write has the same informational ledger. The `substrate-gate.sh` Stop hook that
-used to fail the run on a pending `research:<page id>` row was unwired 2026-09-28; check it manually at Step 6.5 and resolve
-it with Step 4.2c or a logged `waive --phase pre_event`.
+**Ledger note (YED-205):** a pending `research:<page id>` row from Step 4.2 is checked at Step 6.5; resolve it with Step
+4.2c or a logged `waive --phase pre_event`.
 
 ## Step 5 — HubSpot writes (this conversation)
 
@@ -238,14 +208,13 @@ Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot 
 
 ## Step 6.5 — Deep Read gate (run close — YED-139)
 
-Before declaring the run complete, run the authoritative marker check. Since the Stop-hook gates were unwired (2026-09-28) this step is the **only** Deep Read / graph-write gate — do not skip it. It reads the *real* Notion state:
+Before declaring the run complete, run the authoritative marker check. This step is the **only** Deep Read / graph-write gate — do not skip it. It reads the *real* Notion state:
 
-1. **Enumerate touched Event pages** — from the ledger (`.claude/hooks/deep-read-ledger.sh list`) plus this run's own record. Also report any `research:<page id>` row from Step 4.2 still pending.
-2. **Re-fetch each marker** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->` marker. This catches any drift between the ledger and Notion (the ledger is a local echo; Notion is the truth).
+1. **Enumerate touched Event pages** — from this run's own record. Also report any `research:<page id>` row from Step 4.2 still pending.
+2. **Re-fetch each marker** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->` marker. Notion is the truth.
 3. **Verdict:**
    - **All `rendered` (or explicitly waived)** → run passes; report Deep Read ✅.
    - **Any `pending`** → the run is **NOT complete**. Interactive: **block close** — present the pending event(s), offer the idempotent Step 4.5 re-run, and do not report the run as done. Autonomous/batch: report the run **FAILED** with the pending list (never a silent pass).
-4. Reconcile the ledger with what you found (flip `rendered` / `waive` as appropriate) so it agrees with the authoritative Notion state.
 
 ---
 
@@ -256,7 +225,6 @@ After `/event-deep-research` completes successfully, common follow-ons:
 | Want to... | Run |
 |---|---|
 | Generate pre-event content (LinkedIn posts, DMs, prepared questions) | `pre-event-content` skill — pulls research brief from Notion |
-| Generate project ideas to build before the event | `project-ideation` skill — pulls topics + event from Notion |
 | Capture retro after attending | Step 7 of `.claude/skills/event-research/SKILL.md` (handoff to `content-correspondent` for post-event content) |
 | Synthesize multiple events from this week into one post | `pattern-synthesis` skill (needs ≥2 briefs) |
 
@@ -270,7 +238,7 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 - **Parent times out during fan-out** — split: dispatch company-researcher + person-researcher in one batch, topic-landscape-analyst + competitive-signal-scanner in another, then dispatch synthesizer with all four returns merged.
 - **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
 - **A Notion write hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per `notion-write-gotchas.md` (e), verify with notion-fetch on the data_source URL if it persists.
-- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending` (and the ledger row `pending` — do not flip it), and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 check will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
+- **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending`, and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 check will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
 - **A `field-guide-renderer` call returns a `> Gap:` note** (e.g. a `web-verified` fact missing its URL) — keep it in the output, surface it to Alex; it marks a citation to complete before public reuse. Trace it back to the specialist's Evidence Ledger / Step 1.7 URL capture.
 
 ## Why fan-out runs in the parent thread (architectural note)
@@ -286,6 +254,5 @@ The orchestration shape is defined here. The actual research / write methodology
 - `.claude/agents/research/event-research-synthesizer.md` — synthesizer contract (text-in, brief-out)
 - `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts (now w/ historical spine + novice on-ramp + Evidence Ledger)
 - `.claude/agents/content/field-guide-renderer.md` — Deep Read renderer contract (Opus, section-by-section + stitch, endnotes)
-- `.claude/agents/ops/notion-writer.md` — Notion write contract (reference only; do not dispatch — Notion writes run inline in the parent thread (subagents have no claude.ai connectors))
-- `docs/adr/ADR-5-event-field-guide.md` + `.claude/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
+- `docs/adr/ADR-5-event-field-guide.md` + `docs/archive/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
 - `.claude/references/notion-schema.md` (Notion/HubSpot schemas, write order) · `notion-write-gotchas.md` · CLAUDE.md §4 (SDK constraints)

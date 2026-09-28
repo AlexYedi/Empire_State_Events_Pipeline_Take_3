@@ -37,5 +37,5 @@ Follow **`.claude/references/journal-entry-prompt.md`** end to end — it is the
 ## Ground truth
 - Routine: `.claude/references/journal-entry-prompt.md`
 - Generator: `.claude/scripts/build_journal.py` · sidecar: `.claude/data/build-journal-prose.json`
-- Stop hook: `.claude/hooks/build-journal-refresh.sh` · public surface: `/journal` on empire-state-hub
+- Public surface: `/journal` on empire-state-hub
 - System issue: YED-119
