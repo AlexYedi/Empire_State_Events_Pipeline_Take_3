@@ -30,7 +30,7 @@ The reset's rule (CLAUDE.md §5) is that every build removes a named friction on
 
 - The MI graph loses a producer that was not producing. The producer path left is `substrate.py`, per ADR-10.
 - `Pipeline/*` labels remain in Gmail. They are harmless, and Alex can delete them by hand at any time.
-- History that names the lane stays as written: ADR-7, ADR-8's worked examples, `docs/adr/evidence/`, `.claude/evals/` logs, and the `graph-freeze.*` writer list. That list is owned by the substrate cleanup (PR-E), which updates it.
+- History that names the lane stays as written: ADR-7, ADR-8's worked examples, `docs/adr/evidence/`, `.claude/evals/` logs, and the `graph-freeze.*` writer list. The substrate cleanup (PR-E) retires that list.
 - Reversing this means a new ADR. Reviving the lane means restoring the archived files and re-granting the scope. Re-granting is the step that needs a decision.
 
 ## Action for Alex: revoke the Gmail `gmail.modify` scope granted for this lane
