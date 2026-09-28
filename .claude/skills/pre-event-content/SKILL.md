@@ -48,6 +48,7 @@ Alex provides one of:
    - Companies with recent developments
    - Documentarian angle
    - **Verification Flags / provenance exclusions (v1.2, YED-132)** — the brief's `Verification Flags` section AND, if a `prior_context_pack` Content Draft is linked to this Event, its `UNVERIFIED` and `do-not-cite` items. These are the claims that must NOT flow into public copy as fact.
+3b. **Pull prior posts on the theme (YED-208).** Pick the post's 1–3 themes from the fixed list and run the back-catalog query in `content-style-guide.md` → *Variants and prior-post callbacks*. Carry the hits into Steps 2–3 as callback candidates.
 4. Confirm with Alex what content types to generate for this event:
    - The Upcoming Week post (only if multiple events queued for the week)
    - Pre-Event LinkedIn post
@@ -452,6 +453,8 @@ Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if th
 ---
 
 ## Step 7: Write to Notion
+
+**Every post draft sets `Themes`** (the 1–3 picked in Step 1.3b, as a JSON array). Prepared questions and connection notes stay untagged.
 
 Write all approved content to the **Content Drafts** database.
 
