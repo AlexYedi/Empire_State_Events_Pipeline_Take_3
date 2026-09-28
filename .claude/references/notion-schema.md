@@ -115,6 +115,20 @@ HubSpot (post-event, gated, create-once; search name + company first)
   3. Note on each Contact (event name + role + talking points in the body)
 ```
 
+**Step 4 routing (folded from the retired `notion-writer` agent, 2026-09-28).** Writes run inline in the parent
+thread; formatting rules are in `notion-write-gotchas.md`.
+- Per triage path: **NEW** → `create-pages` with the full schema · **REFRESH-light / REFRESH-full** → `update-page`
+  with event-research SKILL Step 4b–4d refresh semantics · **SKIP** → no write, but pass the URL through to the
+  Event's relations · **APPEND-CURRENT-EVENTS-ONLY** (Topics) → touch Current Events + Last Updated only.
+  Triage missing → stop and re-run Step 1.5; never fall back to "create always."
+- **Re-run of an existing Event** → update the existing `research_brief` draft and the Event page
+  `## Research Brief` section in place (with a `> Re-researched [date] — corrections: …` line); never a second draft.
+- **Prior-Context Pack** (if Step 1.7c created one) → after the Event row exists, append a `## Prior-Context Pack`
+  section to the Event body (append-only, never `replace_content`) and relink the pack draft's Event / People /
+  Topics relations to the new rows. Never create a second `prior_context_pack` draft.
+- Every Content Draft gets `Goal` + `Target` at creation (defaults by Content Type in `.claude/skills/content-patterns/goal-tagging.md`;
+  `internal` for research_brief / post_event_brief / prepared_questions).
+
 ## Apollo (Not integrated — separate evaluation)
 
 - Not part of the event research pipeline. Alex evaluates Apollo independently via web UI

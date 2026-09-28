@@ -68,7 +68,7 @@ Listed so they're *conscious deferrals*, not omissions. Resolved during the buil
 
 **9. Constitution / invariants this build must honor.**
 Pointer to the non-negotiables it touches: CLAUDE.md invariants, `notion-write-gotchas.md`,
-`sdk-runtime-constraints.md`, `market-intel-spine.md`, the relevant ADR(s). (spec-kit's constitution
+`platform-constraints.md`, `market-intel-spine.md`, the relevant ADR(s). (spec-kit's constitution
 pattern — make the invariants machine-consumable, not prose the agent may skip.)
 
 **10. Linear wiring + Decision log.**
