@@ -1,9 +1,8 @@
 # Journal-entry prompt — the in-the-moment prose capture (shared module)
 
-The reusable "capture Alex's voice at a break point" routine. Invoked two ways:
-- **Auto** — as the closing step of `/dod-close` (every non-trivial build close-out).
-- **Manual** — the standalone `/journal-entry` command, for any break point that isn't a full DoD
-  close (a content/carousel ship, a milestone, a scaffold).
+The reusable "capture Alex's voice at a break point" routine. Invoked by the standalone `/journal-entry`
+command at any break point (a merged PR, a content/carousel ship, a milestone, a scaffold). The auto-invocation
+from the old DoD close-out was retired with that gate on 2026-09-28.
 
 It exists because the build journal's **facts** self-instrument (git + telemetry → `build_journal.py`),
 but the **prose sidecar** (`.claude/data/build-journal-prose.json`) is human-owned and lapses silently

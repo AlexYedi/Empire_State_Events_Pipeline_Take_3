@@ -1,6 +1,6 @@
 # Canonical PRD template (build-elevating)
 
-**Purpose.** The default spec for any non-trivial build (DoD gate item 1). Composed from Alex's own
+**Purpose.** The default spec for any non-trivial build (PR template box 1, `.github/pull_request_template.md`). Composed from Alex's own
 corpus (`writing-prds`, `writing-north-star-metrics`, `ai-product-strategy`, `risk-playbooks`,
 `head-of-product-engineering`, systems-thinking) + external canon (Amazon PR-FAQ, Shape Up, the
 Linear Method, spec-kit, Anthropic's agent-engineering posts).
@@ -15,7 +15,7 @@ Two rules follow:
 - **Never rewrite — append to the Decision Log.** A dated decision entry is the anti-staleness engine.
   The PRD stays true because history accretes, not because sections get edited.
 
-**Anti-creep (same discipline as the DoD gate).** Target ≤ ~1 page of prose + the decision log. If the
+**Anti-creep.** Target ≤ ~1 page of prose + the decision log. If the
 body creeps toward exhaustive, that's the rule-beating signal — shrink it. Length dilutes the
 executable signal; padding is docked by `build-quality@4`'s density cap. A section with nothing
 load-bearing to say is deleted, not filled.
@@ -25,7 +25,7 @@ load-bearing to say is deleted, not filled.
 ## Template (copy this)
 
 > **Title** · **Linear:** YED-NN · **Date:** YYYY-MM-DD · **Owner:** Alex · **Status:** draft/approved
-> · **Appetite:** <3d | 3-7d | 1-2wk | 2wk+ · **Backfilled?** no (yes → one-line why + honest DoD waiver)
+> · **Appetite:** <3d | 3-7d | 1-2wk | 2wk+ · **Backfilled?** no (yes → one-line why, said plainly in the PR)
 
 **1. Problem & why now** *(PR-FAQ head — the most important section).*
 The problem, the evidence it's real, and *why now*. Lead with the problem, never the solution
@@ -46,15 +46,15 @@ the real thinking lives — e.g. the R2-vs-GCS-vs-Supabase reasoning belongs *he
 - **Archetype guarded against** — especially **Shifting the Burden** (our documented root cause: rigor
   living in optional docs) and **Seeking the Wrong Goal / Rule-Beating** (Goodhart). One line each.
 
-**5. Rabbit holes + pre-mortem** *(satisfies DoD item 3 — the adversarial pass, inline).*
+**5. Rabbit holes + pre-mortem** *(satisfies PR template box 3 — the adversarial pass, inline).*
 Named rabbit holes (where scope/risk actually hides). Then: *"It's N weeks later and this is a regret —
 why?"* — top 2-3 failure modes + the fix folded into the plan.
 
 **6. Success criteria + eval** *(measure value delivered, not captured).*
 - **North-star metric**: leading not lagging, simple, precisely defined ("what counts as X?"), tied to
   the acted-on-value north-star, with a **counter-metric / guardrail** against gaming.
-- **Value-action-registry row** (required — no orphan metrics): `{threshold → action → surface}`,
-  surface ∈ {in-session DoD · Hub dashboard · weekly review}.
+- **Metric → action** (no orphan metrics): `{threshold → action}`, and every metric reported beside its
+  do-nothing baseline (the null-baseline rule, CLAUDE.md §5).
 - **Acceptance criteria** — each requirement as a *checkable statement the build-quality judge can grade*.
   "Done" = these pass. This is the PRD→Linear→judge loop-closer.
 
@@ -86,18 +86,18 @@ pattern — make the invariants machine-consumable, not prose the agent may skip
 | 1 Problem/why-now | `writing-prds` "problem first"; PR-FAQ |
 | 3 Alternatives | decision rationale (the R2 lesson); Shape-Up pitch |
 | 4 Leverage/systems | systems-thinking harness; guards the diagnosed root cause |
-| 5 Pre-mortem | **DoD gate item 3** (adversarial pass) — inline, not separate |
-| 6 Success + eval + registry row | `writing-north-star-metrics`; value-action-registry (no orphan metrics); "evals as PRDs" |
+| 5 Pre-mortem | **PR template box 3** (adversarial pass) — inline, not separate |
+| 6 Success + eval + metric→action | `writing-north-star-metrics`; null-baseline rule (no orphan metrics); "evals as PRDs" |
 | 6 Acceptance criteria | **build-quality judge** grades against the spec, not vibes |
 | 8 Deferred details | anti-staleness (the chunk-size-was-wrong-by-Phase-0 lesson) |
-| 10 Linear + decision log | **DoD gate item 2**; anti-staleness engine |
+| 10 Linear + decision log | **PR template box 2**; anti-staleness engine |
 
 ## Worked example (condensed — YED-118 in this shape)
 - **1 Problem/why-now:** Drive-MCP retrieval is filename-only; can't ask a whole book; corpus fights Gmail's 15GB. *Press release:* "Ask the reference library and get cited passages" — yes, it's the M3 differentiator.
 - **3 Alternatives:** blob store R2 vs GCS vs Supabase-Storage → R2 (decoupled, 10GB, $0 egress, no pause); the Supabase-Pro detour died on a stranded credit. Embeddings local vs hosted → local (zero-metered).
 - **4 Leverage:** information-flow (#6) — route a doc's claims to the decider. Archetype guarded: Shifting-the-Burden (build ahead of corpus volume justified strategically, eyes open).
 - **5 Pre-mortem:** small-model recall; DDL/wrong-project; corpus-maturity → fixes: recall@k gate + bge-base fallback; front-loaded Phase 0; explicit maturity call.
-- **6 Success:** recall@8 ≥ 80% on a Baseten eval set (→ shipped 88%); registry row {recall<80% → swap to bge-base → in-session}. Acceptance: ingest end-to-end + dedup no-op + cited answer.
+- **6 Success:** recall@8 ≥ 80% on a Baseten eval set (→ shipped 88%); metric→action {recall<80% → swap to bge-base → in-session}. Acceptance: ingest end-to-end + dedup no-op + cited answer.
 - **8 Deferred:** chunk size, hnsw vs ivfflat, top-k, bge query prefix — all decided in build.
 - **10 Decision log:** `2026-09-10 — kept R2 over Supabase-Storage — Pro credit stranded on GTM_OS org; decoupling+10GB+no-pause won.`
 

@@ -11,7 +11,7 @@ of the match, inside the same sentence. Conservative by design: under-flagging i
 
 Usage:
   check-tombstones.py --artifact <path>   # judge Step 0: one file
-  check-tombstones.py --all               # rigor-review: repo-wide, docs + code/config (SCAN_EXT) under .claude/ + docs/, history dirs skipped
+  check-tombstones.py --all               # by hand: repo-wide, docs + code/config (SCAN_EXT) under .claude/ + docs/, history dirs skipped
 Hits are a LOWER BOUND, not exhaustive: a removal marker within WINDOW chars clears a match. Treat hits as verified facts, never as proof of absence.
 stdout: one "path:line: [term] text" per hit     stderr: "check-tombstones: N hit(s) in M file(s)"
 exit 0 always (advisory; the caller decides).
@@ -30,7 +30,7 @@ WINDOW = 40
 SKIP_DIRS = (".claude/artifacts/", ".claude/evals/logs/", ".claude/notes/",
              ".claude/proposals/", "docs/adr/", ".claude/data/")
 # controls/manifest.json pins historic control artifacts by git blob (a removed file is still a valid control)
-SKIP_FILES = {REGISTRY, ".claude/evals/correction-recurrence.md", ".claude/hooks/check-tombstones.py",
+SKIP_FILES = {REGISTRY, ".claude/hooks/check-tombstones.py",
               ".claude/evals/controls/manifest.json"}
 # text files where a live call to a removed tool can hide: docs AND executable code/config
 SCAN_EXT = (".md", ".py", ".sh", ".mjs", ".js", ".ts", ".json", ".yml", ".yaml", ".toml")

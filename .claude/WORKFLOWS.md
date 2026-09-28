@@ -28,16 +28,14 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 | `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
 | `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
 | `/judge-build` | ✅ Wired (advisory) | LLM-as-judge scores a build artifact vs `build-quality@1`; writes run-log + calibration ack. Advisory until ≥20 runs @ ≥80% agreement. |
-| `/dod-close` | ✅ Wired (2026-07-11) | Closes a non-trivial build against the DoD gate; writes `dod_met`/`dod_waived`/`correction_rounds` to telemetry via `.claude/hooks/dod-close.sh`. The writer that closed the rigor loop. |
-| `/rigor-review` | ✅ Wired (first run pending) | Weekly ≤10-min learning loop over build-sessions + judge log + waivers + outcomes; proposes codified fixes. |
 | `tag-outcome` (skill) | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). Still invocable as `/tag-outcome`; the wrapper command file was pruned 2026-09-28. |
 
-**Pruned 2026-09-28 (0–1 uses in 30 days):** `/evergreen-deep-dive`, `/scan-trends`, `/scan-voices` (+ skills `trend-radar`, `voice-radar`), `/systems-analyze` (call the `alex:systems-analyst` plugin agent directly), `/toolbox`, `/morning-refresh`, `/recompute-relevance` (the script `.claude/scripts/recompute_relevance.py` stays), and the imported suite `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report`. Recover any with `git checkout archive/pre-reset-2026-09-28 -- <path>`.
+**Pruned 2026-09-28 (0–1 uses in 30 days):** `/evergreen-deep-dive`, `/scan-trends`, `/scan-voices` (+ skills `trend-radar`, `voice-radar`), `/systems-analyze` (call the `alex:systems-analyst` plugin agent directly), `/toolbox`, retired `/dod-close` + retired `/rigor-review` (the DoD gate and weekly review were replaced by `.github/pull_request_template.md`), `/morning-refresh`, `/recompute-relevance` (the script `.claude/scripts/recompute_relevance.py` stays), and the imported suite `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report`. Recover any with `git checkout archive/pre-reset-2026-09-28 -- <path>`.
 
 > **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
 > `empire-state-hub` repo). Source of truth: `.claude/references/roadmap.md` +
 > `.claude/references/market-intel-spine.md`. **Rigor/measurement layer** source of truth:
-> `.claude/references/{roadmap,build-session-contract,value-action-registry}.md`.
+> `.claude/references/{roadmap,build-session-contract,judge}.md` + `.github/pull_request_template.md`.
 
 ---
 

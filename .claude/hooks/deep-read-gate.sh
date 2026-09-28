@@ -21,7 +21,7 @@
 #
 # Durability (review finding #2b): the Aug-2026 regression was invisible AFTER THE FACT.
 # On a close-with-pending, this hook appends a row to .claude/artifacts/deep-read-gate-failures.jsonl
-# so the failure survives the transcript (rigor-review / a human can see it). A perishable
+# so the failure survives the transcript (a human can see it). A perishable
 # systemMessage alone would repeat the original invisibility.
 #
 # NOTE (hard constraint): the authoritative marker lives in Notion, unreadable from a shell
