@@ -1,0 +1,233 @@
+{
+  "_about": "SYNTHETIC fixture for test_bundle_multifile.py and test_judge_e2e.py. It reproduces the SHAPE of the PR #139 range (7 code/doc files + 5 telemetry .jsonl, one file > 400 lines, > 60k chars in full) and the 09-27 deep-read-gate regression log row, without pinning any commit of this repo's history. No file content here is copied from the real files except the four reviewer quotes the regression needs (engineering text, no people, no events). fixture_repo.py materialises it as a throwaway git repo: base -> head (the range) -> small (a one-file range). A line '@@PAD n@@' expands to n deterministic filler lines.",
+  "spec_note": "docs/archive/notes/stop-gate-per-turn-2026-09-27.md",
+  "commits": [
+    {
+      "tag": "base",
+      "files": {
+        "docs/archive/notes/stop-gate-per-turn-2026-09-27.md": [
+          "# Stop gate per turn (SYNTHETIC fixture spec)",
+          "",
+          "Fixture stand-in for the spec the 09-27 deep-read-gate review was given. Only the two decision lines below matter.",
+          "",
+          "## Fix 1",
+          "",
+          "Verify at build whether Claude Code's `SessionEnd` hook event is available in this version; if so, log the abandoned case there too (log only — it cannot block).",
+          "",
+          "## Fix 3",
+          "",
+          "`/rigor-review` (`.claude/evals/correction-recurrence.md` reader) should exclude superseded rows for that session."
+        ],
+        ".claude/evals/test_gate_in_progress.sh": [
+          "#!/usr/bin/env bash",
+          "# test_gate_in_progress.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "pass=0; fail=0",
+          "check() { if eval \"$2\"; then pass=$((pass+1)); else fail=$((fail+1)); echo \"FAIL $1\"; fi; }",
+          "check \"case one\" true",
+          "echo \"$pass passed, $fail failed\""
+        ],
+        ".claude/hooks/deep-read-gate.sh": [
+          "#!/usr/bin/env bash",
+          "# deep-read-gate.sh: SYNTHETIC fixture file (judge bundle tests). Not a real hook; nothing runs it.",
+          "# Shape only: a Stop hook that blocks the turn until a per-session marker exists.",
+          "set -euo pipefail",
+          "",
+          "SESSION_ID=\"${1:-}\"",
+          "MARKER_DIR=\"${MARKER_DIR:-/nonexistent-fixture-dir}\"",
+          "if [ -z \"$SESSION_ID\" ]; then",
+          "  echo \"fixture gate: no session id, failing closed\" >&2",
+          "  exit 2",
+          "fi",
+          "[ -f \"$MARKER_DIR/$SESSION_ID\" ] && exit 0",
+          "echo \"fixture gate: marker missing for this session\" >&2",
+          "exit 2"
+        ],
+        ".claude/hooks/gate-sweep-sessionstart.sh": [
+          "#!/usr/bin/env bash",
+          "# gate-sweep-sessionstart.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "echo \"fixture sweep: nothing to do\""
+        ],
+        ".claude/hooks/substrate-gate.sh": [
+          "#!/usr/bin/env bash",
+          "# substrate-gate.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "SESSION_ID=\"${1:-}\"",
+          "[ -n \"$SESSION_ID\" ] || exit 2",
+          "exit 0"
+        ],
+        ".claude/scripts/spine_client.py": [
+          "\"\"\"spine_client.py: SYNTHETIC fixture file (judge bundle tests). Not the real client; nothing imports it.",
+          "Padded past 400 lines and 60k chars so the range bundle's size rule (hunk mode) is exercised.\"\"\"",
+          "import sys",
+          "",
+          "@@PAD 340@@",
+          "",
+          "",
+          "def req(method, path, attempts=3):",
+          "    for attempt in range(1, attempts + 1):",
+          "        try:",
+          "            return _send(method, path)",
+          "        except OSError as e:",
+          "            if attempt >= attempts:",
+          "                raise",
+          "            sys.stderr.write(\"fixture req: transient error, retrying\\n\")",
+          "",
+          "",
+          "@@PAD 340@@",
+          "",
+          "",
+          "def selftest():",
+          "    ok = True",
+          "    return ok"
+        ],
+        ".claude/settings.json": [
+          "{",
+          "  \"hooks\": {",
+          "    \"Stop\": [{\"hooks\": [{\"type\": \"command\", \"command\": \".claude/hooks/deep-read-gate.sh\"}]}]",
+          "  }",
+          "}"
+        ],
+        ".claude/skills/rigor-review/SKILL.md": [
+          "# rigor-review (SYNTHETIC fixture file)",
+          "",
+          "Reads the failure logs and reports recurring corrections."
+        ],
+        ".claude/artifacts/deep-read-gate-failures.jsonl": [
+          "{\"fixture\": true, \"row\": 1}"
+        ]
+      }
+    },
+    {
+      "tag": "head",
+      "files": {
+        ".claude/evals/test_gate_in_progress.sh": [
+          "#!/usr/bin/env bash",
+          "# test_gate_in_progress.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "pass=0; fail=0",
+          "check() { if eval \"$2\"; then pass=$((pass+1)); else fail=$((fail+1)); echo \"FAIL $1\"; fi; }",
+          "check \"case one\" true",
+          "check \"case two: a live claim keeps the gate silent\" true",
+          "check \"case three: a released claim blocks\" true",
+          "echo \"$pass passed, $fail failed\""
+        ],
+        ".claude/hooks/deep-read-gate.sh": [
+          "#!/usr/bin/env bash",
+          "# deep-read-gate.sh: SYNTHETIC fixture file (judge bundle tests). Not a real hook; nothing runs it.",
+          "# Shape only: a Stop hook that blocks the turn until a per-session marker exists.",
+          "set -euo pipefail",
+          "",
+          "SESSION_ID=\"${1:-}\"",
+          "MARKER_DIR=\"${MARKER_DIR:-/nonexistent-fixture-dir}\"",
+          "if [ -z \"$SESSION_ID\" ]; then",
+          "  echo \"fixture gate: no session id, failing closed\" >&2",
+          "  exit 2",
+          "fi",
+          "source \"$(dirname \"$0\")/_run_in_progress.sh\"",
+          "run_in_progress \"$SESSION_ID\" && exit 0",
+          "[ -f \"$MARKER_DIR/$SESSION_ID\" ] && exit 0",
+          "echo \"fixture gate: marker missing for this session\" >&2",
+          "exit 2"
+        ],
+        ".claude/hooks/gate-sweep-sessionstart.sh": [
+          "#!/usr/bin/env bash",
+          "# gate-sweep-sessionstart.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "echo \"fixture sweep: logging abandoned runs older than the threshold\""
+        ],
+        ".claude/hooks/substrate-gate.sh": [
+          "#!/usr/bin/env bash",
+          "# substrate-gate.sh: SYNTHETIC fixture file (judge bundle tests). Nothing runs it.",
+          "set -euo pipefail",
+          "SESSION_ID=\"${1:-}\"",
+          "[ -n \"$SESSION_ID\" ] || exit 2",
+          "source \"$(dirname \"$0\")/_run_in_progress.sh\"",
+          "exit 0"
+        ],
+        ".claude/scripts/spine_client.py": [
+          "\"\"\"spine_client.py: SYNTHETIC fixture file (judge bundle tests). Not the real client; nothing imports it.",
+          "Padded past 400 lines and 60k chars so the range bundle's size rule (hunk mode) is exercised.\"\"\"",
+          "import sys",
+          "",
+          "@@PAD 340@@",
+          "",
+          "",
+          "def req(method, path, attempts=3):",
+          "    for attempt in range(1, attempts + 1):",
+          "        try:",
+          "            return _send(method, path)",
+          "        except OSError as e:",
+          "            if attempt >= attempts:",
+          "                sys.stderr.write(f\"fixture req: gave up after {attempts} attempt(s)\\n\")",
+          "                raise",
+          "            sys.stderr.write(\"fixture req: transient error, retrying\\n\")",
+          "",
+          "",
+          "@@PAD 340@@",
+          "",
+          "",
+          "def selftest():",
+          "    ok = True",
+          "    ok = ok and callable(req)",
+          "    return ok"
+        ],
+        ".claude/settings.json": [
+          "{",
+          "  \"hooks\": {",
+          "    \"Stop\": [{\"hooks\": [{\"type\": \"command\", \"command\": \".claude/hooks/deep-read-gate.sh\"}]}],",
+          "    \"SessionStart\": [{\"hooks\": [{\"type\": \"command\", \"command\": \".claude/hooks/gate-sweep-sessionstart.sh\"}]}]",
+          "  }",
+          "}"
+        ],
+        ".claude/skills/rigor-review/SKILL.md": [
+          "# rigor-review (SYNTHETIC fixture file)",
+          "",
+          "Reads the failure logs and reports recurring corrections.",
+          "A correction row supersedes the rows it names."
+        ],
+        ".claude/artifacts/deep-read-gate-failures.jsonl": [
+          "{\"fixture\": true, \"row\": 1}",
+          "{\"fixture\": true, \"row\": 2, \"supersedes\": 1}"
+        ],
+        ".claude/evals/logs/fixture-seat-a.jsonl": ["{\"fixture\": true}"],
+        ".claude/evals/logs/fixture-seat-b.jsonl": ["{\"fixture\": true}"],
+        ".claude/evals/logs/fixture-seat-c.jsonl": ["{\"fixture\": true}"],
+        ".claude/evals/logs/fixture-seat-d.jsonl": ["{\"fixture\": true}"]
+      }
+    },
+    {
+      "tag": "small",
+      "files": {
+        "docs/fixture-small-change.md": [
+          "# A small one-file change (SYNTHETIC fixture)",
+          "",
+          "Stays under the 60k size rule, so the bundle is sent in full."
+        ]
+      }
+    }
+  ],
+  "regression_log_row": {
+    "_about": "The 09-27 deep-read-gate reviewer row, trimmed to the fields the regression reads: the four quoted defects and the three quotes the one-file haystack stripped. Quotes are verbatim; nothing else from the row is kept.",
+    "run_id": "sonnet-deep-read-gate",
+    "artifact": ".claude/hooks/deep-read-gate.sh",
+    "defects": [
+      {"file": "docs/archive/notes/stop-gate-per-turn-2026-09-27.md", "criterion": "completeness",
+       "quote": "Verify at build whether Claude Code's `SessionEnd` hook event is available in this version; if so, log the abandoned case there too (log only — it cannot block)."},
+      {"file": "docs/archive/notes/stop-gate-per-turn-2026-09-27.md", "criterion": "completeness",
+       "quote": "`/rigor-review` (`.claude/evals/correction-recurrence.md` reader) should exclude superseded rows for that session."},
+      {"file": ".claude/scripts/spine_client.py", "criterion": "diagnostics",
+       "quote": "if attempt >= attempts:\n                raise"},
+      {"file": ".claude/hooks/deep-read-gate.sh", "criterion": "diagnostics",
+       "quote": "run_in_progress \"$SESSION_ID\" && exit 0"}
+    ],
+    "quote_check": {
+      "unverified_quotes": [
+        "Verify at build whether Claude Code's `SessionEnd` hook event is available in this version; if so, log the abandoned cas",
+        "`/rigor-review` (`.claude/evals/correction-recurrence.md` reader) should exclude superseded rows for that session.",
+        "if attempt >= attempts:\n                raise"
+      ]
+    }
+  }
+}
