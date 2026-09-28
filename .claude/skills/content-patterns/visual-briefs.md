@@ -223,14 +223,14 @@ Every slide in every carousel must specify:
 
 ## Execution — Claude design (default) + Gemini (pictorial)
 
-**Default = Claude design (HTML/SVG via the Artifact tool).** Author the carousel/single
+**Default = Claude design (HTML/SVG → headless Chrome).** Author the carousel/single
 as one self-contained HTML file — a `.slide` frame per slide at 4:5 (1080×1350), dark
 editorial ground, one meaning-bearing accent, real typographic hierarchy, and
 hand-authored inline SVG for diagrams / arrows / timelines. Load `artifact-design`
-(+ `artifact-diagramming`, `dataviz`) first. Publish via the Artifact tool → Alex
-exports with ⌘P → Save as PDF (each slide prints as one 4:5 page → LinkedIn carousel)
-or screenshots frames for PNGs. Iterate in-conversation: edit the file, republish to the
-same URL. No app re-interprets the content — the labels render exactly as written.
+(+ `artifact-diagramming`, `dataviz`) first. Render the PDF with headless Chrome (see
+Export below; each slide prints as one 4:5 page → LinkedIn carousel). Publishing via the
+Artifact tool is optional, for preview or in-conversation iteration (edit the file,
+republish to the same URL). No app re-interprets the content — the labels render exactly as written.
 
 ### Export — automated PDF (default), ⌘P manual fallback
 
