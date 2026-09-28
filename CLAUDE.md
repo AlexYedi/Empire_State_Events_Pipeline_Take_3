@@ -83,7 +83,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Starting a workflow unprompted:** research, drafting and analysis auto-fire when the moment matches; workflows with a built-in approval gate auto-start and pause there; publishing, CRM writes and credit spend (Apollo, Clay) wait for Alex. Unsure → the more cautious tier. "Proceed without prompting" raises the ceiling for that batch.
 
-**Parked thoughts** go to Linear or Notion in the same turn, with the ID in the text. No free-floating "revisit later."
+**Parked thoughts and carry-overs** go to Linear in the same turn, with the ID in the text. Anything owed after today, by Alex or a later session, gets the `carry-over` label, a due date and a Who / What / When / Why / Context description; it shows on the hub's `/ops/todos`. No free-floating "revisit later."
 
 ## 6. Content
 
