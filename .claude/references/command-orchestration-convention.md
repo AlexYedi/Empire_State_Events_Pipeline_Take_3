@@ -60,6 +60,6 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
   completeness — it is not "done."
 
 ## Exemplars (read before authoring)
-- `.claude/commands/interview-prep.md` — 4-axis intake → parallel fan-out → synthesizer → advisory judge
-  → parent-thread persist → present. The canonical multi-agent command.
+- `.claude/commands/interview-prep.md` — 4-axis intake → parallel fan-out → parent-thread synthesis
+  against the skill → Notion write → present. The compact multi-agent command (thinned 2026-09-28).
 - `.claude/commands/event-deep-research.md` — the pipeline rerun manual's Workflow A.

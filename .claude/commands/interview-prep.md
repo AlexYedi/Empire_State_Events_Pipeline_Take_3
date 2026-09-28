@@ -1,121 +1,42 @@
 ---
-description: "Market-Intelligence Engine — Job-Search lens. Generate a 4-axis interview-prep dossier (company × role × stage × interviewer) by fanning out the reused research specialists from this thread, synthesizing via dossier-synthesizer, judge-gating, then persisting to the Postgres graph spine + Notion. Milestone 1 of the engine."
+description: "Job-search lens. Generate a 4-axis interview-prep dossier (company × role × stage × interviewer): fan out the 4 research specialists from this thread, synthesize here against me-model §1.5 with the interview-prep-dossier skill, write the dossier to Notion for comment review."
 argument-hint: "[paste JD + company + interviewer + stage, or say 'prep me for [company]']"
 ---
 
-# /interview-prep — Market-Intelligence Engine, Job-Search lens (Milestone 1)
+# /interview-prep — Job-Search lens
 
-Produce a decision-ready **interview-prep dossier** tailored on four axes: **company × role × interview
-stage × interviewer**. Multi-agent fan-out runs **from this parent thread** (subagents cannot spawn
-subagents — Anthropic SDK constraint); a downstream synthesizer assembles the dossier; a judge gates it;
-the parent persists to Supabase + Notion.
+Orchestration shape only. Methodology, north star (the best *person*, not the most qualified), the 11-section dossier structure and the quality bar: **`.claude/skills/interview-prep-dossier/SKILL.md`**. Read it first.
 
-Methodology (what a great dossier is, the north star, the quality bar): **`.claude/skills/interview-prep-dossier/SKILL.md`** — read it; this file is only the orchestration shape.
+## Step 1 — Intake (this thread)
+Confirm all four axes; ask for any that are missing:
+1. **Company** (+ domain)
+2. **Role**: the JD verbatim, kept as a `VERBATIM SOURCE` block and passed unchanged into every dispatch
+3. **Stage**: `recruiter_screen` · `hiring_manager` · `technical` · `panel` · `cross_functional` · `executive` · `final`
+4. **Interviewer(s)**: name + title (+ LinkedIn)
 
-**North star (do not lose):** prove Alex is the best ***person*** for the job — skills **+ humanity**
-(curious, kind, thoughtful), not a fact dump. Every section helps Alex show genuine curiosity & fit.
+Also capture Alex's stated focus or worry. Then read `.claude/references/me-model.md` (gitignored), **§1.5 Target-Role ICP** and the experience sections. The ICP drives the Fit Thesis and the gaps (YED-152). Never quote me-model into git, logs, or any file outside Notion.
 
----
+## Step 2 — Research fan-out (parallel `Agent` calls, one message)
+Each dispatch leads with the verbatim JD, then the job-lens framing from the skill's mapping table:
+1. **company-researcher**: the company, Gmail-first.
+2. **topic-landscape-analyst**: the segment and the role's domain topics.
+3. **competitive-signal-scanner**: the company and named competitors, last 60 days.
+4. **person-researcher**: each interviewer, Gmail-first. Skip this one only if no interviewer is named.
 
-## Step 1 — Intake & confirm the 4 axes (this conversation, NOT a subagent)
+Wait for all four. If one returns thin, re-invoke only that one with deeper scope.
 
-Collect and confirm all four:
-1. **Company** (+ website/domain if known)
-2. **Role** — the JD pasted verbatim → keep as a `VERBATIM SOURCE` block, carried unchanged into every dispatch
-3. **Interview stage** — `recruiter_screen` | `hiring_manager` | `technical` | `panel` | `cross_functional` | `executive` | `final`
-4. **Interviewer(s)** — name + title (+ LinkedIn if known)
+## Step 3 — Synthesis (this thread)
+Assemble the 11-section dossier in the skill's structure from the four returns, the intake and me-model §1.5. Do not dispatch a synthesizer; the skill is the contract. Apply the honesty rules: unsourced thesis claims go to Verification Flags, and never write a fabricated hook.
 
-Also capture Alex's **stated focus/worry** (e.g. "nervous about systems design", "lead with GTM-engineering").
-If any axis is missing, ask before proceeding — tailoring depends on all four. Do NOT delegate this step.
+## Step 4 — Notion write (this thread; MCP writes are parent-only)
+1. Search before create: `notion-search` for the company or role in Content Drafts (and in Roles, if `/scan-roles` tracked it).
+2. Write the dossier to Content Drafts as plain paragraphs (never code blocks), per `notion-write-gotchas.md`, and link the Roles row in the page body if one exists.
+3. Status: `needs_review`. Alex reviews by inline comment.
 
-Then run a quick **dedup read** against the Postgres spine (`.claude/references/market-intel-spine.md`,
-project `oicikjyzmxqfomrrqkvf`) and Notion: does this company/interviewer already exist? Note matches so
-Step 5 upserts rather than duplicates.
-
-## Step 2 — Research fan-out (this conversation, parallel `Agent` calls in one message)
-
-Dispatch in parallel from this thread. Each dispatch leads with the verbatim JD block (source of truth),
-then the job-lens framing:
-
-1. **company-researcher** — the company. Framing: "for an interview here — what would a sharp candidate
-   know? funding, stage, product, headwinds." Gmail-first (prior correspondence with anyone there changes
-   everything).
-2. **topic-landscape-analyst** — the company's market segment + the role's domain topics. Framing: segment
-   tailwinds/headwinds, where the field is moving, what a thoughtful candidate engages on.
-3. **competitive-signal-scanner** — the company + named competitors. Framing: last-60-day signals + how the
-   company is positioned vs. competitors + meta (what the company/its people say, what others say about them).
-4. **person-researcher** — the interviewer(s) as the "people." Gmail-first, then web. Genuine hooks, recent
-   activity, what they likely probe. One block per interviewer. (Skip only if no interviewer is named.)
-
-Wait for all to return. If one returns thin, re-invoke just that one with deeper scope — don't restart.
-
-## Step 3 — Synthesis (delegated to dossier-synthesizer)
-
-```
-subagent_type: dossier-synthesizer
-prompt: [the 4 axes + verbatim JD + Alex's stated focus + dedup notes + all specialist returns]
-```
-
-The synthesizer assembles the 11-section dossier per the skill's structure. It does NOT research, does NOT
-dispatch subagents, does NOT write to Notion/Postgres. Returns the dossier as text.
-
-## Step 4 — Judge gate (this conversation)
-
-Score the dossier against **`.claude/evals/rubrics/dossier-quality.md`** (LLM-as-judge, per-criterion
-0–1 + reasoning, weighted composite). This is **advisory** (matches `/judge-build` posture): if composite
-< pass band, surface the flag + weakest criteria and either (a) re-invoke the synthesizer with the judge's
-notes, or (b) proceed and note the flag in the Notion write. Never hard-block. Append the run to the
-eval run-log convention (`.claude/evals/`).
-
-## Step 5 — Persist (this conversation — MCP writes are parent-thread only)
-
-Per [[project_notion_writes_must_be_parent_thread]], do all writes inline here, never in a subagent.
-
-**A. Postgres graph spine** — **every WRITE goes through the guarded write path** (ADR-9):
-`python3 .claude/scripts/spine_write.py <table> --json '<row or [rows]>'` (PATCH: `--patch 'id=eq.<uuid>'`;
-upsert: `--prefer 'resolution=merge-duplicates,return=representation'`). It wraps
-`.claude/scripts/spine_client.py` — the ONE sanctioned spine write path (column allowlist + recursive
-email/phone scan, hard-fail; exit 2 = PIIViolation, nothing written; exit 3 = HTTP error). Never hand-roll
-a `curl`/PostgREST POST or PATCH. Use `--dry-run` first if unsure a row passes the guard. **Reads** (the
-dedup lookups below) may stay plain REST GETs at `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`
-(project `empire state ai`, `SUPABASE_API_KEY` from `.env`, never printed) or the Supabase MCP, which is
-canonical for READ-ONLY inspection of this project — never for writes or DDL. Contact PII (email, phone) never
-goes in any row, including `metadata`/free text. Read-before-write dedup:
-- `company` — upsert on lower(name); set fields + `source`.
-- `topic`(s) — upsert on lower(name).
-- `person` — one per interviewer; search by name (+company) before insert; set `role_context='interviewer'`.
-- `event` — `kind='role_posted'`, title = "[Role] @ [Company]", `source` = JD, `event_date` = today.
-- `event_entity` edges — company(role=`employer`), each interviewer(role=`interviewer`), each topic(role=`subject`).
-- Bump `last_engaged_at = now()` + `engagement_count + 1` on touched entities (reinforcement signal).
-
-**B. Notion** — write the dossier (Content Draft `linkedin`/`notion_only` page, or a dedicated dossier page)
-for the comment-review loop. Capture the page id and set `notion_page_id` on the Postgres rows. Follow the
-notion-write gotchas (real newlines in update-page; `notion-search` not `notion-query-data-sources`).
-
-## Step 6 — Present + report
-
-Show the dossier in conversation, the judge verdict, and a confirmation block: Postgres rows created/updated
-(with ids), the Notion page URL, and any Verification Flags. Then the efficacy-loop reminder: when the
-interview happens, the recording → ElevenLabs / `/ingest-recording` path captures it (NOT Granola — dead on
-device), and an `event kind='interview'` can be added to the timeline.
-
----
+## Step 5 — Report
+Give the Quick Take in the conversation, the Notion URL and any Verification Flags. After the interview, the recording goes through `/ingest-recording`.
 
 ## Failure modes
-- **Specialist thin** — re-invoke just that one with deeper scope; re-synthesize. Don't restart.
-- **No interviewer named** — skip person-researcher; dossier notes the interviewer profile is unavailable and
-  pivots Section 5 to "what this stage's interviewer type usually cares about."
-- **`spine_write.py` exit 2 (PIIViolation)** — the guard refused a field; nothing was written. Drop or fix
-  the named field (never widen `ALLOW` to get a dossier through) and retry.
-- **`spine_write.py` exit 3 / REST error** — STOP writes; confirm the ref is `oicikjyzmxqfomrrqkvf`
-  (`empire state ai`) and `SUPABASE_API_KEY` is set in `.env`; if tables 404, the one-time DDL hasn't been
-  applied yet (`.claude/references/market-intel-schema.sql` in the dashboard SQL Editor). The Notion dossier
-  still stands alone. Do NOT write through the Supabase MCP (read-only by policy) or a raw REST call.
-- **Agent registry session-frozen** — this command + dossier-synthesizer were added to disk; they are only
-  discoverable in a FRESH conversation. First run must be a new session.
-
-## Ground truth references
-- `.claude/skills/interview-prep-dossier/SKILL.md` — methodology + dossier structure + quality bar
-- `.claude/agents/research/dossier-synthesizer.md` — synthesizer contract
-- `.claude/references/market-intel-spine.md` — Postgres schema, project id, dedup rules
-- `.claude/references/roadmap.md` — MI Engine framing + milestones (retired the machine-local `where-do-we-stand-sunny-puzzle.md`)
+- **No interviewer named**: skip person-researcher. Section 5 covers what this stage's interviewer type usually probes.
+- **me-model.md absent** (fresh worktree without the symlink): stop and ask. A dossier without the ICP is a company brief.
+- **Notion write fails**: show the dossier in the conversation so it is not lost, then retry the write.
