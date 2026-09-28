@@ -29,7 +29,7 @@ INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 [ -z "$SESSION_ID" ] && exit 0
 
-# Disable override (mirrors the v2-trigger-log convention)
+# Disable override (settings.local.json)
 SETTINGS_LOCAL=".claude/settings.local.json"
 if [ -f "$SETTINGS_LOCAL" ]; then
   if jq -e '.hooks.disable | index("build-session-emit")' "$SETTINGS_LOCAL" >/dev/null 2>&1; then

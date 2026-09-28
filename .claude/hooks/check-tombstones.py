@@ -27,8 +27,8 @@ MARKER = re.compile(r"remov|retir|ripped|deprecat|tombston|vestigial|killed|reje
                     r"instead of", re.I)
 WINDOW = 40
 # history / logs / generated data: describing the past there is correct, not drift
-SKIP_DIRS = (".claude/artifacts/", ".claude/evals/logs/", ".claude/notes/",
-             ".claude/proposals/", "docs/adr/", ".claude/data/")
+SKIP_DIRS = (".claude/artifacts/", ".claude/evals/logs/", "docs/archive/",
+             "docs/adr/", ".claude/data/")
 # controls/manifest.json pins historic control artifacts by git blob (a removed file is still a valid control)
 SKIP_FILES = {REGISTRY, ".claude/hooks/check-tombstones.py",
               ".claude/evals/controls/manifest.json"}
