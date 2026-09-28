@@ -79,7 +79,7 @@ the forks + Alex's calls into the `## Author Steer` (Sharpen) block and honor th
 **When:** Sunday (or week-open) post covering events for **the coming week only**.
 **Input:** Multiple event research briefs (one per event that week).
 **Sources = the briefs only (Alex, 2026-09-27).** Draw each event's unit from its research brief (Quick Take + Verification Flags), the same way for every event. Do NOT read or align to the per-event pre-event drafts or their Author Steer, and do not flag "roundup angle doesn't match the event's own post" as a gap.
-**Length:** Long-form, but the per-event units are tight (this format has the smallest character budget per idea of anything we write).
+**Length:** Long-form, up to the 3,000 cap. Each event unit gets the room it needs; no target below the cap.
 
 > **The roundup's job is to SET THE TABLE — not to take a side (rule added 2026-05-30, Upcoming Week post review).** This is the single most important thing about this format. The roundup calls out the topics, gives a brief state-of-the-union, and surfaces the genuine tensions in the field — **without taking a position on them.** Per the stance-license rule in `content-style-guide.md`: a viewpoint needs room for context + analysis to be worth anything, and a synopsis has none. **A hot take in a synopsis = zero value** (social-media slop / unearned posturing). Bold POV is deferred to the per-event and post-event posts, where there's space to earn it. Do NOT editorialize, do NOT declare winners, do NOT append a clever interrogation ("the number worth interrogating: X") to a synopsis — see `content-anti-patterns.md` (editorial kicker, taking-sides, self-as-protagonist).
 
@@ -130,14 +130,14 @@ CTA:
 - Each synopsis passes the "So What?" test *without* needing a hot take to get there
 - 2-5 relevant hashtags at the end
 - Emoji used sparingly as structural markers
-- **Character budget (added 2026-06-10):** the whole roundup is **≤ 3,000 chars** (LinkedIn hard cap), target 1,300–2,200. This format balloons fastest — count it and cut to budget BEFORE presenting. Sources/deeper links go to the first comment, never inline. Show the count on hand-off. See `content-style-guide.md` → LinkedIn Character Budget.
+- **Character budget (added 2026-06-10):** the whole roundup is **≤ 3,000 chars** (LinkedIn hard cap); no target below it (Alex, 2026-09-28). Count it and cut only if over 3,000, BEFORE presenting. Sources/deeper links go to the first comment, never inline. Show the count on hand-off. See `content-style-guide.md` → LinkedIn Character Budget.
 
 ---
 
 ## Step 3: Generate Pre-Event LinkedIn Post
 
 **When:** Per-event post, typically a few days before the event.
-**Length:** Mid-form (8-15 lines).
+**Length:** Whatever the argument needs, up to the 3,000 cap.
 
 > **This post is the FIRST HALF of a deliberate two-part arc (rule added 2026-09-11 — canonical: `content-style-guide.md` → "The pre→post arc").** Structure it **macro → micro → implications**:
 > 1. **Table-set the topic** — its current state, the trends, the recent developments.
@@ -187,7 +187,7 @@ Present as inline options; ship all three to Notion, never pre-select.
 - Emoji sparingly
 - Documentarian framing: specific detail (reporter), synthesis (student), interpretation (analyst) — hit at least one
 - **Source-check (added 2026-05-26):** any firm/person thesis or positioning claim is source-backed in the brief; if it's an unsourced brief assertion, verify or cut before this goes public
-- **Character budget (added 2026-06-10):** post is **≤ 3,000 chars** (LinkedIn hard cap), target 900–1,500. Count it; if over, cut to budget BEFORE presenting — never hand Alex an over-limit draft to trim. Sources go to the first comment or the carousel, never inline. Show the count on hand-off (e.g. "1,180 / 3,000"). See `content-style-guide.md` → LinkedIn Character Budget.
+- **Character budget (added 2026-06-10):** post is **≤ 3,000 chars** (LinkedIn hard cap); no target below it (Alex, 2026-09-28). Count it; if over 3,000, cut to budget BEFORE presenting — never hand Alex an over-limit draft to trim. Sources go to the first comment or the carousel, never inline. Show the count on hand-off (e.g. "1,180 / 3,000"). See `content-style-guide.md` → LinkedIn Character Budget.
 
 ---
 

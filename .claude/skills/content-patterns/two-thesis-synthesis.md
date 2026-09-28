@@ -43,7 +43,7 @@ ALWAYS use this sequence. Word counts are targets, not hard caps.
 | **Take** | 40-70 words | Where you're landing and why — or, honestly, that you haven't landed yet and here's what would move you. Include the criterion you're using, not just the verdict. |
 | **Invitation** | 15-25 words | A specific open question back to the reader. Not "what do you think?" — something the room can actually answer with a real opinion. |
 
-Total: 180-295 words. LinkedIn's sweet spot.
+Total: whatever the two theses need, within the 3,000-char cap.
 
 ---
 
