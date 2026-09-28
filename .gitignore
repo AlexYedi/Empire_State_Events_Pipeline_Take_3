@@ -27,7 +27,7 @@ venv/
 .claude/settings.local.json
 .claude/.state/
 # Per-session telemetry (build-sessions shards + trigger-log) lives under .claude/.state/telemetry/
-# since 2026-09-29 (YED-229) — already covered by the .claude/.state/ rule above; called out
+# since 2026-09-28 (YED-229) — already covered by the .claude/.state/ rule above; called out
 # explicitly so it's obvious this directory is INTENTIONALLY untracked, not an oversight.
 
 na2-f81e-cd3a-4dd2-96c7-505f7480973d
