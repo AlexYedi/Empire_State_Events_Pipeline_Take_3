@@ -1,25 +1,14 @@
 #!/usr/bin/env python3
-"""test_judge_lib.py: judge_lib.score() must equal the jq scorer inside gemini-judge.sh, on every fixture (YED-209).
+"""test_judge_lib.py: the judge's deterministic parts (YED-209; single reviewer since YED-231).
 
-Two seats scored by two different arithmetics would make "divergence" meaningless. The jq program is EXTRACTED
-from gemini-judge.sh at test time, so if either side drifts this test fails. Also covers quote verification,
-the must-cite rule, and the budget guard. Run: python3 .claude/evals/test_judge_lib.py
+Scores are pinned to fixed expected values (the numbers the jq parity test held until the Gemini adapter was
+removed, so the arithmetic is unchanged). Also covers quote verification, the must-cite rule, finalize() (the
+only place a final verdict is decided), guarded paths and the judge-layer rule.
+Run: python3 .claude/evals/test_judge_lib.py
 """
 import json, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import judge_lib as jl
-
-src = open(".claude/hooks/gemini-judge.sh", encoding="utf-8").read()
-m = re.search(r"jq -c --arg atype \"\$ATYPE\" --argjson dangling \"\$HAS_DANGLING\" '\n(.*?)'\)\n", src, re.S)
-assert m, "could not find the jq scorer in gemini-judge.sh (did it move? update this test)"
-JQ = m.group(1)
-
-
-def jq_score(v, atype, dangling):
-    r = subprocess.run(["jq", "-c", "--arg", "atype", atype, "--argjson", "dangling", json.dumps(dangling), JQ],
-                       input=json.dumps(v), capture_output=True, text=True)
-    assert r.returncode == 0, r.stderr
-    return json.loads(r.stdout)
 
 
 def V(scores, **flags):
@@ -30,20 +19,19 @@ def V(scores, **flags):
             "defects": [], "checks_performed": ["x"], "cap_flags": f}
 
 
-FIX = [("flat ceiling", V([1, 1, 1, 1, 1]), "skill", False), ("nits", V([.85, .9, .85, .95, .8]), "skill", False),
-       ("right on the pass line", V([.7, .7, .7, .7, .7]), "code", False), ("just under", V([.69, .7, .7, .7, .7]), "code", False),
-       ("spec drift caps correctness", V([.95, .9, .9, .9, .9], spec_drift=True), "code", False),
-       ("honesty cap", V([.95, .95, .95, .95, .95], confidence_honesty_violation=True), "skill", False),
-       ("dangling caps both", V([.95, .95, .95, .95, .95]), "skill", True),
-       ("command skeleton", V([.9, .9, .9, .9, .9], command_skeleton_absent=True), "command", False),
-       ("skeleton flag ignored off-type", V([.9, .9, .9, .9, .9], command_skeleton_absent=True), "skill", False),
-       ("density only on deep_read", V([.9, .9, .9, .9, .9], density_padding=True), "deep_read", False),
-       ("density ignored off-type", V([.9, .9, .9, .9, .9], density_padding=True), "skill", False),
-       ("out of range clamps", V([1.4, -0.2, .9, .9, .9]), "skill", False),
-       # @6 (YED-231): a confirmed defect in any privacy layer flags, whatever the backstop
-       ("privacy-layer cap flags a strong artifact", V([.95, .95, .95, .95, .95], privacy_layer_defect=True), "code", False),
-       ("YED-236 regression: 0.784 pass -> flag", V([.75, .72, .85, .9, .65], privacy_layer_defect=True), "code", False),
-       ("privacy flag off = @5 arithmetic", V([.75, .72, .85, .9, .65]), "code", False)]
+FIX = [("flat ceiling", V([1, 1, 1, 1, 1]), "skill", False, 1.0), ("nits", V([.85, .9, .85, .95, .8]), "skill", False, 0.875),
+       ("right on the pass line", V([.7, .7, .7, .7, .7]), "code", False, 0.7),
+       ("just under", V([.69, .7, .7, .7, .7]), "code", False, 0.697),
+       ("spec drift caps correctness", V([.95, .9, .9, .9, .9], spec_drift=True), "code", False, 0.84),
+       ("honesty cap", V([.95, .95, .95, .95, .95], confidence_honesty_violation=True), "skill", False, 0.65),
+       ("dangling caps both", V([.95, .95, .95, .95, .95]), "skill", True, 0.6),
+       ("command skeleton", V([.9, .9, .9, .9, .9], command_skeleton_absent=True), "command", False, 0.79),
+       ("skeleton flag ignored off-type", V([.9, .9, .9, .9, .9], command_skeleton_absent=True), "skill", False, 0.9),
+       ("density only on deep_read", V([.9, .9, .9, .9, .9], density_padding=True), "deep_read", False, 0.65),
+       ("density ignored off-type", V([.9, .9, .9, .9, .9], density_padding=True), "skill", False, 0.9),
+       ("out of range clamps", V([1.4, -0.2, .9, .9, .9]), "skill", False, 0.75),
+       # YED-231 item 7: the privacy cap moved out of the score (finalize() flags on it instead; tested below)
+       ("privacy flag no longer caps the score", V([.95, .95, .95, .95, .95], privacy_layer_defect=True), "code", False, 0.95)]
 ok = n = 0
 
 
@@ -53,28 +41,10 @@ def ck(name, cond):
     print(("  ✓ " if cond else "  ✗ ") + name)
 
 
-for name, v, atype, dang in FIX:
-    a, b = jl.score(v, atype, dang), jq_score(v, atype, dang)
-    same = all(a[k] == b[k] for k in ("weighted_score", "raw_score", "verdict", "flat_ceiling")) and \
-        [c["score"] for c in a["criterion_scores"]] == [c["score"] for c in b["criterion_scores"]]
-    ck(f"score parity python==jq: {name}  ({a['weighted_score']} {a['verdict']})", same)
-
-# quorum-merge.sh keeps a THIRD copy of the composite arithmetic (its Claude-seat recompute). Bind it to judge_lib
-# too (judge on the @6 build, 2026-09-28): extracted at test time, compared on every fixture it is defined for.
-# It applies no dangling cap and applies density/skeleton regardless of artifact type, so those fixtures are skipped.
-qsrc = open(".claude/hooks/quorum-merge.sh", encoding="utf-8").read()
-qm = re.search(r"CV=\$\(printf '%s' \"\$CV\" \| jq -c '\n(.*?)'\)\n", qsrc, re.S)
-ck("quorum-merge.sh recompute jq found", bool(qm))
-if qm:
-    for name, v, atype, dang in FIX:
-        fl = v["cap_flags"]
-        if dang or fl.get("density_padding") or fl.get("command_skeleton_absent"):
-            continue
-        r = subprocess.run(["jq", "-c", qm.group(1)], input=json.dumps(v), capture_output=True, text=True)
-        q = json.loads(r.stdout) if r.returncode == 0 else {}
-        a = jl.score(v, atype, dang)
-        ck(f"score parity python==quorum-merge.sh: {name}  ({a['weighted_score']} {a['verdict']})",
-           q.get("weighted_score") == a["weighted_score"] and q.get("verdict") == a["verdict"])
+for name, v, atype, dang, want in FIX:
+    a = jl.score(v, atype, dang)
+    ck(f"score: {name}  ({a['weighted_score']} {a['verdict']})",
+       a["weighted_score"] == want and a["verdict"] == ("pass" if want >= jl.PASS_LINE else "flag"))
 
 for bad in ({"criterion_scores": []}, V([1, 1, 1, 1, None])):
     try:
@@ -113,31 +83,31 @@ ck("must-cite: <0.85 with no defect is reported", jl.must_cite_gaps(s) == ["corr
 s["defects"] = [{"criterion": "correctness"}]
 ck("must-cite: satisfied by a defect on that criterion", jl.must_cite_gaps(s) == [])
 
-with tempfile.TemporaryDirectory() as d:
-    jl.LEDGER = os.path.join(d, "ledger.jsonl")
-    ck("budget: a priced model under the caps is allowed", jl.check_budget("openai", "gpt-5.4", 20000, 16000) > 0)
-    try:
-        jl.check_budget("openai", "not-a-model", 1, 1); ck("budget: unpriced model refused", False)
-    except jl.BudgetExceeded:
-        ck("budget: unpriced model refused", True)
-    os.environ.pop("JUDGE_TOTAL_CAP_USD", None); os.environ.pop("JUDGE_MONTHLY_CAP_USD", None)
-    with open(jl.LEDGER, "a") as f:                  # $44.90 spent in an EARLIER month: counts toward lifetime only
-        f.write(json.dumps({"ts": "2020-01-15T00:00:00Z", "provider": "openai", "cost_usd": 44.9}) + "\n")
-    ck("budget: no lifetime cap by default (lifted 2026-09-27) — old spend does not block",
-       jl.check_budget("openai", "gpt-5.4", 20000, 16000) > 0)
-    os.environ["JUDGE_TOTAL_CAP_USD"] = "45"
-    try:
-        jl.check_budget("openai", "gpt-5.4", 20000, 16000); ck("budget: opt-in lifetime cap still enforced", False)
-    except jl.BudgetExceeded:
-        ck("budget: opt-in lifetime cap still enforced", True)
-    os.environ.pop("JUDGE_TOTAL_CAP_USD", None)
-    jl.ledger_append(provider="openai", cost_usd=19.9)   # THIS month
-    try:
-        jl.check_budget("openai", "gpt-5.4", 20000, 16000); ck("budget: $20 monthly cap enforced", False)
-    except jl.BudgetExceeded:
-        ck("budget: $20 monthly cap enforced", True)
-    jl.ledger_append(provider="google", cost_usd=999)
-    ck("budget: another provider's spend is not counted", round(jl.spent("openai")[1], 2) == 64.8)
+# finalize(): the only place a final verdict is decided (YED-231). Pass needs nothing to fire.
+base = dict(jl.score(V([.9, .9, .9, .9, .9]), "code", False), artifact=".claude/scripts/x.py", quote_check={})
+ck("finalize: a clean pass stays pass, no reasons", jl.finalize(base) == {"final_verdict": "pass", "flag_reasons": []})
+low = dict(base, verdict="flag", weighted_score=0.61)
+ck("finalize: a score under the line flags", jl.finalize(low)["final_verdict"] == "flag")
+ck("finalize: the privacy flag flags a strong score (no score cap needed)",
+   jl.finalize(dict(base, privacy_layer_defect=True))["final_verdict"] == "flag")
+ck("finalize: flat 1.0 flags as low-information", jl.finalize(dict(base, flat_ceiling=True))["final_verdict"] == "flag")
+ck("finalize: >30% fabricated quotes flags", jl.finalize(dict(base, quote_check={"evidence_unverified": True}))["final_verdict"] == "flag")
+g = jl.finalize(base, {"files": [{"path": ".claude/skills/x/SKILL.md"}, {"path": ".claude/scripts/spine_client.py"}]})
+ck("finalize: a bundle touching the spine write path needs human review",
+   g["final_verdict"] == "flag" and any("guarded_path:.claude/scripts/spine_client.py" in r for r in g["flag_reasons"]))
+ck("guarded: named guard/filter/allowlist files match by name",
+   jl.guarded_paths(["a/inbox-allowlist.md", "b/privacy_filter.py", "c/deny-list.txt", "d/notes.md"])
+   == ["a/inbox-allowlist.md", "b/privacy_filter.py", "c/deny-list.txt"])
+ck("guarded: .gitignore is a privacy filter", jl.guarded_paths([".gitignore"]) == [".gitignore"])
+ck("guarded: ordinary files do not match", jl.guarded_paths([".claude/skills/role-radar/SKILL.md", ".claude/hooks/density-check.sh"]) == [])
+ck("judge layer: judge files are recognised", all(jl.is_judge_layer(p) for p in (
+   ".claude/evals/judge_lib.py", ".claude/skills/judge-build/SKILL.md", ".claude/evals/rubrics/build-quality-v6.md",
+   ".claude/hooks/seat-log.py")))
+ck("judge layer: neighbours in .claude/evals are not", not jl.is_judge_layer(".claude/evals/test_gate_in_progress.sh")
+   and not jl.is_judge_layer(".claude/evals/logs/x.jsonl"))
+p = subprocess.run(["python3", ".claude/evals/judge.py", "run", "--artifact", ".claude/evals/judge_lib.py",
+                    "--artifact-type", "code"], capture_output=True, text=True)
+ck("judge.py: the judge layer is refused as a target (never self-judged)", p.returncode == 2 and "never judged" in p.stderr)
 
 # YED-223: the build-time parity warning fires for a spec-less bundle and stays quiet for a specced one
 import subprocess as _sp, tempfile as _tf, os as _os
