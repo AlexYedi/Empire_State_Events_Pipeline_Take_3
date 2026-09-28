@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reverse-Engineered TAM — Clay in NYC, Sept 30 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #E0A33B; --soft: #C9CCD1;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 44px; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 52px; display: flex; justify-content: space-between;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 64px; }
+  .note { font: 29px/1.35 var(--serif); color: var(--soft); border-left: 6px solid var(--line); padding-left: 24px; }
+  .note b { color: var(--ink); }
+
+  /* s1 circles */
+  .circles { position: relative; height: 640px; margin: 10px 0 30px; }
+  .c { position: absolute; border-radius: 50%; border: 3px solid var(--line); left: 50%; transform: translateX(-50%); }
+  .c1 { width: 640px; height: 640px; top: 0; }
+  .c2 { width: 440px; height: 440px; top: 200px; }
+  .c3 { width: 240px; height: 240px; top: 400px; border-color: var(--accent); background: rgba(224,163,59,.08); }
+  .cl { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; width: 420px; }
+  .cl .k { font: 700 30px/1 var(--mono); letter-spacing: .08em; }
+  .cl .d { font: 24px/1.25 var(--serif); color: var(--soft); margin-top: 8px; }
+  .l1 { top: 60px; } .l2 { top: 250px; } .l3 { top: 470px; width: 220px; } .l3 .k { color: var(--accent); }
+
+  /* s2 pipeline */
+  .pipe { display: grid; gap: 8px; }
+  .step { display: grid; grid-template-columns: 64px 1fr; gap: 22px; align-items: center; border: 2px solid var(--line); border-radius: 14px; padding: 16px 24px; }
+  .step .n { font: 700 34px/1 var(--mono); color: var(--dim); text-align: center; }
+  .step .t { font: 700 32px/1.1 var(--serif); }
+  .step .t span { font: 400 25px/1.3 var(--serif); color: var(--soft); display: block; margin-top: 4px; }
+  .step.hi { border-color: var(--accent); } .step.hi .n { color: var(--accent); }
+  .rail { margin-top: 18px; margin-bottom: 18px; border-top: 3px dashed var(--accent); padding-top: 16px; font: 24px/1.35 var(--mono); color: var(--soft); }
+  .rail b { color: var(--accent); }
+
+  /* s3 timeline */
+  .tl { position: relative; padding-left: 58px; display: grid; gap: 26px; }
+  .tl:before { content: ""; position: absolute; left: 18px; top: 8px; bottom: 8px; width: 4px; background: var(--line); }
+  .tk { position: relative; }
+  .tk:before { content: ""; position: absolute; left: -50px; top: 8px; width: 24px; height: 24px; border-radius: 50%; border: 4px solid var(--accent); background: var(--bg); }
+  .tk.f:before { background: var(--accent); }
+  .tk .d { font: 700 24px/1 var(--mono); color: var(--accent); letter-spacing: .06em; }
+  .tk .e { font: 31px/1.25 var(--serif); margin-top: 6px; }
+  .legend { font: 22px/1.4 var(--mono); color: var(--dim); margin-top: 30px; }
+
+  /* s4 loop */
+  .loop { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .panel { border: 2px solid var(--line); border-radius: 18px; padding: 30px 30px; }
+  .panel h2 { font: 700 26px/1.1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 22px; }
+  .panel .row { font: 29px/1.3 var(--serif); padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .panel .row:last-child { border-bottom: 0; }
+  .panel .row.q { color: var(--accent); font-style: italic; }
+  .ring { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 600 28px/1.2 var(--serif); }
+  .ring .a { color: var(--dim); font: 700 26px/1 var(--mono); }
+
+  /* s5 room */
+  .sched { display: grid; gap: 16px; }
+  .slot { display: grid; grid-template-columns: 150px 1fr; gap: 26px; border-bottom: 2px solid var(--line); padding-bottom: 16px; }
+  .slot .tm { font: 700 30px/1.2 var(--mono); color: var(--accent); }
+  .slot .w { font: 700 32px/1.2 var(--serif); }
+  .slot .w span { display: block; font: 400 26px/1.3 var(--serif); color: var(--soft); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — BEFORE: the top-down TAM -->
+<section class="slide">
+  <div class="kicker">Clay in NYC · Wed Sept 30 · 1 of 5</div>
+  <h1>The TAM on the slide</h1>
+  <div class="circles">
+    <div class="c c1"></div><div class="c c2"></div><div class="c c3"></div>
+    <div class="cl l1"><div class="k">TAM</div><div class="d">every account that could ever buy</div></div>
+    <div class="cl l2"><div class="k">SAM</div><div class="d">the slice your product and team can reach</div></div>
+    <div class="cl l3"><div class="k">SOM</div><div class="d">what you can win this year</div></div>
+  </div>
+  <div class="note">Built <b>top-down</b>: an analyst's market size × an assumed share. Operators warn it can overstate the real opportunity <b>3–10x</b>, and territories, quotas and hiring plans get built on it.</div>
+  <div class="src">Source: SaasCEO, "How to calculate TAM" (operator rule of thumb, not a controlled study).</div>
+  <div class="foot"><span>The TAM you reverse-engineer</span><span>1 / 5</span></div>
+</section>
+
+<!-- SLIDE 2 — AFTER: the reverse-engineered list -->
+<section class="slide">
+  <div class="kicker">The mechanism · 2 of 5</div>
+  <h1>A list you rebuild from your wins</h1>
+  <div class="pipe">
+    <div class="step"><div class="n">1</div><div class="t">Seed with closed-won<span>~10 accounts you actually won</span></div></div>
+    <div class="step"><div class="n">2</div><div class="t">Fingerprint<span>what the winners share: size, stack, business model</span></div></div>
+    <div class="step"><div class="n">3</div><div class="t">Lookalikes<span>Clay clusters from up to 15,000 seed accounts</span></div></div>
+    <div class="step"><div class="n">4</div><div class="t">Mine filters, then pull<span>turn the similarity into a repeatable query</span></div></div>
+    <div class="step"><div class="n">5</div><div class="t">AI-qualify + verify the live site<span>an agent scores good-fit vs bad-fit</span></div></div>
+    <div class="step hi"><div class="n">6</div><div class="t">Keep it live<span>Clay Audiences re-scores the segment as data changes</span></div></div>
+  </div>
+  <div class="rail"><b>Terminal rail:</b> the Clay CLI lets an agent rerun steps 1–6 on demand. It reads Tables and can create, edit and publish Workflows.</div>
+  <div class="src">Sources: Growth Engine X coldoutboundskills (list-expander); Octave on Clay Lookalikes; Clay Docs (Audiences, API/CLI).</div>
+  <div class="foot"><span>The TAM you reverse-engineer</span><span>2 / 5</span></div>
+</section>
+
+<!-- SLIDE 3 — WHAT CHANGED: 2026 -->
+<section class="slide">
+  <div class="kicker">What changed in 2026 · 3 of 5</div>
+  <h1>Everyone went after the live list</h1>
+  <div class="tl">
+    <div class="tk f"><div class="d">MAR 19</div><div class="e">Apollo acquires Pocus (product-usage signals)</div></div>
+    <div class="tk"><div class="d">MAR 25</div><div class="e">Clay Audiences launches as an Enterprise beta</div></div>
+    <div class="tk f"><div class="d">JUN 30</div><div class="e">HubSpot agrees to acquire Warmly (intent data)</div></div>
+    <div class="tk f"><div class="d">JUL 2</div><div class="e">Zoom agrees to acquire Common Room (closed in July)</div></div>
+    <div class="tk"><div class="d">JUL 9</div><div class="e">Clay API + CLI, and ZoomInfo's GTM.AI CLI, ship the same day</div></div>
+    <div class="tk"><div class="d">SEP 11</div><div class="e">Salesforce announces Agentforce AI Skills + the Hunter outbound agent</div></div>
+    <div class="tk"><div class="d">OCT 8</div><div class="e">Sculpt, SF: "How To Build a Perfect TAM With Audiences and the Clay CLI"</div></div>
+  </div>
+  <div class="legend">● filled = acquisition &nbsp;&nbsp; ○ hollow = product launch</div>
+  <div class="src">Sources: Built In; Clay blog; Dealroom; Zoom; Clay community; ZoomInfo IR; Salesforce; sculpt.clay.com.</div>
+  <div class="foot"><span>The TAM you reverse-engineer</span><span>3 / 5</span></div>
+</section>
+
+<!-- SLIDE 4 — SO WHAT: the open questions -->
+<section class="slide">
+  <div class="kicker">Still open · 4 of 5</div>
+  <h1>Where a reverse-engineered list can break</h1>
+  <div class="loop">
+    <div class="panel">
+      <h2>Circularity</h2>
+      <div class="ring"><div>closed-won</div><div class="a">↓</div><div>lookalikes</div><div class="a">↓</div><div>more of the same</div><div class="a">↺</div></div>
+      <div class="row q" style="margin-top:18px">Does it ever find the segment you haven't won yet?</div>
+    </div>
+    <div class="panel">
+      <h2>Too live</h2>
+      <div class="row">Segments re-score continuously</div>
+      <div class="row">Changes write back to the CRM</div>
+      <div class="row">Reps see accounts they already worked</div>
+      <div class="row q">Where's the line between fresh and noisy?</div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:36px">When the list maintains itself, the human's job moves up a layer: <b>defining the definition</b>, and auditing it.</div>
+  <div class="src">Open questions for the room, not verdicts.</div>
+  <div class="foot"><span>The TAM you reverse-engineer</span><span>4 / 5</span></div>
+</section>
+
+<!-- SLIDE 5 — THE ROOM -->
+<section class="slide">
+  <div class="kicker">Wed Sept 30 · Clay NYC, Flatiron · 5 of 5</div>
+  <h1>The room, hour by hour</h1>
+  <div class="sched">
+    <div class="slot"><div class="tm">5:30</div><div class="w">Doors<span>Clay Club NY, hosted by Andreas Wernicke (Snowball Consult)</span></div></div>
+    <div class="slot"><div class="tm">6:00</div><div class="w">Two years of the Clay community<span>Munnawar Hashim, Siya Verma, Shriya Nevatia, Andreas Wernicke</span></div></div>
+    <div class="slot"><div class="tm">6:15</div><div class="w">Building Perfect Lists with Audiences and the Clay CLI<span>Eric Nowoslawski, Growth Engine X: the Sculpt talk, a week early</span></div></div>
+    <div class="slot"><div class="tm">6:45</div><div class="w">Small-group debrief<span>each table brings its top question</span></div></div>
+    <div class="slot"><div class="tm">7:00</div><div class="w">Q&amp;A with Eric<span>then networking until 8:00</span></div></div>
+  </div>
+  <div class="src">Source: Clay in NYC event page (Luma), run of show.</div>
+  <div class="foot"><span>The TAM you reverse-engineer</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>
