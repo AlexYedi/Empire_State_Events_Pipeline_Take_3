@@ -5,7 +5,7 @@ description: Generate a job-search interview-prep dossier tailored on four axes 
 
 # Interview-Prep Dossier (Job-Search lens — Market-Intelligence Engine)
 
-The first lens of the Market-Intelligence Engine (plan of record: `.claude/references/roadmap.md`).
+The first lens of the Market-Intelligence Engine (plan of record: the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c)).
 This skill proves the lens-agnostic engine end-to-end on the **Job-Search lens** by turning the same
 reusable component analyses the engine runs (company · market-segment · competitor · funding · person ·
 org-mapping · trend/conversation) into a single, decision-ready interview dossier.
@@ -107,4 +107,4 @@ self-check before the write.
 - `.claude/commands/interview-prep.md` — orchestration shape
 - `.claude/references/me-model.md` §1.5 — Target-Role ICP (gitignored; never quoted into git)
 - `.claude/agents/research/{company-researcher,person-researcher,topic-landscape-analyst,competitive-signal-scanner}.md` — reused producers
-- `.claude/references/roadmap.md` — MI Engine framing + milestones (the detailed `where-do-we-stand-sunny-puzzle.md` 20-Q framing file was machine-local and is retired)
+- the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) — MI Engine framing + milestones (the detailed `where-do-we-stand-sunny-puzzle.md` 20-Q framing file was machine-local and is retired)

@@ -46,15 +46,15 @@ without ceremony that a solo builder doesn't need. Distilled from the Linear Met
 
 Why this exists: the 2026-09-13 inventory found ~170 open/parked/undecided items across eleven
 containers, and ten places where two artifacts disagreed about the same thing. Only "open work"
-(Linear) and "sequencing" (`roadmap.md`) had a defined home; every other kind landed wherever it was
+(Linear) and "sequencing" (the Notion roadmap) had a defined home; every other kind landed wherever it was
 discovered. This table assigns the rest. Full record: `docs/archive/notes/open-items-inventory-2026-09-13.md`.
 
 | Kind | Home | Shape |
 |---|---|---|
-| Open work | Linear issue in a project; milestone only if on the roadmap runway | `roadmap.md` references IDs only and never carries Done items |
+| Open work | Linear issue in a project; milestone only if on the roadmap runway | the Notion roadmap references IDs only and never carries Done items |
 | Parked idea **with** a revisit trigger | Linear Backlog, label `parked`, first body line `Revisit trigger: …` | trigger fires → move to Todo |
 | Parked idea **without** a trigger | Notion Project Ideas DB (`collection://0956e6ed-8555-4d8f-8856-388966dedaab`) | not in Linear |
-| Decision needed | Linear **Todo**, label `decision`, assigned to Alex, **due-dated**; body = options + recommendation | outcome → `roadmap.md` §9 (or an ADR if architectural); close Done |
+| Decision needed | Linear **Todo**, label `decision`, assigned to Alex, **due-dated**; body = options + recommendation | outcome → the Notion roadmap's decision log (or an ADR if architectural); close Done |
 | Environmental constraint (platform, SDK, MCP, env) | `.claude/references/platform-constraints.md` | symptom · cause · workaround; memory files hold one-line pointers |
 | Work dependency | Linear `blockedBy` relation | never a list in a doc |
 | Debt | Linear Backlog issue if it will ever be paid; otherwise delete the text | no third "tombstone" state |

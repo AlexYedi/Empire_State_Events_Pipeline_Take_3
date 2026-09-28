@@ -36,7 +36,7 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 | Need | Go to |
 |---|---|
 | How the workflows chain, rerun manual | `.claude/WORKFLOWS.md` |
-| Plan of record, decision log, shipped log | `.claude/references/roadmap.md` |
+| Plan of record, decision log, shipped log | Notion "Empire State Roadmap" (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) |
 | What's open | Linear (team Yedibalian, issues `YED-n`); pulled at session start by the user-scope `linear-priorities.sh` |
 | Why the data layer is shaped this way | `docs/adr/README.md` (append-only; reversing an ADR means writing a new one) |
 | Environmental limits (harness, Notion, Supabase, vendors, git) | `.claude/references/platform-constraints.md` |
@@ -67,7 +67,7 @@ These protect irreversible external effects. They do not get waived.
 
 ## 5. Working rules
 
-**Git.** Branch → PR → merge for anything that adds or changes a skill, agent, command, hook, reference, schema or data contract; trivial churn (content outputs, typos) may go straight to `main`. One live session per checkout; worktrees for real parallelism, cut from `origin/main`, with `.env` symlinked in. The `main` checkout stays on `main`. Shared namespaces (ADR numbers, `roadmap.md`, this file, Linear status) are edited from one session at a time. PR the same hour you stop. When git and Linear disagree, git is the fact and Linear gets corrected. When branches need converging, one session runs `reconciliation-terminal-charter.md` and nobody else builds.
+**Git.** Branch → PR → merge for anything that adds or changes a skill, agent, command, hook, reference, schema or data contract; trivial churn (content outputs, typos) may go straight to `main`. One live session per checkout; worktrees for real parallelism, cut from `origin/main`, with `.env` symlinked in. The `main` checkout stays on `main`. Shared namespaces (ADR numbers, the Notion roadmap, this file, Linear status) are edited from one session at a time. PR the same hour you stop. When git and Linear disagree, git is the fact and Linear gets corrected. When branches need converging, one session runs `reconciliation-terminal-charter.md` and nobody else builds.
 
 **Linear is the source of truth for what's open.** Issues for workstreams and dated decisions; the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
 

@@ -2,7 +2,7 @@
 
 Canonical reference for the Postgres graph spine that backs the Market-Intelligence Engine
 (the lens-agnostic MI/business-analysis/research engine; Job-Search + Content are the two cores).
-Plan of record: `.claude/references/roadmap.md` (the former `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` was machine-local and is retired).
+Plan of record: the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) (the former `~/.claude/plans/where-do-we-stand-sunny-puzzle.md` was machine-local and is retired).
 
 ## System of record (resolved 2026-06-28)
 - **Project:** Supabase org **`A.Yedi`**, project **`empire state ai`** — ref **`oicikjyzmxqfomrrqkvf`**

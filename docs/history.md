@@ -1,7 +1,7 @@
 # How this project got here
 
 An archive, not a rulebook. The live rules are in `CLAUDE.md`; the plan of record is
-`.claude/references/roadmap.md`; data-layer decisions are in `docs/adr/`. This page holds the narrative
+the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c); data-layer decisions are in `docs/adr/`. This page holds the narrative
 that used to sit in `CLAUDE.md` before the 2026-09-28 complexity reset cut it from ~6,500 to ≤1,800 words.
 
 ## April 2026: the founding idea
