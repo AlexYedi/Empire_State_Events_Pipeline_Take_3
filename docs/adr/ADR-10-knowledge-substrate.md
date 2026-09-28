@@ -7,7 +7,7 @@
 
 The goal (Alex, 2026-09-18): turn everything the system produces — events, companies, people, topics, briefs, transcripts, learnings, research — into one cohesive source that elevates future event research, content, job hunting, writing, project ideation and software development.
 
-What existed fell short in three measured ways (`.claude/notes/yed-160-scope-2026-09-17.md`):
+What existed fell short in three measured ways (`docs/archive/notes/yed-160-scope-2026-09-17.md`):
 - **No repeatable producer.** No Notion→graph event path ever existed. The 61 `attended` rows came from a one-off migration sourced from the now-frozen gtm-os spine, plus two ad-hoc curls. By 2026-09-17, 24 of 27 recent events were absent and no person had been added since 08-06. `/post-event-content` Step 3.8 was *named* "Knowledge-graph write-back" and wrote Notion only.
 - **Nowhere for knowledge to live.** Entities and events had a home; what was *said or learned* did not. `doc_claims` was a staging table whose only exit was promotion into `event` rows — one fake occasion per claim.
 - **A thin read side.** One consumer (`/event-deep-research` Step 1.7a) pulled at most 8 Notion bodies, treated an empty graph as normal ("graph: no signals"), and could not see across events.
@@ -47,6 +47,20 @@ The W1 A/B (YED-172; two blind events, Alex + a Sonnet seat scoring pack-level) 
 
 Reversing any of decisions 1–9 needs a new ADR. This amendment narrows the boundary the substrate serves, which a Proposed ADR may carry into Acceptance without a successor.
 
+## Amendment 2 — 2026-09-28: gate and freeze machinery pruned (complexity reset, prune PR-E)
+
+Decisions 1–9 stand. This amendment records what was removed around them and what was deliberately kept.
+
+**Removed**
+- **The graph-write freeze** (YED-213): `freeze_check` / `--freeze-override` in `substrate.py`, `freeze_block` / `GraphFrozen` / `READ_ONLY_RPCS` in `spine_client.py` (10 selftest cases), `.claude/references/graph-freeze.{md,json}` and the empty `graph-freeze-overrides.jsonl`. The freeze existed to hold the graph still during the YED-172 A/B; it was lifted 2026-09-24 with 0 overrides logged. `GraphFrozen` and `substrate.py` exit 4 no longer occur. The ADR-9 guard (column allowlists, email/phone refusal and scan, inbox denylist backstop) is unchanged. A future freeze needs a new decision, not a revert.
+- **`identity_probe.py`.** Decision 5's S1b DDL re-trigger (≥10 distinct identity-ambiguity entries in 30 days) was run from `/rigor-review`, retired 2026-09-28. The trigger stands; it is now read by hand from `.claude/artifacts/identity-ambiguity.jsonl` (distinct `(table, name)` per window), which `substrate.py` still writes.
+- **The substrate gate's enforcement.** `substrate-gate.sh` (the Stop hook named in Consequences) was unwired in PR #167. The ledger rows it read are still written, but informational: `/post-event-content` and `/event-deep-research` report 3.8b/c and 4.2 status by hand.
+
+**Kept, and why**
+- **`expect-research`, `stage-research`, `waive`, `ensure-event --expect-claims`, `stage-claims`, `approve-claims`**: live commands still invoke each (`/event-deep-research` Step 4.2, YED-205; `/post-event-content` Step 3.8). `expect-research`, `waive` and `--expect-claims` now write only the informational ledger; drop them from the commands first, then from the producer.
+- **`merge` / `merge --revert`** (decision 5's soft-merge): human-run by design, so no command calls it, but 7 live merges (2026-09-27) are tombstoned in prod and `--revert` is their only undo path. It is also the replacement `platform-constraints.md` names for `merge_topics.py`.
+- **`retrieve.py --lens event`**: no command calls it since the A/B kept the legacy pull, but it is decision 4's one retrieval path. Removing it reverses decision 4 and needs a successor ADR.
+
 ## Relations
 
-Builds on **ADR-0/1/4** (one graph; expand-contract; twin rehearsal). Writes only through **ADR-9**'s single chokepoint. Refines **ADR-7** (inbox signals become one more producer into the same claim layer). Adds a producer/consumer pair to what **ADR-8**'s system graph can check. Numbered from `main` (stub minted 2026-09-18, `6ea6bde`). Evidence trail: `.claude/notes/yed-160-scope-2026-09-17.md` · `knowledge-substrate-architecture-2026-09-18.md` · `knowledge-substrate-review-2026-09-18.md` · `substrate-vs-reconciliation-sequencing-2026-09-18.md` · `substrate-handoff-to-home.md`.
+Builds on **ADR-0/1/4** (one graph; expand-contract; twin rehearsal). Writes only through **ADR-9**'s single chokepoint. Refines **ADR-7** (inbox signals become one more producer into the same claim layer). Adds a producer/consumer pair to what **ADR-8**'s system graph can check. Numbered from `main` (stub minted 2026-09-18, `6ea6bde`). Evidence trail: `docs/archive/notes/yed-160-scope-2026-09-17.md` · `knowledge-substrate-architecture-2026-09-18.md` · `knowledge-substrate-review-2026-09-18.md` · `substrate-vs-reconciliation-sequencing-2026-09-18.md` · `substrate-handoff-to-home.md`.

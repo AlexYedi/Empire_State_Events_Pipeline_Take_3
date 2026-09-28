@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """retrieve — the ONE retrieval interface over the Knowledge Substrate (ADR-10; YED-170).
 
-Spec: .claude/notes/knowledge-substrate-architecture-2026-09-18.md §3.1–3.3, as amended by
-.claude/notes/knowledge-substrate-review-2026-09-18.md (findings 5 + 6). W1 ships ONE lens (`event`);
+Spec: docs/archive/notes/knowledge-substrate-architecture-2026-09-18.md §3.1–3.3, as amended by
+docs/archive/notes/knowledge-substrate-review-2026-09-18.md (findings 5 + 6). W1 ships ONE lens (`event`);
 the other lenses are six weights each and land once this one has proven out on a real brief (A/B).
+The A/B (YED-172) kept the legacy pre-event pull, so no command calls this today; it stays as ADR-10
+D4's one retrieval path (Amendment 1: the job-search lens), not removed without a successor ADR.
 
     .venv/bin/python .claude/scripts/retrieve.py --lens event --seed seed.json [--budget-tokens 6000]
                      [--out pack.md] [--json]
