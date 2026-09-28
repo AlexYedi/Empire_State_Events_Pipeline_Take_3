@@ -11,7 +11,8 @@ every structured field is git/telemetry-derived; the only prose is what a human 
       - commits    = total commits that day (churn like build-sessions.jsonl updates included in the count only)
       - linear     = YED-\\d+ refs parsed from commit titles
       - rigor      = from build-sessions.jsonl + build-sessions/*.jsonl (frozen) + .state/telemetry/build-sessions/*.jsonl (live,
-                     gitignored since YED-229): sessions, dod_met (any), dod_waived (any), correction_rounds (sum)
+                     gitignored since YED-229): sessions, tool_uses (sum). The DoD/correction fields were
+                     retired 2026-09-28 with the DoD gate and are no longer emitted
       - headline   + summary = from the curated prose sidecar (build-journal-prose.json), keyed by date
                      (fallback headline = the day's top PR title; summary = "" so the entry is still honest)
 
@@ -42,7 +43,7 @@ DEFAULT_SINCE = "2026-07-01"
 PR_RE = re.compile(r"\(#(\d+)\)\s*$")                          # squash-merge style: "…title (#57)"
 MERGE_RE = re.compile(r"^Merge pull request #(\d+) from \S+?/(\S+)")  # GitHub-Desktop merge-commit style
 YED_RE = re.compile(r"\b(YED-\d+)\b")
-# NB: churn (build-sessions/dod-waivers updates, bare "build session" commits) is excluded from "shipped"
+# NB: churn (build-sessions updates, bare "build session" commits) is excluded from "shipped"
 # for free — those commits carry no "(#N)", so PR_RE never matches them. No explicit churn filter needed.
 # Two ship conventions coexist: squash-merges carry "(#N)" in a --no-merges commit (PR_RE); merge-commits
 # (Alex's GitHub Desktop flow) are "Merge pull request #N from owner/branch" and are DROPPED by --no-merges,
@@ -141,14 +142,8 @@ def load_telemetry_by_day(since):
         d = ts[:10]
         if not d or d < since:
             continue
-        b = days.setdefault(d, {"sessions": 0, "dod_met": False, "dod_waived": False,
-                                "correction_rounds": 0, "tool_uses": 0})
+        b = days.setdefault(d, {"sessions": 0, "tool_uses": 0})
         b["sessions"] += 1
-        if r.get("dod_met") is True:
-            b["dod_met"] = True
-        if r.get("dod_waived") is True:
-            b["dod_waived"] = True
-        b["correction_rounds"] += int(r.get("correction_rounds") or 0)
         b["tool_uses"] += int(r.get("tool_uses") or 0)
     return days
 
@@ -229,9 +224,6 @@ def main():
                 "commits": e["commits"],
                 "sessions": t.get("sessions", 0),
                 "tools": t.get("tool_uses", 0),
-                "dod_met": t.get("dod_met", False),
-                "dod_waived": t.get("dod_waived", False),
-                "correction_rounds": t.get("correction_rounds", 0),
             },
         })
 
@@ -247,8 +239,7 @@ def main():
           f"{total_prs} PRs shipped | {curated} days with curated prose | since {since}")
     for x in entries[:12]:
         flag = "✍" if x["curated"] else "·"
-        dod = "DoD✓" if x["metrics"]["dod_met"] else ("DoD~" if x["metrics"]["dod_waived"] else "—")
-        print(f"  {flag} {x['date']}  {x['metrics']['prs']}PR {dod}  {x['headline'][:56]}")
+        print(f"  {flag} {x['date']}  {x['metrics']['prs']}PR  {x['headline'][:56]}")
     if len(entries) > 12:
         print(f"  … +{len(entries)-12} more")
 
