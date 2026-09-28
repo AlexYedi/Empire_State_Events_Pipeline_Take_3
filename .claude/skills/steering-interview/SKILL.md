@@ -13,7 +13,7 @@ corrections afterward.
 actually create collaborative, higher-quality content are *informed forks that only exist after the
 prep* — not generic up-front prompts. Splitting the single pre-research intake into **Aim (before)**
 + **Sharpen (after prep)** keeps the one thing that must run early (research direction) while adding
-the co-creation moment where it belongs. Spec: `.claude/proposals/steering-interview-v2-collaborative.md`.
+the co-creation moment where it belongs. Spec: `docs/archive/proposals/steering-interview-v2-collaborative.md`.
 
 This is the **front half** of the content quality loop:
 

@@ -1,12 +1,11 @@
 ---
-description: "Workflow B-lite — take a post-event transcript (Supercut recording preferred; audio file via ElevenLabs or manual paste as fallbacks), condition it against the event roster, then run content-correspondent to produce LinkedIn drafts + outreach in Notion Content Drafts. Granola auto-fetch DISABLED 2026-05-27 — do not fire the Granola API or MCP."
+description: "Workflow B-lite — take a post-event transcript (Supercut recording preferred; audio file via ElevenLabs or manual paste as fallbacks), condition it against the event roster, then run content-correspondent to produce LinkedIn drafts + outreach in Notion Content Drafts."
 argument-hint: "[event name as it appears in Notion / Google Calendar / Supercut]"
 ---
 
 # /post-event-content — post-event flow (Supercut-anchored)
 
-> ## ⚠️ GRANOLA IS OFF (status 2026-05-27)
-> Granola is **nonoperational on Alex's device** — the mobile app is a waitlist-only placeholder, so there are no recordings to fetch. **Do NOT fire the Granola REST API or the Granola MCP** for post-event recordings, here or anywhere. Post-event transcripts come from **Supercut** (Step 2A), an audio file (2B) or a manual paste (2C). The Granola auto-fetch path is retained below but **DISABLED** — re-enable it (and remove this banner) only once Granola actually records on Alex's device.
+> Granola: off, see `.claude/references/platform-constraints.md`.
 
 Takes the transcript of Alex's own recording of an attended event (pulled from **Supercut** by default, 2026-09-28; audio file or manual paste as fallbacks), resolves the event to its Notion row, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes `content-correspondent` with the conditioned quote bank.
 
@@ -14,9 +13,9 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
-- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are mandatory but **not enforced**: the `substrate-gate.sh` Stop hook is unwired as of 2026-09-28, so a skipped graph write will not fail the run. Report 3.8b/c status explicitly in the Step 6 summary.
+- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c status explicitly in the Step 6 summary.
 - **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
-- **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `.claude/proposals/post-event-hubspot-step.md`.
+- **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
 
 ---
@@ -33,7 +32,7 @@ If the user invokes `content-correspondent` directly with raw pasted material, d
 ## Required inputs
 
 1. **Event name** — fuzzy-match-friendly. The command resolves it against the Notion Events DB by title similarity, then anchors downstream lookups.
-2. **Transcript** — resolved in Step 2: a **Supercut** recording (default; needs the Supercut MCP or `SUPERCUT_API` in `.env`), else an audio file, else a paste. **No `GRANOLA_API_KEY` needed** — the Granola path is disabled.
+2. **Transcript** — resolved in Step 2: a **Supercut** recording (default; needs the Supercut MCP or `SUPERCUT_API` in `.env`), else an audio file, else a paste.
 
 
 **Step 1.0 — CLAIM THE EVENT before anything else (YED-213, added 2026-09-24).** Git isolation does not isolate
@@ -67,7 +66,7 @@ Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title 
 
 ## Step 2 — Get the transcript (Supercut → audio file → manual paste)
 
-Granola auto-fetch is **disabled** (see banner). OBS was retired 2026-09-28. Three paths, in order of preference. Every path ends with the transcript saved to `event-transcripts/YYYY-MM-DD_<Event>.md`, and Step 3.5 conditioning then runs on it unchanged. Reference: `.claude/references/supercut.md`.
+Three paths, in order of preference. Every path ends with the transcript saved to `event-transcripts/YYYY-MM-DD_<Event>.md`, and Step 3.5 conditioning then runs on it unchanged. Reference: `.claude/references/supercut.md`.
 
 ### 2A — Supercut recording (PREFERRED — Supercut Pro, 2026-09-28)
 1. **Find the recording.** MCP first: run ToolSearch `supercut` and use its `list_recordings` tool (parent thread only; connectors don't work in subagents). If the MCP isn't loaded this session, use REST (curl, since Cloudflare blocks Python's default user agent):
@@ -100,20 +99,6 @@ If there's an audio file (`.m4a`/`.mp3`/`.wav`, a phone recording, or a Supercut
 2. Recorder-app ASR under-renders proper nouns (**~55% vs ~87%** for the EL recipe across n=4) — prefer 2A/2B whenever a recording exists.
 
 Any path: also capture any **summary / notes** Alex adds (angle/thesis input) and the **attendee names** he recalls (cross-reference Notion People for bucket sorting). If there's neither transcript nor recording, draft from his freeform recap + the pre-event brief — note lower fidelity, skip verbatim quotes.
-
-<details>
-<summary>🚫 Granola auto-fetch — DISABLED (do not run; retained for re-enable when Granola is operational)</summary>
-
-The Granola REST/MCP path is **not active** — the app is a waitlist placeholder on Alex's device, so there are no notes to fetch. Do NOT fire it. Re-enable only when Granola records for real, then restore the manual path as a fallback.
-
-```bash
-# DISABLED — do not run while Granola is nonoperational (2026-05-27)
-# List:   GET https://public-api.granola.ai/v1/notes?created_after=<event_date>T00:00:00Z&created_before=<+36h>   (Bearer $GRANOLA_API_KEY)
-# Detail: GET https://public-api.granola.ai/v1/notes/<note_id>?include=transcript
-# Match:  Google Calendar Event ID (deterministic, preferred) → title+date fuzzy fallback
-# Capture: summary_markdown · diarized transcript · attendees · web_url
-```
-</details>
 
 ## Step 3 — Confirm the event anchor (silent if unambiguous)
 
@@ -238,7 +223,7 @@ After writing the brief, capture its URL and pass it to Step 4 (content-correspo
 
 ## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c)
 
-Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`.claude/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c today:** the `substrate-gate.sh` Stop hook is unwired as of 2026-09-28, so a skipped graph write closes green. Run both sub-steps (or `substrate.py waive` with a reason) and state their outcome in the Step 6 summary.
+Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps (or `substrate.py waive` with a reason) and state their outcome in the Step 6 summary.
 
 ### Step 3.8a — Notion People / Companies / Topics (unchanged)
 
@@ -348,7 +333,7 @@ content-correspondent then runs its standard logic per `.claude/skills/content-c
 
 ## Step 5 — Write drafts to Notion (inline, parent thread)
 
-Once content-correspondent returns drafts, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Do **not** dispatch `notion-writer`: claude.ai connectors (Notion, HubSpot, Calendar) are not available inside subagents, so a subagent write fails. Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
+Once content-correspondent returns drafts, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5 (claude.ai connectors are not available inside subagents). Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
 
 Each draft becomes one Content Drafts row with:
 - `Content Type` per draft (linkedin_post_post, linkedin_dm_speaker, linkedin_dm_host, etc.)
@@ -360,7 +345,7 @@ Each draft becomes one Content Drafts row with:
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
 
-**Spec + rationale:** `.claude/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot post-event, selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
+**Spec + rationale:** `docs/archive/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot post-event, selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
 
 **Topology (hard rule):** all HubSpot writes happen **in the parent thread** — the HubSpot MCP is unavailable inside subagents, and the confirmation table must render inline (memory `project_notion_writes_must_be_parent_thread`).
 
@@ -444,36 +429,7 @@ All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 
 ---
 
-## API key storage — DORMANT (Granola off; no key needed)
-
-**While Granola is disabled (see top banner), this section does not apply — the command requires no `GRANOLA_API_KEY`.** Retained for re-enable whenever Granola becomes operational on Alex's device.
-
-Default storage: `~/.zshrc` export.
-
-```bash
-# Add to ~/.zshrc
-export GRANOLA_API_KEY="grn_..."
-```
-
-Then either restart the terminal or run `source ~/.zshrc` before launching Claude Code.
-
-**Caveat from project memory (`project_claude_code_env_handoff.md`):** Dock-launched Claude Code does NOT inherit `~/.zshrc`. Launch from terminal so `$GRANOLA_API_KEY` is visible. Same constraint as the Linear hook (`LINEAR_API_KEY`).
-
-If the env var is missing at command time, the command should fail clean:
-
-```
-❌ GRANOLA_API_KEY not set. Add to ~/.zshrc:
-   export GRANOLA_API_KEY="grn_..."
-Then relaunch Claude Code from terminal.
-```
-
-NEVER hardcode the key in this file or in any committed file. NEVER log the key in command output.
-
----
-
 ## Failure modes
-
-**Note:** the disabled Granola-API failure modes below are **N/A while that path is off** (top banner). The active failure modes are listed first below.
 
 - **No Supercut match** — try `list=shared` and a wider date window once; still nothing → offer 2B (audio file) or 2C (paste). Never guess between two plausible recordings; ask Alex.
 - **Supercut transcript `pending`/`processing`** — not final. Tell Alex and stop; do not draft from a partial transcript.
@@ -481,11 +437,6 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 - **Supercut 401/403** — `SUPERCUT_API` missing, expired or wrong workspace (regenerate under Settings → Personal API Tokens). A 403 with "Error 1010" is Cloudflare rejecting the client's user agent, not an auth failure: use curl.
 - **Supercut MCP not loaded this session** (added after the session started) — use the REST path; restart Claude Code to pick up the MCP.
 - **No transcript at all** — draft from Alex's recap + the pre-event brief (lower fidelity, no verbatim quotes).
-- *(disabled path)* **GRANOLA_API_KEY not set** — fail clean with setup instruction (above).
-- *(disabled path)* **Granola API 401** — key invalid or expired. Tell Alex to regenerate the key (disabled Granola path: Settings → API).
-- *(disabled path)* **Granola API 429** — rate limit (5/sec sustained, 25 in 5sec burst). Sleep 2s and retry once.
-- *(disabled path)* **Granola API returns empty list for the date window** — widen window to event_date ±48h once. If still empty, no recording exists (common for **in-person events** — Granola has no Android app). Offer the **manual-paste path**: Alex pastes his own recording's transcript, **persist it to `event-transcripts/YYYY-MM-DD_Event.md`** so it survives across sessions (see memory `feedback-comment-workflow-2026-05-26`), then run **Step 3.5 conditioning** on it (mandatory for manual paste) → Step 4. Or skip.
-- *(disabled path)* **Multiple Granola notes match with comparable confidence** — present list with title + start_time + duration, ask Alex to pick.
 - **Notion Event row not found** — present top 3 title-similarity candidates from Events DB. If none, allow "create draft without Notion anchor" path.
 - **Notion People DB doesn't match the recalled attendees** — pass attendee names through unmatched; content-correspondent will still draft outreach but Content Draft `People` relation will be sparse. Acceptable — Alex can backfill in Notion if needed.
 - **A Notion write fails** — flag the error, return the in-memory drafts to Alex in chat so the work isn't lost. He can paste manually.
@@ -497,7 +448,7 @@ NEVER hardcode the key in this file or in any committed file. NEVER log the key 
 
 ## Why this design
 
-The friction kill is removing the transcript-paste step, not removing Alex from the loop. Supercut already records, transcribes and summarizes; pulling that by API/MCP (vs. finding a file and pasting it) frees Alex from the post-event drain of "now I have to find the file and paste it in." Conditioning (Step 3.5) stays in the loop because no vendor transcript is safe to quote from raw. (This paragraph originally described Granola, now disabled; OBS was retired 2026-09-28.)
+The friction kill is removing the transcript-paste step, not removing Alex from the loop. Supercut already records, transcribes and summarizes; pulling that by API/MCP (vs. finding a file and pasting it) frees Alex from the post-event drain of "now I have to find the file and paste it in." Conditioning (Step 3.5) stays in the loop because no vendor transcript is safe to quote from raw.
 
 The dual-path resolution (GCal ID first, title fuzzy fallback) means:
 - Future events captured via `/check-new-events` get the deterministic join automatically
@@ -510,16 +461,13 @@ Summary + transcript together is intentional: the summary drives angle/thesis de
 
 ## Ground truth references
 
-- **Granola API docs** *(disabled path, kept for re-enable)*: https://docs.granola.ai/introduction (auth, endpoints, rate limits)
-- **Granola Get Note schema**: https://docs.granola.ai/api-reference/get-note.md (calendar_event, transcript, attendees fields)
 - **Conditioning skill (Step 3.5)**: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md` — speaker resolution, entity glossary, confidence-scored quote bank
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder
 - **Speaker deep-dives (Step 5.6)**: `.claude/skills/content-patterns/speaker-deep-dive.md` — replaces the retired `/evergreen-deep-dive` command
 - **Supercut (Step 2A)**: `.claude/references/supercut.md` — auth, endpoints, MCP vs REST, verified/unverified facts
-- **Notion write rules (Step 5, inline)**: `.claude/references/notion-write-gotchas.md` + `.claude/references/notion-schema.md` (the `notion-writer` agent's property mapping still documents the fields, but do not dispatch it — subagents lack claude.ai connectors)
-- **HubSpot step spec (Step 5.5)**: `.claude/proposals/post-event-hubspot-step.md` — the gated selective create-once pattern + pre-mortem
+- **Notion write rules (Step 5, inline)**: `.claude/references/notion-write-gotchas.md` + `.claude/references/notion-schema.md` (full property mapping; writes run inline in the parent thread per CLAUDE.md invariant 5)
+- **HubSpot step spec (Step 5.5)**: `docs/archive/proposals/post-event-hubspot-step.md` — the gated selective create-once pattern + pre-mortem
 - **HubSpot CRM schema + Notes convention**: `.claude/references/notion-schema.md` (canonical fields for all three write destinations)
 - **Notion Events DB ID**: `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`
 - **Notion Content Drafts DB ID**: `6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 - **Upstream chain**: `/check-new-events` → `/event-deep-research` writes `Google Calendar Event ID` to Events DB → this command uses it
-- **Discipline-break decision record**: `.claude/notes/execution-week-frictions.md` (2026-05-20 entry for Granola integration)

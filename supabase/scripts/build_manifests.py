@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """build_manifests.py — Notion rows -> substrate.py manifests (the backfill's input side).
 
-Spec: .claude/notes/knowledge-substrate-review-2026-09-18.md ("backfill runs THROUGH the producers")
+Spec: docs/archive/notes/knowledge-substrate-review-2026-09-18.md ("backfill runs THROUGH the producers")
 + ADR-10. This script does NOT write to the graph. It only turns Notion data (pulled in the parent
 thread — the Notion connector is unavailable to subagents and scripts) into manifests, which are
 then fed to .claude/scripts/substrate.py, the same producer /post-event-content Step 3.8b calls.

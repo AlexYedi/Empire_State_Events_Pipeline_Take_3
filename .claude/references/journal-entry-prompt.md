@@ -72,6 +72,5 @@ say "ship as drafted."
 ## Ground truth
 - Facts generator: `.claude/scripts/build_journal.py` (squash `(#N)` **and** merge-commit PRs).
 - Prose sidecar: `.claude/data/build-journal-prose.json` (human-owned; this routine writes it).
-- Auto-refresh Stop hook: `.claude/hooks/build-journal-refresh.sh` (regenerates + nudges on change).
 - Public surface: the `/journal` page on **empire-state-hub** (separate repo → separate deploy).
 - System issue: YED-119 (self-instrumenting build journal).
