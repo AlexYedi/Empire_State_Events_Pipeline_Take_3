@@ -2,9 +2,13 @@
 # Stop hook — build-session telemetry emitter (YED-88 · PRD US-2)
 #
 # Contract-first, lean foundation (decided 2026-06-26: defer the OTEL collector + Langfuse platform):
-#   1. ALWAYS append an authoritative `build_session` record to .claude/artifacts/build-sessions/<session_id>.jsonl
-#      (source of truth; survives any backend change). Sharded per session 2026-09-12 (YED-159);
-#      the pre-shard single file build-sessions.jsonl is frozen history.
+#   1. ALWAYS append an authoritative `build_session` record to
+#      .claude/.state/telemetry/build-sessions/<session_id>.jsonl (source of truth; survives any
+#      backend change). Sharded per session 2026-09-12 (YED-159); moved to this GITIGNORED location
+#      2026-09-29 (YED-229) — appending to a TRACKED file every turn meant every branch switch needed
+#      a "telemetry churn" commit. The pre-shard single file build-sessions.jsonl and the pre-YED-229
+#      tracked shards under .claude/artifacts/build-sessions/ are frozen history; readers
+#      (build_journal.py, /rigor-review) read both the frozen tracked history and the live gitignored shards.
 #   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_TOKEN is set (derived, swappable adapter).
 #
 # Content-gated by construction: emits metadata + counts ONLY — never prompt/tool-input/output bodies (YED-81).
@@ -99,12 +103,15 @@ RECORD=$(jq -nc \
 
 # --- 1. authoritative append-only record (always) ---
 # Sharded per session since 2026-09-12 (YED-159): one file per session_id under build-sessions/.
-# The old single file (build-sessions.jsonl) is frozen history — every session in every worktree
-# appending to one tracked file was the one guaranteed merge conflict and 14 churn commits/month.
-# New files never conflict; a merge is a union of shards. Readers read legacy + shards.
+# Moved to a GITIGNORED directory 2026-09-29 (YED-229): the tracked single file (build-sessions.jsonl)
+# and later the tracked shards were each in turn "the one guaranteed merge conflict and N churn
+# commits/month" — sharding fixed the conflicts but not the churn (every Stop still dirtied a tracked
+# file). Writing under .claude/.state/ (already gitignored) removes the churn entirely: nothing here
+# is committed, so nothing here needs reconciling across branches/worktrees. Readers read legacy
+# tracked history (single file + old shards) + these live shards.
 SHARD_ID=$(printf '%s' "$SESSION_ID" | tr -c 'A-Za-z0-9._-' '_')
-mkdir -p .claude/artifacts/build-sessions
-printf '%s\n' "$RECORD" >> ".claude/artifacts/build-sessions/${SHARD_ID}.jsonl"
+mkdir -p .claude/.state/telemetry/build-sessions
+printf '%s\n' "$RECORD" >> ".claude/.state/telemetry/build-sessions/${SHARD_ID}.jsonl"
 
 # consumed the build_meta into this row — remove it so .state/ stays clean and a stale
 # meta never bleeds into the next session's row (parallels v2-trigger-log's rm of .relevant_skills)
