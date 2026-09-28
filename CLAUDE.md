@@ -37,7 +37,7 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 |---|---|
 | How the workflows chain, rerun manual | `.claude/WORKFLOWS.md` |
 | Plan of record, decision log, shipped log | Notion "Empire State Roadmap" (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) |
-| What's open | Linear (team Yedibalian, issues `YED-n`); pulled at session start by the user-scope `linear-priorities.sh` |
+| What's open | To-dos: Notion To-dos database on the roadmap page (`collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`) · build work: Linear (team Yedibalian, `YED-n`) |
 | Why the data layer is shaped this way | `docs/adr/README.md` (append-only; reversing an ADR means writing a new one) |
 | Environmental limits (harness, Notion, Supabase, vendors, git) | `.claude/references/platform-constraints.md` |
 | Notion/HubSpot schema and write order · MCP write formatting | `notion-schema.md` · `notion-write-gotchas.md` |
@@ -47,7 +47,7 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 | Public/private boundary | `.claude/references/build-in-public.md` |
 
 **Notion database IDs** (parent page NYC AI Event Content Hub `338d3699c2db808781d5d4675dcc5e33`):
-Events `collection://9dcbc999-b4ed-4a51-b48a-10aaf171f1ba` · People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` · Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98` · Topics `collection://d61ce9df-94b3-4637-aa09-d77e09ab3a74` · Content Drafts `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775` · Project Ideas `collection://0956e6ed-8555-4d8f-8856-388966dedaab` · Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`. Live schema is the source of truth: `notion-fetch` before batch creates.
+Events `collection://9dcbc999-b4ed-4a51-b48a-10aaf171f1ba` · People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` · Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98` · Topics `collection://d61ce9df-94b3-4637-aa09-d77e09ab3a74` · Content Drafts `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775` · Project Ideas `collection://0956e6ed-8555-4d8f-8856-388966dedaab` · Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231` · To-dos `collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`. Live schema is the source of truth: `notion-fetch` before batch creates.
 
 **Supabase:** org `A.Yedi`, project `empire state ai` (`oicikjyzmxqfomrrqkvf`), REST with `SUPABASE_API_KEY` from `.env`.
 
@@ -69,7 +69,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Git.** Branch → PR → merge for anything that adds or changes a skill, agent, command, hook, reference, schema or data contract; trivial churn (content outputs, typos) may go straight to `main`. One live session per checkout; worktrees for real parallelism, cut from `origin/main`, with `.env` symlinked in. The `main` checkout stays on `main`. Shared namespaces (ADR numbers, the Notion roadmap, this file, Linear status) are edited from one session at a time. PR the same hour you stop. When git and Linear disagree, git is the fact and Linear gets corrected. When branches need converging, one session runs `reconciliation-terminal-charter.md` and nobody else builds.
 
-**Linear is the source of truth for what's open.** Issues for workstreams and dated decisions; the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
+**Linear holds build work that ships as a PR; to-dos live in Notion.** Linear issues for workstreams; the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
 
 **Build discipline lives in the PR template** (`.github/pull_request_template.md`): spec before code (PRD for product builds, ADR or in-repo reference for infra and data-contract changes), Linear issue linked, one adversarial pass. No waiver log, no close-out ritual. Run `/judge-build` only on the artifact-class triggers in `.claude/skills/judge-build/SKILL.md` (one Sonnet reviewer; it flags, it does not gate; spec `.claude/references/judge.md`). A merged PR can still leave work uncommitted: sweep `git status`.
 
@@ -83,7 +83,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Starting a workflow unprompted:** research, drafting and analysis auto-fire when the moment matches; workflows with a built-in approval gate auto-start and pause there; publishing, CRM writes and credit spend (Apollo, Clay) wait for Alex. Unsure → the more cautious tier. "Proceed without prompting" raises the ceiling for that batch.
 
-**Parked thoughts and carry-overs** go to Linear in the same turn, with the ID in the text. Anything owed after today, by Alex or a later session, gets the `carry-over` label, a due date and a Who / What / When / Why / Context description; it shows on the hub's `/ops/todos`. No free-floating "revisit later."
+**Parked thoughts and to-dos** go to the Notion To-dos database (on the roadmap page) in the same turn: anything owed after today, by Alex or a later session, gets a row with Who, Due, Why and Context, plus a Linear link if it ships as a PR. No free-floating "revisit later."
 
 ## 6. Content
 
