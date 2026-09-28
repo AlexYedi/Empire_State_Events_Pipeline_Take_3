@@ -55,15 +55,20 @@ download feature. Errors are `{error: true, code, message}` with 400/401/402/403
 - The REST API sends no CORS headers: server-side or CLI calls only.
 - "Stacks" were renamed "Playlists" in the app and MCP. REST keeps the `/stacks` paths.
 
-## Verified vs unverified (2026-09-28)
+## Verified on a live recording (2026-09-28, 32 s test, camera + mic, MCP)
 
-**Verified:** Bearer auth with the personal token works. `GET /v1/recordings?limit=1` returned HTTP 200.
-The workspace had **0 recordings**, so nothing below that level was checked live.
+| Item | Result |
+|---|---|
+| MCP tool names | Prefix `mcp__claude_ai_Supercut__`, **hyphenated** (`get-transcript`, `get-recording`, `list-recordings`, `search-recordings`, `get-frame`). The MCP has more than the table above: `get-recording-assets` (manifest of every raw asset + status), `get-microphone-audio` / `get-system-audio`, `get-aligned-transcription`, `download-recording` (rendered video), `download-recording-camera` / `-screen` (raw MP4), `get-mouse-events` / `get-keyboard-events`, `get-recording-analytics`, `list-workspace-members`. So the MCP covers everything; REST is only a fallback |
+| Transcript shape | `sentences[]` of `{text, start, end}`, **no speaker labels** (MCP and REST alike) |
+| Transcript time units | **seconds** (float, e.g. `1.3145`). Chapters, frames and reactions use **ms**, so multiply by 1000 before `get-frame` |
+| AI summary + chapters | Summary present. `chapters[]` was empty on a 32 s clip; expect it on real-length recordings |
+| Word-level transcript | `aligned_transcription.json` = `{words: [{word, start, end}]}`, seconds, same text as the sentences |
+| Raw-asset download on Pro | **Yes.** Mic audio = `.m4a`, AAC, 48 kHz mono. Signed URLs expire in 900 s (audio, JSON) / 3600 s (video) |
+| System audio | `unavailable` unless system-audio capture is on. **Turn it on for webinars**: it is the clean track for `/ingest-recording` |
+| Video | Raw camera MP4 merged in about 1 min (first call returns `preparing`, poll). Rendered video and raw screen are also async |
+| Frames | `get-frame` returns a 1280×720 JPEG. `source` = `screen` (default) / `camera` / `screen_and_camera` |
+| Mouse / keyboard | Only captured when screen recording is on; `unavailable` otherwise |
+| Accuracy | Clean for conversational speech; one mishearing in 32 s ("Google one" for "one"). Proper nouns are untested; that is what `/ingest-recording` keyterms are for |
 
-**Unverified (confirm on the first real recording, then update this section):**
-- Units of the transcript's `sentences[].start`/`end` (seconds or ms; `chapters` use `start_ms`).
-- Whether the **MCP** `get_transcript` carries speaker labels. The docs say "timestamps and speaker
-  dialogue". The REST schema has none.
-- Whether Pro includes the raw-asset download feature (the audio → `/ingest-recording` path).
-- MCP tool-name prefix in this Claude Code setup (the connector was added 2026-09-28, after this session
-  started).
+**What this means for `/post-event-content`:** Supercut alone gives the transcript, timestamps, summary, chapters, slide frames (from screen or camera) and the audio. **Speaker attribution still needs `/ingest-recording`** on the downloaded audio (mic for in-room, system for webinars): Supercut's transcript has no diarization.
