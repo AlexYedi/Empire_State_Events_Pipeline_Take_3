@@ -8,11 +8,11 @@
 #      2026-09-28 (YED-229) — appending to a TRACKED file every turn meant every branch switch needed
 #      a "telemetry churn" commit. The pre-shard single file build-sessions.jsonl and the pre-YED-229
 #      tracked shards under .claude/artifacts/build-sessions/ are frozen history; readers
-#      (build_journal.py, /rigor-review) read both the frozen tracked history and the live gitignored shards.
+#      (build_journal.py) read both the frozen tracked history and the live gitignored shards.
 #   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_TOKEN is set (derived, swappable adapter).
 #
 # Content-gated by construction: emits metadata + counts ONLY — never prompt/tool-input/output bodies (YED-81).
-# Contract: .claude/references/build-session-contract.md (v1).
+# Contract: .claude/references/build-session-contract.md (v2 — the DoD build_meta fold was retired 2026-09-28).
 # Stop hooks emit a top-level `systemMessage` if anything; this one stays silent on success.
 
 set -uo pipefail
@@ -37,7 +37,7 @@ if [ -f "$SETTINGS_LOCAL" ]; then
   fi
 fi
 
-CONTRACT_VERSION="1"
+CONTRACT_VERSION="2"
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 PROJECT=$(basename "${CWD:-${CLAUDE_PROJECT_DIR:-$(pwd)}}")
@@ -70,21 +70,6 @@ fi
 [ -z "${PEAK_CONTEXT//[0-9]/}" ] || PEAK_CONTEXT=0
 echo "$TOOLS_USED" | jq -e . >/dev/null 2>&1 || TOOLS_USED="[]"
 
-# --- optional semantic fields (written during the session by dod-close.sh; nullable) ---
-# Prefer this session's own build_meta; fall back to a single un-suffixed _pending.build_meta
-# (written when $CLAUDE_CODE_SESSION_ID was absent — e.g. --resume/Dock/subagent). The consumed
-# file is removed after the append so .state/ doesn't leak (mirrors v2-trigger-log's cleanup).
-META_FILE=".claude/.state/${SESSION_ID}.build_meta"
-[ ! -f "$META_FILE" ] && [ -f ".claude/.state/_pending.build_meta" ] && META_FILE=".claude/.state/_pending.build_meta"
-DOD_MET=null; DOD_WAIVED=null; CORRECTION_ROUNDS=null
-if [ -f "$META_FILE" ]; then
-  # NB: use has()/else-null, NOT `// null` — jq's `//` treats `false` as empty, which would
-  # silently collapse a legitimate dod_met:false / dod_waived:false back to null.
-  DOD_MET=$(jq -c 'if has("dod_met") then .dod_met else null end' "$META_FILE" 2>/dev/null || echo null)
-  DOD_WAIVED=$(jq -c 'if has("dod_waived") then .dod_waived else null end' "$META_FILE" 2>/dev/null || echo null)
-  CORRECTION_ROUNDS=$(jq -c 'if has("correction_rounds") then .correction_rounds else null end' "$META_FILE" 2>/dev/null || echo null)
-fi
-
 # --- build the authoritative record (content-gated) ---
 RECORD=$(jq -nc \
   --arg sid "$SESSION_ID" --arg cv "$CONTRACT_VERSION" --arg rv "$RUN_VERSION" \
@@ -92,12 +77,10 @@ RECORD=$(jq -nc \
   --argjson tool_uses "$TOOL_USES" --argjson amsgs "$ASSISTANT_MSGS" --argjson uprompts "$USER_PROMPTS" \
   --argjson otok "$OUTPUT_TOKENS" --argjson peak "$PEAK_CONTEXT" \
   --argjson tools "$TOOLS_USED" --argjson touched "$BUILD_TOUCHED" \
-  --argjson dod_met "$DOD_MET" --argjson dod_waived "$DOD_WAIVED" --argjson corr "$CORRECTION_ROUNDS" \
   '{event:"build_session", contract_version:$cv, session_id:$sid, run_version:$rv, project:$proj,
     started_at:$started, ended_at:$ended, tool_uses:$tool_uses, assistant_messages:$amsgs,
     user_prompts:$uprompts, output_tokens:$otok, peak_context_tokens:$peak,
-    tools_used:$tools, build_dir_touched:$touched,
-    dod_met:$dod_met, dod_waived:$dod_waived, correction_rounds:$corr}' 2>/dev/null) || exit 0
+    tools_used:$tools, build_dir_touched:$touched}' 2>/dev/null) || exit 0
 
 [ -z "$RECORD" ] && exit 0
 
@@ -112,10 +95,6 @@ RECORD=$(jq -nc \
 SHARD_ID=$(printf '%s' "$SESSION_ID" | tr -c 'A-Za-z0-9._-' '_')
 mkdir -p .claude/.state/telemetry/build-sessions
 printf '%s\n' "$RECORD" >> ".claude/.state/telemetry/build-sessions/${SHARD_ID}.jsonl"
-
-# consumed the build_meta into this row — remove it so .state/ stays clean and a stale
-# meta never bleeds into the next session's row (parallels v2-trigger-log's rm of .relevant_skills)
-[ -f "$META_FILE" ] && rm -f "$META_FILE" 2>/dev/null
 
 # --- 2. PostHog projection (derived; only if key present) ---
 if [ -n "${POSTHOG_PROJECT_TOKEN:-}" ]; then
