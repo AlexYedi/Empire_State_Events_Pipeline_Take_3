@@ -34,7 +34,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 | **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
 | **P3 · The Loop** — learn from exhaust | Rigor layer v2: correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8 + the registry's existing "system proposes a fix" row + `/rigor-review`, not beside them | watching ✅ (ADR-8, YED-158) · learning ✗ |
 | **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
-| **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, OBS smoke test, YED-141, YED-137, Linear-to-git-truth | ongoing |
+| **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, YED-141, YED-137, Linear-to-git-truth | ongoing |
 
 ## 4. The dependency chain
 
@@ -49,7 +49,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 ### Phase 0 — Gates & cleanup (→ ~Sep 19)
 | Item | Appetite | Why first |
 |---|---|---|
-| OBS live GUI pass + first real smoke test + ETL (**YED-177**) | <1d / 3–7d | the capture lane was "Done" on paper only |
+| Retired OBS lane (was **YED-177**: GUI pass + smoke test + ETL) — superseded 2026-09-28 by Supercut (`supercut.md`); first live Supercut → `/post-event-content` run replaces it | <1d | YED-177 moot |
 
 ### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
 | Item | Appetite | Why now |
@@ -123,7 +123,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 - **2026-09-19 → 09-27** — Knowledge Substrate: S1a/S2 migrations live on prod, **ADR-10 Accepted 2026-09-27 with Amendment 1** after the A/B (YED-172) split verdict (material: substrate; packaging: legacy) · post-event → MI producer (YED-160) + backfill through the producer (YED-171) · event-namespace single-writer + graph-write freeze enforced at the one write path (YED-213/214) · conditioner aims claims at named speakers + question claims first-class (YED-217/218) · third judge seat + null-baseline registry contract (YED-209/212) · role-radar: no-technical-roles scope (YED-221), comp-gate rules for every posting shape (YED-210), Roles DB hygiene (YED-224) · backlog reconciliation closed (YED-199).
 - **2026-09-13 → 09-18** — YED-81 SEC & PII guardrail contract + `spine_client.py` write path (ADR-9, #73) · YED-161 inbox boundary mechanism (#74) + denylist v1 accepted (#75) · YED-166 slide↔recording alignment (#77) · YED-167 Postgres glossary + health review (#78) · ADR-10 Knowledge Substrate stub minted.
-- **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · OBS capture lane (YED-154) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
+- **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · the since-retired OBS capture lane (YED-154, replaced by Supercut 2026-09-28) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
 - **2026-09-04 → 09-11** — Job-Search Engine v1 (YED-146/147/148/150): me-model ICP, `target-companies.md`, role-radar rubric v2.4, Notion Roles DB; content-quality decision backlog cleared.
 - **2026-08** — MI consolidation (YED-130) · topic-intelligence layer (YED-110/120/122) · progressive engine (YED-115/117/121) · Deep Read brief v2 (YED-136) · build journal (YED-119).
 - **2026-06 → 07** — Build-Rigor & Measurement layer (YED-87…94, project Completed 2026-09-12) · cross-provider judge (YED-109) · M1 interview-prep (YED-105) · M2 dashboard (YED-106) · Empire State Hub M1–M6.

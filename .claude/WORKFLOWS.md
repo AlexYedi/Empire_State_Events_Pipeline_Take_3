@@ -23,8 +23,8 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 | Command | Status | Purpose |
 |---|---|---|
-| `/post-event-content` | ✅ Wired | Day-to-day post-event: manual transcript → conditioning → `post_event_brief` → content-correspondent drafts. |
-| `/ingest-recording` | ✅ Wired | Event `.m4a` → ElevenLabs scribe_v2 roster-seeded clean transcript (feeds `/post-event-content`). |
+| `/post-event-content` | ✅ Wired | Day-to-day post-event: Supercut transcript (or audio file / paste) → conditioning → `post_event_brief` → content-correspondent drafts. |
+| `/ingest-recording` | ✅ Wired | Any event audio (phone `.m4a`, or a Supercut audio asset) → ElevenLabs scribe_v2 roster-seeded, diarized transcript (feeds `/post-event-content`). |
 | `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
 | `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
 | `/judge-build` | ✅ Wired (advisory) | LLM-as-judge scores a build artifact vs `build-quality@1`; writes run-log + calibration ack. Advisory until ≥20 runs @ ≥80% agreement. |
@@ -160,7 +160,7 @@ After A completes, the natural next moves:
 
 ## Workflow B — Post-Event
 
-- **B — `/post-event-content`** ✅ WIRED (manual-upload anchored since 2026-05-27; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Manual transcript paste → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Claude-design carousel render → `notion-writer` commits all rows. The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
+- **B — `/post-event-content`** ✅ WIRED (Supercut-anchored since 2026-09-28, manual upload before that; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Supercut transcript (Step 2A; audio file or paste as fallbacks; `.claude/references/supercut.md`) → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Claude-design carousel render → Notion rows written inline in the parent thread (subagents lack claude.ai connectors). The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
 
 ### Retired scaffolds
 `/post-event-synthesis` (Workflow B's chained version), `/weekly-recap` (Workflow C) and `/voice-pass` (Workflow D) were deleted 2026-09-27 — see the note under the status table. The individual pieces they would have chained (`transcript-analysis`, `objection-mining`, `pattern-synthesis`) remain callable on their own; `commercial-insight-generator` and `voice-editor` were pruned from this repo 2026-09-28 (source copies live in `alex-agents-skills`).
