@@ -48,57 +48,47 @@ against a 0.33 always-pass baseline is a real signal, where Gemini's 0.65 agains
 direction. Re-check as acks accrue; if the 0.80 absolute bar proves wrong for flag-heavy samples, change it in a dated
 decision, never silently.
 
-- Seats are **advisory** until they clear all four bars; advisory seats are recorded and surfaced but **cannot auto-accept** a quorum (`quorum-merge.sh` escalates on divergence / flat ceiling / missing parity).
+- *(Superseded 2026-09-28, YED-231: the advisory tier is gone. Roles are `voting` / `shadow` / `off` in `seats.json`, set by Alex; see the section below.)*
 - Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
 - The judge **scores + flags; it never auto-rewrites and never hard-blocks.**
 
-## Three seats, one trust ladder (YED-209, 2026-09-19)
+## One voter, one shadow, one command (YED-231, 2026-09-28; replaced the YED-209 trust ladder)
 
-Spec: `.claude/proposals/third-judge-seat-openai.md`. How to run it: the `judge-build` skill.
+Spec: `.claude/references/judge-right-size-yed-231.md`. How to run it: the `judge-build` skill (`python3 .claude/evals/judge.py run …`).
 
 | File | Job |
 |---|---|
-| `seats.json` | one row per seat: `status` (shadow / advisory / voting), `independence_group`, `since` (start of its current prompt+rubric regime). Promotion = Alex edits this file. A 4th seat is a row here, not new code |
-| `judge_lib.py` | what every seat shares: the scorer (parity-tested against the jq in `gemini-judge.sh`), the one evidence bundle + its sha256, verbatim quote verification, the privacy guard, the spend ledger + caps |
-| `quorum_merge.py` | the N-seat merge. Voting seats decide, advisory seats can only add caution, shadow seats are recorded and hidden until Alex acks. A split is never auto-resolved |
-| `calibration_stats.py --gate` | each seat's *effective* status: configured, lowered one rung if a demotion rule fires on its last 20 prospective runs since `since` |
+| `seats.json` | Alex's static role map: `claude` **voting** · `openai` **shadow** · `gemini` **off** (adapter kept). Plus `revisit` floors and the named replacement candidate. No code writes it. A 4th seat is a row here, not new code |
+| `judge.py` | `run` (bundle → shadow adapters → Sonnet brief → `--resume` merges, one line out) · `ack` (the ONLY `alex_ack` writer: append-only `quorum_ack` rows) · `pending` (un-acked clean passes, for the weekly batch-ack in `/rigor-review`) |
+| `judge_lib.py` | what every seat shares: the scorer (parity-tested against the jq in `gemini-judge.sh`), the evidence bundle (`bundle_version 3`: `--artifact`, `--files` or `--range BASE..HEAD`, hunk mode over 60k chars) + its sha256, quote verification against the **whole bundle**, the privacy guard, the spend ledger + caps |
+| `quorum_merge.py` | the merge: the voter's verdict is the verdict; a quote-verified shadow can only add `verdict_mismatch` / `score_divergence` / `shadow_major_defect`; integrity reasons force `flag`; shadow verdicts stay hidden until the ack |
+| `calibration_stats.py --check` | the voter's κ / recall / null-check vs the `revisit` floors → a REVISIT banner (at every `judge.py run` and in `/rigor-review`). It **reports; it never changes a role** |
 | `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 20 · `JUDGE_TOTAL_CAP_USD` unset = no lifetime cap (was 8 and 45; changed by Alex 2026-09-27) |
-| `controls.py` · `controls/manifest.json` | the control set: real labelled artifact states by git blob. `run` judges them and scores against the label |
-| `.claude/hooks/run-canaries.sh` · `controls/state.json` | the SCHEDULED half: a 3-item sample per seat (~$0.13), recorded per seat with the resolved model id. `--full` runs the whole set |
-| `test_judge_lib.py` · `test_quorum_nseat.py` · `test_canary_gate.py` · `test_quorum_scenarios.py` | 23 + 40 + 7 + 6 offline cases; run all four before changing any of the above |
+| `controls.py` · `controls/manifest.json` | the on-demand regression set: real labelled artifact states by git blob. `run` judges them and scores against the label (no longer scheduled; canaries retired 2026-09-28) |
+| `test_judge_lib.py` · `test_bundle_multifile.py` · `test_quorum_nseat.py` · `test_check_revisit.py` · `test_adapter_contract.py` · `test_null_baseline.py` | offline, free; run them all (each is a script: `python3 <file>`) before changing any of the above |
 
 **Truth is matched on content, not file name.** Every new row carries `artifact_sha256`; a run is scored only against
 acks on the same hash. A legacy row without a hash is left *unscored* if git shows the file changed between the ack
 and the run. (Before this, a file that was flagged, fixed and re-judged the same day had its correct "pass" scored
 against the old flag, and the trusted seat read κ 0.53.)
 
-**Canaries (built 2026-09-20).** Run `bash .claude/hooks/run-canaries.sh` before `/rigor-review` and after any
-seat/model change. A seat is demoted a rung on **two consecutive failures**, when its **resolved model id changed**
-since the last green run (a silent snapshot swap invalidates freshness), or when a **voting** seat's canary is
->14d old. A seat that has *never* run one is reported as `never run`, not demoted — absence of evidence is not
-failure, but it is never silently read as "fresh" either: every quorum record carries each seat's canary status.
-
-**Demotion rules** (each has a minimum sample; they apply to every seat, the trusted one included): flat-1.0 rate ≥ 0.30
-over ≥ 10 runs · flag recall < 0.50 on ≥ 4 real flags · flag precision < 0.40 on ≥ 5 seat flags (over-flagging) ·
-κ < 0.40 on n ≥ 15. **Voting bar** (informational; promotion stays manual): n ≥ 25 prospective with ≥ 8 real flags ·
-κ ≥ 0.60 · recall ≥ 0.70 · precision ≥ 0.60 · flat < 0.20 · agreement ≥ always-pass baseline + 0.10.
-Rows with `calibration_set` in {control, bakeoff, negative-control, triage-experiment} never count toward either.
+**Revisit, not demotion (YED-231).** The ladder's canary and demotion rules produced 0 promotions in 70 days and its
+one live output (demote the voter) was always suppressed by its own guard, so they were retired. `check()` fires when
+the voter has ≥ 5 new acks since `revisit.since` and (κ < 0.40 on n ≥ 15, or flag recall < 0.50); the banner prints
+the numbers, how much of the truth set came from escalations, and the candidate. Alex's `role` edit is the decision.
+Rows with `calibration_set` in {control, bakeoff, negative-control, triage-experiment} never count.
 
 ## The null-model contract + the calibration-data ruling (YED-212, 2026-09-21)
 
 **A metric a do-nothing policy scores just as well on is not a standard.** Every gating metric declares its
 null baseline; a metric within +0.10 of it (n≥10), or with zero variance (n≥10), is **unvalidated** and cannot
-auto-accept. `calibration_stats.null_check()` · surfaced in `--gate` and in `/rigor-review` Step 2.
+auto-accept. `calibration_stats.null_check()` · surfaced in `--check` and in `/rigor-review` Step 2.
 
 **Parity: absent ≠ paired.** 32 Gemini and 47 Claude rows predate the `evidence_parity` field and were being
 counted as if the seat had been given the spec. Seat scoring is now **strict** (parity-true only) and reports
 `parity_unknown` separately; `compute(..., strict_parity=False)` gives the historical view. Alex's **acks still
 seed truth regardless of parity** — his verdict is about the artifact, not about what one seat was shown.
 (Requiring parity there collapsed the truth pool from 35 artifacts to 1; caught in test.)
-
-**Last-voting-seat guard.** If demotions would leave no voting seat, the final demotion is **recorded, not
-applied** (`last_voting_seat_held`), pending Alex's confirmation in `seats.json`. With no trusted seat every run
-escalates, and a gate that cries wolf gets overridden — the failure this layer exists to prevent.
 
 ### Calibration-data ruling (Alex, 2026-09-21)
 The Gemini seat's 2026-07-17 "provisional-trusted" promotion is **VOID as a trust claim**: it rested on 83%

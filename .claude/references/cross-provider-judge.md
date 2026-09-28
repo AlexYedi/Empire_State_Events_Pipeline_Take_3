@@ -1,6 +1,6 @@
 # Cross-provider judge quorum — spec (v1, 2026-07-17)
 
-> **Extended 2026-09-19 (YED-209): three seats.** An OpenAI seat joined in *shadow*, with an N-seat merge, per-seat auto-demotion and content-matched calibration. The design, decision table and pre-mortem are in `.claude/proposals/third-judge-seat-openai.md`; the operating summary is in `.claude/evals/README.md`. Everything below still describes the two original seats accurately.
+> **Right-sized 2026-09-28 (YED-231): the run path, merge and trust rules now live in `.claude/references/judge-right-size-yed-231.md`** (one command, `python3 .claude/evals/judge.py run`; Sonnet voting · OpenAI shadow · Gemini off with its adapter kept; `seats.json` is Alex's static role map). The 2026-09-19 three-seat design (YED-209, `.claude/proposals/third-judge-seat-openai.md`) is history. This file keeps the original two-seat rationale, the run-log contract, the calibration plan and the Gemini build gotchas.
 
 **Why.** The build-quality judge is `provisional-trusted` (crossed 20-@-80% but on a Claude-only, ~1/3-self-produced
 sample). The unclosed risk is **judge circularity / self-preference** (R1): Claude rating Claude-produced work.
@@ -16,19 +16,11 @@ the concrete path to dropping "provisional." This spec is the design; build foll
 - Why Sonnet not Haiku: Haiku wobbled this session (rubric-fit misses, gcc-v2 inconsistency). Not Opus: quota-heavy + Opus-judging-Opus amplifies same-family self-preference.
 - Why Gemini Pro not Flash-Lite: free tier on this key = Flash-Lite only (too weak → noisy disagreements). Billing enabled 2026-07-17; Pro is the quality independent seat. Cost is negligible at judge volume.
 
-## Scoped quorum (not naïve 50/50)
-Both judges score all 5 `build-quality@6` criteria (`@6` = `@5` + the privacy-layer defect cap, 2026-09-28), BUT their votes are **weighted by domain competence**:
-- **Provider-neutral criteria** (`correctness`, `completeness`) — Gemini's independent read carries full weight; this is where cross-provider catches Claude's blind spots.
-- **House-specific criteria** (`convention_adherence`, `anti_pattern_avoidance`) — Claude (Sonnet) retains primary judgment; Gemini lacks native Empire-State context (notion-search vs notion-query-data-sources, SDK subagent constraint, tombstoned decisions) unless heavily briefed. Gemini's vote here is advisory only.
-- `diagnostics` — shared.
-Gemini gets the SAME `judge-system-v2.md` + `build-quality@6` + per-artifact spec/context the Claude judge gets (apples-to-apples), plus a house-context primer for the convention criteria. For `deep_read` artifacts it also runs `density-check.sh` and gets the density signal (a flag, not a hard cap — the model judges padding vs. legitimate on-ramp).
-
-## Quorum resolution (no model tiebreak — it would be circular)
-A disputant cannot adjudicate its own disagreement, and we have no genuinely-independent *third* provider. So:
-- **Agree** (both pass / both flag) → auto-verdict, high confidence, no human needed.
-- **Disagree** → **escalate to Alex** (the only independent tiebreaker). The disagreement set is the highest-value output.
-- **Disagree in autonomous/batch mode** (Alex not in the loop) → **fail-safe to FLAG** (non-destructive — "review before done") + queue the disagreement for later human review. Never auto-resolve a split with a correlated model.
-- Escalations surface **both judges' per-criterion reasoning side-by-side**, with the divergent criterion highlighted → a ~15-second human call.
+## Quorum, resolution and the merge mechanic — superseded
+The scoped 50/50 weighting, the two-seat resolution table and `quorum-merge.sh` (removed 2026-09-28) are replaced by
+`quorum_merge.py` under the rules in **`.claude/references/judge-right-size-yed-231.md` §2/§4**. What survives from
+here: no model tiebreak (Alex is the only tiebreaker), fail-safe FLAG in autonomous mode, and every seat scores the
+same bundle with the harness (never the model) computing the composite.
 
 ## Run-log (schema stays stable — the contract-first payoff)
 Same `.claude/evals/logs/*.jsonl` schema. New/used fields:
@@ -47,48 +39,6 @@ Same `.claude/evals/logs/*.jsonl` schema. New/used fields:
 4. **Free tier on this key = Flash-Lite only** — Pro needs billing (enabled 2026-07-17). Don't silently fall back to a free model if billing lapses; surface it.
 5. **Cost:** ~2–4¢/run · backfill (~15–22 runs) ≈ $0.50–0.90 one-time · ongoing ≈ $1–6/mo. Claude seat stays subscription-free.
 
-## Judge-trigger / merge mechanic (spec, added 2026-07-21 — roadmap item 4, precedes the `/judge-build` wiring)
-How the two seats become one `quorum` verdict inside `/judge-build`. Each seat writes its own schema-stable run-log
-line (contract unchanged); the command computes a **separate additive `quorum` record** — no seat needs to know the
-other's result at write time (avoids an order-dependency the adapter can't satisfy).
-
-**Seats + who runs them:**
-- **Claude (Sonnet) seat** — dispatched by the command via the `Agent` tool with `model: sonnet` (independent of the
-  Opus main thread; house-aware). The subagent runs the `judge-build` methodology and returns the 5-criterion JSON
-  verdict as text. The command appends its run-log line (`judge_model:"claude:sonnet…"`, `judge_provider:"anthropic"`).
-- **Gemini seat** — the command runs `.claude/hooks/gemini-judge.sh --artifact <path> [--context …] --calibration-set prospective`
-  via Bash; the adapter writes its own line and prints the verdict.
-
-**Pre-pass both seats share (mechanized, not model-discretion):** the command first runs
-`.claude/hooks/check-refs.sh --artifact <path>`. Its stdout — the list of *load-bearing referenced paths that do not
-exist* — is (a) injected into BOTH seats' prompts as ground truth ("VERIFIED-MISSING REFERENCES: …"), and (b) used to
-**deterministically enforce** the `@3` dangling-reference cap (completeness ≤0.60 / composite ≤0.60) regardless of what
-the model scored. This closes the `bf17` gap (models under-apply the cap). `gemini-judge.sh` calls `check-refs.sh`
-internally and enforces the cap on its own output; the Claude seat is told to treat the list as authoritative.
-
-**Merge (`.claude/hooks/quorum-merge.sh`):** given `--claude-verdict <json>`, `--gemini-log <path>` (or `--gemini-verdict <json>`),
-`--artifact <path>`, and `--mode interactive|autonomous`, it:
-1. **recomputes BOTH seats' composites** from their criterion scores + cap flags — neither judge computes its own
-   (`judge-system-v2` rule; the Gemini adapter mechanizes it for its seat, this script does it for the Claude seat, so
-   neither seat's arithmetic can drift from the rubric). A self-reported score that differs is recorded as
-   `claude_selfreported_weighted_score`, never silently kept,
-2. sets `agree = (claude.verdict == gemini.verdict)` and `divergence = |claude.ws − gemini.ws|`,
-3. resolves — **matching verdicts alone do NOT auto-accept** (2026-09-19, YED-206). Escalation reasons:
-   `verdict_mismatch` · `score_divergence` (≥ `QUORUM_DIVERGENCE`, default 0.15) · `flat_ceiling:<seat>` (a seat scoring
-   1.0 on all five criteria = low-information) · `gemini_no_evidence_parity`. No reasons → `resolution:"auto"`, final =
-   the agreed verdict; reasons + `interactive` → `resolution:"escalated"` pending Alex; reasons + `autonomous` →
-   `resolution:"failsafe_flag"`, final = `flag`,
-4. appends one `quorum` record to `.claude/evals/logs/<date>-<artifact>-quorum-<run>.jsonl`:
-   `{run_id, timestamp, artifact, claude_run_id, gemini_run_id, claude:{verdict,score}, gemini:{verdict,score},
-   agree, resolution, final_verdict, mode, alex_ack:null}` — the schema-stable §6 block, additive to the seat lines.
-
-**Resolution surfacing:** on `escalated`, the command shows Alex both seats' per-criterion reasoning side-by-side with the
-divergent criterion highlighted, and asks the agree/disagree ack → written to the quorum record's `alex_ack`. On `auto`,
-one ack covers both. `autonomous` mode never blocks — it records `failsafe_flag` and queues the split for later review.
-
-**Autonomy detection:** `--mode` is passed by the command based on whether Alex is in the loop (interactive session →
-`interactive`; batch/headless → `autonomous`, per the [[feedback_ship_all_variants]] batch-autonomy convention).
-
 ## DoD
 Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-close`. Spec artifact = this file (mirror to ChatPRD/Notion). Adversarial pass = the quorum-circularity catch (already in writing, this session).
 
@@ -96,4 +46,4 @@ Non-trivial build → `/judge-build` the adapter itself (dog-fooding) + `/dod-cl
 
 **Evidence parity is a property of the bundle, fixed when `judge_lib.py bundle` builds it.** Every seat scores the bundle's bytes verbatim, so a seat flag cannot add evidence after the fact. The adapters therefore **refuse** `--context`/`--spec-file` together with `--bundle` (exit 2) instead of silently dropping them, and `judge_lib.py bundle` prints an unmissable warning when the bundle carries < 400 chars of spec. The fix for a parity-false bundle is always to rebuild it. Build diff artifacts against the merge-base, never two-dot against a moving `origin/main`.
 
-**Quote verification is format-tolerant for prose only.** A defect's `quote` must appear in the artifact modulo whitespace and case. For prose artifact types (`skill`, `command`, `ref`, `dossier`, `deep_read`) it is also tolerant of dropped markdown `**`, backticks, a word-boundary `*`, and the em-dash / en-dash / spaced-hyphen / colon swap. Code-like types are matched strictly, and `_` is never altered in any mode: in code every delimiter is syntax, and the judge reproduced fabrications against `hay_loose`, `__init__`, `_private`, `*args` and `--bundle` when the first two versions stripped them. Recorded residual: in prose, a quote differing only by that swap or dropped markers verifies. The strict count survives as `unverified_exact`. **Coverage:** quote verification runs for the Claude seat (`seat-log.py`) and the OpenAI seat (`openai_judge.py`). The Gemini seat's response schema has no `quote` field, so it has never been quote-checked, before or after this change; tracked on YED-187.
+**Quote verification is format-tolerant for prose only.** A defect's `quote` must appear in the bundle (since YED-231: any file, spec file, the context, or the range's diff) modulo whitespace and case. For prose artifact types (`skill`, `command`, `ref`, `dossier`, `deep_read`) it is also tolerant of dropped markdown `**`, backticks, a word-boundary `*`, and the em-dash / en-dash / spaced-hyphen / colon swap. Code-like types are matched strictly, and `_` is never altered in any mode: in code every delimiter is syntax, and the judge reproduced fabrications against `hay_loose`, `__init__`, `_private`, `*args` and `--bundle` when the first two versions stripped them. Recorded residual: in prose, a quote differing only by that swap or dropped markers verifies. The strict count survives as `unverified_exact`. **Coverage:** quote verification runs for the Claude seat (`seat-log.py`) and the OpenAI seat (`openai_judge.py`). The Gemini seat's response schema has no `quote` field, so it has never been quote-checked; with Gemini `off` since 2026-09-28 (YED-231) this matters only if it is switched back on (YED-187).

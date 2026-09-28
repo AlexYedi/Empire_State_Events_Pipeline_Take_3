@@ -4,6 +4,8 @@
 
 # Third judge seat (OpenAI): design spec for approval
 
+> **§1–2 superseded by `.claude/references/judge-right-size-yed-231.md` (YED-231, 2026-09-28).** Kept as history.
+
 No files in the repo were edited and no paid API was called. I ran `git fetch`, a dry-run `git merge-tree` (it leaves one unreferenced object in `.git` and does not touch the working tree), and `calibration_stats.py` against log copies in the scratchpad. OpenAI prices and data rules were read from OpenAI's live docs today.
 
 ## Summary
