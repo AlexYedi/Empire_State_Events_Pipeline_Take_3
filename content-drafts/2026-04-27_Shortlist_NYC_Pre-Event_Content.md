@@ -202,9 +202,6 @@ data-driven employee records. Founding posture: deliberately unfunded in 2026.
 **DM Option B** *(angle: adjacent implication — HR-tech 1.0 vs. 2.0)*
 > Brian — pulling for tonight's pitch at Shortlist. Performance reviews have been broken for 100 years; HR-tech 1.0 didn't fix it. Watching you bet on Windmill says something about where the data layer in the work-tool stack finally got rich enough to make this work. Specific question: what's the one signal in a typical employee's work-tool data that's most underused for review prep? Looking forward to seeing the demo.
 
-**DM Option C** *(angle: commercial intersection — founding-GTM seat)*
-> Brian — at Shortlist tonight. I read "unfunded by choice" as a deliberate hire-slow signal. The Windmill founding-GTM seat — *if* it opens — is the kind of asymmetric-equity bet I'd want to be in a real conversation about. Less an immediate ask than a heads-up: I have 12 years of enterprise GTM (Bazaarvoice / Curalate / Cohley, currently Lead Enterprise AD at GKY) and would want to talk if the fit is real. Either way, looking forward to the demo.
-
 ---
 
 ### Akash Magoon — Co-Founder & CEO, Adonis
@@ -245,9 +242,6 @@ mention the events pipeline (adjacent to his work).
 
 ### Ivor Stratford — Co-Founder, Morpheus Talent + Shortlist (HOST)
 Engagement angle: be direct. He's a recruiter; indirectness wastes his time.
-
-**DM Option A** *(angle: direct recruiter ask)*
-> Ivor — at Shortlist tonight. Direct ask: I'm exploring AI-native enterprise GTM seats — 12 years across Bazaarvoice, Curalate, Cohley, currently Lead Enterprise AD at GKY Industries. Best fit shape is "first commercial hire" or "founding GTM" at Series-A-to-B AI cos. Of Morpheus's current portfolio, who's the closest match — and would you be open to a warm intro? Either way, see you in the room.
 
 **DM Option B** *(angle: recruiter question for a recruiter)*
 > Ivor — see you tonight. Recruiter question for a recruiter: of the 6 founders pitching tonight, which two do you think are going to have the hardest time hiring senior GTM right now, and why? The answer is genuinely useful intel for anyone in the operator cohort — and would tell us as much about the Shortlist curation as it would about the founders themselves. Looking forward.
@@ -318,7 +312,6 @@ group by richness of expected answer. Use whichever fits the conversation that o
 
 ### For Ivor Stratford (Host)
 13. **"Of the 6 founders tonight, which two do you think have the hardest time hiring senior GTM right now, and why?"** *(Recruiter question for a recruiter.)*
-14. **"Of Morpheus's portfolio, who's the best match for 'first commercial hire' or 'founding GTM' at Series-A-to-B AI cos?"** *(Direct ask, recruiter-appropriate.)*
 
 ### For the room at large / mixer
 15. **"There's a ~5x funding spread across the 6 founders tonight — Series C with $95M+ raised on one end, deliberately unfunded on the other. Which two do you think are going to be the most interesting to follow over the next 18 months, and why?"** *(Group conversation starter at the mixer.)*

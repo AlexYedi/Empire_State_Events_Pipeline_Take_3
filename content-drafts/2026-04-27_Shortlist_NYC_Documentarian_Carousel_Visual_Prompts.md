@@ -201,7 +201,7 @@ Continuous AI-readable work record makes
 performance review fair, finally.
 
 THE PROOF SO FAR
-Yext IPO repeat founder. $12M announcing tomorrow.
+Yext IPO repeat founder. $12M seed (announced 2026-04-28).
 120 customers.
 
 WATCH FOR

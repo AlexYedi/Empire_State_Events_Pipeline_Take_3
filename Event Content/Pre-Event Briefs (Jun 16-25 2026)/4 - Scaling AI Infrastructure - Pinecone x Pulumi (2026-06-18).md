@@ -24,7 +24,7 @@ So the unifying thesis of the room: **as AI moves from prototype to production, 
 
 1. **The biggest landmine is a speaker-bio error.** Joerg Schad's talk is titled "How Pinecone Builds Infrastructure," but **he no longer works at Pinecone** — he's Head of Engineering at **Nextdata**. He'll be speaking *retrospectively* about Pinecone. Most of the room will assume he's still there. Knowing this is both your sharpest icebreaker and a thing to confirm with the organizer before attributing anything to "Pinecone's current VP Eng." (See People.)
 2. **Adam Gordon Bell ran a Pulumi + AWS AI-agents workshop *the night before* (June 17, "AI Builder Lab NYC," Bedrock AgentCore).** That's a 10-second, real, non-sycophantic opener.
-3. **For Alex's job search specifically:** both are AI-native infra companies, and Pinecone's **new CEO Ash Ashutosh** (Sept 2025; ex-Google solution sales, "enterprises buy outcomes, not technology") is running an *enterprise GTM motion* over a technical product — the exact seam where Alex's profile (enterprise SaaS sales depth + genuine AI fluency) is rare and valuable. Adam Gordon Bell, meanwhile, lives in Alex's lane: bridging engineering and communication.
+3. **GTM angle:** both are AI-native infra companies, and Pinecone's **new CEO Ash Ashutosh** (Sept 2025; ex-Google solution sales, "enterprises buy outcomes, not technology") is running an *enterprise GTM motion* over a technical product. Adam Gordon Bell, meanwhile, lives in Alex's lane: bridging engineering and communication.
 
 **Networking value:** HIGH (in-person, small, technical, two accessible speakers). **Content value:** HIGH (two crisp, current theses to document). **Build-relevance:** HIGH (this is the substrate Alex builds on).
 
@@ -142,7 +142,7 @@ So the unifying thesis of the room: **as AI moves from prototype to production, 
 - **Temporal $300M Series D at $5B** (Feb 17) — durable execution is now a funded, named category for agents. *Medium-high.*
 - **Cloudflare Dynamic Workflows GA** (May 1) — durable execution moving into the serverless platform layer. *Medium.*
 - **Turbopuffer poaching Pinecone customers** (Cursor/Notion/Linear) + pgvector-as-default hardening — the competitive squeeze on the co-headliner. *Medium-high (handle privately, not in public copy without sourcing).*
-- **Pinecone CEO transition** (Ashutosh, Sept 2025) — GTM-leader-over-technical-product; the single most job-search-relevant signal for Alex. *High (personal relevance).*
+- **Pinecone CEO transition** (Ashutosh, Sept 2025) — GTM-leader-over-technical-product. *High.*
 
 ---
 
