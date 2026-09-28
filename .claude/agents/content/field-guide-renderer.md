@@ -87,7 +87,7 @@ You receive all rendered Deep-Read sections in order. Produce the final assemble
 
 ## Reference
 
-- `.claude/proposals/event-field-guide.md` — the spec (unified brief: scannable head + deep body, sizing, decisions).
+- `docs/archive/proposals/event-field-guide.md` — the spec (unified brief: scannable head + deep body, sizing, decisions).
 - `docs/adr/ADR-5-event-field-guide.md` — the single-artifact / decoupled-render / provenance invariants.
-- `.claude/proposals/field-guide-spike-daytona.md` — the validated output bar (Daytona spike).
+- `docs/archive/proposals/field-guide-spike-daytona.md` — the validated output bar (Daytona spike).
 - `.claude/skills/event-research/SKILL.md` — the underlying research methodology.

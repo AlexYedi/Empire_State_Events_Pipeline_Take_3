@@ -47,7 +47,7 @@ without ceremony that a solo builder doesn't need. Distilled from the Linear Met
 Why this exists: the 2026-09-13 inventory found ~170 open/parked/undecided items across eleven
 containers, and ten places where two artifacts disagreed about the same thing. Only "open work"
 (Linear) and "sequencing" (`roadmap.md`) had a defined home; every other kind landed wherever it was
-discovered. This table assigns the rest. Full record: `.claude/notes/open-items-inventory-2026-09-13.md`.
+discovered. This table assigns the rest. Full record: `docs/archive/notes/open-items-inventory-2026-09-13.md`.
 
 | Kind | Home | Shape |
 |---|---|---|

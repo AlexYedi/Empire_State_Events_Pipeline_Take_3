@@ -68,4 +68,4 @@ The slash command pre-dedups against the Notion Events DB by title + date. Exist
 - The invite itself becomes the durable record. GCal becomes your event history.
 - Distributes content review across days — `/check-new-events` processes one event at a time with continue-or-quit control.
 
-See `.claude/notes/execution-week-frictions.md` for the full design decision record (2026-05-20).
+See `docs/archive/notes/execution-week-frictions.md` for the full design decision record (2026-05-20).

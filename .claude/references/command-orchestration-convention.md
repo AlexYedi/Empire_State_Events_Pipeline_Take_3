@@ -47,8 +47,8 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
 - **Frontmatter:** `description` (required) + `argument-hint`. Reference plugin skills with the `alex:`
   prefix when they live in the `alex` plugin (e.g. `alex:message-architecture`, not `message-architecture`).
 - **Placement:** `.claude/commands/<kebab-name>.md`. Methodology lives elsewhere; the command is the shape.
-- **Scaffold ≠ shipped.** A command with orchestration deferred is a **draft** — put it in
-  `.claude/proposals/` with a `DRAFT` header, or keep it in `commands/` only once steps 1–7 are real.
+- **Scaffold ≠ shipped.** A command with orchestration deferred is a **draft**: it lives in Linear (Backlog, label `parked`,
+  body `Revisit trigger: …`), never in `commands/`, until steps 1–7 are real.
   Per the CLAUDE.md steering bias, a command with no named friction on the active publishing path is
   deferred, not built out speculatively.
 
