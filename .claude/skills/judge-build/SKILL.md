@@ -43,7 +43,7 @@ No routine control runs: the control set runs only when the reviewer's model id 
 ## What makes a FLAG (judge_lib.finalize — deterministic, no calibration number involved)
 - composite < 0.70 after caps
 - the reviewer set `privacy_layer_defect` (a confirmed defect in any layer of a privacy/security control)
-- a **guarded path** is in the bundle — `.claude/scripts/spine_client.py`, `inbox_boundary.py`, `build_graph.py`,
+- a **guarded path** is in the bundle — `.claude/scripts/spine_client.py`, `inbox_boundary.py`,
   `.gitignore`, or any file named like guard/filter/allowlist/denylist/boundary/privacy/redact/pii → human review
   whatever the score
 - 1.0 on all five criteria (low-information)
