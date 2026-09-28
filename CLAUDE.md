@@ -24,7 +24,7 @@ Google Calendar ─► /check-new-events ─► /event-deep-research
    (4 specialists ∥ + knowledge-conditioning → synthesizer → Deep Read renderer)
    ─► Notion (Events · People · Companies · Topics · Content Drafts) + HubSpot
    ─► pre-event-content (posts ×3 variants · connection notes A/B · questions · carousel PDF)
-   ─► attend ─► /ingest-recording ─► /post-event-content ─► content-correspondent ─► Notion ─► HubSpot (gated)
+   ─► attend (Supercut records) ─► /post-event-content ─► content-correspondent ─► Notion ─► HubSpot (gated)
 Job-search loop: /scan-roles · role-radar · Notion Roles DB · me-model.md · /interview-prep
 Passive store: Supabase MI graph (post-event claims + roles) via spine_client.py
 ```
@@ -81,7 +81,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Size ceiling, held by Alex, no enforcement hook.** This file stays ≤1,800 words. At most 3 wired project hooks, none that can block a turn. After the paydown, additions to this file, the hook set, references, agents, commands and skills are one-in-one-out: name what the new thing replaces.
 
-**Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Granola) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Starting a workflow unprompted:** research, drafting and analysis auto-fire when the moment matches; workflows with a built-in approval gate auto-start and pause there; publishing, CRM writes and credit spend (Apollo, Clay) wait for Alex. Unsure → the more cautious tier. "Proceed without prompting" raises the ceiling for that batch.
+**Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Starting a workflow unprompted:** research, drafting and analysis auto-fire when the moment matches; workflows with a built-in approval gate auto-start and pause there; publishing, CRM writes and credit spend (Apollo, Clay) wait for Alex. Unsure → the more cautious tier. "Proceed without prompting" raises the ceiling for that batch.
 
 **Parked thoughts** go to Linear or Notion in the same turn, with the ID in the text. No free-floating "revisit later."
 
