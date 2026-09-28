@@ -1,114 +1,46 @@
 # `.claude/evals/` — the shared eval home
 
-The single home for LLM-as-judge quality evaluation in this pipeline. Established 2026-06-26 by the build-rigor layer (Linear YED-89 / PRD US-3); **coordinates with the `eval-harness` project** (Notion Project Ideas `348d3699…`), which owns the rubric/judge conventions and `rubric_version`. When eval-harness is built, its skill rubrics (pre-event-content, etc.) live here too. **One judge system, not two** (never-duplicate-state).
+The single home for LLM-as-judge quality evaluation in this pipeline (established 2026-06-26, YED-89; coordinates
+with the `eval-harness` project, Notion `348d3699…`). **One judge system, not two.** Since YED-231 (2026-09-28) the
+build judge is **one Sonnet reviewer that raises flags**: design `.claude/references/judge.md`, method
+`.claude/skills/judge-build/SKILL.md`.
 
 ## Layout
-- `rubrics/<name>.md` — rubric-as-code: criteria + weights + pass bands + ≥1 pass/fail example each, plus a machine-readable JSON block. Versioned as `<name>@N`; never mutate old versions (bump instead). **Current build rubric: `build-quality@5`** (`rubrics/build-quality-v5.md`, live 2026-09-19 — earned-1.0 scale + 0.85 mid anchor, `defects[]` required, NEW spec-drift cap correctness ≤0.70; YED-206). Previous: **`build-quality@4`** (`rubrics/build-quality-v4.md`, live 2026-08-21 — added the artifact-type-scoped **density cap** ≤0.65 for `deep_read` renders, mechanized by `hooks/density-check.sh`; YED-136). For every artifact type except `deep_read`, `@4` ≡ `@3`. `build-quality-v3.md` (`@3`, confidence-honesty cap), `build-quality-v2.md` (`@2`, dangling-ref + command-skeleton caps) and `build-quality.md` (`@1`) are retained for runs scored under them.
-- `prompts/judge-system.md` — the shared judge system prompt, v1 (kept for runs scored under it).
-- `prompts/judge-system-v2.md` — **current** (2026-09-19, YED-206): defects-before-scores, an earned 1.0, spec-before-impression, don't-trust-docstrings; the harness (not the judge) computes the composite.
-- `calibration_stats.py` — per-seat agreement · always-pass baseline · Cohen's κ · flag recall · flat-1.0 rate.
-- `logs/<YYYY-MM-DD>-<artifact>-<run-id>.jsonl` — **authoritative** append-only run-log (the source of truth). Notion is a *deferred projection*, not the store (same contract-first pattern as `build-session-contract.md`).
-
-## Run-log record schema
-```json
-{ "run_id":"", "timestamp":"", "artifact":"", "artifact_type":"skill|command|hook|ref|code",
-  "rubric":"build-quality@1", "judge_model":"", "session_id":"",
-  "criterion_scores":[{"id":"","score":0.0,"reasoning":""}],
-  "weighted_score":0.0, "verdict":"pass|flag", "alex_ack":null }
-```
-`alex_ack` is the **calibration field** — `null` until Alex reviews, then `"agree" | "disagree"` (+ optional note).
-
-## The calibration gate — per seat, and raw agreement is NOT enough (revised 2026-09-19, YED-206)
-LLM-as-judge has **self-preference bias** — here it's judging work produced by a similar model (the "judge circularity" risk eval-harness flagged as R1). The original gate was "≥20 runs at ≥80% judge–human agreement". **That number is gameable by a seat that passes everything**: when Alex flags ~1 in 5 artifacts, a constant "pass" scores ~80% on its own. The Gemini seat's celebrated "83%" was exactly its always-pass baseline (triage: `.claude/notes/gemini-judge-triage-2026-09-19.md`).
-
-**The gate is now four numbers per seat**, produced by `python3 .claude/evals/calibration_stats.py`:
-
-| metric | bar | why |
-|---|---|---|
-| agreement vs Alex | ≥ 0.80 **and above that seat's always-pass baseline** | the old number, kept but no longer alone |
-| Cohen's κ | ≥ 0.60 | agreement corrected for chance; κ≈0 = adds nothing over always-passing |
-| flag recall | ≥ 0.60 | of the artifacts Alex would send back, how many the seat caught — what a gate actually needs |
-| flat-1.0 rate | < 0.30 | a seat scoring 1.0 on every criterion is low-information whatever its verdict |
-
-**Standing as of 2026-09-19, recomputed after YED-201 restored the round-1 records a log-overwrite bug had been
-destroying** (53 acked runs over 34 artifacts — a bigger, flag-heavier sample than the first cut of this table):
-
-| seat | scored vs Alex | agree | baseline | κ | flag recall | flat 1.0 | standing |
-|---|---|---|---|---|---|---|---|
-| `claude:haiku` | 27 | 0.82 | 0.67 | 0.55 | 0.56 | 0.00 | advisory (κ + recall under) |
-| `claude:sonnet` | 15 | **0.73** | 0.33 | **0.50** | 0.60 | 0.00 | advisory (agreement + κ under) |
-| `gemini` | 26 | 0.65 | 0.62 | **0.12** | **0.10** | **0.81** | **advisory — fails 3 of 4** |
-| `claude:opus` | 6 | 1.00 | 1.00 | — | — | 0.00 | not a seat; κ undefined (zero-variance sample) |
-
-**No seat currently clears all four bars, including the one this file called "trusted" earlier the same day.** That
-earlier read came from 10 scored runs on a pass-heavy sample; the restored records added flag-heavy ones and Sonnet's
-absolute agreement fell to 0.73. Read honestly: Sonnet is still the most *informative* seat by a wide margin — 0.73
-against a 0.33 always-pass baseline is a real signal, where Gemini's 0.65 against a 0.62 baseline is nearly none — but
-**the bar is not moved to make a seat pass.** Consequence: the quorum escalates more often, which is the fail-safe
-direction. Re-check as acks accrue; if the 0.80 absolute bar proves wrong for flag-heavy samples, change it in a dated
-decision, never silently.
-
-- Seats are **advisory** until they clear all four bars; advisory seats are recorded and surfaced but **cannot auto-accept** a quorum (`quorum-merge.sh` escalates on divergence / flat ceiling / missing parity).
-- Re-check on a rolling basis; failing a bar ⇒ fix the seat or the rubric, don't trust the score.
-- The judge **scores + flags; it never auto-rewrites and never hard-blocks.**
-
-## Three seats, one trust ladder (YED-209, 2026-09-19)
-
-Spec: `.claude/proposals/third-judge-seat-openai.md`. How to run it: the `judge-build` skill.
-
 | File | Job |
 |---|---|
-| `seats.json` | one row per seat: `status` (shadow / advisory / voting), `independence_group`, `since` (start of its current prompt+rubric regime). Promotion = Alex edits this file. A 4th seat is a row here, not new code |
-| `judge_lib.py` | what every seat shares: the scorer (parity-tested against the jq in `gemini-judge.sh`), the one evidence bundle + its sha256, verbatim quote verification, the privacy guard, the spend ledger + caps |
-| `quorum_merge.py` | the N-seat merge. Voting seats decide, advisory seats can only add caution, shadow seats are recorded and hidden until Alex acks. A split is never auto-resolved |
-| `calibration_stats.py --gate` | each seat's *effective* status: configured, lowered one rung if a demotion rule fires on its last 20 prospective runs since `since` |
-| `pricing.json` · `spend-ledger.jsonl` | prices with an as-of date; one ledger row per paid API attempt, failures included. Caps: `JUDGE_MAX_USD_PER_RUN` 0.50 · `JUDGE_MONTHLY_CAP_USD` 20 · `JUDGE_TOTAL_CAP_USD` unset = no lifetime cap (was 8 and 45; changed by Alex 2026-09-27) |
-| `controls.py` · `controls/manifest.json` | the control set: real labelled artifact states by git blob. `run` judges them and scores against the label |
-| `.claude/hooks/run-canaries.sh` · `controls/state.json` | the SCHEDULED half: a 3-item sample per seat (~$0.13), recorded per seat with the resolved model id. `--full` runs the whole set |
-| `test_judge_lib.py` · `test_quorum_nseat.py` · `test_canary_gate.py` · `test_quorum_scenarios.py` | 23 + 40 + 7 + 6 offline cases; run all four before changing any of the above |
+| `judge.py` | the one entry point: `run` (bundle + reviewer brief) → `run --resume` (log + one-line verdict) → `ack` (flags only) |
+| `judge_lib.py` | score (`build-quality@6` caps), `finalize()` (final pass/flag + reasons, guarded paths), bundle build (file / files / git range), quote check, privacy guard |
+| `../hooks/seat-log.py` | the ONLY writer of reviewer rows (real UTC time, content hash, harness-computed score) |
+| `rubrics/build-quality-v6.md` | the rubric, **frozen at `@6`**. Older versions retained for runs scored under them; never mutate them |
+| `prompts/judge-system-v2.md` | the reviewer's instructions (defects before scores, earned 1.0). `judge-system.md` = v1, retained |
+| `calibration_stats.py` | a plain **report**: judge-vs-Alex agreement, always-pass baseline, κ, flag recall, flat-1.0 rate, runs per artifact class. **Nothing gates on it** |
+| `controls.py` · `controls/manifest.json` | the control set (real labelled states by git blob). `controls.py plan` prints the runs. Run it only when the reviewer's model id changes |
+| `emit-judge-runs.sh` | projects run rows to PostHog `judge_run` events (the JSONL stays authoritative) |
+| `logs/*.jsonl` | **authoritative, append-only** run log |
+| `spend-ledger.jsonl` | history of the retired OpenAI seat's spend. Nothing writes it now |
+| `test_judge_lib.py` · `test_judge_e2e.py` · `test_bundle_multifile.py` · `test_null_baseline.py` | offline, free; run all four before changing any of the above |
 
-**Truth is matched on content, not file name.** Every new row carries `artifact_sha256`; a run is scored only against
-acks on the same hash. A legacy row without a hash is left *unscored* if git shows the file changed between the ack
-and the run. (Before this, a file that was flagged, fixed and re-judged the same day had its correct "pass" scored
-against the old flag, and the trusted seat read κ 0.53.)
+## Run-log rows
+Reviewer row (written by `seat-log.py`):
+```json
+{ "run_id":"", "timestamp":"", "artifact":"path | range:abc1234..def5678 | files:N@sha", "artifact_sha256":"",
+  "artifact_type":"skill|command|hook|code|ref|deep_read|dossier", "rubric":"build-quality@6",
+  "judge_model":"claude:sonnet", "judge_provider":"anthropic", "session_id":"",
+  "criterion_scores":[{"id":"","score":0.0,"reasoning":""}], "weighted_score":0.0, "verdict":"pass|flag",
+  "final_verdict":"pass|flag", "flag_reasons":[], "defects":[], "quote_check":{}, "calibration_set":"prospective",
+  "evidence_parity":true, "bundle_sha256":"", "bundle_version":3, "alex_ack":null }
+```
+`verdict` is the score verdict; `final_verdict` adds the deterministic rules (guarded path, privacy flag, flat 1.0,
+fabricated quotes). Ack row (written by `judge.py ack`, never by editing a row):
+`{"record_type":"ack", "run_id", "artifact", "artifact_sha256", "verdict": <final_verdict>, "alex_ack":"agree|disagree", "alex_ack_at", "note"}`.
+Older rows from the retired seats (`gemini`, `openai`, `quorum`, `quorum_ack`) stay in `logs/` as history.
 
-**Canaries (built 2026-09-20).** Run `bash .claude/hooks/run-canaries.sh` before `/rigor-review` and after any
-seat/model change. A seat is demoted a rung on **two consecutive failures**, when its **resolved model id changed**
-since the last green run (a silent snapshot swap invalidates freshness), or when a **voting** seat's canary is
->14d old. A seat that has *never* run one is reported as `never run`, not demoted — absence of evidence is not
-failure, but it is never silently read as "fresh" either: every quorum record carries each seat's canary status.
+## Reading the report honestly
+A metric a do-nothing policy scores just as well on is not a standard (YED-212): "83% agreement" was once exactly the
+always-pass baseline. `calibration_stats.py` prints every agreement number beside that baseline, and its `--json`
+carries a `null_check` per seat: `unvalidated` when agreement does not beat the baseline by +0.10 (n ≥ 10). Truth is matched on content hash, not file name. Alex's acks
+seed truth; rows in `calibration_set` {control, bakeoff, negative-control, triage-experiment} never count.
 
-**Demotion rules** (each has a minimum sample; they apply to every seat, the trusted one included): flat-1.0 rate ≥ 0.30
-over ≥ 10 runs · flag recall < 0.50 on ≥ 4 real flags · flag precision < 0.40 on ≥ 5 seat flags (over-flagging) ·
-κ < 0.40 on n ≥ 15. **Voting bar** (informational; promotion stays manual): n ≥ 25 prospective with ≥ 8 real flags ·
-κ ≥ 0.60 · recall ≥ 0.70 · precision ≥ 0.60 · flat < 0.20 · agreement ≥ always-pass baseline + 0.10.
-Rows with `calibration_set` in {control, bakeoff, negative-control, triage-experiment} never count toward either.
-
-## The null-model contract + the calibration-data ruling (YED-212, 2026-09-21)
-
-**A metric a do-nothing policy scores just as well on is not a standard.** Every gating metric declares its
-null baseline; a metric within +0.10 of it (n≥10), or with zero variance (n≥10), is **unvalidated** and cannot
-auto-accept. `calibration_stats.null_check()` · surfaced in `--gate` and in `/rigor-review` Step 2.
-
-**Parity: absent ≠ paired.** 32 Gemini and 47 Claude rows predate the `evidence_parity` field and were being
-counted as if the seat had been given the spec. Seat scoring is now **strict** (parity-true only) and reports
-`parity_unknown` separately; `compute(..., strict_parity=False)` gives the historical view. Alex's **acks still
-seed truth regardless of parity** — his verdict is about the artifact, not about what one seat was shown.
-(Requiring parity there collapsed the truth pool from 35 artifacts to 1; caught in test.)
-
-**Last-voting-seat guard.** If demotions would leave no voting seat, the final demotion is **recorded, not
-applied** (`last_voting_seat_held`), pending Alex's confirmation in `seats.json`. With no trusted seat every run
-escalates, and a gate that cries wolf gets overridden — the failure this layer exists to prevent.
-
-### Calibration-data ruling (Alex, 2026-09-21)
-The Gemini seat's 2026-07-17 "provisional-trusted" promotion is **VOID as a trust claim**: it rested on 83%
-agreement that was arithmetically the always-pass baseline. The rows are **kept as labelled data, partitioned**:
-
-| partition | rows | standing |
-|---|---|---|
-| backfill (`calibration_set: backfill`) | 17 | baseline//history only — never evidence for promotion |
-| prospective, `evidence_parity` absent | ~12 | **excluded** from seat scoring (counted as if paired until 2026-09-21) |
-| prospective, `evidence_parity: true` | ~15 | valid — and these are the evidence *for* demoting Gemini to advisory |
-
-## Deferred (non-destructive, do NOT build now) — now YED-188 (parked slate) + `platform-constraints.md` (2026-09-18)
-A separate-model / cross-judge quorum (independence) and a Notion/PostHog projection of scores — per the lean-foundation decision (2026-06-26). The run-log contract above stays stable when added.
+## What was removed (YED-231)
+The Gemini and OpenAI seats, the quorum merge, seat statuses and demotion rules, canaries, the last-voting-seat guard,
+the spend cap and `pricing.json`. The judge scores and flags; it never auto-rewrites and never hard-blocks.
