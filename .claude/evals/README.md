@@ -17,7 +17,7 @@ build judge is **one Sonnet reviewer that raises flags**: design `.claude/refere
 | `controls.py` · `controls/manifest.json` | the control set (real labelled states by git blob). `controls.py plan` prints the runs. Run it only when the reviewer's model id changes |
 | `logs/*.jsonl` | **authoritative, append-only** run log. Local only: gitignored and untracked since 2026-09-28 (history to that date is in git at `2510701`) |
 | `rubrics/dossier-quality.md` | the `/interview-prep` dossier rubric |
-| `score_entities.py` · `post-event-brief-template-evidence.md` | transcription entity scorer and brief-template evidence, still cited by `/ingest-recording` and `/post-event-content` |
+| `post-event-brief-template-evidence.md` | brief-template evidence, still cited by `/post-event-content` |
 | `test_judge_lib.py` · `test_judge_e2e.py` · `test_bundle_multifile.py` · `test_null_baseline.py` | offline, free; run all four (`python3 .claude/evals/test_<name>.py` from the repo root) before changing any of the above |
 | `test_event_claim.py` | the `event-claim.py` hook's tests (not the judge) |
 
