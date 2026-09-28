@@ -20,7 +20,7 @@ Single-thread skill run. Execute `.claude/skills/role-radar/SKILL.md` end-to-end
 4. **Step 3 — Score** each role 0–100 against the Target-Role ICP rubric v2 — **by role mechanism, not title** (role-mechanism · AI-native-tier · **leverage/support** incl. PLG · AI-multiplier fit · location/culture). Tier **A≥85 / B 60–84 / C 40–59 / drop<40** (v2.4 — raised from 78 on 2026-09-11; see SKILL Step 3).
 5. **Step 4 — Present ranked roles. STOP for approval.**
 6. **Step 5 — Write approved** roles to Roles DB (`Status = new`).
-7. **Step 6 — Close out** — summary by tier, source gaps, the rows-in-DB-but-not-on-the-boards count (YED-224), + offer A-tier contact pull (`voice-radar`).
+7. **Step 6 — Close out** — summary by tier, source gaps, the rows-in-DB-but-not-on-the-boards count (YED-224), + offer A-tier contact pull (Clay enrich, credit-gated).
 
 ## Guardrails
 - Legitimate sources only — public ATS board APIs (and Apollo on request). No LinkedIn scraping, no saved-search feeds.
@@ -30,8 +30,7 @@ Single-thread skill run. Execute `.claude/skills/role-radar/SKILL.md` end-to-end
 ## What comes next
 | Want to... | Do |
 |---|---|
-| Pull hiring managers/contacts at A-tier companies | `voice-radar` / Clay enrich (credit-gated) |
-| What's trending (talking points for outreach) | `/scan-trends` |
+| Pull hiring managers/contacts at A-tier companies | Clay enrich (credit-gated) |
 
 ## Ground truth
 - Methodology: `.claude/skills/role-radar/SKILL.md` (rubric v2 self-contained). ICP source of truth: `.claude/references/me-model.md` §1.5. Target companies + ATS registry: `.claude/references/target-companies.md`. Program: Linear "Job-Search Engine" (YED-146…152).

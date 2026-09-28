@@ -1,7 +1,7 @@
 # Signal taxonomy — canonical topic map (v1)
 
-The persistent **topic-normalization** map for the signal scanners (`trend-radar` Step 2; reusable by
-`voice-radar` / `role-radar`). Promoted from trend-radar's inline seed on 2026-07-15 (first `/rigor-review`)
+The persistent **topic-normalization** map for the signal scanners (originally `trend-radar` Step 2; now used by
+`role-radar` and `inbox-miner`; `trend-radar` and `voice-radar` were pruned 2026-09-28). Promoted from trend-radar's inline seed on 2026-07-15 (first `/rigor-review`)
 so normalization is **consistent run-to-run**, not re-derived ad-hoc each run. Applies the
 `alex:signal-taxonomy` schema/mapping discipline.
 

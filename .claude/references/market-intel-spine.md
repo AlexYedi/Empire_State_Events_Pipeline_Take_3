@@ -64,7 +64,7 @@ Each row's `notion_page_id` links to the human-readable Notion view. Notion rema
 (comment-based feedback loop); Postgres is the source of truth the agentic layer reads.
 
 ## Producers & readers (as of 2026-07-01 — M2)
-- **First producer:** `trend-radar` (`/scan-trends` Step 5.5) emits `market`-kind topic Events via REST
+- **First producer (pruned 2026-09-28; recover from tag `archive/pre-reset-2026-09-28`):** `trend-radar` (`/scan-trends` Step 5.5) emitted `market`-kind topic Events via REST
   (provenance `source`+`url`+`metadata.sources` mandatory; normalized `confidence`). Voice/role producers = fast-follow.
 - **First reader:** the Hub `/ops/market-intel` dashboard (empire-state-hub) reads this graph over REST with
   a server-only client (`MARKET_INTEL_SUPABASE_URL` + `MARKET_INTEL_SUPABASE_KEY`). See M2 plan.

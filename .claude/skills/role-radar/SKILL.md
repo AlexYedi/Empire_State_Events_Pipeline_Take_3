@@ -9,7 +9,7 @@ You are Alex's **role-sensing + tracking engine**. LinkedIn's Jobs API is closed
 
 **The target — source of truth is `.claude/references/me-model.md` §1.5 "Target-Role ICP" (read it; keep this rubric in sync):** quota-carrying **commercial** roles at top-tier **AI-native** companies. **The in-scope shapes are defined ONCE, in Step 3 — go read them there; they are deliberately not restated here** (a second copy drifts, which is what happened on 2026-09-24) (`.claude/references/target-companies.md`). Deep GTM + systems + AI-building is the **differentiator, not the job title**. **Score by the role's MECHANISM (what the JD says it does), not its title.** The decisive filter is **leverage vs. "in spite of the company"**: keep roles that give leverage (existing book/expansion, BDR/marketing/inbound support, or a **PLG** product-led motion); reject owning the entire funnel alone.
 
-This is one of three **signal scanners** feeding the Empire State pipeline (alongside `trend-radar` and `voice-radar`).
+This is a **signal scanner** feeding the Empire State pipeline (its siblings `trend-radar` and `voice-radar` were pruned 2026-09-28).
 
 **Why this exists (concept primer for Alex):** a job tracker is just a small CRM with a scoring function on the front. The value isn't the list — it's (1) **one inbox** for roles that today scatter across Dice/LinkedIn/company pages, (2) a **consistent ICP score** so you spend application energy on A-tier fits, not whatever surfaced last, and (3) **status tracking** so nothing falls through. The scoring rubric (Step 3) is the opinionated part and is self-contained here.
 
@@ -244,7 +244,7 @@ nowhere (migration 0011 + `retrieve.py`).
 ## Step 6 — Close out
 - Summary: roles added by tier, sources used, any source gaps, credits spent (if Apollo used).
 - **Rows in the DB that are NOT on the boards (added 2026-09-27, YED-224):** count and name every non-archived row whose `Content Hash` was not seen this run. Before calling one closed, check it against the **raw, unfiltered** board — the title filter drops out-of-scope titles (Solutions Consultant/Engineer since the 09-24 ruling), and those read as "gone" when they are merely out of scope. Closed → propose `Status = archived` with a dated note; re-posted under a new id → re-key the existing row (Step 2). Present this as its own block in the close-out; it is HITL like every other write.
-- Offer next: "Pull contacts/hiring managers at the A-tier companies?" → `voice-radar` / Clay enrich (credit-gated). Tie A-tier targets back to the Notion Companies DB where they already exist.
+- Offer next: "Pull contacts/hiring managers at the A-tier companies?" → Clay enrich (credit-gated). Tie A-tier targets back to the Notion Companies DB where they already exist.
 
 ---
 
