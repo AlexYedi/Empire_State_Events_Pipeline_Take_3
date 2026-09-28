@@ -1,6 +1,6 @@
 ---
 name: interview-prep-dossier
-description: Generate a job-search interview-prep dossier tailored on four axes — company × role × interview stage × interviewer. The first lens of the Market-Intelligence Engine. Use when Alex has an interview coming up and pastes a JD + company + interviewer + stage. Produces a synthesized dossier (Quick Take, Fit Thesis, company/market/competitor/funding context, decoded role, interviewer profile, org map, stage-specific prep, curiosity-demonstrating questions, blind-spot closer) written to Notion for comment review and persisted to the Postgres graph spine. Triggers on "prep me for [company] interview", "interview dossier for [role]", "I have a [stage] with [interviewer] at [company]".
+description: Generate a job-search interview-prep dossier tailored on four axes — company × role × interview stage × interviewer. The first lens of the Market-Intelligence Engine. Use when Alex has an interview coming up and pastes a JD + company + interviewer + stage. Produces a synthesized dossier (Quick Take, Fit Thesis, company/market/competitor/funding context, decoded role, interviewer profile, org map, stage-specific prep, curiosity-demonstrating questions, blind-spot closer) written to Notion for comment review. Triggers on "prep me for [company] interview", "interview dossier for [role]", "I have a [stage] with [interviewer] at [company]".
 ---
 
 # Interview-Prep Dossier (Job-Search lens — Market-Intelligence Engine)
@@ -10,9 +10,11 @@ This skill proves the lens-agnostic engine end-to-end on the **Job-Search lens**
 reusable component analyses the engine runs (company · market-segment · competitor · funding · person ·
 org-mapping · trend/conversation) into a single, decision-ready interview dossier.
 
-**Orchestration shape lives in `.claude/commands/interview-prep.md`** (mirrors `/event-deep-research`:
-parent-thread fan-out → synthesizer → judge gate → writes). This file is the **methodology** — what a
-great dossier is, how it's tailored, and the quality bar.
+**Orchestration shape lives in `.claude/commands/interview-prep.md`** (parent-thread fan-out of the 4
+specialists → synthesis in the parent against this file + `me-model.md` §1.5 → Notion write). This file is
+the **methodology** and the synthesis contract — what a great dossier is, how it's tailored, and the
+quality bar. (The `dossier-synthesizer` agent, the judge gate and the Postgres persist step were retired
+2026-09-28; the agent is at `docs/archive/agents/dossier-synthesizer.md`.)
 
 ## North star — the "best *person*" frame (do not lose this)
 
@@ -91,28 +93,18 @@ every dispatch ahead of the entity list (fidelity rule from `/event-deep-researc
 
 ## Persistence (parent thread only — MCP not available in subagents)
 
-After Alex-review-grade synthesis passes the judge gate, persist to the graph spine through the **guarded
-write path** — `.claude/scripts/spine_write.py` → `spine_client.py`, the one sanctioned spine writer (ADR-9
-PII guard; project `empire state ai`, ref `oicikjyzmxqfomrrqkvf`). No raw REST writes; the Supabase MCP is
-for read-only inspection only. See `/interview-prep` Step 5 for the exact calls. Then mirror to Notion:
-- **Postgres:** upsert `company` (dedup on lower(name)); upsert `topic`(s); upsert `person` for each
-  interviewer (search-before-create); create an `event` with `kind='role_posted'` (title = role @ company,
-  source = JD) + `event_entity` edges (company role=`employer`, interviewer(s) role=`interviewer`, topics
-  role=`subject`). This seeds the timeline; Alex's eventual application/interview become later events.
-- **Notion:** write the dossier as a Content Draft (or a dedicated page) for the comment-review loop, and
-  set each row's `notion_page_id` back on the Postgres rows. Notion = review surface; Postgres = SoR.
+Notion only: write the dossier to Content Drafts (plain paragraphs, `needs_review`) for the comment-review
+loop, search-before-create. No graph write (the Postgres persist step was retired 2026-09-28 after one
+run; the dossier lives in Notion).
 
 ## HITL posture
 
-Judge-gated auto-commit, then async Notion-comment feedback — Alex is never a pre-commit bottleneck
-(matches the engine's HITL decision and existing ship-all-variants + comment-review patterns). The
-dossier-quality judge (`.claude/evals/rubrics/dossier-quality.md`) runs before the Notion write; a flag
-is surfaced, not a hard block.
+Alex reviews the dossier by inline Notion comment. No judge gate; the quality bar above is the
+self-check before the write.
 
 ## References
 
 - `.claude/commands/interview-prep.md` — orchestration shape
-- `.claude/agents/research/dossier-synthesizer.md` — synthesizer contract
+- `.claude/references/me-model.md` §1.5 — Target-Role ICP (gitignored; never quoted into git)
 - `.claude/agents/research/{company-researcher,person-researcher,topic-landscape-analyst,competitive-signal-scanner}.md` — reused producers
-- `.claude/references/market-intel-spine.md` — Postgres schema + project coordinates + dedup rules
 - `.claude/references/roadmap.md` — MI Engine framing + milestones (the detailed `where-do-we-stand-sunny-puzzle.md` 20-Q framing file was machine-local and is retired)
