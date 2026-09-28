@@ -67,7 +67,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 **Architectural rule (now codified in CLAUDE.md):** any "orchestrator" pattern that needs to fan out specialists must run from the parent / slash command thread, not from inside another subagent. Synthesis-only agents (text in, text out) are fine as subagents — they don't need dispatch capability.
 
-**Artifacts of record:** `.claude/artifacts/orchestrator-fanout-diagnosis.md` (original diagnosis), `.claude/artifacts/orchestrator-validation-comparison.md` (side-by-side from 2026-05-05 run).
+**Record of record:** `.claude/references/sdk-runtime-constraints.md` (the resolved diagnostic; the May 2026 one-off diagnosis/validation artifacts were pruned 2026-09-28 and are recoverable from tag `archive/pre-reset-2026-09-28`).
 
 ---
 
