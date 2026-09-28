@@ -47,13 +47,14 @@ def main() -> int:
     rid = a.label or f"sonnet-{slug}"
     row = {"run_id": rid, "timestamp": jl.now_utc(), "artifact": a.artifact,
            "artifact_sha256": bundle.get("artifact_sha256") or jl.sha256_file(a.artifact),
-           "artifact_type": a.artifact_type, "rubric": bundle.get("rubric_version") or "build-quality@5",
+           "artifact_type": a.artifact_type, "rubric": bundle.get("rubric_version") or "build-quality@6",
            "judge_model": a.judge_model, "judge_provider": "anthropic", "seat_status": "voting",
            "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "_nosession"),
            "criterion_scores": scored["criterion_scores"], "weighted_score": scored["weighted_score"],
            "raw_score": scored["raw_score"], "verdict": scored["verdict"], "alex_ack": None,
            "selfreported_weighted_score": reported if isinstance(reported, (int, float)) else None,
            "confidence_honesty_violation": scored["confidence_honesty_violation"],
+           "privacy_layer_defect": scored.get("privacy_layer_defect", False),   # @6 (YED-231), top-level like the honesty flag
            "defects": scored.get("defects") or [], "checks_performed": scored.get("checks_performed") or [],
            "cap_flags": scored.get("cap_flags") or {}, "flat_ceiling": scored["flat_ceiling"],
            "scoring": "harness-recomputed", "quote_check": qv, "must_cite_gaps": jl.must_cite_gaps(scored),
