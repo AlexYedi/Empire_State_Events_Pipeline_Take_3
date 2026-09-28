@@ -98,5 +98,5 @@ Each re-run should produce a fresh artifact at `.claude/artifacts/systems-analys
 
 - The `alex:systems-analyst` plugin agent (the project copy was pruned 2026-09-28) — invoke for delegated runs of this analysis (note: agent registration may require a fresh conversation per `.claude/WORKFLOWS.md`)
 - Test artifact at `.claude/artifacts/systems-analyst-test-2026-05-04.md` — first eight-phase run with full output
-- Workflow card at `.claude/references/systems-thinking-workflow.md` — three-mode (Analyzing/Planning/Building) framing
+- Workflow card (three-mode Analyzing/Planning/Building framing) retired 2026-09-28; recover from git history
 - `alex:systems-thinking` (plugin skill) — canonical frameworks, Three-Horizon Iteration Framework, and `references/applications-to-product-and-engineering.md` for general-purpose applications
