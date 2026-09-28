@@ -64,10 +64,10 @@ Enough that Alex can hold a 5-minute conversation with an expert and ask follow-
 1. WebSearch for current developments, recent papers, recent product launches, recent debates
 2. Claude training data for foundational depth (architecture, history, technical context)
 
-## Methodology references (read selectively, don't dump)
+## Methodology (inlined 2026-09-28 from `alex:market-scenario-modeler` + `alex:research-brief-blueprint`)
 
-- `.claude/skills/research-methodology/market-scenario-modeler/SKILL.md` — when sizing Opportunities or Use Cases at a market level
-- `.claude/skills/research-methodology/research-brief-blueprint/SKILL.md` — for scoping rigor
+- **Sizing Opportunities or Use Cases at a market level:** state each assumption with its source and date (market size, growth rate, penetration, pricing); give base / upside / downside with the driver that moves each; name the trigger point that would change the call.
+- **Scoping rigor:** tie each dimension to the question Alex needs answered in the room; say explicitly what is out of scope rather than padding.
 
 ## Quality bar
 

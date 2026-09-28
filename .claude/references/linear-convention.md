@@ -55,7 +55,7 @@ discovered. This table assigns the rest. Full record: `docs/archive/notes/open-i
 | Parked idea **with** a revisit trigger | Linear Backlog, label `parked`, first body line `Revisit trigger: …` | trigger fires → move to Todo |
 | Parked idea **without** a trigger | Notion Project Ideas DB (`collection://0956e6ed-8555-4d8f-8856-388966dedaab`) | not in Linear |
 | Decision needed | Linear **Todo**, label `decision`, assigned to Alex, **due-dated**; body = options + recommendation | outcome → `roadmap.md` §9 (or an ADR if architectural); close Done |
-| Environmental constraint (platform, SDK, MCP, env) | `.claude/references/platform-constraints.md` (extends `sdk-runtime-constraints.md`) | symptom · cause · workaround; memory files hold one-line pointers |
+| Environmental constraint (platform, SDK, MCP, env) | `.claude/references/platform-constraints.md` | symptom · cause · workaround; memory files hold one-line pointers |
 | Work dependency | Linear `blockedBy` relation | never a list in a doc |
 | Debt | Linear Backlog issue if it will ever be paid; otherwise delete the text | no third "tombstone" state |
 | Hub repo state (`build-arcs.json` futures, journal gaps) | Linear, project Empire State Hub | hub data files describe the present, never the future |

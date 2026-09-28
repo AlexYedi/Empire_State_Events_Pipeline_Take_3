@@ -27,7 +27,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 | `/ingest-recording` | ✅ Wired | Any event audio (phone `.m4a`, or a Supercut audio asset) → ElevenLabs scribe_v2 roster-seeded, diarized transcript (feeds `/post-event-content`). |
 | `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
 | `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
-| `/judge-build` | ✅ Wired (advisory) | LLM-as-judge scores a build artifact vs `build-quality@1`; writes run-log + calibration ack. Advisory until ≥20 runs @ ≥80% agreement. |
+| `/judge-build` | ✅ Wired (on demand) | One Sonnet reviewer scores a build artifact vs `build-quality@6` (frozen) and raises flags; never rewrites, never blocks. Run only on the artifact-class triggers in its SKILL.md; Alex is asked only on a flag. Spec: `.claude/references/judge.md`. |
 | `tag-outcome` (skill) | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). Still invocable as `/tag-outcome`; the wrapper command file was pruned 2026-09-28. |
 
 **Pruned 2026-09-28 (0–1 uses in 30 days):** `/evergreen-deep-dive` (folded into `/post-event-content` Step 5.6 as optional speaker deep-dives), `/scan-trends`, `/scan-voices` (+ skills `trend-radar`, `voice-radar`), `/systems-analyze` (call the `alex:systems-analyst` plugin agent directly), `/toolbox`, retired `/dod-close` + retired `/rigor-review` (the DoD gate and weekly review were replaced by `.github/pull_request_template.md`), `/morning-refresh`, `/recompute-relevance` (the script `.claude/scripts/recompute_relevance.py` stays), and the imported suite `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report`. Recover any with `git checkout archive/pre-reset-2026-09-28 -- <path>`.
@@ -41,29 +41,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 ## ✅ Resolved 2026-05-07 — orchestrator → synthesizer pivot
 
-**Root cause confirmed:** subagents cannot spawn other subagents. This is an Anthropic SDK runtime constraint, not a config gap or a prompt-level instruction problem.
-
-> "Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation." — [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md)
-
-**How we got here:**
-
-- 2026-05-05: original `event-research-orchestrator` validation run produced a high-quality brief but the orchestrator did inline `WebSearch` instead of fanning out — diagnosed at the time as either a prompt-language issue or a tool-whitelist issue.
-- 2026-05-05: Fix 1 (`tools: Task, Read` whitelist on orchestrator) applied + reverted same day — `Task` was removed entirely while `WebSearch` survived; tool whitelist filters against MCP namespace, not SDK primitives.
-- 2026-05-06: parent-level fan-out test confirmed parent dispatch works cleanly.
-- 2026-05-07 (Fix 3 verification run): orchestrator was re-invoked from a fresh conversation. Orchestrator's own audit reported `Task invocations: 0` and admitted the violation honestly: `"Task tool: absent from tool surface (not deferred, not loaded)... ToolSearch for 'select:Task' returned 'No matching deferred tools found'... specialist fan-out via Task dispatch was architecturally impossible in this invocation."`
-- 2026-05-07 (layer-by-layer diagnostic): tool surfaces of all 6 relevant agents reported in parallel. `Task`/`Agent` was absent from EVERY subagent's surface — orchestrator AND all four specialists AND notion-writer. Confirmed via `ToolSearch select:Task,Agent` → "No matching deferred tools found" in 5/5 attempts.
-- 2026-05-07 (claude-code-guide research): official Anthropic docs confirmed the constraint is by design ("prevents infinite nesting") and not configurable. `Task` was renamed to `Agent` in v2.1.63; both names are aliases.
-
-**Pivot landed (2026-05-07):**
-
-- `event-research-orchestrator` deleted; replaced by `event-research-synthesizer` (text-in, brief-out, no `Task`/`WebSearch` contract).
-- Slash command (`/event-deep-research` Step 2) now fans out the four specialists in parallel **from the parent thread** — where `Agent` IS available. Step 2.5 dispatches the synthesizer.
-- `notion-writer` had a separate "Prompt is too long" failure (Haiku model + inherited 250-tool deferred list). Fixed by scoping `tools:` frontmatter to Notion MCP + Read only.
-- All four specialists got `tools: WebSearch, WebFetch, Read` for hygiene.
-
-**Architectural rule (now codified in CLAUDE.md):** any "orchestrator" pattern that needs to fan out specialists must run from the parent / slash command thread, not from inside another subagent. Synthesis-only agents (text in, text out) are fine as subagents — they don't need dispatch capability.
-
-**Where the record lives:** `.claude/references/sdk-runtime-constraints.md` (the resolved diagnostic; the May 2026 one-off diagnosis/validation artifacts were pruned 2026-09-28 and are recoverable from tag `archive/pre-reset-2026-09-28`).
+Subagents cannot spawn subagents (Anthropic SDK design, not configurable), so the original `event-research-orchestrator` could never fan out. It was replaced by `event-research-synthesizer` (text-in, brief-out); `/event-deep-research` fans out the four specialists from the parent thread. The same day showed the agent registry is session-frozen and that every agent needs a minimal `tools:` line. Record: the Claude Code harness rows of `.claude/references/platform-constraints.md` (the full May 2026 diagnostic is in git history, tag `archive/pre-reset-2026-09-28`).
 
 ---
 
@@ -107,7 +85,7 @@ The full pre-event research pipeline. Replaces the monolithic `event-research` s
 | 2 | Main conversation (parallel fan-out) | Dispatch 4 specialists in parallel from the parent thread (subagents cannot dispatch sub-agents per Anthropic SDK design): `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner` | 4 specialist returns |
 | 2.5 | `event-research-synthesizer` agent (sonnet) | Reconciles cross-references; surfaces verification flags; writes Quick Take, Success Signals, Documentarian Angle; formats brief in Step 3 schema | Assembled brief |
 | 3 | Main conversation | Present brief, iterate with Alex | Approved brief |
-| 4 | `notion-writer` agent (haiku) | Dependency-ordered writes: Companies → Topics → People → Event → Content Draft per Step 4 of event-research SKILL.md | Notion confirmation block + page URLs |
+| 4 | Main conversation (inline MCP writes; subagents have no claude.ai connectors) | Dependency-ordered writes: Companies → Topics → People → Event → Content Draft per Step 4 of event-research SKILL.md and `notion-schema.md` §Write order | Notion confirmation block + page URLs |
 | 5 | Main conversation | HubSpot recurrence check + Companies + Contacts (with associations) + Notes (event name body) | HubSpot confirmation block |
 | 6 | Main conversation | Final summary | Summary report |
 
@@ -117,9 +95,8 @@ The full pre-event research pipeline. Replaces the monolithic `event-research` s
 - `person-researcher` (sonnet) — per-person depth + talking points + prioritization signals; `tools: WebSearch, WebFetch, Read`
 - `topic-landscape-analyst` (sonnet) — 5-dimension topic research; `tools: WebSearch, WebFetch, Read`
 - `competitive-signal-scanner` (sonnet) — cross-company recency, last 60 days; `tools: WebSearch, WebFetch, Read`
-- `notion-writer` (haiku) — dependency-ordered MCP writes; `tools:` scoped to Notion MCP + Read only (prevents Haiku context overflow from inheriting full deferred-tool list)
 
-All under `.claude/agents/research/` and `.claude/agents/ops/`.
+All under `.claude/agents/research/`.
 
 ### Notion writes (5 DBs, in order)
 1. Companies (`d5910dc3-...`) — parallel-safe with Topics
@@ -136,23 +113,18 @@ All under `.claude/agents/research/` and `.claude/agents/ops/`.
 ### Where the methodology lives
 - **Multi-step orchestration shape:** [.claude/commands/event-deep-research.md](commands/event-deep-research.md)
 - **Per-step research/write methodology:** [.claude/skills/event-research/SKILL.md](skills/event-research/SKILL.md) — read this for actual property schemas, write semantics, gotchas
-- **Methodology references** (orchestrator and topic-landscape-analyst draw from these):
-  - [research-brief-blueprint](skills/research-methodology/research-brief-blueprint/SKILL.md)
-  - [market-scenario-modeler](skills/research-methodology/market-scenario-modeler/SKILL.md)
-  - [insights-repository-kit](skills/research-methodology/insights-repository-kit/SKILL.md)
-  - `alex:market-signal-tracker`, `alex:battlecard-library` (plugin skills; the project copies were pruned 2026-09-28)
+- **Methodology references:** plugin skills `alex:research-brief-blueprint`, `alex:market-scenario-modeler` (the lines topic-landscape-analyst uses are inlined in its agent file), `alex:insights-repository-kit`, `alex:market-signal-tracker`, `alex:battlecard-library`. The project copies were removed 2026-09-28.
 
 ### Common follow-ons
 After A completes, the natural next moves:
 - **Pre-event content** → invoke `pre-event-content` skill (it pulls the brief from Notion)
-- **Project ideation** → invoke `project-ideation` skill (it pulls topics + event from Notion)
 - **Step 7 retro** (after attending) → see Workflow B
 
 ### Failure modes
 - Subagent returns thin output → re-invoke just that one with deeper scope
 - Orchestrator times out → split: 2 specialists at a time, then merge
 - Triage plan disagreement post-hoc → re-invoke specific subagent with corrected path
-- notion-writer schema validation error → trust API error text; verify with `notion-fetch` on data_source URL
+- Notion schema validation error → trust the API error text; verify with `notion-fetch` on the data_source URL
 
 ---
 
@@ -189,20 +161,11 @@ The command file is the orchestration shape. The skill is the methodology. The a
 
 ### Skills imported from alex-agents-skills (Tier 1)
 
-**Research methodology** (`.claude/skills/research-methodology/`):
-- `research-brief-blueprint/` — scoping + checklist
-- `market-scenario-modeler/` — TAM/SAM/SOM, sensitivity
-- `insights-repository-kit/` — research artifact governance
-
-**Copywriting** (`.claude/skills/copywriting/`, read by `pre-event-content`):
-- `message-architecture/` — hook banks, CTA playbooks
-- `cold-email-personalization/` — personalization rubric
-
 **Transcript intelligence** (`.claude/skills/transcript-intelligence/`):
 - `transcript-analysis/` — extract from sales/event transcripts
 - `objection-mining/` — friction signal extraction
 
-**Pruned 2026-09-28** (verbatim copies of `alex:*` plugin skills, 0 uses in 30 days): `company-deep-research/`, `content-quality/`, `icp-research/`, `cold-email/`. Use the plugin versions (`alex:battlecard-library`, `alex:market-signal-tracker`, `alex:executive-briefing-kit`, `alex:voice-guidelines`, `alex:persona-development`, `alex:account-qualification`, `alex:copy-frameworks`, `alex:personalization-engine`, `alex:sequence-architecture`).
+**Removed 2026-09-28** (verbatim copies of `alex:*` plugin skills): `company-deep-research/`, `content-quality/`, `icp-research/`, `cold-email/`, `research-methodology/`, `copywriting/`, `brand-storytelling/` (`pre-event-content` now loads `alex:brand-storytelling`, `alex:message-architecture`, `alex:cold-email-personalization`). Archived to `docs/archive/skills/`: `marketing-autoresearch/` (pre-event Step 5 retired), `project-ideation/`. Use the plugin versions (`alex:battlecard-library`, `alex:market-signal-tracker`, `alex:executive-briefing-kit`, `alex:voice-guidelines`, `alex:persona-development`, `alex:account-qualification`, `alex:copy-frameworks`, `alex:personalization-engine`, `alex:sequence-architecture`).
 
 ### Agents imported
 
@@ -213,10 +176,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 **Content** (`.claude/agents/content/`):
 - `field-guide-renderer`
 
-**Ops** (`.claude/agents/ops/`):
-- *Custom:* `notion-writer`
-
-**Pruned 2026-09-28** (0 dispatches in 30 days; byte-identical source copies live in `alex-agents-skills`): `insights-research-director`, `qualitative-field-lead`, `quant-insights-architect`, `market-insights-director`, `win-loss-analyst`, `battlecard-program-manager`, `voice-editor`, `copy-strategist`, `conversion-copywriter`, `cold-email-specialist`, `commercial-insight-generator`, `reframe-architect`, `mobilizer-mapper`, and the project copy of `systems-analyst` (use `alex:systems-analyst`).
+**Pruned 2026-09-28** (0 dispatches in 30 days; byte-identical source copies live in `alex-agents-skills`): `insights-research-director`, `qualitative-field-lead`, `quant-insights-architect`, `market-insights-director`, `win-loss-analyst`, `battlecard-program-manager`, `voice-editor`, `copy-strategist`, `conversion-copywriter`, `cold-email-specialist`, `commercial-insight-generator`, `reframe-architect`, `mobilizer-mapper`, and the project copy of `systems-analyst` (use `alex:systems-analyst`). `notion-writer` was removed the same day (never dispatchable; its mapping lives in `notion-schema.md`).
 
 ### Commands imported (in addition to the workflow commands)
 
@@ -224,9 +184,7 @@ None remain; the five imported commands were pruned 2026-09-28 (see the status t
 
 ### References
 
-`.claude/references/`:
-- `research-analyst-prompt.md` — top-level analyst prompt (imported)
-- `content-style-guide.md`, `content-anti-patterns.md`, `outreach-templates.md`, `pipeline-operations-guide.md`, `portfolio-tracker.md`, `stack-readme.md`, `systems-thinking-workflow.md` (existing)
+`.claude/references/`: see the "Where things live" table in CLAUDE.md §3. Removed 2026-09-28 at 0–1 callers: `research-analyst-prompt`, `pipeline-operations-guide` (duplicated this file), `stack-readme`, `systems-thinking-workflow`, `postgres-glossary`, `sdk-runtime-constraints` (folded into `platform-constraints.md`); `portfolio-tracker` moved with `project-ideation` to `docs/archive/skills/`.
 
 ---
 
@@ -249,4 +207,4 @@ The 2026-05-04 hooks/scheduled-task ideas (intake-count nudges, auto voice pass,
 
 *Partial refresh 2026-07-11 — added the "Commands added since" table (the doc had drifted ~2 months behind; the MI Engine, signal scanners, judge/rigor layer, and market-research suite were all missing). The four-workflow body below is unchanged and still accurate.*
 
-*Status note (2026-09-18): the 2026-05-07 orchestrator→synthesizer pivot and its "VALIDATION PENDING" caveat are SUPERSEDED — Workflow A has run end-to-end in fresh sessions dozens of times since (e.g. the 2026-08-25 and 2026-09-12 batches). The four-workflow body above is the rerun manual; per-command specs in `.claude/commands/` are authoritative where they differ. Registry-freeze constraint is recorded in `sdk-runtime-constraints.md`.*
+*Status note (2026-09-18): the 2026-05-07 orchestrator→synthesizer pivot and its "VALIDATION PENDING" caveat are SUPERSEDED — Workflow A has run end-to-end in fresh sessions dozens of times since (e.g. the 2026-08-25 and 2026-09-12 batches). The four-workflow body above is the rerun manual; per-command specs in `.claude/commands/` are authoritative where they differ. Registry-freeze constraint is recorded in `platform-constraints.md`.*
