@@ -134,4 +134,4 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 - **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `docs/archive/references/signal-taxonomy.md` (archived 2026-09-28, no live reader; the P2 v2 starts from it).
 - **Rigor:** `.github/pull_request_template.md` · `judge.md` · `build-session-contract.md` · null-baseline rule in `CLAUDE.md` §5 · `prd-template.md` · `linear-convention.md`.
 - **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
-- **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
+- **Decisions:** `docs/adr/` (ADR-0…11) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
