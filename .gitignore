@@ -38,7 +38,7 @@ Industry & Market Content/
 supabase/.temp/
 
 # Event media — heavy A/V stays LOCAL (on disk for processing, never committed; GitHub rejects >100MB).
-# Transcripts (.txt/.md) and slide screenshots (.png/.jpg) ARE committed — only the big media is ignored.
+# Slide screenshots and transcripts are NOT committed (see the image and recorded-speech blocks below).
 # Video
 *.mp4
 *.mov
@@ -46,7 +46,7 @@ supabase/.temp/
 *.avi
 *.mkv
 *.webm
-# Audio recordings (the pipeline persists transcripts, not raw audio)
+# Audio recordings (raw audio is never committed)
 *.m4a
 *.wav
 *.mp3
@@ -57,7 +57,35 @@ supabase/.temp/
 # Audio        -> Cloudflare R2:  r2://esep-library/media/<repo path>   (9 files, 222 MB, verified)
 # Images + ElevenLabs transcripts -> Google Drive: "My Drive/Empire State Event Media"
 # Rationale: git stores every version forever; event recordings are
-# GB-scale per event (Supercut keeps its own copies in the cloud). Carousels (.pdf) and notes (.md) stay tracked.
+# GB-scale per event (Supercut keeps its own copies in the cloud). Carousels (.pdf) and notes without recorded speech stay tracked.
+
+# --- Recorded speech: NEVER committed (2026-09-28, option A, no history rewrite) ---
+# Other people's words are private inputs (CLAUDE.md invariant 4; build-in-public.md).
+# Transcripts, ASR review sheets, slide↔transcript alignments, quote banks and
+# quote-heavy post-event briefs/deep-dives live local + R2 esep-library only.
+event-transcripts/
+Event Content/**/*[Tt]ranscript*
+Event Content/**/*RAW recorder*
+Event Content/**/* at [0-9][0-9][-_][0-9][0-9]*.txt
+Event Content/**/*.vtt
+Event Content/**/*.rtf
+**/*REVIEW (low-confidence spots)*
+**/*scribe*.json
+.claude/evals/**/el_scribe_*
+**/slide-*-alignment.*
+Event Content/**/_slide-index.md
+Event Content/**/POST-EVENT BRIEF*
+**/post-event-brief.md
+**/quote-bank.md
+Event Content/**/*.srt
+Event Content/06 23 26_ Daytona AI Builders/POST-EVENT — 5 Takeaways + Brief.md
+Event Content/**/Deep-Dives/
+# Raw transcripts saved under non-transcript names (pre-2026-07 naming)
+Event Content/06 23 26_ Daytona AI Builders/06_23_26 Daytona AI Builders.txt
+Event Content/06 30 26 GTM Eng NYC Coding Agents/06 30 26 GTM Eng NYC_ Coding Agents + GTM Lightning Talks.txt
+Event Content/2026-05-27_Agents-and-MCP-for-Postgres.md
+Event Content/2026-06-02_Fin-x-Clay-Scaling-CX-in-the-AI-Era.md
+Event Content/AI Demo Event.txt
 *.m4a
 *.mp3
 *.mp4
@@ -68,7 +96,7 @@ Event Content/**/*.png
 content-drafts/**/*.jpg
 content-drafts/**/*.jpeg
 content-drafts/**/*.png
-*— Transcript (ElevenLabs).json
+*— Transcript (ElevenLabs).*
 el_scribe_v1_plain.json
 eleven_scribe_v2.json
 
