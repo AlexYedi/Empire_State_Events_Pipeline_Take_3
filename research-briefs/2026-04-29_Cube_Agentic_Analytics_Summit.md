@@ -49,7 +49,7 @@ This event is **a vendor summit pretending to be a conference** — and that's n
 
 **Why he's on this panel:** 645 Ventures is in Cube's cap table. The "Citizen Professional" thesis maps directly onto Cube's "AI Data Analyst" product. Okike's panel presence is partly investor reassurance ("our portfolio company is winning the category") and partly thesis articulation.
 
-**For Alex specifically:** **GTM-relevance HIGH for job search.** 645 Ventures invests in companies that hire senior operators with Alex's profile (enterprise GTM, vertical-SaaS-savvy). Getting on Okike's radar is a high-leverage path to portfolio-company intros. Content angle: write about the panel and **specifically reference the Citizen Professional thesis** — if Okike sees the post, the relationship starts on his preferred frame.
+**Content angle:** write about the panel and **specifically reference the Citizen Professional thesis** — if Okike sees the post, the relationship starts on his preferred frame.
 
 **Best engagement vector (since it's virtual):** Comment substantively on his next LinkedIn post about the panel/event; quote him in Alex's own post about the summit; cite his Citizen Professional thesis with specific reference to Apty or Navattic in any related content.
 
@@ -63,7 +63,7 @@ This event is **a vendor summit pretending to be a conference** — and that's n
 - **Category positioning:** Recognized in **2026 Gartner Market Guide for Agentic Analytics** — they're trying to make this the dominant category name.
 - **Competition:** AtScale (universal semantic layer), GoodData (agentic analytics positioning), Snowflake + Databricks (platform-native), Tableau + Power BI (incumbents bolting on AI).
 
-**For Alex specifically:** **GTM-relevance HIGH.** Cube is at "Series-B-ish, expansion mode, hiring breadth" stage. They're trying to win a category, which means GTM hires — enterprise AEs, CSMs, partner-channel leadership (Snowflake/Databricks ecosystem fit), product marketing. The buyer profile (data leaders at mid-to-large enterprises) is adjacent to what Alex sold at Bazaarvoice/Curalate.
+**Stage:** Cube is at "Series-B-ish, expansion mode, hiring breadth" stage. They're trying to win a category, which means GTM hires — enterprise AEs, CSMs, partner-channel leadership (Snowflake/Databricks ecosystem fit), product marketing.
 
 **Engagement vector:** Cube has a strong content/community presence. Watch the keynote and the 2pm product session; if Artyom drops a sharp data point, comment publicly with a substantive question.
 

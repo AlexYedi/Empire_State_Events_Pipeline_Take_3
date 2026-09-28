@@ -5,7 +5,7 @@ These are verbatim copies of Claude Code plan-mode files that lived only in `~/.
 | File | What it was | Landed as |
 |---|---|---|
 | `scalable-dazzling-micali.md` | Inbox Intelligence Miner v1 plan | ADR-7 · YED-153 · PR #61 |
-| `green-light-encapsulated-cupcake.md` | Job-Search Engine v1 plan | YED-146…150 · PRs #56/#62/#64 |
+| green-light-encapsulated-cupcake.md (private, untracked 2026-09-28) | Job-Search Engine v1 plan | YED-146…150 · PRs #56/#62/#64 |
 | `scaffold-ask-the-stream-unified-garden.md` | Signal Stream (Confluent hackathon) scaffold plan | PR #55 |
 | `do-not-make-anything-drifting-locket.md` | Post-performance ingestion + match-back plan | status unrecorded — check Linear before treating as live |
 | `investigate-the-supabase-warnings-hidden-umbrella.md` | Supabase advisor warnings (Hub DB) | empire-state-hub concern |

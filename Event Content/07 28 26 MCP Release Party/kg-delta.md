@@ -57,7 +57,7 @@ Schema ref: `.claude/references/notion-schema.md`.
 - **Role Context:** Named by Angie as her colleague running the AAIF podcast.
 - **Confidence/source:** HIGH — on stage + roster.
 
-**Non-speaking organizers (create/link only if you track organizers):** Lahari Chowtoori (AAIF NY organizer, ex-AWS TPM) and David DeStefano (AAIF NY co-organizer, identity not fully confirmed) — thanked generically, did not speak. LOW priority; do not attribute content.
+**Non-speaking organizers (create/link only if you track organizers):** Lahari Chowtoori (AAIF NY organizer, ex-AWS TPM) and one co-organizer — thanked generically, did not speak. LOW priority; do not attribute content.
 
 **Audience Q&A members:** unnamed — no People rows.
 

@@ -142,16 +142,11 @@ Virtual format = no in-person mixer. DMs adapt to: substantive LinkedIn comments
 > Joe — wanted to flag that your Cube summit talk frame ("agents amplify weak foundations at machine speed") landed for me as the cleanest articulation of why the AI-readiness conversation is actually about the substrate, not the agents. Quick question for whenever — what's the practical diagnostic you use to assess a data team's modeling/semantic readiness before they roll out agents? Helpful for a piece I'm writing.
 
 ### Nnamdi Okike — Co-Founder & Managing Partner, 645 Ventures
-**TIER 1 for job search.** 645 invests in companies hiring senior operators with Alex's profile.
 
 **Option A (Citizen Professional thesis engagement)**
 > Nnamdi — the Citizen Professional thesis (Apty / Navattic / Cube as portfolio examples) is the most under-cited AI investing frame in 2026. Most loud conversation right now is "agents replace knowledge workers." Yours is structurally the opposite — agents augment non-technical workers who become the new specialists. Question: what's the next vertical where Citizen Professional infrastructure doesn't exist yet — the obvious "AI Data Analyst" equivalent that hasn't been built? Looking forward to today's panel.
 
-**Option B (job-search-adjacent, after public engagement)**
-> Nnamdi — really enjoyed the Cube panel framing today. Quick context: I've been an enterprise GTM operator for 12 years (Bazaarvoice / Curalate / Cohley), currently Lead Enterprise AD at GKY Industries, and looking for "first commercial hire" or "founding GTM" seats at AI-native cos building toward the Citizen Professional thesis. If anything in 645's portfolio fits the shape, I'd value a warm intro. Either way, glad you're naming this thesis publicly.
-
 ### Artyom Keydunov — CEO & Co-Founder, Cube
-**TIER 1 GTM target** — Cube at Series-B-ish, expansion mode.
 
 **Option A (competitive positioning question)**
 > Artyom — at the Cube summit today. Universal semantic layer is a category positioning bet, and Snowflake + Databricks both have semantic-layer offerings now. What's the line you draw between "use Cube" and "use Snowflake's semantic layer" for a data team that's already deep in one platform? That's the buyer-decision question I'd want sharp answers to before evaluating Cube vs. platform-native. Looking forward to the keynote.
