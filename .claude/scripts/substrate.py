@@ -23,6 +23,10 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                   post-event ensure-event attaches these claims when the attended row appears.
                   Spec: .claude/notes/yed-205-spec-2026-09-27.md
+  ensure-roles    --manifest r.json   (YED-149) {"roles": [Notion Roles rows, SQL shape], "company_aliases": {slug|name: Name}}
+                  -> one `role_posted` event each +
+                  a company edge; keyed ONLY by the Roles page id; ICP Tier `drop` skipped. Spec:
+                  .claude/notes/yed-149-spec-2026-09-27.md
   merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
                   HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
                   engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
@@ -68,6 +72,14 @@ ROLE_MAP = {  # manifest role -> the graph's existing vocabulary
     "topic": {"topic": "tagged_topic", "tagged_topic": "tagged_topic", "subject": "tagged_topic"},
     "company": {"host": "subject", "sponsor": "subject", "subject": "subject", "mentioned": "subject"},
 }
+
+# YED-149 — the job lens (spec: .claude/notes/yed-149-spec-2026-09-27.md).
+# JOB_LENS_KINDS never enter an event brief's ledger (retrieve.py + migration 0011 filter them out and add a
+# per-company count instead). PAGE_KEYED_KINDS match ONLY by notion_page_id: the title+kind+same-day fallback
+# collapses same-title roles across companies/locations, and Greenhouse roles have no date to match on.
+JOB_LENS_KINDS = ("role_posted", "application", "interview")
+PAGE_KEYED_KINDS = ("role_posted",)
+ROLE_SKIP_TIERS = ("drop",)            # ICP Tier `drop` = not a target role; counted, never written
 
 # post_event_brief section -> claim_type. Briefs drifted across sessions (verified against real
 # briefs 2026-09-18: Postgres Sep-16 · Agents Behaving Badly Jun-25 · Shortlist Aug-24), so each
@@ -130,7 +142,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
 # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
 # --dry-run is exempted at the call site, not here.
 FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research")
+                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research", "ensure-roles")
 
 
 def freeze_state() -> dict | None:
@@ -729,6 +741,7 @@ class Graph:
 
     def _remember(self, table: str, name: str, rid: str) -> str:
         self._made[(table, norm_text(name))] = rid
+        self.__dict__.setdefault("_made_names", []).append((table, name))   # display casing, for review output
         return rid
 
     def embed(self, texts: list[str]) -> list[str]:
@@ -740,10 +753,22 @@ class Graph:
         from dockb_common import embed_passages, vec_literal
         return [vec_literal(v) for v in embed_passages(texts)]
 
+    def _invalidate(self, table: str) -> None:
+        """Drop only the written table's cached reads (a company write can't change an event read)."""
+        cache = getattr(self, "_rcache", None)
+        if cache:
+            for k in [k for k in cache if k == f"/{table}" or k.startswith(f"/{table}?")]:
+                del cache[k]
+
     def get(self, path: str) -> list:
+        cache = getattr(self, "_rcache", None)      # opt-in per-run read cache (ensure-roles); writes clear it
+        if cache is not None and path in cache:
+            return [dict(r) for r in cache[path]]
         st, body = req("GET", path)
         if st != 200:
             raise SystemExit(f"GET {path} -> {st}: {str(body)[:300]}")
+        if cache is not None:
+            cache[path] = [dict(r) for r in (body or [])]
         return body or []
 
     def post(self, table: str, row: dict | list, prefer: str = "return=representation", on_conflict: str | None = None):
@@ -753,6 +778,7 @@ class Graph:
         if self.dry:
             self._n += 1
             return [{**r, "id": r.get("id") or f"dry:{table}:{self._n}:{i}"} for i, r in enumerate(rows)]
+        self._invalidate(table)                   # after the dry return: a dry write changes nothing server-side
         path = f"/{table}" + (f"?on_conflict={on_conflict}" if on_conflict else "")
         st, body = req("POST", path, rows, prefer=prefer)
         if st not in (200, 201):
@@ -763,6 +789,7 @@ class Graph:
         guard(table, row, op="update")
         if self.dry:
             return
+        self._invalidate(table)
         st, body = req("PATCH", f"/{table}?{flt}", row, prefer="return=minimal")
         if st not in (200, 204):
             raise SystemExit(f"PATCH /{table}?{flt} -> {st}: {str(body)[:400]}")
@@ -860,6 +887,9 @@ class Graph:
             self.stats.bump("topic", "matched")
             self._fill_missing("topic", row, {k: v for k, v in fields.items() if k != "name"})
             return row["id"]
+        if e.get("must_exist"):                      # YED-149: a controlled-vocabulary edge never mints a topic
+            self.stats.bump("topic", "skipped_not_in_vocab")
+            return None
         if (hit := self._cached("topic", e["name"])):
             return hit
         self.stats.bump("topic", "created")
@@ -1085,7 +1115,7 @@ class Graph:
     # -- events ----------------------------------------------------------------------------------
     def find_event(self, ev: dict) -> dict | None:
         row = self.by_pid("event", ev.get("notion_page_id"))
-        if row or not ev.get("event_date"):
+        if row or not ev.get("event_date") or ev.get("kind") in PAGE_KEYED_KINDS:
             return row
         day = ev["event_date"][:10]
         rows = self.get(f"/event?title=ilike.{q(ev['title'].replace('*', ''))}&kind=eq.{ev.get('kind', 'attended')}"
@@ -1094,10 +1124,20 @@ class Graph:
 
     def ensure_event(self, m: dict) -> str:
         ev = m["event"]
+        if ev.get("kind") in PAGE_KEYED_KINDS and not pid_variants(ev.get("notion_page_id")):
+            raise SystemExit(f"ensure-event: {ev.get('kind')} {ev.get('title')!r} has no notion_page_id — refusing "
+                             "(the page id IS this kind's idempotency key; a title match would collapse roles)")
         row = self.find_event(ev)
         if row:
             self.stats.bump("event", "matched")
             eid = row["id"]
+            if ev.get("kind") in PAGE_KEYED_KINDS:   # a rescan only fills what an earlier write lacked...
+                self._fill_missing("event", row, {k: ev.get(k) for k in ("event_date", "url", "confidence")})
+                meta, new = row.get("metadata") or {}, ev.get("metadata") or {}
+                moved = {k: new[k] for k in ("status", "icp_tier") if k in new and meta.get(k) != new[k]}
+                if moved and not str(eid).startswith("dry:"):   # ...plus the two fields Alex moves in Notion
+                    self.patch("event", f"id=eq.{eid}", {"metadata": {**meta, **moved}})
+                    self.stats.bump("event", "status_refreshed")
         else:
             if not ev.get("kind"):   # ADR-10 decision 9: attendance is never inferred — the caller must say so
                 raise SystemExit(f"ensure-event: manifest for {ev.get('title')!r} has no 'kind'; refusing to "
@@ -1105,9 +1145,11 @@ class Graph:
             self.stats.bump("event", "created")
             eid = self.post("event", {k: v for k, v in {
                 "title": ev["title"], "kind": ev["kind"], "event_date": ev.get("event_date"),
-                "description": ev.get("description"), "url": ev.get("url"), "source": SOURCE,
+                "description": ev.get("description"), "url": ev.get("url"),
+                "source": ev.get("source") or SOURCE, "confidence": ev.get("confidence"),
                 "notion_page_id": (pid_variants(ev.get("notion_page_id")) or [None])[-1],
-                "metadata": {k2: ev[k2] for k2 in ("location", "google_calendar_event_id") if ev.get(k2)},
+                "metadata": {**{k2: ev[k2] for k2 in ("location", "google_calendar_event_id") if ev.get(k2)},
+                             **(ev.get("metadata") or {})},
             }.items() if v not in (None, "", {})})[0]["id"]
         existing = set()
         if not str(eid).startswith("dry:"):
@@ -1390,6 +1432,149 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
     print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}")
+    return 0
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-149 — roles -> graph (spec: .claude/notes/yed-149-spec-2026-09-27.md). Input = Notion Roles DB rows in the
+# SQL-mode shape `notion-query-data-sources` returns (column names verbatim), so role-radar Step 5.5 and the
+# one-time backfill feed the SAME verb. Output = one ordinary ensure-event manifest per role.
+# ---------------------------------------------------------------------------------------------
+ATS_SLUG_RE = re.compile(r"(?:jobs\.ashbyhq\.com|job-boards\.greenhouse\.io|boards\.greenhouse\.io|jobs\.lever\.co|"
+                         r"apply\.workable\.com)/([^/?#]+)", re.I)
+
+
+def canonical_company(r: dict, aliases: dict[str, str]) -> str:
+    """The graph name for a Roles row's company. Early scans wrote the ATS board slug (`claylabs`, `gleanwork`) or a
+    lower-cased name into `Company`; written as-is those mint duplicate companies. `aliases` maps a normalized name
+    OR board slug -> canonical name (Step 5.5 builds it from the target-company registry). No alias -> unchanged
+    (the graph's case-insensitive name match still absorbs `anthropic` vs `Anthropic`)."""
+    company = (r.get("Company") or "").strip()
+    amap = {norm_text(k): v for k, v in (aliases or {}).items()}
+    if norm_text(company) in amap:
+        return amap[norm_text(company)]
+    m = ATS_SLUG_RE.search(r.get("userDefined:URL") or r.get("URL") or "")
+    if m and norm_text(m.group(1)) in amap and norm_text(company) == norm_text(m.group(1)):
+        return amap[norm_text(m.group(1))]
+    return company
+
+
+def role_manifest(r: dict, aliases: dict[str, str] | None = None) -> tuple[dict | None, str | None]:
+    """One Roles row -> (manifest, None) or (None, skip_reason). Pure; covered by --selftest.
+    Professional fields only: `Notes` (Alex's free text) never leaves Notion."""
+    title, company = (r.get("Role Title") or "").strip(), canonical_company(r, aliases or {})
+    if not (title and company):
+        return None, "missing_title_or_company"
+    if (r.get("ICP Tier") or "") in ROLE_SKIP_TIERS:
+        return None, "tier_drop"
+    if not pid_variants(r.get("url")) or len(pid_variants(r.get("url"))) != 2:
+        return None, "no_page_id"
+    key = (r.get("Content Hash") or "").strip()
+    if not re.match(r"^(greenhouse|ashby|lever|workable):\S+$", key):
+        # A `title|company` hash is a pre-ATS legacy row, not a verified posting — and in practice each one is an
+        # archived twin of an ATS-keyed row for the SAME posting (titles differ slightly, so name-dedup misses it).
+        return None, "no_ats_key"
+    meta = {k: v for k, v in {
+        "ats_key": key,
+        "company": company, "status": r.get("Status"), "icp_tier": r.get("ICP Tier"),
+        "icp_score": r.get("ICP Score"), "workplace": r.get("Workplace"),
+    }.items() if v not in (None, "")}
+    posted = r.get("date:Posted Date:start") or None     # Greenhouse: empty by design (updated_at is not a posted date)
+    ev = {"notion_page_id": r["url"], "title": f"{title} — {company}", "kind": "role_posted",
+          "event_date": posted, "url": r.get("userDefined:URL") or r.get("URL"), "confidence": 1.0,
+          "source": f"role-radar:{r.get('Source') or 'unknown'}", "location": r.get("Location"), "metadata": meta}
+    return {"event": {k: v for k, v in ev.items() if v not in (None, "")},
+            "entities": [{"type": "company", "name": company, "role": "subject"}]}, None
+
+
+REGISTRY_ROW_RE = re.compile(r"^\|\s*\**([^|*]+?)\**\s*\|\s*(greenhouse|ashby|lever|workable)\s*\|\s*`([^`]+)`", re.I)
+
+
+def registry_aliases(md: str, g: Graph) -> dict[str, str]:
+    """Parse the target-company registry's `| Company | ATS | <backticked slug> |` rows and map each board slug AND each
+    registry name to the name the graph ALREADY uses for that company (so `cursor` -> `Cursor (Anysphere)`),
+    else to the registry name. Deterministic: exact name, then a unique qualified twin, then a qualifier's base.
+    Never fuzzy — `Modal` vs `Modal Labs` is NOT resolved here; the dry run's new-company list is where a human
+    catches it (fix the registry name, then re-run)."""
+    out: dict[str, str] = {}
+    for line in md.splitlines():
+        m = REGISTRY_ROW_RE.match(line.strip())
+        if not m:
+            continue
+        name, slug = m.group(1).strip(), m.group(3).strip()
+        hit = g.live_by_name("company", name)
+        if not hit:
+            twins = [t for t in g.get(
+                f"/company?name=ilike.{q(name.replace('*', '') + ' (*')}&select=*&limit=5")
+                if not (t.get("metadata") or {}).get("merged_into")]
+            hit = twins if len(twins) == 1 else []
+        if not hit:
+            base, qual = split_qualifier(name)
+            if qual:
+                b = g.live_by_name("company", base)
+                hit = b if len(b) == 1 else []
+        canon = hit[0]["name"] if len(hit) == 1 else name
+        for k in (slug, name, split_qualifier(name)[0]):
+            out.setdefault(norm_text(k), canon)
+    return out
+
+
+def _role_current(row: dict, ev: dict, edged: set) -> bool:
+    """True when an existing role row already says everything this manifest would write (the rescan fast path)."""
+    meta, new = row.get("metadata") or {}, ev.get("metadata") or {}
+    return (row["id"] in edged and all(meta.get(k) == new.get(k) for k in ("status", "icp_tier"))
+            and all(row.get(k) not in (None, "") or ev.get(k) in (None, "") for k in ("event_date", "url", "confidence")))
+
+
+def ensure_roles(g: Graph, rows: list[dict], aliases: dict[str, str] | None = None) -> int:
+    """One bulk read of the existing role rows (+ their company edges) lets a rescan skip every unchanged role
+    without a per-role round trip; anything new or changed goes through the ordinary ensure_event path."""
+    skipped: dict[str, int] = {}
+    g._rcache = {}
+    existing = {pid_variants(e["notion_page_id"])[0]: e for e in g.get(
+        "/event?kind=eq.role_posted&select=id,notion_page_id,metadata,event_date,url,confidence&limit=10000")
+        if pid_variants(e.get("notion_page_id"))}
+    ids, edged = [e["id"] for e in existing.values()], set()
+    for i in range(0, len(ids), 80):
+        edged |= {x["event_id"] for x in g.get(f"/event_entity?entity_type=eq.company&event_id=in.({','.join(ids[i:i + 80])})"
+                                               f"&select=event_id")}
+    by_ats = {(e.get("metadata") or {}).get("ats_key"): pid for pid, e in existing.items()}
+    refused = 0
+    for n, r in enumerate(rows, 1):
+        if n % 50 == 0 or n == len(rows):
+            print(f"  … {n}/{len(rows)} roles", flush=True)
+        m, why = role_manifest(r, aliases)
+        if why == "no_page_id":                  # spec decision 1: a hard failure, not a quiet skip
+            print(f"REFUSED no page id: {r.get('Role Title')!r} at {r.get('Company')!r} (url={r.get('url')!r})")
+            refused += 1
+            continue
+        if why:
+            skipped[why] = skipped.get(why, 0) + 1
+            continue
+        pid, ats = pid_variants(m["event"]["notion_page_id"])[0], m["event"]["metadata"]["ats_key"]
+        if by_ats.get(ats, pid) != pid:
+            # The same posting under a DIFFERENT page id: a second Notion row for it, or a mistyped id. Either way a
+            # write would duplicate the role — refuse it loudly; the fix is in Notion (or the manifest), not here.
+            print(f"REFUSED {ats}: already in the graph under page {by_ats[ats][:8]}…, this row is page {pid[:8]}…")
+            skipped["ats_key_on_other_page"] = skipped.get("ats_key_on_other_page", 0) + 1
+            continue
+        by_ats[ats] = pid
+        cur = existing.get(pid)
+        if cur and _role_current(cur, m["event"], edged):
+            g.stats.bump("event", "matched")
+            continue
+        g.ensure_event(m)
+    g._rcache = None
+    g.stats.bump("role", "input", len(rows))
+    for why, n in skipped.items():
+        g.stats.bump("role", f"skipped_{why}", n)
+    new_cos = sorted(n for (t, n) in getattr(g, "_made_names", []) if t == "company")
+    if new_cos:   # the review surface: a would-create company that already exists under another name is a duplicate
+        print(f"{'would create' if g.dry else 'created'} {len(new_cos)} companies: {', '.join(new_cos)}")
+    if refused:
+        g.stats.bump("role", "refused_no_page_id", refused)
+        print(f"ensure-roles: {refused} row(s) REFUSED for a missing/invalid page id — every other row was processed; exit 3")
+        return 3
     return 0
 
 
@@ -1781,6 +1966,70 @@ MIXED_SAMPLE = """
 """
 
 
+def _roles_selftest(ok) -> None:
+    """YED-149 acceptance, offline: idempotent rescan, no cross-company collapse, no topic minting, page id required."""
+    def row(pid, title, co, key, tier="B", posted="2026-09-20", src="ashby", notes="call recruiter at 555"):
+        return {"url": f"https://app.notion.com/p/{pid * 32}"[:61], "Role Title": title, "Company": co,
+                "Content Hash": key, "ICP Tier": tier, "date:Posted Date:start": posted, "Source": src,
+                "userDefined:URL": f"https://jobs.example/{key}", "Status": "new", "Notes": notes}
+    m, why = role_manifest(row("a", "Enterprise AE", "Harvey", "ashby:1"))
+    ok("roles: manifest = role_posted, conf 1.0, company edge", why is None and m["event"]["kind"] == "role_posted"
+       and m["event"]["confidence"] == 1.0 and m["entities"] == [{"type": "company", "name": "Harvey", "role": "subject"}])
+    ok("roles: Notes never leave Notion", "555" not in json.dumps(m))
+    ok("roles: ICP Tier drop -> skipped", role_manifest(row("b", "SDR", "Harvey", "ashby:2", tier="drop"))[1] == "tier_drop")
+    ok("roles: legacy title|company hash -> skipped (not a verified posting)",
+       role_manifest(row("c", "AE", "Zip", "ae|zip"))[1] == "no_ats_key")
+    ok("roles: Greenhouse (no posted date) -> no event_date",
+       "event_date" not in role_manifest(row("d", "AE", "Vercel", "greenhouse:9", posted="", src="greenhouse"))[0]["event"])
+    fg = _FakeGraph()
+    fg.t["company"].append({"id": "co-harvey", "name": "Harvey", "metadata": {}})
+    rows = [row("1", "Account Executive", "Harvey", "ashby:10"), row("2", "Account Executive", "Baseten", "ashby:11"),
+            row("3", "Account Executive", "Harvey", "ashby:12"), row("4", "AE", "Vercel", "greenhouse:13", posted="", src="greenhouse"),
+            row("5", "SDR", "Harvey", "ashby:14", tier="drop")]
+    ensure_roles(fg, rows)
+    evs = [e for e in fg.t["event"] if e["kind"] == "role_posted"]
+    ok("roles: same title at 2 companies + 2 locations -> 4 rows (no title collapse), drop skipped", len(evs) == 4)
+    ok("roles: existing company reused, new one created once",
+       sum(c["name"] == "Harvey" for c in fg.t["company"]) == 1 and sum(c["name"] == "Baseten" for c in fg.t["company"]) == 1)
+    fg.stats = Stats()
+    ensure_roles(fg, rows)
+    ok("roles: rescan is a no-op (created 0)", fg.stats.created() == 0 and len(fg.t["event"]) == 4
+       and not fg.stats.c.get("event", {}).get("status_refreshed"))
+    fg.stats = Stats()
+    ensure_roles(fg, [{**rows[0], "Status": "archived"}])
+    ok("roles: a status moved in Notion is refreshed, still created 0", fg.stats.created() == 0
+       and fg.stats.c["event"].get("status_refreshed") == 1
+       and next(e for e in fg.t["event"] if e["title"] == "Account Executive — Harvey")["metadata"]["status"] == "archived")
+    try:
+        fg.ensure_event({"event": {"title": "AE — Harvey", "kind": "role_posted", "event_date": "2026-09-20"}, "entities": []})
+        refused = False
+    except SystemExit:
+        refused = True
+    ok("roles: role_posted without a page id -> refused", refused)
+    fg.stats = Stats()
+    ensure_roles(fg, [row("9", "Account Executive", "Harvey", "ashby:10")])   # ashby:10 already lives on page 1…
+    ok("roles: a row with no page id fails the run (exit 3), nothing written for it",
+       ensure_roles(fg, [{**row("x", "AE", "Harvey", "ashby:99"), "url": "not-a-page"}]) == 3)
+    ok("roles: same ATS key on a different page id -> refused, nothing written",
+       fg.stats.c["role"].get("skipped_ats_key_on_other_page") == 1 and fg.stats.created() == 0)
+    fg.ensure_event({"event": {**role_manifest(row("6", "CSM", "Harvey", "ashby:15"))[0]["event"]},
+                     "entities": [{"type": "topic", "name": "Brand New Archetype", "must_exist": True}]})
+    ok("roles: must_exist topic never minted", not fg.t["topic"])
+    al = {"claylabs": "Clay", "gleanwork": "Glean"}
+    slug = {**row("7", "AE", "claylabs", "ashby:16"), "userDefined:URL": "https://jobs.ashbyhq.com/claylabs/16"}
+    ok("roles: board-slug company -> canonical via alias", role_manifest(slug, al)[0]["entities"][0]["name"] == "Clay"
+       and role_manifest(slug, al)[0]["event"]["title"] == "AE — Clay")
+    fg2 = _FakeGraph()
+    fg2.t["company"] += [{"id": "c1", "name": "Cursor (Anysphere)", "metadata": {}}, {"id": "c2", "name": "Clay", "metadata": {}}]
+    reg = ("| Company | ATS | Token / board |\n|---|---|---|\n| Clay | ashby | `claylabs` |\n"
+           "| Cursor | ashby | `cursor` |\n| **Runway** | ashby | `runway-ml` |\n| Cyera | Comeet | `x` |")
+    ra = registry_aliases(reg, fg2)
+    ok("registry: slug -> graph name; bare name -> unique qualified twin; unknown -> registry name",
+       ra.get("claylabs") == "Clay" and ra.get("cursor") == "Cursor (Anysphere)" and ra.get("runway-ml") == "Runway"
+       and "x" not in ra)
+    ok("roles: no alias -> name unchanged", role_manifest(row("8", "AE", "Harvey", "ashby:17"), al)[0]["entities"][0]["name"] == "Harvey")
+
+
 def _research_selftest(ok) -> None:
     """YED-205, offline, against _FakeGraph + a sample Evidence Set in the specialists' documented format."""
     items, skipped = parse_ledger(RESEARCH_SAMPLE)
@@ -2074,7 +2323,7 @@ def selftest() -> bool:
     ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
     ok("freeze: every mutating verb is covered",
        set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research"})
+                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research", "ensure-roles"})
     _saved_freeze = FREEZE_PATH
     try:                                              # unreadable marker must fail CLOSED
         globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
@@ -2096,6 +2345,7 @@ def selftest() -> bool:
     _identity_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
+    _roles_selftest(ok)
 
     fail = 0
     for name, good in checks:
@@ -2112,7 +2362,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "expect-research", "stage-research"])
+                                     "expect-research", "stage-research", "ensure-roles"])
     ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
     ap.add_argument("--phase", choices=["post_event", "pre_event"], default="post_event",
                     help="(waive) which gate row: post_event (default) or pre_event (the research row)")
@@ -2136,6 +2386,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
     ap.add_argument("--approve", action="store_true",
                     help="inherited approval: brief-derived claims land approved (do_not_publish ones never do)")
+    ap.add_argument("--aliases-from", metavar="REGISTRY.md",
+                    help="(ensure-roles) the target-company registry; board slugs + names resolve to the graph's "
+                         "existing company names (explicit company_aliases in the manifest win)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
@@ -2193,6 +2446,17 @@ def main(argv: list[str]) -> int:
     if not a.manifest:
         ap.error(f"{a.verb} needs --manifest")
     m = json.load(open(a.manifest, encoding="utf-8"))
+    if a.verb == "ensure-roles":                   # YED-149: {"roles": [Notion Roles rows, SQL shape]} or a bare list
+        aliases = {} if isinstance(m, list) else dict(m.get("company_aliases", {}))
+        if a.aliases_from:                         # the local target-company registry (gitignored; path passed in)
+            aliases = {**registry_aliases(open(a.aliases_from, encoding="utf-8").read(), g), **aliases}
+            print(f"  aliases: {len(aliases)} names/slugs resolved against the graph", flush=True)
+        rc = ensure_roles(g, m if isinstance(m, list) else m.get("roles", []), aliases)
+        print(("DRY-RUN " if a.dry_run else "") + f"ensure-roles: created={stats.created()}")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": a.verb, "dry_run": a.dry_run, "created": stats.created(), "stats": stats.c}))
+        return rc
     rc = 0
     ev = m.get("event") or {}
     gate_key = (pid_variants(ev.get("notion_page_id")) or [None])[0]

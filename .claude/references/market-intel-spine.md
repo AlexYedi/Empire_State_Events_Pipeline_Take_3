@@ -38,7 +38,11 @@ Plan of record: `.claude/references/roadmap.md` (the former `~/.claude/plans/whe
 - **`event`** — first-class **temporal hyperedge AND the signal model**. `kind` splits it:
   `attended` (Alex participates — meetups) vs `market` / `funding` / `launch` / `exec_move` (happens *to*
   entities) vs `role_posted` / `application` / `interview` (job-lens lifecycle). **A signal IS an event**
-  with `kind` + `source` (citation) + `confidence`.
+  with `kind` + `source` (citation) + `confidence`. **Job-lens isolation (YED-149):** `role_posted` is written by
+  role-radar Step 5.5 (`substrate.py ensure-roles`) and is keyed ONLY by the Roles page id, never by title+date.
+  Job-lens kinds never appear in an event-lens ledger: `entity_neighborhood` (0011) excludes them before its
+  limit and returns a per-seed-company `hiring` count instead. Any new consumer that counts events must scope
+  by `kind` for the same reason (hundreds of roles against a handful of signals).
 - **`event_entity`** — the hyperedge join. One event links N entities at a point in time:
   `(event_id, entity_type ∈ {company,person,topic}, entity_id, role)`. Polymorphic (activity-stream
   pattern). The investor↔portfolio link emerges through `funding` events (no separate edge table).
