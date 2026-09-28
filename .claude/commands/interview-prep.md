@@ -71,11 +71,16 @@ eval run-log convention (`.claude/evals/`).
 
 Per [[project_notion_writes_must_be_parent_thread]], do all writes inline here, never in a subagent.
 
-**A. Postgres graph spine** — **REST API, NOT the MCP.** PostgREST at
-`https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/` (project `empire state ai`), `SUPABASE_API_KEY` read
-from `Take_3/.env` at runtime (never printed). Upsert with header
-`Prefer: resolution=merge-duplicates,return=representation`. ⚠️ NEVER use `mcp__claude_ai_Supabase__*` —
-it's on the wrong account (see `.claude/references/market-intel-spine.md`). Read-before-write dedup:
+**A. Postgres graph spine** — **every WRITE goes through the guarded write path** (ADR-9):
+`python3 .claude/scripts/spine_write.py <table> --json '<row or [rows]>'` (PATCH: `--patch 'id=eq.<uuid>'`;
+upsert: `--prefer 'resolution=merge-duplicates,return=representation'`). It wraps
+`.claude/scripts/spine_client.py` — the ONE sanctioned spine write path (column allowlist + recursive
+email/phone scan, hard-fail; exit 2 = PIIViolation, nothing written; exit 3 = HTTP error). Never hand-roll
+a `curl`/PostgREST POST or PATCH. Use `--dry-run` first if unsure a row passes the guard. **Reads** (the
+dedup lookups below) may stay plain REST GETs at `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`
+(project `empire state ai`, `SUPABASE_API_KEY` from `.env`, never printed) or the Supabase MCP, which is
+canonical for READ-ONLY inspection of this project — never for writes or DDL. Contact PII (email, phone) never
+goes in any row, including `metadata`/free text. Read-before-write dedup:
 - `company` — upsert on lower(name); set fields + `source`.
 - `topic`(s) — upsert on lower(name).
 - `person` — one per interviewer; search by name (+company) before insert; set `role_context='interviewer'`.
@@ -100,10 +105,12 @@ device), and an `event kind='interview'` can be added to the timeline.
 - **Specialist thin** — re-invoke just that one with deeper scope; re-synthesize. Don't restart.
 - **No interviewer named** — skip person-researcher; dossier notes the interviewer profile is unavailable and
   pivots Section 5 to "what this stage's interviewer type usually cares about."
-- **Supabase REST error** — STOP writes; confirm the ref is `oicikjyzmxqfomrrqkvf` (`empire state ai`)
-  and `SUPABASE_API_KEY` is set in `.env`; if tables 404, the one-time DDL hasn't been applied yet
-  (`.claude/references/market-intel-schema.sql` in the dashboard SQL Editor). The Notion dossier still
-  stands alone. Do NOT fall back to the Supabase MCP — wrong account.
+- **`spine_write.py` exit 2 (PIIViolation)** — the guard refused a field; nothing was written. Drop or fix
+  the named field (never widen `ALLOW` to get a dossier through) and retry.
+- **`spine_write.py` exit 3 / REST error** — STOP writes; confirm the ref is `oicikjyzmxqfomrrqkvf`
+  (`empire state ai`) and `SUPABASE_API_KEY` is set in `.env`; if tables 404, the one-time DDL hasn't been
+  applied yet (`.claude/references/market-intel-schema.sql` in the dashboard SQL Editor). The Notion dossier
+  still stands alone. Do NOT write through the Supabase MCP (read-only by policy) or a raw REST call.
 - **Agent registry session-frozen** — this command + dossier-synthesizer were added to disk; they are only
   discoverable in a FRESH conversation. First run must be a new session.
 
