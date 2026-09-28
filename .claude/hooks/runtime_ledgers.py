@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """runtime_ledgers.py — which missing `.claude/artifacts/*.jsonl` references are runtime-created ledgers.
 
-Spec: YED-227. Shared by check-refs.sh and build_graph.py so the two dangling-ref tools cannot
-drift (ADR-8 D2 — one rule, one implementation, not two copies kept "in sync" by a comment).
+Spec: YED-227. Used by check-refs.sh (it was also shared with build_graph.py, archived 2026-09-28 to
+docs/archive/scripts/; ADR-8 D2 — one rule, one implementation, not two copies kept "in sync" by a comment).
 
-WHY: an append-only audit ledger (identity-ambiguity.jsonl, substrate-gate-failures.jsonl,
-graph-freeze-overrides.jsonl, …) does not exist until its first write. check-refs.sh flagged it as
+WHY: an append-only audit ledger (e.g. identity-ambiguity.jsonl, written by substrate.py) does not exist
+until its first write. check-refs.sh flagged it as
 dangling and the judge capped completeness at 0.60 — on YED-47 (2026-09-27) that turned two passes
-into flags. A placeholder file is the wrong fix: identity_probe.py reads an ABSENT ledger as "no data
-yet" and an EMPTY one as "a producer ran and found nothing", so a placeholder would lie.
+into flags. A placeholder file is the wrong fix: a reader (identity_probe.py did, until its 2026-09-28 retirement)
+tells an ABSENT ledger ("no data yet") from an EMPTY one ("a producer ran and found nothing"), so a
+placeholder would lie.
 
 RULE (all must hold, else the reference still flags):
   1. the reference is `.claude/artifacts/<name>.jsonl` (directly under artifacts/, .jsonl);
@@ -170,7 +171,7 @@ def is_runtime_ledger(ref, names=None):
 def selftest():
     # Fixture paths are built by concatenation so they never appear as literal `.claude/…` tokens in
     # this file — a literal would become a real dangling reference in the system graph (the test data
-    # polluting the thing under test, the trap build_graph.py's EXTRACTOR_CASES comment records).
+    # polluting the thing under test, the trap the archived build_graph.py's EXTRACTOR_CASES comment records).
     A = ".claude/" + "artifacts/"
     texts = {
         "writer.py": 'LOG = os.path.join(ROOT, ".claude", "artifacts", "gate-failures.jsonl")\n'
