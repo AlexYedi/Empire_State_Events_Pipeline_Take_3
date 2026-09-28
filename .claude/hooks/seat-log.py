@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""seat-log.py: the ONLY way the Claude (Sonnet) seat's verdict gets into the run-log (YED-209).
+"""seat-log.py: the ONLY way the Sonnet reviewer's verdict gets into the run-log (YED-209; YED-231).
 
-The Sonnet seat runs as a subagent, so its row used to be written by hand by the orchestrating model. On
+The reviewer runs as a subagent, so its row used to be written by hand by the orchestrating model. On
 2026-09-19 that produced four rows with made-up timestamps (00:00:00, 22:30:00 …) and no content hash, which
-helped make the trusted seat read kappa 0.53. This writer takes ONLY the model's judgement (criterion scores,
+corrupted the calibration report. This writer takes ONLY the model's judgement (criterion scores,
 defects, cap flags) and derives everything else itself: the real UTC time, the artifact's sha256, the session
-id, and the composite + verdict (judge_lib.score, the same arithmetic every seat gets).
+id, the composite + score verdict (judge_lib.score) and the final pass/flag with its reasons (judge_lib.finalize:
+score, guarded paths, privacy flag, flat ceiling, fabricated quotes). judge.py --resume calls this for you.
 
 Usage:
   seat-log.py [--artifact <path>] --artifact-type <t> --verdict-file <json> [--bundle <bundle.json>]
   (--artifact is required without --bundle; with one it must match, and a multi-file bundle supplies it)
               [--calibration-set prospective] [--label <run-id>] [--note "..."] [--judge-model claude:sonnet]
   The verdict JSON needs: criterion_scores[5]{id,score,reasoning}; optional defects[], checks_performed[], cap_flags{}.
-Prints the scored verdict as JSON on stdout (pass it to quorum_merge.py) and the log path on stderr.
+Prints the logged row as JSON on stdout and the log path on stderr.
 Exit: 0 ok · 1 malformed verdict · 2 usage.
 """
 from __future__ import annotations
@@ -53,7 +54,7 @@ def main() -> int:
         scored = jl.score(verdict, a.artifact_type, dangling)
     except (ValueError, OSError, jl.JudgeError) as e:
         print(f"ERROR: malformed verdict: {e}", file=sys.stderr); return 1
-    # the haystack is everything the seat was shown: every file, spec file and the context (YED-231 §4.2)
+    # the haystack is everything the reviewer was shown: every file, spec file and the context (YED-231 §4.2)
     hay = jl.bundle_haystack(bundle) if bundle else open(a.artifact, encoding="utf-8").read()
     qv = jl.verify_quotes(scored.get("defects") or [], hay, a.artifact_type)
     slug = jl.slug_for(a.artifact)
@@ -61,23 +62,25 @@ def main() -> int:
     row = {"run_id": rid, "timestamp": jl.now_utc(), "artifact": a.artifact,
            "artifact_sha256": bundle.get("artifact_sha256") or jl.sha256_file(a.artifact),
            "artifact_type": a.artifact_type, "rubric": bundle.get("rubric_version") or "build-quality@6",
-           "judge_model": a.judge_model, "judge_provider": "anthropic", "seat_status": "voting",
+           "judge_model": a.judge_model, "judge_provider": "anthropic",
            "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "_nosession"),
            "criterion_scores": scored["criterion_scores"], "weighted_score": scored["weighted_score"],
            "raw_score": scored["raw_score"], "verdict": scored["verdict"], "alex_ack": None,
            "selfreported_weighted_score": reported if isinstance(reported, (int, float)) else None,
            "confidence_honesty_violation": scored["confidence_honesty_violation"],
-           "privacy_layer_defect": scored.get("privacy_layer_defect", False),   # @6 (YED-231), top-level like the honesty flag
+           "privacy_layer_defect": scored.get("privacy_layer_defect", False),   # a flag reason in finalize(); no score cap since YED-231
            "defects": scored.get("defects") or [], "checks_performed": scored.get("checks_performed") or [],
            "cap_flags": scored.get("cap_flags") or {}, "flat_ceiling": scored["flat_ceiling"],
            "scoring": "harness-recomputed", "quote_check": qv, "must_cite_gaps": jl.must_cite_gaps(scored),
            "calibration_set": a.calibration_set, "evidence_parity": bundle.get("evidence_parity", True),
            "bundle_sha256": bundle.get("bundle_sha256"), "bundle_version": bundle.get("bundle_version"),
-           "bundle_mode": bundle.get("bundle_mode")}      # "hunks" = the seat never saw the whole of every file
+           "bundle_mode": bundle.get("bundle_mode")}      # "hunks" = the reviewer never saw the whole of every file
+    row.update(jl.finalize(row, bundle))                  # final_verdict + flag_reasons (Alex is asked only on flag)
     if a.note:
         row["note"] = a.note
     if not a.print_only:
-        out = f".claude/evals/logs/{row['timestamp'][:10]}-{slug}-{rid}.jsonl"
+        logs = os.environ.get("JUDGE_LOG_DIR") or ".claude/evals/logs"   # override only for offline tests
+        out = f"{logs}/{row['timestamp'][:10]}-{slug}-{rid}.jsonl"
         jl.append_log(out, row)
         print(f"logged → {out}", file=sys.stderr)
     print(json.dumps(row))
