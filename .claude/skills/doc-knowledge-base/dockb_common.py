@@ -6,6 +6,11 @@ Two decoupled stores:
 
 Local embeddings: BAAI/bge-small-en-v1.5 (384-d). Query and ingest MUST use the
 same model+version (pinned in EMBED_MODEL). See PRD .claude/references + ChatPRD.
+
+2026-09-28 (prune-sweep row 15): the /ingest-doc + /ask-library skill is archived to
+docs/archive/skills/doc-knowledge-base/. This module STAYS here (no SKILL.md, so it is not a
+skill) because substrate.py and retrieve.py import it from this path for embeddings, and the
+R2 re-derivation path uses r2_client(). Its ENV_PATH and spine_client import are path-relative.
 """
 from __future__ import annotations
 import hashlib, json, os, re, sys, urllib.request, urllib.error

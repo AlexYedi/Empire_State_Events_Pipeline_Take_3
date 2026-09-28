@@ -30,7 +30,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 
 | | What it is | State (2026-09-12) |
 |---|---|---|
-| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB: ingest + ask only (claim extraction parked, YED-235) · **post-event ✗** · roles ✗ |
+| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅→retired 2026-09-28 (ADR-11) doc-KB: ingest + ask only (claim extraction parked, YED-235)→commands archived 2026-09-28, tables + R2 stay · **post-event ✗** · roles ✗ |
 | **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
 | **P3 · The Loop** — learn from exhaust | Rigor layer v2: (retired) correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8. **2026-09-28:** retired the correction-recurrence log, the registry and the weekly rigor review it leaned on (PR template + null-baseline rule instead); re-scope before building | watching ✅ (ADR-8, YED-158) · learning ✗ |
 | **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
@@ -131,7 +131,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 ## 11. Pointers
 
 - **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Job-Search Engine · Empire State Hub · Empire State Events · Build-Rigor & Measurement.
-- **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `signal-taxonomy.md` (→ v2 in P2).
+- **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `docs/archive/references/signal-taxonomy.md` (archived 2026-09-28, no live reader; the P2 v2 starts from it).
 - **Rigor:** `.github/pull_request_template.md` · `judge.md` · `build-session-contract.md` · null-baseline rule in `CLAUDE.md` §5 · `prd-template.md` · `linear-convention.md`.
 - **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
-- **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
+- **Decisions:** `docs/adr/` (ADR-0…11) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
