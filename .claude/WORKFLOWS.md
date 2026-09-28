@@ -35,7 +35,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 **Archived 2026-09-28 to `docs/archive/`** (no runs in 30 days): `/ingest-doc` + `/ask-library` + skill `doc-knowledge-base` (the Supabase doc-KB tables, R2 `esep-library` and `dockb_common.py` stay: `substrate.py`/`retrieve.py` import it) · `/scan-inbox` + skill `inbox-miner` + `inbox_signal_write.py` + `signal-taxonomy.md`, retired by [ADR-11](../docs/adr/ADR-11-retire-inbox-signal-lane.md) (`inbox_boundary.py` stays as `spine_client`'s denylist parser).
 
 > **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
-> `empire-state-hub` repo). Source of truth: `.claude/references/roadmap.md` +
+> `empire-state-hub` repo). Source of truth: the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) +
 > `.claude/references/market-intel-spine.md`. **Rigor/measurement layer** source of truth:
 > `.claude/references/{roadmap,build-session-contract,judge}.md` + `.github/pull_request_template.md`.
 

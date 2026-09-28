@@ -1,6 +1,6 @@
 # `build_session` contract (v2)
 
-The stable interface for build-session telemetry. **This contract — not any vendor — is the durable layer** ("instrument once" lives here). Tools (the local JSONL record, PostHog, a deferred OTEL collector + Langfuse) are swappable adapters behind it. Backing: Linear YED-88 · PRD US-2 · plan of record `.claude/references/roadmap.md` (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
+The stable interface for build-session telemetry. **This contract — not any vendor — is the durable layer** ("instrument once" lives here). Tools (the local JSONL record, PostHog, a deferred OTEL collector + Langfuse) are swappable adapters behind it. Backing: Linear YED-88 · PRD US-2 · plan of record: the Notion roadmap (see CLAUDE.md §3) (retired the machine-local `~/.claude/plans/my-linkedin-on-the-scalable-acorn.md`).
 
 ## Principle (build-better-not-faster)
 - **Authoritative record first, projection second.** Every session is written to an append-only local record (`.claude/.state/telemetry/build-sessions/<session_id>.jsonl` — one shard per session, GITIGNORED since 2026-09-28/YED-229; the pre-2026-09-12 single file `build-sessions.jsonl` and the pre-2026-09-28 tracked shards under `.claude/artifacts/build-sessions/` are frozen history and still read) — the source of truth. PostHog is a *derived projection* for dashboards; if PostHog changes/breaks, no data is lost.
