@@ -741,6 +741,7 @@ class Graph:
 
     def _remember(self, table: str, name: str, rid: str) -> str:
         self._made[(table, norm_text(name))] = rid
+        self._made_names = getattr(self, "_made_names", []) + [(table, name)]   # display casing, for review output
         return rid
 
     def embed(self, texts: list[str]) -> list[str]:
@@ -751,6 +752,13 @@ class Graph:
         sys.path.insert(0, DOCKB)
         from dockb_common import embed_passages, vec_literal
         return [vec_literal(v) for v in embed_passages(texts)]
+
+    def _invalidate(self, table: str) -> None:
+        """Drop only the written table's cached reads (a company write can't change an event read)."""
+        cache = getattr(self, "_rcache", None)
+        if cache:
+            for k in [k for k in cache if k.startswith(f"/{table}?")]:
+                del cache[k]
 
     def get(self, path: str) -> list:
         cache = getattr(self, "_rcache", None)      # opt-in per-run read cache (ensure-roles); writes clear it
@@ -767,11 +775,10 @@ class Graph:
         rows = row if isinstance(row, list) else [row]
         for r in rows:
             guard(table, r)                                          # fail before any network call
-        if getattr(self, "_rcache", None):
-            self._rcache.clear()
         if self.dry:
             self._n += 1
             return [{**r, "id": r.get("id") or f"dry:{table}:{self._n}:{i}"} for i, r in enumerate(rows)]
+        self._invalidate(table)                   # after the dry return: a dry write changes nothing server-side
         path = f"/{table}" + (f"?on_conflict={on_conflict}" if on_conflict else "")
         st, body = req("POST", path, rows, prefer=prefer)
         if st not in (200, 201):
@@ -780,10 +787,9 @@ class Graph:
 
     def patch(self, table: str, flt: str, row: dict):
         guard(table, row, op="update")
-        if getattr(self, "_rcache", None):
-            self._rcache.clear()
         if self.dry:
             return
+        self._invalidate(table)
         st, body = req("PATCH", f"/{table}?{flt}", row, prefer="return=minimal")
         if st not in (200, 204):
             raise SystemExit(f"PATCH /{table}?{flt} -> {st}: {str(body)[:400]}")
@@ -1534,7 +1540,9 @@ def ensure_roles(g: Graph, rows: list[dict], aliases: dict[str, str] | None = No
                                                f"&select=event_id")}
     by_ats = {(e.get("metadata") or {}).get("ats_key"): pid for pid, e in existing.items()}
     refused = 0
-    for r in rows:
+    for n, r in enumerate(rows, 1):
+        if n % 50 == 0 or n == len(rows):
+            print(f"  … {n}/{len(rows)} roles", flush=True)
         m, why = role_manifest(r, aliases)
         if why == "no_page_id":                  # spec decision 1: a hard failure, not a quiet skip
             print(f"REFUSED no page id: {r.get('Role Title')!r} at {r.get('Company')!r} (url={r.get('url')!r})")
@@ -1560,7 +1568,7 @@ def ensure_roles(g: Graph, rows: list[dict], aliases: dict[str, str] | None = No
     g.stats.bump("role", "input", len(rows))
     for why, n in skipped.items():
         g.stats.bump("role", f"skipped_{why}", n)
-    new_cos = sorted(n for (t, n) in g._made if t == "company")
+    new_cos = sorted(n for (t, n) in getattr(g, "_made_names", []) if t == "company")
     if new_cos:   # the review surface: a would-create company that already exists under another name is a duplicate
         print(f"{'would create' if g.dry else 'created'} {len(new_cos)} companies: {', '.join(new_cos)}")
     if refused:
@@ -2442,6 +2450,7 @@ def main(argv: list[str]) -> int:
         aliases = {} if isinstance(m, list) else dict(m.get("company_aliases", {}))
         if a.aliases_from:                         # the local target-company registry (gitignored; path passed in)
             aliases = {**registry_aliases(open(a.aliases_from, encoding="utf-8").read(), g), **aliases}
+            print(f"  aliases: {len(aliases)} names/slugs resolved against the graph", flush=True)
         rc = ensure_roles(g, m if isinstance(m, list) else m.get("roles", []), aliases)
         print(("DRY-RUN " if a.dry_run else "") + f"ensure-roles: created={stats.created()}")
         print(stats.report())
