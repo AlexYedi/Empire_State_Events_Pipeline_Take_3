@@ -95,10 +95,13 @@ Every content skill (`pre-event-content`, `content-correspondent`, `pattern-synt
 
 ---
 
-## Measurement (6-week window, rides `tag-outcome` + value-action registry)
+## Measurement (rolling; the two outcomes below are logged by hand as dated lines here when they occur, attributed to a post if one is named, otherwise to the body of work; `tag-outcome` grades reach/engagement per post and does not record them)
 
 Two outcome types tracked against this north-star:
 - **Job-pipeline activation event** — unprompted HM DM / interview invite / warm intro to a target co, traceable to a specific post.
 - **Access-democratization event** — someone outside NYC used the content to engage a conversation they couldn't otherwise have.
 
 Watch the ratio of audience growth to **relationship activation** (connection accepts → DM replies → conversations); rising followers with flat activation means the conduit works but the conversion doesn't.
+
+**Outcome log**
+- 2026-09-17 · organizer inbound: invite to the GTM World Tour · New York stop · attributed to the body of work (no single post named) · job-pipeline: pending
