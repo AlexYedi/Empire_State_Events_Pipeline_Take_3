@@ -73,7 +73,7 @@ The *intuitive* fix is to add a "publishing automation skill" or scheduling tool
 - **#6 (information flows):** Notion + HubSpot make Alex's research visible and findable to himself.
 - **#9 (delays):** the pipeline closes the research-to-content loop in hours instead of days.
 - **#5 (rules):** definition-of-done for events (skills check), content (style guide), project ideation (architecture confidence ≥ 90%).
-- **#4 (self-organization):** the skills-evolve-the-skills pattern (`update-voice-and-style.md`, `update-anti-patterns.md`).
+- **#4 (self-organization):** the skills-evolve-the-skills pattern (`update-voice-and-style.md`, which also covers the anti-patterns list).
 
 ## Leverage points worth adding deliberately
 

@@ -61,7 +61,6 @@ sys.path.insert(0, HERE)
 from spine_client import PIIViolation, guard, q, req  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-DOCKB = os.path.join(ROOT, ".claude", "skills", "doc-knowledge-base")
 SOURCE = "substrate:notion"          # entity/event rows created by this producer
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 
@@ -611,7 +610,6 @@ class Graph:
         A method so the offline selftest can substitute a stub."""
         if self.dry:
             return ["[dry-run: not embedded]"] * len(texts)
-        sys.path.insert(0, DOCKB)
         from dockb_common import embed_passages, vec_literal
         return [vec_literal(v) for v in embed_passages(texts)]
 
@@ -1174,7 +1172,6 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         if not trows:
             g.stats.bump("claim_entity", "question_topic_unresolved", len(questions))
         else:
-            sys.path.insert(0, DOCKB)
             from dockb_common import embed_passages
             qvecs = embed_passages([it["text"] for it in questions])
             tvecs = embed_passages([t["name"] for t in trows])

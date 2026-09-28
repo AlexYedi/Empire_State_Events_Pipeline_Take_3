@@ -55,7 +55,7 @@ Alex provides one of:
    - Speaker/Host DMs
    - All of the above
 5. **Check for an `## Author Steer — [date]` block** on the Event page (from the `steering-interview` skill). If present, honor it: answer #1 steers the content/angle/what-to-avoid, #2 steers structure/format, #4 is context to keep top of mind. If no steer block exists and Alex is present, offer to run `steering-interview` first ("anything you want to steer before I draft? or skip").
-6. **Build the provenance exclusion list + apply it as a standing rule (v1.2, YED-132).** From the Verification Flags + `prior_context_pack` items collected in (3), assemble this run's **do-not-assert list**. Standing rule for Steps 2–6: **no item on the exclusion list appears in public copy as a stated fact.** For each, choose exactly one — (a) **drop it** (default; a `do-not-cite` benchmark like unverified deliverability stats is dropped, never paraphrased); (b) **attribute it explicitly** to its primary source, and only if one exists ("Attention's own release says…"); or (c) **soften to Alex's own observation**, never a factual claim about the firm/person (the source-check rule, CLAUDE.md §6). Thesis/positioning claims default to (b) or (c), never bare assertion. Surface the honored exclusions at the Step 7 write — a one-line `Excluded per provenance: […]` — so Alex sees what was kept out and why.
+6. **Build the provenance exclusion list + apply it as a standing rule (v1.2, YED-132).** From the Verification Flags + `prior_context_pack` items collected in (3), assemble this run's **do-not-assert list**. Standing rule for Steps 2–5: **no item on the exclusion list appears in public copy as a stated fact.** For each, choose exactly one — (a) **drop it** (default; a `do-not-cite` benchmark like unverified deliverability stats is dropped, never paraphrased); (b) **attribute it explicitly** to its primary source, and only if one exists ("Attention's own release says…"); or (c) **soften to Alex's own observation**, never a factual claim about the firm/person (the source-check rule, CLAUDE.md §6). Thesis/positioning claims default to (b) or (c), never bare assertion. Surface the honored exclusions at the Step 6 write — a one-line `Excluded per provenance: […]` — so Alex sees what was kept out and why.
 
 ---
 
@@ -413,13 +413,7 @@ Suggestion: [what kind of signal would unlock this]
 
 ---
 
-## Step 5: retired 2026-09-28
-
-Retired: the `marketing-autoresearch` optimization pass (1 use in 30 days; no plugin copy), archived at `docs/archive/skills/marketing-autoresearch/`. Past outputs stay in `content-drafts/*/autoresearch/`.
-
----
-
-## Step 6: Compile Prepared Questions
+## Step 5: Compile Prepared Questions
 
 **Reframed 2026-05-20:** Prepared Questions are now generated **independently** from the same per-person research insights, not as a byproduct of unused DM variants (Step 4 produces connection notes: 2 variants per person, A talk-anchored and B adjacent-work-anchored, or 1 when only one real signal exists).
 
@@ -429,9 +423,9 @@ For each person identified in the brief, generate 1-3 prepared questions that:
 - Could be asked live during Q&A or in conversation at the event
 - Go one layer deeper than the source material did
 
-The Step 4 connection note and the Step 6 prepared questions can share research foundation but serve different moments:
+The Step 4 connection note and the Step 5 prepared questions can share research foundation but serve different moments:
 - **Step 4 note:** punchy, optimized for connection request acceptance, ≤200 chars, ONE sharpest question
-- **Step 6 questions:** textured, optimized for in-person depth, multi-sentence OK, multiple angles per person
+- **Step 5 questions:** textured, optimized for in-person depth, multi-sentence OK, multiple angles per person
 
 If the connection request is accepted (Step 4 lands), the prepared questions become natural follow-up material in subsequent DM or in-person conversation.
 
@@ -452,7 +446,7 @@ Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if th
 
 ---
 
-## Step 7: Write to Notion
+## Step 6: Write to Notion
 
 **Every post draft sets `Themes`** (the 1–3 picked in Step 1.3b, as a JSON array). Prepared questions and connection notes stay untagged.
 
@@ -460,7 +454,7 @@ Write all approved content to the **Content Drafts** database.
 
 **Database:** `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 
-> **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. Step 3b.5 renders the carousel with Claude design (Gemini for pictorial imagery). The brief remains in the page body for human reference and for later iteration. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 7 schema gap — go back and run it.
+> **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. Step 3b.5 renders the carousel with Claude design (Gemini for pictorial imagery). The brief remains in the page body for human reference and for later iteration. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 6 schema gap — go back and run it.
 
 ### Content pages to create:
 
@@ -527,11 +521,11 @@ If only one variant produced (per fallback rule), the page body includes that va
 "People": [relation to all people with questions]
 "Topics": [relation to relevant topics]
 ```
-Page body: the compiled question list from Step 6
+Page body: the compiled question list from Step 5
 
 ---
 
-## Step 8: Summary
+## Step 7: Summary
 
 ```
 ## Pre-Event Content Complete: [Event Name]

@@ -1,6 +1,6 @@
 ---
 name: update-voice-and-style
-description: Capture voice/style learnings from Alex's content feedback and propagate them to reference files (content-style-guide.md, content-anti-patterns.md, outreach-templates.md) and dependent content skills. Use when Alex gives feedback on generated content ("this felt too formal", "the hook on option B was better"), observes a tone preference, flags an anti-pattern, or shares an example to extract patterns from. Also invoked proactively when patterns emerge across multiple content sessions.
+description: Capture voice/style learnings from Alex's content feedback and propagate them to reference files (content-style-guide.md, content-anti-patterns.md, outreach-templates.md) and dependent content skills. Use when Alex gives feedback on generated content ("this felt too formal", "the hook on option B was better"), observes a tone preference, flags an anti-pattern, or shares an example to extract patterns from. Also the quick path for the anti-patterns list: "add X to the anti-patterns", "remove Y from off-limits", "never do Z in posts", or a batch of items that bugged him in recent drafts. Also invoked proactively when patterns emerge across multiple content sessions.
 ---
 
 # Skill: Update Voice & Style
@@ -23,6 +23,8 @@ Alex provides one or more of:
 - A structural preference ("I prefer posts that start with a question")
 - An example of content they liked (their own or someone else's) — extract patterns
 - An example of content they hated — extract anti-patterns
+- A direct anti-patterns edit: add, remove or amend a word/phrase, structural or DM pattern, or add a new category
+- A bulk update ("here are 5 things that bugged me about today's drafts") — process each item individually, present as one batch
 
 ---
 
@@ -37,6 +39,8 @@ Classify each piece of feedback into:
 | DM structure | `content-style-guide.md` + `outreach-templates.md` | DM patterns, personalization approach |
 | Anti-pattern (word/phrase) | `content-anti-patterns.md` | Off-limits words table |
 | Anti-pattern (structural) | `content-anti-patterns.md` | Structural anti-patterns table |
+| Anti-pattern (DM) | `content-anti-patterns.md` | DM anti-patterns table |
+| Anti-pattern remove / amend / new category | `content-anti-patterns.md` | Delete the row (confirm first), update example/category/rationale, or add a category row with examples and rationale |
 | Audience/positioning | `content-style-guide.md` | Audience section, positioning notes |
 | Quality bar | `content-style-guide.md` | Quality bar definition |
 | Formatting | `content-style-guide.md` | Hashtags, emoji, length, CTA approach |
@@ -57,6 +61,8 @@ Before updating any file, show Alex:
 **Rationale:** [why this change based on the feedback]
 ```
 
+Anti-pattern edits present as one table instead: `| Action | Table | Entry | Category | Rationale |`.
+
 Get explicit approval before writing.
 
 ---
@@ -70,6 +76,7 @@ Get explicit approval before writing.
    - New anti-pattern → skills reference the file dynamically, no skill edit needed
    - New structural preference → may need to update the post architecture in the skill
    - New content type or CTA → likely needs skill edit
+   - Removed anti-pattern that a skill hard-codes → flag it and propose the skill edit
 4. If a skill file needs updating, show the proposed skill change and get approval
 
 ---
