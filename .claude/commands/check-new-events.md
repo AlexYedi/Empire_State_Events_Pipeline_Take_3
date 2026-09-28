@@ -149,7 +149,7 @@ Topics: [Topics parsed from PIPELINE block]
 URL: [URL parsed from PIPELINE block]
 ```
 
-The Google Calendar Event ID line is the deterministic join key for downstream `/post-event-content` runs against Granola. `/event-deep-research` will pass it to `notion-writer`, which writes it to the Events DB `Google Calendar Event ID` text property.
+The Google Calendar Event ID line is the deterministic join key for downstream `/post-event-content` runs against Granola. `/event-deep-research` writes it (inline, Step 4) to the Events DB `Google Calendar Event ID` text property.
 
 This is the format `/event-deep-research` already accepts (per its required-inputs spec: "natural-language description with cues like 'Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI'").
 
@@ -214,14 +214,14 @@ Pending (not processed this session): K events
 
 ## Step 8 — Deep Read gate (batch close — YED-139, mandatory)
 
-The Step 7 "Deep Read PENDING" block above is a *report*; this step is the *gate* that makes a silent skip impossible to close green. Run it after the summary, before declaring the batch done:
+The Step 7 "Deep Read PENDING" block above is a *report*; this step is the *gate* that catches a silent skip (manual — no hook backs it since 2026-09-28). Run it after the summary, before declaring the batch done:
 
 1. **Enumerate every Event page touched this batch** — read the per-session ledger: `.claude/hooks/deep-read-ledger.sh list`. (Each processed event registered a row at its Step 4 Scan-head commit, flipped to `rendered` on a successful Step 4.5 — per `/event-deep-research`.)
 2. **Re-fetch the real marker for each** — `notion-fetch` the Event page and read its `<!-- deep_read_rendered: [date|pending] -->`. Notion is the truth; the ledger is a local echo. Reconcile any drift (flip `rendered`/`waive` via the ledger helper to match Notion).
 3. **Verdict:**
    - **All `rendered` (or explicitly waived)** → batch passes; report Deep Read ✅ for all.
    - **Any `pending`** → the batch is **NOT complete**. Interactive: **block close** — list the pending event(s) and do not report the batch as done until each is re-rendered (idempotent Step 4.5) or explicitly waived with a reason. Autonomous/batch: report the batch **FAILED** with the pending list.
-4. **Backstop:** even if this step is skipped, the Stop-hook `deep-read-gate.sh` reads the same ledger at session end and FAILS the run on any `pending` row (blocking interactive close / loud FAILED autonomous). Belt (this step, authoritative Notion read) + suspenders (the hook, deterministic ledger check).
+4. **No backstop:** the Stop-hook `deep-read-gate.sh` was unwired 2026-09-28 (complexity reset), so this step is the only Deep Read gate. The ledger is informational — do not skip this step.
 
 **Registry-frozen batch (the Aug-2026 failure path):** if `field-guide-renderer` was unregistered this session, *every* event stranded at `pending`. That is a FAILED batch — either re-run the whole thing in a fresh session, or `waive` each page with the reason and re-render later. Never report the batch "complete" with pending rows.
 
@@ -235,7 +235,7 @@ The Step 7 "Deep Read PENDING" block above is a *report*; this step is the *gate
 - **All events are dupes** — report "Found N events but all are already in Notion" and exit.
 - **Parse warning on an event** — exclude from this run, surface at end with the missing field, don't fail the whole session.
 - **`/event-deep-research` fails mid-event** — report which event failed, mark it as "errored" in the summary, and prompt whether to continue with the next event or quit.
-- **Deep Read didn't render (Step 4.5)** — the Scan head is fine, but the Event page shows `deep_read_rendered: pending`. NON-fatal per event (doesn't block the batch mid-run), but it MUST appear in the Step 7 "Deep Read PENDING" block AND is enforced by the **Step 8 gate + the Stop-hook `deep-read-gate.sh`** (YED-139): any `pending` ledger row FAILS the run / blocks close. Never report an event as fully "complete" with an unrendered Deep Read (that is exactly how the whole Aug-2026 batch shipped thin). Re-run Step 4.5 (idempotent) in a session where `field-guide-renderer` is registered, or `waive` it explicitly with a reason.
+- **Deep Read didn't render (Step 4.5)** — the Scan head is fine, but the Event page shows `deep_read_rendered: pending`. NON-fatal per event (doesn't block the batch mid-run), but it MUST appear in the Step 7 "Deep Read PENDING" block AND is caught by the **Step 8 gate** (YED-139; the `deep-read-gate.sh` Stop hook was unwired 2026-09-28): any `pending` ledger row means the run is not complete. Never report an event as fully "complete" with an unrendered Deep Read (that is exactly how the whole Aug-2026 batch shipped thin). Re-run Step 4.5 (idempotent) in a session where `field-guide-renderer` is registered, or `waive` it explicitly with a reason.
 - **Notion search fails (Step 4)** — fail open: proceed without pre-dedup, let `/event-deep-research` Step 1.5 dedup catch it.
 
 ---
