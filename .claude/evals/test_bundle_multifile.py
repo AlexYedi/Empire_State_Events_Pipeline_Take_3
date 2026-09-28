@@ -22,11 +22,11 @@ def ck(name, cond, detail=""):
     print(("  ✓ " if cond else "  ✗ ") + name + (f"   {detail}" if detail and not cond else ""))
 
 
-if subprocess.run(["git", "cat-file", "-e", "42602e4^{commit}"], capture_output=True).returncode:
-    print("  ✗ PR #139 range not reachable — run `git fetch origin` first"); sys.exit(1)
+if any(subprocess.run(["git", "cat-file", "-e", c + "^{commit}"], capture_output=True).returncode for c in ("42602e4", "2510701")):
+    print("  ✗ fixture commits (PR #139 range, 2510701) not reachable — run `git fetch origin` first"); sys.exit(1)
 
-b1 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[".claude/evals/test_gate_in_progress.sh", SPEC_NOTE], rng=RANGE)
-b2 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[".claude/evals/test_gate_in_progress.sh", SPEC_NOTE], rng=RANGE)
+b1 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[SPEC_NOTE], rng=RANGE)
+b2 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[SPEC_NOTE], rng=RANGE)
 paths = [f["path"] for f in b1["files"]]
 WANT = {".claude/evals/test_gate_in_progress.sh", ".claude/hooks/deep-read-gate.sh", ".claude/hooks/gate-sweep-sessionstart.sh",
         ".claude/hooks/substrate-gate.sh", ".claude/scripts/spine_client.py", ".claude/settings.json",
@@ -57,7 +57,9 @@ ck("a fabricated quote still fails", q["unverified"] == 1 and q["matched_in"] ==
 
 # the deep-read-gate regression (09-27): three CORRECT quotes (two from the spec note, one from spine_client.py as it
 # stood before this range changed it) were stripped as fabricated because the haystack was one file; that removed the only voting seat.
-row = [json.loads(l) for l in open(".claude/evals/logs/2026-09-27-deep-read-gate-sonnet-deep-read-gate.jsonl")][-1]
+# evals/logs/ is untracked since 2026-09-28: read the logged row at the last commit that tracked it
+LOG_AT = "2510701:.claude/evals/logs/2026-09-27-deep-read-gate-sonnet-deep-read-gate.jsonl"
+row = [json.loads(l) for l in subprocess.run(["git", "show", LOG_AT], capture_output=True, text=True, check=True).stdout.splitlines() if l.strip()][-1]
 stripped = [d for d in row["defects"] if any(str(d.get("quote") or "").startswith(u[:60]) for u in row["quote_check"]["unverified_quotes"])]
 ck("regression fixture: the 3 stripped quotes are recovered from the log", len(stripped) == 3, str(len(stripped)))
 # deep-read-gate.sh was deleted 2026-09-28 (unwired); read it at the fixture commit

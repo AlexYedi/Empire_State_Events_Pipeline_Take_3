@@ -11,14 +11,15 @@ build judge is **one Sonnet reviewer that raises flags**: design `.claude/refere
 | `judge.py` | the one entry point: `run` (bundle + reviewer brief) → `run --resume` (log + one-line verdict) → `ack` (flags only) |
 | `judge_lib.py` | score (`build-quality@6` caps), `finalize()` (final pass/flag + reasons, guarded paths), bundle build (file / files / git range), quote check, privacy guard |
 | `../hooks/seat-log.py` | the ONLY writer of reviewer rows (real UTC time, content hash, harness-computed score) |
-| `rubrics/build-quality-v6.md` | the rubric, **frozen at `@6`**. Older versions retained for runs scored under them; never mutate them |
-| `prompts/judge-system-v2.md` | the reviewer's instructions (defects before scores, earned 1.0). `judge-system.md` = v1, retained |
+| `rubrics/build-quality-v6.md` | the rubric, **frozen at `@6`**; never mutate it. Older versions (`@1`–`@5`) are in git history |
+| `prompts/judge-system-v2.md` | the reviewer's instructions (defects before scores, earned 1.0). v1 is in git history |
 | `calibration_stats.py` | a plain **report**: judge-vs-Alex agreement, always-pass baseline, κ, flag recall, flat-1.0 rate, runs per artifact class. **Nothing gates on it** |
 | `controls.py` · `controls/manifest.json` | the control set (real labelled states by git blob). `controls.py plan` prints the runs. Run it only when the reviewer's model id changes |
-| `emit-judge-runs.sh` | projects run rows to PostHog `judge_run` events (the JSONL stays authoritative) |
-| `logs/*.jsonl` | **authoritative, append-only** run log |
-| `spend-ledger.jsonl` | history of the retired OpenAI seat's spend. Nothing writes it now |
-| `test_judge_lib.py` · `test_judge_e2e.py` · `test_bundle_multifile.py` · `test_null_baseline.py` | offline, free; run all four before changing any of the above |
+| `logs/*.jsonl` | **authoritative, append-only** run log. Local only: gitignored and untracked since 2026-09-28 (history to that date is in git at `2510701`) |
+| `rubrics/dossier-quality.md` | the `/interview-prep` dossier rubric |
+| `score_entities.py` · `post-event-brief-template-evidence.md` | transcription entity scorer and brief-template evidence, still cited by `/ingest-recording` and `/post-event-content` |
+| `test_judge_lib.py` · `test_judge_e2e.py` · `test_bundle_multifile.py` · `test_null_baseline.py` | offline, free; run all four (`python3 .claude/evals/test_<name>.py` from the repo root) before changing any of the above |
+| `test_event_claim.py` | the `event-claim.py` hook's tests (not the judge) |
 
 ## Run-log rows
 Reviewer row (written by `seat-log.py`):
@@ -33,7 +34,7 @@ Reviewer row (written by `seat-log.py`):
 `verdict` is the score verdict; `final_verdict` adds the deterministic rules (guarded path, privacy flag, flat 1.0,
 fabricated quotes). Ack row (written by `judge.py ack`, never by editing a row):
 `{"record_type":"ack", "run_id", "artifact", "artifact_sha256", "verdict": <final_verdict>, "alex_ack":"agree|disagree", "alex_ack_at", "note"}`.
-Older rows from the retired seats (`gemini`, `openai`, `quorum`, `quorum_ack`) stay in `logs/` as history.
+Older rows from the retired seats (`gemini`, `openai`, `quorum`, `quorum_ack`) are in git history at `2510701`.
 
 ## Reading the report honestly
 A metric a do-nothing policy scores just as well on is not a standard (YED-212): "83% agreement" was once exactly the
@@ -43,4 +44,5 @@ seed truth; rows in `calibration_set` {control, bakeoff, negative-control, triag
 
 ## What was removed (YED-231)
 The Gemini and OpenAI seats, the quorum merge, seat statuses and demotion rules, canaries, the last-voting-seat guard,
-the spend cap and `pricing.json`. The judge scores and flags; it never auto-rewrites and never hard-blocks.
+the spend cap and `pricing.json`; on 2026-09-28 their residue (rubrics @1–@5, prompt v1, bake-off
+controls, `emit-judge-runs.sh`, `spend-ledger.jsonl`) and the June transcription-eval corpus were removed from the tree. The judge scores and flags; it never auto-rewrites and never hard-blocks.
