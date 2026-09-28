@@ -3,7 +3,9 @@
 healthcheck_2b.py
 =================
 POST-SWAP nightly health check for the consolidated MI graph (YED-130 Increment 2b).
-Throwaway: delete this + the workflow when `pre2b` is dropped after the N-night watch.
+Originally a throwaway N-night watch; since YED-230 (2026-09-28) it is the standing post-write
+check of the nightly compute (topic_intel_compute.py imports its reference + comparator, so the
+compute's parity gate and this check share one definition of "correct").
 
 Reads the LIVE schemas (public + topic_intelligence) — NOT canonical_v2 (empty post-swap).
 Three layers, all read-only:
