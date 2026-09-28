@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
-"""controls.py: materialise + run the judge control set (YED-209 build step 8).
+"""controls.py: the judge control set (YED-209 step 8; YED-231: runs ONLY when the reviewer's model id changes).
 
 Controls are REAL artifact states Alex labelled, referenced by git blob, so the repo never carries a broken
 copy: a negative control is the content that was flagged, a positive control is content he acked as passing.
-A seat that cannot tell them apart is not a judge, whatever its agreement rate says.
+A reviewer that cannot tell them apart is not a judge. No schedule, no canaries: judge.py prints the trigger when
+the model id it is given differs from the last one logged.
 
   controls.py list                     what is in the set
   controls.py materialise --id <id>    write one control to a temp file, print the path
-  controls.py run --seat <id> [--model M] [--ids a,b] [--limit N] [--dry-run]
-                                       judge each control with one seat and score it against the label
+  controls.py plan [--ids a,b]         materialise every control and print the judge.py command for each
+                                       (the reviewer is a subagent, so the parent thread dispatches each run)
 
-Results are logged with calibration_set:"control" so calibration_stats keeps them out of kappa (they are a
-fixed, re-used set: pooling them would inflate a seat's numbers with questions it has already seen).
-Exit: 0 ok · 2 usage · 4 budget.
+Runs are logged with calibration_set:"control" so calibration_stats keeps them out of kappa (a fixed, re-used set).
+Exit: 0 ok · 2 usage.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
-import judge_lib as jl  # noqa: E402
 
 MANIFEST = ".claude/evals/controls/manifest.json"
 
@@ -45,10 +43,8 @@ def materialise(item: dict, into: str) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["list", "materialise", "run"])
+    ap.add_argument("cmd", choices=["list", "materialise", "plan"])
     ap.add_argument("--id"); ap.add_argument("--ids"); ap.add_argument("--limit", type=int)
-    ap.add_argument("--seat", default="openai"); ap.add_argument("--model")
-    ap.add_argument("--label-suffix", default=""); ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     os.chdir(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
     items = load()
@@ -74,42 +70,15 @@ def main() -> int:
         print(materialise(items[0], d))
         return 0
 
-    seat_cfg = next((s for s in json.load(open(".claude/evals/seats.json"))["seats"] if s["id"] == a.seat), None)
-    if not seat_cfg or a.seat == "claude":
-        print(f"--seat must be an adapter-backed seat (not '{a.seat}': the Claude seat runs as a subagent)", file=sys.stderr)
-        return 2
-    model = a.model or seat_cfg.get("model") or ""
     tmp = tempfile.mkdtemp(prefix="judge-controls-")
-    res = []
     for i in items:
         path = materialise(i, tmp)
-        cmd = [seat_cfg["runner"], "--artifact", path, "--artifact-type", i["artifact_type"],
-               "--calibration-set", "control", "--label", f"control-{i['id']}{a.label_suffix}",
-               "--artifact-blob", i["blob"],   # proof this content is the repo's own history, for the privacy guard
-               "--context", f"Control item {i['id']} for the judge control set. This is a real historical state of "
-                            f"{i['artifact']} from this repo, judged on its own terms. Score it as you would any build artifact."]
-        if model:
-            cmd += ["--model", model]
-        if a.dry_run:
-            cmd += ["--dry-run"]
-        p = subprocess.run(["bash"] + cmd if cmd[0].endswith(".sh") else cmd, capture_output=True, text=True)
-        line = (p.stdout or p.stderr).strip().splitlines()
-        got = next((l for l in line if l.startswith("==")), line[-1] if line else "(no output)")
-        verdict = "flag" if " (flag)" in got else ("pass" if " (pass)" in got else "?")
-        hit = "✓" if verdict == i["expect"] else ("·" if a.dry_run else "✗")
-        res.append({"id": i["id"], "expect": i["expect"], "got": verdict, "ok": verdict == i["expect"], "out": got})
-        print(f"  {hit} {i['id']:<44} expect {i['expect']:<5} got {verdict:<5} {'' if a.dry_run else got.split('=>')[-1].strip()[:60]}")
-    if not a.dry_run:
-        scored = [r for r in res if r["got"] in ("pass", "flag")]
-        neg = [r for r in scored if r["expect"] == "flag"]
-        pos = [r for r in scored if r["expect"] == "pass"]
-        rec = sum(r["ok"] for r in neg) / len(neg) if neg else None
-        fp = sum(not r["ok"] for r in pos) / len(pos) if pos else None
-        print(f"\nseat={a.seat} model={model or 'default'} · scored {len(scored)}/{len(res)} · "
-              f"defect recall {rec if rec is None else round(rec, 2)} ({sum(r['ok'] for r in neg)}/{len(neg)}) · "
-              f"false-flag rate {fp if fp is None else round(fp, 2)} ({sum(not r['ok'] for r in pos)}/{len(pos)})")
-        m, t = jl.spent(seat_cfg.get("provider", a.seat))
-        print(f"spend: ${m:.2f} this month, ${t:.2f} lifetime")
+        print(f"# {i['id']}  expect {i['expect']}\n"
+              f"python3 .claude/evals/judge.py run --artifact {path} --artifact-type {i['artifact_type']} "
+              f"--artifact-blob {i['blob']} --calibration-set control --label control-{i['id']} "
+              f"--context \"Control item {i['id']}: a real historical state of {i['artifact']} from this repo, judged on "
+              f"its own terms. Score it as you would any build artifact.\"")
+    print(f"\n{len(items)} controls. After each --resume, compare final_verdict with the expectation above.")
     return 0
 
 

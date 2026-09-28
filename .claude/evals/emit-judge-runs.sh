@@ -18,18 +18,20 @@ for f in .claude/evals/logs/*.jsonl; do
   [ -f "$f" ] || continue
   while IFS= read -r line; do
     [ -z "$line" ] && continue
+    # ack rows (record_type "ack", YED-231) are Alex's labels, not runs: skipped here, read by calibration_stats.py
     payload=$(printf '%s' "$line" | jq -c --arg k "$POSTHOG_PROJECT_TOKEN" '
+      if .record_type == "ack" then empty else
       {api_key:$k, event:"judge_run",
        distinct_id:("judge-" + (.artifact_type // "artifact")),
        timestamp:.timestamp,
        properties:{
          "$insert_id": .run_id, run_id: .run_id, rubric: .rubric,
          artifact: .artifact, artifact_type: .artifact_type,
-         weighted_score: .weighted_score, verdict: .verdict,
+         weighted_score: .weighted_score, verdict: (.final_verdict // .verdict),
          acked: ((.alex_ack // null) != null),
          ack_agree: (((.alex_ack // "") | ascii_downcase | startswith("agree"))),
          criteria: ([.criterion_scores[]? | {(.id): .score}] | add)
-       }}' 2>/dev/null) || continue
+       }} end' 2>/dev/null) || continue
     [ -z "$payload" ] && continue
     code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 8 -X POST "$HOST/capture/" \
       -H "Content-Type: application/json" -d "$payload" 2>/dev/null || echo "ERR")

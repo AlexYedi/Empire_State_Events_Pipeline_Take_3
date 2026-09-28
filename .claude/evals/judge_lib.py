@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""judge_lib.py: the parts of the build-quality judge that every seat must share (YED-209).
+"""judge_lib.py: the build-quality judge's shared mechanics (YED-209; right-sized by YED-231, 2026-09-28).
 
-Why a library: with two seats the scoring math lived as jq inside gemini-judge.sh. With N seats, every seat has
-to get the SAME evidence and be scored by the SAME arithmetic, or "agreement" between seats means nothing.
-Spec: .claude/proposals/third-judge-seat-openai.md. This file owns:
+One reviewer (Claude Sonnet, dispatched from the parent thread) scores a bundle; everything around the model's
+judgement is deterministic and lives here. Entry point: judge.py. Design: .claude/references/judge.md.
 
-  score()          the @5 composite + caps + verdict. Mirrors gemini-judge.sh's jq exactly (parity is tested).
-  build_bundle()   ONE evidence bundle per run, identical for every seat, with a sha256 so a merge can prove it.
-                   bundle_version 3 (YED-231): one file (--artifact), a file list (--files) or a git range (--range).
-  verify_quotes()  a defect must quote the bundle verbatim (any file, spec or context in it); a fabricated quote
-                   is a format failure.
-  privacy_guard()  nothing gitignored, outside the repo, or secret-looking is ever sent to a provider.
-  ledger / caps    every paid API attempt is recorded; per-run and monthly caps are enforced here (a lifetime
-                   cap is opt-in via JUDGE_TOTAL_CAP_USD; the $45 default was lifted by Alex 2026-09-27).
-
-Seats never compute their own composite or verdict. Seats never see each other's output: nothing here accepts one.
+  score()          the build-quality@6 composite + caps + score verdict. The model never computes these.
+  finalize()       the run's final pass/flag and the reasons for a flag (score, guarded path, privacy flag,
+                   flat ceiling, fabricated quotes). Alex is prompted only on a flag.
+  guarded_paths()  the deterministic privacy rule: a bundle touching a guard/filter/allowlist file needs human
+                   review, whatever the score (replaces the @6 privacy score cap, YED-231 item 7).
+  build_bundle()   ONE evidence bundle per run: one file (--artifact), a file list (--files) or a git range
+                   (--range), bundle_version 3.
+  verify_quotes()  a defect must quote the bundle verbatim (any file, spec or context in it).
+  privacy_guard()  nothing gitignored, outside the repo, or secret-looking is ever put in a bundle.
 """
 from __future__ import annotations
 import datetime, hashlib, json, os, re, subprocess
@@ -29,8 +27,6 @@ RANGE_EXCLUDE_PREFIXES = (".claude/evals/logs/", ".claude/.state/")
 FULL_TEXT_LIMIT = 60_000     # above this many chars of full-file text, big files are sent as changed hunks
 HUNK_MIN_LINES = 400         # ...but only files longer than this; smaller files always go in whole
 HUNK_CONTEXT = 40            # ±lines around each change in hunk mode
-LEDGER = ".claude/evals/spend-ledger.jsonl"
-PRICING = ".claude/evals/pricing.json"
 SECRET_RE = re.compile(r"sk-[A-Za-z0-9_-]{20,}|ph[cxs]_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}|ghp_[A-Za-z0-9]{30,}|"
                        r"eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----")
 
@@ -43,10 +39,6 @@ class PrivacyViolation(Exception):
     """exit 3: something that must never leave the machine was about to be sent."""
 
 
-class BudgetExceeded(Exception):
-    """exit 4: a spend cap was hit, or the model has no price on file."""
-
-
 def now_utc() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -55,7 +47,7 @@ def sha256_file(path: str) -> str:
     return hashlib.sha256(open(path, "rb").read()).hexdigest()
 
 
-# ---------------------------------------------------------------- scoring (mirrors gemini-judge.sh, @6)
+# ---------------------------------------------------------------- scoring (build-quality@6, frozen)
 def score(verdict: dict, atype: str, has_dangling: bool) -> dict:
     """Per-criterion caps, weighted sum, composite caps, verdict. Caps only ever LOWER a score."""
     cs = verdict.get("criterion_scores")
@@ -84,8 +76,6 @@ def score(verdict: dict, atype: str, has_dangling: bool) -> dict:
     raw = sum(s[k] * w for k, w in WEIGHTS.items())
     caps = [raw]
     if flags.get("confidence_honesty_violation"):
-        caps.append(0.65)
-    if flags.get("privacy_layer_defect"):            # @6 (YED-231): a broken privacy layer fails, backstop or not
         caps.append(0.65)
     if atype == "deep_read" and flags.get("density_padding"):
         caps.append(0.65)
@@ -139,7 +129,7 @@ def _as_haystack(hay) -> list[tuple[str, str]]:
 
 
 def verify_quotes(defects: list, haystack, artifact_type: str | None = None) -> dict:
-    """Each defect's `quote` must appear somewhere in the evidence the seat was given. Always modulo whitespace and
+    """Each defect's `quote` must appear somewhere in the evidence the reviewer was given. Always modulo whitespace and
     case. For PROSE artifact types (PROSE_TYPES) also modulo dropped markdown `**` / backticks / boundary `*` and
     the em/en-dash / spaced-hyphen / colon swap; code-like types (and an unknown type) are matched strictly. See
     the comment above _MD_RE for why, and for the one recorded residual.
@@ -147,12 +137,12 @@ def verify_quotes(defects: list, haystack, artifact_type: str | None = None) -> 
     `haystack` is the artifact text (a str, the single-file case) or a list of (label, text) sources: every file in
     the bundle, every spec file and the context (YED-231 §4.2). Quoting the spec decision you say is contradicted is
     REQUIRED by judge-system-v2 rule 4, so it has to verify; on 09-27 a one-file haystack stripped three correct
-    quotes as "fabricated" and took the voting seat's vote away. `matched_in` is aligned with the INPUT `defects`
+    quotes as "fabricated" and forced a false flag. `matched_in` is aligned with the INPUT `defects`
     list: the label of the first source that holds the quote, or None (unquoted or unmatched).
 
     `unverified` / `evidence_unverified` use the mode's match; `unverified_exact` keeps the strict count so drift
-    in how seats quote stays visible. The caller tags the run `evidence_unverified` when more than 30% of quoted
-    defects fail, which strips that seat's power to escalate (and, in the quorum, to vote) for this run.
+    in how the reviewer quotes stays visible. More than 30% unverified quotes = `evidence_unverified`, which
+    finalize() turns into a flag: a review built on quotes that are not in the evidence cannot pass.
     """
     tolerant = artifact_type in PROSE_TYPES
     norm = _norm_loose if tolerant else _norm
@@ -189,6 +179,49 @@ def must_cite_gaps(scored: dict) -> list[str]:
     """Any criterion under 0.85 needs a defect filed against it. Returns the criteria that break the rule."""
     have = {d.get("criterion") for d in scored.get("defects") or [] if isinstance(d, dict)}
     return [c["id"] for c in scored["criterion_scores"] if c["score"] < 0.85 and c["id"] not in have]
+
+
+# ---------------------------------------------------------------- deterministic routing rules (YED-231)
+# Guarded paths: the spine write path and the privacy filters. A bundle that touches one needs HUMAN review whatever
+# the score (YED-231 item 7: the @6 privacy cap moved from a model flag to this path check). Match is on the repo
+# path; the pattern catches future guard/filter/allowlist files by name. Widen it in a PR, never per run.
+GUARDED_FILES = (".claude/scripts/spine_client.py", ".claude/scripts/inbox_boundary.py",
+                 ".claude/scripts/build_graph.py", ".gitignore")
+GUARDED_NAME_RE = re.compile(r"guard|filter|allow-?list|deny-?list|boundary|privacy|redact|pii", re.I)
+# The judge layer is never judged by itself (YED-231 item 5): judge.py refuses these as a target and drops them
+# from a range. Telemetry is excluded separately (RANGE_EXCLUDE_PREFIXES).
+JUDGE_LAYER = (".claude/evals/judge_lib.py", ".claude/evals/judge.py", ".claude/evals/calibration_stats.py",
+               ".claude/evals/controls.py", ".claude/evals/controls/", ".claude/evals/rubrics/", ".claude/evals/prompts/",
+               ".claude/evals/emit-judge-runs.sh", ".claude/evals/test_judge_lib.py", ".claude/evals/test_bundle_multifile.py",
+               ".claude/evals/test_null_baseline.py", ".claude/evals/test_judge_e2e.py", ".claude/evals/README.md", ".claude/hooks/seat-log.py",
+               ".claude/skills/judge-build/", ".claude/commands/judge-build.md", ".claude/references/judge.md")
+
+
+def guarded_paths(paths: list[str]) -> list[str]:
+    return sorted(p for p in paths if p in GUARDED_FILES or GUARDED_NAME_RE.search(os.path.basename(p)))
+
+
+def is_judge_layer(path: str) -> bool:
+    p = os.path.normpath(path).replace(os.sep, "/")
+    return any(p == j or (j.endswith("/") and p.startswith(j)) for j in JUDGE_LAYER)
+
+
+def finalize(row: dict, bundle: dict | None = None) -> dict:
+    """The run's final verdict. Pass only if nothing below fires; every reason is shown to Alex with the flag.
+    No calibration number enters here: this is score + deterministic rules, nothing learned."""
+    reasons = []
+    if row.get("verdict") != "pass":
+        reasons.append(f"score {row.get('weighted_score')} < {PASS_LINE}")
+    if row.get("privacy_layer_defect") or (row.get("cap_flags") or {}).get("privacy_layer_defect"):
+        reasons.append("privacy_layer_defect (reviewer confirmed a defect in a privacy/security layer)")
+    paths = [f["path"] for f in (bundle or {}).get("files") or [] if f.get("path")] or [row.get("artifact", "")]
+    for g in guarded_paths(paths):
+        reasons.append(f"guarded_path:{g} (human review required)")
+    if row.get("flat_ceiling"):
+        reasons.append("flat_ceiling (1.0 on all five criteria is low-information)")
+    if (row.get("quote_check") or {}).get("evidence_unverified"):
+        reasons.append("evidence_unverified (>30% of quoted defects are not in the bundle)")
+    return {"final_verdict": "flag" if reasons else "pass", "flag_reasons": reasons}
 
 
 # ---------------------------------------------------------------- privacy guard
@@ -290,7 +323,7 @@ def _diff_old_side(diff: str) -> str:
     return "\n".join(out)
 
 
-def _range_files(rng: str) -> tuple[str, str, list[str]]:
+def _range_files(rng: str, skip_judge_layer: bool = False) -> tuple[str, str, list[str]]:
     """BASE..HEAD (or A...B = merge-base(A,B)..B) -> (base sha, head sha, changed paths minus telemetry)."""
     if "..." in rng:
         a_, b_ = rng.split("...", 1)
@@ -304,7 +337,8 @@ def _range_files(rng: str) -> tuple[str, str, list[str]]:
     head = _git(["rev-parse", "--verify", f"{head_ref or 'HEAD'}^{{commit}}"]).decode().strip()
     names = _git(["diff", "--name-only", "--no-renames", base, head]).decode().splitlines()
     keep = [p for p in names if p and not p.startswith(RANGE_EXCLUDE_PREFIXES)
-            and not (p.startswith(".claude/artifacts/") and p.endswith(".jsonl"))]
+            and not (p.startswith(".claude/artifacts/") and p.endswith(".jsonl"))
+            and not (skip_judge_layer and is_judge_layer(p))]
     return base, head, keep
 
 
@@ -344,8 +378,8 @@ def _prepasses(path: str, atype: str) -> tuple[list[str], list[str], str]:
 
 def build_bundle(artifact: str | None, atype: str, system: str, rubric: str, context: str = "",
                  spec_files: list[str] | None = None, artifact_blob: str | None = None,
-                 files: list[str] | None = None, rng: str | None = None) -> dict:
-    """Everything a seat is allowed to see, in one fixed order. Same bytes for every seat, or the merge refuses.
+                 files: list[str] | None = None, rng: str | None = None, skip_judge_layer: bool = False) -> dict:
+    """Everything the reviewer is allowed to see, in one fixed order, hashed so the run log can prove it.
 
     Exactly one of `artifact` (one file, the pre-v3 shape, byte-identical text), `files` (several files on disk) or
     `rng` (BASE..HEAD: the changed files at HEAD, telemetry excluded, plus the unified diff) names the evidence.
@@ -361,9 +395,10 @@ def build_bundle(artifact: str | None, atype: str, system: str, rubric: str, con
     base = head = None
     entries: list[dict] = []            # {path, text (None if deleted), disk (path the pre-passes read)}
     if rng:
-        base, head, paths = _range_files(rng)
+        base, head, paths = _range_files(rng, skip_judge_layer)
         if not paths:
-            raise ValueError(f"range {rng} changes no judgeable file (telemetry paths are excluded)")
+            raise ValueError(f"range {rng} changes no judgeable file (telemetry{' and judge-layer' if skip_judge_layer else ''} "
+                             "paths are excluded)")
         _range_guard(head, paths)
         privacy_guard(spec_files, [])
         for p in paths:
@@ -422,7 +457,7 @@ def build_bundle(artifact: str | None, atype: str, system: str, rubric: str, con
         sources.append({"label": "context", "text": context})
     if diff:
         sources.append({"label": "diff", "text": diff})
-        # the diff's OLD side without the +/- margin: a seat quoting a line this range removed (it is on screen, in
+        # the diff's OLD side without the +/- margin: a reviewer quoting a line this range removed (it is on screen, in
         # WHAT CHANGED) must verify. The 09-27 deep-read-gate run lost its vote partly over exactly such a quote.
         sources.append({"label": "diff (removed side)", "text": _diff_old_side(diff)})
     dangling = sorted(set(dangling))
@@ -489,64 +524,8 @@ def _single_bundle(artifact: str, atype: str, system: str, rubric: str, context:
             "files": [{"path": artifact, "sha256": sha, "lines": len(art_text.splitlines()), "mode": "full"}],
             "range": None, "sources": sources,
             "has_dangling": bool(dangling), "dangling_refs": dangling_l,
-            "evidence_parity": len(ctx) >= 400,          # same bar gemini-judge.sh uses: a one-line context is not a spec
+            "evidence_parity": len(ctx) >= 400,          # a one-line context is not a spec
             "rubric_version": _rubric_version(rubric)}
-
-
-# ---------------------------------------------------------------- spend ledger + caps
-def _prices() -> dict:
-    return json.load(open(PRICING, encoding="utf-8"))["models"]
-
-
-def cost_usd(model: str, input_tokens: int, output_tokens: int) -> float:
-    p = _prices().get(model)
-    if not p:
-        raise BudgetExceeded(f"{model} has no price in {PRICING}: refusing to spend blind")
-    return round(input_tokens / 1e6 * p["input_per_mtok"] + output_tokens / 1e6 * p["output_per_mtok"], 6)
-
-
-def spent(provider: str) -> tuple[float, float]:
-    """(this calendar month UTC, lifetime) for one provider, from the ledger."""
-    month, total, ym = 0.0, 0.0, now_utc()[:7]
-    if os.path.exists(LEDGER):
-        for line in open(LEDGER, encoding="utf-8"):
-            try:
-                r = json.loads(line)
-            except ValueError:
-                continue
-            if r.get("provider") != provider:
-                continue
-            c = float(r.get("cost_usd") or 0)
-            total += c
-            if str(r.get("ts", ""))[:7] == ym:
-                month += c
-    return round(month, 6), round(total, 6)
-
-
-def check_budget(provider: str, model: str, est_input_tokens: int, max_output_tokens: int) -> float:
-    """Called BEFORE the request, with the worst case. Raises BudgetExceeded; returns the worst-case cost."""
-    worst = cost_usd(model, est_input_tokens, max_output_tokens)
-    per_run = float(os.environ.get("JUDGE_MAX_USD_PER_RUN", "0.50"))
-    m_cap = float(os.environ.get("JUDGE_MONTHLY_CAP_USD", "20"))   # $8 -> $20, Alex 2026-09-27 (Sept hit $7.95 on one failed seat run)
-    # Lifetime cap: OFF by default (Alex, 2026-09-27). The $45 default mirrored a one-time $50 prepaid OpenAI
-    # credit; the $20 monthly cap is now the governor. Set JUDGE_TOTAL_CAP_USD to re-impose one.
-    t_env = os.environ.get("JUDGE_TOTAL_CAP_USD", "").strip()
-    t_cap = float(t_env) if t_env else None
-    month, total = spent(provider)
-    if worst > per_run:
-        raise BudgetExceeded(f"worst case ${worst:.3f} > per-run cap ${per_run:.2f} ({model})")
-    if month + worst > m_cap:
-        raise BudgetExceeded(f"month ${month:.2f} + ${worst:.3f} would pass the monthly cap ${m_cap:.2f}")
-    if t_cap is not None and total + worst > t_cap:
-        raise BudgetExceeded(f"lifetime ${total:.2f} + ${worst:.3f} would pass the lifetime cap ${t_cap:.2f}")
-    return worst
-
-
-def ledger_append(**row) -> None:
-    """One row per paid API ATTEMPT, including failures (run-logs alone would miss those)."""
-    os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
-    with open(LEDGER, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"ts": now_utc(), **row}) + "\n")
 
 
 def append_log(path: str, row: dict) -> None:
@@ -566,7 +545,7 @@ def _cli() -> int:
     """judge_lib.py bundle (--artifact P | --files A B ... | --range BASE..HEAD) --artifact-type T
                           [--context S] [--spec-file F ...] --out bundle.json"""
     import argparse, sys
-    ap = argparse.ArgumentParser(description="build ONE evidence bundle for every judge seat")
+    ap = argparse.ArgumentParser(description="build ONE evidence bundle for the judge (judge.py run does this for you)")
     ap.add_argument("cmd", choices=["bundle"])
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--artifact"); src.add_argument("--files", nargs="+")
@@ -590,13 +569,12 @@ def _cli() -> int:
           f"artifact {b['artifact_sha256'][:12]} · {len(b['text'])} chars · "
           f"evidence_parity={b['evidence_parity']} · dangling={len(b['dangling_refs'])} → {a.out}")
     if not b["evidence_parity"]:
-        # YED-223: parity is fixed HERE, at build time. No seat flag can repair it later — the adapters score the
-        # bundle's bytes verbatim and refuse --context/--spec-file alongside --bundle.
+        # YED-223: parity is fixed HERE, at build time; the reviewer scores the bundle's bytes verbatim.
         print("\n  ⚠️  EVIDENCE-PARITY WARNING: this bundle carries < 400 chars of spec/context.\n"
-              "      Every seat scoring it will log evidence_parity:false and be EXCLUDED from calibration,\n"
-              "      and cross-file defects (spec drift) are invisible to all of them.\n"
+              "      The run will log evidence_parity:false and be excluded from calibration_stats,\n"
+              "      and cross-file defects (spec drift) are invisible to the reviewer.\n"
               "      Fix: REBUILD the bundle with --spec-file <in-repo spec> (repeatable) and/or --context.\n"
-              "      Re-running a seat with extra flags cannot help; the seats refuse them with --bundle.\n",
+              "      A spec cannot be added after the bundle is built.\n",
               file=sys.stderr)
     return 0
 
