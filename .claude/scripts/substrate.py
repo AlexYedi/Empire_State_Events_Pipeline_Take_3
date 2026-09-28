@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """substrate — the ONE producer library for the Knowledge Substrate (ADR-10; YED-160 / YED-169).
 
-Spec: docs/adr/ADR-10-knowledge-substrate.md · .claude/notes/knowledge-substrate-architecture-2026-09-18.md
-(§2, §6.4) as amended by .claude/notes/knowledge-substrate-review-2026-09-18.md.
+Spec: docs/adr/ADR-10-knowledge-substrate.md · docs/archive/notes/knowledge-substrate-architecture-2026-09-18.md
+(§2, §6.4) as amended by docs/archive/notes/knowledge-substrate-review-2026-09-18.md.
 
 Every write goes through spine_client (ADR-9: the single guarded write path). There is no
 backfill script: the backfill runs THIS code over a list of manifests, the same code the live
@@ -22,11 +22,11 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   Evidence Ledger row (web-verified w/ URL -> web_verified; email-signal w/ public URL -> email_signal;
                   everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                   post-event ensure-event attaches these claims when the attended row appears.
-                  Spec: .claude/notes/yed-205-spec-2026-09-27.md
+                  Spec: docs/archive/notes/yed-205-spec-2026-09-27.md
   ensure-roles    --manifest r.json   (YED-149) {"roles": [Notion Roles rows, SQL shape], "company_aliases": {slug|name: Name}}
                   -> one `role_posted` event each +
                   a company edge; keyed ONLY by the Roles page id; ICP Tier `drop` skipped. Spec:
-                  .claude/notes/yed-149-spec-2026-09-27.md
+                  docs/archive/notes/yed-149-spec-2026-09-27.md
   merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
                   HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
                   engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
@@ -38,7 +38,7 @@ Identity (YED-47 S1b-lite, no DDL): company `Name (Qualifier)` resolves to `Name
 candidate is unique AND both website hosts agree; every less-certain case is created AND surfaced to
 .claude/artifacts/identity-ambiguity.jsonl (never guessed). Every resolver follows a tombstone to its live
 target. Persons: page-id -> LinkedIn -> exact name + company; ambiguous -> create + surface. No fuzzy person
-matching, ever (ADR-4 D3). Probe (run by hand): .claude/scripts/identity_probe.py.
+matching, ever (ADR-4 D3). The S1b DDL re-trigger is read by hand from that ledger (ADR-10 D5, Amendment 2).
 
 Common flags: --dry-run (no writes; still reports matched/would-create) · --json (machine summary)
 Self-test (offline, no network): python3 .claude/scripts/substrate.py --selftest
@@ -73,7 +73,7 @@ ROLE_MAP = {  # manifest role -> the graph's existing vocabulary
     "company": {"host": "subject", "sponsor": "subject", "subject": "subject", "mentioned": "subject"},
 }
 
-# YED-149 — the job lens (spec: .claude/notes/yed-149-spec-2026-09-27.md).
+# YED-149 — the job lens (spec: docs/archive/notes/yed-149-spec-2026-09-27.md).
 # JOB_LENS_KINDS never enter an event brief's ledger (retrieve.py + migration 0011 filter them out and add a
 # per-company count instead). PAGE_KEYED_KINDS match ONLY by notion_page_id: the title+kind+same-day fallback
 # collapses same-title roles across companies/locations, and Greenhouse roles have no date to match on.
@@ -115,89 +115,14 @@ CONF_RE = re.compile(r"\b(HIGH|MED)\b")
 
 
 # ---------------------------------------------------------------------------------------------
-# Substrate gate ledger (the Step-4.5 lesson: a skipped step must FAIL the run, not close green).
-# /post-event-content 3.8b calls `ensure-event --expect-claims` -> a PENDING row; 3.8c
-# `stage-claims` success flips it to STAGED. .claude/hooks/substrate-gate.sh (Stop hook) fails
-# the run while any row is PENDING. Backfill calls ensure-event WITHOUT --expect-claims (most
-# backfilled events have no brief), so it never creates gate rows.
-# Same JSONL shape + _pending session fallback as deep-read-ledger.sh.
+# Substrate gate ledger. /post-event-content 3.8b calls `ensure-event --expect-claims` -> a PENDING
+# row; 3.8c `stage-claims` success flips it to STAGED; `waive` records a deliberate skip. The Stop
+# hook that enforced it (substrate-gate.sh) was unwired in the 2026-09-28 complexity reset, so the
+# ledger is INFORMATIONAL: the commands report 3.8b/c status by hand. Backfill calls ensure-event
+# WITHOUT --expect-claims (most backfilled events have no brief), so it never creates gate rows.
 # ---------------------------------------------------------------------------------------------
 STATE_DIR = os.path.join(ROOT, ".claude", ".state")
 GATE_FAIL_LOG = os.path.join(ROOT, ".claude", "artifacts", "substrate-gate-failures.jsonl")
-
-# ---------------------------------------------------------------------------------------------
-# Graph-write freeze (YED-213 reconciliation, 2026-09-21).
-# The freeze and the substrate gate watch DIFFERENT HALVES of the same write:
-#   freeze -> may this write happen at all?      (checked here, BEFORE ensure-event touches the graph)
-#   gate   -> did a write that happened finish?  (checked by substrate-gate.sh at Stop, on PENDING rows)
-# Enforcing the freeze here is what keeps them from conflicting: a refused write never reaches
-# `ledger_mark(..., "pending")`, so the gate has nothing to block on. The old failure shape was a
-# run that called ensure-event (already violating the freeze), then stopped short of stage-claims
-# and got blocked by the gate for honouring a rule it had already broken.
-# Rows opened BEFORE a freeze was declared are closed with `waive --reason` — deliberately not
-# blocked, because the escape valve must stay reachable while frozen.
-# ---------------------------------------------------------------------------------------------
-FREEZE_PATH = os.path.join(ROOT, ".claude", "references", "graph-freeze.json")
-FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.jsonl")
-# Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
-# --dry-run is exempted at the call site, not here.
-FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                 "backfill", "backfill-questions", "approve-claims", "merge", "stage-research", "ensure-roles")
-
-
-def freeze_state() -> dict | None:
-    """The active freeze, or None. A malformed/unreadable file is NOT treated as 'no freeze' —
-    it returns a synthetic active freeze, so a corrupted marker fails closed like the gate does."""
-    if not os.path.exists(FREEZE_PATH):
-        return None
-    try:
-        f = json.load(open(FREEZE_PATH, encoding="utf-8"))
-    except (ValueError, OSError) as e:
-        return {"active": True, "issue": "?", "reason": f"graph-freeze.json is unreadable ({e}) — "
-                "failing closed. Fix or repair the file rather than deleting it."}
-    return f if isinstance(f, dict) and f.get("active") else None
-
-
-def freeze_check(verb: str, dry_run: bool, override: str | None) -> int:
-    """0 = proceed. 4 = refused by an active freeze (distinct from 3 = 'no claims parsed')."""
-    if verb not in FREEZE_BLOCKS or dry_run:
-        return 0
-    fz = freeze_state()
-    if not fz:
-        return 0
-    if override:
-        import datetime
-        os.makedirs(os.path.dirname(FREEZE_LOG), exist_ok=True)
-        with open(FREEZE_LOG, "a", encoding="utf-8") as f:
-            f.write(json.dumps({"event": "graph_freeze_override", "verb": verb,
-                                "issue": fz.get("issue"), "override_reason": override,
-                                "session": os.environ.get("CLAUDE_CODE_SESSION_ID", "_pending"),
-                                "ts": datetime.datetime.now(datetime.timezone.utc)
-                                        .strftime("%Y-%m-%dT%H:%M:%SZ")}) + "\n")
-        print(f"⚠️  GRAPH FREEZE OVERRIDDEN ({fz.get('issue')}): {override}\n"
-              f"    logged to {os.path.relpath(FREEZE_LOG, ROOT)} — proceeding.")
-        return 0
-    print(f"""⛔ GRAPH-WRITE FREEZE ACTIVE ({fz.get('issue', '?')}) — `{verb}` refused, nothing was written.
-
-{fz.get('reason', '')}
-
-Lifts when: {fz.get('lifts_when', 'see .claude/references/graph-freeze.json')}
-
-This is NOT the substrate gate. The gate asks whether a write that happened finished; this asks
-whether the write may happen at all. Because this refusal happens first, no PENDING gate row was
-opened and the Stop hook will not block you for stopping here.
-
-Your options:
-  1. Wait for the freeze to lift (the honest default).
-  2. Re-run with --dry-run to see what WOULD be written.
-  3. If an event already has a PENDING gate row from before the freeze, close it:
-       .venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> \\
-           --reason "graph freeze {fz.get('issue', '')}: claims staged after it lifts"
-  4. Genuine emergency: --freeze-override "<why>" (allowed, and logged as data).
-
-Source of truth: .claude/references/graph-freeze.json""")
-    return 4
-
 
 def _ledger_path() -> str:
     sid = os.environ.get("CLAUDE_CODE_SESSION_ID") or "_pending"
@@ -209,7 +134,7 @@ def ledger_mark(key: str, title: str, marker: str, reason: str | None = None, *,
     """Upsert one row by key. keep_if: markers that must not be downgraded (idempotent add).
     phase: 'post_event' (key = Notion event page id) or 'pre_event' (key = 'research:' + page id — a DISTINCT key,
     because the gate never downgrades STAGED: a shared key would let a staged pre-event row satisfy the post-event
-    gate). substrate-gate.sh reads `phase` to name the right fix."""
+    gate). `phase` names which step a leftover PENDING row belongs to."""
     import datetime
     path = _ledger_path()
     os.makedirs(STATE_DIR, exist_ok=True)
@@ -907,8 +832,8 @@ class Graph:
                          f"({why}) → {detail}. Review for merge: substrate.py merge --dry-run (YED-47).\n")
         if not self.dry:
             # The ledger is created on the first live ambiguity. Its absence means "no data yet", not
-            # "no ambiguities". identity_probe.py counts DISTINCT (table, name) per window, so a re-run
-            # that re-surfaces one ambiguity cannot inflate the DDL re-trigger (>=10 distinct in 30 days).
+            # "no ambiguities". The DDL re-trigger counts DISTINCT (table, name) per window, so a re-run
+            # that re-surfaces one ambiguity cannot inflate it (>=10 distinct in 30 days; ADR-10 D5).
             path = AMBIGUITY_LEDGER
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "a", encoding="utf-8") as f:
@@ -1359,11 +1284,11 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
 
 
 def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) -> int:
-    """YED-205 — the pre-event write. Spec: .claude/notes/yed-205-spec-2026-09-27.md.
+    """YED-205 — the pre-event write. Spec: docs/archive/notes/yed-205-spec-2026-09-27.md.
     Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
     claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
     already exists for this page (a re-run after attendance), claims attach to it. Returns 3 on zero claims
-    (loud; the gate stays PENDING), 5 when the manifest lacks the Notion event page id (4 is the graph freeze's)."""
+    (loud; the gate stays PENDING), 5 when the manifest lacks the Notion event page id (4 is retired: it was the graph freeze's)."""
     ev = manifest.get("event") or {}
     if not ev.get("notion_page_id"):
         sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims + the gate)\n")
@@ -1436,7 +1361,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
 
 
 # ---------------------------------------------------------------------------------------------
-# YED-149 — roles -> graph (spec: .claude/notes/yed-149-spec-2026-09-27.md). Input = Notion Roles DB rows in the
+# YED-149 — roles -> graph (spec: docs/archive/notes/yed-149-spec-2026-09-27.md). Input = Notion Roles DB rows in the
 # SQL-mode shape `notion-query-data-sources` returns (column names verbatim), so role-radar Step 5.5 and the
 # one-time backfill feed the SAME verb. Output = one ordinary ensure-event manifest per role.
 # ---------------------------------------------------------------------------------------------
@@ -1819,7 +1744,7 @@ class _FakeGraph(Graph):
 
 def _identity_selftest(ok) -> None:
     """YED-47 acceptance 1–3, offline. The ledger + merge log are redirected so a selftest never writes the
-    audit files (same rule as the freeze-override log in spine_client's selftest)."""
+    audit files."""
     import tempfile
     g = globals()
     saved = (g["AMBIGUITY_LEDGER"], g["MERGE_LOG"])
@@ -2119,7 +2044,7 @@ def _research_selftest(ok) -> None:
     ok("stage: zero admissible rows -> exit 3 (loud), and NOTHING is written to any table",
        stage_research(empty, "## Evidence Set\nnothing here", m, brief_ref="notion:x") == 3
        and not any(empty.t.values()))
-    ok("stage: manifest without the Notion event id -> exit 5 (not 4: that is the freeze's code)",
+    ok("stage: manifest without the Notion event id -> exit 5",
        stage_research(_FakeGraph(), RESEARCH_SAMPLE, {"event": {}}, brief_ref=None) == 5)
     # ---- attendance: post-event ensure-event attaches them ----------------------------------------------
     eid = fg.ensure_event({"event": {**m["event"], "kind": "attended"}, "entities": []})
@@ -2245,32 +2170,30 @@ def selftest() -> bool:
         ok("guard still accepts person.bio (substrate simply never sends it)", True)
     except PIIViolation:
         ok("guard still accepts person.bio (substrate simply never sends it)", False)
-    # gate ledger + Stop hook, end to end, in a throwaway session (no network)
-    import subprocess
-    hook_path = os.path.join(ROOT, ".claude", "hooks", "substrate-gate.sh")
+    # gate ledger, in a throwaway session (no network). The Stop hook that read it is unwired (2026-09-28);
+    # what is pinned here is the ledger's own contract: STAGED/WAIVED are never downgraded by a re-run.
     saved = os.environ.get("CLAUDE_CODE_SESSION_ID")
     os.environ["CLAUDE_CODE_SESSION_ID"] = "substrate-selftest"
     try:
-        def run_hook() -> str:
-            env = dict(os.environ, CLAUDE_PROJECT_DIR=ROOT)
-            p = subprocess.run([hook_path], input=json.dumps({"session_id": "substrate-selftest", "stop_hook_active": False}),
-                               text=True, capture_output=True, env=env)
-            return p.stdout.strip()
+        def marker(key: str):
+            for line in open(_ledger_path(), encoding="utf-8"):
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if r.get("key") == key:
+                    return r.get("marker")
         k, t = "0" * 32, "gate selftest event"
         ledger_mark(k, t, "pending")
-        ok("gate: PENDING row blocks the stop", '"decision":"block"' in run_hook())
+        ok("gate: expect opens a PENDING row", marker(k) == "pending")
         ledger_mark(k, t, "staged")
         ledger_mark(k, t, "pending", keep_if=("staged", "waived"))
-        ok("gate: re-running ensure-event never downgrades STAGED", run_hook() == "")
+        ok("gate: re-running ensure-event never downgrades STAGED", marker(k) == "staged")
         with open(_ledger_path(), "a", encoding="utf-8") as f:
             f.write("{not json\n")
-        ok("gate: corrupt ledger line blocks (fail-closed)", '"decision":"block"' in run_hook())
-        # freeze <-> gate reconciliation (YED-213): the gate must not tell you to run a verb the
-        # producer will refuse. With a freeze active its message has to name the freeze + the waive.
-        if freeze_state():
-            out = run_hook()
-            ok("gate: names the active freeze instead of only 'run stage-claims'",
-               "GRAPH-WRITE FREEZE IS ACTIVE" in out and "waive" in out)
+        ledger_mark(k, t, "staged")
+        ok("gate: a corrupt ledger line is preserved verbatim, not dropped",
+           "{not json" in open(_ledger_path(), encoding="utf-8").read())
     finally:
         if os.path.exists(_ledger_path()):
             os.remove(_ledger_path())
@@ -2310,37 +2233,6 @@ def selftest() -> bool:
     ok("split: heading residue is cut off", split_questions("Which metric wins? ## 2026-09-08 Trend Radar") == ["Which metric wins?"])
     ok("split: version numbers do not split", len(split_questions("Does v2.5 change the answer on 60% to 25% success?")) == 1)
 
-    # ---- graph-write freeze (YED-213) -------------------------------------------------------
-    # Pinned because the whole point is that the freeze is enforced at the producer, not trusted
-    # to a sentence in a note. Every case below is a way the two mechanisms could re-collide.
-    ok("freeze: the marker is a COMMITTED file, not per-worktree .state",
-       FREEZE_PATH.startswith(os.path.join(ROOT, ".claude", "references")))
-    ok("freeze: a write verb is refused with exit 4 while active",
-       freeze_check("ensure-event", False, None) == 4 if freeze_state() else True)
-    ok("freeze: --dry-run is never blocked", freeze_check("ensure-event", True, None) == 0)
-    ok("freeze: waive stays reachable (the escape valve for pre-freeze rows)",
-       freeze_check("waive", False, None) == 0)
-    ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
-    ok("freeze: every mutating verb is covered",
-       set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
-                              "backfill", "backfill-questions", "approve-claims", "merge", "stage-research", "ensure-roles"})
-    _saved_freeze = FREEZE_PATH
-    try:                                              # unreadable marker must fail CLOSED
-        globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
-        ok("freeze: absent marker means no freeze (default-open when nothing is declared)",
-           freeze_state() is None)
-        import tempfile
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tf:
-            tf.write("{ this is not json")
-            broken = tf.name
-        globals()["FREEZE_PATH"] = broken
-        fz = freeze_state()
-        ok("freeze: a CORRUPT marker fails closed (active), like the gate's corrupt-line rule",
-           bool(fz) and fz.get("active") is True)
-        os.unlink(broken)
-    finally:
-        globals()["FREEZE_PATH"] = _saved_freeze
-
     # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
     _identity_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
@@ -2376,12 +2268,9 @@ def main(argv: list[str]) -> int:
                                            "ensure-entity code, run over a list (there is no separate backfill path)")
     ap.add_argument("--expect-claims", action="store_true",
                     help="(ensure-event, live /post-event-content only) open a PENDING gate row that "
-                         "stage-claims must close — the Stop hook fails the run otherwise")
+                         "stage-claims closes (informational since the Stop hook was unwired 2026-09-28)")
     ap.add_argument("--reason", help="(waive) why this event's claims are deliberately not staged — logged · "
                                      "(merge) why these two rows are one thing — logged; REQUIRED for a live merge")
-    ap.add_argument("--freeze-override", metavar="WHY",
-                    help="proceed despite an active graph-write freeze (.claude/references/graph-freeze.json). "
-                         "Logged to .claude/artifacts/graph-freeze-overrides.jsonl — allowed, never silent")
     ap.add_argument("--brief")
     ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
     ap.add_argument("--approve", action="store_true",
@@ -2392,9 +2281,6 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
-    rc_freeze = freeze_check(a.verb, a.dry_run, a.freeze_override)   # before ANY write path runs
-    if rc_freeze:
-        return rc_freeze
     if a.verb == "preview-claims":                 # offline: what would stage-claims stage? (review surface)
         if not a.brief:
             ap.error("preview-claims needs --brief")
