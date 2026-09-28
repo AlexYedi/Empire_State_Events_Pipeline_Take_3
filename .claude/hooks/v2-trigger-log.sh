@@ -2,9 +2,14 @@
 # Stop hook — v2-trigger logging
 # Issue: YED-27 Hook B
 #
+# UNWIRED from .claude/settings.json 2026-09-28 (YED-229 hook-unwiring pass) — the review found the
+# meta layer was recording mostly its own noise. Left on disk (not deleted; a separate prune pass
+# decides) and re-pointed at a gitignored path so a future manual re-wire doesn't reopen the tracked-
+# file churn this pass removed. Re-wire by adding it back to .claude/settings.json's Stop hooks.
+#
 # Behavior:
 #   If the session ran any of the 4 v2-relevant skills, append a structured entry
-#   to .claude/artifacts/trigger-log.md (timestamp + skills + trigger choice "?"),
+#   to .claude/.state/telemetry/trigger-log.md (timestamp + skills + trigger choice "?"),
 #   and prompt Alex the 4-option trigger question via additionalContext.
 #   Alex updates the "?" later with his answer.
 #
@@ -28,7 +33,7 @@ SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 
 STATE_DIR=".claude/.state"
 SKILLS_FILE="$STATE_DIR/${SESSION_ID}.relevant_skills"
-LOG_FILE=".claude/artifacts/trigger-log.md"
+LOG_FILE=".claude/.state/telemetry/trigger-log.md"
 
 # Disable override
 SETTINGS_LOCAL=".claude/settings.local.json"
