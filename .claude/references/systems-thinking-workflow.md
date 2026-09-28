@@ -2,7 +2,7 @@
 
 A reference that ties Alex's existing skill harness together through Meadows' systems lens. Use when you have an initiative, problem, or question that spans multiple stages — discovery, design, build, ship, post-ship — and want a coherent way to invoke the right skills in the right order.
 
-This file is **not a skill**. It is a workflow card for the orchestrator (Alex, or `head-of-product-engineering`) to consult. The actual work happens via the named skills.
+This file is **not a skill**. It is a workflow card for the orchestrator (Alex, or `alex:head-of-product-engineering`) to consult. The actual work happens via the named skills.
 
 ---
 
@@ -14,7 +14,7 @@ Every product/strategic effort spans three modes that recur, often interleaved:
 2. **Planning** — given that analysis, what should we do? Which leverage points to push, in what order, at what horizon?
 3. **Building** — execute the plan, while preserving the system properties (resilience, self-organization, hierarchy) and not falling into the named archetypes.
 
-The systems-thinking skill (`.claude/skills/systems-thinking/`) provides the diagnostic vocabulary. The other skills are the mode-specific tooling.
+The `alex:systems-thinking` plugin skill provides the diagnostic vocabulary. The other skills are the mode-specific tooling.
 
 ---
 
@@ -22,7 +22,7 @@ The systems-thinking skill (`.claude/skills/systems-thinking/`) provides the dia
 
 **Goal:** understand the system before acting on it. Most failed interventions skip this mode.
 
-**Lead skill:** `systems-thinking` (with the eight-phase analysis from `references/diagnostic-questions.md`).
+**Lead skill:** `alex:systems-thinking` (with the eight-phase analysis from `references/diagnostic-questions.md`).
 
 **Supporting skills:**
 - `conducting-user-interviews` — gather data from inside the system
@@ -49,17 +49,17 @@ The systems-thinking skill (`.claude/skills/systems-thinking/`) provides the dia
 
 **Goal:** decide what to do, where to push, in what sequence.
 
-**Lead skills:** `head-of-product-engineering` (for full lifecycle plans), or for narrower scopes:
-- `defining-product-vision` — paradigm-level (#2)
-- `writing-north-star-metrics` — goal-level (#3) with Goodhart resistance
-- `prioritizing-roadmap` — leverage-point distribution check
-- `product-management:write-spec`, `writing-prds` — feature-level (#5 rules / #6 info flows)
+**Lead skills:** `alex:head-of-product-engineering` (for full lifecycle plans), or for narrower scopes:
+- `alex:defining-product-vision` — paradigm-level (#2)
+- `alex:writing-north-star-metrics` — goal-level (#3) with Goodhart resistance
+- `alex:prioritizing-roadmap` — leverage-point distribution check
+- `product-management:write-spec`, `alex:writing-prds` — feature-level (#5 rules / #6 info flows)
 - `engineering:architecture` — software architecture (#10)
 
 **Supporting skills:**
-- `risk-playbooks` — pre-mortem against the 8 archetypes before committing
-- `launch-tiering` — size second-order analysis to scope of intervention
-- `ai-product-strategy` — when AI-specific feedback-loop design is in scope
+- `alex:risk-playbooks` — pre-mortem against the 8 archetypes before committing
+- `alex:launch-tiering` — size second-order analysis to scope of intervention
+- `alex:ai-product-strategy` — when AI-specific feedback-loop design is in scope
 - `engineering:system-design` — when system design is the lever
 - `product-management:roadmap-update` — operational layer
 
@@ -79,7 +79,7 @@ If any of these are skipped, the plan is more likely to produce surprise outcome
 
 **Goal:** execute without falling into the archetypes; preserve system properties.
 
-**Lead skills:** `shipping-products` (in-flight execution discipline) + the operational engineering skills.
+**Lead skills:** `alex:shipping-products` (in-flight execution discipline) + the operational engineering skills.
 
 **Supporting skills:**
 - `engineering:code-review` — strengthen the balancing loop (#8)
@@ -128,7 +128,7 @@ The modes interleave; they're not strictly sequential. The skill is recognizing 
 **Trigger:** Alex notices the pipeline is producing more event briefs but content output is plateauing. Why?
 
 **Analyze mode:**
-- Run `systems-thinking` eight-phase analysis on the pipeline as a system.
+- Run `alex:systems-thinking` eight-phase analysis on the pipeline as a system.
 - Identify stocks: events researched (rising), content drafts (plateauing), published content (plateauing).
 - Identify flows: research throughput is up, content drafting is the bottleneck.
 - Match to archetype: Tragedy of the Commons (Alex's drafting time is the shared resource being claimed by every event).
@@ -136,9 +136,9 @@ The modes interleave; they're not strictly sequential. The skill is recognizing 
 
 **Plan mode:**
 - Decide: lever is information flow (#6) — surface drafting load to Alex earlier — and rule (#5) — change definition-of-done so research includes a content scaffold.
-- Use `prioritizing-roadmap` leverage-point distribution check to confirm.
-- Use `risk-playbooks` to screen the change against archetypes (e.g., does scaffold-included research create Shifting the Burden where research quality drops?).
-- Use `head-of-product-engineering` for full lifecycle if the change is significant.
+- Use `alex:prioritizing-roadmap` leverage-point distribution check to confirm.
+- Use `alex:risk-playbooks` to screen the change against archetypes (e.g., does scaffold-included research create Shifting the Burden where research quality drops?).
+- Use `alex:head-of-product-engineering` for full lifecycle if the change is significant.
 
 **Build mode:**
 - Update `event-research.md` skill to include a content scaffold step.
@@ -156,14 +156,14 @@ This is the cycle: analyze → plan → build → re-analyze. The skills compose
 ## When to pull this file
 
 - At the start of any non-trivial product/strategic initiative.
-- When a `head-of-product-engineering` orchestration kicks off (the Workflow 1 + 4 systems-thinking invocations should consult this file).
+- When an `alex:head-of-product-engineering` orchestration kicks off (the Workflow 1 + 4 systems-thinking invocations should consult this file).
 - When debugging a chronic team/product/GTM issue and "we've tried everything" has been said.
 - When designing a new skill or evolving an existing one (the mode classification helps decide the skill's actual purpose).
 - During quarterly retros — which mode did we under-invest in?
 
 ## See also
 
-- `.claude/skills/systems-thinking/SKILL.md` — the systems-thinking skill itself
-- `.claude/skills/systems-thinking/references/` — the eight reference files this workflow draws on
-- `.claude/skills/head-of-product-engineering/SKILL.md` — the orchestrator that hard-invokes systems-thinking twice
+- `alex:systems-thinking` (plugin skill) — the systems-thinking skill itself, its eight reference files, and the Three-Horizon Iteration Framework
+- `alex:head-of-product-engineering` (plugin skill) — the orchestrator that hard-invokes systems-thinking twice
+- `.claude/references/systems-thinking-pipeline-diagnostic.md` — this pipeline's own stocks/flows/loops diagnostic (the project-specific applications layer)
 - `alex:systems-analyst` (plugin agent; the project copy was pruned 2026-09-28) — the delegated systems-analysis agent (when you want a sub-agent to run a full eight-phase analysis without consuming main-context tokens). Note: per `.claude/WORKFLOWS.md` "Known gap" section, custom agents may not be discoverable mid-conversation; invoke from a fresh session for now.
