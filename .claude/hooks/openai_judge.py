@@ -124,7 +124,7 @@ def main() -> int:
     seat = next((s for s in json.load(open(".claude/evals/seats.json"))["seats"] if s["id"] == "openai"), {})
     model = a.model or seat.get("model") or "gpt-5.4"
     effort = a.reasoning_effort or seat.get("reasoning_effort") or "medium"
-    status = a.seat_status or seat.get("status") or "shadow"
+    status = a.seat_status or seat.get("role") or "shadow"
 
     try:
         if a.bundle:

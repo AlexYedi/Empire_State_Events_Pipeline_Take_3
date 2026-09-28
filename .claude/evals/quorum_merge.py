@@ -1,58 +1,42 @@
 #!/usr/bin/env python3
-"""quorum_merge.py: merge N judge seats into one verdict (YED-209). Generalises quorum-merge.sh (2 seats).
+"""quorum_merge.py: merge the judge seats into one verdict (YED-209; right-sized by YED-231).
 
-THE RULE THAT MAKES IT AIR TIGHT
-  A seat's PASS reduces scrutiny only if that seat is VOTING (it earned that against Alex's labels).
-  Any advisory or voting seat's DOUBT can add scrutiny. A shadow seat changes nothing, either way.
-  A split is never auto-resolved: a majority built from possibly-correlated models is not independent evidence.
+Spec: .claude/references/judge-right-size-yed-231.md §2/§4. Roles come from seats.json, a static map only Alex edits:
+  voting   its verdict IS the verdict
+  shadow   runs on every build, hidden from Alex until he acks; it can only ADD an escalation, never decide
+  off      not run and not consulted (the adapter is kept)
 
-Status per seat = the LOWER of what Alex configured in seats.json and what the seat has earned
-(calibration_stats.gate: auto-demotion, applied to every seat, the trusted one included).
-
-  voting seats          other signals                          -> resolution        final
-  all PASS              no reasons at all                      -> auto              pass
-  all FLAG              no INTEGRITY reason                    -> auto              flag
-  all PASS              quality reasons only                   -> escalated*        pass pending Alex's ack
-  any                   an INTEGRITY reason                    -> escalated*        flag
-  split                 anything                               -> escalated*        flag
-  none effective        anything                               -> escalated*        flag   (no_voting_seat)
+  voting seat           other signals                              -> resolution        final
+  pass                  none                                       -> auto              pass
+  flag                  no INTEGRITY reason                        -> auto              flag  (rework is already a conversation)
+  pass                  a shadow reason (below)                    -> escalated*        pass pending Alex's ack
+  any                   an INTEGRITY reason                        -> escalated*        flag
   * in --mode autonomous every `escalated` becomes `failsafe_flag` with final = flag (never auto-resolved).
 
-  INTEGRITY reasons mean we cannot trust that the seats scored the same thing, so the artifact is never recorded
-  as passing on their word: seat_missing · seat_invalid · evidence_mismatch · no_bundle_hash · no_voting_seat.
-  QUALITY reasons are disagreement about the artifact itself and may stand as "pass pending ack": advisory_flag ·
-  score_divergence · flat_ceiling · no_evidence_parity · same_group_only. (verdict_mismatch is in NEITHER bucket
-  by design: it only fires when the voting seats disagree, which already forces final=flag on its own.)
-  A seat tagged evidence_unverified (>30% of its defect quotes are not in the artifact) loses BOTH its escalation
-  power and its vote for that run: if its quotes are invented, its pass is not evidence either.
-  CANARIES (spec §2 row 1, built 2026-09-20): a seat whose last canary FAILED, or whose canary is stale while it
-  votes, is demoted by the gate before it gets here, so a failing seat cannot hold a vote. The quorum record also
-  carries each seat's canary status; "never run" is reported as such, never as fresh.
-
-Escalation reasons: verdict_mismatch · score_divergence (max pairwise |Δ| >= QUORUM_DIVERGENCE, default 0.15, among
-non-shadow seats) · flat_ceiling:<seat> · no_evidence_parity:<seat> · advisory_flag:<seat> · seat_missing:<seat> ·
-evidence_mismatch (seats scored different bundles) · no_bundle_hash:<seat> · no_voting_seat ·
-same_group_only (all voting seats share one independence_group, so "unanimous" is one opinion).
-A seat whose defect quotes fail verification (>30%) is tagged evidence_unverified:<seat>: recorded, and NONE of
-its signals count for THIS run — not its flag, its divergence, its flat ceiling, or its parity. It cannot invent
-its way into an escalation, and (per the vote rule above) it cannot vote either.
+  Shadow reasons (only from a shadow whose quotes verified):
+    verdict_mismatch:<seat>     the shadow's verdict differs from the voter's
+    score_divergence            |voter - shadow| >= QUORUM_DIVERGENCE (default 0.15)
+    shadow_major_defect:<seat>  on a voter PASS, the shadow filed a `major` defect whose own quote verified
+  INTEGRITY reasons mean we cannot trust that the seats scored the same thing, or that the voter's verdict is
+  evidence, so the artifact is never recorded as passing: seat_missing · seat_invalid · evidence_mismatch ·
+  no_bundle_hash · no_voting_seat. A seat whose defect quotes fail verification (>30%) is tagged
+  evidence_unverified:<seat> and loses every signal for this run; for the voter that means its vote, so the run
+  ends in no_voting_seat. Flat ceilings and missing evidence parity are recorded as notes, not escalations.
 
 Usage:
-  quorum_merge.py --artifact <path> --seat <id>=<run-log.jsonl> [--seat ...] [--mode interactive|autonomous]
-                  [--label <run-id>] [--print-only] [--reveal-shadow]
-Each --seat points at that seat's run-log file; the LAST row for this artifact is used.
-Exit 0 when a verdict was produced (advisory: the caller acts on `resolution`); 2 on a usage error such as an
-unknown seat id, where nothing is merged. A malformed seat row is NOT an exception: it becomes seat_invalid.
+  quorum_merge.py --artifact <path|range:..|files:..> --seat <id>=<run-log.jsonl> [--seat ...]
+                  [--mode interactive|autonomous] [--label <run-id>] [--print-only] [--reveal-shadow]
+Each --seat points at that seat's run-log file; the LAST row for this artifact is used. `judge.py run` calls this
+for you. Exit 0 when a verdict was produced; 2 on a usage error such as an unknown seat id (nothing is merged).
+A malformed seat row is NOT an exception: it becomes seat_invalid.
 """
 from __future__ import annotations
-import argparse, itertools, json, os, sys
+import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import calibration_stats as cal  # noqa: E402
 import judge_lib as jl  # noqa: E402
 
-ORDER = cal.ORDER
-# reasons that mean the EVIDENCE is untrustworthy (vs. mere disagreement about the artifact)
 INTEGRITY = {"seat_missing", "seat_invalid", "evidence_mismatch", "no_bundle_hash", "no_voting_seat"}
 
 
@@ -71,18 +55,14 @@ def last_row(path: str, artifact: str) -> tuple[dict | None, int]:
         except ValueError:
             corrupt += 1
             continue
-        if r.get("record_type") != "quorum" and r.get("artifact") == artifact:
+        if r.get("record_type") not in ("quorum", "quorum_ack") and r.get("artifact") == artifact:
             rows.append(r)
     return (rows[-1] if rows else None), corrupt
 
 
 def valid_row(r: dict | None) -> bool:
-    """A row we can actually score with. A seat that emitted a partial row is NOT silently treated as agreeing.
-
-    Validates EVERY field merge() later touches, not just the two it reads first: a row with a good verdict and
-    score but junk `criterion_scores` used to pass here and then crash is_flat() (found by the Sonnet seat,
-    2026-09-20). If this function says True, nothing downstream may raise on that row.
-    """
+    """A row we can actually score with. Validates EVERY field merge() later touches, so nothing downstream may
+    raise on a row this accepts (a junk `criterion_scores` once crashed is_flat(); found by the Sonnet seat)."""
     if not isinstance(r, dict) or r.get("verdict") not in ("pass", "flag"):
         return False
     ws = r.get("weighted_score")
@@ -92,7 +72,10 @@ def valid_row(r: dict | None) -> bool:
     if cs is not None and (not isinstance(cs, list) or not all(isinstance(c, dict) for c in cs)):
         return False
     qc = r.get("quote_check")
-    return qc is None or isinstance(qc, dict)
+    if qc is not None and not isinstance(qc, dict):
+        return False
+    d = r.get("defects")
+    return d is None or isinstance(d, list)
 
 
 def is_flat(r: dict) -> bool:
@@ -100,136 +83,146 @@ def is_flat(r: dict) -> bool:
     return r.get("flat_ceiling") is True or (len(cs) == 5 and all(c.get("score") == 1 for c in cs))
 
 
-def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], effective: dict[str, str],
-          mode: str = "interactive", threshold: float = 0.15, canary: dict | None = None) -> dict:
-    # Normalise at the boundary: anything that is not a dict becomes a sentinel. Everything below may then
-    # assume dict-or-None, instead of each call site defending itself (the whack-a-mole that produced three
-    # separate AttributeError paths on 2026-09-20).
+def verified_majors(r: dict) -> int:
+    """`major` defects whose OWN quote verified (quote_check.matched_in is aligned with defects). A row without
+    matched_in (pre-YED-231) counts 0: an unproven major must not escalate."""
+    mi = (r.get("quote_check") or {}).get("matched_in")
+    if not isinstance(mi, list):
+        return 0
+    return sum(1 for d, m in zip(r.get("defects") or [], mi) if isinstance(d, dict) and d.get("severity") == "major" and m)
+
+
+def merge(artifact: str, seat_rows: dict[str, dict | None], cfg: list[dict], mode: str = "interactive",
+          threshold: float = 0.15) -> dict:
+    # Normalise at the boundary: anything that is not a dict becomes a sentinel, so nothing below defends itself.
     seat_rows = {k: (v if isinstance(v, dict) else (None if v is None else {"_malformed": repr(v)[:80]}))
                  for k, v in seat_rows.items()}
-    canary = canary or {}
-    canary_status = {s["id"]: ((canary.get(s["id"]) or {}).get("status") or "never run") for s in cfg}
+    role = {s["id"]: s.get("role", "shadow") for s in cfg}
     reasons: list[str] = []
     notes: list[str] = []
-    live = {}                                      # non-shadow seats that reported
-    for seat in cfg:
-        sid, eff = seat["id"], effective.get(seat["id"], seat.get("status", "shadow"))
-        row = seat_rows.get(sid)
-        if eff == "shadow":
-            continue                               # recorded below, never consulted
+    voters: dict[str, dict] = {}
+    shadows: dict[str, dict] = {}
+    for s in cfg:
+        sid, rl, row = s["id"], role[s["id"]], seat_rows.get(s["id"])
+        if rl == "off":
+            continue
+        voting = rl == "voting"
         if row is None:
-            reasons.append(f"seat_missing:{sid}")
-            continue
-        if not valid_row(row):
-            reasons.append(f"seat_invalid:{sid}")     # partial/malformed row: loud, not a traceback
-            continue
-        live[sid] = row
+            (reasons if voting else notes).append(f"{'seat' if voting else 'shadow'}_missing:{sid}")
+        elif not valid_row(row):
+            (reasons if voting else notes).append(f"{'seat' if voting else 'shadow'}_invalid:{sid}")
+        else:
+            (voters if voting else shadows)[sid] = row
+    live = {**voters, **shadows}
     unverified = {sid for sid, r in live.items() if (r.get("quote_check") or {}).get("evidence_unverified")}
-    assert all(valid_row(r) for r in live.values()), "live rows must be pre-validated: nothing below may raise"
-    for sid in sorted(unverified):
-        notes.append(f"evidence_unverified:{sid}")
-
-    # a seat whose quotes are fabricated loses its VOTE as well as its escalation power: if it invented the
-    # evidence for a defect, its "pass" is not evidence either (the one direction the air-tight rule must cover).
-    voting = {sid: r for sid, r in live.items() if effective[sid] == "voting" and sid not in unverified}
-    advisory = {sid: r for sid, r in live.items() if effective[sid] == "advisory"}
+    notes += [f"evidence_unverified:{sid}" for sid in sorted(unverified)]
 
     hashes = {sid: r.get("bundle_sha256") for sid, r in live.items()}
-    for sid, h in hashes.items():
-        if not h:
-            reasons.append(f"no_bundle_hash:{sid}")
+    reasons += [f"no_bundle_hash:{sid}" for sid, h in hashes.items() if not h]
     if len({h for h in hashes.values() if h}) > 1:
         reasons.append("evidence_mismatch")
-
     for sid, r in live.items():
-        if sid in unverified:
-            continue          # ALL of an unverified seat's signals are stripped, not just its flag: a seat whose
-        if is_flat(r):        # quotes are invented cannot escalate by any route (found by the Gemini seat, 09-20)
-            reasons.append(f"flat_ceiling:{sid}")
+        if is_flat(r):
+            notes.append(f"flat_ceiling:{sid}")
         if r.get("evidence_parity") is False:
-            reasons.append(f"no_evidence_parity:{sid}")
-    for sid, r in advisory.items():
-        if r["verdict"] == "flag" and sid not in unverified:
-            reasons.append(f"advisory_flag:{sid}")
+            notes.append(f"no_evidence_parity:{sid}")
 
-    counted = {sid: r for sid, r in live.items() if sid not in unverified}
-    div = max((abs(a["weighted_score"] - b["weighted_score"]) for a, b in itertools.combinations(counted.values(), 2)),
-              default=0.0)
-    if div >= threshold:
-        reasons.append("score_divergence")
-
-    # spec §2: seats sharing a provider OR an independence_group count as ONE vote. Both keys collapse, and
-    # they collapse transitively, so an explicit group cannot be used to make two same-provider seats look
-    # independent (a --seat b --seat c where a,b share a provider and b,c share a group is ONE bloc).
-    def keys_of(sid: str) -> set[str]:
-        s_ = next(x for x in cfg if x["id"] == sid)
-        return {f"g:{s_['independence_group']}" if s_.get("independence_group") else f"id:{sid}"} | \
-               ({f"p:{s_['provider']}"} if s_.get("provider") else set())
-    blocs: list[set[str]] = []
-    for sid in voting:
-        k = keys_of(sid)
-        hit = [b for b in blocs if b & k]
-        for b in hit:
-            blocs.remove(b)
-            k |= b
-        blocs.append(k)
-    groups = blocs                                     # one entry per independent bloc of voting seats
-    verdicts = {r["verdict"] for r in voting.values()}
-    if not voting:
+    # a voter whose quotes are fabricated loses its vote: if it invented a defect's evidence, its pass is not evidence
+    counted = {sid: r for sid, r in voters.items() if sid not in unverified}
+    verdicts = {r["verdict"] for r in counted.values()}
+    if not counted:
         reasons.append("no_voting_seat")
         agreed = None
     elif len(verdicts) > 1:
-        reasons.append("verdict_mismatch")
+        reasons.append("verdict_mismatch")           # two voters disagree: never majority-resolved
         agreed = None
     else:
-        agreed = verdicts.pop()
-        if len(voting) > 1 and len(groups) == 1:
-            reasons.append("same_group_only")          # "unanimous" from one bloc is one opinion, not corroboration
+        agreed = next(iter(verdicts))
+    div = 0.0
+    if agreed is not None:
+        for sid, r in shadows.items():
+            if sid in unverified:
+                continue                             # an unverified shadow cannot escalate by any route
+            if r["verdict"] != agreed:
+                reasons.append(f"verdict_mismatch:{sid}")
+            div = max([div] + [abs(r["weighted_score"] - v["weighted_score"]) for v in counted.values()])
+            if agreed == "pass" and verified_majors(r):
+                reasons.append(f"shadow_major_defect:{sid}")
+        if div >= threshold:
+            reasons.append("score_divergence")
 
     reasons = sorted(set(reasons))
-    integrity = sorted(r for r in reasons if r.split(":")[0] in INTEGRITY)
-    if agreed == "flag" and not integrity:
-        resolution, final = "auto", "flag"         # a flag goes to Alex anyway; nothing to protect against
-    elif agreed == "pass" and not reasons:
+    integrity = sorted(x for x in reasons if x.split(":")[0] in INTEGRITY)
+    esc = "failsafe_flag" if mode == "autonomous" else "escalated"
+    if integrity or agreed is None:
+        resolution, final = esc, "flag"
+    elif agreed == "flag":
+        resolution, final = "auto", "flag"
+    elif not reasons:
         resolution, final = "auto", "pass"
     else:
-        resolution = "failsafe_flag" if mode == "autonomous" else "escalated"
-        # integrity reasons mean the seats may not have scored the same artifact: never record that as a pass.
-        final = "pass" if (agreed == "pass" and mode != "autonomous" and not integrity) else "flag"
+        resolution, final = esc, ("flag" if mode == "autonomous" else "pass")
 
-    def block(sid: str) -> dict | None:
+    def block(sid: str) -> dict:
         r = seat_rows.get(sid)
         if r is None:
-            return None
-        if not valid_row(r):                              # malformed: recorded as such, never scored
+            return {"verdict": None}
+        if not valid_row(r):
             return {"verdict": None, "weighted_score": None, "run_id": r.get("run_id"), "valid": False}
-        return {"verdict": r.get("verdict"), "weighted_score": r.get("weighted_score"), "run_id": r.get("run_id"),
-                "valid": valid_row(r)}
+        return {"verdict": r["verdict"], "weighted_score": r["weighted_score"], "run_id": r.get("run_id"), "valid": True,
+                "flat_ceiling": is_flat(r), "bundle_sha256": r.get("bundle_sha256")}
 
-    rec = {"record_type": "quorum", "artifact": artifact, "mode": mode,
-           "agree": agreed is not None, "resolution": resolution, "final_verdict": final,
-           "divergence": round(div, 3), "escalation_reasons": reasons, "integrity_reasons": integrity, "notes": notes,
-           "independent_blocs": len(groups), "voting_seats": sorted(voting),
-           # spec §2 row 1: "canaries fresh". Enforcement is in the gate (a failing/stale seat is demoted before
-           # it can vote); this field is the audit trail, so an auto-pass can never be read as "controls were
-           # green" when they were merely never run.
-           "canary_freshness": canary_status,
-           "seats": [{"id": s["id"], "configured": s.get("status"), "effective": effective.get(s["id"]),
-                      "independence_group": s.get("independence_group"), **(block(s["id"]) or {"verdict": None}),
-                      # same definition of "flat" the reasons loop used, so the record can't drift from it
-                      "flat_ceiling": bool(valid_row(seat_rows.get(s["id"])) and is_flat(seat_rows[s["id"]])),
-                      "bundle_sha256": (seat_rows.get(s["id"]) or {}).get("bundle_sha256")} for s in cfg],
-           "quorum_rules": "n-seat v1 (YED-209): voting decides, advisory adds caution, shadow is recorded only",
-           # the LOG deliberately keeps every seat's real verdict, shadow included — calibration_stats needs it to
-           # ever promote that seat. Hiding-until-ack is a PRESENTATION rule; any other consumer of this file
-           # (dashboard, export) must re-apply it by checking seats[].effective == "shadow" and alex_ack == null.
-           "contains_unacked_shadow_verdicts": any(x["effective"] == "shadow" and x.get("verdict") for x in
-                                                   [{"effective": effective.get(s["id"]), **(block(s["id"]) or {})} for s in cfg]),
-           "alex_ack": None}
-    for legacy in ("claude", "gemini"):            # back-compat blocks the 2-seat readers expect
-        if block(legacy):
-            rec[legacy] = block(legacy)
+    seats = [{"id": s["id"], "role": role[s["id"]], **block(s["id"])} for s in cfg if role[s["id"]] != "off"]
+    return {"record_type": "quorum", "artifact": artifact, "mode": mode,
+            "artifact_sha256": next((r.get("artifact_sha256") for r in live.values() if r.get("artifact_sha256")), None),
+            "agree": agreed is not None and not any(x.startswith("verdict_mismatch") for x in reasons),
+            "resolution": resolution, "final_verdict": final, "divergence": round(div, 3),
+            "escalation_reasons": reasons, "integrity_reasons": integrity, "notes": notes,
+            "voting_seats": sorted(voters), "seats": seats,
+            # the LOG keeps every seat's real verdict, shadow included (calibration needs it). Hiding-until-ack is a
+            # PRESENTATION rule: any consumer must re-apply it (seats[].role == "shadow" and alex_ack == null).
+            "contains_unacked_shadow_verdicts": any(x["role"] == "shadow" and x.get("verdict") for x in seats),
+            "alex_ack": None}
+
+
+def acked_versions(artifact: str) -> set:
+    """Content hashes of this artifact that carry an ack (quorum_ack rows are folded in by cal.load)."""
+    return {r.get("artifact_sha256") for r in cal.load(".claude/evals/logs")
+            if r.get("record_type") == "quorum" and r.get("artifact") == artifact and r.get("alex_ack")}
+
+
+def render(rec: dict, reveal: bool = False) -> list[str]:
+    out = [f"== quorum ({rec['mode']}) — {rec['artifact']}"]
+    for s in rec["seats"]:
+        hidden = s["role"] == "shadow" and not reveal
+        shown = "recorded (hidden until you ack, so it can't sway your label)" if hidden and s.get("verdict") else \
+            ("— did not run" if s.get("verdict") is None else f"{s['verdict']} ({s['weighted_score']})")
+        out.append(f"   {s['id']:<8} {s['role']:<7} {shown}")
+    out.append(f"   divergence {rec['divergence']}  ->  {rec['resolution']}   final: {rec['final_verdict']}")
+    if rec["escalation_reasons"]:
+        out.append(f"   escalation reasons: {' '.join(rec['escalation_reasons'])}")
+    if rec["notes"]:
+        out.append(f"   notes: {' '.join(rec['notes'])}")
+    return out
+
+
+def finalize(rec: dict, label: str = "", corrupt: dict | None = None) -> dict:
+    """Stamp id/time/content hash; a corrupt log line is never silently skipped."""
+    for sid, nbad in sorted((corrupt or {}).items()):
+        rec["notes"].append(f"corrupt_log_lines:{sid}={nbad}")
+        print(f"   ⚠️  {nbad} unparseable line(s) in {sid}'s log — the row used may not be the newest.", file=sys.stderr)
+    art = rec["artifact"]
+    # the hash the seats scored wins; a plain file with no seat hash falls back to its bytes on disk
+    sha = rec.get("artifact_sha256") or (jl.sha256_file(art) if os.path.isfile(art) else None)
+    rec.update({"run_id": label or f"quorum-{jl.slug_for(art)}", "timestamp": jl.now_utc(), "artifact_sha256": sha,
+                "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "_nosession")})
     return rec
+
+
+def write(rec: dict) -> str:
+    out = f".claude/evals/logs/{rec['timestamp'][:10]}-{jl.slug_for(rec['artifact'])}-{rec['run_id']}.jsonl"
+    jl.append_log(out, rec)
+    return out
 
 
 def main() -> int:
@@ -239,12 +232,12 @@ def main() -> int:
     ap.add_argument("--mode", default="interactive", choices=["interactive", "autonomous"])
     ap.add_argument("--label", default=""); ap.add_argument("--print-only", action="store_true")
     ap.add_argument("--reveal-shadow", action="store_true",
-                    help="show shadow seats' verdicts; REFUSED until this artifact has an acked quorum row")
+                    help="show shadow seats' verdicts; REFUSED until this version of the artifact has an ack")
     a = ap.parse_args()
     os.chdir(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
     cfg = json.load(open(cal.SEATS_FILE, encoding="utf-8"))["seats"]
     seat_rows: dict[str, dict | None] = {s["id"]: None for s in cfg}
-    corrupt_lines: dict[str, int] = {}
+    corrupt: dict[str, int] = {}
     for spec in a.seat:
         sid, _, path = spec.partition("=")
         if sid not in seat_rows:
@@ -254,51 +247,17 @@ def main() -> int:
         if os.path.isfile(path):
             seat_rows[sid], bad = last_row(path, a.artifact)
             if bad:
-                corrupt_lines[sid] = bad
-    g = cal.gate(cal.load(".claude/evals/logs"), 3.0)
-    effective = {s["id"]: g.get(s["id"], {}).get("effective", s.get("status", "shadow")) for s in cfg}
-    cur_sha = jl.sha256_file(a.artifact) if os.path.isfile(a.artifact) else None
-    if a.reveal_shadow and not any(
-            r.get("record_type") == "quorum" and r.get("artifact") == a.artifact and r.get("alex_ack")
-            and r.get("artifact_sha256") == cur_sha          # an ack on an OLDER version does not unlock this one
-            for r in cal.load(".claude/evals/logs")):
-        print("REFUSED --reveal-shadow: no acked quorum row for THIS version of the artifact (content hash "
-              f"{str(cur_sha)[:12]}). Ack the verdict first; an ack on an earlier version does not unlock it, or "
-              "the shadow seat's score anchors the label it is supposed to be measured against.", file=sys.stderr)
+                corrupt[sid] = bad
+    rec = finalize(merge(a.artifact, seat_rows, cfg, a.mode, float(os.environ.get("QUORUM_DIVERGENCE", "0.15"))),
+                   a.label, corrupt)
+    if a.reveal_shadow and rec["artifact_sha256"] not in acked_versions(a.artifact):
+        print("REFUSED --reveal-shadow: no ack for THIS version of the artifact (content hash "
+              f"{str(rec['artifact_sha256'])[:12]}). Ack first (judge.py ack), or the shadow seat's score anchors "
+              "the label it is supposed to be measured against.", file=sys.stderr)
         return 2
-    canary = json.load(open(cal.CANARY_STATE, encoding="utf-8")) if os.path.exists(cal.CANARY_STATE) else {}
-    rec = merge(a.artifact, seat_rows, cfg, effective, a.mode,
-                float(os.environ.get("QUORUM_DIVERGENCE", "0.15")), canary)
-    for sid, nbad in sorted(corrupt_lines.items()):     # a corrupt line must never be silently skipped
-        rec["notes"].append(f"corrupt_log_lines:{sid}={nbad}")
-        print(f"   ⚠️  {nbad} unparseable line(s) in {sid}'s log — the row used may not be the newest.", file=sys.stderr)
-    rec.update({"run_id": a.label or f"quorum-{jl.slug_for(a.artifact)}", "timestamp": jl.now_utc(),
-                "artifact_sha256": jl.sha256_file(a.artifact) if os.path.isfile(a.artifact) else None,
-                "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "_nosession"),
-                "demotions": {k: v["demoted_because"] for k, v in g.items() if v["demoted_because"]}})
-
-    print(f"== quorum ({a.mode}) — {a.artifact}")
-    for s in rec["seats"]:
-        hidden = s["effective"] == "shadow" and not a.reveal_shadow
-        shown = "recorded (hidden until you ack, so it can't sway your label)" if hidden and s["verdict"] else \
-            ("— did not run" if s["verdict"] is None else f"{s['verdict']} ({s['weighted_score']})")
-        demo = "  ⬇ auto-demoted" if s["configured"] != s["effective"] else ""
-        print(f"   {s['id']:<8} {s['effective']:<9} {shown}{demo}")
-    print(f"   divergence {rec['divergence']}  ->  {rec['resolution']}   final: {rec['final_verdict']}")
-    if rec["escalation_reasons"]:
-        print(f"   escalation reasons: {' '.join(rec['escalation_reasons'])}")
-    if rec["notes"]:
-        print(f"   notes: {' '.join(rec['notes'])}")
-    for k, why in rec["demotions"].items():
-        print(f"   ⬇ {k} demoted: {'; '.join(why)}")
-    if rec["resolution"] == "escalated":
-        print("   ACTION: show each non-shadow seat's per-criterion reasoning side by side; ask Alex agree/disagree -> alex_ack.")
-    if rec["resolution"] == "failsafe_flag":
-        print("   NOTE: autonomous mode -> failed safe to FLAG; queued for human review. Nothing was auto-resolved.")
+    print("\n".join(render(rec, a.reveal_shadow)))
     if not a.print_only:
-        out = f".claude/evals/logs/{rec['timestamp'][:10]}-{jl.slug_for(a.artifact)}-{rec['run_id']}.jsonl"
-        jl.append_log(out, rec)
-        print(f"   logged -> {out}")
+        print(f"   logged -> {write(rec)}")
     return 0
 
 
