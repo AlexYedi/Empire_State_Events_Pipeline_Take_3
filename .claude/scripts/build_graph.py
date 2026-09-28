@@ -159,9 +159,15 @@ def gitignored(paths):
             ["git", "check-ignore", "--stdin"],
             cwd=ROOT, input="\n".join(paths), capture_output=True, text=True, timeout=30,
         )
-        return {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
-    except Exception:
+    except Exception as e:  # noqa: BLE001 — fail open (the hub's fail-closed guard is the boundary), but LOUDLY
+        print(f"build_graph: WARNING git check-ignore failed ({e}); gitignored files are NOT filtered "
+              "this run — the hub's privacy guard (YED-236) still blocks them from publishing", file=sys.stderr)
         return set()
+    if p.returncode not in (0, 1):  # 0 = some ignored, 1 = none ignored, anything else = git error
+        print(f"build_graph: WARNING git check-ignore exited {p.returncode}: {p.stderr.strip()[:200]}; "
+              "gitignored files are NOT filtered this run", file=sys.stderr)
+        return set()
+    return {ln.strip() for ln in p.stdout.splitlines() if ln.strip()}
 
 
 def subtype_for(rel: str) -> str:
@@ -263,6 +269,9 @@ def build():
 
     probe_rel = sorted({p for _, p, _, _ in pending if not p.startswith("~/")})
     ignored = gitignored(probe_rel)
+    # `git check-ignore` echoes each path verbatim, so a `./`-prefixed reference comes back with its prefix while
+    # the membership tests below use the stripped `norm` — add the stripped form too (judge 2026-09-27, YED-236).
+    ignored |= {p[2:] for p in ignored if p.startswith("./")}
     # ADR status is read once per ADR (for the `proposed` class), not re-parsed per reference.
     adr_proposed = {
         rel: "proposed" in (adr_status(t) or "").lower()
