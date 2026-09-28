@@ -1,6 +1,6 @@
 # Right-size the build-quality judge — build spec (YED-231)
 
-**Status:** Proposed 2026-09-28 · infra spec (satisfies DoD item 1 per YED-129) · Linear YED-231 · supersedes the
+**Status:** Accepted 2026-09-28 (Alex ruled §9) · infra spec (satisfies DoD item 1 per YED-129) · Linear YED-231 · supersedes the
 run-path sections of `cross-provider-judge.md` and `.claude/proposals/third-judge-seat-openai.md` §1–2 (they stay as history).
 **Rubric unchanged:** `build-quality@6` stays; this is a harness change, not a rubric bump.
 
@@ -110,4 +110,5 @@ the **revisit banner**; it changes no status.
 - 2026-09-28 — `controls.py` kept as on-demand regression data; canary *scheduling + demotion* retired.
 - 2026-09-28 — Quote haystack = the whole bundle; `bundle_version 3`; range/files bundles first-class; `.patch` files no longer committed.
 - 2026-09-28 — `quorum-merge.sh` deleted (third copy of the arithmetic); `quorum_merge.py` is the one merge.
-- 2026-09-28 — Recommendation logged, not decided: Gemini `off` (Q1).
+- 2026-09-28 — **Alex ruled §9:** Q1 Gemini `off`, adapter kept (change 8 dropped) · Q2 weekly batch-ack in `/rigor-review` accepted · Q3 `revisit.candidate` = OpenAI `gpt-5.4-mini` · Q4 HIGH = schema `major`, no new level.
+- 2026-09-28 — Sequencing simplified: phases (1)–(3) land as separate commits on one branch / one PR, not three PRs (one reviewer, one judge run).
