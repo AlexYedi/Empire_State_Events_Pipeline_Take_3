@@ -75,5 +75,3 @@ repo `.env` (Creator tier). Recipe is locked in `.claude/scripts/ingest_recordin
 - The recording's file extension can lie: the 2026-09-16 phone export was an MP4/AAC container named
   `.mp3`. `ffprobe` reads it regardless; `afinfo`/Spotlight may not.
 - This calls ElevenLabs via the SDK script directly (not the MCP) — the MCP isn't required.
-- Eval: re-score each event with `.claude/evals/score_entities.py` (spoken-only, variant-aware) to
-  keep the scorecard growing. The eval now runs on production output, not n=1.

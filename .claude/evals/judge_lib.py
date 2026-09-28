@@ -192,7 +192,7 @@ GUARDED_NAME_RE = re.compile(r"guard|filter|allow-?list|deny-?list|boundary|priv
 # from a range. Telemetry is excluded separately (RANGE_EXCLUDE_PREFIXES).
 JUDGE_LAYER = (".claude/evals/judge_lib.py", ".claude/evals/judge.py", ".claude/evals/calibration_stats.py",
                ".claude/evals/controls.py", ".claude/evals/controls/", ".claude/evals/rubrics/", ".claude/evals/prompts/",
-               ".claude/evals/emit-judge-runs.sh", ".claude/evals/test_judge_lib.py", ".claude/evals/test_bundle_multifile.py",
+               ".claude/evals/test_judge_lib.py", ".claude/evals/test_bundle_multifile.py",
                ".claude/evals/test_null_baseline.py", ".claude/evals/test_judge_e2e.py", ".claude/evals/README.md", ".claude/hooks/seat-log.py",
                ".claude/skills/judge-build/", ".claude/commands/judge-build.md", ".claude/references/judge.md")
 

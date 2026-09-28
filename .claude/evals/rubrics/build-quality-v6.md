@@ -32,7 +32,7 @@ One new composite cap; criteria, weights, anchors and pass band are **unchanged*
 **What changed from `@4` (2026-09-19, YED-206 — the Gemini rubber-stamp triage):**
 `@4` had one pass anchor and one fail anchor per criterion and defined 1.0 as "matches the pass anchor or better", so a
 judge that found no fail anchor could legally return 1.0 on everything. The Gemini seat did exactly that on 20 of 23
-real prospective artifacts (triage: `.claude/notes/gemini-judge-triage-2026-09-19.md`). Three changes; criteria,
+real prospective artifacts (triage: `docs/archive/notes/gemini-judge-triage-2026-09-19.md`). Three changes; criteria,
 weights and pass band are **unchanged**, so `@5` composites are comparable to `@4`:
 1. **The top of the scale must be earned** — 1.0 = "searched this criterion for defects and can name what was checked";
    a **0.85 middle anchor** ("ships with reviewer nits") is added to every criterion.
