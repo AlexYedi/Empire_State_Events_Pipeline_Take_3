@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""calibration_stats.py — what each judge seat is actually worth (YED-206).
+"""calibration_stats.py — a plain REPORT of how the judge agrees with Alex (YED-206; report-only since YED-231).
+
+Nothing gates on this file. YED-231 (2026-09-28) removed the per-seat trust ladder (seats.json, --gate, demotion
+rules, canaries, the last-voting-seat guard): the judge is one Sonnet reviewer that raises flags, and these numbers
+are read by a human at /rigor-review, never by code that decides a verdict. It also counts runs per artifact class.
 
 Raw judge-vs-Alex agreement is the metric the gate used, and it is misleading: if Alex flags 3 of 18
 artifacts, a seat that says "pass" to everything scores 83% — which is exactly what the Gemini seat
@@ -42,8 +46,8 @@ EXCLUDE_SETS = {"negative-control", "triage-experiment", "control", "bakeoff"}
 # --- null-baseline contract (YED-212, ruled 2026-09-21) ----------------------------------------------------
 # A metric that a do-nothing policy scores just as well on is not a standard. "83% Gemini-vs-Alex agreement"
 # WAS the always-pass baseline (15/18) on a corpus where 83% of artifacts pass, and the gate's >=80% threshold
-# sat BELOW it — so the gate could never fire, for 63 days. Every gating metric now declares its null model and
-# must beat it by this margin; anything that doesn't is `unvalidated` and loses the right to auto-accept.
+# sat BELOW it — so the gate could never fire, for 63 days. The report still prints every agreement number next
+# to its null model; one that doesn't beat it by this margin is reported `unvalidated` (report only since YED-231).
 NULL_MARGIN = 0.10      # how far above the do-nothing baseline a metric must sit to count as informative
 NULL_MIN_N = 10         # below this, report "insufficient" — never "validated"
 
@@ -135,17 +139,11 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
     return round((po - pe) / (1 - pe), 3)
 
 
-ORDER = ["shadow", "advisory", "voting"]
-SEATS_FILE = ".claude/evals/seats.json"
-CANARY_STATE = ".claude/evals/controls/state.json"
-CANARY_STALE_DAYS = 14
-
-
 def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
             strict_parity: bool = True) -> tuple[dict, dict, collections.Counter]:
-    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (the gate's slice).
+    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored.
 
-    strict_parity=True (the gate's setting) scores only rows with evidence_parity TRUE, and reports how many were
+    strict_parity=True (the default) scores only rows with evidence_parity TRUE, and reports how many were
     set aside as unknown. strict_parity=False scores unknown rows too, for the historical view.
     """
     a = argparse.Namespace(window=window)
@@ -263,114 +261,33 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
     return out, truths, stats
 
 
-def gate(rows: list[dict], window: float) -> dict:
-    """Effective status per configured seat = its configured status, lowered ONE rung if a demotion rule fires.
-
-    Promotion is never automatic (Alex edits seats.json). Demotion is, and it applies to every seat, the trusted
-    one included: exempting the anchor seat is how a blind spot survives. Rules read the last 20 PROSPECTIVE runs
-    since the seat's `since` date (its current prompt/rubric regime; older behaviour is not held against it).
-    Each rule has a minimum sample so three unlucky runs can't demote a seat.
-    """
-    cfg = json.load(open(SEATS_FILE, encoding="utf-8"))["seats"] if os.path.exists(SEATS_FILE) else []
-    canary = json.load(open(CANARY_STATE, encoding="utf-8")) if os.path.exists(CANARY_STATE) else {}
-    res = {}
-    for seat in cfg:
-        name, since = seat["seat_name"], str(seat.get("since") or "")
-        mine = [r for r in rows if seat_of(r) == name and r.get("calibration_set") == "prospective"
-                and str(r.get("timestamp") or "") >= since]
-        recent = {id(r) for r in sorted(mine, key=lambda r: str(r.get("timestamp") or ""))[-20:]}
-        m = compute(rows, window, keep=lambda s_, r: s_ == name and id(r) in recent)[0].get(name, {})
-        n_runs, n = m.get("runs", 0), m.get("scored_against_alex", 0)
-        why = []
-        if n_runs >= 10 and (m.get("flat_1.0_rate") or 0) >= 0.30:
-            why.append(f"flat-1.0 rate {m['flat_1.0_rate']:.2f} >= 0.30 over {n_runs} runs")
-        if m.get("truth_flags", 0) >= 4 and (m.get("flag_recall") or 0) < 0.50:
-            why.append(f"flag recall {m['flag_recall']:.2f} < 0.50 on {m['truth_flags']} real flags")
-        if m.get("seat_flags", 0) >= 5 and (m.get("flag_precision") or 0) < 0.40:
-            why.append(f"flag precision {m['flag_precision']:.2f} < 0.40 on {m['seat_flags']} seat flags (over-flagging)")
-        if n >= 15 and m.get("kappa") is not None and m["kappa"] < 0.40:
-            why.append(f"kappa {m['kappa']:.2f} < 0.40 on n={n}")
-        # --- canary rules (YED-209 step 8). A seat that cannot tell a known-bad artifact from a known-good one
-        # is not a judge, whatever its agreement rate says. Absence of a canary is NOT a failure (it would demote
-        # everything the day this shipped) — it is reported as `canary: never run` so the quorum can say so.
-        c = canary.get(seat["id"]) or {}
-        if c:
-            if (c.get("consecutive_failures") or 0) >= 2:
-                why.append(f"{c['consecutive_failures']} consecutive canary failures (last {c.get('last_run', '?')[:10]})")
-            last_model = c.get("model_resolved") or ""
-            cur_model = seat.get("model") or ""
-            if c.get("status") == "pass" and cur_model and last_model and cur_model not in last_model:
-                why.append(f"model changed to {cur_model} since the last green canary ({last_model}): re-run canaries")
-            try:
-                age = (datetime.datetime.now(datetime.timezone.utc)
-                       - datetime.datetime.fromisoformat(c["last_run"].replace("Z", "+00:00"))).days
-                if age > CANARY_STALE_DAYS and ORDER.index(seat.get("status", "shadow")) >= 2:
-                    why.append(f"canary {age}d old (> {CANARY_STALE_DAYS}d) for a voting seat")
-            except (KeyError, ValueError):
-                pass
-        # the null-baseline rule (YED-212): a seat no better than always-saying-pass cannot auto-accept
-        nc = m.get("null_check") or {}
-        if nc.get("status") == "unvalidated":
-            why.append(f"null-baseline: {nc.get('detail')}")
-        conf = seat.get("status", "shadow")
-        eff = ORDER[max(0, ORDER.index(conf) - 1)] if why else conf
-        ready = (n >= 25 and m.get("truth_flags", 0) >= 8 and (m.get("kappa") or 0) >= 0.60 and (m.get("flag_recall") or 0) >= 0.70
-                 and (m.get("flag_precision") or 0) >= 0.60 and (m.get("flat_1.0_rate") or 0) < 0.20
-                 and (m.get("agreement") or 0) >= (m.get("always_pass_baseline") or 0) + 0.10)
-        res[seat["id"]] = {"seat_name": name, "configured": conf, "effective": eff, "demoted_because": why,
-                           "null_check": nc,
-                           "meets_voting_bar": ready, "window": m,
-                           "canary": ({"status": c.get("status"), "last_run": c.get("last_run"),
-                                       "consecutive_failures": c.get("consecutive_failures", 0)}
-                                      if c else {"status": "never run"})}
-    # --- last-voting-seat guard (Alex's ruling 2026-09-21) ---------------------------------------------------
-    # If applying the demotions would leave NO voting seat, the demotion of the final one is recorded but not
-    # applied. Rationale: with no trusted seat every run escalates, and a gate that cries wolf gets overridden —
-    # the failure mode this whole layer exists to prevent. Alex confirms it by hand in seats.json.
-    if not any(v["effective"] == "voting" for v in res.values()):
-        survivors = [k for k, v in res.items() if v["configured"] == "voting" and v["demoted_because"]]
-        if survivors:
-            pick = min(survivors, key=lambda k: len(res[k]["demoted_because"]))   # the least-broken one
-            res[pick]["effective"] = "voting"
-            res[pick]["last_voting_seat_held"] = True
-            res[pick]["demotion_pending_confirmation"] = res[pick]["demoted_because"]
-    return res
+def class_counts(rows: list[dict]) -> dict:
+    """Judge runs per artifact class (reviewer rows only; control runs and acks are not runs of real work)."""
+    c: dict = collections.defaultdict(lambda: {"runs": 0, "flags": 0, "acked": 0})
+    acked = {r.get("run_id") for r in rows if r.get("record_type") == "ack"}
+    for r in rows:
+        if not seat_of(r) or r.get("calibration_set") in EXCLUDE_SETS:
+            continue
+        k = c[r.get("artifact_type") or "?"]
+        k["runs"] += 1
+        k["flags"] += (r.get("final_verdict") or r.get("verdict")) == "flag"
+        k["acked"] += bool(r.get("alex_ack")) or r.get("run_id") in acked
+    return dict(sorted(c.items()))
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--logs", default=".claude/evals/logs")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--gate", action="store_true", help="effective status per configured seat (auto-demotion)")
     ap.add_argument("--window", type=float, default=3.0, help="max days between a run and the ack it is scored against")
     a = ap.parse_args()
     rows = load(a.logs)
-    if a.gate:
-        g = gate(rows, a.window)
-        if a.json:
-            print(json.dumps(g, indent=1)); return 0
-        for sid, x in g.items():
-            w = x["window"]
-            print(f"{sid:<8} configured={x['configured']:<9} effective={x['effective']:<9} "
-                  f"runs={w.get('runs', 0)} scored={w.get('scored_against_alex', 0)} kappa={w.get('kappa')} "
-                  f"recall={w.get('flag_recall')} flat={w.get('flat_1.0_rate')}  voting-bar-met={x['meets_voting_bar']}")
-            for y in x["demoted_because"]:
-                print(f"           DEMOTED: {y}")
-            nc = x.get("null_check") or {}
-            if nc:
-                print(f"           null-model: {nc.get('status')} — {nc.get('detail', 'beats the do-nothing baseline')}")
-        held = [k for k, v in g.items() if v.get("last_voting_seat_held")]
-        if held:
-            print(f"\n⚠️  {', '.join(held)} would have been demoted, but it is the LAST voting seat. Demotion is")
-            print("    RECORDED, NOT APPLIED, pending Alex's confirmation (YED-212 ruling 2026-09-21): auto-demoting")
-            print("    the last seat makes every run escalate, and the pressure to override that defeats the gate.")
-            print("    Confirm by setting the seat's status in seats.json, or fix the cause and re-run.")
-        return 0
     out, truths, stats = compute(rows, a.window)
     acks = [v for c in truths.values() for _, v, _ in c]
     if a.json:
         print(json.dumps({"alex_acked_runs": len(acks), "artifacts": len(truths), "window_days": a.window,
-                          "unscored_file_changed": stats["unscored_file_changed"], "seats": out}, indent=1))
+                          "unscored_file_changed": stats["unscored_file_changed"], "seats": out,
+                          "runs_per_class": class_counts(rows)}, indent=1))
         return 0
     print(f"Alex-acked runs: {len(acks)} over {len(truths)} artifacts  (flag: {sum(v == 'flag' for v in acks)})"
           f"  · match window: ±{a.window:g}d  · left unscored because the file changed between ack and run: "
@@ -381,6 +298,8 @@ def main() -> int:
         f = lambda v: "  —  " if v is None else f"{v:.2f}"
         print(f"{seat:<15}{m['runs']:>5}{m['scored_against_alex']:>8}{f(m['agreement']):>7}{f(m['always_pass_baseline']):>7}"
               f"{f(m['kappa']):>7}{f(m['flag_recall']):>8}{f(m['flag_precision']):>7}{f(m['flat_1.0_rate']):>9}")
+    print("\nruns per artifact class (runs · final flags · acked): " + "  ".join(
+        f"{k} {v['runs']}·{v['flags']}·{v['acked']}" for k, v in class_counts(rows).items()))
     print("\nRead: agreement ABOVE baseline is the real signal; kappa ≈ 0 means the seat adds nothing over "
           "always-passing; flag recall is what a gate actually needs; a high flat-1.0 rate means low information.")
     return 0

@@ -20,9 +20,9 @@ This is the **learning loop** — the step that turns feedback into improvement,
 
 ## Step 2 — Review against the registry (only the action-triggering metrics)
 **First, run the null-model check — before reading any metric as good news:**
-`bash .claude/hooks/run-canaries.sh` then `python3 .claude/evals/calibration_stats.py --gate`.
-Any seat reported `null-model: unvalidated` is no better than always saying "pass" and cannot auto-accept,
-whatever its agreement rate looks like. **A metric within +0.10 of its do-nothing baseline is not evidence.**
+`python3 .claude/evals/calibration_stats.py` (a plain report since YED-231; nothing gates on it).
+An agreement number reported `unvalidated` is no better than always saying "pass",
+whatever it looks like. **A metric within +0.10 of its do-nothing baseline is not evidence.**
 (YED-212: "83% agreement" was the always-pass baseline for 63 days, and the gate's 80% threshold sat below it.)
 Ask the same question of any NEW metric before trusting it: what does this score when the system does nothing?
 - build-quality scores < 0.70 — were they reworked?
@@ -31,6 +31,7 @@ Ask the same question of any NEW metric before trusting it: what does this score
 - **gate failures (YED-228, added 2026-09-27):** count `*_gate_failed` and `*_gate_abandoned` rows in `.claude/artifacts/deep-read-gate-failures.jsonl` and `substrate-gate-failures.jsonl` — **excluding superseded rows**: a `gate_false_positive_correction` row voids every earlier failure row from the same `session` (the logs are append-only, so corrections never delete). Filter: `jq -s '(map(select(.event=="gate_false_positive_correction")) | map({(.session): .ts}) | add // {}) as $c | map(select((.event|test("_gate_(failed|abandoned)$")) and (($c[.session] // "") < .ts or ($c[.session] == null))))' <log>`. Before YED-228 the gates logged one false row per turn of an in-progress run (9 in session b7b796e0, all superseded); after it, any live row is a real skip or an abandoned run — each one gets a named cause in Step 4.
 - judge–human agreement (from `alex_ack`) — **is it ≥ +0.10 above the always-pass baseline on the same rows?** Raw agreement alone means nothing (YED-212)
 - **ack hygiene (the labeler is a rater too):** what share of escalations did Alex simply agree with, and how fast? A reflexive-agree pattern turns the ground truth into a constant and makes every κ undefined
+- **judge blind spot-check (monthly, first review of the month, YED-231):** pick 5 artifacts judged this month (passes included), review them yourself *before* opening their verdicts, then compare and record each with `python3 .claude/evals/judge.py ack --run <id> agree|disagree` — the only check on passes, which are never acked in-session
 - acted-on outcome vs goal — trending which way?
 - **identity hygiene (YED-47, added 2026-09-27):** run `.venv/bin/python .claude/scripts/identity_probe.py` (read-only). Two registry rows: *identity ambiguity* (distinct ledger entries in 30d; **≥10 reopens the parked DDL half** — the `name_norm` / `entity_alias` / `entity_merge` issue) and *identity duplicates* (exact dupes + qualifier twins + host/LinkedIn collisions + tombstones-with-edges; **any pair → propose it with `substrate.py merge … --dry-run`; Alex approves every merge**, never the agent). Null baseline: an absent or empty ledger over **0 producer sessions** is "no data", not "clean" — read it beside the session count the probe prints.
 For each that crosses its threshold, take the registry's named **action**.
