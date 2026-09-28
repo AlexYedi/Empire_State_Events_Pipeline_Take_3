@@ -168,8 +168,7 @@ a pending row does not block close — report it in Step 6. It writes nothing to
     --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g>
 ```
 Success flips the ledger row to STAGED. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
-ledger rows (loud; re-run with the raw specialist returns), **4** = graph-write freeze active (leave it pending, or waive
-citing the freeze), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, leave
+ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, leave
 the row pending and tell Alex (list it in the Step 6 summary as an incomplete).
 
 **4.2d Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
