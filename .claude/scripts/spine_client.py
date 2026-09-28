@@ -328,6 +328,11 @@ _TRANSIENT = (urllib.error.URLError, TimeoutError, ConnectionError, http.client.
 # dropped one is closed and rebuilt by the retry loop. A NON-retryable call (plain insert, /rpc/) always gets its own
 # fresh connection, exactly as before: if a reused socket died mid-send we could not know whether the insert landed.
 CONNECT_TIMEOUT = 10             # a stalled SYN now costs 10s once, not 30s per call
+
+
+class NotSent(ConnectionError):
+    """The connection never opened, so not one byte of the request left this machine. Retrying is safe for ANY
+    method, including a plain insert: nothing can have landed (first live backfill died on exactly this, 2026-09-27)."""
 _CONN: http.client.HTTPSConnection | None = None
 
 
@@ -351,9 +356,9 @@ def _send(method: str, path: str, data, headers: dict, timeout: int, reuse: bool
         conn = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
         try:
             conn.connect()
-        except Exception:
+        except _TRANSIENT as e:
             conn.close()
-            raise
+            raise NotSent(f"connect failed before sending: {type(e).__name__}: {e}") from e
         if reuse:
             _CONN = conn
     conn.sock.settimeout(timeout)
@@ -398,7 +403,7 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
         headers.update(extra_headers)
     data = json.dumps(body).encode() if body is not None else None
     retryable = _retryable(method, path, prefer)
-    attempts = REQ_RETRIES if retryable else 1
+    attempts = REQ_RETRIES           # a non-retryable call still retries a NotSent failure (see NotSent), nothing else
     for attempt in range(1, attempts + 1):
         try:
             code, txt = _send(method, path, data, headers, timeout, reuse=retryable)
@@ -408,8 +413,11 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
                 return code, txt
             return code, (json.loads(txt) if txt else None)
         except _TRANSIENT as e:                        # no answer at all: stall / reset / dropped socket
+            made = attempt
+            if not retryable and not isinstance(e, NotSent):
+                attempt = attempts                     # may have landed: fail loud on the first stall, as before
             if attempt >= attempts:
-                sys.stderr.write(f"req: gave up after {attempts} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
+                sys.stderr.write(f"req: gave up after {made} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
                                  f"{str(e)[:120]}. Nothing after this call ran; a re-run is idempotent (upserts "
                                  f"and GETs), and any gate row stays PENDING until it succeeds.\n")
                 raise
@@ -545,7 +553,7 @@ def selftest() -> bool:
             calls["n"] += 1
             calls.setdefault("reuse", []).append(reuse)
             if calls["n"] < 3:
-                raise urllib.error.URLError("timed out")
+                raise NotSent("connect failed") if calls.get("notsent") else urllib.error.URLError("timed out")
             return 200, "[]"
         # The freeze cases below arm a TEMP "active" marker at registration time, so a write-path call here
         # would be refused at the door before it reaches the stubbed socket — same escape as `_absent()`.
@@ -577,9 +585,15 @@ def selftest() -> bool:
                     raise PIIViolation(f"plain POST made {calls['n']} calls")
                 if calls["reuse"][-1] is not False:
                     raise PIIViolation("plain POST went over the shared keep-alive connection")
+            # ...but a plain POST whose connection never opened IS retried: nothing was sent.
+            calls["n"], calls["notsent"] = 0, True
+            st, _ = req("POST", "/person", [{"name": "Plain Insert"}], prefer="return=representation")
+            if not (st == 200 and calls["n"] == 3):
+                raise PIIViolation(f"NotSent plain POST not retried: calls={calls['n']}")
         finally:
             g["REQ_BACKOFF"], g["_send"], g["load_key"], g["FREEZE_PATH"] = saved
-    add("retry loop: 2 stalls then success on GET; plain POST fails on the 1st stall", _retry_loop_case, False)
+    add("retry loop: 2 stalls then success on GET; plain POST fails on the 1st stall unless nothing was sent",
+        _retry_loop_case, False)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
