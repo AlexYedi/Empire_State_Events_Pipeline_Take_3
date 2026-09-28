@@ -8,7 +8,8 @@ defects, cap flags) and derives everything else itself: the real UTC time, the a
 id, and the composite + verdict (judge_lib.score, the same arithmetic every seat gets).
 
 Usage:
-  seat-log.py --artifact <path> --artifact-type <t> --verdict-file <json> [--bundle <bundle.json>]
+  seat-log.py [--artifact <path>] --artifact-type <t> --verdict-file <json> [--bundle <bundle.json>]
+  (--artifact is required without --bundle; with one it must match, and a multi-file bundle supplies it)
               [--calibration-set prospective] [--label <run-id>] [--note "..."] [--judge-model claude:sonnet]
   The verdict JSON needs: criterion_scores[5]{id,score,reasoning}; optional defects[], checks_performed[], cap_flags{}.
 Prints the scored verdict as JSON on stdout (pass it to quorum_merge.py) and the log path on stderr.
@@ -23,18 +24,28 @@ import judge_lib as jl  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--artifact", required=True); ap.add_argument("--artifact-type", default="skill")
+    ap.add_argument("--artifact", default="", help="the file judged; optional with --bundle (a multi-file bundle "
+                    "names itself, e.g. range:abc1234..def5678)")
+    ap.add_argument("--artifact-type", default="skill")
     ap.add_argument("--verdict-file", required=True); ap.add_argument("--bundle", default="")
     ap.add_argument("--calibration-set", default="prospective"); ap.add_argument("--label", default="")
     ap.add_argument("--note", default=""); ap.add_argument("--judge-model", default="claude:sonnet")
     ap.add_argument("--print-only", action="store_true")
     a = ap.parse_args()
     os.chdir(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
-    if not os.path.isfile(a.artifact):
+    try:
+        bundle = json.load(open(a.bundle, encoding="utf-8")) if a.bundle else {}
+    except (ValueError, OSError) as e:
+        print(f"ERROR: unreadable bundle: {e}", file=sys.stderr); return 2
+    if bundle and a.artifact and a.artifact != bundle.get("artifact"):
+        print(f"ERROR: --artifact {a.artifact} is not the bundle's artifact ({bundle.get('artifact')})", file=sys.stderr)
+        return 2
+    a.artifact = a.artifact or bundle.get("artifact", "")
+    multi = bundle.get("bundle_kind") in ("range", "files")
+    if not multi and not os.path.isfile(a.artifact):
         print(f"ERROR: artifact not found: {a.artifact}", file=sys.stderr); return 2
     try:
         verdict = json.load(open(a.verdict_file, encoding="utf-8"))
-        bundle = json.load(open(a.bundle, encoding="utf-8")) if a.bundle else {}
         dangling = bundle.get("has_dangling")
         if dangling is None:
             dangling = bool(jl._run([".claude/hooks/check-refs.sh", "--artifact", a.artifact]))
@@ -42,7 +53,9 @@ def main() -> int:
         scored = jl.score(verdict, a.artifact_type, dangling)
     except (ValueError, OSError, jl.JudgeError) as e:
         print(f"ERROR: malformed verdict: {e}", file=sys.stderr); return 1
-    qv = jl.verify_quotes(scored.get("defects") or [], open(a.artifact, encoding="utf-8").read(), a.artifact_type)
+    # the haystack is everything the seat was shown: every file, spec file and the context (YED-231 §4.2)
+    hay = jl.bundle_haystack(bundle) if bundle else open(a.artifact, encoding="utf-8").read()
+    qv = jl.verify_quotes(scored.get("defects") or [], hay, a.artifact_type)
     slug = jl.slug_for(a.artifact)
     rid = a.label or f"sonnet-{slug}"
     row = {"run_id": rid, "timestamp": jl.now_utc(), "artifact": a.artifact,
@@ -59,7 +72,8 @@ def main() -> int:
            "cap_flags": scored.get("cap_flags") or {}, "flat_ceiling": scored["flat_ceiling"],
            "scoring": "harness-recomputed", "quote_check": qv, "must_cite_gaps": jl.must_cite_gaps(scored),
            "calibration_set": a.calibration_set, "evidence_parity": bundle.get("evidence_parity", True),
-           "bundle_sha256": bundle.get("bundle_sha256"), "bundle_version": bundle.get("bundle_version")}
+           "bundle_sha256": bundle.get("bundle_sha256"), "bundle_version": bundle.get("bundle_version"),
+           "bundle_mode": bundle.get("bundle_mode")}      # "hunks" = the seat never saw the whole of every file
     if a.note:
         row["note"] = a.note
     if not a.print_only:
