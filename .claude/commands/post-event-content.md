@@ -422,6 +422,7 @@ Drafts created: N
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 Speaker deep-dives (Step 5.6): [N drafts / later / no]
+Room page: [added to empire-state-hub rooms.curated.json — run `pnpm gen:rooms` once the recap is published / already listed]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
