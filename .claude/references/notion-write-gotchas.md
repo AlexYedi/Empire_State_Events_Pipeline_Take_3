@@ -5,7 +5,7 @@ Non-obvious property-format and markdown-flavor rules for `notion-create-pages` 
 as escaped literal text. Follow them mechanically; the API error messages are the source
 of truth if anything drifts.
 
-Primary consumers: the pipeline command files (Notion writes run inline in the parent thread (subagents have no claude.ai connectors); the `notion-writer` agent is not dispatched). Extracted from
+Primary consumers: the pipeline command files (Notion writes run inline in the parent thread (subagents have no claude.ai connectors); the `notion-writer` agent is retired). Extracted from
 CLAUDE.md 2026-06-02 to keep always-loaded context lean — content is unchanged.
 
 ## create-pages property-format rules (2026-04-18 — learned live on FDE event writes)
