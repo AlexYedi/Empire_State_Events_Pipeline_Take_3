@@ -25,16 +25,14 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 |---|---|---|
 | `/post-event-content` | ✅ Wired | Day-to-day post-event: manual transcript → conditioning → `post_event_brief` → content-correspondent drafts. |
 | `/ingest-recording` | ✅ Wired | Event `.m4a` → ElevenLabs scribe_v2 roster-seeded clean transcript (feeds `/post-event-content`). |
-| `/evergreen-deep-dive` | ✅ Wired | Presenter-level evergreen deep-dive posts, decoupled from event timing (content bank). |
 | `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
-| `/scan-trends` · `/scan-roles` · `/scan-voices` | ✅ Wired | Signal scanners (skills `trend-radar` / `role-radar` / `voice-radar`), Notion-only, HITL, legitimate-sources only. |
+| `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
 | `/judge-build` | ✅ Wired (advisory) | LLM-as-judge scores a build artifact vs `build-quality@1`; writes run-log + calibration ack. Advisory until ≥20 runs @ ≥80% agreement. |
 | `/dod-close` | ✅ Wired (2026-07-11) | Closes a non-trivial build against the DoD gate; writes `dod_met`/`dod_waived`/`correction_rounds` to telemetry via `.claude/hooks/dod-close.sh`. The writer that closed the rigor loop. |
 | `/rigor-review` | ✅ Wired (first run pending) | Weekly ≤10-min learning loop over build-sessions + judge log + waivers + outcomes; proposes codified fixes. |
-| `/tag-outcome` | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). |
-| `/systems-analyze` | ✅ Wired | Dispatches `systems-analyst` for the eight-phase Meadows diagnostic (Workflow E). |
-| `/toolbox` | ✅ Wired | Discovery — lists the toolkit. |
-| `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report` | ✅ Built (thin docs, 2026-07-02) | Imported market-research + copywriting command suite; no PRD/Linear yet (candidate for retro-codification). |
+| `tag-outcome` (skill) | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). Still invocable as `/tag-outcome`; the wrapper command file was pruned 2026-09-28. |
+
+**Pruned 2026-09-28 (0–1 uses in 30 days):** `/evergreen-deep-dive`, `/scan-trends`, `/scan-voices` (+ skills `trend-radar`, `voice-radar`), `/systems-analyze` (call the `alex:systems-analyst` plugin agent directly), `/toolbox`, `/morning-refresh`, `/recompute-relevance` (the script `.claude/scripts/recompute_relevance.py` stays), and the imported suite `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report`. Recover any with `git checkout archive/pre-reset-2026-09-28 -- <path>`.
 
 > **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
 > `empire-state-hub` repo). Source of truth: `.claude/references/roadmap.md` +
@@ -67,7 +65,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 **Architectural rule (now codified in CLAUDE.md):** any "orchestrator" pattern that needs to fan out specialists must run from the parent / slash command thread, not from inside another subagent. Synthesis-only agents (text in, text out) are fine as subagents — they don't need dispatch capability.
 
-**Artifacts of record:** `.claude/artifacts/orchestrator-fanout-diagnosis.md` (original diagnosis), `.claude/artifacts/orchestrator-validation-comparison.md` (side-by-side from 2026-05-05 run).
+**Where the record lives:** `.claude/references/sdk-runtime-constraints.md` (the resolved diagnostic; the May 2026 one-off diagnosis/validation artifacts were pruned 2026-09-28 and are recoverable from tag `archive/pre-reset-2026-09-28`).
 
 ---
 
@@ -144,8 +142,7 @@ All under `.claude/agents/research/` and `.claude/agents/ops/`.
   - [research-brief-blueprint](skills/research-methodology/research-brief-blueprint/SKILL.md)
   - [market-scenario-modeler](skills/research-methodology/market-scenario-modeler/SKILL.md)
   - [insights-repository-kit](skills/research-methodology/insights-repository-kit/SKILL.md)
-  - [market-signal-tracker](skills/company-deep-research/market-signal-tracker/SKILL.md)
-  - [battlecard-library](skills/company-deep-research/battlecard-library/SKILL.md)
+  - `alex:market-signal-tracker`, `alex:battlecard-library` (plugin skills; the project copies were pruned 2026-09-28)
 
 ### Common follow-ons
 After A completes, the natural next moves:
@@ -166,7 +163,7 @@ After A completes, the natural next moves:
 - **B — `/post-event-content`** ✅ WIRED (manual-upload anchored since 2026-05-27; `post_event_brief` first-class artifact added 2026-05-28). The day-to-day post-event flow. Manual transcript paste → `transcript-conditioning` (Step 3.5) → **`post_event_brief` synthesis (Step 3.7 — the data store / short-term memory)** → `content-correspondent` drafts Tier 1 comment + Tier 2 primary post (pre→post bridge) + Tier 2 alternate + bucket-sorted outreach DMs → optional Claude-design carousel render → `notion-writer` commits all rows. The brief is the post-event mirror of the pre-event `research_brief`; every downstream draft references it in its body. Granola auto-fetch path retained but DISABLED (app nonoperational on Alex's device).
 
 ### Retired scaffolds
-`/post-event-synthesis` (Workflow B's chained version), `/weekly-recap` (Workflow C) and `/voice-pass` (Workflow D) were deleted 2026-09-27 — see the note under the status table. The individual pieces they would have chained (`transcript-analysis`, `objection-mining`, `commercial-insight-generator`, `pattern-synthesis`, `voice-editor`) remain callable on their own.
+`/post-event-synthesis` (Workflow B's chained version), `/weekly-recap` (Workflow C) and `/voice-pass` (Workflow D) were deleted 2026-09-27 — see the note under the status table. The individual pieces they would have chained (`transcript-analysis`, `objection-mining`, `pattern-synthesis`) remain callable on their own; `commercial-insight-generator` and `voice-editor` were pruned from this repo 2026-09-28 (source copies live in `alex-agents-skills`).
 
 ---
 
@@ -199,13 +196,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 - `market-scenario-modeler/` — TAM/SAM/SOM, sensitivity
 - `insights-repository-kit/` — research artifact governance
 
-**Company deep research** (`.claude/skills/company-deep-research/`):
-- `battlecard-library/` — per-company battlecard templates
-- `market-signal-tracker/` — severity + confidence signal log
-- `executive-briefing-kit/` — exec recap format
-
-**Content quality** (`.claude/skills/content-quality/`):
-- `voice-guidelines/` — tone/style/localization rules
+**Copywriting** (`.claude/skills/copywriting/`, read by `pre-event-content`):
 - `message-architecture/` — hook banks, CTA playbooks
 - `cold-email-personalization/` — personalization rubric
 
@@ -213,38 +204,25 @@ The command file is the orchestration shape. The skill is the methodology. The a
 - `transcript-analysis/` — extract from sales/event transcripts
 - `objection-mining/` — friction signal extraction
 
-**ICP research** (`.claude/skills/icp-research/`):
-- `persona-development/` — buyer personas
-- `account-qualification/` — account scoring + qualification
-
-**Cold email** (`.claude/skills/cold-email/`):
-- `copy-frameworks/` — battle-tested cold email structures
-- `personalization-engine/` — signal detection + personalization layers
-- `sequence-architecture/` — multi-touch sequence design
+**Pruned 2026-09-28** (verbatim copies of `alex:*` plugin skills, 0 uses in 30 days): `company-deep-research/`, `content-quality/`, `icp-research/`, `cold-email/`. Use the plugin versions (`alex:battlecard-library`, `alex:market-signal-tracker`, `alex:executive-briefing-kit`, `alex:voice-guidelines`, `alex:persona-development`, `alex:account-qualification`, `alex:copy-frameworks`, `alex:personalization-engine`, `alex:sequence-architecture`).
 
 ### Agents imported
 
 **Research** (`.claude/agents/research/`):
-- *Imported:* `insights-research-director`, `qualitative-field-lead`, `quant-insights-architect`, `market-insights-director`, `win-loss-analyst`, `battlecard-program-manager`
-- *Custom (built for Workflow A):* `event-research-synthesizer`, `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`
+- *Custom (built for Workflow A):* `event-research-synthesizer`, `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`, `knowledge-conditioning`
+- *Job-search lens:* `dossier-synthesizer`
 
 **Content** (`.claude/agents/content/`):
-- `voice-editor`, `copy-strategist`, `conversion-copywriter`, `cold-email-specialist`
-
-**Sales methodology** (`.claude/agents/sales-methodology/`):
-- `commercial-insight-generator`, `reframe-architect`, `mobilizer-mapper` (Challenger Sale)
+- `field-guide-renderer`
 
 **Ops** (`.claude/agents/ops/`):
 - *Custom:* `notion-writer`
 
+**Pruned 2026-09-28** (0 dispatches in 30 days; byte-identical source copies live in `alex-agents-skills`): `insights-research-director`, `qualitative-field-lead`, `quant-insights-architect`, `market-insights-director`, `win-loss-analyst`, `battlecard-program-manager`, `voice-editor`, `copy-strategist`, `conversion-copywriter`, `cold-email-specialist`, `commercial-insight-generator`, `reframe-architect`, `mobilizer-mapper`, and the project copy of `systems-analyst` (use `alex:systems-analyst`).
+
 ### Commands imported (in addition to the workflow commands)
 
-`.claude/commands/`:
-- `create-messaging-brief` — copywriting kit
-- `generate-channel-copy` — copywriting kit
-- `test-and-report` — copywriting kit
-- `run-market-landscape-study` — market research
-- `analyze-competitive-landscape` — competitive intel
+None remain; the five imported commands were pruned 2026-09-28 (see the status table note).
 
 ### References
 

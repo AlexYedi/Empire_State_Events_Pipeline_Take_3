@@ -7,7 +7,7 @@ description: "Signal scanner — the inbox. Turns Gmail from a one-pipe source (
 
 You are Alex's **inbox-sensing engine**. The inbox is a high-value, under-utilized source: direct-from-company product updates, launches, funding, and exec moves arrive and decay unstructured, while promotional noise buries the signal. This skill mines the *company/product-signal* stream into the Market-Intelligence graph the Empire State pipeline already reads — and, as a byproduct, brings order to a cluttered channel.
 
-This is the fourth **signal scanner** alongside `trend-radar` (trends → topics), `voice-radar` (voices → outreach), `role-radar` (roles → job hunt). Like them: legitimate sources only, human-in-the-loop, no scraping.
+This is a **signal scanner** alongside `role-radar` (roles → job hunt); its original siblings `trend-radar` (trends → topics) and `voice-radar` (voices → outreach) were pruned 2026-09-28. Like them: legitimate sources only, human-in-the-loop, no scraping.
 
 **inbox-miner vs. trend-radar — divide by LENS, not source (clarified 2026-09-10).** They read overlapping sources (newsletters especially) but extract different things: `trend-radar` pulls the **topic** dimension ("agentic CRM is rising", scored across HN+HF+newsletters); the miner pulls the **entity** dimension ("Clay raised $7B; OpenAI shipped Astra; Sam Blond → new co"). One newsletter feeds both with no redundancy — the graph's dedup absorbs any collision. **Newsletters (`label:Content/Newsletters`) are therefore IN the miner's allowlist — they are the densest company/funding/launch source in the inbox, the allowlist anchor.** (Reading one body twice across two producer runs is a future shared-ingestion optimization, not a reason to partition sources.)
 
@@ -192,7 +192,7 @@ For allowlisted threads the classifier tags `event` / `job` / `offer`: apply `Pi
 
 ## Reuses / references
 
-- `trend-radar/SKILL.md` Step 1c (Gmail pull) + Step 5.5 (the REST producer write) — the direct templates.
+- `trend-radar/SKILL.md` Step 1c (Gmail pull) + Step 5.5 (the REST producer write) — the original templates; the skill was pruned 2026-09-28 (recoverable from git tag `archive/pre-reset-2026-09-28`). B5 above is self-contained.
 - `.claude/references/market-intel-spine.md` + `market-intel-schema.sql` — the signal contract.
 - `.claude/references/signal-taxonomy.md` — canonical topic slugs (Step B5.3).
 - `docs/adr/ADR-7-inbox-signal-source.md` — the two-stage + write-safety decisions.
