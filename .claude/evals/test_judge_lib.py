@@ -103,7 +103,7 @@ ck("guarded: ordinary files do not match", jl.guarded_paths([".claude/skills/rol
 ck("judge layer: judge files are recognised", all(jl.is_judge_layer(p) for p in (
    ".claude/evals/judge_lib.py", ".claude/skills/judge-build/SKILL.md", ".claude/evals/rubrics/build-quality-v6.md",
    ".claude/hooks/seat-log.py")))
-ck("judge layer: neighbours in .claude/evals are not", not jl.is_judge_layer(".claude/evals/test_gate_in_progress.sh")
+ck("judge layer: neighbours in .claude/evals are not", not jl.is_judge_layer(".claude/evals/test_event_claim.py")
    and not jl.is_judge_layer(".claude/evals/logs/x.jsonl"))
 p = subprocess.run(["python3", ".claude/evals/judge.py", "run", "--artifact", ".claude/evals/judge_lib.py",
                     "--artifact-type", "code"], capture_output=True, text=True)

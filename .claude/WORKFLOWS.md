@@ -25,12 +25,14 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 |---|---|---|
 | `/post-event-content` | ✅ Wired | Day-to-day post-event: Supercut transcript (or audio file / paste) → conditioning → `post_event_brief` → content-correspondent drafts. |
 | `/ingest-recording` | ✅ Wired | Any event audio (phone `.m4a`, or a Supercut audio asset) → ElevenLabs scribe_v2 roster-seeded, diarized transcript (feeds `/post-event-content`). |
-| `/interview-prep` | ✅ Wired | **Market-Intelligence Engine — Milestone 1 (Job-Search lens).** 4-axis dossier → judge-gate → Postgres spine + Notion. |
+| `/interview-prep` | ✅ Wired | **Job-Search lens.** 4-axis dossier: 4 research specialists in parallel → synthesis in the parent against `me-model.md` §1.5 (skill `interview-prep-dossier`) → Notion. Judge gate, Postgres persist and `dossier-synthesizer` retired 2026-09-28. |
 | `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
 | `/judge-build` | ✅ Wired (on demand) | One Sonnet reviewer scores a build artifact vs `build-quality@6` (frozen) and raises flags; never rewrites, never blocks. Run only on the artifact-class triggers in its SKILL.md; Alex is asked only on a flag. Spec: `.claude/references/judge.md`. |
 | `tag-outcome` (skill) | ✅ Wired | Manual outcome-tagging ritual — closes the acted-on-value loop (Goal vs realized Outcome). Still invocable as `/tag-outcome`; the wrapper command file was pruned 2026-09-28. |
 
 **Pruned 2026-09-28 (0–1 uses in 30 days):** `/evergreen-deep-dive` (folded into `/post-event-content` Step 5.6 as optional speaker deep-dives), `/scan-trends`, `/scan-voices` (+ skills `trend-radar`, `voice-radar`), `/systems-analyze` (call the `alex:systems-analyst` plugin agent directly), `/toolbox`, retired `/dod-close` + retired `/rigor-review` (the DoD gate and weekly review were replaced by `.github/pull_request_template.md`), `/morning-refresh`, `/recompute-relevance` (the script `.claude/scripts/recompute_relevance.py` stays), and the imported suite `/run-market-landscape-study` · `/analyze-competitive-landscape` · `/create-messaging-brief` · `/generate-channel-copy` · `/test-and-report`. Recover any with `git checkout archive/pre-reset-2026-09-28 -- <path>`.
+
+**Archived 2026-09-28 to `docs/archive/`** (no runs in 30 days): `/ingest-doc` + `/ask-library` + skill `doc-knowledge-base` (the Supabase doc-KB tables, R2 `esep-library` and `dockb_common.py` stay: `substrate.py`/`retrieve.py` import it) · `/scan-inbox` + skill `inbox-miner` + `inbox_signal_write.py` + `signal-taxonomy.md`, retired by [ADR-11](../docs/adr/ADR-11-retire-inbox-signal-lane.md) (`inbox_boundary.py` stays as `spine_client`'s denylist parser).
 
 > **Market-Intelligence Engine** is its own arc (spine + `/ops/market-intel` dashboard in the
 > `empire-state-hub` repo). Source of truth: `.claude/references/roadmap.md` +
@@ -171,7 +173,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 
 **Research** (`.claude/agents/research/`):
 - *Custom (built for Workflow A):* `event-research-synthesizer`, `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner`, `knowledge-conditioning`
-- *Job-search lens:* `dossier-synthesizer`
+- *Job-search lens:* none. `/interview-prep` reuses the four specialists above and synthesizes in the parent (`dossier-synthesizer` archived 2026-09-28 to `docs/archive/agents/`).
 
 **Content** (`.claude/agents/content/`):
 - `field-guide-renderer`

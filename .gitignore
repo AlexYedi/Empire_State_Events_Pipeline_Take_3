@@ -100,6 +100,9 @@ content-drafts/**/*.png
 el_scribe_v1_plain.json
 eleven_scribe_v2.json
 
+# Judge run logs: judge.py still appends here; local, append-only, never tracked (untracked 2026-09-28)
+.claude/evals/logs/
+
 # Personal data — kept on disk for the skills that read them, never tracked (purged from history 2026-09-16)
 .claude/references/me-model.md
 .claude/references/target-companies.md
