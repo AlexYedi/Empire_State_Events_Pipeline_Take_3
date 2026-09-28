@@ -18,7 +18,9 @@ for f in .claude/evals/logs/*.jsonl; do
   [ -f "$f" ] || continue
   while IFS= read -r line; do
     [ -z "$line" ] && continue
+    # quorum_ack rows (judge.py ack, YED-231) are not runs: they share the quorum's run_id and would collide on $insert_id
     payload=$(printf '%s' "$line" | jq -c --arg k "$POSTHOG_PROJECT_TOKEN" '
+      if .record_type == "quorum_ack" then empty else
       {api_key:$k, event:"judge_run",
        distinct_id:("judge-" + (.artifact_type // "artifact")),
        timestamp:.timestamp,
@@ -29,7 +31,7 @@ for f in .claude/evals/logs/*.jsonl; do
          acked: ((.alex_ack // null) != null),
          ack_agree: (((.alex_ack // "") | ascii_downcase | startswith("agree"))),
          criteria: ([.criterion_scores[]? | {(.id): .score}] | add)
-       }}' 2>/dev/null) || continue
+       }} end' 2>/dev/null) || continue
     [ -z "$payload" ] && continue
     code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 8 -X POST "$HOST/capture/" \
       -H "Content-Type: application/json" -d "$payload" 2>/dev/null || echo "ERR")

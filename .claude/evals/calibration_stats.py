@@ -32,7 +32,7 @@ NEAREST-IN-TIME ack for the same artifact and only within --window days (default
 wins. Rows with evidence_parity:false or calibration_set in {negative-control, triage-experiment} are
 excluded — from BOTH the ground-truth pool and the per-seat scoring.
 
-Usage: python3 .claude/evals/calibration_stats.py [--logs .claude/evals/logs] [--json]
+Usage: python3 .claude/evals/calibration_stats.py [--logs .claude/evals/logs] [--json] [--check]
 """
 from __future__ import annotations
 import argparse, collections, datetime, functools, glob, json, os, subprocess
@@ -101,6 +101,23 @@ def load(logs: str) -> list[dict]:
                 continue
             r["_file"] = os.path.basename(f)
             rows.append(r)
+    return fold_acks(rows)
+
+
+def fold_acks(rows: list[dict]) -> list[dict]:
+    """Apply `quorum_ack` rows (written only by judge.py ack, append-only) to their quorum row: the LATEST ack per
+    run_id wins. The ack rows themselves stay in the list; they carry no verdict, so every reader skips them."""
+    latest: dict[str, dict] = {}
+    for r in rows:
+        if r.get("record_type") == "quorum_ack" and r.get("run_id"):
+            if str(r.get("alex_ack_at") or "") >= str((latest.get(r["run_id"]) or {}).get("alex_ack_at") or ""):
+                latest[r["run_id"]] = r
+    for r in rows:
+        a = latest.get(r.get("run_id")) if r.get("record_type") == "quorum" else None
+        if a:
+            r["alex_ack"], r["alex_ack_at"] = a.get("alex_ack"), a.get("alex_ack_at")
+            if a.get("note"):
+                r["alex_ack_note"] = a["note"]
     return rows
 
 
@@ -135,18 +152,16 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
     return round((po - pe) / (1 - pe), 3)
 
 
-ORDER = ["shadow", "advisory", "voting"]
 SEATS_FILE = ".claude/evals/seats.json"
-CANARY_STATE = ".claude/evals/controls/state.json"
-CANARY_STALE_DAYS = 14
 
 
 def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
-            strict_parity: bool = True) -> tuple[dict, dict, collections.Counter]:
-    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (the gate's slice).
+            strict_parity: bool = True, on_scored=None) -> tuple[dict, dict, collections.Counter]:
+    """Per-seat stats. Truth comes from ALL rows; `keep(seat, row)` limits which RUNS are scored (check()'s slice).
 
-    strict_parity=True (the gate's setting) scores only rows with evidence_parity TRUE, and reports how many were
-    set aside as unknown. strict_parity=False scores unknown rows too, for the historical view.
+    strict_parity=True (check()'s setting) scores only rows with evidence_parity TRUE, and reports how many were
+    set aside as unknown. strict_parity=False scores unknown rows too, for the historical view. `on_scored(row)` is
+    called for every run that was matched to one of Alex's verdicts.
     """
     a = argparse.Namespace(window=window)
 
@@ -239,6 +254,8 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
         t = truth_for(r)
         if t:
             s["pairs"].append((r["verdict"], t))
+            if on_scored:
+                on_scored(r)
 
     out = {}
     for seat, s in sorted(seats.items()):
@@ -263,108 +280,85 @@ def compute(rows: list[dict], window: float, keep=lambda seat, r: True,
     return out, truths, stats
 
 
-def gate(rows: list[dict], window: float) -> dict:
-    """Effective status per configured seat = its configured status, lowered ONE rung if a demotion rule fires.
+def check(rows: list[dict], window: float = 3.0, seats_file: str | None = None) -> dict:
+    """Is it time for Alex to revisit the voting seat? REPORTS ONLY: it never writes seats.json (YED-231 §4.5).
 
-    Promotion is never automatic (Alex edits seats.json). Demotion is, and it applies to every seat, the trusted
-    one included: exempting the anchor seat is how a blind spot survives. Rules read the last 20 PROSPECTIVE runs
-    since the seat's `since` date (its current prompt/rubric regime; older behaviour is not held against it).
-    Each rule has a minimum sample so three unlucky runs can't demote a seat.
+    The voter's numbers come from its last 20 prospective, parity-true runs since the seat's `since` (its current
+    prompt/rubric regime). `new_acks` counts those of its runs, dated on/after `revisit.since`, that have Alex's
+    verdict. `revisit_due` when new_acks >= min_new_acks AND (kappa < kappa_floor on n >= n_min, or flag recall <
+    recall_floor). `n_from_escalation` shows how much of the truth set came from escalations (the hard cases): a
+    skewed sample is visible, not hidden (pre-mortem 1). The banner is the mechanism; Alex's edit is the decision.
     """
-    cfg = json.load(open(SEATS_FILE, encoding="utf-8"))["seats"] if os.path.exists(SEATS_FILE) else []
-    canary = json.load(open(CANARY_STATE, encoding="utf-8")) if os.path.exists(CANARY_STATE) else {}
-    res = {}
-    for seat in cfg:
-        name, since = seat["seat_name"], str(seat.get("since") or "")
-        mine = [r for r in rows if seat_of(r) == name and r.get("calibration_set") == "prospective"
-                and str(r.get("timestamp") or "") >= since]
-        recent = {id(r) for r in sorted(mine, key=lambda r: str(r.get("timestamp") or ""))[-20:]}
-        m = compute(rows, window, keep=lambda s_, r: s_ == name and id(r) in recent)[0].get(name, {})
-        n_runs, n = m.get("runs", 0), m.get("scored_against_alex", 0)
-        why = []
-        if n_runs >= 10 and (m.get("flat_1.0_rate") or 0) >= 0.30:
-            why.append(f"flat-1.0 rate {m['flat_1.0_rate']:.2f} >= 0.30 over {n_runs} runs")
-        if m.get("truth_flags", 0) >= 4 and (m.get("flag_recall") or 0) < 0.50:
-            why.append(f"flag recall {m['flag_recall']:.2f} < 0.50 on {m['truth_flags']} real flags")
-        if m.get("seat_flags", 0) >= 5 and (m.get("flag_precision") or 0) < 0.40:
-            why.append(f"flag precision {m['flag_precision']:.2f} < 0.40 on {m['seat_flags']} seat flags (over-flagging)")
-        if n >= 15 and m.get("kappa") is not None and m["kappa"] < 0.40:
-            why.append(f"kappa {m['kappa']:.2f} < 0.40 on n={n}")
-        # --- canary rules (YED-209 step 8). A seat that cannot tell a known-bad artifact from a known-good one
-        # is not a judge, whatever its agreement rate says. Absence of a canary is NOT a failure (it would demote
-        # everything the day this shipped) — it is reported as `canary: never run` so the quorum can say so.
-        c = canary.get(seat["id"]) or {}
-        if c:
-            if (c.get("consecutive_failures") or 0) >= 2:
-                why.append(f"{c['consecutive_failures']} consecutive canary failures (last {c.get('last_run', '?')[:10]})")
-            last_model = c.get("model_resolved") or ""
-            cur_model = seat.get("model") or ""
-            if c.get("status") == "pass" and cur_model and last_model and cur_model not in last_model:
-                why.append(f"model changed to {cur_model} since the last green canary ({last_model}): re-run canaries")
-            try:
-                age = (datetime.datetime.now(datetime.timezone.utc)
-                       - datetime.datetime.fromisoformat(c["last_run"].replace("Z", "+00:00"))).days
-                if age > CANARY_STALE_DAYS and ORDER.index(seat.get("status", "shadow")) >= 2:
-                    why.append(f"canary {age}d old (> {CANARY_STALE_DAYS}d) for a voting seat")
-            except (KeyError, ValueError):
-                pass
-        # the null-baseline rule (YED-212): a seat no better than always-saying-pass cannot auto-accept
-        nc = m.get("null_check") or {}
-        if nc.get("status") == "unvalidated":
-            why.append(f"null-baseline: {nc.get('detail')}")
-        conf = seat.get("status", "shadow")
-        eff = ORDER[max(0, ORDER.index(conf) - 1)] if why else conf
-        ready = (n >= 25 and m.get("truth_flags", 0) >= 8 and (m.get("kappa") or 0) >= 0.60 and (m.get("flag_recall") or 0) >= 0.70
-                 and (m.get("flag_precision") or 0) >= 0.60 and (m.get("flat_1.0_rate") or 0) < 0.20
-                 and (m.get("agreement") or 0) >= (m.get("always_pass_baseline") or 0) + 0.10)
-        res[seat["id"]] = {"seat_name": name, "configured": conf, "effective": eff, "demoted_because": why,
-                           "null_check": nc,
-                           "meets_voting_bar": ready, "window": m,
-                           "canary": ({"status": c.get("status"), "last_run": c.get("last_run"),
-                                       "consecutive_failures": c.get("consecutive_failures", 0)}
-                                      if c else {"status": "never run"})}
-    # --- last-voting-seat guard (Alex's ruling 2026-09-21) ---------------------------------------------------
-    # If applying the demotions would leave NO voting seat, the demotion of the final one is recorded but not
-    # applied. Rationale: with no trusted seat every run escalates, and a gate that cries wolf gets overridden —
-    # the failure mode this whole layer exists to prevent. Alex confirms it by hand in seats.json.
-    if not any(v["effective"] == "voting" for v in res.values()):
-        survivors = [k for k, v in res.items() if v["configured"] == "voting" and v["demoted_because"]]
-        if survivors:
-            pick = min(survivors, key=lambda k: len(res[k]["demoted_because"]))   # the least-broken one
-            res[pick]["effective"] = "voting"
-            res[pick]["last_voting_seat_held"] = True
-            res[pick]["demotion_pending_confirmation"] = res[pick]["demoted_because"]
-    return res
+    doc = json.load(open(seats_file or SEATS_FILE, encoding="utf-8"))
+    rv = doc.get("revisit") or {}
+    since = str(rv.get("since") or "")
+    voters = [s for s in doc.get("seats", []) if s.get("role") == "voting"]
+    if not voters:
+        return {"status": "no_voting_seat", "detail": "no seat has role voting in seats.json", "candidate": rv.get("candidate")}
+    seat = voters[0]
+    name, regime = seat["seat_name"], str(seat.get("since") or "")
+    mine = [r for r in rows if seat_of(r) == name and r.get("calibration_set") == "prospective"
+            and str(r.get("timestamp") or "") >= regime]
+    recent = {id(r) for r in sorted(mine, key=lambda r: str(r.get("timestamp") or ""))[-20:]}
+    new_ids = {id(r) for r in mine if str(r.get("timestamp") or "") >= since}
+    scored: list[dict] = []
+    m = compute(rows, window, keep=lambda s_, r: s_ == name and id(r) in recent, on_scored=scored.append)[0].get(name, {})
+    fresh: list[dict] = []
+    compute(rows, window, keep=lambda s_, r: s_ == name and id(r) in new_ids, on_scored=fresh.append)
+    n_new = len(fresh)
+    esc_runs = {s_.get("run_id") for q in rows if q.get("record_type") == "quorum"
+                and q.get("resolution") in ("escalated", "failsafe_flag")
+                for s_ in (q.get("seats") or []) if isinstance(s_, dict) and s_.get("id") == seat["id"]}
+    n, kappa_, recall = m.get("scored_against_alex", 0), m.get("kappa"), m.get("flag_recall")
+    k_floor, r_floor = float(rv.get("kappa_floor", 0.40)), float(rv.get("recall_floor", 0.50))
+    n_min, min_new = int(rv.get("n_min", 15)), int(rv.get("min_new_acks", 5))
+    why = []
+    if n >= n_min and kappa_ is not None and kappa_ < k_floor:
+        why.append(f"kappa {kappa_:.2f} < {k_floor} on n={n}")
+    if recall is not None and recall < r_floor:
+        why.append(f"flag recall {recall:.2f} < {r_floor} on {m.get('truth_flags', 0)} real flags")
+    status = "revisit_due" if (n_new >= min_new and why) else "not_due"
+    return {"status": status, "seat": seat["id"], "seat_name": name, "since": since, "new_acks": n_new,
+            "min_new_acks": min_new, "n": n, "kappa": kappa_, "flag_recall": recall,
+            "truth_flags": m.get("truth_flags", 0), "null_check": m.get("null_check"),
+            "n_from_escalation": sum(1 for r in scored if r.get("run_id") in esc_runs),
+            "reasons": why, "candidate": rv.get("candidate")}
+
+
+def banner(c: dict) -> str:
+    """One line to print wherever the judge runs; empty unless a revisit is due."""
+    if c.get("status") != "revisit_due":
+        return ""
+    cand = c.get("candidate") or {}
+    return (f"⚠️  REVISIT the voting seat ({c['seat_name']}): {'; '.join(c['reasons'])} · {c['new_acks']} new acks since "
+            f"{c['since']} · {c['n_from_escalation']}/{c['n']} of the truth set came from escalations · "
+            f"null-model {(c.get('null_check') or {}).get('status')}. Candidate: {cand.get('seat')} "
+            f"({cand.get('model')}). The decision is a one-line role edit in .claude/evals/seats.json.")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--logs", default=".claude/evals/logs")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--gate", action="store_true", help="effective status per configured seat (auto-demotion)")
+    ap.add_argument("--check", action="store_true",
+                    help="the voting seat's numbers vs the revisit floors in seats.json (reports; never writes)")
     ap.add_argument("--window", type=float, default=3.0, help="max days between a run and the ack it is scored against")
     a = ap.parse_args()
     rows = load(a.logs)
-    if a.gate:
-        g = gate(rows, a.window)
+    if a.check:
+        c = check(rows, a.window)
         if a.json:
-            print(json.dumps(g, indent=1)); return 0
-        for sid, x in g.items():
-            w = x["window"]
-            print(f"{sid:<8} configured={x['configured']:<9} effective={x['effective']:<9} "
-                  f"runs={w.get('runs', 0)} scored={w.get('scored_against_alex', 0)} kappa={w.get('kappa')} "
-                  f"recall={w.get('flag_recall')} flat={w.get('flat_1.0_rate')}  voting-bar-met={x['meets_voting_bar']}")
-            for y in x["demoted_because"]:
-                print(f"           DEMOTED: {y}")
-            nc = x.get("null_check") or {}
-            if nc:
-                print(f"           null-model: {nc.get('status')} — {nc.get('detail', 'beats the do-nothing baseline')}")
-        held = [k for k, v in g.items() if v.get("last_voting_seat_held")]
-        if held:
-            print(f"\n⚠️  {', '.join(held)} would have been demoted, but it is the LAST voting seat. Demotion is")
-            print("    RECORDED, NOT APPLIED, pending Alex's confirmation (YED-212 ruling 2026-09-21): auto-demoting")
-            print("    the last seat makes every run escalate, and the pressure to override that defeats the gate.")
-            print("    Confirm by setting the seat's status in seats.json, or fix the cause and re-run.")
+            print(json.dumps(c, indent=1)); return 0
+        if c["status"] == "no_voting_seat":
+            print(f"no voting seat: {c['detail']}"); return 0
+        nc = c.get("null_check") or {}
+        print(f"{c['seat']} ({c['seat_name']}) voting · n={c['n']} kappa={c['kappa']} recall={c['flag_recall']} "
+              f"(real flags {c['truth_flags']}) · from escalations {c['n_from_escalation']}/{c['n']} · "
+              f"new acks since {c['since']}: {c['new_acks']}/{c['min_new_acks']} · null-model {nc.get('status')} "
+              f"— {nc.get('detail', 'beats the do-nothing baseline')}")
+        print(f"revisit: {c['status']}" + (f" ({'; '.join(c['reasons'])})" if c["reasons"] else ""))
+        if banner(c):
+            print(banner(c))
         return 0
     out, truths, stats = compute(rows, a.window)
     acks = [v for c in truths.values() for _, v, _ in c]
