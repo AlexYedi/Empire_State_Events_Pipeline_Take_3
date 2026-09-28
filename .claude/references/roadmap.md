@@ -1,111 +1,129 @@
-# Empire State — Roadmap & Plan of Record (v2 · adopted 2026-09-12)
+# Empire State — Roadmap & Plan of Record (v3 · adopted 2026-09-28)
 
-**This file is the single, version-controlled plan of record.** Linear is the live "what's open"
-(`linear-convention.md`); this file is the narrative spine and the *sequencing*. Two rules keep it a
-plan and not a ledger: **the runway never carries Done items** (shipped work drops to §10), and
-**every runway item names its dependency, appetite band, and why-now**. v1 (2026-08-07 → 2026-09-12)
-is preserved in git history; its load-bearing decisions are carried in §9.
+## 1. How to use this file
 
----
+**Read this before proposing work.** It is the one list for product direction, as of 2026-09-28.
+Linear holds the open items (label `carry-over` for anything dated); this file holds direction.
+**Single writer:** one session edits it at a time. §9–§10 are append-only history. v2's arc, programs,
+quarter plan, anchors, kill list and pre-mortem are superseded; they live in git history.
 
-## 1. The arc — from a pipeline that records to an engine that learns
+## 2. North star and outcomes
 
-The system is already good at **recording** (research briefs, `post_event_brief`s, the Notion KG,
-telemetry, the build journal) and newly good at **watching** (ADR-8's drift router, the trust strip,
-relevance recompute). The next horizon is **learning**: every attended event, ingested book, inbox
-signal, and build session becomes exhaust that (a) feeds **one graph**, (b) organized by an explicit
-**reference architecture of applied-AI systems** — so the engine knows *what* to keep an ear to the
-ground on — and (c) improves the pipeline's own skills through a **judged, human-approved loop**.
-It is the software-factory thesis applied to our own system, and the most credible technical-buyer
-story the work can tell: *a self-improving market-intelligence engine, with its exhaust on display.*
+**North star: the body of work generates inbound** — dated organizer, hiring-manager/recruiter or
+speaker inbound attributed to a post or the corpus, hand-logged in `audience-north-star.md` the day it
+happens. **Baseline:** 1 in 9 months (one organizer invite) ≈ 0.1/month; 0 hiring-manager activations.
+**Target by 2027-03-27:** ≥6, ≥2 hiring-manager-class. <3 = "no information", not failure (§7).
 
-## 2. North stars (unchanged from v1)
+| Outcome | Signal | Do-nothing baseline | Target |
+|---|---|---|---|
+| **O1 · Publishing mix follows performance** | Post-event share of published posts; class median vs overall | 26% (13/50); recap median 354 vs overall 262; roundup 197–272 | ≥50% by 12/12; class median ≥1.5× overall |
+| **O2 · Rooms is the destination** | Vercel Web Analytics page views on `/rooms/*` with a LinkedIn referrer, per linked recap; inbound links | 0 links/post, 0 referred views, 0 inbound links | ≥10 referred views/linked recap by 12/12; ≥2 inbound links by 3/27 |
+| **O3 · The search runs through the pipeline** (an outcome, not a forcing function) | Interviews referencing the hub/Rooms/posts; hours per application | 0 recorded; hours per hand-tailored resume | ≥1/month from Nov; <30 min via `/tailor-resume` |
 
-- **Program:** build better, not faster; operational north-star = **acted-on value** (measured by `/tag-outcome`; the value-action registry was retired 2026-09-28).
-- **Career / product:** the **Market-Intelligence Engine** as the differentiator and the job-search asset.
-- **Content:** audience-first documentarian authority (`audience-north-star.md`).
-- **Shared mission (empire-state + gtm-os):** employment is a balanced, first-class outcome of the work — never an at-all-costs imperative that narrows the build.
+## 3. Horizons (≤3 builds in flight; content runs are not builds)
 
-## 3. Programs and lanes
+### Now — October
 
-| | What it is | State (2026-09-12) |
+| Item | Why | Size | Kill / continue test | Linear |
+|---|---|---|---|---|
+| Rooms link in the next two recaps | O2; recaps dead-end | S, no build | 10/28 (§4) | YED-241 |
+| Speaker deep-dives: Postgres 10/9, LeadDev 10/16 | O1; 14 transcripts unmined | S, no build | ≥1 speaker reshare or ≥1.25× recap median by 10/30 → default | YED-243 |
+| Roundup at 1 variant, 10/4–11/1 | O1; weakest format costs most | S, no build | 11/1 (§4) | YED-242 |
+| The Shortlist recap-partner pitch, 10/10 | North star | S | yes/no by 10/24 | YED-244 |
+| X cross-post test, 10/5–11/2 | Only unacted audience signal | S | 11/2 (§4) | YED-239 |
+| Field Report mini-edition, Oct 20–24 | O1 + north star | M, content | 11/7 (§4) | YED-126 |
+| LinkedIn analytics export | Audience claims unmeasured since 8/25 | S, manual | by 11/15, or stop claiming segment reach | YED-247 |
+| Confirm Vercel Web Analytics reads `/rooms/*` views + referrer (shipped with Rooms; no new tool) | 10/28 needs a denominator | S | reads by 10/14, else readout is links-only | — |
+| `/tailor-resume`, on demand | O3 | S, ≤1 d | 2nd use <30 min | YED-151 |
+
+### Next — Nov → Dec 12
+
+| Item | Why | Size | Kill / continue test | Linear |
+|---|---|---|---|---|
+| Field Report #1 (one theme, corpus-wide, cited) | O1 + north star | M | ≥2× recap median saves+reshares or ≥1 speaker/HM DM by 12/5 → quarterly | YED-126 |
+| Theme → prior-post index (flat Notion view) | Back-links compound | S, 1 h | used in ≥3 posts by 12/12 | YED-178 |
+| C-5 "Who's hiring commercial AI roles in NYC, scored", one post | O3 as content | S | HM inbound or ≥1.25× median → monthly | — |
+| Rooms v1.1: search, speaker tags | O2 | M | only after positive 10/28; ≥1.5× views over 3 recaps | — |
+| Second organizer pitch | North star | S | one yes by 12/12 | — |
+| Selective HubSpot pass (~10–15, create-once) | CRM for people met | S | one pass | YED-238 |
+| Dec 12 prep: graph-consumer tally + review | Gate for Later | S | §4 | — |
+
+### Later — Jan → Mar 2027 (all conditional on Dec 12)
+
+| Item | Size | Kill / continue test |
 |---|---|---|
-| **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅→retired 2026-09-28 (ADR-11) doc-KB: ingest + ask only (claim extraction parked, YED-235)→commands archived 2026-09-28, tables + R2 stay · **post-event ✗** · roles ✗ |
-| **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
-| **P3 · The Loop** — learn from exhaust | Rigor layer v2: (retired) correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8. **2026-09-28:** retired the correction-recurrence log, the registry and the weekly rigor review it leaned on (PR template + null-baseline rule instead); re-scope before building | watching ✅ (ADR-8, YED-158) · learning ✗ |
-| **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
-| **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, YED-141, YED-137, Linear-to-git-truth | ongoing |
+| Field Report #2 | M | same bar; two misses kill the format |
+| C-8 pre-read audio, 3 episodes | S ×3 | completions + any "I listened" reply |
+| `/interview-prep` reads Rooms + transcripts (replaces YED-207) | S | used in 2 dossiers |
+| C-2 one chart: companies on NYC stages × open commercial AI roles | S | reposts by named companies |
+| Taxonomy v2 + hub panels (YED-126, YED-114) | L | a named reader beyond Alex |
+| Organizer partnership formalized | S | credit or stage slot by 3/27 |
 
-## 4. The dependency chain
+## 4. Decision dates
 
-`SEC contract (YED-81)` → `P1 producers` → `P2 map` → `P3 loop` → `unattended scheduling (Q1)`
+- **10/24** Shortlist answer: yes → second pitch; no → park C-6 until a second organizer inbound.
+- **10/28** Rooms readout: ≥10 referred views/recap → v1.1 in Nov, C-8 eligible Jan; else Rooms static.
+- **10/30** Deep-dives → default Step 5.6 output, or opt-in.
+- **11/1** Roundup: within ±0.10 of the 3-variant median → lean permanently; >25% worse → revert.
+- **11/2** X: ≥5 builder follows/replies or 1 invite → keep; else drop.
+- **11/7** Field Report mini → full #1, or the format is dead and YED-126 closes "shipped as content".
+- **11/15** LinkedIn export → per-format demographics; else O1 measured on format only.
+- **12/12 · MI graph go/no-go.** Go = ≥2 human-facing consumers read the graph (substrate pull, role-radar, interview prep) and ≥1 produced a published post or an application; baseline: substrate pull only. Go → scoped to the job lens; YED-179 and YED-126 infra eligible on a friction seen twice. No-go → freeze DDL and non-role producers; Supabase = read-only passive store.
+- **12/12** Quarter review, O1–O3 vs baselines. **1/15** Field Report #2 go.
+- **3/27** Six-month review: ≥6 growth · 3–5 hold · <3 format review (not instrumentation).
 
-Producers before organizers before learners: a graph can't be organized before it's filled, and
-nothing learns from exhaust it doesn't emit. SEC sits first because the richest data (people named in
-transcripts) and both scale steps (whole-inbox scan, anything unattended) are gated on it.
+## 5. Idea portfolio (re-ranked 2026-09-28; replaces the 59-row census)
 
-## 5. The quarter — Sep 15 → Dec 12 (2-week cycles as circuit breakers; appetite bands, never estimates)
+**Build next:** Field Report mini → #1 → #2 (C-1) · `/tailor-resume` (YED-151) · YED-178 index · Rooms v1.1 after 10/28 · `/interview-prep` on Rooms at the 2nd interview.
 
-### Phase 0 — Gates & cleanup (→ ~Sep 19)
-| Item | Appetite | Why first |
-|---|---|---|
-| Retired OBS lane (was **YED-177**: GUI pass + smoke test + ETL) — superseded 2026-09-28 by Supercut (`supercut.md`); first live Supercut → `/post-event-content` run replaces it | <1d | YED-177 moot |
+**Test cheaply first:** C-4 deep-dives · C-6 Shortlist · C-7 X · roundup lean · C-5 one post · C-2 one chart (if C-5 gets saves) · C-8 audio (Jan) · a "since last time" recap paragraph from the nightly recompute · deep-dive → speaker DM with the Rooms link (4 sends) · YED-238 · YED-220 items 1–2 as two paragraphs.
 
-### Phase 1 — Close the loops · P1 (Cycles 1–2, ~Sep 22 → Oct 17) → **A1**
-| Item | Appetite | Why now |
-|---|---|---|
-| ~~YED-157 B3–B5~~ — **closed 2026-09-27, superseded by ADR-10.** The claim table, `reference` tier and `approve-claims` gate already exist; the digest/lanes were cut as speculative. Remaining piece = YED-235 (parked, ≤1 day: repoint `extract_claims.py` at `claim`, with a revisit trigger) | — | Library value unproven at close: 2 docs, 0 claims, no real `/ask-library` runs |
-| YED-149 roles → spine producer | 3–7d | Third producer; the job-search lens becomes graph-native |
-| YED-131 nightly topic recompute (pg_cron, no LLM tokens) | <3d | Cheap; unblocks the P2 hub panels |
+**Parked (trigger):**
+- YED-208 content lens → manual index fails after ~10 posts · YED-207 → Dec 12 go + Rooms prep insufficient twice.
+- YED-126 / YED-114 → #1 readers + Dec 12 go + a second viewer · YED-179 → Dec 12 go + friction twice · YED-249 → Dec 12 go.
+- YED-233 backfill, YED-186 → a consumer · YED-65 Clay → first warm-outreach friction.
+- YED-48 → brief regression twice · YED-191 → a public misspelling · YED-182 → a sandbox section in a report · YED-226 / YED-47 → dedup probe >0 pairs.
+- YED-76 → a second viewer · Brief Pulse → a weekly question Notion can't answer · YED-235 → a book quoted in two posts · project ideation → one idea ships · GTM University → GTM-OS calendar.
 
-### Phase 2 — The map · P2 (Cycles 3–4, ~Oct 20 → Nov 14) → **A2**
-| Item | Appetite | Why here |
-|---|---|---|
-| **YED-126 — the architecture lens:** Applied-AI Reference Architecture v1 (PRD-first, Fable-drafted) — layers/components of agentic + enterprise AI systems (model → environment → harness → factory, plus data/retrieval, evals, identity/governance, GTM). **Ships only as** `signal-taxonomy` v2 + topic remap + hub surface + the lens's query shape — never as prose alone | 1–2wk | Needs signal density to be grounded; before P1 it's a whitepaper (the R2 trap). Closes M3 pillar 3. |
-| YED-114 hub topic-intelligence panels — home settled: **empire-state-hub** | 3–7d | The map needs a face |
-| YED-104 T1 audience/conversation intelligence at draft time | 3–7d | Content becomes the graph's first *reader* at draft time (accumulating awareness) |
-| **YED-47 hygiene tier-1 in code** — identity + provenance + dedup | 1–2wk | Duplicate entities are the symptom; the graph must be trustworthy before the loop learns from it |
+**Killed:** P3 "The Loop" / Rigor v2 (YED-162) · ADR-8 Increment 2 (YED-163) · measurement → plugin promotion · the streaming cluster (Signal Desk, Signal Stream, GTM Situation Room, Ask-the-Stream, M2 dashboard, `/scan-trends` YED-180, `/morning-refresh`) · YED-104 · YED-234, 181, 145, 194, 192, 137, 113 · Phase 3 intake form · Stage 1 qualifier · `project-complete` · `/ops/ideas` + `/ops/backlog` · YED-219 as a gated magnet · the 8 portfolio demo builds · a newsletter.
 
-### Phase 3 — The loop · P3 (Cycles 5–6, ~Nov 17 → Dec 12) → **A3**
-| Item | Appetite | Why last |
-|---|---|---|
-| **YED-48** eval harness for event-research (10 golden + judge) | 1–2wk | You can't learn without a score |
-| **Behavioral-exhaust loop v1 / Rigor v2** (YED-162; its correction-recurrence input was retired 2026-09-28, re-scope first): recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
-| **ADR-8 Increment 2** (YED-163): extend the system graph to skills ↔ agents ↔ commands ↔ *outcomes* — the skills/agents graph | 3–7d | Watching → learning needs outcomes on the graph |
-| Measurement → `alex` plugin promotion | <3d | Only after the loop has produced ≥1 merged fix — the proof it's load-bearing |
-| YED-82 craft + honesty + launch (its security-audit half shipped in Phase 0 under the SEC contract) | 3–7d | The hub as the interview artifact, polished after the quarter's proof exists |
+## 6. Removal queue (tail of the 2026-09-28 prune)
 
-**Deliberately deferred to Q1 2027 → one parked issue, YED-179** (unattended producer scheduling — the metered-key question was decided 2026-09-18; learned relevance weights; embedding-based dedup; X/Twitter ingestion). Hub session replay stays YED-113 (parked).
+1. Delete `.claude/hooks/second-fix-nudge.sh`.
+2. `.claude/skills/doc-knowledge-base/` helpers → one `dockb_common.py` in `.claude/scripts/`.
+3. Fix 10 stale references in `.claude/evals/`.
+4. `.claude/scripts/spine_client.py` ~line 348 stale message (guarded: Alex reviews).
+5. `pre-event-content`: renumber around "Step 5 retired".
+6. Fold `.claude/skills/update-anti-patterns.md` into `update-voice-and-style`.
+7. Archive the Linear Build-Rigor project · clear local `.state` scratch.
+8. Hub `/ops/content-performance`: refresh or drop (waits on YED-247).
+9. Rename Notion "Project Ideas" → "Specs & Ideas".
 
-## 6. Anchors (Linear milestones M4–M6 on the MI Engine) — and what each proves
+After this queue: **one-in-one-out.**
 
-| Anchor | Target | Proof |
-|---|---|---|
-| **A1 · One graph, three producers** (M4) | 2026-10-17 | Post-event and roles writing to the spine; trust strip shows them (doc-digest dropped 2026-09-27 — YED-157 closed) |
-| **A2 · The map** (M5) | 2026-11-14 | Reference architecture live as taxonomy v2 + hub panels; the architecture lens answers "what's moving in layer X" |
-| **A3 · The loop closes** (M6) | 2026-12-12 | First judge-gated, exhaust-derived fix merged; event-research eval live; judge de-provisional |
-| **Career** (continuous) | monthly | ≥1 hiring-manager activation traceable to a post or hub artifact (`audience-north-star.md` floor) |
+## 7. Guardrails and the biggest risk
 
-## 7. Kill / re-home / defer (ratified by Alex 2026-09-12)
+1. **No new stores:** no Supabase DDL before a Dec 12 go; no new Notion DBs; no mailing list.
+2. **No meta regrowth:** ≤3 hooks; no dashboards, judge seats, eval harness or telemetry surfaces; analytics = Vercel Web Analytics only.
+3. **No hub build without a readout;** no new `/ops` pages.
+4. **No backfills without a consumer.** Role-radar rubric frozen to ~10/27.
+5. **Don't reopen** Clarify, Gamma, OBS, judge quorum, the no-build window, the roundup's brief-only source, the substrate A/B.
+6. **Contracts hold:** 3 variants, Notion first, source-check claims, scheduled posts frozen, HubSpot selective/create-once, recorded speech never public.
+7. **Employment is measured (O3), never forced.**
 
-- **Canceled:** YED-67 + 68/69/70/71/72/73 (NY Tech Week single-vs-swarm harness — superseded by the cross-provider judge) · YED-41/42/46/57 (Full-Stack-GTM relics) · YED-55/56/59 (Capstone 2 — absorbed conceptually by the MI Engine; the CRM write already exists in YED-142; re-issue as an MI lens when a real outreach friction motivates it) · YED-107 (folded into YED-157 lane D).
-- **Programs closed:** "Full-Stack GTM Roadmap (24-week half)" and "GTM-oS" — milestones at 0%, live ideas already inside the MI Engine + Job-Search Engine. Keeping two programs was the source-of-truth failure at the planning layer.
-- **Re-homed:** YED-47, YED-128, YED-131 → MI Engine · YED-65 → Job-Search Engine · YED-114 → Empire State Hub · YED-129 → Build-Rigor · YED-141 → Empire State Events.
-- **Parked:** this file no longer lists parked items. They live in Linear under label `parked` (with a revisit trigger) or in Notion Project Ideas (without one) — `linear-convention.md` §Container rule, 2026-09-18. Clarify stays dead (a ruling, not a park). *GTM University (GTM-3/GTM-10/GTM-11, formerly YED-98/100/101) un-parked 2026-09-13 → §9; all gtm-OS items moved to the `GTM-OS` Linear team 2026-09-18.*
-- **Corrected to git truth:** YED-155 → Done (shipped in #60) · YED-66 → Done (the manual-upload path *is* `/post-event-content`) · YED-81 → High.
-
-## 8. Pre-mortem (the adversarial pass)
-
-- *The reference architecture becomes a whitepaper nobody reads* → it ships only as taxonomy v2 + panels + lens code.
-- *Post-event floods the graph with low-confidence claims* → staged candidate→approved with a confidence cap, as doc-KB does.
-- *Auto-fixes rot the skills* → proposals only, judge-gated, Alex merges; registry threshold governs.
-- *Sessions collide once three programs run in parallel* → one worktree per program; `reconciliation-terminal-charter.md`.
-- *Job search crowds out builds, or vice versa* → the career lane is *outputs of the programs*, plus one explicit weekly slot.
-
-**Confidence:** ~75% on the ordering (producers → map → loop; SEC-first is non-negotiable). ~50% on dates — they are appetite, and cycles will re-shape items; that is the point.
+**Risk:** the north star is lagging and rare (0.1/month), inviting premature kills or a regrown
+measurement layer. **Mitigation:** every §4 decision reads a 2–4-week leading proxy; inbound is
+hand-logged. If publishing falls below 2 posts/week for 3 weeks: maintenance mode, and Dec 12 defaults
+to no-go. Confidence in the sequence: 65% (n=7–9 per cell; three of four Now tests are firsts).
 
 ## 9. Decision log (dated; append, never edit)
 
+- **2026-09-28 — Roadmap v3 adopted (this file).** P3 loop killed; A1 closes partially met (post-event writes to the spine, YED-160; roles producer deferred to the Dec 12 go/no-go); Dec 12 go/no-go criteria in §4; analytics = Vercel Web Analytics (PostHog removed).
+- **2026-09-28 — Carry-overs** live in Linear (label `carry-over`, due date, Who/What/When/Why/Context), rendered on the hub `/ops/todos`.
+- **2026-09-28 — Recorded speech never public;** affected history purged.
+- **2026-09-28 — Rooms shipped** on the hub, with Vercel Web Analytics.
+- **2026-09-28 — Inbox lane retired (ADR-11).** Judge = one on-demand Sonnet reviewer by artifact class (YED-231).
+- **2026-09-28 — Complexity reset:** the pipeline is the product; meta layer cut; `CLAUDE.md` ≤1,800 words, ≤3 hooks, one-in-one-out.
 - **2026-09-18 — Oct-9 decisions ruled (Alex).** YED-128 **folded** into YED-168 (migrations become the spine's source of truth by construction; acceptance lines carried). YED-175 systems diagnostic **dropped** — the reconciliation is the intervention; reopen only if the container-rule audit trends up. YED-34 **re-scoped from delete to audit-and-place** after inspection (108 agent + 102 command files of real role content; promote the dispatch-worthy 10–20 to plugin root, fold the rest into umbrella skills as personas/references; delete nothing).
 - **2026-09-18 — Four Oct-2 decisions ruled (Alex, on recommendation).** YED-129: **product = PRD, infra = spec** — ADRs/in-repo references are the spec artifact for infra; the three pending PRD mirrors (judge, ADR-8, inbox-miner) are closed as "ADR is the spec". YED-173: Content Pipeline v2 Stage 2 **killed as a unit** (parts absorbed: schemas → YED-168, eval gates → YED-48/judge, status automation behind the YED-23 flip). YED-174: YED-30 Step 5 CLAUDE.md canonical backport **approved** — execute in a fresh session after PR #79. YED-176: **Gemini fallback stays the default**; no Anthropic key until a scripted Claude call is on the runway.
 - **2026-09-18 — Backlog reconciliation.** Container rule ratified (`linear-convention.md`); ~170 inventory items triaged (`docs/archive/notes/backlog-triage-2026-09-18.md`) into 9 decisions (YED-128/129/34/173–176), ~20 new issues (YED-177–197), merges, and deletions; ADR-8 Amendment 3 (Increment 4); `GTM-OS` Linear team created and the 11 gtm-OS issues moved (GTM-1…11); labels `parked`/`decision` live. Prioritization (step 2) runs on the clean board.
@@ -121,6 +139,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 ## 10. Shipped log (condensed; full history in git + the hub `/journal`)
 
+- **2026-09-28** — Complexity reset: dead surface pruned, lean `CLAUDE.md`, one-reviewer judge (YED-231), ADR-11, Supercut replaces OBS, Rooms live, nightly topic recompute, carry-overs, roadmap v3.
 - **2026-09-19 → 09-27** — Knowledge Substrate: S1a/S2 migrations live on prod, **ADR-10 Accepted 2026-09-27 with Amendment 1** after the A/B (YED-172) split verdict (material: substrate; packaging: legacy) · post-event → MI producer (YED-160) + backfill through the producer (YED-171) · event-namespace single-writer + graph-write freeze enforced at the one write path (YED-213/214) · conditioner aims claims at named speakers + question claims first-class (YED-217/218) · third judge seat + null-baseline registry contract (YED-209/212) · role-radar: no-technical-roles scope (YED-221), comp-gate rules for every posting shape (YED-210), Roles DB hygiene (YED-224) · backlog reconciliation closed (YED-199).
 - **2026-09-13 → 09-18** — YED-81 SEC & PII guardrail contract + `spine_client.py` write path (ADR-9, #73) · YED-161 inbox boundary mechanism (#74) + denylist v1 accepted (#75) · YED-166 slide↔recording alignment (#77) · YED-167 Postgres glossary + health review (#78) · ADR-10 Knowledge Substrate stub minted.
 - **2026-09-12** — Reconciliation to single-source `main` (#60–#70): doc-KB Phase A + A.5 (YED-118/156) + YED-157 B1+B2 · Inbox Miner v1 (YED-153, ADR-7) · the since-retired OBS capture lane (YED-154, replaced by Supercut 2026-09-28) · ADR-8 drift router (YED-158) · per-session telemetry shards (YED-159) · charter + git conventions (#67).
@@ -130,8 +149,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 ## 11. Pointers
 
-- **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Job-Search Engine · Empire State Hub · Empire State Events · Build-Rigor & Measurement.
-- **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `docs/archive/references/signal-taxonomy.md` (archived 2026-09-28, no live reader; the P2 v2 starts from it).
-- **Rigor:** `.github/pull_request_template.md` · `judge.md` · `build-session-contract.md` · null-baseline rule in `CLAUDE.md` §5 · `prd-template.md` · `linear-convention.md`.
-- **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
-- **Decisions:** `docs/adr/` (ADR-0…11) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
+- **Open items:** Linear (team Yedibalian; `carry-over`, `parked`) · hub `/ops/todos`.
+- **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md` · `outreach-templates.md`.
+- **Discipline:** `.github/pull_request_template.md` · `judge.md` · `second-fix-stop-rule.md` · `linear-convention.md` · `build-in-public.md`.
+- **MI graph:** `market-intel-spine.md` · **Decisions:** `docs/adr/` · archive: `docs/archive/` · **Workflows:** `.claude/WORKFLOWS.md`.
