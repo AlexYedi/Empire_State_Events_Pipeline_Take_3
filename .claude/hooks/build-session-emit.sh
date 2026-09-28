@@ -5,7 +5,7 @@
 #   1. ALWAYS append an authoritative `build_session` record to
 #      .claude/.state/telemetry/build-sessions/<session_id>.jsonl (source of truth; survives any
 #      backend change). Sharded per session 2026-09-12 (YED-159); moved to this GITIGNORED location
-#      2026-09-29 (YED-229) — appending to a TRACKED file every turn meant every branch switch needed
+#      2026-09-28 (YED-229) — appending to a TRACKED file every turn meant every branch switch needed
 #      a "telemetry churn" commit. The pre-shard single file build-sessions.jsonl and the pre-YED-229
 #      tracked shards under .claude/artifacts/build-sessions/ are frozen history; readers
 #      (build_journal.py, /rigor-review) read both the frozen tracked history and the live gitignored shards.
@@ -103,7 +103,7 @@ RECORD=$(jq -nc \
 
 # --- 1. authoritative append-only record (always) ---
 # Sharded per session since 2026-09-12 (YED-159): one file per session_id under build-sessions/.
-# Moved to a GITIGNORED directory 2026-09-29 (YED-229): the tracked single file (build-sessions.jsonl)
+# Moved to a GITIGNORED directory 2026-09-28 (YED-229): the tracked single file (build-sessions.jsonl)
 # and later the tracked shards were each in turn "the one guaranteed merge conflict and N churn
 # commits/month" — sharding fixed the conflicts but not the churn (every Stop still dirtied a tracked
 # file). Writing under .claude/.state/ (already gitignored) removes the churn entirely: nothing here

@@ -2,7 +2,7 @@
 # Stop hook — v2-trigger logging
 # Issue: YED-27 Hook B
 #
-# UNWIRED from .claude/settings.json 2026-09-29 (YED-229 hook-unwiring pass) — the review found the
+# UNWIRED from .claude/settings.json 2026-09-28 (YED-229 hook-unwiring pass) — the review found the
 # meta layer was recording mostly its own noise. Left on disk (not deleted; a separate prune pass
 # decides) and re-pointed at a gitignored path so a future manual re-wire doesn't reopen the tracked-
 # file churn this pass removed. Re-wire by adding it back to .claude/settings.json's Stop hooks.
