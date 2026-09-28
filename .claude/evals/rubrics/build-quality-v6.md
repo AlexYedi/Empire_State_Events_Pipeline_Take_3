@@ -5,6 +5,15 @@ Scope: **build artifacts** in the Empire State pipeline — skills, commands, ho
 Owned by the eval convention (`rubric_version` = `build-quality@6`; never mutate — bump to `@7`).
 Pair with the judge system prompt **`prompts/judge-system-v2.md`**.
 
+> **Frozen, with a harness enforcement note (YED-231, 2026-09-28).** `@6` is the last build rubric; the criteria,
+> anchors, flags and the reviewer's instructions below are unchanged. Two things are now enforced by the harness
+> (`judge_lib.finalize()`), not by composite arithmetic or a quorum, because the quorum is gone:
+> (1) **`privacy_layer_defect` no longer caps the composite.** Setting it still flags the run, and any bundle touching a
+> guarded path (spine write path, privacy filters, allow/deny lists, `.gitignore`) flags for human review whatever the
+> score — a deterministic path rule. The composite-cap row for it in the JSON block below is historical.
+> (2) **`flat_ceiling` → the run flags** (read "quorum escalates" below as "the run flags; Alex is asked").
+> Design: `.claude/references/judge.md`.
+
 **What changed from `@5` (2026-09-28, YED-231 — Alex's privacy-layer ruling on the YED-236 quorum):**
 One new composite cap; criteria, weights, anchors and pass band are **unchanged**, so `@6` composites are comparable to
 `@5` everywhere the new flag is false.
