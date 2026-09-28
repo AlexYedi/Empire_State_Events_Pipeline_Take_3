@@ -5,7 +5,7 @@ The persistent **topic-normalization** map for the signal scanners (originally `
 so normalization is **consistent run-to-run**, not re-derived ad-hoc each run. Applies the
 `alex:signal-taxonomy` schema/mapping discipline.
 
-**How to use:** at the start of trend-radar Step 2, read this file. For each raw item, map its candidate
+**How to use:** at the start of a scanner's topic-normalization step (originally trend-radar Step 2), read this file. For each raw item, map its candidate
 tags to a `canonical_topic` via the synonym lists below. If a raw tag matches nothing here, create a new
 canonical entry (human-readable, GTM-facing) and **append it back to this file** in the same run — that is
 how the map grows. Prefer merging near-synonyms (under-merging hides corroboration); split only genuinely

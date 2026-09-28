@@ -29,7 +29,9 @@ WINDOW = 40
 # history / logs / generated data: describing the past there is correct, not drift
 SKIP_DIRS = (".claude/artifacts/", ".claude/evals/logs/", ".claude/notes/",
              ".claude/proposals/", "docs/adr/", ".claude/data/")
-SKIP_FILES = {REGISTRY, ".claude/evals/correction-recurrence.md", ".claude/hooks/check-tombstones.py"}
+# controls/manifest.json pins historic control artifacts by git blob (a removed file is still a valid control)
+SKIP_FILES = {REGISTRY, ".claude/evals/correction-recurrence.md", ".claude/hooks/check-tombstones.py",
+              ".claude/evals/controls/manifest.json"}
 # text files where a live call to a removed tool can hide: docs AND executable code/config
 SCAN_EXT = (".md", ".py", ".sh", ".mjs", ".js", ".ts", ".json", ".yml", ".yaml", ".toml")
 
