@@ -8,8 +8,7 @@ never hard-blocks. Run it with `python3 .claude/evals/judge.py` (method: `.claud
 from 2026-07-17 to 09-27: the Gemini and OpenAI seats and their adapters, the quorum merge, the per-seat trust ladder
 (statuses, demotion rules, canaries, the last-voting-seat guard) and the OpenAI spend cap. The extra seats did not earn
 their keep: Gemini's agreement was its always-pass baseline, the OpenAI seat stayed in shadow, and the quorum escalated
-on its own bundle mechanics, so Alex was asked about runs where nothing was wrong. Historic run logs and
-`spend-ledger.jsonl` are kept as history; the retired design is in git history and
+on its own bundle mechanics, so Alex was asked about runs where nothing was wrong. Historic run logs (now gitignored) and the spend ledger are gone from the tree; the retired design is in git history and
 `docs/archive/proposals/third-judge-seat-openai.md`.
 
 ## How a run works
