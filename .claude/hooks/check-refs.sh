@@ -8,7 +8,8 @@
 # "dangling" never wrongly caps a good artifact. It errs toward under-flagging (safe): if a run is ambiguous it is
 # skipped, never guessed.
 # Spec: .claude/references/judge.md.
-# The extraction rules here are shared VERBATIM with .claude/scripts/build_graph.py (ADR-8 D2) — change both.
+# The extraction rules here were shared verbatim with build_graph.py (ADR-8 D2) until that script was archived
+# 2026-09-28 (docs/archive/scripts/build_graph.py); this file is now their only live home.
 #
 # Usage: check-refs.sh --artifact <path>
 #   stdout: one missing referenced path per line (empty = none missing)
@@ -39,7 +40,7 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
       esac
       # Template / regex / alternation: the path charset stops at `{`, `\`, `(`, `|`, `[`, `$`, `%`,
       # leaving a truncated prefix that can never exist on disk (`evolution-log-{slug}.md`,
-      # `ADR-\d+`, `keyterms.(json|md)`). Shared verbatim with build_graph.py per ADR-8 D2.
+      # `ADR-\d+`, `keyterms.(json|md)`).
       #
       # PER-MATCH, not per-run (fixed 2026-09-12, judge defect D4). The first cut dropped the WHOLE
       # whitespace-run on a template hit, silently swallowing real references that shared the run:
@@ -62,7 +63,7 @@ CANDIDATES=$(grep -oE '[^[:space:]]*\.claude/[^[:space:]]*' "$ARTIFACT" 2>/dev/n
 missing=0; checked=0; ignored=0; runtime=0
 # Runtime-created append-only ledgers (YED-227): a missing `.claude/artifacts/<name>.jsonl` that some tracked
 # script appends to is absent-until-first-write, not a defect. The rule lives in ONE place —
-# .claude/hooks/runtime_ledgers.py — shared with build_graph.py (ADR-8 D2). Computed once, lazily.
+# .claude/hooks/runtime_ledgers.py. Computed once, lazily.
 RUNTIME_LEDGERS=""; RUNTIME_LOADED=0
 while IFS= read -r ref; do
   [ -n "$ref" ] || continue
@@ -74,8 +75,8 @@ while IFS= read -r ref; do
   # to qualify — an outright typo is not ignored, so it still flags.
   # try the bare path AND with a trailing slash: .gitignore lists runtime DIRS as ".claude/.state/", and
   # `git check-ignore .claude/.state` (no slash) does not match that rule.
-  # YED-236: a gitignored target is excused whether or not it exists on THIS disk — same policy as
-  # build_graph.py (ignored = absent), so a run in Alex's checkout and in a clean clone agree.
+  # YED-236: a gitignored target is excused whether or not it exists on THIS disk (ignored = absent), so a
+  # run in Alex's checkout and in a clean clone agree.
   if { git check-ignore -q "$ref" 2>/dev/null || git check-ignore -q "${ref%/}/" 2>/dev/null; }; then
     ignored=$((ignored+1))
     continue

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""inbox_boundary — the /scan-inbox scan boundary as a MECHANISM, not a convention (YED-161, ADR-7 D3).
+"""inbox_boundary — the inbox scan boundary as a MECHANISM, not a convention (YED-161, ADR-7 D3).
+
+Status (2026-09-28): the inbox lane it bounded is retired (ADR-11); this file is kept for the spine_client
+tier-0 denylist backstop (ADR-9). The CLI below is that retired lane's interface, kept as-is.
 
 Before this file, `inbox-denylist.md` described itself as "the primary PII/SEC control" and nothing
 executed it. This module is the single parser + matcher for BOTH boundary files, and the runtime gate
