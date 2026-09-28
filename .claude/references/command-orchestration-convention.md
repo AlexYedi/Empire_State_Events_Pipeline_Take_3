@@ -1,6 +1,6 @@
 # Command orchestration convention (v1)
 
-**Why this exists.** The first `/rigor-review` (2026-07-15) found a recurring build defect —
+**Why this exists.** A 2026-07-15 build review (the since-retired weekly rigor review) found a recurring build defect —
 `thin-declarative-command` (count 5, the entire Jul-2 GTM suite): a `.claude/commands/*.md` that *names*
 agents but ships **no orchestration** — no dispatch order, no parallel/serial control flow, no output
 destination, no failure modes. A user running it would get nothing deterministic. This file is the
@@ -53,7 +53,7 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
   deferred, not built out speculatively.
 
 ## Build-time hook (makes the fix stick, not just documented)
-- A **command/pipeline** build is *non-trivial* → the DoD gate applies. Its **spec-artifact** item is
+- A **command/pipeline** build is *non-trivial* → the PR template's checkboxes apply. Its **spec-before-code** box is
   satisfied by conforming to this skeleton (steps 1–7 present or explicitly N/A-with-reason).
 - The build-quality judge scores command completeness against this skeleton (`build-quality@2`
   completeness anchor). A command that lists agents without dispatch/collect/output logic **fails**

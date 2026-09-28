@@ -17,7 +17,7 @@
 #
 # Session id: prefers $CLAUDE_CODE_SESSION_ID (set in in-session Bash calls, same id the
 # Stop hook receives as .session_id); falls back to `_pending` under Dock/--resume/subagent
-# contexts where the env var is absent — the dod-close.sh / build-session-emit.sh convention.
+# contexts where the env var is absent — the build-session-emit.sh convention.
 #
 # Usage (called by the command specs, NOT by a user):
 #   deep-read-ledger.sh add      "<event title>" "<notion page_id>"   # Step 4g — default PENDING (idempotent per page_id)
@@ -108,7 +108,7 @@ case "$CMD" in
       '{event:$e, page_id:$p, marker:"waived", reason:$r, ts:$t}')
     _upsert "$PID" "$ROW"
     # Durability (review finding #5): a waive is NOT a silent pass. Record it in the same
-    # durable failure log the gate writes, so a self-waive still surfaces in rigor-review.
+    # durable failure log the gate writes, so a self-waive still surfaces to a human.
     mkdir -p "$(dirname "$FAIL_LOG")" 2>/dev/null
     jq -cn --arg s "$SID" --arg e "$EVENT" --arg p "$PID" --arg r "$REASON" --arg t "$NOW" \
       '{event:"deep_read_gate_waived", session:$s, page_event:$e, page_id:$p, reason:$r, ts:$t}' >> "$FAIL_LOG" 2>/dev/null

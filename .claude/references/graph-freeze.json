@@ -33,7 +33,7 @@
   "override": {
     "how": "GRAPH_FREEZE_OVERRIDE=\"<why>\" as an environment variable — it works for EVERY writer, because most of them (recompute_relevance, backfill_people, inbox_signal_write; merge_topics before it was retired) take no CLI arguments. substrate.py additionally accepts --freeze-override \"<why>\" for the same effect with a friendlier message.",
     "logged_to": ".claude/artifacts/graph-freeze-overrides.jsonl",
-    "note": "An override is data, not a failure — same philosophy as a DoD waiver. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
+    "note": "An override is data, not a failure — same philosophy as the old DoD waiver log. It exists so an emergency is not silently blocked, and so the pattern is visible if it gets used routinely."
   },
 
   "lifted": "2026-09-24",

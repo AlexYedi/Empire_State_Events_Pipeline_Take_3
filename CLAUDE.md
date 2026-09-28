@@ -71,12 +71,9 @@ These protect irreversible external effects. They do not get waived.
 
 **Linear is the source of truth for what's open.** Issues for workstreams and dated decisions; the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
 
-**Build discipline.** A build is non-trivial if it adds or changes a skill, agent, command or pipeline component, alters a schema or data contract, or is hard to reverse. Before closing one:
-1. A spec existed before the code: an ADR or in-repo reference for infra, a ≤1-page PRD (`prd-template.md`) for anything with an audience.
-2. The Linear issue is opened or updated.
-3. One adversarial pass in writing (a pre-mortem question or a `cto-principal-architect` check).
+**Build discipline lives in the PR template** (`.github/pull_request_template.md`): spec before code (PRD for product builds, ADR or in-repo reference for infra and data-contract changes), Linear issue linked, one adversarial pass. No waiver log, no close-out ritual. Run `/judge-build` only on the artifact-class triggers in `.claude/skills/judge-build/SKILL.md` (one Sonnet reviewer; it flags, it does not gate; spec `.claude/references/judge.md`). A merged PR can still leave work uncommitted: sweep `git status`.
 
-The judge is not a DoD item: run `/judge-build` when the artifact class calls for it, per the triggers in `.claude/skills/judge-build/SKILL.md` (new skill or command at first ship; code over ~150 lines or touching a guarded path; never on the judge itself). One Sonnet reviewer; it flags, it does not gate (spec `.claude/references/judge.md`). Close with `/dod-close`. A DoD-closed build can still be uncommitted: sweep `git status`.
+**Never report a metric without its do-nothing baseline** (the null-baseline rule).
 
 **Second-fix stop rule** (`second-fix-stop-rule.md`). On the second fix to the same component in one workstream, judge round 3+, or a Linear issue whose purpose is to follow up something built in the last 7 days: stop patching and ask `alex:cto-principal-architect` one question, "is this a design problem, and what should we remove?" Removal and revert are first-class outcomes.
 
