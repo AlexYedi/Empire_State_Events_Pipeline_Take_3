@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """test_bundle_multifile.py: bundle_version 3 — range/files bundles + the whole-bundle quote haystack (YED-231 §8).
 
-Offline and free: builds bundles from git history and replays logged quotes; no seat is called.
-The fixture range is PR #139 (c607c08..42602e4): 7 code/doc files + 5 telemetry .jsonl rows, ~78k chars in full.
+Offline and free: builds bundles from a synthetic fixture repo and replays a logged quote row; no seat is called.
+History-independent: the range, the files and the 09-27 log row come from fixtures/judge_range_fixture.json,
+materialised as a throwaway git repo (fixtures/fixture_repo.py), so a rewrite of this repo's history cannot break it.
+The fixture has the shape of PR #139: 7 code/doc files + 5 telemetry .jsonl rows, > 60k chars in full.
 Run from the repo root: python3 .claude/evals/test_bundle_multifile.py
 """
-import json, os, subprocess, sys, tempfile
+import atexit, json, os, shutil, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures"))
 import judge_lib as jl
+import fixture_repo
 
 ROOT = os.getcwd()
 SYS, RUB = ".claude/evals/prompts/judge-system-v2.md", ".claude/evals/rubrics/build-quality-v6.md"
-RANGE = "c607c08..42602e4"
-SPEC_NOTE = "docs/archive/notes/stop-gate-per-turn-2026-09-27.md"      # the spec the 09-27 deep-read-gate run was given
+ASYS, ARUB = os.path.join(ROOT, SYS), os.path.join(ROOT, RUB)
 ok = n = 0
 
 
@@ -22,29 +25,33 @@ def ck(name, cond, detail=""):
     print(("  ✓ " if cond else "  ✗ ") + name + (f"   {detail}" if detail and not cond else ""))
 
 
-if any(subprocess.run(["git", "cat-file", "-e", c + "^{commit}"], capture_output=True).returncode for c in ("42602e4", "2510701")):
-    print("  ✗ fixture commits (PR #139 range, 2510701) not reachable — run `git fetch origin` first"); sys.exit(1)
+FX_DIR = tempfile.mkdtemp(prefix="judge-fixture-repo-")
+atexit.register(shutil.rmtree, FX_DIR, True)
+fx = fixture_repo.build(FX_DIR)
+os.chdir(FX_DIR)                          # the judge code reads git from its working directory; nothing else changes
+RANGE, SPEC_NOTE = fx["range"], fx["spec_note"]      # the spec the 09-27 deep-read-gate run was given (synthetic stand-in)
 
-b1 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[SPEC_NOTE], rng=RANGE)
-b2 = jl.build_bundle(None, "hook", SYS, RUB, spec_files=[SPEC_NOTE], rng=RANGE)
+b1 = jl.build_bundle(None, "hook", ASYS, ARUB, spec_files=[SPEC_NOTE], rng=RANGE)
+b2 = jl.build_bundle(None, "hook", ASYS, ARUB, spec_files=[SPEC_NOTE], rng=RANGE)
 paths = [f["path"] for f in b1["files"]]
 WANT = {".claude/evals/test_gate_in_progress.sh", ".claude/hooks/deep-read-gate.sh", ".claude/hooks/gate-sweep-sessionstart.sh",
         ".claude/hooks/substrate-gate.sh", ".claude/scripts/spine_client.py", ".claude/settings.json",
         ".claude/skills/rigor-review/SKILL.md"}
 ck("range: the 7 code/doc files are in the bundle", set(paths) == WANT, str(paths))
 ck("range: none of the 5 telemetry .jsonl rows is", not any(p.endswith(".jsonl") for p in paths))
-ck("range: bundle_version 3, artifact id names the range", b1["bundle_version"] == 3 and b1["artifact"] == "range:c607c08..42602e4")
+ck("range: bundle_version 3, artifact id names the range",
+   b1["bundle_version"] == 3 and b1["artifact"] == f"range:{fx['base'][:7]}..{fx['head'][:7]}")
 ck("range: artifact_sha256 is stable across two builds", b1["artifact_sha256"] == b2["artifact_sha256"])
 ck("range: the whole bundle is byte-stable too", b1["bundle_sha256"] == b2["bundle_sha256"])
 ck("range: the diff is carried as a WHAT CHANGED section", "===== WHAT CHANGED" in b1["text"])
 ck("range: each file under its own FILE header", all(f"===== FILE: {p} (" in b1["text"] for p in WANT))
 
-# the 60k rule: PR #139 is ~78k chars in full, so files > 400 lines go as hunks (and only those)
+# the 60k rule: the range is > 60k chars in full, so files > 400 lines go as hunks (and only those)
 modes = {f["path"]: f["mode"] for f in b1["files"]}
 ck("size rule: > 60k chars flips bundle_mode to hunks", b1["bundle_mode"] == "hunks")
 ck("size rule: only the > 400-line file is hunked", modes[".claude/scripts/spine_client.py"] == "hunks"
    and all(m == "full" for p, m in modes.items() if p != ".claude/scripts/spine_client.py"), str(modes))
-small = jl.build_bundle(None, "ref", SYS, RUB, rng="54fa9fc..071fff8")
+small = jl.build_bundle(None, "ref", ASYS, ARUB, rng=fx["small_range"])
 ck("size rule: a small range stays full", small["bundle_mode"] == "full" and small["files"][0]["mode"] == "full")
 
 hay = jl.bundle_haystack(b1)
@@ -56,14 +63,13 @@ q = jl.verify_quotes([{"quote": "the stop gate now fails open when the ledger is
 ck("a fabricated quote still fails", q["unverified"] == 1 and q["matched_in"] == [None])
 
 # the deep-read-gate regression (09-27): three CORRECT quotes (two from the spec note, one from spine_client.py as it
-# stood before this range changed it) were stripped as fabricated because the haystack was one file; that removed the only voting seat.
-# evals/logs/ is untracked since 2026-09-28: read the logged row at the last commit that tracked it
-LOG_AT = "2510701:.claude/evals/logs/2026-09-27-deep-read-gate-sonnet-deep-read-gate.jsonl"
-row = [json.loads(l) for l in subprocess.run(["git", "show", LOG_AT], capture_output=True, text=True, check=True).stdout.splitlines() if l.strip()][-1]
+# stood before the range changed it) were stripped as fabricated because the haystack was one file; that removed the only
+# voting seat. The logged row (trimmed to its quotes) lives in the fixture.
+row = fx["log_row"]
 stripped = [d for d in row["defects"] if any(str(d.get("quote") or "").startswith(u[:60]) for u in row["quote_check"]["unverified_quotes"])]
 ck("regression fixture: the 3 stripped quotes are recovered from the log", len(stripped) == 3, str(len(stripped)))
-# deep-read-gate.sh was deleted 2026-09-28 (unwired); read it at the fixture commit
-old = jl.verify_quotes(stripped, subprocess.run(["git", "show", "42602e4:.claude/hooks/deep-read-gate.sh"], capture_output=True, text=True, check=True).stdout, "hook")
+old = jl.verify_quotes(stripped, subprocess.run(["git", "show", f"{fx['head']}:.claude/hooks/deep-read-gate.sh"],
+                                                capture_output=True, text=True, check=True).stdout, "hook")
 ck("regression: against the old one-file haystack they fail (reproduced)", old["unverified"] == 3)
 new = jl.verify_quotes(stripped, hay, "hook")
 ck("regression: against the whole bundle all 3 verify", new["unverified"] == 0, str(new["unverified_quotes"]))
@@ -72,10 +78,12 @@ ck("regression: two matched in the spec note, one in the sibling file's removed 
 ck("regression: the whole row now clears the 30% bar", not jl.verify_quotes(row["defects"], hay, "hook")["evidence_unverified"])
 
 # single-file bundles: text unchanged in shape; spec text joins the haystack
-one = jl.build_bundle(".claude/hooks/density-check.sh", "hook", SYS, RUB, spec_files=[SPEC_NOTE])
+one = jl.build_bundle(".claude/hooks/deep-read-gate.sh", "hook", ASYS, ARUB, spec_files=[SPEC_NOTE])   # in the fixture repo
 ck("single-file: bundle_version 3, ARTIFACT CONTENT layout kept", one["bundle_version"] == 3 and "===== ARTIFACT CONTENT" in one["text"]
-   and one["artifact"] == ".claude/hooks/density-check.sh")
+   and one["artifact"] == ".claude/hooks/deep-read-gate.sh")
 ck("single-file: a spec quote now verifies", jl.verify_quotes(stripped[:1], jl.bundle_haystack(one), "hook")["unverified"] == 0)
+
+os.chdir(ROOT)                            # the rest reads files on disk in this repo (HEAD, not history)
 
 # --files: named files on disk, same haystack rule
 fb = jl.build_bundle(None, "code", SYS, RUB, files=[".claude/evals/judge_lib.py", ".claude/hooks/seat-log.py"])
