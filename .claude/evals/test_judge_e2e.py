@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""test_judge_e2e.py: judge.py run -> --resume -> ack on real multi-file ranges, offline (YED-231 acceptance).
+"""test_judge_e2e.py: judge.py run -> --resume -> ack on multi-file bundles, offline (YED-231 acceptance).
 
 No model is called: a canned reviewer verdict stands in for the Sonnet subagent. Logs and state go to a temp dir.
 Checks: a multi-file PR ends in pass/flag without escalating on bundle mechanics (a quote from file 2 verifies);
 one command runs the whole judge; Alex is asked only on flag; a guarded path flags whatever the score; acks are
-append-only and one per run. Run from the repo root: python3 .claude/evals/test_judge_e2e.py
+append-only and one per run. The range case runs in a synthetic fixture repo (fixtures/judge_range_fixture.json),
+so no commit of this repo's history is pinned. Run from the repo root: python3 .claude/evals/test_judge_e2e.py
 """
 import json, os, subprocess, sys, tempfile
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures"))
+import fixture_repo
 ok = n = 0
 
 
@@ -20,6 +23,13 @@ tmp = tempfile.mkdtemp(prefix="judge-e2e-")
 env = dict(os.environ, JUDGE_LOG_DIR=os.path.join(tmp, "logs"), JUDGE_STATE_DIR=os.path.join(tmp, "state"),
            CLAUDE_PROJECT_DIR=os.getcwd())
 J = lambda *a: subprocess.run(["python3", ".claude/evals/judge.py", *a], capture_output=True, text=True, env=env)
+# the range case: `run --range` (the only step that reads git) runs unchanged with the fixture repo as its project dir;
+# resume/ack read only the state/log dirs, so they run from here as usual
+fx = fixture_repo.build(os.path.join(tmp, "fixture-repo"))
+fx_env = dict(env, CLAUDE_PROJECT_DIR=fx["root"])
+JUDGE, SYS, RUB = (os.path.join(os.getcwd(), p) for p in (".claude/evals/judge.py", ".claude/evals/prompts/judge-system-v2.md",
+                                                          ".claude/evals/rubrics/build-quality-v6.md"))
+JR = lambda *a: subprocess.run(["python3", JUDGE, *a], capture_output=True, text=True, env=fx_env)
 
 
 def verdict(quote_from: str | None, score: float = 0.88) -> str:
@@ -35,9 +45,6 @@ def verdict(quote_from: str | None, score: float = 0.88) -> str:
     return p
 
 
-if subprocess.run(["git", "cat-file", "-e", "42602e4^{commit}"], capture_output=True).returncode:
-    print("  ✗ fixture ranges not reachable — run `git fetch origin` first"); sys.exit(1)
-
 # 1. a multi-file bundle with NO guarded path (two hooks, --files)
 r = J("run", "--files", ".claude/hooks/check-refs.sh", ".claude/hooks/density-check.sh", "--artifact-type", "hook",
       "--label", "e2e-files")
@@ -50,8 +57,8 @@ ck("resume: a quote from file 2 verifies and a clean multi-file run PASSES (no e
    r.returncode == 0 and "PASS" in r.stdout and "ASK ALEX" not in r.stdout, r.stdout + r.stderr)
 
 # 2. a range that touches the spine write path: FLAG for human review even at a high score
-r = J("run", "--range", "c607c08..42602e4", "--artifact-type", "hook", "--label", "e2e-range")
-ck("run --range: PR #139 builds and warns about the guarded path up front", r.returncode == 0 and "guarded path" in r.stdout,
+r = JR("run", "--range", fx["range"], "--artifact-type", "hook", "--label", "e2e-range", "--system", SYS, "--rubric", RUB)
+ck("run --range: the PR #139-shaped fixture range builds and warns about the guarded path up front", r.returncode == 0 and "guarded path" in r.stdout,
    r.stdout + r.stderr)
 r = J("run", "--resume", "e2e-range", "--verdict", verdict(None, 0.95))
 ck("resume: guarded path flags whatever the score, and Alex is asked", "FLAG" in r.stdout and "ASK ALEX" in r.stdout
