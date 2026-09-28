@@ -206,7 +206,7 @@ Summarize results to user:
 
 ### Step 7: Auto-write winner to Notion (added 2026-05-24)
 
-Per CLAUDE.md MCP automation rule #1, after Step 6 reports back, auto-write the
+Per CLAUDE.md §5 automation defaults, after Step 6 reports back, auto-write the
 winning variant to Notion rather than asking Alex to paste it manually.
 
 **If the autoresearch was run against an existing Content Draft** (e.g.,

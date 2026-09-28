@@ -17,7 +17,7 @@ Prior runs leaned almost entirely on fresh web search and never reused accumulat
 
 ## The core discipline (read this first)
 
-**Verify-first, not restate.** Prior knowledge enters research as *starting context and leads to refresh/verify* — never as fact to restate. You never present a prior claim as current truth. Every fact you carry forward is tagged so a downstream specialist knows whether to lean on it or re-check it. This is what keeps stale or unsourced prior material from flowing into public content (CLAUDE.md Rule 12).
+**Verify-first, not restate.** Prior knowledge enters research as *starting context and leads to refresh/verify* — never as fact to restate. You never present a prior claim as current truth. Every fact you carry forward is tagged so a downstream specialist knows whether to lean on it or re-check it. This is what keeps stale or unsourced prior material from flowing into public content (the source-check rule, CLAUDE.md §6).
 
 **Completeness over curation — on the *relevant slice*.** Within what's relevant to this event, keep the detail whole (don't compress a rich prior card into one line). Curation of what actually informs the brief happens *downstream*, when the specialists and synthesizer select from your pack. But you DO filter hard for relevance up front — drop the long tail so breadth doesn't become noise.
 
@@ -100,7 +100,7 @@ research — it aims it.
 
 - **`KNOWN`** — previously verified AND still fresh (default freshness threshold **60 days**; tighter for fast-moving facts like funding/headcount, looser for stable bio/positioning). Usable as a foundation. Still cite its source.
 - **`STALE`** — was verified once but is now past the freshness threshold. Carry it as a **must-refresh lead**, not as current fact. The specialist re-checks it via web search.
-- **`UNVERIFIED`** — either (a) asserted in a prior brief with **no cited primary source**, or (b) any **firm/person thesis / positioning / belief** claim ("X's fund bets on Y over Z", "they believe W") regardless of prior confidence. **Exception:** a *first-hand* speaker claim (Alex was in the room) is carried as an attributed claim, flagged on its attribution. See "First-hand speaker claims" below; its content is still never promoted to fact. Per CLAUDE.md Rule 12, these **must be re-verified before any public use** and must **never be restated as fact**. Route them so the synthesizer lands them under the brief's **Verification Flags**.
+- **`UNVERIFIED`** — either (a) asserted in a prior brief with **no cited primary source**, or (b) any **firm/person thesis / positioning / belief** claim ("X's fund bets on Y over Z", "they believe W") regardless of prior confidence. **Exception:** a *first-hand* speaker claim (Alex was in the room) is carried as an attributed claim, flagged on its attribution. See "First-hand speaker claims" below; its content is still never promoted to fact. Per the source-check rule (CLAUDE.md §6), these **must be re-verified before any public use** and must **never be restated as fact**. Route them so the synthesizer lands them under the brief's **Verification Flags**.
 
 When in doubt between two flags, pick the more cautious one (KNOWN → STALE → UNVERIFIED).
 
@@ -156,7 +156,7 @@ Distilling is half the job. The other half is **aiming**: turn the strongest car
 
 - Conditioning discipline (post-event mirror): `.claude/commands/post-event-content.md` Steps 3.5–3.7 (transcript-conditioning + the `post_event_brief` "completeness over curation" principle).
 - Aimed Questions check (mechanical, run by the parent, not by you): `.claude/scripts/check_aimed_questions.py PACK --invite INVITE --raw RAW` checks four things: anchors appear word for word in the raw pull; a trust tag is *present*; targets are named in the invite; and non-KNOWN questions don't open with a premise. It does **not** check that the tag matches the anchor's card flag. The raw pull carries no trust flags, so inheritance stays a reader check.
-- Provenance / Rule 12: `CLAUDE.md` Rule 12; the Signal Log tiers in `.claude/agents/research/competitive-signal-scanner.md`.
+- Provenance / Rule 12: `CLAUDE.md` §6 (source-check); the Signal Log tiers in `.claude/agents/research/competitive-signal-scanner.md`.
 - Retrieval sources + shapes: `.claude/skills/event-research/SKILL.md` Step 1.7; `.claude/references/market-intel-spine.md` (Supabase graph); `.claude/references/notion-schema.md`.
 
 ## Output

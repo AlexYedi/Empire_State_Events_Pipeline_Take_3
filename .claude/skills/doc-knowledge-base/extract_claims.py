@@ -5,8 +5,8 @@ Writes ONLY to the `doc_claims` staging table (status='candidate'). Nothing
 reaches the MI graph here — promotion to `event` happens at the /doc-digest
 gate, after Alex approves line by line.
 
-Backend: Gemini (GEMINI_API_KEY), matching the house adapter convention in
-.claude/hooks/gemini-judge.sh. Zero Claude tokens. Implemented in Python rather
+Backend: Gemini (GEMINI_API_KEY), the house default for scripted LLM steps
+(platform-constraints.md, metered-Claude row). Zero Claude tokens. Implemented in Python rather
 than the PRD's sketched bash because it reuses dockb_common's extraction and
 Supabase REST helpers; the model stays a swappable adapter (`extractor` /
 `extractor_model` columns), which was the PRD's actual requirement.

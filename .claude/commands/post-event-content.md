@@ -149,7 +149,7 @@ Before drafting, condition the transcript so speaker labels and proper nouns can
 3. Confidence-scored **quote bank** (HIGH = verbatim-safe; MED = paraphrase only)
 4. Conditioning confidence score + down-weighted sections
 
-**Discipline (Rule 12):** the transcript is a primary source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use (CLAUDE.md Rule 12).
+**Discipline (Rule 12):** the transcript is a primary source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use (the source-check rule, CLAUDE.md §6).
 
 ## Step 3.6 — Post-event enrichment (bounded · gated-on-use · cached)
 
@@ -182,7 +182,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 **Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
 
 **Required sections (the full enhanced brief — mirror this scaffold; expand each as the material warrants):**
-1. **Page-index callout** at top + `/toc` hint (per CLAUDE.md gotcha `i`)
+1. **Page-index callout** at top + `/toc` hint (per `notion-write-gotchas.md` convention `i`)
 2. **Quick Take** — three sentences: what the room actually was, the headline, the event-type tag for content routing (single-presenter talk / multi-presenter showcase / shared-conversation panel)
 3. **The Thesis** — the single sharpest takeaway from the room, as a quotable line if possible
 4. **Pre → Post Gap** — table contrasting what the pre-event brief predicted vs. what actually happened (highest-value beat). *Conditional:* if no pre-event brief is linked, pull it from the Event page; if none exists, mark "n/a — no pre-event research."
@@ -352,7 +352,7 @@ Each draft becomes one Content Drafts row with:
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
 
-**Spec + rationale:** `.claude/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md **Rule 6** (prefer create over update), **Rules 10/11** (dedup-search before create), and **HubSpot Write Orchestration** (Company → Contact + association → Note).
+**Spec + rationale:** `.claude/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot post-event, selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
 
 **Topology (hard rule):** all HubSpot writes happen **in the parent thread** — the HubSpot MCP is unavailable inside subagents, and the confirmation table must render inline (memory `project_notion_writes_must_be_parent_thread`).
 

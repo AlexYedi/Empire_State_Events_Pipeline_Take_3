@@ -51,9 +51,12 @@ The description may contain:
 - `<br>` tags — treat as line breaks for block detection
 - Other organizer content — only the PIPELINE block matters for parsing
 
-If no PIPELINE block found in any event, report:
-> "No new events with PIPELINE blocks in the next 14 days. Either you haven't added the block to any new invites, or all events with blocks are already in Notion."
-Then exit.
+**Raw-description fallback (the common case, observed 2026-07-07; YED-193).** Most invites carry the organizer's
+raw Luma/meetup description and NO PIPELINE block. Do NOT exit on "no PIPELINE block found": parse speakers,
+hosts, companies and topics directly from the raw `description` (it is usually rich enough), flag the deviation
+once, present a detection summary + scope confirm (which events; steering; whether to include HubSpot), then
+proceed. HubSpot writes are the lowest-value step on a multi-event batch; offer them as a follow-up rather than
+forcing them inline. Exit only when there are no new (non-deduped) events at all.
 
 ## Step 3 — Parse PIPELINE fields (LLM, not regex)
 

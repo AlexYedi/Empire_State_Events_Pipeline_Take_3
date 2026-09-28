@@ -225,7 +225,7 @@ Create a Content Draft via `notion-create-pages` targeting data source
   for the canonical output schema), followed by the per-person DM drafts under
   a "Speaker/Host DMs" header.
 
-Follow the Notion gotchas from CLAUDE.md exactly:
+Follow `.claude/references/notion-write-gotchas.md` exactly:
 - Multi-select: JSON-array-STRING (`"[\"x\",\"y\"]"`), not native array.
 - Relations: JSON-array-string of full page URLs, not bare IDs.
 - Select: exact match to defined options.
@@ -273,4 +273,4 @@ Return to Alex:
 - `../content-patterns/visual-briefs.md` — carousel-as-narrative visual pattern
   (required reading every invocation; Arc 2 is the required arc for synthesis
   posts).
-- Project CLAUDE.md — Notion schema, write orchestration, property format gotchas.
+- `.claude/references/notion-schema.md` (schema, write order) + `notion-write-gotchas.md` (property formats).

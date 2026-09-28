@@ -110,7 +110,7 @@ slide. Keep each dimension to 1–3 tight lines.
 auto-transcripts that **garble company and founder names and numbers**. Before any
 name, number, or thesis claim goes into public content or the CRM, **verify it via
 web search** (fan out one `company-researcher` per company). This doubles as the
-rule-12 source-check (`CLAUDE.md`). Never tag a person by a transcript-garbled
+source-check rule (`CLAUDE.md` §6). Never tag a person by a transcript-garbled
 name.
 
 ---
@@ -272,7 +272,7 @@ analog — store it as the browsable source of truth.
 - `.claude/references/content-style-guide.md` — voice (decenter self, no I-led
   openers, earned stance, define jargon inline).
 - `.claude/references/content-anti-patterns.md` — language anti-patterns.
-- `CLAUDE.md` — Notion/HubSpot schema, MCP-write gotchas, rule 12 (source-check),
+- `CLAUDE.md` (§6 source-check) + `notion-schema.md` / `notion-write-gotchas.md` (Notion/HubSpot schema, MCP-write gotchas),
   Tier-3 (CRM/Apollo credits are manual).
 - Memory: `feedback_name_people_and_thank_speakers`, `feedback_no_i_led_openers`,
   `feedback_upcoming_week_stance_and_self`, `feedback_define_jargon_inline`.
