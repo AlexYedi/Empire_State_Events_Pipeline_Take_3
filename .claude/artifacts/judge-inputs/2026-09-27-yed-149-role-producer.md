@@ -89,7 +89,7 @@ diff --git a/.claude/references/market-intel-spine.md b/.claude/references/marke
 index b2ca379..7155682 100644
 --- a/.claude/references/market-intel-spine.md
 +++ b/.claude/references/market-intel-spine.md
-@@ -38,7 +38,11 @@ Plan of record: `.claude/references/roadmap.md` (the former `~/.claude/plans/whe
+@@ -38,7 +38,11 @@
  - **`event`** — first-class **temporal hyperedge AND the signal model**. `kind` splits it:
    `attended` (Alex participates — meetups) vs `market` / `funding` / `launch` / `exec_move` (happens *to*
    entities) vs `role_posted` / `application` / `interview` (job-lens lifecycle). **A signal IS an event**
@@ -106,7 +106,7 @@ diff --git a/.claude/scripts/retrieve.py b/.claude/scripts/retrieve.py
 index df6110e..a36af43 100644
 --- a/.claude/scripts/retrieve.py
 +++ b/.claude/scripts/retrieve.py
-@@ -7,6 +7,7 @@ the other lenses are six weights each and land once this one has proven out on a
+@@ -7,6 +7,7 @@
  
      .venv/bin/python .claude/scripts/retrieve.py --lens event --seed seed.json [--budget-tokens 6000]
                       [--out pack.md] [--json]
@@ -114,7 +114,7 @@ index df6110e..a36af43 100644
  
  seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
              "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365}
-@@ -31,7 +32,7 @@ import argparse, datetime as dt, json, math, os, sys
+@@ -31,7 +32,7 @@
  HERE = os.path.dirname(os.path.abspath(__file__))
  sys.path.insert(0, HERE)
  from spine_client import q, req  # noqa: E402
@@ -123,7 +123,7 @@ index df6110e..a36af43 100644
  
  ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
  DOCKB = os.path.join(ROOT, ".claude", "skills", "doc-knowledge-base")
-@@ -105,6 +106,7 @@ def neighborhood(ids: list[str], since: str | None) -> tuple[dict, str]:
+@@ -105,6 +106,7 @@
      events = []
      if eids:
          flt = f"&event_date=gte.{since}" if since else ""
@@ -131,7 +131,7 @@ index df6110e..a36af43 100644
          events = get(f"/event?id=in.({','.join(eids)}){flt}&select=id,title,kind,event_date,source,url"
                       f"&order=event_date.desc&limit=60") or []
      edges = []
-@@ -149,6 +151,41 @@ def score_claims(claims: list[dict], seed_ids: set[str], nb_event_ids: set[str],
+@@ -149,6 +151,41 @@
      return sorted(claims, key=lambda c: -c["_score"])
  
  
@@ -173,7 +173,7 @@ index df6110e..a36af43 100644
  def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
      w = LENSES[lens]
      found, missing = resolve(seed.get("entities", []))
-@@ -157,6 +194,7 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
+@@ -157,6 +194,7 @@
      if seed.get("window_days"):
          since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=int(seed["window_days"]))).strftime("%Y-%m-%dT00:00:00Z")
      nb, mode = neighborhood(ids, since) if ids else ({"events": [], "edges": [], "documents": [], "claims": []}, "no seeds")
@@ -181,7 +181,7 @@ index df6110e..a36af43 100644
      live = claim_layer_live()
      claims = {c["id"]: {**c, "_direct": True} for c in nb.get("claims", [])}
      if live and seed.get("text"):
-@@ -193,8 +231,10 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
+@@ -193,8 +231,10 @@
      tcards = ["## Topics recurring across these occasions", ""] + [
          f"- {name} — {len(evs)} occasions" for name, evs in sorted(topics.items(), key=lambda kv: -len(kv[1]))[:15]]
  
@@ -193,7 +193,7 @@ index df6110e..a36af43 100644
      def render(c: dict) -> str:
          flag = " ⚠ do-not-publish" if (c.get("metadata") or {}).get("do_not_publish") else ""
          ev = ev_by_id.get(c.get("event_id"))
-@@ -233,14 +273,16 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
+@@ -233,14 +273,16 @@
      audit = {"lens": lens, "mode": mode, "claims_layer": "live" if live else "not migrated (S1a pending)",
               "seeds_resolved": len(found), "seeds_unresolved": missing, "events": len(nb["events"]),
               "edges": len(nb["edges"]), "claims_candidates": len(ranked), "claims_kept": len(kept),
@@ -213,7 +213,7 @@ index df6110e..a36af43 100644
  
      # ---- loud failure (review finding 6) --------------------------------------------------------
      rc = 0
-@@ -258,7 +300,39 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
+@@ -258,7 +300,39 @@
      return "\n".join(lines), {**audit, "audit_line": audit_line}, rc
  
  
@@ -257,7 +257,7 @@ diff --git a/.claude/scripts/substrate.py b/.claude/scripts/substrate.py
 index 81cac22..03a77b7 100644
 --- a/.claude/scripts/substrate.py
 +++ b/.claude/scripts/substrate.py
-@@ -23,6 +23,10 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
+@@ -23,6 +23,10 @@
                    everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                    post-event ensure-event attaches these claims when the attended row appears.
                    Spec: .claude/notes/yed-205-spec-2026-09-27.md
@@ -268,7 +268,7 @@ index 81cac22..03a77b7 100644
    merge           --table company|person|topic --from <id|name> --into <id|name> --reason "…" [--dry-run]
                    HUMAN-ONLY, REVERSIBLE soft-merge (YED-47, ADR-4 D3): re-points every edge it can, transfers
                    engagement, tombstones the source (metadata.merged_into + an edge snapshot). Deletes nothing.
-@@ -69,6 +73,14 @@ ROLE_MAP = {  # manifest role -> the graph's existing vocabulary
+@@ -69,6 +73,14 @@
      "company": {"host": "subject", "sponsor": "subject", "subject": "subject", "mentioned": "subject"},
  }
  
@@ -283,7 +283,7 @@ index 81cac22..03a77b7 100644
  # post_event_brief section -> claim_type. Briefs drifted across sessions (verified against real
  # briefs 2026-09-18: Postgres Sep-16 · Agents Behaving Badly Jun-25 · Shortlist Aug-24), so each
  # kind has aliases. A heading matches when it STARTS WITH an alias.
-@@ -130,7 +142,7 @@ FREEZE_LOG = os.path.join(ROOT, ".claude", "artifacts", "graph-freeze-overrides.
+@@ -130,7 +142,7 @@
  # Verbs that change graph state. `waive` and `preview-claims` are absent on purpose (see above);
  # --dry-run is exempted at the call site, not here.
  FREEZE_BLOCKS = ("ensure-entity", "ensure-event", "ensure-document", "stage-claims",
@@ -292,7 +292,7 @@ index 81cac22..03a77b7 100644
  
  
  def freeze_state() -> dict | None:
-@@ -741,15 +753,22 @@ class Graph:
+@@ -741,15 +753,22 @@
          return [vec_literal(v) for v in embed_passages(texts)]
  
      def get(self, path: str) -> list:
@@ -315,7 +315,7 @@ index 81cac22..03a77b7 100644
          if self.dry:
              self._n += 1
              return [{**r, "id": r.get("id") or f"dry:{table}:{self._n}:{i}"} for i, r in enumerate(rows)]
-@@ -761,6 +780,8 @@ class Graph:
+@@ -761,6 +780,8 @@
  
      def patch(self, table: str, flt: str, row: dict):
          guard(table, row, op="update")
@@ -324,7 +324,7 @@ index 81cac22..03a77b7 100644
          if self.dry:
              return
          st, body = req("PATCH", f"/{table}?{flt}", row, prefer="return=minimal")
-@@ -860,6 +881,9 @@ class Graph:
+@@ -860,6 +881,9 @@
              self.stats.bump("topic", "matched")
              self._fill_missing("topic", row, {k: v for k, v in fields.items() if k != "name"})
              return row["id"]
@@ -334,7 +334,7 @@ index 81cac22..03a77b7 100644
          if (hit := self._cached("topic", e["name"])):
              return hit
          self.stats.bump("topic", "created")
-@@ -1085,7 +1109,7 @@ class Graph:
+@@ -1085,7 +1109,7 @@
      # -- events ----------------------------------------------------------------------------------
      def find_event(self, ev: dict) -> dict | None:
          row = self.by_pid("event", ev.get("notion_page_id"))
@@ -343,7 +343,7 @@ index 81cac22..03a77b7 100644
              return row
          day = ev["event_date"][:10]
          rows = self.get(f"/event?title=ilike.{q(ev['title'].replace('*', ''))}&kind=eq.{ev.get('kind', 'attended')}"
-@@ -1094,10 +1118,20 @@ class Graph:
+@@ -1094,10 +1118,20 @@
  
      def ensure_event(self, m: dict) -> str:
          ev = m["event"]
@@ -364,7 +364,7 @@ index 81cac22..03a77b7 100644
          else:
              if not ev.get("kind"):   # ADR-10 decision 9: attendance is never inferred — the caller must say so
                  raise SystemExit(f"ensure-event: manifest for {ev.get('title')!r} has no 'kind'; refusing to "
-@@ -1105,9 +1139,11 @@ class Graph:
+@@ -1105,9 +1139,11 @@
              self.stats.bump("event", "created")
              eid = self.post("event", {k: v for k, v in {
                  "title": ev["title"], "kind": ev["kind"], "event_date": ev.get("event_date"),
@@ -378,7 +378,7 @@ index 81cac22..03a77b7 100644
              }.items() if v not in (None, "", {})})[0]["id"]
          existing = set()
          if not str(eid).startswith("dry:"):
-@@ -1393,6 +1429,138 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None)
+@@ -1393,6 +1429,138 @@
      return 0
  
  
@@ -517,7 +517,7 @@ index 81cac22..03a77b7 100644
  def source_key_for_topic_questions(notion_topic_id: str) -> str:
      return sha("notion_topic_questions:" + pid_variants(notion_topic_id)[0])
  
-@@ -1781,6 +1949,68 @@ MIXED_SAMPLE = """
+@@ -1781,6 +1949,68 @@
  """
  
  
@@ -586,7 +586,7 @@ index 81cac22..03a77b7 100644
  def _research_selftest(ok) -> None:
      """YED-205, offline, against _FakeGraph + a sample Evidence Set in the specialists' documented format."""
      items, skipped = parse_ledger(RESEARCH_SAMPLE)
-@@ -2074,7 +2304,7 @@ def selftest() -> bool:
+@@ -2074,7 +2304,7 @@
      ok("freeze: preview-claims is offline, never blocked", freeze_check("preview-claims", False, None) == 0)
      ok("freeze: every mutating verb is covered",
         set(FREEZE_BLOCKS) == {"ensure-entity", "ensure-event", "ensure-document", "stage-claims",
@@ -595,7 +595,7 @@ index 81cac22..03a77b7 100644
      _saved_freeze = FREEZE_PATH
      try:                                              # unreadable marker must fail CLOSED
          globals()["FREEZE_PATH"] = os.path.join(ROOT, ".claude", "references", "__nonexistent__.json")
-@@ -2096,6 +2326,7 @@ def selftest() -> bool:
+@@ -2096,6 +2326,7 @@
      _identity_selftest(ok)
      # ---- the pre-event write path (YED-205) --------------------------------------------------------
      _research_selftest(ok)
@@ -603,7 +603,7 @@ index 81cac22..03a77b7 100644
  
      fail = 0
      for name, good in checks:
-@@ -2112,7 +2343,7 @@ def main(argv: list[str]) -> int:
+@@ -2112,7 +2343,7 @@
      ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
      ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims", "waive",
                                       "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
@@ -612,7 +612,7 @@ index 81cac22..03a77b7 100644
      ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
      ap.add_argument("--phase", choices=["post_event", "pre_event"], default="post_event",
                      help="(waive) which gate row: post_event (default) or pre_event (the research row)")
-@@ -2136,6 +2367,9 @@ def main(argv: list[str]) -> int:
+@@ -2136,6 +2367,9 @@
      ap.add_argument("--brief-ref", help="external_ref for the brief document, e.g. notion:<page id>")
      ap.add_argument("--approve", action="store_true",
                      help="inherited approval: brief-derived claims land approved (do_not_publish ones never do)")
@@ -622,7 +622,7 @@ index 81cac22..03a77b7 100644
      ap.add_argument("--dry-run", action="store_true")
      ap.add_argument("--json", action="store_true")
      a = ap.parse_args(argv)
-@@ -2193,6 +2427,16 @@ def main(argv: list[str]) -> int:
+@@ -2193,6 +2427,16 @@
      if not a.manifest:
          ap.error(f"{a.verb} needs --manifest")
      m = json.load(open(a.manifest, encoding="utf-8"))
@@ -651,7 +651,7 @@ index 9fa7938..bfeaa44 100644
  ---
  
  # Role Radar Skill
-@@ -20,7 +20,7 @@ This is one of three **signal scanners** feeding the Empire State pipeline (alon
+@@ -20,7 +20,7 @@
  - **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk pass per run (Content Hash + Tier + Status + Notes for every row — a few LIMIT/OFFSET pages of the same query, ~100 rows each), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
  - **No fabricated numbers / honest gaps:** if a source errors, say so.
  
@@ -660,7 +660,7 @@ index 9fa7938..bfeaa44 100644
  
  ---
  
-@@ -210,6 +210,37 @@ End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**
+@@ -210,6 +210,37 @@
  
  ---
  
@@ -698,7 +698,7 @@ index 9fa7938..bfeaa44 100644
  ## Step 6 — Close out
  - Summary: roles added by tier, sources used, any source gaps, credits spent (if Apollo used).
  - **Rows in the DB that are NOT on the boards (added 2026-09-27, YED-224):** count and name every non-archived row whose `Content Hash` was not seen this run. Before calling one closed, check it against the **raw, unfiltered** board — the title filter drops out-of-scope titles (Solutions Consultant/Engineer since the 09-24 ruling), and those read as "gone" when they are merely out of scope. Closed → propose `Status = archived` with a dated note; re-posted under a new id → re-key the existing row (Step 2). Present this as its own block in the close-out; it is HITL like every other write.
-@@ -231,5 +262,5 @@ End with: **"Add which roles to the Roles DB? (A-tier / all / numbers / none)"**
+@@ -231,5 +262,5 @@
  - **`.claude/references/target-companies.md`** — the target-company list + company→ATS registry (board tokens).
  - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
  - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
