@@ -1,7 +1,7 @@
 # Signal taxonomy — canonical topic map (v1)
 
 The persistent **topic-normalization** map for the signal scanners (originally `trend-radar` Step 2; now used by
-`role-radar` and `inbox-miner`; `trend-radar` and `voice-radar` were pruned 2026-09-28). Promoted from trend-radar's inline seed on 2026-07-15 (first `/rigor-review`)
+`role-radar` and `inbox-miner`; `trend-radar` and `voice-radar` were pruned 2026-09-28). Promoted from trend-radar's inline seed on 2026-07-15 (first weekly rigor review, since retired)
 so normalization is **consistent run-to-run**, not re-derived ad-hoc each run. Applies the
 `alex:signal-taxonomy` schema/mapping discipline.
 
@@ -36,4 +36,4 @@ is what the Notion Topics DB `Topic` title and the Postgres `topic.name` match a
 ## Growth log
 - 2026-07-15 — seeded from trend-radar inline map (5 entries) + expanded to 14 for the tracked-domain
   coverage in trend-radar's Inputs (agentic systems, LLM eval, GTM-engineering, AI infra, RAG). Promoted to
-  a file per the `dangling-reference-in-skill` correction (rigor-review 2026-07-15).
+  a file per the `dangling-reference-in-skill` correction (weekly rigor review 2026-07-15, since retired).

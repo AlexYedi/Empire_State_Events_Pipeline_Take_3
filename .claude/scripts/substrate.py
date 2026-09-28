@@ -38,7 +38,7 @@ Identity (YED-47 S1b-lite, no DDL): company `Name (Qualifier)` resolves to `Name
 candidate is unique AND both website hosts agree; every less-certain case is created AND surfaced to
 .claude/artifacts/identity-ambiguity.jsonl (never guessed). Every resolver follows a tombstone to its live
 target. Persons: page-id -> LinkedIn -> exact name + company; ambiguous -> create + surface. No fuzzy person
-matching, ever (ADR-4 D3). Weekly probe: .claude/scripts/identity_probe.py (from /rigor-review).
+matching, ever (ADR-4 D3). Probe (run by hand): .claude/scripts/identity_probe.py.
 
 Common flags: --dry-run (no writes; still reports matched/would-create) · --json (machine summary)
 Self-test (offline, no network): python3 .claude/scripts/substrate.py --selftest

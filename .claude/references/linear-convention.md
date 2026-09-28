@@ -61,9 +61,9 @@ discovered. This table assigns the rest. Full record: `.claude/notes/open-items-
 | Hub repo state (`build-arcs.json` futures, journal gaps) | Linear, project Empire State Hub | hub data files describe the present, never the future |
 
 **The load-bearing rule:** a parked / deferred / decision thought is filed to its home **in the same turn**
-it is written anywhere else, and the file carries the Linear ID or Notion link. The weekly
-`/rigor-review` grep (`awaiting decision|revisit (after|when)|deferred|parked` outside lines carrying
-`YED-`/`GTM-`/a Notion link) is the audit; this sentence is the fix.
+it is written anywhere else, and the file carries the Linear ID or Notion link. An ad-hoc grep
+(`awaiting decision|revisit (after|when)|deferred|parked` outside lines carrying `YED-`/`GTM-`/a Notion
+link) is the audit when one is wanted; this sentence is the fix.
 
 **Labels under this rule:** `parked`, `decision` added; the unused Devin-playbook group and
 `project-eval-harness` retired (a project is a project). Total stays ≤5 live labels + `cycle-<n>`.

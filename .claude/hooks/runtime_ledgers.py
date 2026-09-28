@@ -188,7 +188,7 @@ def selftest():
         # one alias hop, as substrate.py's ambiguity ledger does (`path = AMBIGUITY_LEDGER`)
         "alias.py": 'LEDGER = os.path.join(ROOT, ".claude", "artifacts", "aliased.jsonl")\n'
                     'path = LEDGER\nwith open(path, "a", encoding="utf-8") as f:\n    f.write(x)\n',
-        # shell default-expansion alias, as dod-close.sh-style writers do
+        # shell default-expansion alias (the LOG="${OVERRIDE:-$D}" writer pattern)
         "alias.sh": 'D=".claude/" + "artifacts/sh-default.jsonl"\nLOG="${OVERRIDE:-$D}"\necho x >> "$LOG"\n',
         # a NESTED ledger must not excuse the same basename directly under artifacts/
         "nested.py": 'N = os.path.join(ROOT, ".claude", "artifacts", "sub", "nested-only.jsonl")\n'

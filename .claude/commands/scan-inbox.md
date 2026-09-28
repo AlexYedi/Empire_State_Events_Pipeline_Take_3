@@ -76,4 +76,4 @@ Decision record: `docs/adr/ADR-7-inbox-signal-source.md`.
 ## Close out
 - Summarize: senders bucketed / signals written (matched vs created) / labels applied / spam batched /
   coverage. Flag any company created-this-run for source-check. Reconcile Linear (YED-153) if the run
-  surfaced build work; `/dod-close` at the build boundary.
+  surfaced build work; build changes go through a PR (`.github/pull_request_template.md`).

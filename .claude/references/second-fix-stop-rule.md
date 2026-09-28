@@ -48,6 +48,6 @@ Using `general-purpose` for design work is the smell, not `general-purpose` itse
   **Status: written, NOT wired and untested** — the agent's auto-mode classifier (correctly) refuses to let
   the agent register its own hooks. Alex wires it: `chmod +x` the script and add a `PreToolUse` entry,
   matcher `mcp__linear__save_issue|Agent|Task`, to `.claude/settings.json`. Until then the rule is prose only. Tracked: YED-237.
-- **Recount:** `/rigor-review` checks for any component fixed ≥3 times in the week with no architect
-  review in between. That's the evidence of whether this rule works. If it doesn't change behaviour within
+- **Recount (by hand, when asked):** look for any component fixed ≥3 times in a week with no architect
+  review in between (`git log` per path). That's the evidence of whether this rule works. If it doesn't change behaviour within
   ~3 weeks, promote the nudge to an `ask` gate — don't add more prose.
