@@ -39,7 +39,7 @@ if subprocess.run(["git", "cat-file", "-e", "42602e4^{commit}"], capture_output=
     print("  ✗ fixture ranges not reachable — run `git fetch origin` first"); sys.exit(1)
 
 # 1. a multi-file bundle with NO guarded path (two hooks, --files)
-r = J("run", "--files", ".claude/hooks/deep-read-gate.sh", ".claude/hooks/density-check.sh", "--artifact-type", "hook",
+r = J("run", "--files", ".claude/hooks/check-refs.sh", ".claude/hooks/density-check.sh", "--artifact-type", "hook",
       "--label", "e2e-files")
 ck("run --files: bundle built, reviewer brief written, one NEXT instruction", r.returncode == 0 and "NEXT" in r.stdout, r.stderr)
 brief = os.path.join(tmp, "state", "e2e-files", "brief.txt")

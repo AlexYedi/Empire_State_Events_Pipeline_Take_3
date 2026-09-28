@@ -12,7 +12,7 @@
 # exists to catch). Reference band from the Daytona spike: ~150–200 words/citation reads as healthy,
 # citation-dense prose. Default flag threshold is deliberately loose (300) so legitimate on-ramp never
 # false-flags as long as the artifact carries enough real citations overall.
-# Spec: .claude/evals/rubrics/build-quality-v4.md · .claude/proposals/event-field-guide.md (anti-padding).
+# Spec: .claude/evals/rubrics/build-quality-v4.md · docs/archive/proposals/event-field-guide.md (anti-padding).
 #
 # Usage: density-check.sh --artifact <path> [--max-ratio <N>]
 #   stdout: a per-section word table + a summary verdict line

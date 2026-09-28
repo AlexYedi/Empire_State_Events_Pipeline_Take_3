@@ -422,7 +422,7 @@ aim for, and what to pay attention to. No bullet points, no hedging. Three sente
 
 ## Step 3: Present the Brief — the SCAN HEAD (ADR-5)
 
-The brief is **one artifact with two layers** (ADR-5 · `.claude/proposals/event-field-guide.md`): a **Scan head** (in-room, phone-glanceable) and a **Deep Read** (the prose commute read). **Step 3 presents and commits the Scan head. The Deep Read is rendered and appended later, in Step 4.5, decoupled — a render failure never blocks this.**
+The brief is **one artifact with two layers** (ADR-5 · `docs/archive/proposals/event-field-guide.md`): a **Scan head** (in-room, phone-glanceable) and a **Deep Read** (the prose commute read). **Step 3 presents and commits the Scan head. The Deep Read is rendered and appended later, in Step 4.5, decoupled — a render failure never blocks this.**
 
 The synthesizer returns two blocks: the **Scan head** and a `## Evidence Set` (URL-carrying, organized by render section). **Display only the Scan head to Alex** — the Evidence Set is internal fuel for Step 4.5, not brief content. Use this exact head structure:
 

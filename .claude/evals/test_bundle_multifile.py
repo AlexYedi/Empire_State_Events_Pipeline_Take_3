@@ -12,7 +12,7 @@ import judge_lib as jl
 ROOT = os.getcwd()
 SYS, RUB = ".claude/evals/prompts/judge-system-v2.md", ".claude/evals/rubrics/build-quality-v6.md"
 RANGE = "c607c08..42602e4"
-SPEC_NOTE = ".claude/notes/stop-gate-per-turn-2026-09-27.md"      # the spec the 09-27 deep-read-gate run was given
+SPEC_NOTE = "docs/archive/notes/stop-gate-per-turn-2026-09-27.md"      # the spec the 09-27 deep-read-gate run was given
 ok = n = 0
 
 
@@ -60,7 +60,8 @@ ck("a fabricated quote still fails", q["unverified"] == 1 and q["matched_in"] ==
 row = [json.loads(l) for l in open(".claude/evals/logs/2026-09-27-deep-read-gate-sonnet-deep-read-gate.jsonl")][-1]
 stripped = [d for d in row["defects"] if any(str(d.get("quote") or "").startswith(u[:60]) for u in row["quote_check"]["unverified_quotes"])]
 ck("regression fixture: the 3 stripped quotes are recovered from the log", len(stripped) == 3, str(len(stripped)))
-old = jl.verify_quotes(stripped, open(".claude/hooks/deep-read-gate.sh").read(), "hook")
+# deep-read-gate.sh was deleted 2026-09-28 (unwired); read it at the fixture commit
+old = jl.verify_quotes(stripped, subprocess.run(["git", "show", "42602e4:.claude/hooks/deep-read-gate.sh"], capture_output=True, text=True, check=True).stdout, "hook")
 ck("regression: against the old one-file haystack they fail (reproduced)", old["unverified"] == 3)
 new = jl.verify_quotes(stripped, hay, "hook")
 ck("regression: against the whole bundle all 3 verify", new["unverified"] == 0, str(new["unverified_quotes"]))
@@ -69,9 +70,9 @@ ck("regression: two matched in the spec note, one in the sibling file's removed 
 ck("regression: the whole row now clears the 30% bar", not jl.verify_quotes(row["defects"], hay, "hook")["evidence_unverified"])
 
 # single-file bundles: text unchanged in shape; spec text joins the haystack
-one = jl.build_bundle(".claude/hooks/deep-read-gate.sh", "hook", SYS, RUB, spec_files=[SPEC_NOTE])
+one = jl.build_bundle(".claude/hooks/density-check.sh", "hook", SYS, RUB, spec_files=[SPEC_NOTE])
 ck("single-file: bundle_version 3, ARTIFACT CONTENT layout kept", one["bundle_version"] == 3 and "===== ARTIFACT CONTENT" in one["text"]
-   and one["artifact"] == ".claude/hooks/deep-read-gate.sh")
+   and one["artifact"] == ".claude/hooks/density-check.sh")
 ck("single-file: a spec quote now verifies", jl.verify_quotes(stripped[:1], jl.bundle_haystack(one), "hook")["unverified"] == 0)
 
 # --files: named files on disk, same haystack rule
