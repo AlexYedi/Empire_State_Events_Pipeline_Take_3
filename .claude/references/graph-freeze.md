@@ -54,7 +54,7 @@ declared. Blocking it would strand those rows with no legal way to close them.
 
 **5. Overrides are data, not failures.** `GRAPH_FREEZE_OVERRIDE="<why>"` (env, because most writers take no CLI
 args) or `substrate.py --freeze-override "<why>"`. Both append to `.claude/artifacts/graph-freeze-overrides.jsonl`.
-Same philosophy as a DoD waiver: an emergency must not be silently blocked, and routine use must be visible.
+Same philosophy as the old DoD waiver log: an emergency must not be silently blocked, and routine use must be visible.
 
 ## What is and is not blocked
 

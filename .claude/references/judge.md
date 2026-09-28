@@ -25,8 +25,8 @@ on its own bundle mechanics, so Alex was asked about runs where nothing was wron
    a **guarded path** in the bundle (spine write path, privacy filters, allow/deny lists, `.gitignore`: human review
    whatever the score; this replaced the @6 privacy score cap) · flat 1.0 on all five criteria · > 30% of quoted
    defects not found in the bundle. Otherwise **pass**.
-5. Alex is asked **only on a flag** (`judge.py ack`, append-only rows). Passes are checked by the monthly blind
-   spot-check of 5 artifacts at `/rigor-review`.
+5. Alex is asked **only on a flag** (`judge.py ack`, append-only rows). A blind spot-check of passes is optional,
+   when Alex asks for one.
 
 ## Kept
 Defects before scores · the caps (dangling-ref, spec-drift, confidence-honesty, command-skeleton, density) ·
@@ -38,4 +38,4 @@ no second model, no shadow · no scheduled control runs: the control set (`contr
 reviewer's model id changes (`judge.py` prints the trigger) · the judge layer is never judged by itself.
 
 ## When to run it
-The artifact-class trigger list lives in `.claude/skills/judge-build/SKILL.md`. It replaced DoD item 4.
+The artifact-class trigger list lives in `.claude/skills/judge-build/SKILL.md`. It replaced DoD item 4 (the DoD gate itself was retired 2026-09-28 for `.github/pull_request_template.md`).

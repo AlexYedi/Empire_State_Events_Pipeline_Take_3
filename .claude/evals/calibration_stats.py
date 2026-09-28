@@ -3,7 +3,7 @@
 
 Nothing gates on this file. YED-231 (2026-09-28) removed the per-seat trust ladder (seats.json, --gate, demotion
 rules, canaries, the last-voting-seat guard): the judge is one Sonnet reviewer that raises flags, and these numbers
-are read by a human at /rigor-review, never by code that decides a verdict. It also counts runs per artifact class.
+are read by a human on request, never by code that decides a verdict. It also counts runs per artifact class.
 
 Raw judge-vs-Alex agreement is the metric the gate used, and it is misleading: if Alex flags 3 of 18
 artifacts, a seat that says "pass" to everything scores 83% — which is exactly what the Gemini seat

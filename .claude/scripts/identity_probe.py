@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """identity_probe — the standing identity-hygiene probe for the Market-Intelligence graph (YED-47, item 4).
 
-READ-ONLY. Every request is a GET through spine_client (ADR-9); the probe never writes. Run it from
-/rigor-review Step 2 (weekly) or by hand; its rows are the value-action-registry's "identity ambiguity"
-and "identity duplicates" metrics.
+READ-ONLY. Every request is a GET through spine_client (ADR-9); the probe never writes. Run it by hand
+(the weekly rigor review that used to call it was retired 2026-09-28); its rows are the "identity ambiguity"
+and "identity duplicates" counts.
 
 What it measures, per table (company · person · topic):
   rows                    live rows (tombstones excluded from every duplicate count below)

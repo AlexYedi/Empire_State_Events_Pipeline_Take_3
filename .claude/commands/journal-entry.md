@@ -1,17 +1,16 @@
 ---
-description: "Capture an in-the-moment build-journal prose entry — draft from today's shipped facts, ask ≤3 sharpening forks, write the human-owned prose sidecar, regenerate the hub journal, and flag the deploy. The manual break-point companion to the /dod-close auto-capture."
+description: "Capture an in-the-moment build-journal prose entry — draft from today's shipped facts, ask ≤3 sharpening forks, write the human-owned prose sidecar, regenerate the hub journal, and flag the deploy. Run it at any shipped-PR break point."
 argument-hint: "[optional: a date YYYY-MM-DD (default today), or a one-line note on what shipped]"
 ---
 
 # /journal-entry — capture a build-journal entry in the moment
 
 Runs the shared **journal-entry prompt** to pull Alex's voice into the public build journal at a break
-point that isn't a full DoD close — a content/carousel ship, a scaffold, a milestone. (For a non-trivial
-build close-out, `/dod-close` runs this same routine automatically as its final step.)
+point — a merged PR, a content/carousel ship, a scaffold, a milestone.
 
 ## Trigger
 Alex types `/journal-entry`, or the agent proactively offers it after a shippable break point that
-won't hit `/dod-close` (a Tier-1/2 artifact that still belongs on the build-in-public surface). Because
+(a merged PR, or a Tier-1/2 artifact that still belongs on the build-in-public surface). Because
 it writes a reviewable artifact and never publishes on its own (the hub deploy stays manual), it is
 safe to start proactively.
 

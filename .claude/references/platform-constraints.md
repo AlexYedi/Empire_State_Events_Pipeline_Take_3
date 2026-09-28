@@ -86,7 +86,7 @@
   Full list + the correct slugs: `.claude/references/target-companies.md`.
 
 ## Tombstones (removed tools/decisions — mechanically checked, YED-201 Fix 2A, 2026-09-19)
-A removal only sticks if it reaches every file that *uses* the removed thing. `.claude/hooks/check-tombstones.py` flags any line in `.claude/**` / `docs/**` (docs + code/config files) that names a term below **without** a removal marker within 40 characters (removed · retired · ripped · deprecated · tombstone · vestigial · killed · rejected · disabled · superseded · replaced · no longer · do not · never · legacy · historical). The judge runs it in Step 0 (both seats see the hits as fact), and `/rigor-review` runs it repo-wide. **Add a row the same turn you remove something.** Patterns are Python regex, case-sensitive; write a regex alternation `|` as `\|` (GitHub's table escape; the checker unescapes it).
+A removal only sticks if it reaches every file that *uses* the removed thing. `.claude/hooks/check-tombstones.py` flags any line in `.claude/**` / `docs/**` (docs + code/config files) that names a term below **without** a removal marker within 40 characters (removed · retired · ripped · deprecated · tombstone · vestigial · killed · rejected · disabled · superseded · replaced · no longer · do not · never · legacy · historical). The judge runs it in Step 0 (the reviewer sees the hits as fact); run `--all` by hand for a repo-wide sweep. **Add a row the same turn you remove something.** Patterns are Python regex, case-sensitive; write a regex alternation `|` as `\|` (GitHub's table escape; the checker unescapes it).
 
 | Term | Pattern | Removed | Use instead |
 |---|---|---|---|
@@ -104,6 +104,10 @@ A removal only sticks if it reaches every file that *uses* the removed thing. `.
 | quorum-merge.sh / quorum_merge.py (multi-seat quorum) | `quorum[-_]merge(\.sh\|\.py)?` | 2026-09-28 (YED-231) | same; one seat, no quorum |
 | run-canaries.sh (seat canaries / trust ladder) | `run-canaries(\.sh)?` | 2026-09-28 (YED-231) | same; no calibration gating |
 | merge_topics.py (hard-delete merge) | `merge_topics(\.py)?` | 2026-09-27 (YED-47) | `substrate.py merge --table T --from A --into B --reason "…"` — human-only, reversible soft-merge (`--revert`); tombstones, never deletes (ADR-4 D3) |
+| /dod-close + dod-close.sh (DoD gate) | `dod-close\|build_meta` | 2026-09-28 | `.github/pull_request_template.md` (3 checkboxes, no waiver log) |
+| /rigor-review (weekly review) | `rigor-review` | 2026-09-28 | nothing scheduled; ask for a review when there is a question |
+| value-action-registry.md | `value-action-registry` | 2026-09-28 | the null-baseline rule in CLAUDE.md §5; outcomes via `/tag-outcome` |
+| correction-recurrence log | `correction-recurrence` | 2026-09-28 | the second-fix stop rule (`second-fix-stop-rule.md`) |
 
 ## Git / repo
 | Constraint | Cause | Workaround | Since |

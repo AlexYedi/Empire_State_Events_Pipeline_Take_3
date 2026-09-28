@@ -21,7 +21,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 
 ## 2. North stars (unchanged from v1)
 
-- **Program:** build better, not faster; operational north-star = **acted-on value** (`value-action-registry.md`).
+- **Program:** build better, not faster; operational north-star = **acted-on value** (measured by `/tag-outcome`; the value-action registry was retired 2026-09-28).
 - **Career / product:** the **Market-Intelligence Engine** as the differentiator and the job-search asset.
 - **Content:** audience-first documentarian authority (`audience-north-star.md`).
 - **Shared mission (empire-state + gtm-os):** employment is a balanced, first-class outcome of the work — never an at-all-costs imperative that narrows the build.
@@ -32,7 +32,7 @@ story the work can tell: *a self-improving market-intelligence engine, with its 
 |---|---|---|
 | **P1 · One Graph** — close the loops | Every producer writes to the MI spine; every consumer reads it | trend ✅ inbox ✅ doc-KB: ingest + ask only (claim extraction parked, YED-235) · **post-event ✗** · roles ✗ |
 | **P2 · The Map** — organize the graph | The **Applied-AI Reference Architecture** shipped as `signal-taxonomy` v2 (topics = system components/layers), a hub surface, and the **third MI lens = the architecture lens** (YED-126) | not started; taxonomy is a flat 14-row synonym list |
-| **P3 · The Loop** — learn from exhaust | Rigor layer v2: correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8 + the registry's existing "system proposes a fix" row + `/rigor-review`, not beside them | watching ✅ (ADR-8, YED-158) · learning ✗ |
+| **P3 · The Loop** — learn from exhaust | Rigor layer v2: (retired) correction-recurrence → *proposed* codified fix (a PR) → judge-gated → Alex merges. Built **on** ADR-8. **2026-09-28:** retired the correction-recurrence log, the registry and the weekly rigor review it leaned on (PR template + null-baseline rule instead); re-scope before building | watching ✅ (ADR-8, YED-158) · learning ✗ |
 | **Career lane** (continuous) | The consumers: resume tailor (YED-151), interview-prep ICP (YED-152), Clay-backed warm outreach (YED-65, parked), headline test + the theme→prior-post index (YED-178), event deep-dives (= the content pipeline). Every anchor throws off a build-in-public artifact via the journal | in flight |
 | **Hygiene lane** (standing tax) | Garbled-name verification, entity dedup (systemic fix = YED-47), denylist enforcement, YED-141, YED-137, Linear-to-git-truth | ongoing |
 
@@ -70,7 +70,7 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 | Item | Appetite | Why last |
 |---|---|---|
 | **YED-48** eval harness for event-research (10 golden + judge) | 1–2wk | You can't learn without a score |
-| **Behavioral-exhaust loop v1 / Rigor v2** (YED-162): correction-recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
+| **Behavioral-exhaust loop v1 / Rigor v2** (YED-162; its correction-recurrence input was retired 2026-09-28, re-scope first): recurrence ≥N → auto-proposed fix as a PR → judge-gated → Alex merges. Not net-new architecture | 1–2wk | Needs the judge trusted (de-provisional accrues passively) and an eval score |
 | **ADR-8 Increment 2** (YED-163): extend the system graph to skills ↔ agents ↔ commands ↔ *outcomes* — the skills/agents graph | 3–7d | Watching → learning needs outcomes on the graph |
 | Measurement → `alex` plugin promotion | <3d | Only after the loop has produced ≥1 merged fix — the proof it's load-bearing |
 | YED-82 craft + honesty + launch (its security-audit half shipped in Phase 0 under the SEC contract) | 3–7d | The hub as the interview artifact, polished after the quarter's proof exists |
@@ -132,6 +132,6 @@ transcripts) and both scale steps (whole-inbox scan, anything unattended) are ga
 
 - **Live status:** Linear (team Yedibalian) — projects: Market-Intelligence Engine · Job-Search Engine · Empire State Hub · Empire State Events · Build-Rigor & Measurement.
 - **MI spine:** `market-intel-spine.md` · schema `market-intel-schema.sql` · taxonomy `signal-taxonomy.md` (→ v2 in P2).
-- **Rigor:** `value-action-registry.md` · `judge.md` · `build-session-contract.md` · DoD in `CLAUDE.md` · `prd-template.md` · `linear-convention.md`.
+- **Rigor:** `.github/pull_request_template.md` · `judge.md` · `build-session-contract.md` · null-baseline rule in `CLAUDE.md` §5 · `prd-template.md` · `linear-convention.md`.
 - **Content:** `audience-north-star.md` · `content-style-guide.md` · `content-anti-patterns.md`.
 - **Decisions:** `docs/adr/` (ADR-0…8) · **Git:** `reconciliation-terminal-charter.md` + CLAUDE.md §5 "Git" · **Workflows:** `.claude/WORKFLOWS.md`.
