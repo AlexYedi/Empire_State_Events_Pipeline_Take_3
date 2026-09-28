@@ -260,8 +260,8 @@ Iterate until Alex decides. Then proceed to Step 5.
 ## Step 5: Write to Notion
 
 Write selected proposals to the **Project Ideas** database via
-`mcp__notion__notion-create-pages` (Notion MCP) — per CLAUDE.md MCP automation
-rule #1, this is the auto-write path, not a manual handoff to the Notion UI.
+`mcp__notion__notion-create-pages` (Notion MCP) — per CLAUDE.md §5 automation
+defaults, this is the auto-write path, not a manual handoff to the Notion UI.
 
 **MCP tool:** `mcp__notion__notion-create-pages`
 **Database (data source):** `collection://0956e6ed-8555-4d8f-8856-388966dedaab`

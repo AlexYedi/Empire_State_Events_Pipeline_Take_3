@@ -84,7 +84,7 @@ Before fan-out, load what the pipeline already knows about these entities so res
 
 **First-touch event (no prior record for any entity):** skip 1.7b/1.7c, note it, and run Step 2 from scratch. The graph read commonly returns empty until event-research write-back ships — expected, not a failure.
 
-**Verify-first (the discipline):** the pack is prior context, never current fact. Downstream readers treat `KNOWN` as a foundation and `STALE` / `UNVERIFIED` as leads to refresh/verify; nothing stale or unsourced flows into the brief as fact (CLAUDE.md Rule 12).
+**Verify-first (the discipline):** the pack is prior context, never current fact. Downstream readers treat `KNOWN` as a foundation and `STALE` / `UNVERIFIED` as leads to refresh/verify; nothing stale or unsourced flows into the brief as fact (the source-check rule, CLAUDE.md §6).
 
 ## Step 2 — Multi-agent research fan-out (this conversation)
 
@@ -274,7 +274,7 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 - **Specialist returns thin output** — re-invoke that one specialist from this thread with deeper scope or more specific direction. Re-dispatch synthesizer with updated returns. Don't restart the whole orchestration.
 - **Parent times out during fan-out** — split: dispatch company-researcher + person-researcher in one batch, topic-landscape-analyst + competitive-signal-scanner in another, then dispatch synthesizer with all four returns merged.
 - **Triage plan disagreement post-hoc** — if while reviewing the brief Alex realizes an entity should have been REFRESH instead of SKIP, re-invoke just the relevant specialist with the corrected path; don't restart the whole flow.
-- **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per CLAUDE.md gotcha (e), verify with notion-fetch on the data_source URL if it persists.
+- **notion-writer hits a schema validation error** — the live Notion schema is authoritative. Use the API error text to fix the property value, retry. Per `notion-write-gotchas.md` (e), verify with notion-fetch on the data_source URL if it persists.
 - **notion-writer fails with "Prompt is too long"** — its `tools:` whitelist may have drifted to inherit too much. Verify `.claude/agents/ops/notion-writer.md` frontmatter still scopes `tools:` to Notion MCP + Read only.
 - **Deep Read render fails (Step 4.5)** — this is **decoupled by design**: warn Alex, leave the `## Deep Read` marker `pending` (and the ledger row `pending` — do not flip it), and continue (or finish). The Scan head + entity records + content pipeline are unaffected. Re-run just Step 4.5 (idempotent). A single-section failure → render the rest and flag the gap; do not abandon the whole Deep Read for one thin section. The Step 6.5 gate + the Stop-hook `deep-read-gate.sh` will surface the pending marker at close — that's intended: decoupled-by-design means the render failure doesn't *block mid-run*, NOT that an unrendered Deep Read closes green.
 - **A `field-guide-renderer` call returns a `> Gap:` note** (e.g. a `web-verified` fact missing its URL) — keep it in the output, surface it to Alex; it marks a citation to complete before public reuse. Trace it back to the specialist's Evidence Ledger / Step 1.7 URL capture.
@@ -294,4 +294,4 @@ The orchestration shape is defined here. The actual research / write methodology
 - `.claude/agents/content/field-guide-renderer.md` — Deep Read renderer contract (Opus, section-by-section + stitch, endnotes)
 - `.claude/agents/ops/notion-writer.md` — Notion write contract
 - `docs/adr/ADR-5-event-field-guide.md` + `.claude/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
-- `CLAUDE.md` § Project Architecture — Notion/HubSpot schemas, write order, gotchas, SDK constraints
+- `.claude/references/notion-schema.md` (Notion/HubSpot schemas, write order) · `notion-write-gotchas.md` · CLAUDE.md §4 (SDK constraints)

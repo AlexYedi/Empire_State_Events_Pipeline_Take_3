@@ -421,5 +421,5 @@ visually — what the reader should walk away with after swiping through.]
   voice rules above must remain consistent with the style guide's tone.
 - `.claude/references/content-anti-patterns.md` — language anti-patterns;
   visual anti-patterns above are the parallel set.
-- CLAUDE.md — Notion Content Drafts schema, Notion property gotchas (multi-select
+- `notion-schema.md` + `notion-write-gotchas.md` — Notion Content Drafts schema, property gotchas (multi-select
   JSON-array-string, relations as full page URLs, etc.).
