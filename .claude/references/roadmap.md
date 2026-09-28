@@ -2,6 +2,8 @@
 
 ## 1. How to use this file
 
+**Canonical copy: the Notion page "Empire State Roadmap — Oct 2026 → Mar 2027 (v3)"** (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c), where Alex edits and comments. This file is a dated mirror for cheap session reads: at session start, if the Notion page's last-edited time is newer than this file's as-of date, re-sync §2–§7 from it (Notion wins on conflict); §9–§10 history lives only here.
+
 **Read this before proposing work.** It is the one list for product direction, as of 2026-09-28.
 Linear holds the open items (label `carry-over` for anything dated); this file holds direction.
 **Single writer:** one session edits it at a time. §9–§10 are append-only history. v2's arc, programs,
@@ -105,7 +107,7 @@ After this queue: **one-in-one-out.**
 
 1. **No new stores:** no Supabase DDL before a Dec 12 go; no new Notion DBs; no mailing list.
 2. **No meta regrowth:** ≤3 hooks; no dashboards, judge seats, eval harness or telemetry surfaces; analytics = Vercel Web Analytics only.
-3. **No hub build without a readout;** no new `/ops` pages.
+3. **No hub build without a readout;** no `/ops` pages beyond the four live ones and `/ops/todos`.
 4. **No backfills without a consumer.** Role-radar rubric frozen to ~10/27.
 5. **Don't reopen** Clarify, Gamma, OBS, judge quorum, the no-build window, the roundup's brief-only source, the substrate A/B.
 6. **Contracts hold:** 3 variants, Notion first, source-check claims, scheduled posts frozen, HubSpot selective/create-once, recorded speech never public.
