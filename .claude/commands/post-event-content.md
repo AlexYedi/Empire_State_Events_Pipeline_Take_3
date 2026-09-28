@@ -271,7 +271,7 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
 
 ### Step 3.8c — The brief's learnings → first-hand claims (`substrate.py stage-claims`)
 
-Save the Step 3.7 `post_event_brief` body to a local file (the same text written to Notion), then:
+Save the Step 3.7 `post_event_brief` body to `.claude/.state/briefs/<event-slug>.md` (gitignored; the same text written to Notion), then:
 ```
 .venv/bin/python .claude/scripts/substrate.py stage-claims --manifest <m.json> --brief <brief.md> \
     --brief-ref notion:<post_event_brief page id>
