@@ -1,10 +1,10 @@
 ---
-description: "Pull events from the 'Going to Events' Google Calendar (next 14 days), find new ones with a PIPELINE block in the description, and run /event-deep-research + pre-event-content on each — one event at a time with continue-or-quit control between events."
+description: "Pull events from the 'Going to Events' Google Calendar (next 14 days), find new ones (parsed from a PIPELINE block in the description, else from the raw organizer description), and run /event-deep-research + pre-event-content on each — one event at a time with continue-or-quit control between events."
 ---
 
 # /check-new-events
 
-Lightweight orchestration on top of Workflow A. Detects new event invites that carry a PIPELINE block in the GCal description, dedups against Notion, then runs the full research + content chain on each — interactively, one event at a time. Alex controls the pace via a continue-or-quit prompt between events.
+Lightweight orchestration on top of Workflow A. Detects new event invites (parsing a PIPELINE block when the GCal description has one, the raw organizer description otherwise), dedups against Notion, then runs the full research + content chain on each — interactively, one event at a time. Alex controls the pace via a continue-or-quit prompt between events.
 
 **Input:** none — pulls automatically from the "Going to Events" calendar.
 
@@ -22,7 +22,7 @@ This command runs when:
 
 ## Required inputs
 
-None. The calendar ID and time window are hardcoded; the PIPELINE block is the structured input.
+None. The calendar ID and time window are hardcoded; the PIPELINE block is the structured input when present; the raw organizer description is the fallback.
 
 ## Step 1 — Query Google Calendar
 
@@ -58,17 +58,17 @@ once, present a detection summary + scope confirm (which events; steering; wheth
 proceed. HubSpot writes are the lowest-value step on a multi-event batch; offer them as a follow-up rather than
 forcing them inline. Exit only when there are no new (non-deduped) events at all.
 
-## Step 3 — Parse PIPELINE fields (LLM, not regex)
+## Step 3 — Parse event fields (LLM, not regex)
 
-For each event with a PIPELINE block, extract the structured fields using natural-language understanding (NOT strict regex):
+For each event, extract the structured fields using natural-language understanding (NOT strict regex). **Source:** the PIPELINE block when present; otherwise the raw organizer `description` (the Step 2 fallback, and the common case). With a raw description, pull speakers, host, topics and URL from wherever they appear in the organizer copy, and mark the event `source: raw-description` so the Step 5 summary shows which events were parsed without a PIPELINE block.
 
 - **Speakers** — list of `Name (Title, Company)` entries, but tolerate format variations: comma/dash/at-sign/semicolon separators, bulleted lists, missing titles, missing companies, just-names
 - **Host** — organizing entity name (free text)
 - **Topics** — comma-separated keywords (any separator OK)
-- **URL** — first http(s) URL in the block (optional)
+- **URL** — first http(s) URL in the block or description (optional)
 - **Intent** — one of `attend`, `documentary`, `both` (optional; default to `attend` if absent)
 
-Required fields: Speakers, Host, Topics. If any of these are missing or empty, log the event as a parse warning and exclude it from processing — surface it at the end of the run.
+Required fields: Speakers, Host, Topics. If any of these are missing or empty (from the PIPELINE block or, failing that, the raw description), log the event as a parse warning and exclude it from processing — surface it at the end of the run.
 
 **Also capture the Google Calendar event ID** from the GCal MCP response's `id` field (NOT the iCalUID — use the `id` field). This is the stable join key for downstream content (and matches `calendar_event_id` on the disabled Granola API path, should it return). Pass it through to `/event-deep-research` as a field named `Google Calendar Event ID` so it lands on the Notion Event row.
 
@@ -91,17 +91,18 @@ Before running any research, surface the full plan in this format:
 ```
 📅 Checked "Going to Events" — next 14 days
 
-Found N events with PIPELINE blocks:
+Found N events (PIPELINE block or raw-description parse):
   ✨ NEW (will process):
     1. [Event title] — [date, time]
        Speakers: [parsed]
        Host: [parsed]
        Topics: [parsed]
        Intent: [parsed]
+       Source: [PIPELINE / raw-description]
     2. ...
   ⏭️  DUPE (already in Notion — skipping):
     - [Event title] — [date]
-  ⚠️  PARSE WARNING (incomplete PIPELINE block — needs your attention):
+  ⚠️  PARSE WARNING (required field not found — needs your attention):
     - [Event title] — missing: [field]
 
 About to run /event-deep-research + pre-event-content on N new events, one at a time.
@@ -133,7 +134,7 @@ See `.claude/skills/steering-interview/SKILL.md` for the two-touch protocol, rou
 
 ### 6a. Run /event-deep-research
 
-Execute the full `/event-deep-research` workflow as documented in `.claude/commands/event-deep-research.md`. Pass the structured PIPELINE fields as the input in this natural-language format:
+Execute the full `/event-deep-research` workflow as documented in `.claude/commands/event-deep-research.md`. Pass the Step 3 parsed fields as the input in this natural-language format:
 
 ```
 Event: [event title]
@@ -141,12 +142,12 @@ Date: [event date]
 Location: [event location from GCal]
 Google Calendar Event ID: [event.id from GCal MCP response]
 
-[Original description from organizer — text BEFORE the PIPELINE block in the GCal description]
+[Original description from organizer — text BEFORE the PIPELINE block, or the whole description when there is none]
 
-Speaker: [Speakers parsed from PIPELINE block]
-Host: [Host parsed from PIPELINE block]
-Topics: [Topics parsed from PIPELINE block]
-URL: [URL parsed from PIPELINE block]
+Speaker: [Speakers parsed in Step 3]
+Host: [Host parsed in Step 3]
+Topics: [Topics parsed in Step 3]
+URL: [URL parsed in Step 3]
 ```
 
 The Google Calendar Event ID line is the deterministic join key for downstream `/post-event-content` runs against Granola. `/event-deep-research` writes it (inline, Step 4) to the Events DB `Google Calendar Event ID` text property.
@@ -200,7 +201,7 @@ Skipped (already in Notion): M events
 
 Parse warnings (needs your attention):
   - [Event title] — missing [field]
-  - Action: fix the PIPELINE block in the invite and re-run /check-new-events
+  - Action: add the missing field (or a PIPELINE block) to the invite and re-run /check-new-events
 
 Pending (not processed this session): K events
   - [list]
@@ -231,7 +232,7 @@ The Step 7 "Deep Read PENDING" block above is a *report*; this step is the *gate
 
 - **GCal MCP error** — report cleanly and exit. Don't fake data.
 - **No events found in time window** — report "No upcoming events on 'Going to Events' calendar in next 14 days" and exit.
-- **No events with PIPELINE blocks** — report the message from Step 2 and exit.
+- **No PIPELINE blocks** — not a failure: parse from the raw description (Step 2 fallback, Step 3).
 - **All events are dupes** — report "Found N events but all are already in Notion" and exit.
 - **Parse warning on an event** — exclude from this run, surface at end with the missing field, don't fail the whole session.
 - **`/event-deep-research` fails mid-event** — report which event failed, mark it as "errored" in the summary, and prompt whether to continue with the next event or quit.

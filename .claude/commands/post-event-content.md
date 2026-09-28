@@ -26,6 +26,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 This command runs when:
 - Alex types `/post-event-content [event name]`
 - Alex says "post-event content for [event]" / "draft the post for last night's [event]" / "write up [event] from Supercut"
+- Alex says "run post-event-content speaker deep-dives for [event]" → Step 1.0 + Step 1, then Step 5.6 only
 
 If the user invokes `content-correspondent` directly with raw pasted material, defer to that skill's existing path — this command adds Notion event-resolution + transcript intake + roster-grounded conditioning.
 
@@ -186,7 +187,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 **Inputs:**
 - Conditioned quote bank + speaker resolution table + entity glossary (from Step 3.5)
-- The pre-event `research_brief` linked to this Event (for pre→post comparison)
+- The pre-event `research_brief` (for pre→post comparison): `notion-fetch` the linked Notion Event page and read its research brief (Scan head + Deep Read), or the linked `research_brief` Content Draft. If neither exists, section 4 reads "n/a — no pre-event research"; never reconstruct a pre-event view after the fact.
 - Notion roster (People + Companies + Topics relations from the Event row)
 - Slides/photos uploaded by Alex (catalog them, don't re-OCR). When `slide-recording-alignment.json` exists, the Slides Catalog is **time-aligned**: one row per slide with recording offset · capture time · slide title · confirm-pass result, and quotes/stats cite the slide they were spoken over. Unaligned photos keep a row with no offset.
 - Alex's own freeform recap / observations if provided
@@ -404,6 +405,23 @@ Approve all / edit row N / skip row N / skip HubSpot entirely?
 ### 5.5e — Report
 Roll the results into the Step 6 summary: created contacts/companies, Notes added, rows skipped (with reason). If the HubSpot MCP is unavailable, **fail clean** — surface the candidate + note table in chat so Alex can act manually; the Notion writes (Steps 3.7–3.8, 5) are already committed and unaffected.
 
+## Step 5.6 — Speaker deep-dives (OPTIONAL — ask, never auto-run)
+
+Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + transcript. Methodology:
+`.claude/skills/content-patterns/speaker-deep-dive.md` (read it in full before running).
+
+1. **Ask Alex:** "Speaker deep-dives for this event? [yes / later / no]". `no` or `later` → skip to Step 6
+   (note `later` in the summary). No default run.
+2. **Standalone on a past event** ("run post-event-content speaker deep-dives for <event>"): allowed for any
+   event whose Notion page has a `post_event_brief` + a transcript. Run Step 1.0 (claim) and Step 1 (resolve)
+   first, then jump here; skip Steps 2–5.5. Release the claim when done.
+3. **Build slices** (parent) → **fan out** one `general-purpose` drafting agent per presenter, in parallel, in
+   one message; text + web only, working files under gitignored `.claude/.state/deep-dives/<event-slug>/`.
+4. **Collect**, re-invoke any thin return alone, then **write to Notion inline** (CLAUDE.md invariant 5): one
+   Content Draft per speaker, `needs_review`, 3 hook variants, plain paragraphs. Nothing lands in a tracked path.
+5. **Failure:** no `post_event_brief` → stop and say so; no transcript → paraphrase-only, flagged; a Notion
+   write fails → return that draft in chat.
+
 ## Step 6 — Summary
 
 ```
@@ -418,6 +436,7 @@ Drafts created: N
   - Bucket B outreach: N drafts
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
+Speaker deep-dives (Step 5.6): [N drafts / later / no]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
@@ -494,6 +513,7 @@ Summary + transcript together is intentional: the summary drives angle/thesis de
 - **Granola Get Note schema**: https://docs.granola.ai/api-reference/get-note.md (calendar_event, transcript, attendees fields)
 - **Conditioning skill (Step 3.5)**: `.claude/skills/transcript-intelligence/transcript-conditioning/SKILL.md` — speaker resolution, entity glossary, confidence-scored quote bank
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder
+- **Speaker deep-dives (Step 5.6)**: `.claude/skills/content-patterns/speaker-deep-dive.md` — replaces the retired `/evergreen-deep-dive` command
 - **Supercut (Step 2A)**: `.claude/references/supercut.md` — auth, endpoints, MCP vs REST, verified/unverified facts
 - **Notion write rules (Step 5, inline)**: `.claude/references/notion-write-gotchas.md` + `.claude/references/notion-schema.md` (the `notion-writer` agent's property mapping still documents the fields, but do not dispatch it — subagents lack claude.ai connectors)
 - **HubSpot step spec (Step 5.5)**: `.claude/proposals/post-event-hubspot-step.md` — the gated selective create-once pattern + pre-mortem
