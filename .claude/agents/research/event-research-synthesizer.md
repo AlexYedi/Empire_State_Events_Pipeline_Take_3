@@ -62,7 +62,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 
 6. **Preserve the Evidence Set (ADR-5 — the Deep Read's fuel).** After the head, emit a `## Evidence Set (for the Deep Read render — do not display to Alex as brief content)` block that **passes through, organized for the parent's render loop**, everything the renderer will need. Do NOT compress it, do NOT drop URLs (the spike caught that dropping URLs breaks endnotes). Organize by render section so the parent can hand each `field-guide-renderer` call its slice:
    - **Primer/Landscape ←** every topic's lineage + mechanism + 5-dimension facts + that topic's **Evidence Ledger** (URL rows verbatim).
-   - **Companies ←** every company's historical spine + mechanism + developments + headwinds + that company's **Evidence Ledger**, plus any relevant signal-scanner rows.
+   - **Companies ←** every company's **Value Frame (first)** + historical spine + developments + headwinds + that company's **Evidence Ledger**, plus any relevant signal-scanner rows.
    - **People ←** every researched person's career arc + POV + recent activity + that person's **Evidence Ledger**.
    - **Cross-Event Threads ←** the Prior-Context Pack's **Continuity Ledger** + **Graph Signals** (URL-tagged), plus any recurring-entity notes.
    - **The Frame ←** a short synthesis pointer (room, state of field, why-now, what Alex walks out able to discuss) — the renderer expands it.

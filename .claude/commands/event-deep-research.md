@@ -79,7 +79,7 @@ Once triage is approved, **dispatch all four specialists in parallel from this t
 
 The four parallel dispatches:
 
-1. **company-researcher** — every Company entity that needs research (NEW or REFRESH). Pass the entity list scoped to this specialist + their triage paths + Alex's stated focus.
+1. **company-researcher** — every Company entity that needs research (NEW, REFRESH, or FRAME-ONLY: a SKIP whose record has no Value Frame, YED-233). Pass the entity list scoped to this specialist + their triage paths + Alex's stated focus.
 2. **person-researcher** — every Person entity that needs research (NEW or REFRESH). Skip the dispatch entirely if no people are named or all are SKIP.
 3. **topic-landscape-analyst** — every Topic entity (NEW, REFRESH, or APPEND-CURRENT-EVENTS-ONLY). Topics never get full SKIP.
 4. **competitive-signal-scanner** — runs across ALL companies (including SKIP) to surface market signals in last 60 days.

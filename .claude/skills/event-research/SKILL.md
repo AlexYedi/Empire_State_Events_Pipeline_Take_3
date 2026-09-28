@@ -88,7 +88,8 @@ For each canonicalized entity, run a `notion-search` against its database:
 | Events | `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba` | Event Name (title) — detect re-runs of the same event |
 
 For each hit, capture: page URL, `Last Researched` / `Last Updated` date, and (for Companies)
-the existing `Recent Developments` text (you'll need it for the audit trail in 4b).
+the existing `Recent Developments` text (you'll need it for the audit trail in 4b) and whether
+the record **has a Value Frame** (its `Description` starts with `Value prop:`; YED-233).
 
 ### 1.5c: Classify each entity (NEW / REFRESH / SKIP)
 
@@ -112,6 +113,10 @@ Path semantics:
   rule in 4b; per Person overwrite rule in 4d).
 - **REFRESH (full)** — rerun full Step 2 research for that entity. Merge/overwrite per the
   same rules as light refresh — full vs. light only changes research scope, not write semantics.
+- **FRAME-ONLY** (Companies, YED-233) — a SKIP company whose record has no Value Frame. Research
+  only the frame (Step 2c, first block) and write it in 4b. This is how older records get their frame:
+  lazily, when the company next appears at an event. No bulk backfill. REFRESH companies with no
+  frame get one as part of the refresh.
 - **APPEND-CURRENT-EVENTS-ONLY** (Topics, ≤45 days) — skip everything except fresh Current
   Events. Append a new dated block to the Topic's Current Events (see 4c merge rules).
 
@@ -353,7 +358,11 @@ If someone is not findable via web search, note that honestly — don't fabricat
 
 For each company:
 - **Prior correspondence (Gmail):** has Alex emailed anyone here? Summarize relationship state + most recent date (active deal, prior pilot, warm contact, cold-outbound sent). Omit if nothing found.
-- What they do (1-2 sentences — assume Alex may not know)
+- **Value Frame — FIRST, it frames everything else (YED-233):** value prop (one outcome line, ≤25 words;
+  becomes `Description`) · for whom · problem as they state it (sourced) · how it works (plain-language
+  mechanism) · unique bet (1–3, tagged [product]/[distribution]/[business model]/[data]/[insight], sourced)
+  · our read (one labeled-analysis line with the strongest counterpoint). Full contract:
+  `.claude/agents/research/company-researcher.md`.
 - Recent news: funding rounds (amount if available), product launches, partnerships, leadership changes
 - Industry/Space classification: AI/ML, Enterprise Software, Developer Tools, VC/Investment, Data Infrastructure
 - Estimated funding stage: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public
@@ -504,7 +513,7 @@ Do not silently fall back to "create always."
 Create a page with these properties:
 ```
 "Company Name": "[company name]"                    — title
-"Description": "[1-2 sentence description]"         — text
+"Description": "Value prop: [value prop line]"      — text (the Value Frame's first line; the prefix marks the record as framed)
 "Website": "[url]"                                  — url
 "Industry / Space": "[\"AI/ML\", ...]"              — multi_select (JSON array)
 "Funding Stage": "[stage]"                          — select (one of: Seed, Series A, Series B, Series C, Series D, Series E, Series F, Series G, Series H, Series I, Public)
@@ -514,7 +523,8 @@ Create a page with these properties:
 "date:Last Researched:is_datetime": 0               — integer
 ```
 
-Page body content: expanded company research (full analysis from Step 2c).
+Page body content: a `## Value Frame` section FIRST (the full frame block from Step 2c), then the
+expanded company research (full analysis from Step 2c).
 
 #### Refresh path (REFRESH light | full)
 
@@ -533,8 +543,8 @@ Do NOT overwrite the company page blindly. Steps:
      (if changed), `Recent Funding ($)` (if changed), `date:Last Researched:start` (today).
    - Merge: `Industry / Space` multi-select — union new values with existing, don't drop
      existing tags Alex may have hand-curated.
-   - Leave alone: `Company Name`, `Description` (unless Description is empty), `Website`
-     (unless empty or the domain has genuinely changed via M&A).
+   - Leave alone: `Company Name`, `Description` (unless it is empty or has no Value Frame — then
+     write `Value prop: …`), `Website` (unless empty or the domain has genuinely changed via M&A).
 
 3. **Page body** — append a new dated section with the refreshed research:
    ```
@@ -542,6 +552,13 @@ Do NOT overwrite the company page blindly. Steps:
    [new research]
    ```
    Don't delete prior body content.
+
+#### Frame-only path (FRAME-ONLY, and any REFRESH record without a frame)
+
+Set `Description` to `Value prop: [value prop line]`. The prior Description moves into the body
+section below, so nothing is lost. Insert a `## Value Frame` section at the **top** of the page body
+(the full frame block + its Evidence Ledger rows). Touch nothing else. Don't bump `Last Researched`,
+because the rest of the record wasn't re-researched.
 
 #### Skip path (SKIP)
 
