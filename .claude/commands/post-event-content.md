@@ -223,7 +223,7 @@ After writing the brief, capture its URL and pass it to Step 4 (content-correspo
 
 ## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c)
 
-Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps (or `substrate.py waive` with a reason) and state their outcome in the Step 6 summary.
+Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps and state their outcome (or why one was skipped) in the Step 6 summary.
 
 ### Step 3.8a — Notion People / Companies / Topics (unchanged)
 
@@ -250,9 +250,9 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
 2. **Dry-run, then write:**
    ```
    .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json> --dry-run
-   .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json> --expect-claims
+   .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json>
    ```
-   `--expect-claims` opens the gate row that 3.8c must close. Re-running is safe: a second run reports `created=0`.
+   Re-running is safe: a second run reports `created=0`.
 
 ### Step 3.8c — The brief's learnings → first-hand claims (`substrate.py stage-claims`)
 
@@ -266,10 +266,9 @@ Save the Step 3.7 `post_event_brief` body to `.claude/.state/briefs/<event-slug>
 - Rule-12 lines ("unsourced", "don't publish") are staged with `metadata.do_not_publish = true`, confidence ≤ 0.5, and are **never** auto-approved.
 - **Always pass `--approve`** — inherited approval, **ratified by Alex 2026-09-18**: claims parsed from a brief he has reviewed land `approved`. Rule-12 / do-not-publish claims never do; they stay `candidate`. To promote claims staged before this ruling: `substrate.py approve-claims --manifest <m.json>`.
 - **0 claims parsed = loud failure (exit 3)**, not a silent pass — it means the brief's headings drifted.
-- Success flips the gate row to STAGED. If there is genuinely no brief (e.g. a walk-in with no transcript), acknowledge it instead — logged, not silent:
-  `.venv/bin/python .claude/scripts/substrate.py waive --manifest <m.json> --reason "<why>"`
+- If there is genuinely no brief (e.g. a walk-in with no transcript), say so with the reason in the Step 6 summary — skipped, not silent.
 
-**Prerequisite:** migration `supabase/migrations/0009_substrate_s1a_additive.sql` applied to prod (rehearsed on the twin via `supabase/scripts/rehearse_s1a.py`). Until it is, 3.8c fails with a 404 on `claim` — do not waive around it; say so in the Step 6 summary.
+**Prerequisite:** migration `supabase/migrations/0009_substrate_s1a_additive.sql` applied to prod (rehearsed on the twin via `supabase/scripts/rehearse_s1a.py`). Until it is, 3.8c fails with a 404 on `claim` — do not skip around it; say so in the Step 6 summary.
 
 ## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
 
@@ -414,7 +413,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 ✅ /post-event-content complete: [Event Name]
 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
-Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / waived: reason]  (not gate-enforced — report it)
+Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
 Drafts created: N
   - Tier 1 comment: [Notion URL]
   - Tier 2 post + visual brief: [Notion URL]
