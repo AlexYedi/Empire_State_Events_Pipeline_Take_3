@@ -1,11 +1,14 @@
-name: MI 2b nightly health-check (throwaway)
+name: MI topic-intelligence nightly (compute + health-check)
 
-# Post-swap N-night watch for the MI consolidation (YED-130 Increment 2b).
-# Runs the read-only health-check nightly; the job FAILS (and opens an issue) only if the
-# consolidated graph loses coherence or a read path breaks — alert-on-failure-only.
-#
-# DELETE this workflow + supabase/scripts/healthcheck_2b.py once `pre2b` is dropped
-# (i.e. the gtm spine is decommissioned and the watch is over).
+# Nightly topic-intelligence refresh for the consolidated MI graph (YED-230 / YED-131).
+#   1. COMPUTE — supabase/scripts/topic_intel_compute.py --apply: a read-only parity gate (the
+#      ported SQL must reproduce healthcheck_2b.py's independent reference exactly), then
+#      `set role pipeline_writer; select topic_intelligence.compute_topic_intelligence(today)`.
+#      Refuses to write on any mismatch. Needs migration 0012 applied.
+#   2. HEALTH-CHECK — supabase/scripts/healthcheck_2b.py (read-only): stored snapshot vs the
+#      independent recompute + the 8 structural invariants + the anon read-path probe.
+# Before 2026-09-28 only step 2 ran and nothing recomputed, so the stored snapshot froze at the
+# 2026-08-10 cutover and step 2 failed every night on staleness (#80 … #140).
 #
 # REQUIRED repo secrets (Settings > Secrets and variables > Actions):
 #   MI_DB_DSN            The SESSION POOLER connection string (IPv4 — GitHub runners can't reach
@@ -26,6 +29,10 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: mi-topic-intel-nightly
+  cancel-in-progress: false
+
 jobs:
   healthcheck:
     runs-on: ubuntu-latest
@@ -36,6 +43,11 @@ jobs:
           python-version: "3.12"
       - name: Install psql (libpq client)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Compute topic intelligence (parity-gated write via pipeline_writer)
+        env:
+          MI_DB_DSN: ${{ secrets.MI_DB_DSN }}
+          PSQL_BIN: psql
+        run: python3 supabase/scripts/topic_intel_compute.py --apply --runtime github_actions
       - name: Run MI 2b health-check
         env:
           MI_DB_DSN: ${{ secrets.MI_DB_DSN }}
@@ -61,6 +73,6 @@ jobs:
           else
             gh issue create \
               --title "MI 2b health-check FAILED (since $TODAY)" \
-              --body "The nightly post-swap health-check failed — the consolidated MI graph lost coherence or a read path broke. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
+              --body "The nightly topic-intelligence job failed — either the compute refused to write (ported SQL disagreed with the reference, or the write errored) or the health-check found the stored graph incoherent. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
               || echo "issue-create failed; check the Actions run directly"
           fi
