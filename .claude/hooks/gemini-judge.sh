@@ -13,7 +13,7 @@ cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null || true
 
 ARTIFACT=""; ATYPE="skill"; CALSET="prospective"; CONTEXT=""; SPEC_FILES=""
 MODEL="gemini-pro-latest"
-RUBRIC=".claude/evals/rubrics/build-quality-v5.md"
+RUBRIC=".claude/evals/rubrics/build-quality-v6.md"
 SYSTEM=".claude/evals/prompts/judge-system-v2.md"
 LABEL=""; PRINT_ONLY=0; BUNDLE=""; ABLOB=""; DRY_RUN=0
 while [ $# -gt 0 ]; do
@@ -129,7 +129,7 @@ Work in this order, and the output schema enforces it:
 1. checks_performed: list the concrete things you checked (e.g. "each numbered ADR decision vs the code", "every write path", "error handling on network calls").
 2. defects: every defect you found, major or minor, each with location (line number, function or section), criterion, severity, spec_ref (the numbered spec/ADR decision it contradicts, or ""), and description. Competent artifacts usually still have minor reviewer nits; list them.
 3. criterion_scores: score each of the 5 criteria 0-1 INDEPENDENTLY using the rubric scale (1.0 = searched and found nothing of consequence; ~0.85 = passes with nits; 0.70 = pass line; below = send back). Reasoning must cite specific lines or sections.
-4. cap_flags: set confidence_honesty_violation (an unverified/uncited claim asserted as verified), spec_drift (behaviour contradicts a numbered decision in the supplied spec), command_skeleton_absent (a command that lists agents without dispatch/output), density_padding (deep_read only: padding is generic filler, not legitimate novice on-ramp; an honestly short section is NOT padding).
+4. cap_flags: set confidence_honesty_violation (an unverified/uncited claim asserted as verified), spec_drift (behaviour contradicts a numbered decision in the supplied spec), command_skeleton_absent (a command that lists agents without dispatch/output), density_padding (deep_read only: padding is generic filler, not legitimate novice on-ramp; an honestly short section is NOT padding), privacy_layer_defect (you CONFIRMED a correctness defect in ANY layer of a privacy/security/access-control mechanism - a filter, guard, redaction, permission check, secret handling, allow/deny list - even if another layer or backstop would catch it; a backstop never excuses a broken layer; NOT for hardening suggestions or logging gaps in a correct layer).
 Do NOT compute a composite score or a verdict; the harness does that.
 House-context primer (for convention_adherence/anti_pattern_avoidance): project skills in .claude/skills/ take NO alex: prefix (that prefix is for alex-plugin skills only); subagents cannot spawn subagents (fan-out runs from the parent thread); MCP writes are parent-thread only; Supabase as the Market-Intelligence store is sanctioned (NOT an anti-pattern), Supabase as a measurement store is tombstoned. If you lack house context for a convention question, say so in the reasoning and score what you CAN verify; do not default to 1.0.'
 
@@ -146,9 +146,9 @@ SCHEMA='{"type":"OBJECT","propertyOrdering":["checks_performed","defects","crite
   "criterion_scores":{"type":"ARRAY","items":{"type":"OBJECT","propertyOrdering":["id","score","reasoning"],"required":["id","score","reasoning"],
     "properties":{"id":{"type":"STRING","enum":["correctness","completeness","convention_adherence","anti_pattern_avoidance","diagnostics"]},
       "score":{"type":"NUMBER"},"reasoning":{"type":"STRING"}}}},
-  "cap_flags":{"type":"OBJECT","required":["confidence_honesty_violation","spec_drift","command_skeleton_absent","density_padding"],
+  "cap_flags":{"type":"OBJECT","required":["confidence_honesty_violation","spec_drift","command_skeleton_absent","density_padding","privacy_layer_defect"],
     "properties":{"confidence_honesty_violation":{"type":"BOOLEAN"},"spec_drift":{"type":"BOOLEAN"},
-      "command_skeleton_absent":{"type":"BOOLEAN"},"density_padding":{"type":"BOOLEAN"}}}}}'
+      "command_skeleton_absent":{"type":"BOOLEAN"},"density_padding":{"type":"BOOLEAN"},"privacy_layer_defect":{"type":"BOOLEAN"}}}}}'
 
 # --- build request body safely with jq (no manual escaping) ---
 [ -n "$BUNDLE" ] && DANGLING=$(jq -r '.dangling_refs | join("\n")' "$BUNDLE")   # the cap must use the bundle's pre-pass
@@ -226,11 +226,13 @@ VERDICT_JSON=$(echo "$VERDICT_JSON" | jq -c --arg atype "$ATYPE" --argjson dangl
   | ($s.correctness*0.30 + $s.completeness*0.20 + $s.convention_adherence*0.20 + $s.anti_pattern_avoidance*0.20 + $s.diagnostics*0.10) as $raw
   | ([$raw]
      + (if .cap_flags.confidence_honesty_violation then [0.65] else [] end)
+     + (if .cap_flags.privacy_layer_defect then [0.65] else [] end)
      + (if $atype=="deep_read" and .cap_flags.density_padding then [0.65] else [] end)
      + (if $dangling then [0.60] else [] end) | min) as $capped
   | .raw_score = (($raw*1000|round)/1000)
   | .weighted_score = (($capped*1000|round)/1000)
   | .confidence_honesty_violation = .cap_flags.confidence_honesty_violation
+  | .privacy_layer_defect = (.cap_flags.privacy_layer_defect // false)
   | .verdict = (if .weighted_score >= 0.70 then "pass" else "flag" end)')
 [ -n "$DANGLING" ] && echo "  check-refs: dangling reference(s) present → completeness/composite capped ≤0.60 deterministically" >&2
 [ "$(echo "$VERDICT_JSON" | jq -r '.flat_ceiling')" = "true" ] && echo "  ⚠️  FLAT CEILING: all five criteria 1.0 — low-information; the quorum will escalate instead of auto-accepting." >&2

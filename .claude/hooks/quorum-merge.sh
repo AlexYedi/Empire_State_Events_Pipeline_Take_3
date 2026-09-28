@@ -68,7 +68,7 @@ if printf '%s' "$CV" | jq -e '(.criterion_scores|type)=="array" and (.criterion_
     | (if $f.command_skeleton_absent then cap("completeness"; 0.35) else . end)
     | (.criterion_scores|map({(.id): .score})|add) as $s
     | ($s.correctness*0.30 + $s.completeness*0.20 + $s.convention_adherence*0.20 + $s.anti_pattern_avoidance*0.20 + $s.diagnostics*0.10) as $raw
-    | ([$raw] + (if $f.confidence_honesty_violation then [0.65] else [] end) + (if $f.density_padding then [0.65] else [] end) | min) as $capped
+    | ([$raw] + (if $f.confidence_honesty_violation then [0.65] else [] end) + (if $f.density_padding then [0.65] else [] end) + (if $f.privacy_layer_defect then [0.65] else [] end) | min) as $capped
     | .weighted_score = (($capped*1000|round)/1000)
     | .verdict = (if .weighted_score >= 0.70 then "pass" else "flag" end)')
   CV_WS=$(printf '%s' "$CV" | jq -r '.weighted_score')

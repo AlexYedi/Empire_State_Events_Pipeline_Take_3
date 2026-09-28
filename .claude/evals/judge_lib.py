@@ -48,7 +48,7 @@ def sha256_file(path: str) -> str:
     return hashlib.sha256(open(path, "rb").read()).hexdigest()
 
 
-# ---------------------------------------------------------------- scoring (mirrors gemini-judge.sh, @5)
+# ---------------------------------------------------------------- scoring (mirrors gemini-judge.sh, @6)
 def score(verdict: dict, atype: str, has_dangling: bool) -> dict:
     """Per-criterion caps, weighted sum, composite caps, verdict. Caps only ever LOWER a score."""
     cs = verdict.get("criterion_scores")
@@ -78,6 +78,8 @@ def score(verdict: dict, atype: str, has_dangling: bool) -> dict:
     caps = [raw]
     if flags.get("confidence_honesty_violation"):
         caps.append(0.65)
+    if flags.get("privacy_layer_defect"):            # @6 (YED-231): a broken privacy layer fails, backstop or not
+        caps.append(0.65)
     if atype == "deep_read" and flags.get("density_padding"):
         caps.append(0.65)
     if has_dangling:
@@ -86,6 +88,7 @@ def score(verdict: dict, atype: str, has_dangling: bool) -> dict:
     out["raw_score"] = round(raw * 1000) / 1000
     out["weighted_score"] = round(min(caps) * 1000) / 1000
     out["confidence_honesty_violation"] = bool(flags.get("confidence_honesty_violation"))
+    out["privacy_layer_defect"] = bool(flags.get("privacy_layer_defect"))
     out["verdict"] = "pass" if out["weighted_score"] >= PASS_LINE else "flag"
     out["scoring"] = "harness-recomputed"
     return out
@@ -182,7 +185,7 @@ Work in this order, and the output schema enforces it:
 1. checks_performed: list the concrete things you checked (e.g. "each numbered ADR decision vs the code", "every write path", "error handling on network calls").
 2. defects: every defect you found, major or minor, each with location (the line number shown in the ARTIFACT CONTENT margin, plus function or section), criterion, severity, spec_ref (the numbered spec/ADR decision it contradicts, or ""), and description. Where the schema has a `quote` field, copy the offending text VERBATIM from that line (it is checked mechanically; a quote that is not in the artifact counts against you). Competent artifacts usually still have minor reviewer nits; list them.
 3. criterion_scores: score each of the 5 criteria 0-1 INDEPENDENTLY using the rubric scale (1.0 = searched and found nothing of consequence; ~0.85 = passes with nits; 0.70 = pass line; below = send back). Reasoning must cite specific lines or sections. Any criterion you score below 0.85 must have at least one defect filed against it.
-4. cap_flags: set confidence_honesty_violation (an unverified/uncited claim asserted as verified), spec_drift (behaviour contradicts a numbered decision in the supplied spec), command_skeleton_absent (a command that lists agents without dispatch/output), density_padding (deep_read only: padding is generic filler, not legitimate novice on-ramp; an honestly short section is NOT padding).
+4. cap_flags: set confidence_honesty_violation (an unverified/uncited claim asserted as verified), spec_drift (behaviour contradicts a numbered decision in the supplied spec), command_skeleton_absent (a command that lists agents without dispatch/output), density_padding (deep_read only: padding is generic filler, not legitimate novice on-ramp; an honestly short section is NOT padding), privacy_layer_defect (you CONFIRMED a correctness defect in ANY layer of a privacy/security/access-control mechanism - a filter, guard, redaction, permission check, secret handling, allow/deny list - even if another layer or backstop would catch it; a backstop never excuses a broken layer; NOT for hardening suggestions or logging gaps in a correct layer).
 Do NOT compute a composite score or a verdict; the harness does that.
 House-context primer (for convention_adherence/anti_pattern_avoidance): project skills in .claude/skills/ take NO alex: prefix (that prefix is for alex-plugin skills only); subagents cannot spawn subagents (fan-out runs from the parent thread); MCP writes are parent-thread only; Supabase as the Market-Intelligence store is sanctioned (NOT an anti-pattern), Supabase as a measurement store is tombstoned. If you lack house context for a convention question, say so in the reasoning and score what you CAN verify; do not default to 1.0."""
 
@@ -308,7 +311,7 @@ def _cli() -> int:
     ap.add_argument("cmd", choices=["bundle"])
     ap.add_argument("--artifact", required=True); ap.add_argument("--artifact-type", default="skill")
     ap.add_argument("--context", default=""); ap.add_argument("--spec-file", action="append", default=[])
-    ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v5.md")
+    ap.add_argument("--rubric", default=".claude/evals/rubrics/build-quality-v6.md")
     ap.add_argument("--system", default=".claude/evals/prompts/judge-system-v2.md")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
