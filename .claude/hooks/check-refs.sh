@@ -74,7 +74,9 @@ while IFS= read -r ref; do
   # to qualify — an outright typo is not ignored, so it still flags.
   # try the bare path AND with a trailing slash: .gitignore lists runtime DIRS as ".claude/.state/", and
   # `git check-ignore .claude/.state` (no slash) does not match that rule.
-  if [ ! -e "$probe" ] && { git check-ignore -q "$ref" 2>/dev/null || git check-ignore -q "${ref%/}/" 2>/dev/null; }; then
+  # YED-236: a gitignored target is excused whether or not it exists on THIS disk — same policy as
+  # build_graph.py (ignored = absent), so a run in Alex's checkout and in a clean clone agree.
+  if { git check-ignore -q "$ref" 2>/dev/null || git check-ignore -q "${ref%/}/" 2>/dev/null; }; then
     ignored=$((ignored+1))
     continue
   fi
