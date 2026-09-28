@@ -3,7 +3,7 @@
 
 WHY THIS EXISTS. Four times in two days a metric said "the model is bad" and the harness was at fault. The
 fourth: `controls.py` started passing `--artifact-blob`, only `openai_judge.py` knew it, and EVERY Gemini
-control run died with "unknown arg" — which the canary then recorded as the Gemini SEAT failing. A seat was
+control run died with "unknown arg" — which the (since retired, YED-231) canary then recorded as the Gemini SEAT failing. A seat was
 one run away from being auto-demoted for a flag it had never been taught.
 
 The shape is always the same: a change lands in one adapter, the others silently break or get blamed. This
@@ -18,7 +18,7 @@ from __future__ import annotations
 import json, os, subprocess, sys, tempfile
 
 # Flags every seat adapter must ACCEPT (parse without "unknown arg"). Add a flag here the moment any caller
-# — controls.py, run-canaries.sh, the judge-build skill — starts passing it to more than one adapter.
+# — controls.py, judge.py, the judge-build skill — starts passing it to more than one adapter.
 REQUIRED = ["--artifact", "--artifact-type", "--calibration-set", "--context", "--spec-file",
             "--model", "--rubric", "--system", "--label", "--print-only", "--bundle", "--artifact-blob", "--dry-run"]
 UNKNOWN_FLAG = "--definitely-not-a-real-flag"

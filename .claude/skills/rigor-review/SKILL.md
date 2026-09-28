@@ -20,15 +20,21 @@ This is the **learning loop** — the step that turns feedback into improvement,
 
 ## Step 2 — Review against the registry (only the action-triggering metrics)
 **First, run the null-model check — before reading any metric as good news:**
-`bash .claude/hooks/run-canaries.sh` then `python3 .claude/evals/calibration_stats.py --gate`.
-Any seat reported `null-model: unvalidated` is no better than always saying "pass" and cannot auto-accept,
-whatever its agreement rate looks like. **A metric within +0.10 of its do-nothing baseline is not evidence.**
+`python3 .claude/evals/calibration_stats.py --check` (reports only; it never changes a seat's role).
+If it prints a **REVISIT** banner, put the voting seat's numbers and the named candidate in front of Alex: the
+decision is his one-line `role` edit in `.claude/evals/seats.json` (YED-231). A voter reported
+`null-model: unvalidated` is no better than always saying "pass", whatever its agreement rate looks like. **A metric within +0.10 of its do-nothing baseline is not evidence.**
 (YED-212: "83% agreement" was the always-pass baseline for 63 days, and the gate's 80% threshold sat below it.)
 Ask the same question of any NEW metric before trusting it: what does this score when the system does nothing?
 - build-quality scores < 0.70 — were they reworked?
 - corrective-rounds ÷ value — trend up?
 - DoD waiver-rate — climbing / clustering on builds?
 - **gate failures (YED-228, added 2026-09-27):** count `*_gate_failed` and `*_gate_abandoned` rows in `.claude/artifacts/deep-read-gate-failures.jsonl` and `substrate-gate-failures.jsonl` — **excluding superseded rows**: a `gate_false_positive_correction` row voids every earlier failure row from the same `session` (the logs are append-only, so corrections never delete). Filter: `jq -s '(map(select(.event=="gate_false_positive_correction")) | map({(.session): .ts}) | add // {}) as $c | map(select((.event|test("_gate_(failed|abandoned)$")) and (($c[.session] // "") < .ts or ($c[.session] == null))))' <log>`. Before YED-228 the gates logged one false row per turn of an in-progress run (9 in session b7b796e0, all superseded); after it, any live row is a real skip or an abandoned run — each one gets a named cause in Step 4.
+- **weekly batch-ack (YED-231, keeps the calibration truth set from collapsing to escalations only):** run
+  `python3 .claude/evals/judge.py pending --days 7`. It lists the week's un-acked clean passes (run id, artifact,
+  voter score, top defect). Show the list and take **one** answer: "all agree", or the exceptions. Write it with
+  `python3 .claude/evals/judge.py ack --run <id> [--run <id> …] agree` (and a separate `… disagree "why"` per
+  exception). `judge.py ack` is the only ack writer; never edit a log row by hand. Note how many were acked in Step 4.
 - judge–human agreement (from `alex_ack`) — **is it ≥ +0.10 above the always-pass baseline on the same rows?** Raw agreement alone means nothing (YED-212)
 - **ack hygiene (the labeler is a rater too):** what share of escalations did Alex simply agree with, and how fast? A reflexive-agree pattern turns the ground truth into a constant and makes every κ undefined
 - acted-on outcome vs goal — trending which way?

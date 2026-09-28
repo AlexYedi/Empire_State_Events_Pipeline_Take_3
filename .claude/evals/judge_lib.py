@@ -426,6 +426,9 @@ def build_bundle(artifact: str | None, atype: str, system: str, rubric: str, con
         # WHAT CHANGED) must verify. The 09-27 deep-read-gate run lost its vote partly over exactly such a quote.
         sources.append({"label": "diff (removed side)", "text": _diff_old_side(diff)})
     dangling = sorted(set(dangling))
+    if rng:     # judged AS OF head: a reference that exists at head is not dangling, even if the worktree dropped it since
+        dangling = [r for r in dangling if r.startswith("~") or subprocess.run(
+            ["git", "cat-file", "-e", f"{head}:{r.rstrip('/')}"], capture_output=True).returncode != 0]
     art_sha = hashlib.sha256("\n".join(f"{m['path']}\t{m['sha256'] or 'deleted'}"
                                        for m in sorted(meta, key=lambda m: m["path"])).encode()).hexdigest()
     art_id = f"range:{base[:7]}..{head[:7]}" if rng else f"files:{len(meta)}@{art_sha[:12]}"

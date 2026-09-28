@@ -59,23 +59,6 @@ for name, v, atype, dang in FIX:
         [c["score"] for c in a["criterion_scores"]] == [c["score"] for c in b["criterion_scores"]]
     ck(f"score parity python==jq: {name}  ({a['weighted_score']} {a['verdict']})", same)
 
-# quorum-merge.sh keeps a THIRD copy of the composite arithmetic (its Claude-seat recompute). Bind it to judge_lib
-# too (judge on the @6 build, 2026-09-28): extracted at test time, compared on every fixture it is defined for.
-# It applies no dangling cap and applies density/skeleton regardless of artifact type, so those fixtures are skipped.
-qsrc = open(".claude/hooks/quorum-merge.sh", encoding="utf-8").read()
-qm = re.search(r"CV=\$\(printf '%s' \"\$CV\" \| jq -c '\n(.*?)'\)\n", qsrc, re.S)
-ck("quorum-merge.sh recompute jq found", bool(qm))
-if qm:
-    for name, v, atype, dang in FIX:
-        fl = v["cap_flags"]
-        if dang or fl.get("density_padding") or fl.get("command_skeleton_absent"):
-            continue
-        r = subprocess.run(["jq", "-c", qm.group(1)], input=json.dumps(v), capture_output=True, text=True)
-        q = json.loads(r.stdout) if r.returncode == 0 else {}
-        a = jl.score(v, atype, dang)
-        ck(f"score parity python==quorum-merge.sh: {name}  ({a['weighted_score']} {a['verdict']})",
-           q.get("weighted_score") == a["weighted_score"] and q.get("verdict") == a["verdict"])
-
 for bad in ({"criterion_scores": []}, V([1, 1, 1, 1, None])):
     try:
         jl.score(bad, "skill", False); ck("malformed verdict rejected", False)

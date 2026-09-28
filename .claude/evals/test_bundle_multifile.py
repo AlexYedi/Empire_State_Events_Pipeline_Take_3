@@ -37,6 +37,8 @@ ck("range: bundle_version 3, artifact id names the range", b1["bundle_version"] 
 ck("range: artifact_sha256 is stable across two builds", b1["artifact_sha256"] == b2["artifact_sha256"])
 ck("range: the whole bundle is byte-stable too", b1["bundle_sha256"] == b2["bundle_sha256"])
 ck("range: the diff is carried as a WHAT CHANGED section", "===== WHAT CHANGED" in b1["text"])
+ck("range: refs are checked as of HEAD (run-canaries.sh existed at 42602e4, so it is not dangling there)",
+   b1["has_dangling"] is False and b1["dangling_refs"] == [], str(b1["dangling_refs"]))
 ck("range: each file under its own FILE header", all(f"===== FILE: {p} (" in b1["text"] for p in WANT))
 
 # the 60k rule: PR #139 is ~78k chars in full, so files > 400 lines go as hunks (and only those)

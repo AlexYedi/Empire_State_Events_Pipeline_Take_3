@@ -1,97 +1,56 @@
 ---
 name: judge-build
-description: "Cross-provider LLM-as-judge for build artifacts (skills/commands/hooks/refs/code). Runs a two-seat quorum — Claude/Sonnet (house-aware) + Gemini (independent) — scores each against the build-quality rubric per-criterion (0–1 + reasoning), mechanically enforces the dangling-reference cap, merges to one quorum verdict, writes authoritative run-logs, and prompts Alex to ack/disagree (the calibration field). Agree→auto; disagree→escalate (fail-safe FLAG in autonomous mode). PROVISIONAL-TRUSTED. Coordinates with eval-harness; never auto-rewrites, never hard-blocks."
+description: "LLM-as-judge for build artifacts (skills/commands/hooks/refs/code, one file, several files or a git range). One command: judge.py builds one evidence bundle, runs the OpenAI shadow seat, hands the parent a brief for the Claude/Sonnet voting seat, merges, and prints one line. The voter's verdict is the verdict; a quote-verified shadow can only escalate. Clean passes are logged without a prompt (batch-acked weekly in /rigor-review); escalations ask Alex to ack via judge.py ack. Never auto-rewrites, never hard-blocks."
 ---
 
-# Judge Build Skill (cross-provider quorum)
+# Judge Build Skill
 
-You orchestrate the **build-quality judge** so quality is a measurable, cross-provider signal — not a vibe, and not a single model rating its own family's work. Part of the build-rigor measurement layer (PRD US-3 / Linear YED-89; cross-provider quorum = YED-109). Home is `.claude/evals/`. Full design: **`.claude/references/cross-provider-judge.md`** (read it once).
+You orchestrate the **build-quality judge**: a measurable quality signal on a build, not a vibe. Part of the build-rigor
+layer (PRD US-3 / YED-89). Home is `.claude/evals/`. **Spec: `.claude/references/judge-right-size-yed-231.md`** (YED-231,
+supersedes the run-path sections of `cross-provider-judge.md`). Rubric: **`build-quality@6`**
+(`.claude/evals/rubrics/build-quality-v6.md`: `@5` + the privacy-layer cap, composite ≤ 0.65 when ANY layer of a privacy
+control is broken, whatever the backstop). Judge prompt: `.claude/evals/prompts/judge-system-v2.md`.
 
-**Load first (every run):**
-- `.claude/evals/prompts/judge-system-v2.md` — the **current** judge instructions (defects-before-scores, earned 1.0, don't-trust-docstrings). Follow verbatim. (`judge-system.md` = v1, retained for runs scored under it.)
-- `.claude/evals/rubrics/build-quality-v6.md` — the **current** rubric (`build-quality@6`, live 2026-09-28, YED-231): `@5` plus ONE new composite cap — **`privacy_layer_defect` → composite ≤ 0.65 (FLAG)** when a confirmed correctness defect sits in ANY layer of a privacy/security/access-control mechanism, **whatever the backstop** (Alex's ruling on the YED-236 quorum: "a flaw in the first layer of a privacy control should fail regardless of the backstop"). Everything below about `@5` still holds. Record `rubric: "build-quality@6"`.
-- `.claude/evals/rubrics/build-quality-v5.md` — the **previous** rubric (`build-quality@5`, live 2026-09-19, YED-206): 1.0 must be EARNED ("searched and can name what was checked") + a 0.85 mid anchor, `defects[]` required before scores, and a **NEW spec-drift cap (correctness ≤0.70)** when behaviour contradicts a numbered spec/ADR decision. Pair with `prompts/judge-system-v2.md`. Record `rubric: "build-quality@5"` in every run-log. Inherited from `@4`: 5 criteria + weights, pass band 0.70, and the caps — composite **confidence-honesty cap ≤0.65** (unverified-asserted-as-verified → flag) + completeness caps (dangling-reference ≤0.60; command-skeleton-absent ≤0.35) + the **density cap ≤0.65 (`deep_read` artifacts only)** — padding (high word-to-cited-fact ratio that is generic-explainer filler, NOT legitimate novice on-ramp) → flag. (`build-quality-v4.md`/`-v3.md`/`-v2.md`/`.md` = retained `@3`/`@2`/`@1`; never mutate old versions. For every artifact type EXCEPT `deep_read`, `@4` ≡ `@3`.)
-
-**Ground rules:**
-- **Per-seat standing (revised 2026-09-19, YED-206).** Trust is per seat, on four numbers from `.claude/evals/calibration_stats.py` (agreement above the seat's always-pass baseline · κ ≥ 0.60 · flag recall ≥ 0.60 · flat-1.0 rate < 0.30): **Sonnet = trusted seat** (κ 0.80, recall 0.80); **Gemini = ADVISORY** (κ 0.27, recall 0.20, flat-1.0 0.82 — it rubber-stamped 20 of 23 real artifacts; triage: `.claude/notes/gemini-judge-triage-2026-09-19.md`). An advisory seat runs and is recorded but **cannot auto-accept a quorum**. Still do NOT hard-block on the score.
-- **Score + flag only.** Never rewrite the artifact; never hard-block. Surface a verdict for Alex to ack.
-- **Honest:** if a criterion can't be assessed (missing context), say so and score conservatively — don't invent.
-
----
+**Seats** (`.claude/evals/seats.json`, Alex's static role map; no code edits it): `claude` (Sonnet) **voting** ·
+`openai` (gpt-5.4-mini) **shadow**, runs on every build, hidden until the ack · `gemini` **off** (adapter kept).
+**Ground rules:** score + flag only; never rewrite, never hard-block. Missing context → say so, score conservatively.
 
 ## Inputs
-- **Artifact** — a file path (e.g. `.claude/skills/trend-radar/SKILL.md`) or pasted content. Note its `artifact_type` (skill/command/hook/ref/code).
-- **(Optional) Spec** — the issue/PRD/AC it should satisfy (for `correctness`/`completeness`). If absent, infer from the artifact's own stated purpose and say so.
-- **Mode** — `interactive` (Alex in the loop, default) or `autonomous` (batch/headless). Drives disagreement resolution.
+- **What changed:** one file (`--artifact P`), several (`--files A B …`), or a git range (`--range BASE..HEAD`). For a
+  branch, pass the range against the **merge-base** (`$(git merge-base origin/main HEAD)..HEAD`), never two-dot against
+  a moving `origin/main`. Telemetry paths are excluded automatically; don't commit `.patch` bundles to `logs/`.
+- **`--artifact-type`** (skill/command/hook/ref/code/deep_read) and **`--spec-file`** (the in-repo spec; repeatable)
+  and/or `--context "…"`. Under 400 chars of spec = evidence parity false; rebuild with a spec rather than run blind.
+- **Mode:** `interactive` (default) or `autonomous` (every escalation fails safe to FLAG).
 
-## The three-seat run (default since 2026-09-19, YED-209). Use THIS; Steps 2–4 below are the two-seat fallback
-
-Spec: `.claude/proposals/third-judge-seat-openai.md`. Seats and their status live in `.claude/evals/seats.json`
-(`claude` voting · `gemini` advisory · `openai` shadow). **The rule:** a seat's PASS reduces scrutiny only if that
-seat is *voting*; any advisory or voting seat's doubt adds scrutiny; a shadow seat changes nothing; a split is never
-auto-resolved. Every seat scores the **same bytes**, and no seat ever sees another seat's output.
-
-1. **Build ONE evidence bundle** (runs the Step 0 pre-passes and the privacy guard for you):
-   `python3 .claude/evals/judge_lib.py bundle --artifact <path> --artifact-type <t> --spec-file <in-repo spec> [--context "<text>"] --out <scratchpad>/bundle.json`
-   Spec files must be tracked files inside the repo. A gitignored, symlinked or out-of-repo file is refused (exit 3, no override); pass ad-hoc spec text with `--context` instead. Also write the bundle's `.text` to a `.txt` for the Sonnet seat.
-   **Evidence parity is fixed HERE, at build time** (YED-223). If the build prints an EVIDENCE-PARITY WARNING, **rebuild the bundle** with `--spec-file`/`--context` — never re-run a seat with extra flags: the adapters score the bundle's bytes verbatim and **refuse** `--context`/`--spec-file` alongside `--bundle` (exit 2). Build the artifact diff against the **merge-base** (`git diff $(git merge-base origin/main HEAD)..HEAD`), never two-dot against `origin/main` — a `main` that moved mid-run makes the diff show other people's merges as deletions (2026-09-27).
-2. **Run the three seats in parallel, all on that bundle:**
-   Pass **only** `--bundle` (plus `--label`/`--dry-run`): the adapters refuse `--context`/`--spec-file` with it. If a seat reports evidence_parity:false, go back to Step 1 and **rebuild the bundle** — never re-run a seat (YED-223).
-   - Gemini: `bash .claude/hooks/gemini-judge.sh --bundle <bundle.json> --label gemini-<slug>`
-   - OpenAI: `bash .claude/hooks/openai-judge.sh --bundle <bundle.json> --label openai-<slug>` (try `--dry-run` first: free, shows the worst-case cost). Exit 3 = privacy guard, 4 = spend cap. A failed seat is a *missing* seat: never quietly carry on with fewer.
-   - Sonnet: dispatch via the `Agent` tool (`model: sonnet`), give it ONLY the bundle `.txt` plus read access to the repo, and have it return `{checks_performed, defects[{line, quote, …}], criterion_scores, cap_flags}` with **no composite and no verdict**. Tell it not to read `.claude/evals/logs/`.
-3. **Log the Sonnet seat with the validated writer, never by hand:** (since YED-223 its quote check is tolerant of dropped markdown `**`/backticks and the dash/colon swap for PROSE artifact types only; code and hooks are matched strictly and `_` is never altered — pass the right `--artifact-type`; `unverified_exact` keeps the strict count) save its JSON to a file, then
-   `python3 .claude/hooks/seat-log.py --artifact <path> --artifact-type <t> --verdict-file <json> --bundle <bundle.json> --label sonnet-<slug>`
-   It stamps the real time, the content hash and the harness-computed score. (Hand-written rows on 2026-09-19 carried made-up timestamps and corrupted the scorecard.)
-4. **Merge:** `python3 .claude/evals/quorum_merge.py --artifact <path> --seat claude=<log> --seat gemini=<log> --seat openai=<log> [--mode autonomous]`
-   It applies each seat's *effective* status (configured, lowered one rung if `calibration_stats.py --gate` finds a demotion rule fired) and prints the resolution.
-5. **Ack BEFORE looking at the shadow seat.** The merge hides a shadow seat's verdict so it can't sway your label. Get Alex's ack first, write it to the quorum row's `alex_ack`, and only then re-run with `--reveal-shadow --print-only` if he wants to see it.
-
-## Step 0 — Mechanized pre-passes (both seats share this ground truth)
-1. **Dangling references.** Run `bash .claude/hooks/check-refs.sh --artifact <path>`. Its stdout is the list of load-bearing `.claude/…` references that **do not exist on disk** — verified fact, not model opinion. This closes the `bf17` gap (models under-apply the cap). Pass this list to BOTH seats. The Gemini adapter runs check-refs itself and enforces the cap; for the Claude seat, treat the list as authoritative and cap completeness ≤0.60 (composite ≤0.60) if it is non-empty.
-2. **Tombstones (added 2026-09-19, YED-201 Fix 2A).** Run `python3 .claude/hooks/check-tombstones.py --artifact <path>`. Its stdout lists lines that name a **removed** tool/decision (the Tombstones table in `platform-constraints.md`) with no removal marker on the line. Each hit is verified fact, but the list is a **lower bound**, not proof of absence: a removal marker within 40 chars clears a match. The seats judge whether each line is load-bearing and still read the artifact for misses. Pass the list to BOTH seats (the Gemini adapter runs it itself). A load-bearing step that relies on a removed tool is a correctness + anti_pattern_avoidance defect. It's the removed-Gamma class Gemini passed at 1.0 on 2026-09-18. No numeric cap (rubric unchanged at `@4`).
-3. **Density (`deep_read` artifacts only).** If `artifact_type = deep_read`, run `bash .claude/hooks/density-check.sh --artifact <path>`. It reports `words / citations` per section + a `verdict` (`OK` / `PADDING-RISK` / `UNCITED-LONGFORM`). This is the **number-side** of the density cap, **not** a deterministic cap: padding vs. legitimate novice on-ramp (uncited-by-design) is a judgment. Pass the signal to both seats (the Gemini adapter runs it itself for deep_read). The Claude seat applies the density cap ≤0.65 **only** if a `PADDING-RISK`/`UNCITED-LONGFORM` signal is, on inspection, generic-explainer filler — never for an honestly-short section or for legitimate jargon/mechanism on-ramp prose. Skip this pre-pass entirely for non-`deep_read` artifacts.
-
-## Step 1 — Read the artifact + its spec
-Read the file(s). If a spec/AC was given (or findable in Linear/the PRD), hold the artifact against it. Note `artifact_type`.
-
-## Step 2 — Run the two seats (both score all 5 criteria independently, 0–1 + reasoning)
-- **Claude (Sonnet) seat — house-aware.** Dispatch via the `Agent` tool with **`model: sonnet`** (independent of the Opus main thread, avoids Opus-judging-Opus self-preference; keeps house context). Give it `judge-system-v2.md` + `build-quality-v6.md` + the artifact + the Step-0 missing-refs list + (for `deep_read`) the density signal + any spec. It returns `{checks_performed[], defects[], criterion_scores[], cap_flags{}}` — **defects first, and NO composite or verdict**: `quorum-merge.sh` recomputes both from the criterion scores + cap flags, exactly as the Gemini adapter does for its seat, so neither seat's arithmetic can drift from the rubric (round 3, 2026-09-19). A seat verdict that still carries `weighted_score` is recomputed anyway and the self-reported value is recorded as `claude_selfreported_weighted_score`. Apply the **judge-circularity caution** (be *more* skeptical of plausible-but-wrong work).
-- **Gemini seat — independent (cross-provider).** Run `bash .claude/hooks/gemini-judge.sh --artifact <path> --artifact-type <t> --calibration-set prospective [--context "<spec>"]`. It scores the same rubric (`@5`), mechanically enforces the dangling-ref cap, runs the density pre-pass for `deep_read` (flag, not hard-cap), and **writes its own run-log line** (`judge_provider:"google"`). **Pass `--artifact-type deep_read` when judging a rendered Deep Read** so the density signal is computed.
-- **Scoped quorum weighting** (per the spec): Gemini carries **full weight** on the provider-neutral criteria (`correctness`, `completeness`); the Claude/Sonnet seat is **primary** on the house-specific criteria (`convention_adherence`, `anti_pattern_avoidance`) where Gemini lacks native Empire-State context; `diagnostics` shared.
-
-## Step 3 — Write the Claude seat's run-log line
-Append the Sonnet verdict as one JSON line to `.claude/evals/logs/<YYYY-MM-DD>-<artifact-slug>-<run-id>.jsonl` per the README schema (`judge_model:"claude:sonnet"`, `judge_provider:"anthropic"`, `rubric:"build-quality@6"`, `calibration_set:"prospective"`, `alex_ack:null`). (The Gemini line was written by its adapter in Step 2.) These local logs are the source of truth.
-
-## Step 4 — Merge to one quorum verdict
-Run `bash .claude/hooks/quorum-merge.sh --artifact <path> --mode <interactive|autonomous> --claude-verdict '<sonnet json>' --gemini-log <the gemini log path from Step 2> [--claude-run-id <id>]`. It computes `agree` + `divergence` + `escalation_reasons[]`, resolves, and appends the `quorum` record. **Resolution (revised 2026-09-19):** matching verdicts alone are NOT enough — the merge escalates on any of `verdict_mismatch`, `score_divergence` (|Δ| ≥ 0.15), `flat_ceiling:<seat>` (a seat scoring 1.0 on all five criteria = low-information), or `gemini_no_evidence_parity`. No reasons → `auto`; reasons + interactive → **escalate to Alex**; reasons + autonomous → **fail-safe FLAG**. Never auto-resolve a split with a correlated model.
-
-## Step 5 — Present verdict + ack (the calibration step)
-```
-## Build-quality quorum — {artifact}  →  {final_verdict}  ({resolution})
-Claude/Sonnet {ws}  |  Gemini {ws}   agree: {bool}
-- correctness {c-s}/{g-s} — {why}         [Gemini full weight]
-- completeness {c-s}/{g-s} — {why}        [Gemini full weight; check-refs: {missing or none}]
-- convention_adherence {c-s}/{g-s} — {why}[Claude primary]
-- anti_pattern_avoidance {c-s}/{g-s} — {why}[Claude primary]
-- diagnostics {c-s}/{g-s} — {why}
-{if escalated: the divergent criterion, both seats' reasoning SIDE-BY-SIDE, highlighted}
-{if flag: the 1–2 highest-leverage fixes}
-```
-- **Agree** → ask once: **"Agree with this verdict? (agree / disagree — and why)"** → write into the quorum record's `alex_ack`
-  as a **string** (`"agree"` / `"disagree"`, never a dict), with `alex_ack_at` as a **full UTC timestamp**
-  (`2026-09-21T14:03:11Z`, not a date). Ack *latency* is the early-warning signal for reflexive agreement — the
-  risk that the labeler becomes the always-pass rater and every κ goes undefined — and a date-only stamp makes it
-  unmeasurable (rigor-review 2026-09-21).
-- **Escalated** → the disagreement is the highest-value output: show it, ask Alex to adjudicate → that call becomes the `alex_ack` and the tiebreak. A disagree is *more* valuable than an agree — it shows where to tighten the rubric.
-- **Autonomous** → no prompt; record `failsafe_flag` and note it's queued. Tell Alex the running Approach-B agreement rate if ≥5 prospective acks exist.
+## The run
+1. **Start:** `python3 .claude/evals/judge.py run --range <base>..HEAD --artifact-type <t> --spec-file <spec>`
+   (try `--dry-run` first: builds the bundle, runs the privacy guard, prints the OpenAI worst-case cost, sends
+   nothing). It builds ONE bundle (pre-passes `check-refs` / `check-tombstones` / `density-check` per file; exit 3 =
+   privacy guard, nothing sent), runs the shadow adapter on it, and prints the brief path.
+2. **Sonnet seat (parent thread only; a subagent cannot spawn one):** dispatch the `Agent` tool, `model: sonnet`, prompt
+   *"Read `<brief>` and follow it exactly. Return only the JSON object."* Save its JSON to the path `judge.py` printed.
+3. **Finish:** `python3 .claude/evals/judge.py run --resume <run-id> --sonnet-verdict <that json>`. It logs the verdict
+   through `seat-log.py` (the only writer for this seat: real UTC time, content hash, harness-computed score, quotes
+   checked against the whole bundle), merges, and prints **one line**, plus the REVISIT banner when due.
+4. **Act on the line:**
+   - `PASS (auto)` → done. No prompt; it is batch-acked weekly in `/rigor-review` (`judge.py pending`).
+   - `FLAG (auto)` → the voter flagged: show its top 1–2 defects and fix. No ack prompt (rework is the conversation).
+   - `… (escalated)` → show the voter's per-criterion reasoning and the reasons (`verdict_mismatch:<shadow>`,
+     `score_divergence`, `shadow_major_defect:<shadow>`, or an integrity reason, which always ends in FLAG). Ask Alex
+     once: **"agree / disagree, and why?"** Write it with `python3 .claude/evals/judge.py ack --run <quorum-run-id>
+     agree|disagree "why"`. Only after the ack does the shadow's verdict appear. Never write `alex_ack` by hand.
+   - `failsafe_flag` (autonomous) → recorded; queued for Alex; nothing auto-resolved.
 
 ## Failure modes
-- **No spec available** — score `correctness`/`completeness` against the artifact's own stated purpose; flag reduced confidence.
-- **Artifact too large** — judge the load-bearing sections; note what wasn't covered (no silent truncation).
-- **Gemini seat errors** (billing lapse → Flash-Lite, HTTP error) — the adapter surfaces it and exits non-zero; do NOT silently fall back to a single-judge pass. Record the Claude seat, note the quorum is incomplete, and flag for a re-run.
-- **Rubric feels wrong for this artifact type** — record it in the ack note; a signal to add an artifact-type rubric later (don't bend the score).
+- **Shadow adapter fails** (network, budget exit 4) → recorded as `shadow_missing`; the voter still decides. Say so.
+- **Sonnet JSON rejected** by `seat-log.py` → the voter is missing → integrity FLAG. Re-dispatch, then `--resume` again.
+- **Voter quotes unverified** (> 30%) → the voter loses its vote → `no_voting_seat` → FLAG. Check the brief reached it.
+- **Big range** (> 60k chars of files) → files over 400 lines go as changed hunks ±40 (`bundle_mode: hunks` in every
+  row). Say that a hunk-mode pass is not a full read.
+- **Rubric feels wrong for the artifact type** → put it in the ack note; don't bend the score.
 
-## Reuses / references
-- `.claude/hooks/{check-refs.sh, check-tombstones.py, density-check.sh, gemini-judge.sh, openai-judge.sh, seat-log.py, quorum-merge.sh}` · `.claude/evals/{judge_lib.py, quorum_merge.py, seats.json, pricing.json, spend-ledger.jsonl}` · `.claude/evals/{prompts/judge-system-v2.md, rubrics/build-quality-v6.md, README.md, calibration_stats.py, test_quorum_scenarios.py}` · design: `.claude/references/cross-provider-judge.md`.
-- Coordinates with `eval-harness` (Notion `348d3699…`) — same judge home; eval-harness owns `rubric_version`.
+## References
+`.claude/evals/{judge.py, judge_lib.py, quorum_merge.py, calibration_stats.py, seats.json, README.md}` ·
+`.claude/hooks/{seat-log.py, openai-judge.sh, gemini-judge.sh, check-refs.sh, check-tombstones.py, density-check.sh}` ·
+spec `.claude/references/judge-right-size-yed-231.md` · coordinates with `eval-harness` (Notion `348d3699…`), which owns `rubric_version`.
