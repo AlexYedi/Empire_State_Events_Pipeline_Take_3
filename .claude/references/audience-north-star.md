@@ -85,7 +85,7 @@ Jobs decide what to surface; demographics decorate.
 
 ## How it's used
 
-Every content skill (`pre-event-content`, `content-correspondent`, `pattern-synthesis`, `evergreen-deep-dive`) imports this as the top-level ethos. Per-post gut check:
+Every content skill (`pre-event-content`, `content-correspondent`, `pattern-synthesis`) imports this as the top-level ethos. Per-post gut check:
 
 - Does the reader get real value — would a non-attendee come away with something usable?
 - Is the reader the protagonist, not me?
