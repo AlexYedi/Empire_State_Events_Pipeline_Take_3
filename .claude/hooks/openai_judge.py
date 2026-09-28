@@ -7,7 +7,7 @@ bytes) and --dry-run (build + privacy guard + budget check, no network, free).
 What makes this seat safe to add (spec: .claude/proposals/third-judge-seat-openai.md):
   * it never computes its own composite or verdict (judge_lib.score does, identically for every seat);
   * it never sees another seat's output (there is no input for one);
-  * every defect must carry a verbatim quote, checked against the artifact (a made-up flaw can't be quoted);
+  * every defect must carry a verbatim quote, checked against the bundle (a made-up flaw can't be quoted);
   * a spend cap is checked BEFORE the request, and every attempt lands in the ledger, failures included;
   * the privacy guard refuses gitignored / out-of-repo / secret-looking evidence, with no override;
   * the key is read from .env and goes only into the HTTPS header: never argv, never a log, never stdout;
@@ -35,8 +35,9 @@ SCHEMA = {  # strict mode: every property required, no extras. Key order = the o
         "checks_performed": {"type": "array", "items": {"type": "string"}},
         "defects": {"type": "array", "items": {
             "type": "object", "additionalProperties": False,
-            "required": ["line", "quote", "location", "criterion", "severity", "spec_ref", "description"],
-            "properties": {"line": {"type": "integer"}, "quote": {"type": "string"}, "location": {"type": "string"},
+            "required": ["file", "line", "quote", "location", "criterion", "severity", "spec_ref", "description"],
+            "properties": {"file": {"type": "string"},   # multi-file bundles (YED-231); "" for a one-file bundle
+                           "line": {"type": "integer"}, "quote": {"type": "string"}, "location": {"type": "string"},
                            "criterion": {"type": "string", "enum": CRIT},
                            "severity": {"type": "string", "enum": ["major", "minor"]},
                            "spec_ref": {"type": "string"}, "description": {"type": "string"}}}},
@@ -138,9 +139,7 @@ def main() -> int:
                 print("  ⚠️  EVIDENCE-PARITY: this bundle was built with < 400 chars of spec — logging "
                       "evidence_parity:false. REBUILD the bundle with --spec-file; no seat flag can fix it.",
                       file=sys.stderr)
-            blob = a.artifact_blob or bundle.get("artifact_blob")
-            jl.privacy_guard([bundle["artifact"]], [bundle["text"]],        # guard again: a bundle is just a file
-                             {bundle["artifact"]: blob} if blob else None)
+            jl.guard_bundle(bundle, a.artifact_blob or None)          # guard again: a bundle is just a file
         else:
             if not a.artifact or not os.path.isfile(a.artifact):
                 print(f"ERROR: --artifact missing/unreadable: {a.artifact}", file=sys.stderr); return 2
@@ -193,8 +192,8 @@ def main() -> int:
     except (ValueError, jl.JudgeError) as e:
         return fail(f"malformed verdict: {e}")
 
-    art_text = open(art, encoding="utf-8").read()
-    qv = jl.verify_quotes(scored.get("defects") or [], art_text, atype)
+    # the haystack is every text the seat was shown (all files + spec + context), not just one file (YED-231 §4.2)
+    qv = jl.verify_quotes(scored.get("defects") or [], jl.bundle_haystack(bundle), atype)
     gaps = jl.must_cite_gaps(scored)
     jl.ledger_append(**base, ok=True)
 
@@ -230,7 +229,8 @@ def main() -> int:
         "flat_ceiling": scored["flat_ceiling"], "scoring": "harness-recomputed", "quote_check": qv,
         "must_cite_gaps": gaps, "dangling_refs": bundle["dangling_refs"], "calibration_set": a.calibration_set,
         "evidence_parity": bundle["evidence_parity"], "bundle_sha256": bundle["bundle_sha256"],
-        "bundle_version": bundle["bundle_version"], "artifact_blob": bundle.get("artifact_blob"),
+        "bundle_version": bundle["bundle_version"], "bundle_mode": bundle.get("bundle_mode"),
+        "artifact_blob": bundle.get("artifact_blob"),
         "usage": usage, "cost_usd": cost})
     print(f"  logged → {out}")
     return 0
