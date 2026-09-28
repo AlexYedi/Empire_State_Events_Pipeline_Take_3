@@ -1,8 +1,8 @@
 # Canonical PRD template (build-elevating)
 
 **Purpose.** The default spec for any non-trivial build (PR template box 1, `.github/pull_request_template.md`). Composed from Alex's own
-corpus (`writing-prds`, `writing-north-star-metrics`, `ai-product-strategy`, `risk-playbooks`,
-`head-of-product-engineering`, systems-thinking) + external canon (Amazon PR-FAQ, Shape Up, the
+corpus (`alex:writing-prds`, `alex:writing-north-star-metrics`, `alex:ai-product-strategy`, `alex:risk-playbooks`,
+`alex:head-of-product-engineering`, `alex:systems-thinking`) + external canon (Amazon PR-FAQ, Shape Up, the
 Linear Method, spec-kit, Anthropic's agent-engineering posts).
 
 **The one idea that governs this template.** Because an *agent* writes these, human authoring cost is
@@ -58,7 +58,7 @@ why?"* — top 2-3 failure modes + the fix folded into the plan.
 - **Acceptance criteria** — each requirement as a *checkable statement the build-quality judge can grade*.
   "Done" = these pass. This is the PRD→Linear→judge loop-closer.
 
-**7. AI-native fields** *(for AI/agent builds — from `ai-product-strategy`).*
+**7. AI-native fields** *(for AI/agent builds — from `alex:ai-product-strategy`).*
 Human-AI boundary (what the agent decides vs. the human gates); failure/squishiness UX (the 1% wrong);
 built-for-the-slope (swappable models); which eval/judge *is* the living acceptance layer.
 
@@ -83,14 +83,21 @@ pattern — make the invariants machine-consumable, not prose the agent may skip
 
 | Section | Satisfies |
 |---|---|
-| 1 Problem/why-now | `writing-prds` "problem first"; PR-FAQ |
+| 1 Problem/why-now | `alex:writing-prds` "problem first"; PR-FAQ |
 | 3 Alternatives | decision rationale (the R2 lesson); Shape-Up pitch |
 | 4 Leverage/systems | systems-thinking harness; guards the diagnosed root cause |
 | 5 Pre-mortem | **PR template box 3** (adversarial pass) — inline, not separate |
-| 6 Success + eval + metric→action | `writing-north-star-metrics`; null-baseline rule (no orphan metrics); "evals as PRDs" |
+| 6 Success + eval + metric→action | `alex:writing-north-star-metrics`; null-baseline rule (no orphan metrics); "evals as PRDs" |
 | 6 Acceptance criteria | **build-quality judge** grades against the spec, not vibes |
 | 8 Deferred details | anti-staleness (the chunk-size-was-wrong-by-Phase-0 lesson) |
 | 10 Linear + decision log | **PR template box 2**; anti-staleness engine |
+
+## Persisting a finished product PRD to ChatPRD
+*(Moved from the pruned project copy of `writing-prds`, 2026-09-28. ChatPRD's role is open under YED-129: product = PRD, infra = in-repo spec.)*
+- **Fire only on a complete product PRD** (problem + user + success metric + scope in/out + why-now). Skip partial drafts being workshopped, pure guidance questions, and critiques of an existing PRD.
+- **Call:** `mcp__claude_ai_ChatPRD__create_document` with `title` (≤8 words from the problem statement; `{project} — PRD (cycle {n})` from `alex:head-of-product-engineering`), `contentMarkdown` (the PRD section only, not the Orchestration Log / Register / Evolution Log), `summary` (one sentence, what + why-now), and `projectId` when Alex names a project (resolve via `list_projects`, fuzzy title match).
+- **n+1 / title collision:** `search_documents` first; on a hit, ask Alex whether to `update_document` (keeps comments + history) or create with a date suffix.
+- **Surface the ChatPRD URL** beside the Notion page URL. **Auth error** → tell Alex to reconnect via `/mcp`; never fall back silently to "copy it manually". Known limits: `platform-constraints.md` (ChatPRD row).
 
 ## Worked example (condensed — YED-118 in this shape)
 - **1 Problem/why-now:** Drive-MCP retrieval is filename-only; can't ask a whole book; corpus fights Gmail's 15GB. *Press release:* "Ask the reference library and get cited passages" — yes, it's the M3 differentiator.
