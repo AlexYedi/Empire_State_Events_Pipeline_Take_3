@@ -166,7 +166,6 @@ Thumb test: Visual rhythm of the list-then-pivot structure carries the post.
 ---
 
 ### David Yaffe — Co-Founder & CEO, Estuary
-**TIER 1 GTM contact.** Estuary at the exact stage (post-Series A, repeat founder, enterprise data ICP) where Alex's profile fits.
 
 **Option A** *(angle: thesis engagement — modern stack inversion)*
 > David — at DDNYC tonight. Your "modern data stack turning inside out" frame is the cleanest articulation of the shift I've seen. Tonight's pairing with Ramp Labs makes it operational — the data layer is now actively serving agents, not just dashboards. Where's the next 6-month wedge for Estuary in that shift — agent-shaped customers buying infra directly, or BI customers being pulled forward by agent-readiness pressure? Looking forward to the talk.

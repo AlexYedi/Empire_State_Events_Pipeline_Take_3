@@ -39,7 +39,7 @@ This connects directly to last Thursday's OpenClaw event. Zo is the productized,
 
 **Stage:** Likely Series A or post-seed extension, building infrastructure phase.
 
-**Likely roles (inference from product + cap table):** Infra engineers, founding designer, possibly an early growth/community lead. **GTM-relevance to Alex: low-medium** — Zo is consumer/prosumer infrastructure, not enterprise GTM.
+**Likely roles (inference from product + cap table):** Infra engineers, founding designer, possibly an early growth/community lead.
 
 **Worth engaging on:** The OpenClaw connection is the natural opener. Substantive question: *"Where's the line for Zo between 'AI assistant you own' and 'infrastructure layer for the next generation of apps'? Are you betting on consumer pull or developer pull?"*
 
@@ -61,8 +61,6 @@ This is the **freshest enterprise AI funding story in the room** by a mile. What
 
 **Likely roles (inference):** Enterprise AE, Strategic Account Director, Customer Success leadership, RevOps, vertical product (claims/denials/underpayments).
 
-**GTM-relevance to Alex: VERY HIGH.** This is the closest fit to Alex's enterprise GTM background in the room. Healthcare RCM is a long-cycle, complex-contract, large-ACV motion — the same shape as Bazaarvoice/Curalate enterprise deals. AI-native in execution but enterprise-classical in motion.
-
 **Worth engaging on:** *"4x revenue and 130% NRR in 2025 — what's breaking inside the company right now? Where's the next enterprise GTM hire that would matter most?"*
 
 ---
@@ -81,8 +79,6 @@ This is the **freshest enterprise AI funding story in the room** by a mile. What
 
 **Likely roles (inference):** Founding engineer, founding designer, applied AI engineer. Possibly a "first commercial hire" if they're moving to revenue. Operator-first culture given the thesis.
 
-**GTM-relevance to Alex: medium.** This is a thesis-bet company, not an enterprise GTM company — yet. But the "first GTM hire at a USV-backed agent-orchestration startup" is a high-leverage seat if it becomes available. Worth flagging interest.
-
 **Worth engaging on:** *"You said in your seed announcement that you'll demonstrate a software company entirely run by agents in 2026. What's the first business function you're going to fully agentify, and what's the order after that?"* That question shows you read the post.
 
 ---
@@ -96,8 +92,6 @@ This is the **freshest enterprise AI funding story in the room** by a mile. What
 **Stage signal:** Speaking at Shoptalk Europe 2026 (major retail conference) suggests post-product-market-fit and in expansion mode. Likely Series A or late seed.
 
 **Likely roles (inference):** Customer Success leadership (CPG brand-side), Account Management, Sales (ICP = D2C / CPG), Product Marketing.
-
-**GTM-relevance to Alex: HIGH.** Bazaarvoice / Curalate / Cohley DNA is exactly the customer profile Rediem sells into. Alex has shipped enterprise contracts with the same buyer persona Rediem chases. Strong fit.
 
 **Worth engaging on:** *"You're competing in a market where loyalty programs are commoditized — Sephora, Starbucks, every airline. What does your zero-party-data + behavioral psychology stack do that the legacy systems structurally can't?"* (Specific, not generic.)
 
@@ -116,8 +110,6 @@ This is the **freshest enterprise AI funding story in the room** by a mile. What
 **Stage:** Pre-funding, small team (likely 5–15). Likely hiring slow but very deliberately.
 
 **Likely roles (inference):** Founding GTM hire, founding CSM, founding designer. The kind of seat you take *because* you trust the founder, not because of the comp.
-
-**GTM-relevance to Alex: HIGH** for the longer game. A founding-GTM seat at a Distelburger company has asymmetric upside — both equity and brand. Even if the conversation doesn't lead to a role, **getting on Distelburger's radar is the highest-value relationship outcome of the entire night.**
 
 **Worth engaging on:** *"You took Yext public in 2017. Today you're building the AI Management Company unfunded. What did Yext teach you that made you decide not to run that playbook again? What's structurally different about the AI moment that changes the optimal capital structure?"*
 
@@ -139,8 +131,6 @@ This is the **freshest enterprise AI funding story in the room** by a mile. What
 **Stage:** Commercial expansion. Likely Series A or B. Hiring CSMs, partner managers, possibly a credit-union-focused enterprise sales leader.
 
 **Likely roles (inference):** Credit Union Account Executive, Strategic Partnerships Manager, CSM, Product Marketing.
-
-**GTM-relevance to Alex: MEDIUM-HIGH.** Verticalized financial institutions GTM is an enterprise-flavor motion — not Alex's exact stack but adjacent and learnable. The "long tail of credit unions" buyer is interesting because it's high-volume mid-market sales, which is closer to Cohley than Curalate.
 
 **Worth engaging on:** *"You're winning the long tail of credit unions — institutions in the $6M to $34B range. That's a fragmented buyer with no central decision-maker. How are you actually distributing into that — is it inside sales, partnerships like CUNA, or something else?"*
 
@@ -168,9 +158,7 @@ He's hosted **300+ events for 50,000+ founders, operators, investors, and tech p
 
 **What he actually does:** Co-founder and Director of Morpheus Group, a transatlantic recruiting firm (UK / Germany / US) specifically targeting **founders of VC-backed tech startups, scale-ups, and global tech firms.** $16.9M annual revenue, 39 employees. Specializes in "Emerging Tech" as a vertical category.
 
-**How to think about him:** Ivor is the **conventional half** of the host team. Yeung is the network. Ivor is the recruiting machine. He places people into the kinds of roles that show up on this stage. If you're going through a job search at AI-native companies, **Morpheus is exactly the kind of recruiter you want a relationship with** — they have the pipeline density, transatlantic mandate, and targeted vertical that Alex's profile fits.
-
-**Best thing to do at the event:** Be direct about the job search. Don't be coy. He's a recruiter; he reads tea leaves all day; pretending you're "just here to learn" wastes his time and yours. The right move is *"I'm exploring AI-native enterprise GTM seats. Here's what I'm best at. Who in your portfolio is the best fit and would you be open to making a warm intro?"*
+**How to think about him:** Ivor is the **conventional half** of the host team. Yeung is the network. Ivor is the recruiting machine. He places people into the kinds of roles that show up on this stage.
 
 ---
 
@@ -179,7 +167,7 @@ He's hosted **300+ events for 50,000+ founders, operators, investors, and tech p
 **The wider pattern this event is part of:**
 
 - **Yeung + Stratford are deliberately building "the talent layer" of the NYC AI scene** as infrastructure. Application-only events, curated rosters, recurring formats (this is #4 of the Shortlist series — they're iterating on it). Compare to similar plays in SF (Cerebral Valley's events, Sequoia's "Pioneers" gatherings) — NYC is finally building parallel infrastructure rather than just being a satellite of SF.
-- **Series B and below is the hot stage** because the Series C+ companies aren't hiring at this layer of operator anymore — they're hiring directors and VPs through executive search. Series B and below is where someone with 12 years of enterprise GTM experience can land in a "first commercial hire" or "founding GTM" seat with real equity. That's the seat shape that fits Alex's profile right now.
+- **Series B and below is the hot stage** because the Series C+ companies aren't hiring at this layer of operator anymore — they're hiring directors and VPs through executive search. Series B and below is where experienced enterprise GTM operators land "first commercial hire" or "founding GTM" seats with real equity.
 - **The "application-only" mechanism is doing real work.** It signals to operators that the room is curated and to founders that the people they meet have been pre-screened. The format is becoming the dominant pattern for high-signal events in 2026 — Luma alone has tracked a ~40% increase in application-only events year-over-year (anecdotal from the Luma product team's own posts). This event, the Shortlist, the OOO Summit, Cosmo by Andrew Yeung — all the same model.
 - **Six founders in 2.5 hours = ~5 minutes per pitch + mixer.** Density matters. Most NYC events bring one founder, one panel, three hours. Shortlist's format compresses the signal — you walk out knowing what 6 companies do, who's hiring, who you want to follow up with. This is why it's curated: random founders wouldn't get density that high.
 

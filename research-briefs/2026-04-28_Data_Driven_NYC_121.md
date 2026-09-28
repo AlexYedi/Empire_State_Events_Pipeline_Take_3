@@ -56,7 +56,7 @@ This is **Matt Turck's room** before it's anything else. Turck has run Data Driv
 
 **Public thesis post (good content material):** *"Is the Modern Data Stack dying, or turning inside out?"* — Yaffe's framing, on LinkedIn. This is the conversation Tue's audience cares about.
 
-**For Alex Yedi specifically:** **GTM-relevance HIGH.** Estuary is at the exact stage (post-Series A, repeat founder, enterprise-data ICP) where Alex's profile fits — first commercial hire, founding GTM, enterprise AE for data infrastructure buyers. Yaffe knows the LiveRamp/data-infra GTM motion that Bazaarvoice/Curalate sales experience maps to. **Tier 1 contact for direct outreach.** Killer opener: *"Your 'modern data stack turning inside out' frame — Tue panel will pair you with Ramp Labs' production-agent story. The thread between you is that the data layer is now actively serving agents, not just dashboards. Where's the next 6-month wedge for Estuary in that shift — agent-shaped customers buying infra, or BI customers being pulled forward?"*
+**Opener:** *"Your 'modern data stack turning inside out' frame — Tue panel will pair you with Ramp Labs' production-agent story. The thread between you is that the data layer is now actively serving agents, not just dashboards. Where's the next 6-month wedge for Estuary in that shift — agent-shaped customers buying infra, or BI customers being pulled forward?"*
 
 ---
 
@@ -76,7 +76,6 @@ This is **Matt Turck's room** before it's anything else. Turck has run Data Driv
 - His MAD Landscape has been referenced in every AI/ML/Data investor deck for years.
 - His podcast amplifies guests to a huge audience.
 - His Data Driven NYC events screen for serious operators in the space.
-- FirstMark portfolio access is the indirect prize (warm intro to Estuary, Dataiku, Synthesia, etc.).
 
 **Engagement vector:** Don't pitch him on a job (he won't bite). Approach him with a **specific MAD Podcast episode reference + a sharp follow-up question.** Mention what Alex is building (events pipeline / documentarian content) — adjacent to his own community-curation work, makes Alex memorable. Substantive comment on his next LinkedIn post about the panel doubles as public-track engagement.
 
@@ -98,7 +97,7 @@ This is **Matt Turck's room** before it's anything else. Turck has run Data Driv
 
 **Ramp Labs is the AI research arm** — Alex Levinson's home base. Their Substack publishes building-in-public engineering writeups (the self-maintaining sheets piece is the most recent).
 
-**For Alex Yedi specifically:** Ramp at $32B is too late-stage for first-commercial-hire seats — those happened years ago. But Ramp is **massively hiring** at every other level (enterprise AEs, vertical product, partner channel, customer success leadership). Alex's profile fits "Strategic Account Director" or "Enterprise Account Executive" at the upper end of their hiring mix. **Tier 2 for direct talent pipeline; Tier 1 for content / market context.**
+**Hiring posture:** Ramp at $32B is **massively hiring** at every level (enterprise AEs, vertical product, partner channel, customer success leadership). **Tier 1 for content / market context.**
 
 ---
 

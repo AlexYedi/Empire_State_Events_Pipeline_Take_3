@@ -56,7 +56,7 @@ Append one correction row to each failures log: `{"event":"gate_false_positive_c
 
 1. `deep-read-ledger.sh rendered 3e8d3699-c2db-81b9-ba32-e122ea8de2fb` is **not yet done** (Event page already carries `deep_read_rendered: 2026-09-27`; the Content Draft mirror is not). Append the Deep Read (`scratchpad/run/render/deep_read.md`, pronoun-fixed) to Content Draft `3e8d3699-c2db-8118-8d6d-c7a88521398e` via `notion-update-page update_content` on the `pending` marker; then flip the ledger.
 2. Step 6.5: `notion-fetch` the Event page and confirm the marker; reconcile the ledger.
-3. HubSpot Step 5 on Alex's ✅ (table already presented): create 5 companies → 8 contacts w/ associations → 11 notes; attach Ivor's note to `477298938613`; Ivor duplicate (`540707930827`) = Alex's call, not merged unprompted.
+3. HubSpot Step 5 on Alex's ✅ (table already presented): create 5 companies → 8 contacts w/ associations → 11 notes; attach a contact's note to `<id>`; that contact's duplicate (`<id>`) = Alex's call, not merged unprompted.
 4. Step 6 summary block (include the `Graph:` line) → `event-claim.py release "The Shortlist: September Founder Showcase"` — this is the moment the fixed gates evaluate for real.
 5. Apply Fixes 1–3 on the branch (they do not need to precede steps 1–4; but doing Fix 1 first stops the noise immediately — recommended order: Fix 1 → steps 1–4 → Fix 2/3 → PR → judge → dod-close).
 

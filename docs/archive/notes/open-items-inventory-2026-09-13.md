@@ -126,8 +126,8 @@
 - **Proactive call-outs** — keep by default; trim only if cumbersome. Standing re-check.
 
 ### Inbox boundary (Alex-owned)
-- Are any `Companies/*` Gmail labels personal/financial (New York Life, Mercury, Brex, Ramp) → denylist?
-- Which denylisted-category domains that are also job targets (e.g. `ramp.com`) get a per-purpose override?
+- (inbox boundary question — see Linear)
+- (inbox boundary question — see Linear)
 - Personal-sender + health-provider lists are placeholder comments.
 - "Meta" company alias/parent rule (collision with Meta Superintelligence Labs) — add to alias map after a ruling.
 - VC-newsletter canonical URL — prefer the subject company's own URL over the aggregator post?
@@ -155,7 +155,7 @@
 ### Legacy docs still formally open
 - `PROJECT_BRIEF.md`: Apollo credit refresh cadence · Notion text-property limits · HubSpot `event_associations` custom property.
 - `HANDOFF_V2.md`: 9 plan-locking questions (watchlist size, source cost tiers, podcast ingestion, Framer vs. Next, hub v1 JTBD, channels beyond LinkedIn, cadence/auto-publish, budget band, no-scraping rule) — several answered implicitly, none closed in-file.
-- `target-companies.md`: Hugging Face ATS slug `_tbd_`; "Nvidia acq. pending".
+- `target-companies.md`: (inbox boundary question — see Linear)
 
 ---
 

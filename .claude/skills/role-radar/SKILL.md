@@ -45,16 +45,16 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
 Read the **company→ATS registry** in `.claude/references/target-companies.md` (**31 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic; the per-board live-verification dates are recorded in that registry file, not asserted here). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
-- **Greenhouse** (`anthropic, vercel, togetherai, verkada, gleanwork, snorkelai, formationbio`):
+- **Greenhouse** (board tokens per company: see `target-companies.md`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
   → `jq '.jobs[] | {id, title, url:.absolute_url, loc:(.location.name // ""), updated:.updated_at}'`
   ⚠️ **Greenhouse exposes no posted date — `updated_at` is last-modified, and projecting it as `posted` is a real defect (fixed 2026-09-20).** A role open for months that got any edit this week reads as new. So: (a) project it as **`updated`**, never `posted`; (b) **never write it to the Roles DB `Posted Date`** — leave that property empty for Greenhouse rows; (c) **never use it alone to decide the recency window.** On 2026-09-19 this surfaced Vercel Enterprise AE and Anthropic CSM Tech as "this week" when both were long-open. For Greenhouse rows treat recency as **UNKNOWN** and confirm on the posting page before claiming a role is new. **Ashby `publishedAt`, Lever `createdAt` and Workable `published_on` are true posted dates** and may be used normally.
-- **Ashby** (`openai, notion, ramp, claylabs, perplexity, sierra, cursor, elevenlabs, langchain, baseten, cohere, writer, harvey, decagon, zip, runway-ml, profound, modal, taktile, reflectionai, mirage, traversal, generalintuition-medal`):
+- **Ashby** (board slugs per company: see `target-companies.md`):
   `curl -s "https://api.ashbyhq.com/posting-api/job-board/{board}"`
   → `jq '.jobs[] | select(.isListed) | {id, title, url:.jobUrl, loc:(.location // ""), posted:.publishedAt, remote:.isRemote}'`
 - **Lever** (fallback only): `curl -s "https://api.lever.co/v0/postings/{co}?mode=json"`
   → `jq '.[] | {id, title:.text, url:.hostedUrl, loc:(.categories.location // ""), posted:((.createdAt/1000)|todate|.[:10])}'` (Lever's `createdAt` is epoch **milliseconds** — convert before it reaches `Posted Date`; caught by the Gemini seat 2026-09-27)
-- **Workable** (`huggingface`) — added 2026-09-21 so Hugging Face stops being invisible to every scan:
+- **Workable** (accounts per company: see `target-companies.md`) — added 2026-09-21 so Workable-hosted registry companies stop being invisible to every scan:
   `curl -s "https://apply.workable.com/api/v1/widget/accounts/{account}?details=true"`
   → `jq '.jobs[] | {id:.shortcode, title, url:.shortlink, loc:((.city // "") + " " + (.country // "")), posted:.published_on, remote:.telecommuting}'`
   **Freshness is TRUE here** — `published_on` is a real posted date (ISO `YYYY-MM-DD`), so it may be written to `Posted Date` normally, unlike Greenhouse. Natural key = `workable:{shortcode}`. Note the job object nests nothing useful under `.id`; **`shortcode` is the stable id**.
@@ -68,7 +68,7 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
   **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
 - **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup; for Workable the id is `.shortcode`); freshness = `posted` for **Ashby, Lever and Workable**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a **projected** TSV (title, id, url, location, posted, comp band) so raw JSON never touches parent context — scoring happens in Step 3, after Step 2 has removed already-tracked rows, so no subagent scores a role the DB already holds).
-- **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** Intercom, Rippling, Mistral (no big-4 API by slug). **Hugging Face left this list 2026-09-21** — it is on Workable, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
+- **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** registry companies with no big-4 API by slug (named in `target-companies.md`); the Workable-hosted one left this list 2026-09-21, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 9 additions + the Workable shape re-verified live 2026-09-21; General Intuition verified live 2026-09-24.**
 
 ### 1b. Apollo job-postings at named targets (credit-gated — optional)
@@ -115,7 +115,7 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 > reject, however good the comp. *(Worked example, 2026-09-24: Modal AE-Enterprise KEPT — "drive new
 > business by generating pipeline" AND "expand existing accounts"; Traversal Enterprise AE REJECTED —
 > "own the full sales cycle, from strategic prospecting to closing" with only Sales-Engineering support
-> and no book, despite OTE $300–320K and an in-person NYC seat.)*
+> and no book, despite an OTE above the floor and an in-person NYC seat.)*
 
 | Dimension | Points | How to score |
 |---|---|---|
@@ -224,10 +224,10 @@ edge. Spec + the reasoning behind every rule: `docs/archive/notes/yed-149-spec-2
 2. **Write them to a scratch file** as `{"roles": [<rows verbatim>]}` (in the session scratchpad, never the repo).
 3. **Dry-run, then live:**
    `.venv/bin/python .claude/scripts/substrate.py ensure-roles --manifest <file> --aliases-from .claude/references/target-companies.md --dry-run`,
-   then the same without `--dry-run`. `--aliases-from` maps board slugs and registry names (`claylabs`, `cursor`) to
-   the name the graph already uses (`Clay`, `Cursor (Anysphere)`). Read the dry run's `would create N companies:`
-   line first. A listed company that already exists in the graph under another name (e.g. `Modal` vs `Modal Labs`)
-   is a duplicate in the making: add `"company_aliases": {"modal": "Modal Labs"}` to the manifest (or fix the
+   then the same without `--dry-run`. `--aliases-from` maps board slugs and registry names (`acmelabs`, `acme`) to
+   the name the graph already uses (`Acme`, `Acme (Parent)`). Read the dry run's `would create N companies:`
+   line first. A listed company that already exists in the graph under another name (e.g. `Acme` vs `Acme Labs`)
+   is a duplicate in the making: add `"company_aliases": {"acme": "Acme Labs"}` to the manifest (or fix the
    registry name), re-run the dry run, and only then write. A `REFUSED <ats key>` line means the same posting sits
    on two Notion pages; resolve that in Notion.
 4. **Rules the verb enforces (don't re-implement them):** the Roles page id is the only idempotency key (a rescan
@@ -236,7 +236,7 @@ edge. Spec + the reasoning behind every rule: `docs/archive/notes/yed-149-spec-2
 5. Step 6 summary line: `Graph: N role events (created X · matched Y · skipped drop Z)`.
 
 What the graph does with them: `/event-deep-research`'s Context Pack **never lists roles in the ledger**. A seed
-company gets one count line instead ("Harvey — 6 tracked roles (A:2 B:4)"), and applications/interviews appear
+company gets one count line instead ("Acme — N tracked roles (A:x B:y)"), and applications/interviews appear
 nowhere (migration 0011 + `retrieve.py`).
 
 ---
