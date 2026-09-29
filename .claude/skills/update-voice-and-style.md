@@ -44,6 +44,9 @@ Classify each piece of feedback into:
 | Audience/positioning | `content-style-guide.md` | Audience section, positioning notes |
 | Quality bar | `content-style-guide.md` | Quality bar definition |
 | Formatting | `content-style-guide.md` | Hashtags, emoji, length, CTA approach |
+| Character variant (C) / personality floor / recurring series (Room #N, Hype Check, Over-Engineered, Job Hunt Week N, Best of Builds) | `content-style-guide.md` | The voice v2 rules for that item |
+
+**Voice v2 iteration log (2026-09-28; 4-week test, read 2026-10-26).** When mining Alex's Notion comments, check every batch explicitly for these three: comments on Variant C (which cold opens landed, which `[PERSONALITY LINE NEEDED]` flags he filled and how), the personality floor, and each recurring series. Record each learning as a **dated in-place annotation** on the rule it changes (`(2026-10-05: …)`), not a separate log; the 2026-10-26 read is a pass over those annotations.
 
 ---
 

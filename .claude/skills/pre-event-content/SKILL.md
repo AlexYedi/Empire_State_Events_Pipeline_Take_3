@@ -173,10 +173,12 @@ CTA — "If you're deep into [topic], what are you most looking forward to learn
 
 **Generate 3 variants** with different hook formulas (per message-architecture):
 - **Variant A:** Question hook — opens with a sharp question only an insider would ask
-- **Variant B:** Contrarian hook — opens with a take that pushes against the consensus on the topic
-- **Variant C:** Stat hook OR story hook — opens with a specific data point from the brief, OR a specific moment/anecdote
+- **Variant B:** Contrarian OR stat hook — opens with a take that pushes against the consensus, OR a specific data point from the brief
+- **Variant C:** Character variant (voice v2, 2026-09-28) — same facts as A/B, but a cold open with a joke or a confession in Alex's voice. If no steer or dictation supplied the personality line, write the rest and leave `[PERSONALITY LINE NEEDED: <what kind of line, where>]` in place; never invent a confession.
 
 Present as inline options; ship all three to Notion, never pre-select.
+
+**Walk-in line (under the variants):** one ≤25-word phone-clip script Alex can say on camera walking into the room — the question he's walking in with, in plain speech. Ships in the same Notion page body under the variants; it is a script, not a post.
 
 ### Quality Checks
 - Exactly 2-3 data points from the research brief, with sources available if Alex wants to reference
@@ -481,7 +483,7 @@ Page body: the approved post variant + **the Step 3b carousel brief appended und
 "People": [relation to people mentioned]
 "Topics": [relation to topics covered]
 ```
-Page body: the approved post variant + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
+Page body: all three post variants + the Step 3 walk-in line + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
 
 **Speaker/Host Connection Request Notes (one page per person):**
 ```

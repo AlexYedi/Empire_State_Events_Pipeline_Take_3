@@ -45,6 +45,9 @@ with `notion-fetch` on the data_source URL before any batch create (see
   Outcome Date (date), Published URL (url),
   Themes (multi-select — added 2026-09-28, YED-208: the back-catalog index for prior-post callbacks; fixed list in
   `content-style-guide.md` → Variants and prior-post callbacks; post drafts only, roundups untagged),
+  Format (select — documented 2026-09-28, voice v2: `clip` / `photo` / `motion` / `audio` / `poll` for
+  field-media and non-text posts, per `visual-briefs.md` 1/1/1 options; docs-first: `notion-fetch` the live
+  DB and add or confirm the property/values before the first write that sets it),
   relations to Event/People/Topics/Project Ideas
   Note: Goal + Target are the **assigned-goal** (set at creation); Outcome/Outcome Value/Outcome Date are the
   **realized outcome** (set post-publish by `/tag-outcome`). Together = the acted-on-value north-star.

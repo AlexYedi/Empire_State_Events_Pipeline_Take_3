@@ -1,6 +1,6 @@
 ---
 name: transcript-conditioning
-description: "Condition a raw single-event ASR/diarized transcript into reliable content inputs — resolve diarized 'Speaker N' labels to a known roster, normalize ASR-mangled entity names against a pre-event brief, and extract a confidence-scored verbatim quote bank. Upstream of content-correspondent Mode B. Use when post-event content is built from a manually-pasted or low-quality transcript (Otter/Zoom/phone-recording exports, walk-in events Granola didn't record) where speaker labels are unreliable and proper nouns are garbled. Triggers: 'condition this transcript', 'clean up the transcript', 'who said what', 'fix the speaker labels', or any post-event flow where transcript quality gates quote accuracy."
+description: "Condition a raw single-event ASR/diarized transcript into reliable content inputs — resolve diarized 'Speaker N' labels to a known roster, normalize ASR-mangled entity names against a pre-event brief, and extract a confidence-scored verbatim quote bank. Upstream of content-correspondent. Use when post-event content is built from a manually-pasted or low-quality transcript (Otter/Zoom/phone-recording exports, walk-in events Granola didn't record) where speaker labels are unreliable and proper nouns are garbled. Triggers: 'condition this transcript', 'clean up the transcript', 'who said what', 'fix the speaker labels', or any post-event flow where transcript quality gates quote accuracy."
 ---
 
 # Transcript Conditioning
