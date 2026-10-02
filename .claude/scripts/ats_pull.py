@@ -15,7 +15,8 @@ TSV columns: company vendor key title url location posted updated remote comp_te
   comp_*   = comp_gate.py verdict WITHOUT the emerging-seller flag (a JD judgment): re-run comp_gate --emerging in
              Step 3 when the JD is pitched at an emerging seller.
 --jd-dir writes one plain-text JD per passing row ({key}.txt, ':' → '_') for the Step 3 mechanism read.
-stderr ends with the gap line Step 4 must report: "N companies returned 0 rows: … · M errored: …".
+stderr ends with the gap line Step 4 must report: "N companies returned 0 rows … · M errored … · K excluded … ·
+comp gate: ON|OFF". Struck-through registry companies (~~Harvey~~) are skipped, not fetched.
 Exit 0 on a completed run (gaps included), 2 on bad args, 3 when the registry can't be parsed.
 """
 from __future__ import annotations
@@ -52,7 +53,12 @@ DROP = re.compile(r"Engineer|Developer|Designer|Scientist|Researcher|Recruiter|A
 COMP_LINE = re.compile(r"[^.\n]*\$\s*\d[\d,]*(?:\.\d+)?\s*[kK]?[^.\n]*")
 # Location default = NYC + Remote (US) (SKILL Inputs). Multi-location strings pass when ANY part matches;
 # an empty location passes (unknown is not a reject). --any-location turns the filter off.
-LOC = re.compile(r"New York|\bNYC\b|\bNY\b|Brooklyn|Manhattan|Remote|United States|\bUSA?\b|North America|Americas", re.I)
+LOC_US = re.compile(r"New York|\bNYC\b|Brooklyn|Manhattan|United States|North America|Americas", re.I)
+LOC_US_CASE = re.compile(r"\bNY\b|\bUSA?\b")            # case-sensitive: never the word "us"
+REMOTE = re.compile(r"Remote|Anywhere", re.I)
+NON_US = re.compile(r"Europe|\bEU\b|EMEA|APAC|LATAM|\bUK\b|United Kingdom|London|Germany|Berlin|France|Paris|"
+                    r"Spain|Ireland|Dublin|Netherlands|Amsterdam|Poland|Israel|India|Canada|Toronto|Mexico|Brazil|"
+                    r"Australia|Japan|Tokyo|Singapore|Korea|Seoul", re.I)
 # A JD sentence counts as comp only when it talks about pay, and not about customers' money.
 COMP_KW = re.compile(r"salary|\bpay\b|compensation|\bOTE\b|on[- ]target|\bbase\b|earnings|commission", re.I)
 NOT_COMP = re.compile(r"\bspend\b|revenue|\bARR\b|funding|raised|valuation|deal size|contract value|\bACV\b|budget", re.I)
@@ -78,7 +84,16 @@ def parse_registry(md: str) -> list[dict]:
 
 
 def keep_location(loc: str) -> bool:
-    return not loc.strip() or bool(LOC.search(loc))
+    """NYC + Remote (US). Multi-location strings pass when ANY part passes; remote passes unless it names a
+    non-US region ("Remote - Germany" drops); empty = unknown, passes."""
+    if not loc.strip():
+        return True
+    for part in re.split(r"[|;/]| or ", loc):
+        if LOC_US.search(part) or LOC_US_CASE.search(part):
+            return True
+        if REMOTE.search(part) and not NON_US.search(part):
+            return True
+    return False
 
 
 def keep_title(title: str) -> bool:
@@ -119,7 +134,8 @@ def project(vendor: str, data) -> list[dict]:
             ms = j.get("createdAt")
             posted = time.strftime("%Y-%m-%d", time.gmtime(ms / 1000)) if isinstance(ms, (int, float)) else ""
             rng = j.get("salaryRange") or {}
-            comp = f"${rng['min']:,} - ${rng['max']:,}" if rng.get("min") and rng.get("max") else ""
+            usd_year = rng.get("currency", "USD") == "USD" and rng.get("interval", "per-year-salary") == "per-year-salary"
+            comp = f"${rng['min']:,} - ${rng['max']:,}" if usd_year and rng.get("min") and rng.get("max") else ""
             rows.append({"id": j.get("id"), "title": j.get("text", ""), "url": j.get("hostedUrl", ""),
                          "location": (j.get("categories") or {}).get("location", ""), "posted": posted,
                          "updated": "", "remote": "", "jd": j.get("descriptionPlain") or _plain(j.get("description")),
@@ -162,6 +178,8 @@ def run(entries: list[dict], floor: int | None, jd_dir: str | None,
         any_location: bool = False) -> tuple[list[dict], list[str], list[str], int]:
     out, empty, errored, scanned = [], [], [], 0
     for e in entries:
+        if e["excluded"]:      # struck through in the registry (e.g. ~~Harvey~~): every role auto-rejects on company fit
+            continue
         try:
             raw = project(e["vendor"], fetch(e["vendor"], e["token"]))
         except Exception as err:  # noqa: BLE001
@@ -216,7 +234,8 @@ def selftest() -> int:
     check("greenhouse: comp found in escaped-HTML JD", comp_gate.parse_comp(comp_text(gh[0])).get("high") == 220_000)
     lv = project("lever", [{"id": "a", "text": "AM", "hostedUrl": "u", "createdAt": 1790000000000, "categories": {}}])
     for loc, want in [("San Francisco, CA | New York City, NY", True), ("Remote - US", True), ("London, UK", False),
-                      ("", True), ("Berlin", False)]:
+                      ("", True), ("Berlin", False), ("Remote - Germany", False), ("Remote, EU", False),
+                      ("Remote", True), ("Join us in Austin", False)]:
         check(f"location filter: {loc!r} → {'keep' if want else 'drop'}", keep_location(loc) == want)
     gh2 = project("greenhouse", {"jobs": [{"id": 8, "title": "CSM", "absolute_url": "u", "location": {"name": "NYC"},
                   "content": "&lt;p&gt;Annual Salary: $151,840 &amp;mdash; $200,000 USD&lt;/p&gt;"}]})
@@ -226,6 +245,9 @@ def selftest() -> int:
     fp = project("greenhouse", {"jobs": [{"id": 9, "title": "CSM", "absolute_url": "u", "location": {"name": "NYC"},
                  "content": "Manage accounts ranging from ~$100K to $10M+ in annual spend. Our Series C raised $250M."}]})
     check("comp: customer spend / funding amounts are not pay", comp_text(fp[0]) == "")
+    lv2 = project("lever", [{"id": "b", "text": "AM", "hostedUrl": "u", "categories": {},
+                             "salaryRange": {"currency": "GBP", "interval": "per-year-salary", "min": 90000, "max": 120000}}])
+    check("lever: non-USD salaryRange is not passed off as $", lv2[0]["comp_src"] == "")
     check("lever: createdAt epoch-ms → ISO date", re.fullmatch(r"\d{4}-\d{2}-\d{2}", lv[0]["posted"]) is not None)
     wk = project("workable", {"jobs": [{"shortcode": "ABC123", "title": "AM", "shortlink": "u", "published_on": "2026-09-29"}]})
     check("workable: shortcode is the id", wk[0]["id"] == "ABC123")
@@ -254,7 +276,12 @@ def main(argv: list[str]) -> int:
         return 3
     if a.only:
         want = {s.strip().lower() for s in a.only.split(",")}
+        missing = want - {e["company"].lower() for e in entries}
+        if missing:
+            print(f"ats_pull: --only names not in the registry: {', '.join(sorted(missing))}", file=sys.stderr)
         entries = [e for e in entries if e["company"].lower() in want]
+        if not entries:
+            return 2
     floor = a.floor
     if floor is None:
         try:
@@ -266,13 +293,19 @@ def main(argv: list[str]) -> int:
     rows, empty, errored, scanned = run(entries, floor, a.jd_dir, a.any_location)
     lines = ["\t".join(COLS)] + ["\t".join(_tsv(r[c]) for c in COLS) for r in rows]
     if a.out:
-        open(a.out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+        try:
+            open(a.out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+        except OSError as e:
+            print(f"ats_pull: cannot write --out {a.out}: {e}", file=sys.stderr); return 3
     else:
         print("\n".join(lines))
     print(f"ats_pull: {len(entries)} boards · {scanned} roles scanned · {len(rows)} passed the title filter",
           file=sys.stderr)
+    excluded = [e["company"] for e in entries if e["excluded"]]
     print(f"ats_pull: {len(empty)} companies returned 0 rows: {', '.join(empty) or '—'} · "
-          f"{len(errored)} errored: {'; '.join(errored) or '—'}", file=sys.stderr)
+          f"{len(errored)} errored: {'; '.join(errored) or '—'} · {len(excluded)} excluded (struck through): "
+          f"{', '.join(excluded) or '—'} · comp gate: {'ON' if floor else 'OFF — no floor, comp_verdict blank'}",
+          file=sys.stderr)
     return 0
 
 

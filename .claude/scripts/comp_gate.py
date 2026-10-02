@@ -31,7 +31,7 @@ MONEY = r"(?<![A-Za-z])\$\s*([\d,]+(?:\.\d+)?)\s*([kKmM])?"   # USD only: CA$/MX
 RANGE_RX = re.compile(MONEY + r"\s*(?:-|–|—|to)\s*" + MONEY)
 UPTO_RX = re.compile(r"(?:up to|as much as|max(?:imum)? of)\s*" + MONEY, re.I)
 SINGLE_RX = re.compile(MONEY)
-BASE_RX = re.compile(r"\b(?:base(?:\s+salary|\s+pay)?|annual salary|salary range|before variable|plus commission|offers commission)\b"
+BASE_RX = re.compile(r"\b(?:base(?:\s+salary|\s+pay)?|salary|before variable|plus commission|offers commission)\b"
                      r"|\+\s*commission", re.I)
 OTE_RX = re.compile(r"\b(OTE|on[- ]target earnings|total (?:target )?compensation)\b", re.I)
 
@@ -45,27 +45,46 @@ def _usd(num: str, suffix: str | None) -> int:
     return int(round(v))
 
 
+def _label(window: str) -> str:
+    return "ote" if OTE_RX.search(window) else "base" if BASE_RX.search(window) else "unlabelled"
+
+
+def _window(text: str, start: int, end: int) -> str:
+    """The band's own clause: up to 60 chars back and 30 forward, cut at a clause break or another $ amount,
+    so a neighbouring band's label ("…; OTE $250K") never leaks onto this one."""
+    before = re.split(r"[;.\n]|\$\s*\d[\d,]*\s*[kKmM]?", text[max(0, start - 60):start])[-1]
+    after = re.split(r"[;.\n$]", text[end:end + 30])[0]
+    return before + text[start:end] + after
+
+
 def parse_comp(text: str) -> dict:
     """Posted comp text -> {low, high, label: ote|base|unlabelled, one_sided, snippet}; {} when nothing posted.
 
-    Only USD amounts >= $20K count (filters "$5M Series A"-style noise below salary scale is NOT attempted:
-    amounts >= $2M are ignored as non-comp)."""
+    USD only: amounts are counted when $20K <= amount < $2M (drops "$5M seed"-style noise above salary scale);
+    "US$" is read as USD, any other currency prefix (CA$, MX$, A$) is skipped -> UNKNOWN. Each range is labelled
+    from its OWN neighbourhood (60 chars before, 30 after), so "Base $150K-$180K; OTE $250K-$300K" labels each
+    band separately; when several bands are posted, an OTE-labelled band wins (it is the comparable figure)."""
     if not text:
         return {}
-    label = "ote" if OTE_RX.search(text) else "base" if BASE_RX.search(text) else "unlabelled"
+    text = text.replace("US$", "$")
+    found = []
     for m in RANGE_RX.finditer(text):
         lo, hi = _usd(m.group(1), m.group(2) or m.group(4)), _usd(m.group(3), m.group(4))
         if 20_000 <= lo <= hi < 2_000_000:
-            return {"low": lo, "high": hi, "label": label, "one_sided": False, "snippet": m.group(0)}
+            win = _window(text, m.start(), m.end())
+            found.append({"low": lo, "high": hi, "label": _label(win), "one_sided": False, "snippet": m.group(0)})
+    if found:
+        return next((f for f in found if f["label"] == "ote"), found[0])
     m = UPTO_RX.search(text)
     if m:
         hi = _usd(m.group(1), m.group(2))
         if 20_000 <= hi < 2_000_000:
-            return {"low": None, "high": hi, "label": label, "one_sided": True, "snippet": m.group(0)}
+            return {"low": None, "high": hi, "label": _label(text), "one_sided": True, "snippet": m.group(0)}
     for m in SINGLE_RX.finditer(text):
         v = _usd(m.group(1), m.group(2))
         if 20_000 <= v < 2_000_000:
-            return {"low": v, "high": v, "label": label, "one_sided": False, "snippet": m.group(0)}
+            win = _window(text, m.start(), m.end())
+            return {"low": v, "high": v, "label": _label(win), "one_sided": False, "snippet": m.group(0)}
     return {}
 
 
@@ -119,6 +138,9 @@ def selftest() -> int:
         ("$205K OTE", False, "PASS", 205_000),                    # single number
         ("Competitive salary + equity", False, "UNKNOWN", None),  # nothing posted
         ("OTE CA$180,000 - CA$230,000", False, "UNKNOWN", None),  # non-USD is not compared to a USD floor
+        ("Salary: $150K - $200K", False, "PASS", 200_000),        # bare "Salary" = base band -> top (judge r1)
+        ("Base salary $150K-$180K; OTE $250K-$300K", False, "PASS", 275_000),  # per-band labels; OTE band wins
+        ("US$180,000 - US$230,000 OTE", False, "PASS", 205_000),  # explicit US$ is USD
         ("We raised a $5M seed. Pay $190K–$230K + commission", False, "PASS", 230_000),  # $5M ignored; commission = base
     ]
     ok = 0

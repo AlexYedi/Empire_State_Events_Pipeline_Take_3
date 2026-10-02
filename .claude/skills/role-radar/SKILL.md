@@ -65,11 +65,15 @@ What the script enforces (change the rule in the script, then this summary):
   them. Drop includes `Engineer` (Solutions/Sales Engineer are OUT, ruled 2026-09-24, no protected carve-out),
   `Technical Account Manager` (OUT, 2026-09-27) and marketing titles; `Growth` only passes as
   `Growth Strategist|Growth Account|Growth AE|Scaled Growth` (the bare word leaked marketing roles on 09-19).
-- **Location default = NYC + Remote (US)** (Inputs); `--any-location` turns it off. Scoring still applies the
-  location row in Step 3.
+- **Location default = NYC + Remote (US)** (Inputs): a remote role naming a non-US region drops; `--any-location`
+  turns it off. Scoring still applies the location row in Step 3.
+- **Struck-through registry companies** (`~~Name~~`, coverage-only, every role auto-rejects on company fit) are
+  skipped, not fetched, and counted in the gap line.
 - **Comp** columns come from `comp_gate.py` (Step 3, v2.3), computed **without** the emerging-seller flag.
-- **Gap line (stderr), reported in Step 4 verbatim:** "N companies returned 0 rows … · M errored …". A failed
-  board is never "no roles".
+- **Gap line (stderr), reported in Step 4 verbatim:** "N companies returned 0 rows … · M errored … · K excluded …
+  · comp gate: ON|OFF". A failed board is never "no roles". **Registry-staleness guard, still manual:** also
+  report the count of target companies with no big-4 board (the "five holdouts" table in `target-companies.md`),
+  since the script only sees the registry.
 
 ### 1b. Apollo job-postings at named targets (credit-gated — optional)
 - Only if Alex wants roles at specific targets *not* on the big-4 ATS. **Off by default** — the scan runs the boards; Apollo is a per-request add-on. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
@@ -185,8 +189,9 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
   **The model owns two judgment inputs, the script owns the arithmetic:**
   1. **Emerging seller?** The JD pitches the seat at an early-career seller (ex-SDR/BDR, "next step into
      full-cycle ownership", "first closing role") → re-run with `--emerging`.
-  2. **Label sanity.** The script reads OTE / base (salary, base pay, "+ commission", "Offers Commission") /
-     unlabelled from the text. If the JD body contradicts the structured field, the JD body is the posting:
+  2. **Label sanity.** The script labels each posted band from its own clause: OTE / base ("salary", "base pay",
+     "+ commission", "Offers Commission") / unlabelled; when a posting shows both a base and an OTE band, the OTE
+     band is the one tested. Non-USD amounts (CA$, MX$, GBP via Lever) come back UNKNOWN. If the JD body contradicts the structured field, the JD body is the posting:
      re-run on the JD sentence.
   The rulings the script implements (2026-09-27, Alex, YED-210 — pinned by `--selftest`): OTE or unlabelled
   band → **midpoint** · base/salary band → **top** · emerging seller → **low end** · one-sided "up to $X" →
