@@ -249,6 +249,18 @@ If input is sparse (just an event name, no contacts or takeaways), ask three thi
 
 Don't ask for more. Produce from what you have.
 
+## On failure
+
+- **Quote bank has 0 HIGH lines** → no verbatim quotes and no @-tags on quoted people; paraphrase, and
+  say so in the hand-off ("paraphrase-only: no HIGH quotes").
+- **Roster / People rows missing** → skip the contact sort and outreach; note "no roster" rather than
+  inventing buckets.
+- **Back-catalog query fails or returns nothing** → no callback; say which (failed vs. no hits).
+- **A Learn-More link or a Rule-12 claim can't be verified** → cut it and list it under the hand-off's
+  unverified items; never ship a link you haven't confirmed.
+- **No Field Color for Variant C** → leave `[PERSONALITY LINE NEEDED: …]`; never invent Alex's line.
+- **Notion write fails (parent thread)** → keep the drafts in chat, name the failed write, retry once.
+
 ---
 
 ## Execution Infrastructure

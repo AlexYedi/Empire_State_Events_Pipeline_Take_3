@@ -56,6 +56,16 @@ A compact artifact, NOT a re-typed transcript:
 
 content-correspondent (Mode B) consumes this in place of the raw transcript: the quote bank is the verbatim-quote source, the glossary guarantees proper nouns are spelled right in public copy, the confidence score gates how aggressively to quote.
 
+## On failure
+
+- **No roster and no brief** → build the minimal roster from the invite first; if even that is empty,
+  say so, resolve nobody, and mark every quote MED (paraphrase-only).
+- **A voice resolves to no one** → list it as `UNRESOLVED` in the speaker table with its tells; its lines
+  never carry a name in public copy.
+- **No HIGH-confidence quotes at all** → say "quote bank: 0 HIGH" at the top of the output so drafting
+  goes paraphrase-only; don't promote MED lines to fill the gap.
+- **Transcript empty, truncated or still processing** → stop and name which; don't condition a partial.
+
 ## Discipline
 
 - **Source-check rule (CLAUDE.md §6, the old "Rule 12"):** a transcript is a PRIMARY source for what a person *said in the room* — quote freely. It is NOT a source for external firm/person *thesis* claims; those still need independent citation before public use.

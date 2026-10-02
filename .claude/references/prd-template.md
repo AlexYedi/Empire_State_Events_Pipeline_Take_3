@@ -59,8 +59,10 @@ why?"* — top 2-3 failure modes + the fix folded into the plan.
   "Done" = these pass. This is the PRD→Linear→judge loop-closer.
 
 **7. AI-native fields** *(for AI/agent builds — from `alex:ai-product-strategy`).*
-Human-AI boundary (what the agent decides vs. the human gates); failure/squishiness UX (the 1% wrong);
-built-for-the-slope (swappable models); which eval/judge *is* the living acceptance layer.
+Human-AI boundary (what the agent decides vs. the human gates); **code-vs-model split** (which steps
+are deterministic — a script with a `--selftest` — and which genuinely need judgment; parsing, dates,
+arithmetic and threshold gates are code, never prose rules for a model to follow); failure/squishiness
+UX (the 1% wrong); built-for-the-slope (swappable models); which eval/judge *is* the living acceptance layer.
 
 **8. Build-time details — flagged, deferred (NOT committed).**
 The implementation precision reality will decide: chunk size, index type, exact fields, library choice.
