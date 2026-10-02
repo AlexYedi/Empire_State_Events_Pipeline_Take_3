@@ -42,6 +42,9 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
    anti-pattern the judge docks.
 7. **Failure modes.** At least: a required input missing; a specialist returns thin/empty; an external
    dependency (MCP/API/key) unavailable. Say what the command does in each case (degrade, don't crash).
+   **Skills too (2026-10-02, YED-254):** every `SKILL.md` carries a short `## On failure` section with the
+   same shape: *if X fails, say which X failed and do Y.* Name the failure in the output; never paper
+   over it ("errors are results": a returned failure lets the next step or Alex correct course).
 
 ## Conventions
 - **Frontmatter:** `description` (required) + `argument-hint`. Reference plugin skills with the `alex:`

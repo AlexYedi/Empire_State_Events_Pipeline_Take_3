@@ -68,6 +68,17 @@ repo `.env` (Creator tier). Recipe is locked in `.claude/scripts/ingest_recordin
      `python .claude/scripts/align_slides.py --selftest` pins the 2026-09-16 reference case.
    - Offsets **locate** a quote; they do not license quoting it verbatim. The R1 contract (step 4) still applies.
 
+## On failure (say which step failed, then degrade)
+- **Audio path not found / unreadable** → stop and name the path you tried; ask for the file. Don't
+  guess a neighbouring file.
+- **`ELEVENLABS_API_KEY` missing, or HTTP 401** → stop; report "ElevenLabs auth failed". Fall back to
+  the Supercut transcript (`/post-event-content` 2A) or a paste (2C), marked lower proper-noun fidelity.
+- **HTTP 429 / quota exhausted** → stop after one retry; report the remaining-quota message verbatim.
+  Same fallback. No pay-per-use top-up without Alex.
+- **No roster for keyterms** → run anyway, label the transcript `UNVERIFIED`, paraphrase-only (step 4).
+- **Photos with no EXIF time** → they align on file mtime at LOW confidence; the confirm pass is
+  mandatory for them. **Every photo unaligned** → report it and keep the catalog without offsets.
+
 ## Notes / gotchas
 - `keyterms` **requires `scribe_v2`** (scribe_v1 → HTTP 400).
 - Diarization labels are anonymous (`speaker_0…`) and scribe_v2 over-segments — map Speaker→name
