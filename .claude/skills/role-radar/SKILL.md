@@ -20,7 +20,7 @@ This is a **signal scanner** feeding the Empire State pipeline (its siblings `tr
 - **Notion plan constraint (re-verified 2026-09-27):** `notion-query-data-sources` SQL **does** work on this plan but is **quota-capped** — the shared workspace limit tripped after ~12 queries in one session. Spend it on ONE bulk pass per run (Content Hash + Tier + Status + Notes for every row — a few LIMIT/OFFSET pages of the same query, ~100 rows each), then use `notion-fetch` per page for anything else. Never design a step that needs SQL more than once; when the cap hits mid-run, fall back to `notion-fetch` — it has no such cap.
 - **No fabricated numbers / honest gaps:** if a source errors, say so.
 
-**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used in any scan to date — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 31-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI graph) is **live as Step 5.5** (YED-149, 2026-09-27 — shipped once the Roles DB proved its dedup: 203 rows, 0 duplicate ATS keys). Scheduled ingestion stays deferred.
+**Scope:** ATS boards APIs (primary) + Apollo-at-targets (credit-gated, optional); Notion-only; manual trigger. **Dice and RSS.app were REMOVED 2026-09-27 (Alex):** never used in any scan to date — the Dice connector was never authenticated and no RSS.app feed was ever generated — and the 38-board ATS registry covers the target list directly. Do not re-add them without a coverage case. The **graph-producer** (roles → MI graph) is **live as Step 5.5** (YED-149, 2026-09-27 — shipped once the Roles DB proved its dedup: 203 rows, 0 duplicate ATS keys). Scheduled ingestion stays deferred.
 
 ---
 
@@ -43,7 +43,7 @@ widgets call; legitimate, full-fidelity, not scraping). Read the company→ATS r
 `.claude/references/target-companies.md` ({ATS vendor, board token/slug} per company).
 
 ### 1a. ATS boards APIs — `curl` + `jq` (Bash), PRIMARY
-Read the **company→ATS registry** in `.claude/references/target-companies.md` (**31 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic; the per-board live-verification dates are recorded in that registry file, not asserted here). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
+Read the **company→ATS registry** in `.claude/references/target-companies.md` (**38 companies** — 21 confirmed 2026-09-08, **9 added 2026-09-21**, **1 added 2026-09-24** from the Flywheel "New York AI Mafia" graphic, **7 added 2026-09-28** from the "AI Map of San Francisco" graphic; the per-board live-verification dates are recorded in that registry file, not asserted here). Per company, curl its board and **`jq`-project to the compact shape BEFORE anything enters context** — raw boards are 0.5–12 MB, never dump them:
 
 - **Greenhouse** (board tokens per company: see `target-companies.md`):
   `curl -s "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"`
@@ -68,7 +68,7 @@ Read the **company→ATS registry** in `.claude/references/target-companies.md` 
   **The bare word `Growth` was the original leak** — on 2026-09-19 it passed "Growth Marketing Manager", "Senior Product Designer (Growth)" and "Senior Backend Engineer (Growth)", all dropped by hand. The keep-list above is now narrowed at source to `Growth Strategist|Growth Account|Growth AE|Scaled Growth`, so the leak is closed where the grep is built, not only here. (The leadership-signal titles — Sales Director, Head of Sales — match no drop term and are unaffected.)
 - **Natural key = `{ats_vendor}:{id}`** (Step 2 dedup; for Workable the id is `.shortcode`); freshness = `posted` for **Ashby, Lever and Workable**. For **Greenhouse, freshness is UNKNOWN** — `updated` is not a posted date (see the caveat above).
 - **Fan out 5–6 companies per distillation subagent** (curl works in subagents; the subagent declares `tools: Bash, Read` and returns a **projected** TSV (title, id, url, location, posted, comp band) so raw JSON never touches parent context — scoring happens in Step 3, after Step 2 has removed already-tracked rows, so no subagent scores a role the DB already holds).
-- **Coverage = the 31 registry companies. Deferred (skip v1; recorded on YED-149):** registry companies with no big-4 API by slug (named in `target-companies.md`); the Workable-hosted one left this list 2026-09-21, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
+- **Coverage = the 38 registry companies. Deferred (skip v1; recorded on YED-149):** registry companies with no big-4 API by slug (named in `target-companies.md`); the Workable-hosted one left this list 2026-09-21, now supported above. The Step 4 digest MUST report gaps loudly: "N companies returned 0 rows / M unmapped" (registry-staleness guard).
 - 4 fixed API hosts — no per-company `settings.local.json` allowlist churn. **Endpoints + field shapes verified live 2026-09-08; the 9 additions + the Workable shape re-verified live 2026-09-21; General Intuition verified live 2026-09-24.**
 
 ### 1b. Apollo job-postings at named targets (credit-gated — optional)
@@ -116,6 +116,26 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 > business by generating pipeline" AND "expand existing accounts"; Traversal Enterprise AE REJECTED —
 > "own the full sales cycle, from strategic prospecting to closing" with only Sales-Engineering support
 > and no book, despite an OTE above the floor and an in-person NYC seat.)*
+>
+> **"End-to-end" framing is the own-the-funnel signal (ruled 2026-09-28 — Alex).** When the JD's
+> framing puts the whole onus on the seller ("end-to-end", "own the entire sales cycle", "from first
+> touch to close"), score it as the own-the-funnel case. **A passing mention of expansion or renewal
+> does NOT offset that framing:** judge the JD's weight, not an isolated keyword. *(Worked example,
+> 2026-09-28: Factory AE Mid-Market NYC demoted B→C. It mentions "expansion and renewal" but is a
+> pure-play end-to-end AE. Cognition Account Director Enterprise (East) has the same shape and was
+> promoted to A only under the v2.1 #3 intangibles exemption: company quality, recent raise, pay,
+> enterprise AD seat, SDRs prospecting the account list. Reason written to Notes.)*
+>
+> **VERTICAL-TERRITORY REJECT: financial services and government (ruled 2026-09-28 — Alex).** A role
+> whose territory is **financial services** (banks, insurers, capital markets, FSI) or
+> **government / public sector** (federal, state & local, SLED, agencies) is **`drop`**, however good
+> the company or pay. Alex, verbatim: *"I do not have enough subject matter expertise to honestly compete
+> for those roles … those are specific customer types that people build a career around selling to."*
+> This is separate from the company-level vertical exclusion (e.g. legal AI): it applies to the
+> **territory of a role at a horizontal company** (Databricks FS AE, Scale AI FS AE, Databricks State &
+> Local all dropped 2026-09-28). Check title AND JD territory before scoring. In the Roles DB, a
+> dropped row is set `ICP Tier = drop` + `Status = archived`, **never deleted**, so dedup keeps
+> blocking the re-add. **Healthcare / life-sciences territory is unruled:** send it to the Held bucket; don't assume either way.
 
 | Dimension | Points | How to score |
 |---|---|---|
@@ -254,7 +274,7 @@ nowhere (migration 0011 + `retrieve.py`).
 - **Roles DB schema drift** — `notion-fetch` the data source; live schema wins.
 
 ## Confidence & honest gaps
-- **Strong (high):** aggregation + consistent ICP scoring + status tracking across the 31 ATS boards (+ Apollo when asked).
+- **Strong (high):** aggregation + consistent ICP scoring + status tracking across the 38 ATS boards (+ Apollo when asked).
 - **Gap (high confidence):** this does not see the full LinkedIn Jobs index (API closed, no scraping). RSS.app of saved searches was the intended partial bridge and was removed 2026-09-27 unused; TheirStack (paid) is the option if coverage ever becomes the constraint. Name the gap; don't imply full LinkedIn coverage.
 
 ## Reuses / references
