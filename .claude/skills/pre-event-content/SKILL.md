@@ -104,7 +104,7 @@ FOR EACH EVENT (set the table — tight):
     * The tension/open question that exists in the FIELD — attributed to the field, not
       to Alex, and left OPEN. ("The field is split — X has shown A; Y just bet on B.")
     * Then STOP. No verdict, no "here's what I'd ask," no editorial kicker.
-  - **Learn-More Set: 3–5 curated resources** (papers, company announcements, speaker writing, publications on the topics/tech/companies/people) → first comment; mandatory every post (see `content-style-guide.md` → The Learn-More Set)
+  - **Learn-More Set: 3–5 curated resources** (papers, company announcements, speaker writing, publications on the topics/tech/companies/people) → first comment; mandatory every post; **≤1,250 chars per comment** (Learn-More first, sources as a reply; see `content-style-guide.md` → The Learn-More Set)
 
 EVENTS PENDING (if any):
   - Brief mention of events Alex has applied to / hoping to attend
@@ -182,7 +182,7 @@ Present as inline options; ship all three to Notion, never pre-select.
 
 ### Quality Checks
 - Exactly 2-3 data points from the research brief, with sources available if Alex wants to reference
-- **Learn-More Set: 3–5 curated resources → first comment/carousel** (mandatory every post; separate from the in-body data points — see `content-style-guide.md` → The Learn-More Set)
+- **Learn-More Set: 3–5 curated resources → first comment/carousel** (mandatory every post; **≤1,250 chars per comment**, sources as a reply; separate from the in-body data points — see `content-style-guide.md` → The Learn-More Set)
 - One clear insight or question that passes the expert-pause test
 - No words/patterns from the anti-patterns file
 - 2-5 relevant hashtags
