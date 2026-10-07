@@ -238,10 +238,10 @@ def selftest() -> int:
                       ("Remote", True), ("Join us in Austin", False)]:
         check(f"location filter: {loc!r} → {'keep' if want else 'drop'}", keep_location(loc) == want)
     gh2 = project("greenhouse", {"jobs": [{"id": 8, "title": "CSM", "absolute_url": "u", "location": {"name": "NYC"},
-                  "content": "&lt;p&gt;Annual Salary: $151,840 &amp;mdash; $200,000 USD&lt;/p&gt;"}]})
+                  "content": "&lt;p&gt;Annual Salary: $121,840 &amp;mdash; $165,000 USD&lt;/p&gt;"}]})
     c2 = comp_gate.parse_comp(comp_text(gh2[0]))
-    check("greenhouse: double-escaped &mdash; range parses as a range, labelled base", c2.get("low") == 151_840 and
-          c2.get("high") == 200_000 and c2.get("label") == "base")
+    check("greenhouse: double-escaped &mdash; range parses as a range, labelled base", c2.get("low") == 121_840 and
+          c2.get("high") == 165_000 and c2.get("label") == "base")
     fp = project("greenhouse", {"jobs": [{"id": 9, "title": "CSM", "absolute_url": "u", "location": {"name": "NYC"},
                  "content": "Manage accounts ranging from ~$100K to $10M+ in annual spend. Our Series C raised $250M."}]})
     check("comp: customer spend / funding amounts are not pay", comp_text(fp[0]) == "")
@@ -252,8 +252,8 @@ def selftest() -> int:
     wk = project("workable", {"jobs": [{"shortcode": "ABC123", "title": "AM", "shortlink": "u", "published_on": "2026-09-29"}]})
     check("workable: shortcode is the id", wk[0]["id"] == "ABC123")
     ab = project("ashby", {"jobs": [{"id": "x", "title": "AE", "isListed": False}, {"id": "y", "title": "AE", "jobUrl": "u",
-                                     "publishedAt": "2026-09-28T10:00:00Z", "compensation": {"compensationTierSummary": "$200K – $240K • Offers Commission"}}]})
-    check("ashby: unlisted jobs skipped, structured comp used", len(ab) == 1 and comp_text(ab[0]).startswith("$200K"))
+                                     "publishedAt": "2026-09-28T10:00:00Z", "compensation": {"compensationTierSummary": "$210K – $250K • Offers Commission"}}]})
+    check("ashby: unlisted jobs skipped, structured comp used", len(ab) == 1 and comp_text(ab[0]).startswith("$210K"))
     print(f"selftest: {ok}/{n} ats_pull cases pass")
     return 0 if ok == n else 1
 
