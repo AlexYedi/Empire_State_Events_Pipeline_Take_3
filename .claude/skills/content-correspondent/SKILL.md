@@ -16,48 +16,19 @@ Your job is to receive raw event input — voice notes, Granola transcripts, fre
 
 ---
 
-## Input modes — two ways this skill is invoked
+## Input modes
 
-### Mode A — Granola-anchored (⏸ DISABLED 2026-05-27 — Granola nonoperational)
+**Structured input** comes from `/post-event-content` Step 4 (conditioned quote bank, recording summary, attendees, pre-event brief, author steer, field color); that command defines the shape. (The Granola-anchored Mode A was removed 2026-09-28; Granola is off, see `platform-constraints.md`.)
 
-> Granola is OFF — the app is a waitlist-only placeholder on Alex's device, so there's nothing to fetch. `/post-event-content` no longer calls Granola; **do not fire the Granola API or MCP.** Until Granola ships a working app, `/post-event-content` runs on a **manual transcript upload + `transcript-conditioning`**, then hands this skill the conditioned quote bank — i.e. **Mode B is the active intake.** Re-enable this mode when Granola records for real.
-
-When live, this mode took the Granola transcript + AI summary that `/post-event-content` fetched via API and treated it as structured input. The structured-input shape it expects is now produced by manual upload → conditioning instead.
-
-Expected input shape:
-
-```
-Event: [Notion Event Name]
-Date: [Event Date]
-Notion Event URL: [...]
-Granola Note URL: [...]
-
-=== Granola AI Summary (primary input — use for angle, takeaways, thesis) ===
-[summary_markdown — Granola's pre-synthesized takeaways]
-
-=== Granola Diarized Transcript (verbatim quote source — use for speaker quotes and color) ===
-Speaker 1 (microphone): [text]
-Speaker 2 (speaker): [text]
-...
-
-=== Attendees (cross-reference against Notion People DB for bucket sorting) ===
-[name, email] pairs
-
-=== Notion Pre-Event Brief (if available — for documentary thesis continuity) ===
-[research_brief Content Draft content]
-```
-
-**Use the summary for angle/thesis decisions.** Granola's AI synthesis has already done the heavy lifting of "what was the room about" — don't redo it. Pull the documentarian thesis from the summary, then go to the transcript for verbatim quotes that ground it.
-
-**Use the transcript for verbatim quotes and color.** Speaker quotes in the Tier 1 comment and Tier 2 post must come from the transcript verbatim — don't paraphrase from the summary. The summary smooths the language; the transcript preserves voice.
+**Use the quote bank for verbatim quotes.** Speaker quotes in the Tier 1 comment and Tier 2 post come from the conditioned quote bank — never from the recording summary, which smooths the language.
 
 **Cross-reference attendees against the Notion People DB.** Each attendee with a People DB match becomes a candidate for bucket sorting (A/B/C/D). Attendees without matches are surfaced for Alex to classify or skip.
 
 **Use the pre-event brief for thesis continuity.** If Alex pre-researched the event (Workflow A), there's a `research_brief` Content Draft linked to this Event with the predicted documentary angle. Compare post-event reality to pre-event prediction — the gap is often the most interesting content beat ("I went in expecting X, the room actually argued Y").
 
-### Mode B — Manual paste (legacy, still supported)
+### Manual paste (ad-hoc)
 
-When Alex pastes raw material directly into the conversation (Granola export, Wispr voice notes, freeform recap, photos with captions), run the existing flow described below. Mode A is preferred because it removes the paste friction, but Mode B remains supported for ad-hoc events that weren't pre-researched or for cases where Granola wasn't recording.
+When Alex pastes raw material directly into the conversation (Wispr voice notes, freeform recap, photos with captions), run the flow described below — for ad-hoc events that weren't pre-researched or weren't recorded.
 
 **Upstream — condition first (added 2026-05-27):** if the pasted transcript has unreliable speaker labels or ASR-mangled proper nouns (the norm for in-person / phone recordings), run the `transcript-conditioning` skill FIRST — grounded in the event's roster — and consume its quote bank + glossary in place of the raw transcript. `/post-event-content` **Step 3.5** does this automatically; for an ad-hoc manual paste, invoke it yourself before drafting. Never quote a named person verbatim from an unconditioned low-quality transcript.
 
@@ -151,8 +122,6 @@ RAW EXPERIENCE
 📝 LinkedIn short post — single biggest takeaway (within 24h)
     ↓
 📄 LinkedIn document/carousel — pattern across 2–3 events (biweekly)
-    ↓
-📰 Newsletter section or long-form — the thesis that keeps showing up (monthly)
 ```
 
 **The field reporter frame** is what makes the content work. Alex isn't broadcasting thought leadership from a soapbox. He's a correspondent sending dispatches from inside the NYC AI/tech scene. Write in present tense, write like someone who was actually in the room, lead with what was observed or felt before what it means. Have a take. "AI GTM is evolving" is useless. "Nobody in that room could define what 'agentic' means for a quota-carrying rep, and that gap is where deals are dying" is a conversation starter.
@@ -177,16 +146,9 @@ Hook examples that work:
 Use the "Yes, And" format — add a new dimension, counterpoint, or specific observation. Not "great event!" A comment that sounds like a person, not a marketing bot:
 > "The [specific point they made] is something I've been watching play out in [your specific context]. What I'd add from the enterprise/GTM side: [your observation]. Curious whether others in the room saw [specific dynamic] the same way."
 
-#### Audience-Specific Post Angles
+#### Variant C — the character variant (voice v2, 2026-09-28)
 
-The same event can generate different post angles. Pick one per event and commit. Vary across events to test which audience resonates.
-
-| Audience | Angle | Hook Style |
-|----------|-------|------------|
-| Founders & Builders | "What I observed about [problem/market] from the inside" | "The founders who are actually gaining traction all share one counterintuitive habit..." |
-| Execs & Hiring Managers | "What the talent and team dynamics in this scene tell you about the market" | "I've noticed the best enterprise AI hires I keep meeting are all coming from [unexpected background]..." |
-| Peers (AEs, CS, AM in transition) | "What I'm learning from builders about how our jobs are changing" | "Honest admission: I came expecting to ask questions. I left feeling like the one who should be building." |
-| General Tech/AI Audience | "Signal from the NYC AI scene — what's real vs. noise" | "Everyone talks about AI GTM. Last night I was in a room of 60 people actually doing it. Here's the gap." |
+Every post ships 3 variants. A and B carry the dispatch and the hiring-manager read; **C is the character variant**: the same facts, but a cold open with a joke or a confession, plus the Snack Index line when field color supplies it. Source the personality from `=== Field Color ===` (Alex's dictation, photos, clips — `/post-event-content` Step 4). If no dictation supplied a usable line, draft the rest and leave `[PERSONALITY LINE NEEDED: <what kind of line, where>]`; never invent a confession or a joke about a named person. Attended-room recaps run under the **Room #N** series title.
 
 #### Special event format — Founder / Startup Showcase
 
@@ -287,13 +249,25 @@ If input is sparse (just an event name, no contacts or takeaways), ask three thi
 
 Don't ask for more. Produce from what you have.
 
+## On failure
+
+- **Quote bank has 0 HIGH lines** → no verbatim quotes and no @-tags on quoted people; paraphrase, and
+  say so in the hand-off ("paraphrase-only: no HIGH quotes").
+- **Roster / People rows missing** → skip the contact sort and outreach; note "no roster" rather than
+  inventing buckets.
+- **Back-catalog query fails or returns nothing** → no callback; say which (failed vs. no hits).
+- **A Learn-More link or a Rule-12 claim can't be verified** → cut it and list it under the hand-off's
+  unverified items; never ship a link you haven't confirmed.
+- **No Field Color for Variant C** → leave `[PERSONALITY LINE NEEDED: …]`; never invent Alex's line.
+- **Notion write fails (parent thread)** → keep the drafts in chat, name the failed write, retry once.
+
 ---
 
 ## Execution Infrastructure
 
-- **Granola** → primary source. Pulled automatically via `/post-event-content` slash command (Mode A above). Provides AI summary + diarized transcript + attendee list. Replaces manual transcript paste.
-- **Wispr Flow** → optional supplement when Granola wasn't recording, or for the Uber/subway-home dictation of "things I didn't say out loud but want in the post" (interior color the room transcript can't capture)
-- **Claude** → outreach and post drafts (this workflow, with Mode A or Mode B input)
+- **Supercut** → primary source. Pulled via `/post-event-content` Step 2A, conditioned in Step 3.5.
+- **Wispr Flow + phone photos/clips** → the `=== Field Color ===` input: the subway-home dictation of "things I didn't say out loud but want in the post" plus what the camera saw; feeds Variant C and the Snack Index
+- **Claude** → outreach and post drafts (this workflow)
 - **Notion** → all drafts land in Content Drafts DB (status: `needs_review`); Notion writes run inline in the parent thread (subagents have no claude.ai connectors)
 - **n8n** → not used (event pipeline is Claude-skill-first, not middleware)
 - **PostHog** → future: track which posts drive profile visits and connection requests
@@ -306,7 +280,7 @@ Don't ask for more. Produce from what you have.
 **Next morning:**
 1. Send queued outreach DMs (touch 1)
 2. Publish Tier 1 LinkedIn post using last night's sentence as the hook seed
-3. If Granola transcript is available, pull speaker quotes for color
+3. If a conditioned transcript is available, pull speaker quotes for color
 
 **Day 7 (calendar reminder after event):**
 1. Check reply status on Bucket A touch 1 DMs

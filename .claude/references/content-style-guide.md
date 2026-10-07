@@ -7,13 +7,15 @@
 
 ## Voice & Tone
 
+**Voice v2 is a 4-week test (read 2026-10-26); every rule Alex's review comments change is updated in place with a dated annotation via update-voice-and-style.** Rules marked "(added 2026-09-28 — voice v2)" or "(rewritten 2026-09-28 — voice v2)" are the test. The fixed floors (Receipts, Hiring-Manager Activation, the 3,000-char cap, 3 variants, source-check) are not under test.
+
 Five tone pillars — use all five together. They reinforce each other:
 
 1. **Curious, not performative** — Genuine interest drives the content. Never post to be seen posting.
 2. **Commercially aware, not salesy** — Understand the business context. Never pitch.
 3. **Informed, not lecturing** — Share what you've learned. Never explain down.
 4. **Opinionated but open to being wrong** — Take a position. Invite correction.
-5. **Documentarian, not influencer** — Capture what happened, what it means, and why it matters. **Always lead with the audience and the subject** — and bring yourself in wherever it *adds value*: your analysis, your perspective, or a unique point of view derived from what you've learned, built, or experienced — through events, interactions, or the **intersections where they converge**. The rule isn't "never about you"; it's **never about you at the audience's expense.** Self in service, not performance. *(This is the counterweight — see the Audience-First North-Star section below.)*
+5. **Correspondent with a byline, not a camera** — Capture what happened, what it means, why it matters, and what *you* thought, felt or laughed at. The reader should be able to tell it was Alex in the room, not a transcript. Self in service, not performance. *(Rewritten 2026-09-28 — voice v2.)*
 
 **Predictions vs. stances (added 2026-05-26):** Soften *predictions about event content* — frame what you expect an event to be about as curiosity or hypothesis ("I was curious going in," "I expected," "the question I brought in"), never a cocky "I predicted." But never soften *stances on subjects, topics, or analysis* — take the bold, contrarian, or definitive position on the substance. The hedge is only for guesses about what an event will contain, used as a narrative starting point.
 
@@ -21,21 +23,33 @@ Five tone pillars — use all five together. They reinforce each other:
 
 - **Space / format** — long-form (post-event recap, deep per-event post) has room for context + analysis → high license. A roundup synopsis (the tightest character budget of any format) has none → **set the table, don't take a side.**
 - **Presence** — pre-event (haven't seen it yet) → low license; surface the field's open questions. Post-event (you were in the room) → high license; deliver your earned read.
-- **Expertise** — calibrate to where Alex actually is: an informed, curious documentarian, *not yet a topic expert*. Definitive verdicts from that position read as unearned. Stance-license **grows over time** as Alex builds, reads, and attends more — and the `steering-interview` skill is how that growing perspective gets captured per event.
+- **Expertise** — Alex is an operator with dozens of rooms, talk transcripts and shipped systems behind him. Take the position. The license condition is the *receipt*: a take needs the number, the quote or the demo behind it, in the same post. No receipt, no take. The `steering-interview` skill captures his perspective per event. *(Rewritten 2026-09-28 — voice v2.)*
 
 **Default stance-license by format:**
 | Format | License | What to do |
 |---|---|---|
-| The Upcoming Week roundup | Lowest | Set the table. State each topic's current state + the genuine tension that *already exists in the field*, attributed to the field — never Alex's verdict. No sides. |
+| The Upcoming Week roundup | Lowest | Set the table. State each topic's current state + the genuine tension that *already exists in the field*, attributed to the field — never Alex's verdict. No sides. Built from briefs only. One human line at the top is allowed (weather, the subway, the week's mood); no verdicts. *(Human line added 2026-09-28 — voice v2.)* |
 | Per-event pre-event post | Medium — structured, not a hot take | **Table-set, then go deep.** (1) Set the table on the *topic*: current state, trends, recent developments. (2) Dig into the **specific perspective** carried by the event description and the person presenting. (3) Discuss that perspective's **implications in the broader context**. Open the question the event is about; don't declare the verdict — the reality-check belongs to the post-event post. |
 | Post-event recap / synthesis | Highest | **Cash the pre-event setup against reality.** Take the macro + micro table-setting and focus on *exactly what was said*: the real implications, the impact, where the room agreed, where it argued — the reality of what actually happened. |
 
 **The test before shipping any viewpoint:** *can this same piece also carry the context and analysis that earns it?* If the format has no room for that, cut the viewpoint and surface the tension neutrally instead.
 
+**Humor (added 2026-09-28 — voice v2).** What works: specificity (the exact absurd detail), self-deprecation about *your own systems and process*, understatement, enterprise seriousness next to a small human fact, honest numbers ("0 comments, 1 save, and the save was me"), running series. What is cringe: puns in hooks, "haha" and 😂, meme fonts, "I'm not like other LinkedIn people", sarcasm about job-hunting or unemployment, jokes at the expense of anyone junior, of attendees, of a speaker's product or of another job seeker, a joke in line one on a serious topic. **Punch up or in, never down:** at hype, at VC decks, at LinkedIn itself, at the pipeline. Never at a named person's expense unless it is affectionate hype ("she built this in a weekend, which is frankly rude to the rest of us"). The model never invents a joke; humor comes from Alex's dictation or a real fact.
+
+**Surprise (added 2026-09-28 — voice v2).** Every post has one pattern break: a cold open, a number the reader did not expect, a reversal ("the best thing said on stage was said in the hallway"), a confession, or a format the account has not used in a week. If the post is predictable from its first line, restructure.
+
+**Personality floor (added 2026-09-28 — voice v2).** Every post has ≥1 line only Alex would write: a reaction, a joke, an admission, a specific enthusiasm about a person. The model does not invent this line; it comes from Alex's dictation or the steering interview ("what was funny / what surprised you"). No dictation → the C variant flags `[PERSONALITY LINE NEEDED: …]` and Alex adds it in review.
+
+**Character continuity (added 2026-09-28 — voice v2).** Series are reused, not reinvented: the same Room numbering, the same "Job Hunt, Week N" header (see Recurring series under Positioning). Recognizability is repetition of *form* with new *content*.
+
+**On camera (added 2026-09-28 — voice v2).** Face and voice are real. No AI avatar of Alex, no cloned narration presented as him (a cloned voice may read a *sourced* quote card or a caption track, labeled). One take, natural light, phone at eye level, captions on.
+
 **The pre→post arc — the two per-event posts are ONE deliberate two-part arc (added 2026-09-11).** Not two independent posts:
 
 - **Pre-event = the table-set, macro → micro.** The topic's current state, trends, and recent developments (macro) → the *specific* perspective carried by the event description and the person presenting (micro) → what that perspective **implies in the broader context**. It opens the question the event is actually about. Presence is still absent, so it does not resolve the tension — but with Field Guide v2 research behind it, a pre-event post is now **substantiated**, not a lightly-held question.
 - **Post-event = the reality check.** Take that same macro + micro framing and resolve it against what *actually happened*: exactly what was said, the real implications and impact, where the room **agreed**, where it **argued**, and what proved true versus what was merely set up.
+
+The arc can carry field media: a walk-in clip pre-event, the recap post-event, a walk-out line. *(Added 2026-09-28 — voice v2.)*
 
 The gap between the table you set and the reality you found **is itself the content** — this is precisely what the `post_event_brief`'s **Pre→Post Gap** section exists to capture, and the post-event post should mine it.
 
@@ -43,7 +57,7 @@ The gap between the table you set and the reality you found **is itself the cont
 
 **Pre-event creation is collaboratively steered (ruled 2026-09-11).** The per-event pre-event prompt leans on Alex's **editorial direction for the specific event and week** — `steering-interview` Touch 1 (Aim) is load-bearing here, not optional. Direction given per event **overrides** the defaults above.
 
-**Decenter the self — curator, not protagonist (added 2026-05-30).** The subject of a post is the events, topics, and tensions — **not Alex.** First-person "I/me" that centers Alex ("seven rooms on *my* calendar," "here's what *I'm* walking into") reads as a thinly-veiled personal brag and undercuts the documentarian frame (pillar 5). Lead with the field and the abundance; position Alex as the curator pointing at what's worth watching. The "I" that survives is the curator's, not the brand-builder's. Model: *"Hundreds of events for NYC Tech Week — the seven worth watching are…"* (subject = the events; the "I" is incidental). When you catch an "I/me" that centers Alex rather than the content, cut or recast it. **Counterweight — this is an *ordering*, not an *erasure*:** where Alex's presence, access, judgment, or insight *is* the value, he steps forward and claims it plainly (see the **Audience-First North-Star** section immediately below).
+**The subject leads; the character stays (rewritten 2026-09-28 — voice v2).** The reader comes for the room, the idea, the number. Alex is the narrator with a point of view: his reaction, his joke, his call. Cut "I" when it is a credential or a brag ("my calendar", "I predicted"). Keep it when it is a *reaction* ("I laughed", "I did not believe this until I checked").
 
 ## Audience-First North-Star (why · who · the counterweight)
 
@@ -51,7 +65,7 @@ The gap between the table you set and the reality you found **is itself the cont
 
 **Persona — embedded expert correspondent.** In the room (**witness**) → generous (**audience-first**) → analytically authoritative (connects what's said to prior coverage, Alex's own work, and current news; points to where to go deeper).
 
-**The counterweight to every decenter-self rule — audience-first is an *ordering*, NOT an *erasure*.** The decenter-self, stance-license, and never-lead-with-"I" rules mean *the audience comes before Alex* — they do **not** mean *erase Alex*. He is present, named, and opinionated wherever his presence, access, judgment, or insight **is** the value. **Attribution follows value: when the call is his and it's right, he claims it plainly, with conviction.** Humble in *priority* (audience first), never in *false modesty* about what he knows. **"Self in service, not self in subtraction"** — a post can be heavily Alex and still be audience-first, as long as it serves the reader rather than performs for them.
+**Audience-first is an *ordering*, NOT an *erasure*.** The subject-leads and stance-license rules mean *the audience comes before Alex* — they do **not** mean *erase Alex*. He is present, named, and opinionated wherever his presence, access, judgment, or insight **is** the value. **Attribution follows value: when the call is his and it's right, he claims it plainly, with conviction.** Humble in *priority* (audience first), never in *false modesty* about what he knows. **"Self in service, not self in subtraction"** — a post can be heavily Alex and still be audience-first, as long as it serves the reader rather than performs for them.
 
 **The three floors (non-negotiable, every post):**
 1. **Receipts** — ≥1 detail only possible from physically being there (a fragment of real dialogue, a room reaction, a slide that wasn't online). Architectural, not a brag. *A post that could have been written from a recap fails this floor.*
@@ -66,14 +80,10 @@ Default structure for LinkedIn posts (adapted from Hook-Context-Insight-CTA):
 HOOK — First 1-2 lines. Stop the scroll. A surprising stat, a contrarian take,
        or a specific detail that signals "this person was actually paying attention."
 
-TABLE-SET — Immediately after the hook, in one or two plain sentences, say WHAT
-          THIS IS before WHY it matters: the event by name, its format (webinar /
-          panel / briefing / meetup), and the people (host + presenters). The reader
-          should never have to reach the thesis — or the thank-you at the bottom — to
-          learn they're reading about a webinar with named speakers. Order is
-          non-negotiable: the what → the why → the value. The hook still leads and
-          stays a scroll-stopper; the table-set is the compact second beat, not a
-          preamble. (Added 2026-09-09 — Variant C review, below.)
+TABLE-SET — Within the first four lines, in one sentence: what, format, who
+          (the event by name; webinar / panel / briefing / meetup; host +
+          presenters). The hook may come before it; the table-set never comes
+          after the thesis. (Rewritten 2026-09-28 — voice v2.)
 
 CONTEXT — Why this matters right now. Connect the event/topic to a broader trend,
           a recent development, or a shift the audience should care about.
@@ -85,9 +95,9 @@ INSIGHT — One deeply considered observation or one genuinely novel question.
 CTA (varies by content type) — See Content Type CTAs below.
 ```
 
-**Opener rule — never lead with "I" (added 2026-08-07 — the strongest first-line rule we have).** An event post's first line must lead with the *subject*, never Alex. Pick one of five leads: the **topic / core tension**; a **relevant recent headline or stat** (often the strongest hook — e.g., "This stat should make you rethink AI agents: [stat]…"); the **host company** *in service of the event* (never a bare "Company just…" product-ad construction — see the company/product-name row in `content-anti-patterns.md`); the **people** (host/speaker) who make the room worth showing up for; or the **NYC AI ecosystem** framing ("The NYC AI ecosystem is playing host to another … tonight"). **Banned openers:** "Tonight I'm at…", "I wrote…", "One stat reframed how *I* think…" — they center Alex and waste the hook. The curator's "I" may appear *later*, once the subject is established. This is the first-line enforcement of the decenter-self rule. **(Ordering, not erasure:** the curator's / analyst's "I" steps forward *after* the subject leads — see the Audience-First North-Star counterweight.)
+**Opener rule — lead with a pattern break (rewritten 2026-09-28 — voice v2).** The first line is a cold open: a number with its baseline, a quote, a confession, a joke, a scene. "I" is allowed in line one when it is a reaction or a confession ("I have been to dozens of these. Tonight was the first one where…"). **Banned:** "Tonight I'm at…", "Excited to…", "I wrote…", and any line that could open any other post.
 
-**Table-set before you theorize (added 2026-09-09 — Variant C review; Alex: "always want to table-set").** Every event post owes the reader a plain, simple orientation *before* the why and the value: **what this is** (the event, named), **what format** (a webinar / panel / briefing — say the word), and **who** (host + presenters, named). Then the thesis, then the earned insight. The failure this fixes: a post with a strong takeaway that dives straight into content and analysis, so the reader never learns it was a *webinar with named speakers* until the thank-you at the very bottom (if at all) — the insight floats with no scene under it. This is NOT a contradiction of the never-lead-with-"I" or no-long-preamble rules: the hook still leads with the subject, and the table-set is one–two tight sentences, not throat-clearing. Think **context → why → value**, where "context" is the simple *what*, delivered up front. Naming the format + speakers early also does double duty — it's the Receipts floor and the credibility signal ("I was in this specific room") landing where it counts, not buried.
+**Table-set within the first four lines (rewritten 2026-09-28 — voice v2; original 2026-09-09).** In one sentence: **what this is** (the event, named), **what format** (say the word), and **who** (host + presenters, named). The hook may come before it; the table-set never comes after the thesis. The failure this fixes: an insight that floats with no scene under it, the reader learning it was a webinar with named speakers only at the thank-you. Naming format and speakers early also lands the Receipts floor where it counts.
 
 ## Content Type CTAs
 
@@ -95,13 +105,14 @@ CTA (varies by content type) — See Content Type CTAs below.
 |---|---|
 | The Upcoming Week | "If you can't make it or aren't in the NYC area but have a question you wish you could ask — connect, message me and I'll ask it. If you're going, happy to connect before, don't hesitate to say and I'll see you there." |
 | Pre-Event Post | Educational reminder + "If you're deep into this subject, what are you most looking forward to learning/hearing about?" |
-| Post-Event Recap | No CTA. Pure documentarian. Let the content speak. |
+| Post-Event Recap | One specific ask: "If you run enterprise accounts at a company doing this, I want to compare notes: DM me." Or the Hallway invitation: "Tell me what your room said." Never "Thoughts?" *(Rewritten 2026-09-28 — voice v2.)* |
 
-**The close is the self-trap.** The ending is where self-credentialing and self-flagellation sneak back in even when the body is clean. Do NOT end on a verdict you'll deliver ("what I'll be testing," "the real version not the demo") or a credential ("I've been doing this since X"). End on the open questions, defer to the experts about to answer them, and offer to share where **they** land. **Curiosity + deference + service — never verdict + credential.**
+**Close with a verdict or a laugh, not a bow (rewritten 2026-09-28 — voice v2).** End on Alex's call in one line, a specific ask, or (in a Room #N recap only) an optional Snack Index line. Banned closes: a credential ("I've done this since…"), a generic question, deference for its own sake. The roundup and pre-event posts still close without a verdict.
 
 ## Data Points
 
 - Pull in **at least 2, no more than 3** specific stats/facts/data points per post
+- **Every number ships with its baseline** (the null-baseline rule, made public). *(Added 2026-09-28 — voice v2.)*
 - Source them from the research brief
 - Provide source references so Alex can share deeper resources if desired
 
@@ -109,15 +120,12 @@ CTA (varies by content type) — See Content Type CTAs below.
 
 - **Hashtags:** 2-5 per post, relevant and specific (e.g., #AgenticAI, #DataReadiness, not just #AI)
 - **Tagging (revised 2026-09-27):** Name every speaker, host, organizer and community person the post is about, in pre-event AND post-event posts. Tagging them is giving back: it promotes them in their community and elevates the event. Weave the names in naturally, never as a dump. Write plain names in the draft; Alex applies the @-mentions manually, because @-syntax doesn't carry across platforms.
-- **Emoji:** Sparingly but present. Use as structural markers or emphasis, not decoration.
-- **Length by type (character counts include spaces, line breaks, and emojis — LinkedIn counts everything):**
-  - The Upcoming Week: Long-form roundup — **hard cap 3,000**, no lower target
-  - Pre-Event Post: **hard cap 3,000**, no lower target
-  - Post-Event Recap: Long-form narrative — **hard cap 3,000**, no lower target
+- **Emoji:** Sparingly but present. Use as structural markers or emphasis, not decoration. Humor comes from words, not emoji.
+- **Length:** the 3,000-char hard cap below is the only limit. A 400-char post with a photo is a valid post. *(Per-type length targets deleted 2026-09-28 — voice v2.)*
 
 ## LinkedIn Character Budget (hard limit — added 2026-06-10)
 
-**The LinkedIn feed-post hard cap is 3,000 characters** (LinkedIn's published limit; unchanged since 2023. Re-check it against LinkedIn's own help pages before citing the number publicly — "verified June 2026" was asserted here with no source recorded, flagged 2026-09-20). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
+**The LinkedIn feed-post hard cap is 3,000 characters** (LinkedIn's published limit, verified against [help page a528176](https://www.linkedin.com/help/linkedin/answer/a528176) on 2026-09-30, closing the 2026-09-20 no-source flag; all other media limits: `### LinkedIn Media Limits` below). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
 
 - **Hard cap: 3,000 characters. Non-negotiable.** Count the post before presenting it. If a draft exceeds 3,000, cut it to budget *before* showing Alex — do not ship an over-limit draft with a "trim this" note.
 - **No target below the cap (Alex, 2026-09-28).** These posts carry several speakers, companies and complex ideas; squeezing them under an invented ceiling loses the value. Length follows the content. The only limit is 3,000. Do not cite third-party "sweet spot" ranges (e.g. 1,300–1,900) as a target, and do not tell Alex a draft is "over target" when it is under 3,000.
@@ -137,7 +145,7 @@ CTA (varies by content type) — See Content Type CTAs below.
 
 ## Variants and prior-post callbacks
 
-- **Every post ships 3 inline variants** (per-event, post-event, the Upcoming Week roundup and pattern-synthesis alike; ruled 2026-09-11, "3 everywhere" confirmed 2026-09-19). Variants differ in hook/framing, not in take. Connection notes stay at **2** (A talk-anchored, B adjacent-work-anchored; `outreach-templates.md`). Ship all variants to Notion; never pre-select.
+- **Every post ships 3 inline variants** (per-event, post-event, the Upcoming Week roundup and pattern-synthesis alike; ruled 2026-09-11, "3 everywhere" confirmed 2026-09-19). **Three variants, three jobs (rewritten 2026-09-28 — voice v2):** A = the straight dispatch (receipts-first). B = the hiring-manager variant (commercial judgment). **C = the character variant** (cold open, a joke or a confession; same facts). All three ship; Alex picks. Connection notes stay at **2** (A talk-anchored, B adjacent-work-anchored; `outreach-templates.md`). Ship all variants to Notion; never pre-select.
 - **Link back to Alex's own prior posts** when a recap touches a theme he has covered before (in the Learn-More Set and/or inline). Treat the back-catalog as a first-class citation source: it pumps long-tail traffic to older posts and shows a thesis evolving over time, which is the documentarian moat. Frame the callback as evolution ("first surfaced at [event]; here's what changed / held / was reinforced"), never a bare "see my last post."
 - **The back-catalog is the Content Drafts `Themes` property (YED-208).** Every post draft is tagged with 1–3 themes when it is written. The themes are a fixed list; adding one is a schema change, so update `notion-schema.md` in the same PR: `agents-agentic-stack` · `mcp` · `gtm-engineering` · `ai-slop-evals` · `ai-productivity` · `devtools-ai-infra` · `data-databases` · `voice-ai` · `ai-search` · `eng-leadership` · `founders-demos` · `signal-vs-intent` · `security-governance` · `frontier-models`. The Upcoming Week roundups stay untagged; they are not back-link targets. **Pull before drafting**: one `notion-query-data-sources` SQL call on `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`:
   `SELECT "Title", "Published URL", date(createdTime) FROM <ds> WHERE "Content Status"='published' AND "Published URL" IS NOT NULL AND ("Themes" LIKE '%"<theme>"%' OR …) ORDER BY createdTime DESC`
@@ -199,12 +207,25 @@ If the answer is no, rework the insight before presenting.
 ## Positioning
 
 - **Full stack GTM** is the thesis but it is NOT explicit in content. It's implicit — demonstrated by the range of topics, commercial instinct, and content production quality.
-- Lead with event-focused content as subject matter. The building, managing, iterating, and executing of projects develops the skills quietly. Content about learnings from building comes later.
-- **Documentarian identity:**
+- Lead with event-focused content as subject matter. **Builds are content the week they ship:** every build gets a 30-Second Demo post, and an Over-Engineered post if it failed interestingly. *(Rewritten 2026-09-28 — voice v2.)*
+- **Correspondent identity:**
   - Reporter: "I go to things and share what happened" — specific details
   - Student: "I go to things and share what I learned" — synthesis
   - Analyst: "I go to things and share what it means" — interpretation
-  - Use all three. A specific detail to highlight each angle per event.
+  - Character: "I go to things and you can tell it was me" *(added 2026-09-28 — voice v2)*
+  - Use all four. A specific detail to highlight each angle per event.
+
+### Recurring series (added 2026-09-28 — voice v2)
+
+Same header, same form, new content each time; retire a series that gets no reply in 4 weeks.
+
+- **Room #N** — numbered event recaps. The count includes only rooms Alex attended.
+- **Hype Check** — one claim from a slide, one number, one baseline. Punches at the claim, never the speaker.
+- **Over-Engineered** — what the pipeline got wrong this week and what it cost.
+- **Job Hunt, Week N** — the search run as a pipeline: counts and method only. Never names, comp or a target list. At most every other week.
+- **Best of Builds** — what NYC builders are actually shipping (demos, founder showcases). Sincere, specific, source-checked.
+
+**Formats, not series:** The Hallway (stage vs hallway, paraphrased, unnamed) and The 30-Second Demo. **The Snack Index is not a series:** at most an optional closing line inside a Room #N recap, always affectionate toward the hosts.
 
 ---
 
@@ -217,10 +238,20 @@ dropped, it's a deliberate call — note it, don't treat it as an oversight.
 
 **Visuals must add, never repeat (added 2026-05-26):** A visual earns its place only by adding information the post text doesn't carry — a structure, comparison, progression, architecture, or "where-the-value-moves" view. Re-printing quotes or lines already in the post (e.g., a quote-card carousel of lines you already wrote) is text-forward repetition, not visual content. Canonical carousel rules: `.claude/skills/content-patterns/visual-briefs.md`.
 
-### Visual Output Per Post: 3 Briefs
-1. **Directly Supportive (Data/Stat)** — Clean visual reinforcing the post's key data point
-2. **Directly Supportive (Conceptual/Framework)** — Diagram, map, or framework visual
-3. **Wild Card 🌶️** — Professional but spicier. Different aesthetic, unexpected format, edge.
+**Recording and consent (added 2026-09-28 — voice v2).**
+- **Recorded speech from events is never public.** No audio or video of a speaker or attendee is published, excerpted or audiogrammed. Transcripts are private inputs; only quotes Alex chooses, source-checked, go in text.
+- **Alex's own clips of himself are fine** anywhere, including outside a venue.
+- **Slides:** photograph only what is presented to the room; skip anything marked confidential or do-not-share, unannounced funding, or non-public customer names; if a speaker asks for no photos, none.
+- **People in photos:** wide room shots are fine; recognizable close-ups of attendees need a yes; speakers on stage are fine (public role) and get tagged.
+- **Hallway:** paraphrase, unnamed, unless the person says "quote me".
+- **Off the record** means out of the transcript and every derived file (`build-in-public.md`), not just the post.
+
+### Visual Output Per Post: 3 Options (rewritten 2026-09-28 — voice v2)
+1. **Structured** — Claude HTML/SVG → PDF (stat card, diagram, framework, carousel)
+2. **Field media** — phone photo, clip, or motion from the room
+3. **Wild** — professional but spicier. Different aesthetic, unexpected format, edge.
+
+Field media is preferred when it exists; a carousel is not the default answer to "what is the visual".
 
 ### Format & Sizing (LinkedIn-Optimized)
 
@@ -240,7 +271,32 @@ link as the reason to prefer 4:5, not as a measured result of ours.
 | Retina export | Create at 2160x2700, export at 1080x1350 | Always — no exceptions |
 
 - File format: **PNG** for graphics with text, **JPG** for photos, **PDF** for carousels
-- Max file size: 10MB per image, 100MB per PDF carousel
+- Max file size: **5 MB per image**, 100 MB per PDF carousel (corrected 2026-09-30: this read 10 MB; LinkedIn's photo limit is 5 MB)
+
+### LinkedIn Media Limits (personal profile, organic — added 2026-09-30)
+
+Hard limits from LinkedIn's own help pages, checked 2026-09-30. Use each medium's own page: the general media-types page (a564109) gives a blanket 100 MB figure that contradicts the per-medium pages. Ads specs differ; these are organic.
+
+| Medium | Hard limits | Source |
+|---|---|---|
+| **Video** | MP4/MOV/WEBM and others · 75 KB–5 GB · 3 s–15 min · ratio 1:2.4 to 2.4:1 (9:16, 4:5, 1:1, 16:9 all OK) · 256x144 to 4096x2304 · 10–60 fps · captions via SRT, desktop upload only | [a548372](https://www.linkedin.com/help/linkedin/answer/a548372), [a552177](https://www.linkedin.com/help/linkedin/answer/a552177) |
+| **Images** | Up to 20 per post · 5 MB each · ≥552x276, 1080 px wide recommended · ratio 3:1 to 4:5 · alt text supported · no image + link preview in the same post | [a527229](https://www.linkedin.com/help/lms/answer/a527229) |
+| **Document (carousel)** | PDF/PPT/DOC · 100 MB · 300 pages · 1 per post · **title required** · **viewers can download it** · not editable after posting · animations render static · flatten layers, one page size | [a518909](https://www.linkedin.com/help/linkedin/answer/a518909) |
+| **Text** | Post 3,000 chars · article 125,000 chars | [a528176](https://www.linkedin.com/help/linkedin/answer/a528176), [a522483](https://www.linkedin.com/help/linkedin/answer/a522483) |
+| **Poll** | 2–4 options · question ≤140 chars, options ≤30 · 1 day to 2 weeks | [a522948](https://www.linkedin.com/help/linkedin/answer/a522948) |
+| **Live** | ≤4 h · access needs >150 followers/connections · third-party streaming tool | [a548518](https://www.linkedin.com/help/linkedin/answer/a548518) |
+| **Scheduling** | 10 min to 3 months ahead · events/jobs can't be scheduled | [a1347212](https://www.linkedin.com/help/linkedin/answer/a1347212) |
+
+**Operating rules that follow:**
+- **One media type per post. Video and images never mix** (working assumption, Alex 2026-09-30; LinkedIn documents no rule, but image + link is officially blocked and mixed media is reported unsupported). Pick the medium per post.
+- **4:5 is the tallest single image LinkedIn accepts.** A 9:16 still falls outside the 3:1–4:5 range and gets cropped or letterboxed; reserve 9:16 for video.
+- **Native image carousels were removed (Dec 2023).** A swipeable carousel is a document post.
+- **Carousel PDFs are public files.** Anyone can download one, so nothing goes on a slide that wouldn't survive being saved and forwarded.
+- **Video captions:** burn them in rather than relying on the desktop-only SRT upload.
+
+**Benchmarks, not LinkedIn rules (third-party, low–medium confidence):** the "see more" fold (~140 mobile / ~210 desktop chars), the outbound-link reach penalty (~60%, Forbes 2026-07-30; the reason links go in the first comment), the carousel slide-count sweet spot, and any hashtag cap. LinkedIn publishes no recommended organic video length.
+
+**Unverified (settle by test post, not desk research):** organic custom video thumbnails, animated GIF behavior in feed posts, the 1,250-char comment cap.
 
 ### The 2-Second Thumb Test (Non-Negotiable Quality Gate)
 
@@ -290,7 +346,8 @@ because each swipe counts as interaction. They need structure to pay off.
 Until a locked brand kit exists (Minimal V1 still applies), use a **constrained
 palette per content type**, not per post. Visual recognition compounds over time.
 
-- Safest high-impact formula: **Dark background + white text + one accent color**
+- Safest high-impact formula for carousels: **Dark background + white text + one accent color**
+- **Photos are the second palette** *(added 2026-09-28 — voice v2)*. A real photo of a real room beats a typeset card for any post whose value is *being there*.
 - Accent by topic area:
   - Tech / AI → blue
   - Data / infrastructure → green
@@ -340,8 +397,14 @@ Match format to content, not vice versa. Don't make a carousel when a single ima
 |---|---|---|
 | One killer stat | Single image, 4:5 portrait | Hero number + context. Clean, shareable. |
 | Process or framework | Carousel (5-8 slides) | Each step gets a slide. Swipe = narrative momentum. |
-| Hot take / contrarian insight | Bold typography card | Text IS the visual. Big font, dark bg, one sentence. |
-| Event recap with multiple moments | Carousel with photos | Documentarian angle. Each slide = one moment. |
+| Hot take / contrarian insight | Bold typography card, or a 60–90 s talking-head clip | Text IS the visual, or the tone of voice is. |
+| Event recap with multiple moments | Carousel with photos | Correspondent angle. Each slide = one moment. |
+| Being there (room, slide, view, food) | 2–4 phone photos, LinkedIn multi-image | A real room beats a typeset card. *(Added 2026-09-28 — voice v2.)* |
+| Walk-in / walk-out | 30–60 s face clip, 9:16 vertical, captions on | The arc's video half. *(Added 2026-09-28 — voice v2.)* |
+| A build shipping | 30-Second Demo: screen + camera, 60–120 s | Show it doing the thing, then what it didn't do. *(Added 2026-09-28 — voice v2.)* |
+| A mechanism clearer in motion | 8–15 s motion card (Claude HTML/SVG animation) | Motion carries the mechanism. *(Added 2026-09-28 — voice v2.)* |
+| A dispatch with no time to write | ~2 min audiogram in Alex's real voice + photos | Labeled as his voice; never a clone. *(Added 2026-09-28 — voice v2.)* |
+| Before a multi-room night | LinkedIn native poll | Cheap interaction; report the result in the recap. *(Added 2026-09-28 — voice v2.)* |
 | Comparison (before/after, X vs Y) | Single image, split layout | Side-by-side at a glance. |
 | Conceptual or abstract idea | AI-generated custom image | Gemini/Imagen for what doesn't exist as a photo. |
 | Multi-event weekly preview | Carousel (1 slide per event) | Each event gets its own visual treatment. |
@@ -354,7 +417,7 @@ Two lanes, and **neither is a constrained app that re-interprets your content** 
 |---|---|
 | Diagrams, matrices, stat cards, timelines, carousels — any label-dense / structured visual | **Claude design** — self-contained HTML/SVG via the Artifact tool → export 4:5 PDF/PNG. **DEFAULT.** Pixel-exact; renders exactly what's authored, no re-flow. |
 | Conceptual / editorial / illustrative / photographic imagery | **Gemini** (Alex's subscription — frontier flexibility, no app harness). Claude writes the prompt; Alex generates. |
-| Presentation-style video | Google Vids |
+| Concept B-roll motion only (after the HTML animation has been tried) | **Runway / Higgsfield / Veo.** Never an avatar of Alex. *(Added 2026-09-28 — voice v2; replaces the unused Google Vids row.)* |
 
 **Removed 2026-08-07:** Gamma (the app re-interpreted content and broke dense labels — the exact thing it was chosen to fix over Canva, now solved better by Claude authoring the pixels directly). **Canva is vestigial** — Claude + Gemini cover both the structured and pictorial lanes. See `content-patterns/visual-briefs.md`.
 
@@ -370,7 +433,8 @@ Two lanes, and **neither is a constrained app that re-interprets your content** 
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-28*
+*Version: 2.0 — Voice v2 (4-week test, read 2026-10-26): correspondent with a byline; subject leads, character stays; pattern-break openers; receipt-licensed expertise; recap CTA; verdict-or-laugh close; baseline with every number; per-type length targets deleted (3,000 cap only); variants A dispatch / B hiring-manager / C character; builds are content; recurring series; Humor, Surprise, Personality floor, Character continuity, On camera; recording and consent rules; 3 visual options incl. field media; photos as second palette; format rows for photo, clip, demo, motion, audio, poll.*
 *Version: 1.0 — Defined the **pre→post arc**: the per-event pre-event and post-event posts are one deliberate two-part arc, not two independent posts. Pre-event = table-set macro (topic's current state, trends, recent developments) → micro (the specific perspective the event description + the presenter carry) → implications in the broader context; it opens the question without resolving it. Post-event = the reality check — exactly what was said, real implications/impact, where the room agreed and where it argued; mines the `post_event_brief` **Pre→Post Gap**. Raised per-event pre-event stance-license from low–medium to **medium (structured, not a hot take)** — justified by Field Guide v2 research depth, which the 2026-05-30 rule predated. Ruled: **stance is advisory, NOT a gate** in the invariants contract (only falsifiable parts bind); **pre-event creation is collaboratively steered** (steering-interview Touch 1 load-bearing, per-event direction overrides defaults). Rulings by Alex, 2026-09-11.*
 
 *Version: 0.9 — Added the Table-Set rule (from the GLM-5.3 Variant C post review, shipped 2026-09-09). Every event post must table-set — plainly say what this is, that it was a webinar/panel/briefing, and name the host + presenters — BEFORE the why and the value: context (the simple what) → why → value. Added a TABLE-SET beat to Post Architecture, a named rule, and a `content-anti-patterns.md` row. Compatible with (not a contradiction of) the never-lead-with-"I" + no-long-preamble rules — the hook still leads; the table-set is one–two tight sentences. See memory `feedback-table-set-context-first-2026-09-09`.*

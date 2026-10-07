@@ -56,7 +56,7 @@ conversation. Never dispatch it as a subagent.**
 fully skippable. Runs **before** `/event-deep-research` (and before the post-event Step 3.6
 enrichment) so answer #3 can actually steer the agents.
 
-Ask all five together in a **single conversational message** (not five round-trips), tied to the
+Ask all six together in a **single conversational message** (not six round-trips), tied to the
 deliverable by name. Free-text — open-ended elicitation, so do NOT use `AskUserQuestion` (that's for
 picking between options). Alex may answer any subset, or skip entirely.
 
@@ -66,8 +66,9 @@ picking between options). Alex may answer any subset, or skip entirely.
 > 3. **Additional research** — anything to dig deeper on? A person, company, source, claim, or angle to research harder than the default. *(This one steers the fan-out — it must land before research.)*
 > 4. **Anything else** — context from something you read / built / attended, a relationship or goal tied to this, a person you want to land well with, where your thinking has moved. *(The one that makes your voice more informed over time.)*
 > 5. **Audience** — who is this primarily for? Which segment(s) — remote/excluded builder, time-constrained practitioner, aspirant/outsider, GTM peer, hiring manager, speakers/hosts — and any specific reader or outcome you're aiming at?
+> 6. **Character** — what would be funny or surprising about this room? *(Feeds the Variant C cold open; added 2026-09-28, voice v2.)*
 
-**Routing (this is the point — the five answers do NOT all feed the same stage):**
+**Routing (this is the point — the six answers do NOT all feed the same stage):**
 
 | # | Answer | Must land before | Routes into |
 |---|---|---|---|
@@ -76,6 +77,7 @@ picking between options). Alex may answer any subset, or skip entirely.
 | 3 | **Additional research** | **the research fan-out** | the `/event-deep-research` specialist prompts (company/person/topic/signal scope) |
 | 4 | **Anything else** | everywhere | research + content + the voice corpus |
 | 5 | **Audience** | content generation | which segment's job the post serves → what to surface + which variant carries the HM-activation angle |
+| 6 | **Character** | content generation | the Variant C (character variant) cold open; absent → C flags `[PERSONALITY LINE NEEDED: …]` |
 
 ---
 

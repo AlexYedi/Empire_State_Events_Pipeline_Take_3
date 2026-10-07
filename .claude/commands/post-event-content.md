@@ -318,6 +318,12 @@ Transcript source: [Supercut public_id + title / ElevenLabs file / manual paste]
 [The ≤3 forks put to Alex and his decisions/pushback, verbatim. These are binding editorial
 direction — the thesis pick, the quote-safety call, the cut chosen. content-correspondent honors
 them over its defaults. If Step 3.9 was skipped (no real fork / "just draft it"), note the skip.]
+
+=== Field Color (Alex's own — feeds Variant C and the Snack Index) ===
+[Alex's Wispr dictation (the subway-home "what I didn't say out loud") + phone photos/clips from
+the room, with one-line captions. Personality source for the C variant; never a quote source for
+other people. Recording/consent rules: visual-briefs.md. If absent, C flags
+[PERSONALITY LINE NEEDED: …] instead of inventing one.]
 ```
 
 content-correspondent then runs its standard logic per `.claude/skills/content-correspondent/SKILL.md`: bucket-sorts contacts, drafts Tier 1 comment + Tier 2 post + visual carousel brief + bucket A/B outreach DMs. Its "structured notes if the session was recorded; use for direct quotes from speakers" input is this block: the conditioned quote bank is the only verbatim quote source.

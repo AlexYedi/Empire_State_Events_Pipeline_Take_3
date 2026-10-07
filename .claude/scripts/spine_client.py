@@ -345,7 +345,7 @@ def req(method: str, path: str, body=None, prefer: str | None = None, *, timeout
             if giving_up:
                 sys.stderr.write(f"req: gave up after {attempt} attempt(s) on {method} {path[:90]} — {type(e).__name__}: "
                                  f"{str(e)[:120]}. Nothing after this call ran; a re-run is idempotent (upserts "
-                                 f"and GETs), and any gate row stays PENDING until it succeeds.\n")
+                                 f"and GETs), and the skipped graph write is reported in the run summary.\n")
                 raise
             wait = REQ_BACKOFF[min(attempt, len(REQ_BACKOFF)) - 1]
             sys.stderr.write(f"req: transient {type(e).__name__} ({str(e)[:80]}) on {method} {path[:90]} — "

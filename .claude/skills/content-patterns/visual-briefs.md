@@ -70,14 +70,22 @@ copy.
 
 ---
 
-## Option framework (added 2026-05-26 — Alex review)
+## Option framework — 1/1/1 (voice v2, 2026-09-28; replaces the 2026-05-26 four-option set)
 
-When proposing a post's visual, offer **four distinct format options**, not four near-identical candidates of one design:
+When proposing a post's visual, offer **three options of different kinds**, not near-identical candidates of one design:
 
-1. **Single image A** — one infographic / diagram concept.
-2. **Single image B** — a *different* single concept (a different cut: matrix vs. graph vs. comparison).
-3. **3-slide carousel** — condensed arc.
-4. **5-slide carousel** — full arc.
+1. **Structured** — one Claude HTML/SVG → PDF visual (single image or 3–5 slide carousel, arc per below).
+2. **Field media** — one of Alex's own photos, phone clips, or a short motion loop from the room (Content Drafts `Format`: photo / clip / motion). Offered whenever `=== Field Color ===` media exists; subject to the recording/consent rules below.
+3. **Wild** — one unexpected cut: a map, a poll, a joke card, an audio clip, a format the series hasn't used yet.
+
+**The carousel is no longer the default when field media exists** — lead with option 2 and let the structured visual earn its slot.
+
+### Recording and consent (short rules)
+
+- Recorded speech from events is **never public**: no clip or audio of someone else talking; the only public trace is a quote Alex chose, in text (`build-in-public.md` holds the transcript rule).
+- Wide room shots are fine; **close-ups of a person need their yes**.
+- Hallway lines are **paraphrased and unnamed**.
+- Alex's own clips of himself (walk-in lines, talking-head takes) are fine.
 
 **Emphasis: real visual information** — infographics, architecture / flow diagrams, statistics, charts/graphs, matrices, before/after, "where the value moves." Typography-only cards are a fallback, not the goal; never stock or decorative AI imagery. Every statistic in the post is a candidate for a chart or a stat-callout.
 

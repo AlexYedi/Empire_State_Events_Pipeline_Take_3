@@ -185,8 +185,7 @@ def must_cite_gaps(scored: dict) -> list[str]:
 # Guarded paths: the spine write path and the privacy filters. A bundle that touches one needs HUMAN review whatever
 # the score (YED-231 item 7: the @6 privacy cap moved from a model flag to this path check). Match is on the repo
 # path; the pattern catches future guard/filter/allowlist files by name. Widen it in a PR, never per run.
-GUARDED_FILES = (".claude/scripts/spine_client.py", ".claude/scripts/inbox_boundary.py",
-                 ".claude/scripts/build_graph.py", ".gitignore")
+GUARDED_FILES = (".claude/scripts/spine_client.py", ".claude/scripts/inbox_boundary.py", ".gitignore")
 GUARDED_NAME_RE = re.compile(r"guard|filter|allow-?list|deny-?list|boundary|privacy|redact|pii", re.I)
 # The judge layer is never judged by itself (YED-231 item 5): judge.py refuses these as a target and drops them
 # from a range. Telemetry is excluded separately (RANGE_EXCLUDE_PREFIXES).

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Judge, Not the Filter — Clay in NYC recap, Sept 30 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --dim: #8A8F98; --line: #2A2F36; --accent: #E0A33B; --soft: #C9CCD1;
+    --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 104px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+  h1 { font: 700 84px/1.05 var(--serif); letter-spacing: -.01em; margin-bottom: 56px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 92% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 52px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .12em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 64px; }
+  .note { font: 32px/1.35 var(--serif); color: var(--soft); border-left: 6px solid var(--line); padding-left: 26px; }
+  .note b { color: var(--ink); }
+
+  /* s1 mislabels */
+  .mis { display: grid; gap: 22px; margin-bottom: 56px; }
+  .m { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; border-bottom: 2px solid var(--line); padding-bottom: 22px; }
+  .m .is { font: 700 36px/1.15 var(--serif); }
+  .m .ar { font: 700 34px/1 var(--mono); color: var(--dim); text-align: center; }
+  .m .as { font: 32px/1.2 var(--mono); color: var(--accent); }
+  .m .as small { display: block; font: 18px/1.2 var(--mono); color: var(--dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+
+  /* s2 coverage */
+  .cov { display: grid; gap: 52px; }
+  .reg .t { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .reg .t b { font: 700 38px/1 var(--serif); }
+  .reg .t span { font: 21px/1 var(--mono); color: var(--dim); }
+  .bar { display: grid; grid-template-columns: 130px 1fr 110px; align-items: center; gap: 18px; margin-top: 10px; }
+  .bar .lb { font: 20px/1 var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
+  .bar .tr { height: 36px; background: #1A1E23; border-radius: 6px; overflow: hidden; }
+  .bar .fl { height: 100%; background: #3A3F47; }
+  .bar.p .fl { background: var(--accent); }
+  .bar .v { font: 700 36px/1 var(--mono); text-align: right; color: var(--dim); }
+  .bar.p .v { color: var(--accent); }
+
+  /* s3 pipeline */
+  .pipe { display: grid; gap: 14px; }
+  .step { display: grid; grid-template-columns: 70px 1fr; gap: 22px; align-items: center; border: 2px solid var(--line); border-radius: 14px; padding: 22px 26px; }
+  .step .n { font: 700 36px/1 var(--mono); color: var(--dim); text-align: center; }
+  .step .t { font: 700 38px/1.1 var(--serif); }
+  .step .t span { font: 400 26px/1.3 var(--serif); color: var(--soft); display: block; margin-top: 6px; }
+  .step.hi { border-color: var(--accent); background: rgba(224,163,59,.07); } .step.hi .n { color: var(--accent); }
+  .step.hi .t span b { color: var(--accent); font-weight: 700; }
+
+  /* s4 question card */
+  .card { border: 2px solid var(--accent); border-radius: 20px; padding: 40px 42px; display: grid; gap: 26px; margin-bottom: 48px; }
+  .card .r { display: grid; grid-template-columns: 140px 1fr; gap: 20px; }
+  .card .k { font: 700 22px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .card .q { font: 34px/1.3 var(--serif); }
+  .card .r.no .q { color: var(--soft); font-size: 30px; }
+
+  /* s5 close */
+  .big { font: 700 96px/1.04 var(--serif); margin-bottom: 40px; }
+  .credits { display: grid; gap: 18px; margin-top: 56px; }
+  .credits div { font: 30px/1.3 var(--serif); color: var(--soft); border-bottom: 2px solid var(--line); padding-bottom: 18px; }
+  .credits b { color: var(--ink); }
+  .credits code { font: 24px/1.3 var(--mono); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — HOOK: the filter fails both ways -->
+<section class="slide">
+  <div class="kicker">Clay in NYC · Room recap · 1 of 5</div>
+  <h1>Your filter is wrong in <u>both directions</u></h1>
+  <div class="mis">
+    <div class="m"><div class="is">An FDIC-insured bank</div><div class="ar">→</div><div class="as"><small>LinkedIn says</small>Construction</div></div>
+    <div class="m"><div class="is">An SEC-registered wealth manager</div><div class="ar">→</div><div class="as"><small>LinkedIn says</small>Semiconductor Mfg.</div></div>
+    <div class="m"><div class="is">A New Jersey school district</div><div class="ar">→</div><div class="as"><small>LinkedIn says</small>Luxury Goods &amp; Jewelry</div></div>
+  </div>
+  <div class="note">It <b>misses</b> real fits. And it <b>pulls junk</b>: a plain Banking + United States filter returned 16,895 companies, about 10,500 of them not banks.</div>
+  <div class="src">Source: Eric Nowoslawski, Growth Engine X, "perfect-company-list" (GitHub, 2026).</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5</span></div>
+</section>
+
+<!-- SLIDE 2 — EVIDENCE: coverage against registries -->
+<section class="slide">
+  <div class="kicker">The receipts · 2 of 5</div>
+  <h1>Same registry. Different method.</h1>
+  <div class="cov">
+    <div class="reg">
+      <div class="t"><b>SEC-registered advisers</b><span>baseline: 14,863 on the roster</span></div>
+      <div class="bar"><div class="lb">Filters</div><div class="tr"><div class="fl" style="width:31%"></div></div><div class="v">31%</div></div>
+      <div class="bar p"><div class="lb">Judged</div><div class="tr"><div class="fl" style="width:92%"></div></div><div class="v">92%</div></div>
+    </div>
+    <div class="reg">
+      <div class="t"><b>NJ school districts</b><span>baseline: 668 districts</span></div>
+      <div class="bar"><div class="lb">Filters</div><div class="tr"><div class="fl" style="width:54%"></div></div><div class="v">54%</div></div>
+      <div class="bar p"><div class="lb">Judged</div><div class="tr"><div class="fl" style="width:80%"></div></div><div class="v">80%</div></div>
+    </div>
+    <div class="reg">
+      <div class="t"><b>FDIC-insured banks</b><span>baseline: 4,231 active banks</span></div>
+      <div class="bar"><div class="lb">Filters</div><div class="tr"><div class="fl" style="width:79%"></div></div><div class="v">79%</div></div>
+      <div class="bar p"><div class="lb">Judged</div><div class="tr"><div class="fl" style="width:88%"></div></div><div class="v">88%</div></div>
+    </div>
+  </div>
+  <div class="src">Coverage = share of each public registry found. Filters = every fitting LinkedIn industry label. Runs of 2026-09-27; the SEC figure counts matches across the whole data stack. Source: Growth Engine X, perfect-company-list.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- SLIDE 3 — MECHANISM -->
+<section class="slide">
+  <div class="kicker">The method · 3 of 5</div>
+  <h1>Pull wide. Judge every row.</h1>
+  <div class="pipe">
+    <div class="step"><div class="n">1</div><div class="t">Learn<span>which labels your real customers use</span></div></div>
+    <div class="step"><div class="n">2</div><div class="t">Pull<span>every one of them, wide on purpose</span></div></div>
+    <div class="step hi"><div class="n">3</div><div class="t">Judge<span>one yes/no question per company, on a cheap model: <b>900K+ judgments ≈ $12</b></span></div></div>
+    <div class="step"><div class="n">4</div><div class="t">Loop<span>find lookalikes of the fits, judge them the same way</span></div></div>
+    <div class="step"><div class="n">5</div><div class="t">Stop<span>when 20 runs in a row add one company or fewer</span></div></div>
+  </div>
+  <div class="src">Judge model in the demos: Jev (TypeSafe AI). Source: Growth Engine X, perfect-company-list.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- SLIDE 4 — WHERE THE HUMAN SITS -->
+<section class="slide">
+  <div class="kicker">Where the human sits · 4 of 5</div>
+  <h1>You write the question</h1>
+  <div class="card">
+    <div class="r"><div class="k">Ask</div><div class="q">Is this a bank or savings institution that takes deposits?</div></div>
+    <div class="r"><div class="k">Yes</div><div class="q">A deposit-taking bank or thrift</div></div>
+    <div class="r no"><div class="k">No</div><div class="q">Credit union, mortgage lender, fintech, broker, wealth manager, bank software vendor, association</div></div>
+  </div>
+  <div class="note">The edge cases get decided <b>in the criteria</b>, before the model sees a single row.</div>
+  <div class="src">Example judge question, adapted from Growth Engine X, perfect-company-list.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- SLIDE 5 — CLOSE -->
+<section class="slide">
+  <div class="kicker">Clay in NYC · Wed Sept 30 · 5 of 5</div>
+  <div class="big">What's your <u style="text-decoration:none;background:linear-gradient(#8FE83A,#8FE83A) 0 92%/100% 10px no-repeat">coverage rate</u>?</div>
+  <div class="note">Run your list against a registry before you trust the filter.</div>
+  <div class="credits">
+    <div><b>Eric Nowoslawski</b>, Growth Engine X. The full talk is at Sculpt, Oct 8, San Francisco.</div>
+    <div>Hosted by <b>Andreas Wernicke</b> (Clay Club NY) with <b>Munnawar Hashim</b>, <b>Siya Verma</b> and <b>Shriya Nevatia</b> (Clay).</div>
+    <div>The method, open source: <code>github.com/growthenginenowoslawski/coldoutboundskills</code></div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>

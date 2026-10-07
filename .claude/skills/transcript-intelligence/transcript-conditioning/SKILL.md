@@ -1,6 +1,6 @@
 ---
 name: transcript-conditioning
-description: "Condition a raw single-event ASR/diarized transcript into reliable content inputs — resolve diarized 'Speaker N' labels to a known roster, normalize ASR-mangled entity names against a pre-event brief, and extract a confidence-scored verbatim quote bank. Upstream of content-correspondent Mode B. Use when post-event content is built from a manually-pasted or low-quality transcript (Otter/Zoom/phone-recording exports, walk-in events Granola didn't record) where speaker labels are unreliable and proper nouns are garbled. Triggers: 'condition this transcript', 'clean up the transcript', 'who said what', 'fix the speaker labels', or any post-event flow where transcript quality gates quote accuracy."
+description: "Condition a raw single-event ASR/diarized transcript into reliable content inputs — resolve diarized 'Speaker N' labels to a known roster, normalize ASR-mangled entity names against a pre-event brief, and extract a confidence-scored verbatim quote bank. Upstream of content-correspondent. Use when post-event content is built from a manually-pasted or low-quality transcript (Otter/Zoom/phone-recording exports, walk-in events Granola didn't record) where speaker labels are unreliable and proper nouns are garbled. Triggers: 'condition this transcript', 'clean up the transcript', 'who said what', 'fix the speaker labels', or any post-event flow where transcript quality gates quote accuracy."
 ---
 
 # Transcript Conditioning
@@ -55,6 +55,16 @@ A compact artifact, NOT a re-typed transcript:
 4. Conditioning confidence score + down-weighted sections
 
 content-correspondent (Mode B) consumes this in place of the raw transcript: the quote bank is the verbatim-quote source, the glossary guarantees proper nouns are spelled right in public copy, the confidence score gates how aggressively to quote.
+
+## On failure
+
+- **No roster and no brief** → build the minimal roster from the invite first; if even that is empty,
+  say so, resolve nobody, and mark every quote MED (paraphrase-only).
+- **A voice resolves to no one** → list it as `UNRESOLVED` in the speaker table with its tells; its lines
+  never carry a name in public copy.
+- **No HIGH-confidence quotes at all** → say "quote bank: 0 HIGH" at the top of the output so drafting
+  goes paraphrase-only; don't promote MED lines to fill the gap.
+- **Transcript empty, truncated or still processing** → stop and name which; don't condition a partial.
 
 ## Discipline
 

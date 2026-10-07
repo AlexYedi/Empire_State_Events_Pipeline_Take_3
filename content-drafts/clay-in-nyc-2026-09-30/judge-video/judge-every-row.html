@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Judge Every Row — workflow video</title>
+<!--
+  Deterministic workflow video. window.render(t) draws the exact state at t seconds.
+  render.mjs steps t at 30 fps, screenshots each frame, ffmpeg assembles the MP4.
+  Open in a browser with ?play to watch it live. All labels/numbers: Growth Engine X,
+  perfect-company-list (GitHub, runs of 2026-09-27) unless tagged "illustrative".
+-->
+<style>
+  :root {
+    --bg:#111418; --ink:#F5F3EE; --dim:#8A8F98; --line:#2A2F36; --accent:#E0A33B; --soft:#C9CCD1; --sig:#8FE83A;
+    --paper:#F7F6F2; --pink:#1A1E23; --grid:#E3E1DA; --gink:#1B1E22; --gdim:#7A7F87;
+    --serif:"Iowan Old Style","Palatino",Georgia,serif; --mono:Menlo,"SF Mono",Monaco,monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:1080px; height:1350px; overflow:hidden; background:var(--bg); color:var(--ink); }
+  #stage { position:relative; width:1080px; height:1350px; overflow:hidden; }
+  .layer { position:absolute; inset:0; }
+
+  /* header: step + caption */
+  #hdr { position:absolute; left:72px; right:72px; top:70px; }
+  #kick { font:600 24px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+  #cap { font:700 60px/1.08 var(--serif); margin-top:22px; min-height:136px; }
+  #sub { font:28px/1.35 var(--serif); color:var(--soft); margin-top:10px; min-height:40px; }
+
+  /* the app window */
+  #win { position:absolute; left:56px; right:56px; top:330px; height:820px; background:var(--paper); border-radius:18px;
+         box-shadow:0 30px 80px rgba(0,0,0,.45); overflow:hidden; color:var(--gink); }
+  #bar { height:62px; background:#ECEAE3; border-bottom:2px solid var(--grid); display:flex; align-items:center; padding:0 22px; gap:12px; }
+  .dot { width:14px; height:14px; border-radius:50%; background:#CFCCC4; }
+  #tab { margin-left:18px; font:600 21px/1 var(--mono); color:var(--gink); background:var(--paper); padding:12px 18px; border-radius:10px 10px 0 0; position:relative; top:12px; }
+  #count { margin-left:auto; font:600 21px/1 var(--mono); color:var(--gdim); }
+  #count b { color:var(--gink); }
+
+  table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  th { font:700 16px/1.2 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--gdim); text-align:left;
+       padding:16px 16px; border-bottom:2px solid var(--grid); background:#F1EFE9; }
+  td { font:22px/1.2 var(--serif); padding:0 16px; height:60px; border-bottom:1px solid var(--grid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  td.src { font:17px/1 var(--mono); color:var(--gdim); }
+  td.ind { font:18px/1 var(--mono); }
+  th.j, td.j { width:180px; }
+  th.j { color:#8A5A0B; background:#F6ECD9; }
+  td.j { background:#FBF6EC; }
+  .pill { display:inline-block; font:700 18px/1 var(--mono); padding:8px 14px; border-radius:999px; }
+  .yes { background:#1B1E22; color:var(--sig); }
+  .no  { background:#E9E6DF; color:#8F8A80; }
+  .think { display:inline-block; width:120px; height:12px; border-radius:6px; background:linear-gradient(90deg,#EADFCB,#D9B77A,#EADFCB); }
+  tr.cut td:not(.j) { color:#B8B4AB; text-decoration:line-through; text-decoration-color:#C9C5BC; }
+  tr.fit td { background:#F2FAE9; }
+  tr.fit td.j { background:#F2FAE9; }
+
+  /* learn panel */
+  #learn { padding:36px 40px; }
+  #learn h3, #loop h3 { font:700 20px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gdim); margin-bottom:26px; }
+  .chip { display:flex; align-items:center; gap:22px; margin-bottom:22px; }
+  .chip .lab { font:28px/1 var(--mono); width:430px; }
+  .chip .barw { display:block; flex:1; height:30px; background:#ECEAE3; border-radius:6px; overflow:hidden; }
+  .chip .barf { display:block; height:100%; background:var(--accent); width:0; }
+  .chip .num { font:700 30px/1 var(--mono); width:70px; text-align:right; }
+  .chip.odd .lab { color:#B0552A; }
+  #rule { margin-top:34px; font:27px/1.35 var(--serif); color:var(--gink); border-left:6px solid var(--accent); padding-left:22px; }
+
+  /* loop panel */
+  #loop { padding:36px 40px; }
+  .run { display:grid; grid-template-columns:160px 1fr 120px; align-items:center; font:26px/1 var(--mono); padding:13px 0; border-bottom:1px solid var(--grid); }
+  .run .rb { display:block; height:20px; background:#ECEAE3; border-radius:5px; overflow:hidden; margin-right:24px; }
+  .run .rf { display:block; height:100%; background:var(--gink); }
+  .run .add { text-align:right; font-weight:700; }
+  #stop { margin-top:26px; font:700 30px/1.25 var(--serif); color:var(--gink); background:#F2FAE9; border:2px solid #9BD86A; border-radius:14px; padding:20px 24px; }
+  .illus { font:600 17px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:#B0552A; display:block; margin-top:12px; }
+
+  /* result panel */
+  #result { padding:44px 44px; }
+  .reg { margin-bottom:46px; }
+  .reg .t { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .reg .t b { font:700 36px/1 var(--serif); }
+  .reg .t span { font:20px/1 var(--mono); color:var(--gdim); }
+  .rbar { display:grid; grid-template-columns:200px 1fr 100px; align-items:center; gap:16px; margin-top:12px; }
+  .rbar .lb { font:19px/1 var(--mono); color:var(--gdim); text-transform:uppercase; letter-spacing:.06em; }
+  .rbar .tr { display:block; height:34px; background:#ECEAE3; border-radius:6px; overflow:hidden; }
+  .rbar .fl { display:block; height:100%; width:0; background:#B9B5AC; }
+  .rbar.p .fl { background:var(--accent); }
+  .rbar .v { font:700 32px/1 var(--mono); text-align:right; }
+
+  /* title + end cards */
+  .card { display:flex; flex-direction:column; justify-content:center; padding:0 88px; }
+  .card .k { font:600 24px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:36px; }
+  .card h1 { font:700 104px/1.04 var(--serif); }
+  .card h1 u { text-decoration:none; background:linear-gradient(var(--sig),var(--sig)) 0 92%/100% 12px no-repeat; }
+  .card p { font:32px/1.4 var(--serif); color:var(--soft); margin-top:40px; }
+  .card .cr { font:28px/1.45 var(--serif); color:var(--soft); margin-top:22px; border-top:2px solid var(--line); padding-top:22px; }
+  .card .cr b { color:var(--ink); } .card code { font:23px/1.3 var(--mono); color:var(--accent); }
+
+  #foot { position:absolute; left:72px; right:72px; bottom:54px; display:flex; justify-content:space-between; align-items:center; font:22px/1.3 var(--mono); color:var(--dim); }
+  .mark { display:inline-flex; align-items:center; gap:12px; letter-spacing:.12em; }
+  .mark:before { content:""; width:16px; height:16px; background:var(--sig); }
+  #tag { font:18px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+  #prog { position:absolute; left:0; bottom:0; height:6px; background:var(--accent); width:0; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- TITLE -->
+  <div id="title" class="layer card">
+    <div class="k">Clay in NYC · How the method runs</div>
+    <h1>Pull wide.<br><u>Judge every row.</u></h1>
+    <p>Eric Nowoslawski's perfect-company-list method, step by step, on his FDIC bank demo.</p>
+  </div>
+
+  <!-- WORKFLOW -->
+  <div id="flow" class="layer">
+    <div id="hdr"><div id="kick"></div><div id="cap"></div><div id="sub"></div></div>
+    <div id="win">
+      <div id="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span id="tab"></span><span id="count"></span></div>
+
+      <div id="learn" class="pane">
+        <h3>Your customers, enriched · LinkedIn industry they chose</h3>
+        <div class="chip"><span class="lab">Banking</span><span class="barw"><span class="barf" data-w="86"></span></span><span class="num">43</span></div>
+        <div class="chip"><span class="lab">Financial Services</span><span class="barw"><span class="barf" data-w="8"></span></span><span class="num">4</span></div>
+        <div class="chip"><span class="lab">(blank)</span><span class="barw"><span class="barf" data-w="4"></span></span><span class="num">2</span></div>
+        <div class="chip odd"><span class="lab">Telecommunications</span><span class="barw"><span class="barf" data-w="2"></span></span><span class="num">1</span></div>
+        <div id="rule">If even one real customer sits under an industry, <b>pull that whole industry</b>. Then add name and description keywords with no industry filter.</div>
+      </div>
+
+      <div id="grid" class="pane">
+        <table>
+          <thead><tr><th>Company</th><th style="width:240px">LinkedIn industry</th><th style="width:190px">Pulled by</th><th class="j">Deposit-taking bank?</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div id="loop" class="pane">
+        <h3>Find more like the fits · judge each one the same way <span class="illus">illustrative counts</span></h3>
+        <div id="runs"></div>
+        <div id="stop">Stop: 20 runs in a row added one company or fewer.</div>
+      </div>
+
+      <div id="result" class="pane">
+        <div class="reg"><div class="t"><b>SEC-registered advisers</b><span>registry: 14,863</span></div>
+          <div class="rbar"><span class="lb">Standard filters</span><span class="tr"><span class="fl" data-w="31"></span></span><span class="v">31%</span></div>
+          <div class="rbar p"><span class="lb">Judge every row</span><span class="tr"><span class="fl" data-w="92"></span></span><span class="v">92%</span></div></div>
+        <div class="reg"><div class="t"><b>NJ school districts</b><span>registry: 668</span></div>
+          <div class="rbar"><span class="lb">Standard filters</span><span class="tr"><span class="fl" data-w="54"></span></span><span class="v">54%</span></div>
+          <div class="rbar p"><span class="lb">Judge every row</span><span class="tr"><span class="fl" data-w="80"></span></span><span class="v">80%</span></div></div>
+        <div class="reg"><div class="t"><b>FDIC-insured banks</b><span>registry: 4,231</span></div>
+          <div class="rbar"><span class="lb">Standard filters</span><span class="tr"><span class="fl" data-w="79"></span></span><span class="v">79%</span></div>
+          <div class="rbar p"><span class="lb">Judge every row</span><span class="tr"><span class="fl" data-w="88"></span></span><span class="v">88%</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- END -->
+  <div id="end" class="layer card">
+    <div class="k">Clay in NYC · Sept 30</div>
+    <h1 style="font-size:80px">The finding got cheap.<br><u>The judging is the job.</u></h1>
+    <div class="cr" style="margin-top:56px"><b>Eric Nowoslawski</b>, Growth Engine X. Full talk at Sculpt, Oct 8, San Francisco.</div>
+    <div class="cr">Hosted by <b>Andreas Wernicke</b> with <b>Munnawar Hashim</b>, <b>Siya Verma</b> and <b>Shriya Nevatia</b> (Clay).</div>
+    <div class="cr">Method: <code>github.com/growthenginenowoslawski/coldoutboundskills</code></div>
+  </div>
+
+  <div id="foot"><span class="mark">ALEX YEDI</span><span id="tag">Illustration · source: Growth Engine X, perfect-company-list</span></div>
+  <div id="prog"></div>
+</div>
+
+<script>
+// ---- data (labels from perfect-company-list; verdicts follow its judge criteria) ----
+const ROWS = [
+  ["Community bank",                 "Banking",            "industry",       true ],
+  ["Credit union",                   "Banking",            "industry",       false],
+  ["Mortgage lender",                "Banking",            "industry",       false],
+  ["Cowboy State Bank",              "Construction",       "keyword “bank”", true ],
+  ["Toyota dealer",                  "Banking",            "industry",       false],
+  ["Savings bank (thrift)",          "Financial Services", "industry",       true ],
+  ["Bank software vendor",           "Banking",            "industry",       false],
+  ["Fed. Reserve Bank, St. Louis", "Banking",            "industry",       false],
+  ["Pawn and gun shop",              "Banking",            "industry",       false],
+  ["Rural bank",                     "Telecommunications", "industry",       true ],
+];
+const RUNS = [["Run 1","+14"],["Run 2","+9"],["Run 3","+6"],["Run 4","+3"],["…",""],["Run 59","+1"],["Run 60","+0"]];
+const RUNW = [100,64,43,21,0,7,0];
+
+// ---- timeline (seconds) ----
+const T = { title:[0,3], learn:[3,7.5], pull:[7.5,14], judge:[14,21], loop:[21,26.5], result:[26.5,31], end:[31,34] };
+const DURATION = 34;
+
+const $ = id => document.getElementById(id);
+const clamp = (x,a=0,b=1) => Math.max(a,Math.min(b,x));
+const ease = x => { x = clamp(x); return x<.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; };
+const prog = (t,[a,b]) => clamp((t-a)/(b-a));
+const fade = (t,[a,b],f=.35) => Math.min(clamp((t-a)/f), clamp((b-t)/f));
+
+// build table rows once
+const tb = $('rows');
+ROWS.forEach(r => { const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${r[0]}</td><td class="ind">${r[1]}</td><td class="src">${r[2]}</td><td class="j"></td>`; tb.appendChild(tr); });
+const runs = $('runs');
+RUNS.forEach((r,i) => { const d = document.createElement('div'); d.className = 'run';
+  d.innerHTML = `<span>${r[0]}</span><span class="rb"><span class="rf" style="width:${RUNW[i]}%"></span></span><span class="add">${r[1]}</span>`; runs.appendChild(d); });
+
+function show(el, o) { el.style.opacity = o; el.style.visibility = o > 0.001 ? 'visible' : 'hidden'; }
+
+window.DURATION = DURATION;
+window.render = function (t) {
+  // layers
+  show($('title'), fade(t, T.title));
+  show($('flow'),  fade(t, [T.learn[0], T.result[1]]));
+  show($('end'),   fade(t, [T.end[0], DURATION + 1]));
+  show($('foot'),  1);
+  $('prog').style.width = (100 * clamp(t / DURATION)) + '%';
+
+  // panes
+  const inPull = t >= T.pull[0] && t < T.loop[0];
+  show($('learn'),  fade(t, T.learn));
+  show($('grid'),   fade(t, [T.pull[0], T.loop[0]]));
+  show($('loop'),   fade(t, T.loop));
+  show($('result'), fade(t, [T.result[0], T.result[1] + .35]));
+  ['learn','grid','loop','result'].forEach(id => { $(id).style.position = 'absolute'; $(id).style.left = 0; $(id).style.right = 0; $(id).style.top = '62px'; });
+
+  // header copy per step
+  let kick = '', cap = '', sub = '', tab = '', count = '';
+  if (t < T.pull[0]) { kick = 'Step 1 of 4 · Learn'; cap = 'Learn how your customers label themselves';
+    sub = 'Eric\'s demo: 50 known banks used as the customer list.'; tab = 'customers.csv'; count = '<b>50</b> customers'; }
+  else if (t < T.judge[0]) { kick = 'Step 2 of 4 · Pull'; cap = 'Pull every label. Wide on purpose.';
+    sub = 'Keep size and geography tight. Expect junk.'; tab = 'pull · banks';
+    const n = Math.round(16895 * ease(prog(t, [T.pull[0] + .4, T.pull[1] - .6])));
+    count = `pulled <b>${n.toLocaleString('en-US')}</b>`; }
+  else if (t < T.loop[0]) { kick = 'Step 3 of 4 · Judge'; cap = 'One yes/no question. Every row.';
+    sub = 'A cheap decision model answers it. 900K+ judgments ≈ $12.'; tab = 'pull · banks'; count = 'pulled <b>16,895</b>'; }
+  else if (t < T.result[0]) { kick = 'Step 4 of 4 · Loop, then stop'; cap = 'Find more like the fits, until it runs dry';
+    sub = 'A cap keeps the loop from becoming “an unlimited money extractor.”'; tab = 'lookalike loop'; count = ''; }
+  else { kick = 'The receipts'; cap = 'Scored against public registries';
+    sub = 'Share of each registry found. Runs of 2026-09-27.'; tab = 'coverage'; count = ''; }
+  $('kick').textContent = kick; $('cap').textContent = cap; $('sub').textContent = sub;
+  $('tab').textContent = tab; $('count').innerHTML = count;
+
+  // learn bars
+  document.querySelectorAll('#learn .chip').forEach((c, i) => {
+    const p = ease(prog(t, [T.learn[0] + .5 + i * .45, T.learn[0] + 1.3 + i * .45]));
+    c.style.opacity = Math.max(.15, p); c.querySelector('.barf').style.width = (p * c.querySelector('.barf').dataset.w) + '%';
+  });
+  $('rule').style.opacity = ease(prog(t, [T.learn[0] + 2.6, T.learn[0] + 3.2]));
+
+  // rows appear during pull, get judged during judge
+  [...tb.children].forEach((tr, i) => {
+    const appear = T.pull[0] + .6 + i * .5;
+    tr.style.opacity = ease(prog(t, [appear, appear + .3]));
+    const jStart = T.judge[0] + .5 + i * .58, jDone = jStart + .4;
+    const cell = tr.querySelector('.j'); const yes = ROWS[i][3];
+    let state = t < jStart ? 'none' : (t < jDone ? 'think' : (yes ? 'yes' : 'no'));
+    if (cell.dataset.s !== state) {
+      cell.dataset.s = state;
+      cell.innerHTML = state === 'think' ? '<span class="think"></span>' : state === 'yes' ? '<span class="pill yes">YES · fit</span>' : state === 'no' ? '<span class="pill no">NO</span>' : '';
+    }
+    tr.classList.toggle('cut', state === 'no' && t > jDone + .25);
+    tr.classList.toggle('fit', state === 'yes');
+  });
+
+  // loop runs
+  [...runs.children].forEach((d, i) => { d.style.opacity = ease(prog(t, [T.loop[0] + .4 + i * .45, T.loop[0] + .7 + i * .45])); });
+  $('stop').style.opacity = ease(prog(t, [T.loop[0] + 3.9, T.loop[0] + 4.4]));
+
+  // result bars
+  document.querySelectorAll('#result .rbar').forEach((b, i) => {
+    const p = ease(prog(t, [T.result[0] + .4 + i * .35, T.result[0] + 1.4 + i * .35]));
+    b.querySelector('.fl').style.width = (p * b.querySelector('.fl').dataset.w) + '%';
+  });
+};
+
+// live preview: open with ?play
+render(0);
+if (location.search.includes('play')) { const s = performance.now();
+  (function loop(){ const t = (performance.now() - s) / 1000; render(t % DURATION); requestAnimationFrame(loop); })(); }
+</script>
+</body>
+</html>

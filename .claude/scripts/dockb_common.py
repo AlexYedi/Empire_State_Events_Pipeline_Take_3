@@ -7,10 +7,10 @@ Two decoupled stores:
 Local embeddings: BAAI/bge-small-en-v1.5 (384-d). Query and ingest MUST use the
 same model+version (pinned in EMBED_MODEL). See PRD .claude/references + ChatPRD.
 
-2026-09-28 (prune-sweep row 15): the /ingest-doc + /ask-library skill is archived to
-docs/archive/skills/doc-knowledge-base/. This module STAYS here (no SKILL.md, so it is not a
-skill) because substrate.py and retrieve.py import it from this path for embeddings, and the
-R2 re-derivation path uses r2_client(). Its ENV_PATH and spine_client import are path-relative.
+2026-09-28: the /ingest-doc + /ask-library skill is archived to docs/archive/skills/doc-knowledge-base/.
+This module moved to .claude/scripts/ (it is a library, not a skill) because substrate.py and
+retrieve.py import it for embeddings, and the R2 re-derivation path uses r2_client(). Deps:
+.claude/scripts/requirements-dockb.txt. Its ENV_PATH and spine_client import are path-relative.
 """
 from __future__ import annotations
 import hashlib, json, os, re, sys, urllib.request, urllib.error
@@ -26,7 +26,7 @@ CHUNK_HARD_CAP_TOKENS = 512
 SUPABASE_REF = "oicikjyzmxqfomrrqkvf"
 SUPABASE_BASE = f"https://{SUPABASE_REF}.supabase.co/rest/v1"
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))))), ".env")  # repo-root/.env (symlink ok)
+    os.path.abspath(__file__)))), ".env")  # repo-root/.env (symlink ok)
 
 # ---- env --------------------------------------------------------------------
 @lru_cache(maxsize=1)
@@ -86,7 +86,7 @@ def count_tokens(text: str) -> int:
 # ---- Supabase REST ----------------------------------------------------------
 # --- ADR-9 (YED-81): every write goes through the spine_client guard; semantics preserved
 # (raise on HTTPError, 60s timeout, extra headers such as Prefer pass through). ---------------
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # spine_client is a sibling
 from spine_client import req as _spine_req, PIIViolation  # noqa: E402
 
 

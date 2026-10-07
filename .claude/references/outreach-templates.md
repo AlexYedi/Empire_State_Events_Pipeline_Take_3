@@ -117,7 +117,7 @@ Connection request notes and Prepared Questions are now generated **independentl
 
 1. **Per-person research** surfaces N candidate questions/signals from talk abstracts, recent posts, work
 2. **Step 4** picks the SHARPEST one and trims it to ≤200 chars for the connection note
-3. **Step 6** keeps the longer-form versions of these (plus others not used for the note) as Prepared Questions for live engagement at the event
+3. **Step 5** keeps the longer-form versions of these (plus others not used for the note) as Prepared Questions for live engagement at the event
 
 The note and the prepared questions can share research foundation but serve different moments:
 - **Note:** punchy, optimized for connection request acceptance, ≤200 chars
