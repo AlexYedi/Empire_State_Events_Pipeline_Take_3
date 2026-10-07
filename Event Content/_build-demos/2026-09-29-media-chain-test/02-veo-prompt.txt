@@ -1,0 +1,3 @@
+Model: veo-3.1-fast-generate-preview · mode: image-to-video (start frame = 01-nano-banana-still.png) · 8 s · 52 s to render · ~$1.20 (estimate)
+Prompt: Slow cinematic push-in from the back of the room toward the glowing screen. Attendees shift their weight, one turns to whisper to a neighbor, city lights twinkle through the arched windows. Ambient audio: low crowd murmur, a faint presenter voice echoing, soft HVAC hum. No text, no captions.
+Findings: output came back 16:9, so the 4:5 still got black bars and Veo invented the edges (set the frame size once, up front); the crowd drifts between the first and last frames (fast-model continuity).

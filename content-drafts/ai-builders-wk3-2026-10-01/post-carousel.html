@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Three Cs, Packaged — AI Builders Week 3 recap, Oct 1 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #0F172A; --ink: #F5F3EE; --dim: #8A93A6; --line: #26324A; --accent: #D97706; --soft: #C9CED8;
+    --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 104px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+  h1 { font: 700 84px/1.05 var(--serif); letter-spacing: -.01em; margin-bottom: 56px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 92% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 52px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .12em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { font: 20px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 64px; }
+
+  /* s1 hook */
+  .s1 h1 { font-size: 112px; margin-top: 80px; }
+  .cs { display: flex; gap: 40px; margin-top: auto; margin-bottom: 150px; }
+  .cs span { font: 700 300px/0.8 var(--serif); color: transparent; -webkit-text-stroke: 4px var(--ink); }
+  .cs span.a { -webkit-text-stroke-color: var(--accent); }
+  .sub { font: 40px/1.3 var(--serif); color: var(--soft); }
+
+  /* s3/s4 rows (shared frame) */
+  .rows { display: grid; gap: 28px; margin-top: 20px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; align-items: center; gap: 32px; border: 2px solid var(--line); border-radius: 16px; padding: 40px 36px; min-height: 210px; }
+  .row .c { font: 700 30px/1 var(--mono); letter-spacing: .1em; color: var(--accent); }
+  .row .t { font: 700 46px/1.15 var(--serif); }
+
+  /* s5 template */
+  .fill { display: grid; gap: 44px; margin-top: 10px; }
+  .fill p { font: 42px/1.35 var(--serif); color: var(--soft); }
+  .fill p b { color: var(--accent); font: 700 26px/1 var(--mono); letter-spacing: .1em; display: block; margin-bottom: 12px; }
+  .fill i { font-style: normal; display: inline-block; min-width: 150px; border-bottom: 4px solid var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — HOOK -->
+<section class="slide s1">
+  <div class="kicker">AI Builders · 3percentclub · Oct 1</div>
+  <h1>You already do <u>spec-driven</u> development.</h1>
+  <div class="sub">The Three Cs, packaged.</div>
+  <div class="cs"><span>C</span><span>C</span><span class="a">C</span></div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5</span></div>
+</section>
+
+<!-- SLIDE 2 — MECHANISM: the loop -->
+<section class="slide">
+  <div class="kicker">The map</div>
+  <h1>Three Cs, one spec loop</h1>
+  <svg width="904" height="760" viewBox="0 0 904 760" role="img" aria-label="Loop: spec, plan, build, verify. Context tags spec, Complexity tags plan, Criticism tags verify; build is untagged.">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8A93A6"/>
+      </marker>
+    </defs>
+    <!-- arrows: clockwise SPEC(TL) -> PLAN(TR) -> BUILD(BR) -> VERIFY(BL) -> SPEC -->
+    <g stroke="#8A93A6" stroke-width="4" fill="none" marker-end="url(#ar)">
+      <line x1="372" y1="170" x2="520" y2="170"/>
+      <line x1="692" y1="250" x2="692" y2="430"/>
+      <line x1="520" y1="520" x2="372" y2="520"/>
+      <line x1="212" y1="430" x2="212" y2="250"/>
+    </g>
+    <!-- nodes -->
+    <g font-family="Menlo, monospace" font-weight="700" font-size="36" text-anchor="middle">
+      <rect x="52" y="90" width="320" height="160" rx="18" fill="#141E33" stroke="#D97706" stroke-width="3"/>
+      <text x="212" y="182" fill="#F5F3EE">SPEC</text>
+      <rect x="532" y="90" width="320" height="160" rx="18" fill="#141E33" stroke="#D97706" stroke-width="3"/>
+      <text x="692" y="182" fill="#F5F3EE">PLAN</text>
+      <rect x="532" y="440" width="320" height="160" rx="18" fill="#141E33" stroke="#3A4560" stroke-width="3" stroke-dasharray="10 8"/>
+      <text x="692" y="532" fill="#8A93A6">BUILD</text>
+      <rect x="52" y="440" width="320" height="160" rx="18" fill="#141E33" stroke="#D97706" stroke-width="3"/>
+      <text x="212" y="532" fill="#F5F3EE">VERIFY</text>
+    </g>
+    <!-- C tags -->
+    <g font-family="Menlo, monospace" font-weight="700" font-size="24" letter-spacing="3" text-anchor="middle" fill="#D97706">
+      <text x="212" y="60">CONTEXT</text>
+      <text x="692" y="60">COMPLEXITY</text>
+      <text x="212" y="650">CRITICISM</text>
+    </g>
+    <text x="692" y="650" text-anchor="middle" font-family="Iowan Old Style, Georgia, serif" font-size="30" fill="#8A93A6" font-style="italic">The only step that isn't a C.</text>
+  </svg>
+  <div class="src">Source: Maria Ashby, 3percentclub AI Architect Fellowship, 2026</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- SLIDE 3 — EVIDENCE A: a deal -->
+<section class="slide">
+  <div class="kicker">Evidence · a deal</div>
+  <h1>Where it lives in a deal</h1>
+  <div class="rows">
+    <div class="row"><div class="c">CONTEXT</div><div class="t">Discovery + SOW exclusions</div></div>
+    <div class="row"><div class="c">COMPLEXITY</div><div class="t">Product vs. people vs. no AI</div></div>
+    <div class="row"><div class="c">CRITICISM</div><div class="t">Mutual close plan, tested pre-signature</div></div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- SLIDE 4 — EVIDENCE B: the pipeline (same frame) -->
+<section class="slide">
+  <div class="kicker">Evidence · my pipeline</div>
+  <h1>Where it lives in my pipeline</h1>
+  <div class="rows">
+    <div class="row"><div class="c">CONTEXT</div><div class="t">PRD with written non-goals</div></div>
+    <div class="row"><div class="c">COMPLEXITY</div><div class="t">Privacy guard = code, not a model</div></div>
+    <div class="row"><div class="c">CRITICISM</div><div class="t">1 adversarial pass per PR · 30/30 self-test</div></div>
+  </div>
+  <div class="src">Source: github.com/AlexYedi/Empire_State_Events_Pipeline_Take_3, 2026</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- SLIDE 5 — CTA: the template -->
+<section class="slide">
+  <div class="kicker">Your turn</div>
+  <h1>Which <u>C</u> is missing from your resume?</h1>
+  <div class="fill">
+    <p><b>CONTEXT</b>I scoped <i>&nbsp;</i> and ruled out <i>&nbsp;</i>.</p>
+    <p><b>COMPLEXITY</b>I chose <i>&nbsp;</i> over a model for <i>&nbsp;</i>.</p>
+    <p><b>CRITICISM</b>I built the check that caught <i>&nbsp;</i>.</p>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>
