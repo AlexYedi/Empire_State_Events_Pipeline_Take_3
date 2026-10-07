@@ -10,7 +10,7 @@ The floor NEVER lives in this repo: it is read at runtime from `.claude/referenc
 (gitignored), or passed with --floor. Self-test uses a synthetic floor.
 
 Usage:
-  comp_gate.py --text "$180K – $220K OTE" [--emerging] [--floor 200000]
+  comp_gate.py --text "$180K – $220K OTE" [--emerging] [--floor 137000]
   comp_gate.py --low 180000 --high 220000 --label base [--emerging]
   comp_gate.py --selftest
 Output: one JSON object {verdict: PASS|REJECT|UNKNOWN, figure, rules, note}. Exit 0 always except bad args (2)
@@ -124,24 +124,24 @@ def read_floor(path: str = ME_MODEL) -> int:
 
 
 def selftest() -> int:
-    F = 200_000   # synthetic floor — the real one never enters the repo
+    F = 137_000   # synthetic floor, deliberately unrelated to any real figure; the real one never enters the repo
     cases = [
         # (text, emerging, expected verdict, expected figure)
-        ("$180K – $220K OTE", False, "PASS", 200_000),            # midpoint exactly at floor clears
-        ("$170,000 - $220,000 OTE", False, "REJECT", 195_000),    # midpoint below
-        ("$180K–$221K OTE", True, "REJECT", 180_000),             # emerging seller: low end
-        ("Base salary range $150K – $200K", False, "PASS", 200_000),   # base-only: top
-        ("Base salary $150K-$210K", True, "PASS", 210_000),       # base + emerging -> higher figure (top)
-        ("up to $215K", False, "REJECT", 195_000),                # one-sided: X − 20K
-        ("up to $220K OTE", False, "PASS", 200_000),
-        ("$180K - $230K", False, "PASS", 205_000),                # unlabelled -> midpoint
-        ("$205K OTE", False, "PASS", 205_000),                    # single number
+        ("$120K – $154K OTE", False, "PASS", 137_000),            # midpoint exactly at floor clears
+        ("$110,000 - $160,000 OTE", False, "REJECT", 135_000),    # midpoint below
+        ("$125K–$170K OTE", True, "REJECT", 125_000),             # emerging seller: low end
+        ("Base salary range $100K – $137K", False, "PASS", 137_000),   # base-only: top
+        ("Base salary $100K-$150K", True, "PASS", 150_000),       # base + emerging -> higher figure (top)
+        ("up to $150K", False, "REJECT", 130_000),                # one-sided: X − 20K
+        ("up to $157K OTE", False, "PASS", 137_000),
+        ("$120K - $160K", False, "PASS", 140_000),                # unlabelled -> midpoint
+        ("$140K OTE", False, "PASS", 140_000),                    # single number
         ("Competitive salary + equity", False, "UNKNOWN", None),  # nothing posted
-        ("OTE CA$180,000 - CA$230,000", False, "UNKNOWN", None),  # non-USD is not compared to a USD floor
-        ("Salary: $150K - $200K", False, "PASS", 200_000),        # bare "Salary" = base band -> top (judge r1)
-        ("Base salary $150K-$180K; OTE $250K-$300K", False, "PASS", 275_000),  # per-band labels; OTE band wins
-        ("US$180,000 - US$230,000 OTE", False, "PASS", 205_000),  # explicit US$ is USD
-        ("We raised a $5M seed. Pay $190K–$230K + commission", False, "PASS", 230_000),  # $5M ignored; commission = base
+        ("OTE CA$120,000 - CA$160,000", False, "UNKNOWN", None),  # non-USD is not compared to a USD floor
+        ("Salary: $100K - $140K", False, "PASS", 140_000),        # bare "Salary" = base band -> top (judge r1)
+        ("Base salary $100K-$120K; OTE $170K-$210K", False, "PASS", 190_000),  # per-band labels; OTE band wins
+        ("US$120,000 - US$160,000 OTE", False, "PASS", 140_000),  # explicit US$ is USD
+        ("We raised a $5M seed. Pay $120K–$150K + commission", False, "PASS", 150_000),  # $5M ignored; commission = base
     ]
     ok = 0
     for text, em, want_v, want_f in cases:
