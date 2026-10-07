@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Open-Weight Year — AI Week Past &amp; Present 1/2, Oct 7 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #0F172A; --ink: #F5F3EE; --dim: #8A93A6; --line: #26324A; --accent: #3B82F6; --soft: #C9CED8;
+    --card: #141E33; --sig: #8FE83A; --warn: #F59E0B; --mute: #3A4560;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 104px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 48px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 92% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 52px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .12em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { font: 19px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 60px; }
+  .sub { font: 40px/1.3 var(--serif); color: var(--soft); }
+
+  /* s1 */
+  .s1 h1 { font-size: 108px; margin-top: 50px; }
+  .s1 svg { margin-top: 70px; }
+
+  /* s2 timeline */
+  .tl { position: relative; margin-left: 20px; padding-left: 48px; border-left: 3px solid var(--line); display: grid; gap: 15px; }
+  .tl div { position: relative; font: 30px/1.25 var(--serif); color: var(--soft); }
+  .tl div:before { content: ""; position: absolute; left: -59px; top: 9px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); }
+  .tl div.w:before { background: var(--warn); }
+  .tl div.now:before { background: var(--sig); }
+  .tl b { font: 700 22px/1 var(--mono); color: var(--dim); letter-spacing: .06em; display: inline-block; width: 120px; }
+  .legend { font: 20px/1 var(--mono); color: var(--dim); margin-top: 22px; display: flex; gap: 30px; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 10px; vertical-align: -1px; }
+
+  /* s3 spectrum */
+  .spec { display: grid; grid-template-columns: 14px 1fr; column-gap: 40px; }
+  .spec .bar { grid-row: 1 / span 5; border-radius: 7px; background: linear-gradient(var(--sig), var(--accent) 45%, var(--mute)); }
+  .spec .row { padding: 22px 0; border-bottom: 2px solid var(--line); }
+  .spec .row:first-of-type { border-top: 2px solid var(--line); }
+  .spec .t { font: 700 24px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin-bottom: 12px; }
+  .spec .m { font: 32px/1.25 var(--serif); color: var(--soft); }
+  .ends { display: flex; justify-content: space-between; font: 20px/1 var(--mono); color: var(--dim); letter-spacing: .1em; margin: 0 0 16px 54px; }
+
+  /* s5 */
+  .s5 h1 { font-size: 100px; margin-top: 60px; }
+  .q { font: 44px/1.35 var(--serif); color: var(--soft); max-width: 880px; }
+  .ev { margin-top: auto; margin-bottom: 120px; font: 26px/1.5 var(--mono); color: var(--dim); }
+  .ev b { color: var(--ink); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — HOOK: tokens vs spend -->
+<section class="slide s1">
+  <div class="kicker">AI Week · Past &amp; Present · 1/2</div>
+  <h1>Open won the <u>tokens</u>.</h1>
+  <div class="sub">Closed kept the invoice. The open-weight year, going into tonight's hack night.</div>
+  <svg width="904" height="560" viewBox="0 0 904 560" role="img" aria-label="Open-weight share on Vercel's AI Gateway: 7% of tokens in December 2025, 56% of tokens in August 2026, 14% of spend in August 2026.">
+    <g font-family="Menlo, monospace" font-size="22" fill="#C9CED8">
+      <rect x="0" y="0" width="22" height="22" rx="3" fill="#38BDF8"/><text x="34" y="19">OPEN-WEIGHT</text>
+      <rect x="250" y="0" width="22" height="22" rx="3" fill="#F59E0B"/><text x="284" y="19">CLOSED</text>
+    </g>
+    <g font-family="Menlo, monospace" font-size="22" fill="#8A93A6" letter-spacing="2">
+      <text x="0" y="84">TOKENS · DEC '25</text>
+      <text x="0" y="254">TOKENS · AUG '26</text>
+      <text x="0" y="424">SPEND · AUG '26</text>
+    </g>
+    <!-- 100% stacked bars, 904px = 100% -->
+    <rect x="0" y="104" width="904" height="80" rx="6" fill="#F59E0B"/>
+    <rect x="0" y="104" width="63" height="80" rx="6" fill="#38BDF8"/>
+    <text x="80" y="157" font-family="Iowan Old Style, Georgia, serif" font-size="44" font-weight="700" fill="#0F172A">7%</text>
+
+    <rect x="0" y="274" width="904" height="80" rx="6" fill="#F59E0B"/>
+    <rect x="0" y="274" width="506" height="80" rx="6" fill="#38BDF8"/>
+    <text x="24" y="329" font-family="Iowan Old Style, Georgia, serif" font-size="48" font-weight="700" fill="#0F172A">56%</text>
+
+    <rect x="0" y="444" width="904" height="80" rx="6" fill="#F59E0B"/>
+    <rect x="0" y="444" width="127" height="80" rx="6" fill="#38BDF8"/>
+    <text x="144" y="499" font-family="Iowan Old Style, Georgia, serif" font-size="44" font-weight="700" fill="#0F172A">14%</text>
+  </svg>
+  <div class="src">Vercel AI Gateway Production Index, Sep 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5</span></div>
+</section>
+
+<!-- SLIDE 2 — TIMELINE -->
+<section class="slide">
+  <div class="kicker">Developments · dated</div>
+  <h1>The open-weight year, dated</h1>
+  <div class="legend" style="margin:0 0 26px"><span><i style="background:#3B82F6"></i>release / deal</span><span><i style="background:#F59E0B"></i>closing or rules</span></div>
+  <div class="tl">
+    <div><b>JAN 27</b>Kimi K2.5 leads the open field</div>
+    <div><b>FEB 11</b>GLM-5</div>
+    <div><b>MAR 16</b>Mistral Small 4, Apache 2.0</div>
+    <div><b>APR 2</b>Gemma 4 moves to Apache 2.0</div>
+    <div class="w"><b>APR 8</b>Meta ships its new flagship closed</div>
+    <div><b>APR 24</b>DeepSeek V4: 1.6T, MIT</div>
+    <div class="w"><b>APR 29</b>Mistral Medium 3.5, revenue-gated</div>
+    <div><b>JUN 4</b>Nemotron 3 Ultra, data + recipes</div>
+    <div><b>JUL</b>Kimi K3: 2.8T, 1M context</div>
+    <div><b>JUL 21</b>Microsoft × Mistral deal</div>
+    <div class="w"><b>AUG 2</b>EU AI Act model rules apply</div>
+    <div><b>SEP 8</b>Mistral raises €3B at €21B+</div>
+    <div class="now"><b>OCT 6</b>Mistral Large 4 preview: 1T</div>
+  </div>
+  <div class="src">Sources: Artificial Analysis; Google; Mistral; Axios; Kimi; Microsoft; TechCrunch. Large 4 weights due end of October.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- SLIDE 3 — LICENCE SPECTRUM -->
+<section class="slide">
+  <div class="kicker">What "open" means now</div>
+  <h1>"Open" split <u>five</u> ways</h1>
+  <div class="ends"><span>MOST OPEN</span></div>
+  <div class="spec">
+    <div class="bar"></div>
+    <div class="row"><div class="t">Fully open</div><div class="m">Weights + data + recipes · Nemotron, OLMo</div></div>
+    <div class="row"><div class="t">MIT / Apache</div><div class="m">DeepSeek, GLM, Gemma 4, Mistral Small 4</div></div>
+    <div class="row"><div class="t">Custom licence</div><div class="m">Kimi K3, Qwen3.8-Max</div></div>
+    <div class="row"><div class="t">Revenue-gated</div><div class="m">Free below a revenue line · Mistral Medium 3.5</div></div>
+    <div class="row"><div class="t">Closed flagship</div><div class="m">From former open champions · Meta Muse, Qwen3.6-Max</div></div>
+  </div>
+  <div class="ends" style="margin-top:16px"><span>CLOSED</span></div>
+  <div class="src">Read the licence, not the label.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- SLIDE 4 — GAP -->
+<section class="slide">
+  <div class="kicker">Where open stands · Artificial Analysis</div>
+  <h1>One release behind, <u>not a generation</u></h1>
+  <svg width="904" height="700" viewBox="0 0 904 700" role="img" aria-label="Artificial Analysis Intelligence Index. July 17, version 4.1.1: best open Kimi K3 57 vs best closed 60, a 3 point gap. September, version 4.3: best open GLM-5.3 45 vs best closed 53, an 8 point gap.">
+    <g font-family="Menlo, monospace" font-size="22" fill="#C9CED8">
+      <rect x="0" y="0" width="22" height="22" rx="3" fill="#38BDF8"/><text x="34" y="19">OPEN-WEIGHT</text>
+      <rect x="250" y="0" width="22" height="22" rx="3" fill="#F59E0B"/><text x="284" y="19">CLOSED</text>
+    </g>
+    <g transform="translate(0,60)">
+    <g font-family="Menlo, monospace" font-size="22" fill="#8A93A6" letter-spacing="2">
+      <text x="0" y="24">JUL 17 · INDEX v4.1.1</text>
+      <text x="0" y="314">SEP · INDEX v4.3 (STRICTER)</text>
+    </g>
+    <g font-family="Menlo, monospace" font-size="24">
+      <rect x="0" y="44" width="722" height="64" rx="6" fill="#38BDF8"/>
+      <text x="20" y="86" fill="#0F172A" font-weight="700">Open · Kimi K3 · 57</text>
+      <rect x="0" y="122" width="760" height="64" rx="6" fill="#F59E0B"/>
+      <text x="20" y="164" fill="#0F172A" font-weight="700">Closed · Fable 5 · 60</text>
+      <text x="780" y="140" fill="#8FE83A" font-weight="700">3 pts</text>
+
+      <line x1="0" y1="268" x2="904" y2="268" stroke="#26324A" stroke-width="2" stroke-dasharray="8 8"/>
+
+      <rect x="0" y="334" width="570" height="64" rx="6" fill="#38BDF8"/>
+      <text x="20" y="376" fill="#0F172A" font-weight="700">Open · GLM-5.3 · 45</text>
+      <rect x="0" y="412" width="671" height="64" rx="6" fill="#F59E0B"/>
+      <text x="20" y="454" fill="#0F172A" font-weight="700">Closed · top · 53</text>
+      <text x="690" y="430" fill="#8FE83A" font-weight="700">8–9 pts</text>
+    </g>
+    <text x="0" y="560" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-style="italic" fill="#8A93A6">The gap breathes. On the hardest agentic work, closed still leads:</text>
+    <text x="0" y="604" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-style="italic" fill="#C9CED8">TerminalBench Hard 54–61% closed vs 43–46% open.</text>
+  </g>
+  </svg>
+  <div class="src">Scores aren't comparable across index versions; the gap is. Kimi K3 scored 44 on v4.3. TerminalBench Hard: Artificial Analysis, Apr 30.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- SLIDE 5 — CTA -->
+<section class="slide s5">
+  <div class="kicker">The question I'm taking in</div>
+  <h1>Which step needs the <u>frontier</u>?</h1>
+  <div class="q">Closed tokens cost about 7.8x more. Which parts of your agent actually earn that?</div>
+  <div class="ev"><b>AI Agents Hack Night · Mistral AI × Elasticsearch</b><br>Hosts: Olivia Petrie, Jon Avezbaki · Elastic<br>Wed Oct 7 · 1250 Broadway · demos at 8<br>Next: what the room said · 2/2</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>
