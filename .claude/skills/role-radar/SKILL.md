@@ -130,16 +130,18 @@ Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (J
 > promoted to A only under the v2.1 #3 intangibles exemption: company quality, recent raise, pay,
 > enterprise AD seat, SDRs prospecting the account list. Reason written to Notes.)*
 >
-> **VERTICAL-TERRITORY REJECT: financial services and government (ruled 2026-09-28 — Alex).** A role
-> whose territory is **financial services** (banks, insurers, capital markets, FSI) or
-> **government / public sector** (federal, state & local, SLED, agencies) is **`drop`**, however good
+> **VERTICAL-TERRITORY REJECT: financial services, government, healthcare / life sciences (ruled 2026-09-28,
+> extended 2026-10-07 — Alex).** A role whose territory is **financial services** (banks, insurers, capital
+> markets, FSI), **government / public sector** (federal, state & local, SLED, municipal, agencies) or
+> **healthcare / life sciences / pharma** is **`drop`**, however good
 > the company or pay. Alex, verbatim: *"I do not have enough subject matter expertise to honestly compete
 > for those roles … those are specific customer types that people build a career around selling to."*
 > This is separate from the company-level vertical exclusion (e.g. legal AI): it applies to the
 > **territory of a role at a horizontal company** (Databricks FS AE, Scale AI FS AE, Databricks State &
 > Local all dropped 2026-09-28). Check title AND JD territory before scoring. In the Roles DB, a
 > dropped row is set `ICP Tier = drop` + `Status = archived`, **never deleted**, so dedup keeps
-> blocking the re-add. **Healthcare / life-sciences territory is unruled:** send it to the Held bucket; don't assume either way.
+> blocking the re-add. *(Healthcare / life sciences was Held until 2026-10-07; Alex: "cut/drop anything life
+> sciences or health." Applied the same day to 11 rows across Anthropic, Cursor, Decagon, OpenAI, Sierra, Profound.)*
 
 | Dimension | Points | How to score |
 |---|---|---|
@@ -197,6 +199,11 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
   band → **midpoint** · base/salary band → **top** · emerging seller → **low end** · one-sided "up to $X" →
   **X − $20K** · two rules at once → the **higher** figure · **exactly at the floor clears** (≥).
   A range is no longer a Held case.
+  3. **Commission offered, share not stated (ruled 2026-10-07, Alex).** A base/salary band that says commission or
+     variable comp is offered without quantifying it: assume commission is **≥ 25% of total comp**, so test
+     **base top ÷ 0.75** against the floor. No commission/variable mentioned at all → the rule does not apply.
+     *`comp_gate.py` does not implement this yet, and mislabels Ashby's "$X – $Y • Offers Commission" summary as
+     unlabelled (midpoint) instead of base: adjudicate those by hand until the script is fixed.*
 - **Level flexibility — Mid-Market is IN at top-tier companies** *(wired into the Role-mechanism row of the scoring table via its segment note; change both together).* Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
 ---
