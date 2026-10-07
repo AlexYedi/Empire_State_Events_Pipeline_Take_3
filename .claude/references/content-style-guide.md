@@ -125,7 +125,7 @@ CTA (varies by content type) — See Content Type CTAs below.
 
 ## LinkedIn Character Budget (hard limit — added 2026-06-10)
 
-**The LinkedIn feed-post hard cap is 3,000 characters** (LinkedIn's published limit; unchanged since 2023. Re-check it against LinkedIn's own help pages before citing the number publicly — "verified June 2026" was asserted here with no source recorded, flagged 2026-09-20). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
+**The LinkedIn feed-post hard cap is 3,000 characters** (LinkedIn's published limit, verified against [help page a528176](https://www.linkedin.com/help/linkedin/answer/a528176) on 2026-09-30, closing the 2026-09-20 no-source flag; all other media limits: `### LinkedIn Media Limits` below). The count includes letters, numbers, punctuation, spaces, line breaks, and emojis — *everything*. A post over 3,000 chars cannot be published as-is; LinkedIn truncates it. **Generate every LinkedIn post WITHIN this budget from the start — never hand Alex a 4,000–5,000-char draft he then has to cut down.** This rule exists specifically to kill the recurring tax of hand-trimming thousands of characters per post before it can ship.
 
 - **Hard cap: 3,000 characters. Non-negotiable.** Count the post before presenting it. If a draft exceeds 3,000, cut it to budget *before* showing Alex — do not ship an over-limit draft with a "trim this" note.
 - **The "…see more" fold: ~140 chars on mobile, ~210 on desktop.** The hook and the reason to expand must land before the fold — front-load the scroll-stopper in the first ~140 characters.
@@ -270,7 +270,32 @@ link as the reason to prefer 4:5, not as a measured result of ours.
 | Retina export | Create at 2160x2700, export at 1080x1350 | Always — no exceptions |
 
 - File format: **PNG** for graphics with text, **JPG** for photos, **PDF** for carousels
-- Max file size: 10MB per image, 100MB per PDF carousel
+- Max file size: **5 MB per image**, 100 MB per PDF carousel (corrected 2026-09-30: this read 10 MB; LinkedIn's photo limit is 5 MB)
+
+### LinkedIn Media Limits (personal profile, organic — added 2026-09-30)
+
+Hard limits from LinkedIn's own help pages, checked 2026-09-30. Use each medium's own page: the general media-types page (a564109) gives a blanket 100 MB figure that contradicts the per-medium pages. Ads specs differ; these are organic.
+
+| Medium | Hard limits | Source |
+|---|---|---|
+| **Video** | MP4/MOV/WEBM and others · 75 KB–5 GB · 3 s–15 min · ratio 1:2.4 to 2.4:1 (9:16, 4:5, 1:1, 16:9 all OK) · 256x144 to 4096x2304 · 10–60 fps · captions via SRT, desktop upload only | [a548372](https://www.linkedin.com/help/linkedin/answer/a548372), [a552177](https://www.linkedin.com/help/linkedin/answer/a552177) |
+| **Images** | Up to 20 per post · 5 MB each · ≥552x276, 1080 px wide recommended · ratio 3:1 to 4:5 · alt text supported · no image + link preview in the same post | [a527229](https://www.linkedin.com/help/lms/answer/a527229) |
+| **Document (carousel)** | PDF/PPT/DOC · 100 MB · 300 pages · 1 per post · **title required** · **viewers can download it** · not editable after posting · animations render static · flatten layers, one page size | [a518909](https://www.linkedin.com/help/linkedin/answer/a518909) |
+| **Text** | Post 3,000 chars · article 125,000 chars | [a528176](https://www.linkedin.com/help/linkedin/answer/a528176), [a522483](https://www.linkedin.com/help/linkedin/answer/a522483) |
+| **Poll** | 2–4 options · question ≤140 chars, options ≤30 · 1 day to 2 weeks | [a522948](https://www.linkedin.com/help/linkedin/answer/a522948) |
+| **Live** | ≤4 h · access needs >150 followers/connections · third-party streaming tool | [a548518](https://www.linkedin.com/help/linkedin/answer/a548518) |
+| **Scheduling** | 10 min to 3 months ahead · events/jobs can't be scheduled | [a1347212](https://www.linkedin.com/help/linkedin/answer/a1347212) |
+
+**Operating rules that follow:**
+- **One media type per post. Video and images never mix** (working assumption, Alex 2026-09-30; LinkedIn documents no rule, but image + link is officially blocked and mixed media is reported unsupported). Pick the medium per post.
+- **4:5 is the tallest single image LinkedIn accepts.** A 9:16 still falls outside the 3:1–4:5 range and gets cropped or letterboxed; reserve 9:16 for video.
+- **Native image carousels were removed (Dec 2023).** A swipeable carousel is a document post.
+- **Carousel PDFs are public files.** Anyone can download one, so nothing goes on a slide that wouldn't survive being saved and forwarded.
+- **Video captions:** burn them in rather than relying on the desktop-only SRT upload.
+
+**Benchmarks, not LinkedIn rules (third-party, low–medium confidence):** the "see more" fold (~140 mobile / ~210 desktop chars), the outbound-link reach penalty (~60%, Forbes 2026-07-30; the reason links go in the first comment), the carousel slide-count sweet spot, and any hashtag cap. LinkedIn publishes no recommended organic video length.
+
+**Unverified (settle by test post, not desk research):** organic custom video thumbnails, animated GIF behavior in feed posts, the 1,250-char comment cap.
 
 ### The 2-Second Thumb Test (Non-Negotiable Quality Gate)
 
