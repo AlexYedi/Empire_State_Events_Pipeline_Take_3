@@ -6,7 +6,7 @@
 **Format:** 1080×1350 px (4:5 portrait) per slide
 **Intent:** Editorial documentary register. Field-guide feel. Reads like a Bloomberg / The Information piece, not a startup pitch deck.
 **Source brief:** `research-briefs/2026-04-27_Shortlist_NYC_April_Founder_Showcase.md`
-**Companion post drafts:** `content-drafts/2026-04-27_Shortlist_NYC_Post-Event_Content.md`
+**Companion post drafts:** `2026-04-27_Shortlist_NYC_Post-Event_Content.md`
 
 ---
 

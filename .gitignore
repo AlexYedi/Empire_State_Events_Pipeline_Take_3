@@ -78,14 +78,14 @@ Event Content/**/POST-EVENT BRIEF*
 **/post-event-brief.md
 **/quote-bank.md
 Event Content/**/*.srt
-Event Content/06 23 26_ Daytona AI Builders/POST-EVENT — 5 Takeaways + Brief.md
+Event Content/06 23 26 Daytona AI Builders/POST-EVENT — 5 Takeaways + Brief.md
 Event Content/**/Deep-Dives/
 # Raw transcripts saved under non-transcript names (pre-2026-07 naming)
-Event Content/06 23 26_ Daytona AI Builders/06_23_26 Daytona AI Builders.txt
+Event Content/06 23 26 Daytona AI Builders/06_23_26 Daytona AI Builders.txt
 Event Content/06 30 26 GTM Eng NYC Coding Agents/06 30 26 GTM Eng NYC_ Coding Agents + GTM Lightning Talks.txt
-Event Content/2026-05-27_Agents-and-MCP-for-Postgres.md
-Event Content/2026-06-02_Fin-x-Clay-Scaling-CX-in-the-AI-Era.md
-Event Content/AI Demo Event.txt
+Event Content/05 27 26 Agents and MCP for Postgres/2026-05-27_Agents-and-MCP-for-Postgres.md
+Event Content/06 02 26 Fin x Clay Scaling CX in the AI Era/2026-06-02_Fin-x-Clay-Scaling-CX-in-the-AI-Era.md
+Event Content/05 21 26 AI Demo Night/AI Demo Event.txt
 *.m4a
 *.mp3
 *.mp4
@@ -93,9 +93,6 @@ Event Content/AI Demo Event.txt
 Event Content/**/*.jpg
 Event Content/**/*.jpeg
 Event Content/**/*.png
-content-drafts/**/*.jpg
-content-drafts/**/*.jpeg
-content-drafts/**/*.png
 *— Transcript (ElevenLabs).*
 el_scribe_v1_plain.json
 eleven_scribe_v2.json
@@ -113,8 +110,8 @@ eleven_scribe_v2.json
 # Private — see .claude/references/build-in-public.md (job-search specifics, off-record, contact-targeting; untracked 2026-09-28)
 docs/archive/notes/gtm-world-tour-intake-2026-09-23.md
 docs/archive/notes/ai-mafia-roster-2026-09-21.md
-Event Content/06 24 26_ NYC AI Demos #10/nyc-ai-portfolio-jobs.md
-Event Content/06 24 26_ NYC AI Demos #10/PLANNING — event ingest + job map + predictions.md
+Event Content/06 24 26 NYC AI Demos #10/nyc-ai-portfolio-jobs.md
+Event Content/06 24 26 NYC AI Demos #10/PLANNING — event ingest + job map + predictions.md
 docs/adr/evidence/plans/green-light-encapsulated-cupcake.md
 Event Content/08 24 26 The Shortlist August Founder Showcase/SHOWCASE_BRIEF.md
 Event Content/08 24 26 The Shortlist August Founder Showcase/apollo_enrichment_upload.csv

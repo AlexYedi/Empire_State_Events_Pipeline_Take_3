@@ -10,7 +10,7 @@ import os
 
 # ----- Configuration -----
 
-OUT_DIR = "/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/content-drafts/carousel-shortlist-nyc-4"
+OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_DIR = "/Users/sameoldexpressions/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/f85326cc-c479-4349-956a-d3d47e404d0b/d1370235-0ed8-47e6-859d-0bec833074a3/skills/canvas-design/canvas-fonts"
 
 W, H = 1080, 1350
