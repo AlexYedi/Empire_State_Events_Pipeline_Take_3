@@ -6,7 +6,7 @@
 **Hosts:** Andrew Yeung + Ivor Stratford
 **Source brief:** `research-briefs/2026-04-27_Shortlist_NYC_April_Founder_Showcase.md`
 **Source transcript:** `event-transcripts/2026-04-27_Shortlist_NYC_April_Founder_Showcase_transcript.md`
-**Companion file:** `content-drafts/2026-04-27_Shortlist_NYC_Documentarian_Carousel_Visual_Prompts.md`
+**Companion file:** `2026-04-27_Shortlist_NYC_Documentarian_Carousel_Visual_Prompts.md`
 
 ---
 
@@ -58,7 +58,7 @@ Common pattern across all six: not one of them led with "AI" as the differentiat
 **Event Phase:** `post_event`
 **Status:** copy drafted, visual production pending
 **Target ship:** 2–3 days after Post 1 (2026-04-30 / 05-01)
-**Visual prompts file:** `content-drafts/2026-04-27_Shortlist_NYC_Documentarian_Carousel_Visual_Prompts.md`
+**Visual prompts file:** `2026-04-27_Shortlist_NYC_Documentarian_Carousel_Visual_Prompts.md`
 
 **Slide copy summary:** 8 slides — cover + 6 founder slides (each with Bet / Proof So Far / Watch For) + close (pattern statement). See the visual prompts file for full per-slide spec.
 
