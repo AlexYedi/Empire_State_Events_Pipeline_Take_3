@@ -65,6 +65,8 @@ What the script enforces (change the rule in the script, then this summary):
   them. Drop includes `Engineer` (Solutions/Sales Engineer are OUT, ruled 2026-09-24, no protected carve-out),
   `Technical Account Manager` (OUT, 2026-09-27) and marketing titles; `Growth` only passes as
   `Growth Strategist|Growth Account|Growth AE|Scaled Growth` (the bare word leaked marketing roles on 09-19).
+  `Activation Manager` is kept (ruled IN 2026-10-11: Ramp's Customer Activation Managers own a book of accounts);
+  the book test in Step 3 still decides each one (an implementation-queue seat is not a book).
 - **Location default = NYC + Remote (US)** (Inputs): a remote role naming a non-US region drops; `--any-location`
   turns it off. Scoring still applies the location row in Step 3.
 - **Struck-through registry companies** (`~~Name~~`, coverage-only, every role auto-rejects on company fit) are
@@ -74,6 +76,10 @@ What the script enforces (change the rule in the script, then this summary):
   · comp gate: ON|OFF". A failed board is never "no roles". **Registry-staleness guard, still manual:** also
   report the count of target companies with no big-4 board (the "five holdouts" table in `target-companies.md`),
   since the script only sees the registry.
+- **Unmatched titles (stderr, after the gap line; ADR-12 #3):** in-location titles that sound commercial and that
+  neither list rules on. Skim them in Step 4 and list any that look in scope as **keep-list candidates for Alex to
+  rule on**; never add one to `KEEP` without Alex's ruling. This is how a family like Ramp's Activation Managers gets
+  seen. The ADR-12 trigger is the list staying over 50 on two scans in a row after the first backlog is ruled.
 
 ### 1b. Apollo job-postings at named targets (credit-gated — optional)
 - Only if Alex wants roles at specific targets *not* on the big-4 ATS. **Off by default** — the scan runs the boards; Apollo is a per-request add-on. Resolve the org ID via Apollo org search, then call `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings`.
@@ -193,9 +199,12 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
      "+ commission", "Offers Commission") / unlabelled; when a posting shows both a base and an OTE band, the OTE
      band is the one tested. Non-USD amounts (CA$, MX$, GBP via Lever) come back UNKNOWN. If the JD body contradicts the structured field, the JD body is the posting:
      re-run on the JD sentence.
-  The rulings the script implements (2026-09-27, Alex, YED-210 — pinned by `--selftest`): OTE or unlabelled
-  band → **midpoint** · base/salary band → **top** · emerging seller → **low end** · one-sided "up to $X" →
-  **X − $20K** · two rules at once → the **higher** figure · **exactly at the floor clears** (≥).
+  **The comp rulings are not restated here.** Their one executable copy, with dates, is the ruling ledger at the
+  top of `comp_gate.py`, pinned by `--selftest` (ADR-12: the 10-07 commission ruling sat in prose for four days
+  and never reached the script). A new ruling = a script change + a selftest case in the same commit.
+  **`ASSUMED` in the note** = the figure grossed up a band that never says base/salary (Ashby's
+  "$X – $Y • Offers Commission"). The verdict stands; keep the `ASSUMED` line in `Notes` and confirm the band with
+  the recruiter on first contact. If the real number is >10% off the figure, log it: that is an ADR-12 V2 trigger.
   A range is no longer a Held case.
 - **Level flexibility — Mid-Market is IN at top-tier companies** *(wired into the Role-mechanism row of the scoring table via its segment note; change both together).* Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
