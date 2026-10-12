@@ -49,10 +49,12 @@ ENDPOINT = {
 KEEP = re.compile(r"Customer Success|\bCSM\b|Account Manager|Account Director|Account Executive|Engagement Manager|"
                   r"Sales Director|Sales Lead|Sales Leader|Enterprise Sales Director|VP,? Sales|Head of Sales|"
                   r"Growth Strategist|Growth Account|Growth AE|Scaled Growth|Named Account|Client Director|"
-                  r"Client Partner|Relationship Manager|Activation Manager", re.I)   # Activation: Ramp CS-with-a-book seats, in 2026-10-11
+                  r"Client Partner|Relationship Manager|Activation Manager", re.I)   # Activation = CS with a book (2026-10-11)
 DROP = re.compile(r"Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|"
                   r"Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen|"
-                  r"Technical Account Manager", re.I)
+                  r"Technical Account Manager|"
+                  r"\bFinance\b|FP&A|Accounting|Treasury|Payroll|Procurement|Spend Management|\bERP\b|"   # finance / resource
+                  r"Financial Services|\bFinServ\b", re.I)   # planning roles and FS territories OUT (2026-10-11)
 # Unmatched-titles surfacing (ADR-12 #3) — display only, never changes which rows pass. A title neither list rules on
 # is shown when it sounds commercial and is not a known non-seller family (SDR/BDR, ops, enablement, people, finance…).
 COMMERCIAL = re.compile(r"customer|account|client|sales|revenue|partner|growth|business|onboarding|activation|success|"
@@ -248,15 +250,19 @@ def selftest() -> int:
                     ("Strategic Account Executive", True), ("Growth Marketing Manager", False),
                     ("Senior Backend Engineer (Growth)", False), ("Technical Account Manager", False),
                     ("Solutions Engineer", False), ("Customer Success Manager, Enterprise", True),
-                    ("Customer Activation Manager | Enterprise", True)]:
+                    ("Customer Activation Manager | Enterprise", True),
+                    ("Enterprise Customer Activation Manager | Bill Pay & Procurement", False),
+                    ("Account Executive, Financial Services", False), ("Strategic Finance, GTM", False),
+                    ("Account Director, FP&A Solutions", False)]:
         check(f"title filter: {t!r} → {'keep' if want else 'drop'}", keep_title(t) == want)
-    # Real titles (Ramp Ashby board, 2026-10-11): all nine Activation seats must reach Step 3's book test.
+    # Real titles (Ramp Ashby board, 2026-10-11; Ramp itself is cut, the titles still pin the Activation keep rule).
     ramp = ["Customer Activation Manager | Enterprise", "Customer Activation Manager | Mid-Market",
             "Customer Activation Manager | Scaled", "Customer Activation Manager | Strategic Enterprise",
             "Senior Customer Activation Manager | Scaled", "Enterprise Customer Activation Manager | Bill Pay & Procurement ",
             "Senior Customer Activation Manager | Partnerships ", "Customer Activation Manager | Commercial ",
             "Procurement Product Activation Manager"]
-    check("title filter: all 9 real Ramp Activation titles kept", all(keep_title(t) for t in ramp))
+    check("title filter: real Activation titles kept unless they name a finance product",
+          all(keep_title(t) != ("Procurement" in t) for t in ramp))
     check("unmatched: a title neither list rules on is surfaced", unmatched_title("Customer Onboarding Lead"))
     check("unmatched: a deliberately dropped title is not", not unmatched_title("Solutions Engineer"))
     check("unmatched: a known non-seller family is quiet", not unmatched_title("Sales Development Representative"))

@@ -55,3 +55,4 @@ The roadmap's guardrails (no new stores, hooks or dashboards; one-in-one-out) ru
 | Date | Status | Note |
 |---|---|---|
 | 2026-10-11 | Accepted | V1 shipped on branch `alex/job-search-mission-scaffold` with the Activation and stated-split rulings. |
+| 2026-10-11 | Amended | Same day, Alex cut finance and resource-planning companies and roles (Ramp, Zip). The nine Ramp postings stay as comp-parsing and title fixtures; the drop-list gained finance / FS titles. |

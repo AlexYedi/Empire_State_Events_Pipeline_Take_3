@@ -194,7 +194,8 @@ def selftest() -> int:
         ("$70K – $95.8K • Offers Equity • Offers Commission • 70/30 Split", False, "REJECT", 136_857),  # just under
         ("Base salary $100K – $120K, equity", False, "REJECT", 120_000),  # no variable mentioned: no gross-up; equity is a note only
         ("$120K – $154K OTE • 70/30 Split", False, "PASS", 137_000),   # labelled OTE: split does not gross up again
-        # Real postings (Ramp Ashby board, pulled 2026-10-11): the regression set for the Activation ruling (ADR-12 #3).
+        # Real postings (Ramp Ashby board, pulled 2026-10-11): comp-parsing regression set (ADR-12 #3). Ramp itself was cut
+        # the same day (finance companies out); the Ashby formats still pin the split / commission / unlabelled rules.
         ("$182K – $278K • Offers Equity • Multiple Ranges", False, "PASS", 230_000),              # CAM Enterprise
         ("$142K – $216K • Offers Equity • Offers Commission", False, "PASS", 288_000),            # CAM Mid-Market
         ("$93.6K – $143K • Offers Equity • Offers Commission • Multiple Ranges", False, "PASS", 190_666),   # CAM Scaled
