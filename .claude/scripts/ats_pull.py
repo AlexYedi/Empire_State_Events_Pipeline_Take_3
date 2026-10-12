@@ -16,7 +16,10 @@ TSV columns: company vendor key title url location posted updated remote comp_te
              Step 3 when the JD is pitched at an emerging seller.
 --jd-dir writes one plain-text JD per passing row ({key}.txt, ':' → '_') for the Step 3 mechanism read.
 stderr ends with the gap line Step 4 must report: "N companies returned 0 rows … · M errored … · K excluded … ·
-comp gate: ON|OFF". Struck-through registry companies (~~Harvey~~) are skipped, not fetched.
+comp gate: ON|OFF", then the unmatched-titles block: in-location titles that hit NEITHER the keep- nor the drop-list
+(the blind spot that hid Ramp's Activation Managers until 2026-10-11; ADR-12 #3), narrowed to titles that sound
+commercial and aren't a known non-seller family (SDR/BDR, ops, enablement, people, finance). Skim it each scan; a title
+that should be in becomes a keep-list ruling. Struck-through registry companies (~~Harvey~~) are skipped, not fetched.
 Exit 0 on a completed run (gaps included), 2 on bad args, 3 when the registry can't be parsed.
 """
 from __future__ import annotations
@@ -46,10 +49,20 @@ ENDPOINT = {
 KEEP = re.compile(r"Customer Success|\bCSM\b|Account Manager|Account Director|Account Executive|Engagement Manager|"
                   r"Sales Director|Sales Lead|Sales Leader|Enterprise Sales Director|VP,? Sales|Head of Sales|"
                   r"Growth Strategist|Growth Account|Growth AE|Scaled Growth|Named Account|Client Director|"
-                  r"Client Partner|Relationship Manager", re.I)
+                  r"Client Partner|Relationship Manager|Activation Manager", re.I)   # Activation = CS with a book (2026-10-11)
 DROP = re.compile(r"Engineer|Developer|Designer|Scientist|Researcher|Recruiter|Accountant|Controller|Counsel|"
                   r"Marketing Manager|Product Manager|Program Manager|Content|Brand|Demand Gen|"
-                  r"Technical Account Manager", re.I)
+                  r"Technical Account Manager|"
+                  r"\bFinance\b|FP&A|Accounting|Treasury|Payroll|Procurement|Spend Management|\bERP\b|"   # finance / resource
+                  r"Financial Services|\bFinServ\b", re.I)   # planning roles and FS territories OUT (2026-10-11)
+# Unmatched-titles surfacing (ADR-12 #3) — display only, never changes which rows pass. A title neither list rules on
+# is shown when it sounds commercial and is not a known non-seller family (SDR/BDR, ops, enablement, people, finance…).
+COMMERCIAL = re.compile(r"customer|account|client|sales|revenue|partner|growth|business|onboarding|activation|success|"
+                        r"commercial|\bGTM|go-to-market|deal|expansion|renewal|adoption|implementation|deployment|"
+                        r"relationship", re.I)
+QUIET = re.compile(r"development rep|\bSDR\b|\bBDR\b|operations|\bops\b|enablement|compensation|people|talent|recruit|"
+                   r"finance|marketing|analyst|associate|specialist|coordinator|intern|counsel|legal|security|policy|"
+                   r"support|safeguard|systems|payroll|\btax\b|treasury|data", re.I)
 COMP_LINE = re.compile(r"[^.\n]*\$\s*\d[\d,]*(?:\.\d+)?\s*[kK]?[^.\n]*")
 # Location default = NYC + Remote (US) (SKILL Inputs). Multi-location strings pass when ANY part matches;
 # an empty location passes (unknown is not a reject). --any-location turns the filter off.
@@ -98,6 +111,12 @@ def keep_location(loc: str) -> bool:
 
 def keep_title(title: str) -> bool:
     return bool(KEEP.search(title)) and not DROP.search(title)
+
+
+def unmatched_title(title: str) -> bool:
+    """Neither list ruled on it, it sounds commercial, and it isn't a known non-seller family. Coverage gaps hide here."""
+    return (not KEEP.search(title) and not DROP.search(title)
+            and bool(COMMERCIAL.search(title)) and not QUIET.search(title))
 
 
 def _plain(s: str | None) -> str:
@@ -175,8 +194,8 @@ def fetch(vendor: str, token: str) -> object:
 
 
 def run(entries: list[dict], floor: int | None, jd_dir: str | None,
-        any_location: bool = False) -> tuple[list[dict], list[str], list[str], int]:
-    out, empty, errored, scanned = [], [], [], 0
+        any_location: bool = False) -> tuple[list[dict], list[str], list[str], int, list[str]]:
+    out, empty, errored, scanned, unmatched = [], [], [], 0, []
     for e in entries:
         if e["excluded"]:      # struck through in the registry (e.g. ~~Harvey~~): every role auto-rejects on company fit
             continue
@@ -189,7 +208,11 @@ def run(entries: list[dict], floor: int | None, jd_dir: str | None,
         if not raw:
             empty.append(e["company"])
         for r in raw:
-            if not keep_title(r["title"]) or not (any_location or keep_location(r["location"])):
+            if not (any_location or keep_location(r["location"])):
+                continue
+            if not keep_title(r["title"]):
+                if unmatched_title(r["title"]):
+                    unmatched.append(f"{e['company']}: {r['title'].strip()}")
                 continue
             key = f"{e['vendor']}:{r['id']}"
             ct = comp_text(r)
@@ -201,7 +224,7 @@ def run(entries: list[dict], floor: int | None, jd_dir: str | None,
             if jd_dir:
                 with open(os.path.join(jd_dir, key.replace(":", "_") + ".txt"), "w", encoding="utf-8") as fh:
                     fh.write(f"{r['title']} @ {e['company']}\n{r['url']}\n\n{r['jd']}\n")
-    return out, empty, errored, scanned
+    return out, empty, errored, scanned, sorted(set(unmatched))
 
 
 def _tsv(v) -> str:
@@ -226,8 +249,23 @@ def selftest() -> int:
     for t, want in [("Enterprise Sales Director", True), ("Engagement Manager, DaaS", True),
                     ("Strategic Account Executive", True), ("Growth Marketing Manager", False),
                     ("Senior Backend Engineer (Growth)", False), ("Technical Account Manager", False),
-                    ("Solutions Engineer", False), ("Customer Success Manager, Enterprise", True)]:
+                    ("Solutions Engineer", False), ("Customer Success Manager, Enterprise", True),
+                    ("Customer Activation Manager | Enterprise", True),
+                    ("Enterprise Customer Activation Manager | Bill Pay & Procurement", False),
+                    ("Account Executive, Financial Services", False), ("Strategic Finance, GTM", False),
+                    ("Account Director, FP&A Solutions", False)]:
         check(f"title filter: {t!r} → {'keep' if want else 'drop'}", keep_title(t) == want)
+    # Real titles (Ramp Ashby board, 2026-10-11; Ramp itself is cut, the titles still pin the Activation keep rule).
+    ramp = ["Customer Activation Manager | Enterprise", "Customer Activation Manager | Mid-Market",
+            "Customer Activation Manager | Scaled", "Customer Activation Manager | Strategic Enterprise",
+            "Senior Customer Activation Manager | Scaled", "Enterprise Customer Activation Manager | Bill Pay & Procurement ",
+            "Senior Customer Activation Manager | Partnerships ", "Customer Activation Manager | Commercial ",
+            "Procurement Product Activation Manager"]
+    check("title filter: real Activation titles kept unless they name a finance product",
+          all(keep_title(t) != ("Procurement" in t) for t in ramp))
+    check("unmatched: a title neither list rules on is surfaced", unmatched_title("Customer Onboarding Lead"))
+    check("unmatched: a deliberately dropped title is not", not unmatched_title("Solutions Engineer"))
+    check("unmatched: a known non-seller family is quiet", not unmatched_title("Sales Development Representative"))
     gh = project("greenhouse", {"jobs": [{"id": 7, "title": "AE", "absolute_url": "u", "location": {"name": "NYC"},
                                            "updated_at": "2026-09-30T00:00:00Z", "content": "&lt;p&gt;Pay $180K – $220K OTE&lt;/p&gt;"}]})
     check("greenhouse: posted EMPTY, updated kept", gh[0]["posted"] == "" and gh[0]["updated"] == "2026-09-30")
@@ -290,7 +328,7 @@ def main(argv: list[str]) -> int:
             print(f"ats_pull: no OTE floor ({e}); comp columns left blank", file=sys.stderr)
     if a.jd_dir:
         os.makedirs(a.jd_dir, exist_ok=True)
-    rows, empty, errored, scanned = run(entries, floor, a.jd_dir, a.any_location)
+    rows, empty, errored, scanned, unmatched = run(entries, floor, a.jd_dir, a.any_location)
     lines = ["\t".join(COLS)] + ["\t".join(_tsv(r[c]) for c in COLS) for r in rows]
     if a.out:
         try:
@@ -306,6 +344,11 @@ def main(argv: list[str]) -> int:
           f"{len(errored)} errored: {'; '.join(errored) or '—'} · {len(excluded)} excluded (struck through): "
           f"{', '.join(excluded) or '—'} · comp gate: {'ON' if floor else 'OFF — no floor, comp_verdict blank'}",
           file=sys.stderr)
+    # ADR-12 V2 trigger: still over 50 once the first backlog is ruled on = too long to skim; the labelled-eval set is due.
+    print(f"ats_pull: {len(unmatched)} unmatched titles (in-location, commercial, neither keep nor drop; skim for misses)"
+          + (" · ADR-12 trigger: over 50, too long to skim" if len(unmatched) > 50 else "") + ":", file=sys.stderr)
+    for t in unmatched:
+        print(f"  {t}", file=sys.stderr)
     return 0
 
 
