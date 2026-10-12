@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>More Agents or More Compute</title>
+<style>
+/* Layout: five 1080x1350 slides. One framework: "what did the work?" Charts drawn to scale, legend on top, direct labels. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF; --pale:#C9D1E3;
+  --accent:#5B8DEF; --accent-deep:#1E40AF; --mark:#8FE83A;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:820px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--mark);padding-bottom:4px}
+.src{max-width:700px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+.note{font-family:var(--body);font-size:29px;line-height:1.35;color:var(--muted);margin-top:auto;margin-bottom:110px;max-width:860px}
+.note b{color:var(--ink);font-weight:600}
+/* slide 1 */
+.s1 .rule{width:180px;height:8px;background:var(--accent);margin-top:auto;margin-bottom:200px}
+/* legend */
+.legend{display:flex;gap:40px;margin-top:56px;font-family:var(--mono);font-size:22px;letter-spacing:.06em;text-transform:uppercase;color:var(--pale)}
+.legend span{display:flex;align-items:center;gap:14px}
+.sw{width:28px;height:28px;border-radius:3px;display:inline-block}
+.sw.a{background:var(--accent)} .sw.p{background:var(--pale)}
+/* slide 2 diverging chart: zero at x=444, 100% = 420px (drawn to scale); label sits opposite its bar */
+.div{margin-top:120px;position:relative;height:500px}
+.div .zero{position:absolute;left:443px;top:0;height:440px;width:3px;background:var(--ink)}
+.div .zlab{position:absolute;left:444px;top:-14px;transform:translate(-50%,-100%);font-family:var(--mono);font-size:20px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.row{position:absolute;left:0;right:0;height:180px}
+.r1{top:40px} .r2{top:240px}
+.row .txt{position:absolute;top:8px;display:flex;flex-direction:column;gap:10px}
+.row .val{font-family:var(--display);font-size:72px;font-weight:600;line-height:1}
+.row .lab{font-family:var(--body);font-size:28px;font-weight:600;line-height:1.2;color:var(--ink)}
+.row .bar{position:absolute;top:20px;height:120px;border-radius:3px}
+.r1 .txt{right:474px;text-align:right;align-items:flex-end}
+.r2 .txt{left:474px}
+.r1 .val{color:var(--accent)} .r1 .bar{left:446px;width:339px;background:var(--accent)}
+.r2 .val{color:var(--pale)} .r2 .bar{left:149px;width:294px;background:var(--pale)}
+.axis{position:absolute;left:0;right:0;top:452px;height:30px;font-family:var(--mono);font-size:19px;color:var(--muted)}
+.axis span{position:absolute;transform:translateX(-50%)}
+/* slide 3 paired bars */
+.pair{margin-top:56px;display:flex;flex-direction:column;gap:56px}
+.metric .mlab{font-family:var(--mono);font-size:24px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.hb{display:flex;align-items:center;gap:22px;margin-bottom:16px}
+.hb .b{height:72px;border-radius:3px}
+.hb .b.a{background:var(--accent)} .hb .b.p{background:var(--pale)}
+.hb .n{font-family:var(--display);font-size:52px;font-weight:600;line-height:1;white-space:nowrap}
+.hb .n.a{color:var(--accent)} .hb .n.p{color:var(--pale)}
+/* slide 4 track bars */
+.track{margin-top:60px;display:flex;flex-direction:column;gap:46px}
+.tr .tl{font-family:var(--body);font-size:30px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline}
+.tr .tl em{font-style:normal;font-family:var(--display);font-size:60px}
+.tr .tl em.a{color:var(--accent)} .tr .tl em.p{color:var(--pale)}
+.tr .tb{height:64px;background:var(--panel);border:2px solid var(--rule);border-radius:4px;position:relative}
+.tr .tb i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.tr .tb i.a{background:var(--accent)} .tr .tb i.p{background:var(--pale)}
+.tick{display:flex;justify-content:space-between;font-family:var(--mono);font-size:19px;color:var(--muted);margin-top:10px}
+/* slide 5 checklist */
+.checks{margin-top:64px;display:flex;flex-direction:column;gap:26px}
+.ck{display:grid;grid-template-columns:110px 1fr;align-items:center;background:var(--panel);border:2px solid var(--rule);border-radius:6px;padding:34px 36px}
+.ck .k{font-family:var(--mono);font-size:40px;color:var(--accent);font-weight:600}
+.ck .t{font-family:var(--body);font-size:38px;line-height:1.25;font-weight:600;text-wrap:balance}
+.s5 .q{font-family:var(--display);font-style:italic;font-size:62px;line-height:1.12;color:var(--accent);margin-top:auto;margin-bottom:120px;text-wrap:balance}
+</style></head><body>
+
+<section class="slide s1">
+  <div class="eyebrow">NY ML Research Guild · Amazon JFK27 · Oct 14</div>
+  <h1>More agents, or more compute?</h1>
+  <p class="sub">From chain of thought to agent swarms. When a swarm wins, what actually did the work?</p>
+  <div class="rule"></div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5</span></div>
+</section>
+
+<section class="slide s2">
+  <div class="eyebrow">Multi-agent vs one agent</div>
+  <h2>Same idea, opposite results</h2>
+  <div class="div">
+    <div class="zlab">Single agent = 0</div>
+    <div class="zero"></div>
+    <div class="row r1"><div class="txt"><span class="val">+80.8%</span><span class="lab">Decomposable<br>financial reasoning</span></div><div class="bar"></div></div>
+    <div class="row r2"><div class="txt"><span class="val">−70.0%</span><span class="lab">Sequential planning</span></div><div class="bar"></div></div>
+    <div class="axis"><span style="left:24px">−100%</span><span style="left:444px">0</span><span style="left:864px">+100%</span></div>
+  </div>
+  <p class="note">Independent pieces: the team tended to help. <b>Chained steps: it tended to hurt.</b></p>
+  <div class="foot"><span class="src">Source: Kim et al., "Towards a Science of Scaling Agent Systems," arXiv 2512.08296, 2025</span><span class="page">2 / 5</span></div>
+</section>
+
+<section class="slide s3">
+  <div class="eyebrow">The famous swarm result</div>
+  <h2>More findings. More tokens, too.</h2>
+  <div class="legend"><span><i class="sw a"></i>45-agent swarm</span><span><i class="sw p"></i>Independent agents</span></div>
+  <div class="pair">
+    <div class="metric"><div class="mlab">Vulnerabilities found</div>
+      <div class="hb"><div class="b a" style="width:700px"></div><div class="n a">266</div></div>
+      <div class="hb"><div class="b p" style="width:55px"></div><div class="n p">21</div></div>
+    </div>
+    <div class="metric"><div class="mlab">Tokens spent</div>
+      <div class="hb"><div class="b a" style="width:700px"></div><div class="n a">~27M</div></div>
+      <div class="hb"><div class="b p" style="width:169px"></div><div class="n p">~6.5M</div></div>
+    </div>
+  </div>
+  <p class="note"><b>Not compute-matched.</b> The swarm also searched a wider scope. In shared scope, cost per finding was roughly comparable.</p>
+  <div class="foot"><span class="src">Source: Anthropic, "Multiagent Systems: Patterns and Problems," 2026</span><span class="page">3 / 5</span></div>
+</section>
+
+<section class="slide s4">
+  <div class="eyebrow">When many answers are valid</div>
+  <h2>Checking beats counting votes</h2>
+  <div class="track">
+    <div class="tr"><div class="tl">Symbolic verifier (CALVER)<em class="a">42.1%</em></div><div class="tb"><i class="a" style="width:42.1%"></i></div></div>
+    <div class="tr"><div class="tl">Voting · reward model · LLM judge<em class="p">≈30%</em></div><div class="tb"><i class="p" style="width:30%"></i></div>
+      <div class="tick"><span>0%</span><span>50%</span><span>100%</span></div></div>
+  </div>
+  <p class="note">A swarm hands back a pile of attempts. <b>Agreement isn't proof when several answers are right.</b></p>
+  <div class="foot"><span class="src">Source: Vaidya, Jerzak, Sprague, Yin, Ho, CALVER, arXiv 2608.03506, 2026 (CLEAR find-one-valid task)</span><span class="page">4 / 5</span></div>
+</section>
+
+<section class="slide s5">
+  <div class="eyebrow">Before you believe a swarm result</div>
+  <h2>Ask for the baseline</h2>
+  <div class="checks">
+    <div class="ck"><div class="k">01</div><div class="t">What does one agent do with the same tokens?</div></div>
+    <div class="ck"><div class="k">02</div><div class="t">Does the task split into independent pieces?</div></div>
+    <div class="ck"><div class="k">03</div><div class="t">What checks the answers: votes or a verifier?</div></div>
+  </div>
+  <p class="q">Separate agents, extra samples, or the checker?</p>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+</body></html>

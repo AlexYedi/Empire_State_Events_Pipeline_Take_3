@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Who Brought the First Users</title>
+<style>
+/* Layout: five 1080x1350 slides, left-aligned editorial grid. Arc 1: hook, timeline, paired bars, suspects matrix, question. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#F5A524; --accent-deep:#D97706; --base:#DCE2EE; --mark:#8FE83A;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--mark);padding-bottom:4px}
+.src{max-width:700px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+/* slide 1 */
+.s1 .rule{width:180px;height:8px;background:var(--accent);margin-top:auto;margin-bottom:200px}
+/* slide 2 timeline */
+.tl{margin-top:64px;position:relative;padding-left:64px;display:flex;flex-direction:column;gap:30px}
+.tl::before{content:"";position:absolute;left:17px;top:24px;bottom:24px;width:3px;background:var(--rule)}
+.ev{position:relative;background:var(--panel);border:2px solid var(--rule);border-radius:6px;padding:28px 34px}
+.ev::before{content:"";position:absolute;left:-58px;top:34px;width:26px;height:26px;border-radius:50%;background:var(--ground);border:4px solid var(--muted)}
+.ev.hit{border-color:var(--accent)}
+.ev.hit::before{background:var(--accent);border-color:var(--accent)}
+.ev .when{font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ev .what{font-family:var(--body);font-weight:700;font-size:38px;line-height:1.15;margin-top:8px}
+.ev .what b{color:var(--accent)}
+.ev .note{font-family:var(--body);font-size:28px;line-height:1.3;color:var(--muted);margin-top:8px}
+.claim{margin-top:34px;display:flex;align-items:baseline;gap:20px;font-family:var(--body);font-size:30px;color:var(--ink)}
+.claim .tag{font-family:var(--mono);font-size:19px;letter-spacing:.1em;text-transform:uppercase;color:var(--ground);background:var(--base);padding:6px 12px;border-radius:4px;white-space:nowrap}
+/* slide 3 bars */
+.legend{margin-top:44px;display:flex;gap:44px;font-family:var(--body);font-size:28px;color:var(--ink)}
+.legend span{display:flex;align-items:center;gap:14px}
+.sw{width:30px;height:30px;border-radius:4px;display:inline-block}
+.sw.ai{background:var(--accent)} .sw.base{background:var(--base)}
+.grp{margin-top:56px}
+.grp h3{font-family:var(--body);font-weight:700;font-size:34px}
+.grp .def{font-family:var(--body);font-size:24px;color:var(--muted);margin-top:6px}
+.br{margin-top:18px;display:grid;grid-template-columns:150px 1fr;align-items:center;gap:20px}
+.br .lab{font-family:var(--body);font-weight:600;font-size:28px;color:var(--ink)}
+.br .track{display:flex;align-items:center;gap:20px}
+.bar{height:72px;border-radius:4px}
+.bar.ai{background:var(--accent)} .bar.base{background:var(--base)}
+.br .v{font-family:var(--mono);font-weight:600;font-size:34px;color:var(--ink)}
+.read{margin-top:52px;font-family:var(--display);font-style:italic;font-size:44px;line-height:1.15;color:var(--ink)}
+/* slide 4 matrix */
+.fun{margin-top:40px;display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:24px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.fun i{font-style:normal;color:var(--accent)}
+.mx{margin-top:44px;display:flex;flex-direction:column;gap:28px}
+.row{display:grid;grid-template-columns:250px 1fr;gap:28px;background:var(--panel);border:2px solid var(--rule);border-radius:6px;padding:40px 34px;align-items:start}
+.row .who{font-family:var(--display);font-weight:600;font-size:50px;line-height:1}
+.row .sig{font-family:var(--mono);font-size:19px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:12px;display:block}
+.row .test{font-family:var(--body);font-size:33px;line-height:1.3}
+.row .test b{color:var(--accent);font-weight:600}
+/* slide 5 */
+.s5 h1{font-size:118px;margin-top:auto}
+.s5 .q{font-family:var(--display);font-style:italic;font-size:76px;line-height:1.1;color:var(--accent);margin-top:36px;margin-bottom:230px;text-wrap:balance}
+</style></head><body>
+
+<section class="slide s1">
+  <div class="eyebrow">Founder GTM Mixer · NYC · Oct 13</div>
+  <h1>Who brought the first users?</h1>
+  <p class="sub">Before any channel exists: the launch, the audience, or the workflow?</p>
+  <div class="rule"></div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5</span></div>
+</section>
+
+<section class="slide s2">
+  <div class="eyebrow">Aident AI · Dec 2025 → now</div>
+  <h2>Two launches. Then a new product.</h2>
+  <div class="tl">
+    <div class="ev"><div class="when">Dec 23, 2025 · Product Hunt</div><div class="what">#3 of the day</div><div class="note">Playbooks: plain-English automations across 250+ tools</div></div>
+    <div class="ev hit"><div class="when">Mar 5, 2026 · Product Hunt</div><div class="what"><b>#1</b> Product of the Day</div><div class="note">Aident AI Beta 2, about ten weeks later</div></div>
+    <div class="ev"><div class="when">Today · aident.ai</div><div class="what">Loadout</div><div class="note">An MCP layer that plugs coding agents into 1,000+ apps</div></div>
+  </div>
+  <div class="claim"><span class="tag">Aident says</span><span>0 → 18,000 users in three months</span></div>
+  <div class="foot"><span class="src">Sources: Product Hunt 2026 · aident.ai 2026 · Luma event page 2026 (user count is the company's claim)</span><span class="page">2 / 5</span></div>
+</section>
+
+<section class="slide s3">
+  <div class="eyebrow">AI apps vs non-AI apps · 2026</div>
+  <h2>AI wins the trial, loses the year</h2>
+  <div class="legend"><span><i class="sw ai"></i>AI apps</span><span><i class="sw base"></i>Non-AI apps</span></div>
+  <div class="grp">
+    <h3>Trial converts to paid</h3>
+    <div class="br"><span class="lab">AI apps</span><span class="track"><span class="bar ai" style="width:165px"></span><span class="v">8.5%</span></span></div>
+    <div class="br"><span class="lab">Non-AI</span><span class="track"><span class="bar base" style="width:108px"></span><span class="v">5.6%</span></span></div>
+  </div>
+  <div class="grp">
+    <h3>Still subscribed after one year</h3>
+    <div class="br"><span class="lab">AI apps</span><span class="track"><span class="bar ai" style="width:409px"></span><span class="v">21.1%</span></span></div>
+    <div class="br"><span class="lab">Non-AI</span><span class="track"><span class="bar base" style="width:595px"></span><span class="v">30.7%</span></span></div>
+  </div>
+  <p class="read">A launch fills the top. The year decides.</p>
+  <div class="foot"><span class="src">Source: RevenueCat 2026 subscription data, via TechCrunch, 2026 (medians)</span><span class="page">3 / 5</span></div>
+</section>
+
+<section class="slide s4">
+  <div class="eyebrow">How to tell them apart</div>
+  <h2>Three suspects, three fingerprints</h2>
+  <div class="fun">Signup <i>→</i> Activated <i>→</i> Retained</div>
+  <div class="mx">
+    <div class="row"><div><div class="who">Launch</div><span class="sig">Shows in signups</span></div><div class="test">What share arrived in the <b>launch window</b>, versus before and after it?</div></div>
+    <div class="row"><div><div class="who">Audience</div><span class="sig">Distribution</span></div><div class="test">Did the people who came for Playbooks <b>follow the move</b> to Loadout?</div></div>
+    <div class="row"><div><div class="who">Workflow</div><span class="sig">Shows in retention</span></div><div class="test">Who is still active at <b>day 90</b>, and what job brought them back?</div></div>
+  </div>
+  <div class="foot"><span class="src">Framework: Alex Yedi · denominator terms: signup, activation, retention</span><span class="page">4 / 5</span></div>
+</section>
+
+<section class="slide s5">
+  <div class="eyebrow">The open question</div>
+  <h1>New product. Same users?</h1>
+  <p class="q">Which of the three held?</p>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+</body></html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Safe by Which Layer</title>
+<style>
+/* Five 1080x1350 slides. Arc 1: hook, mechanism (three-layer map), evidence (survey bars), evidence (trade-off), question card.
+   Accent = red (security / risk topic). Bars on slides 3-4 are drawn to scale (slide 3: 8px = 1 point; slide 4: 800px = 1.00). */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#F87171; --accent-deep:#DC2626; --mark:#8FE83A; --fill:#CBD5E1;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:128px;line-height:1.0;margin-top:44px}
+h2{font-size:80px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:60px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--mark);padding-bottom:4px}
+.src{max-width:780px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+
+/* slide 1 */
+.s1 .layers{margin-top:auto;margin-bottom:190px;display:flex;gap:18px}
+.s1 .layers span{font-family:var(--mono);font-size:24px;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--accent);color:var(--ink);padding:14px 22px;border-radius:4px}
+
+/* slide 2: three-layer map */
+.map{margin-top:34px;display:flex;flex-direction:column;gap:18px}
+.band{background:var(--panel);border:2px solid var(--rule);border-left:10px solid var(--accent);border-radius:6px;padding:20px 30px}
+.band .top{display:flex;align-items:baseline;gap:20px}
+.band .layer{font-family:var(--body);font-weight:700;font-size:40px}
+.band .alias{font-family:var(--mono);font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.band dl{display:grid;grid-template-columns:140px 1fr;row-gap:6px;margin-top:10px}
+.band dt{font-family:var(--mono);font-size:21px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:4px}
+.band dd{font-family:var(--body);font-size:26px;line-height:1.3;color:var(--ink)}
+.band dd b{color:var(--accent);font-weight:600}
+.aside{margin-top:20px;font-family:var(--body);font-size:25px;line-height:1.35;color:var(--muted);border-top:2px solid var(--rule);padding-top:18px}
+.aside b{color:var(--ink);font-weight:600}
+
+/* slide 3: survey bars, 8px = 1 percentage point */
+.legend{display:flex;flex-wrap:wrap;gap:36px;margin-top:40px;font-family:var(--body);font-size:26px;color:var(--ink)}
+.legend span{display:flex;align-items:center;gap:14px}
+.legend i{display:inline-block;width:30px;height:30px;border-radius:4px}
+.k-live{background:var(--accent)} .k-rest{background:var(--fill)}
+.bars{margin-top:44px;display:flex;flex-direction:column;gap:34px}
+.bars .lab{font-family:var(--body);font-weight:600;font-size:32px}
+.bars .lab small{display:block;font-family:var(--mono);font-weight:400;font-size:21px;color:var(--muted);letter-spacing:.04em;margin-top:4px}
+.bar{display:flex;align-items:center;margin-top:12px;height:72px}
+.seg{height:72px;display:flex;align-items:center;justify-content:flex-end;padding-right:20px;font-family:var(--body);font-weight:700;font-size:34px;color:#0E1320;border-radius:3px}
+.seg.live{background:var(--accent)} .seg.rest{background:var(--fill)}
+.note{margin-top:46px;font-family:var(--body);font-size:30px;line-height:1.35;color:var(--muted);border-top:2px solid var(--rule);padding-top:24px}
+.note b{color:var(--ink)}
+
+/* slide 4: trade-off, 800px = 1.00 */
+.pair{margin-top:44px;display:flex;flex-direction:column;gap:30px}
+.pair .seg{height:84px;font-size:38px}
+.pair .bar{height:84px}
+.safety{margin-top:40px;display:flex;align-items:center;gap:26px;background:var(--panel);border:2px solid var(--rule);border-radius:6px;padding:26px 32px}
+.safety svg{flex:none}
+.safety p{font-family:var(--body);font-size:30px;line-height:1.3}
+.safety p small{display:block;font-size:24px;color:var(--muted);margin-top:6px}
+
+/* slide 5: listening card */
+.s5 h1{font-size:112px;margin-top:40px}
+.card{margin-top:56px;display:flex;flex-direction:column;gap:22px}
+.check{display:grid;grid-template-columns:56px 1fr;gap:24px;align-items:start;border-bottom:2px solid var(--rule);padding-bottom:22px}
+.check .box{width:46px;height:46px;border:4px solid var(--accent);border-radius:6px;margin-top:4px}
+.check .k{font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.check .q{font-family:var(--display);font-size:44px;line-height:1.15;margin-top:6px}
+.s5 .close{margin-top:40px;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.2;color:var(--accent);text-wrap:balance}
+</style></head><body>
+
+<section class="slide s1">
+  <div class="eyebrow">Daytona HackSprint #6 · NYC · Oct 16</div>
+  <h1>Safe, according to which layer?</h1>
+  <p class="sub">Every team pitches its safeguards in three minutes, then demos the agent operating safely.</p>
+  <div class="layers"><span>The wall</span><span>The rules</span><span>The receipts</span></div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5</span></div>
+</section>
+
+<section class="slide s2">
+  <div class="eyebrow">The safeguards map · who sells what</div>
+  <h2>Three layers, three sellers</h2>
+  <div class="map">
+    <div class="band">
+      <div class="top"><span class="layer">Containment</span><span class="alias">The wall</span></div>
+      <dl>
+        <dt>Stops</dt><dd>A mistake escaping into real systems</dd>
+        <dt>Misses</dt><dd>A tool call the agent is <b>allowed</b> to make</dd>
+        <dt>Sold by</dt><dd>Daytona (sandboxes) · Anchor Browser (cloud browsers)</dd>
+      </dl>
+    </div>
+    <div class="band">
+      <div class="top"><span class="layer">Policy</span><span class="alias">The rules</span></div>
+      <dl>
+        <dt>Stops</dt><dd>A tool call, <b>before it runs</b> (allow / deny)</dd>
+        <dt>Misses</dt><dd>Whether an allowed action got the right answer</dd>
+        <dt>Sold by</dt><dd>AWS (AgentCore Policy, GA March 2026)</dd>
+      </dl>
+    </div>
+    <div class="band">
+      <div class="top"><span class="layer">Evidence</span><span class="alias">The receipts</span></div>
+      <dl>
+        <dt>Stops</dt><dd>Nothing alone; it <b>records and scores</b> it</dd>
+        <dt>Misses</dt><dd>Harm in real time, unless evals run live</dd>
+        <dt>Sold by</dt><dd>Arize, now part of Dynatrace · AWS (AgentCore Evaluations)</dd>
+      </dl>
+    </div>
+  </div>
+  <p class="aside">Also partners, and what gets protected: <b>SurrealDB</b> (memory), <b>ElevenLabs</b> (voice)</p>
+  <div class="foot"><span class="src">Map: Alex Yedi. Sources: AWS News Blog, 2026 · Arize, 2026 · Prediction Guard, 2026 · luma.com/hacksprint-nyc</span><span class="page">2 / 5</span></div>
+</section>
+
+<section class="slide s3">
+  <div class="eyebrow">The evidence layer · share of agent teams</div>
+  <h2>Many cameras, fewer referees</h2>
+  <div class="legend"><span><i class="k-live"></i>Scores the agent while it runs</span><span><i class="k-rest"></i>Watches, or tests offline</span></div>
+  <div class="bars">
+    <div><div class="lab">Observability<small>CAN SEE WHAT THE AGENT DID</small></div>
+      <div class="bar"><div class="seg rest" style="width:712px">89%</div></div></div>
+    <div><div class="lab">Offline evals<small>SCORES IT ON A TEST SET</small></div>
+      <div class="bar"><div class="seg rest" style="width:416px">52%</div></div></div>
+    <div><div class="lab">Online evals<small>SCORES IT LIVE, IN PRODUCTION</small></div>
+      <div class="bar"><div class="seg live" style="width:296px">37%</div></div></div>
+  </div>
+  <p class="note">Watching to grading live: a <b>52-point drop</b>. Most teams can replay what an agent did. Far fewer score it while it acts.</p>
+  <div class="foot"><span class="src">Source: LangChain, State of Agent Engineering, 2026 (1,300+ respondents)</span><span class="page">3 / 5</span></div>
+</section>
+
+<section class="slide s4">
+  <div class="eyebrow">The layers can fight · Arize's own demo</div>
+  <h2>Safer isn't the same as working</h2>
+  <div class="legend"><span><i class="k-rest"></i>Before the fix</span><span><i class="k-live"></i>After the fix</span></div>
+  <div class="pair">
+    <div><div class="bars"><div class="lab">Task completion<small>SHARE OF VALID REQUESTS COMPLETED</small></div></div>
+      <div class="bar"><div class="seg rest" style="width:712px">0.89</div></div>
+      <div class="bar" style="margin-top:16px"><div class="seg live" style="width:576px">0.72</div></div></div>
+  </div>
+  <div class="safety">
+    <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8 L54 34 H40 V56 H24 V34 H10 Z" fill="#CBD5E1"/></svg>
+    <p>Action safety went <b>up</b> with the same fix.<small>One change, two scores, opposite directions.</small></p>
+  </div>
+  <p class="note">The post's lesson: <b>score safety and task success separately</b>, on the same test set, before and after every fix.</p>
+  <div class="foot"><span class="src">Source: Arize blog, "AI agent regression testing with Arize AX" (Fuad Ali, Nancy Chauhan), 2026</span><span class="page">4 / 5</span></div>
+</section>
+
+<section class="slide s5">
+  <div class="eyebrow">Friday's open question · for any agent demo</div>
+  <h1>Which layer earns the trust?</h1>
+  <div class="card">
+    <div class="check"><div class="box"></div><div><div class="k">Containment</div><div class="q">What is walled off, and what still gets out?</div></div></div>
+    <div class="check"><div class="box"></div><div><div class="k">Policy</div><div class="q">Which call was denied, and by what, outside the model?</div></div></div>
+    <div class="check"><div class="box"></div><div><div class="k">Evidence</div><div class="q">What was scored, live, over how many runs?</div></div></div>
+  </div>
+  <p class="close">Three minutes. Which box does the winner tick?</p>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+</body></html>
