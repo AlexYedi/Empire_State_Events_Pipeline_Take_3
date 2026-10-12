@@ -69,9 +69,11 @@ What the script enforces (change the rule in the script, then this summary):
   the book test in Step 3 still decides each one (an implementation-queue seat is not a book).
   **Finance and resource planning are OUT (2026-10-11, Alex: "anything finance or resource planning is out for
   roles and companies").** Drop catches Finance / FP&A / Accounting / Treasury / Payroll / Procurement / Spend
-  Management / ERP titles and Financial Services territories; finance, spend, procurement and ERP companies are
-  struck through in the registry (Ramp, Zip). In Step 3, a role selling a finance or resource-planning product
-  at an otherwise-fine company is a company-fit reject.
+  Management / ERP titles and Financial Services territories. **Companies (scope clarified 2026-10-12): fintech,
+  and any tech or services company whose buyer is the finance function** (office of the CFO: spend, AP/AR and
+  billing, procurement, FP&A, accounting, treasury, payroll, ERP) are struck through in the registry (Ramp, Zip)
+  and are a company-fit reject in Step 3, including a new company surfaced by Apollo or an event. A horizontal AI
+  company whose users include finance teams stays in; a product built *for* finance teams is out.
 - **Location default = NYC + Remote (US)** (Inputs): a remote role naming a non-US region drops; `--any-location`
   turns it off. Scoring still applies the location row in Step 3.
 - **Struck-through registry companies** (`~~Name~~`, coverage-only, every role auto-rejects on company fit) are
