@@ -25,6 +25,7 @@ Before any Agent dispatch:
 | Public copy before it leaves `needs_review` | `.claude/scripts/output_checks.py` → `output-evaluator` (mode `quote` and/or `source`) |
 | Notion write from a validated payload | `.claude/scripts/notion_payload.py` prints VALID → `notion-writer` |
 | `post_event_brief` | `post-event-synthesizer` (being added; until it lands, the parent thread) |
+| Hackathon / build sprint | `alex:build-sprint` skill: prep → Alex picks → architecture → safeguards → repo → pitch; build day with builder · diagnostician · reviewer (`code`/`safeguards`/`demo`) |
 | Carousel render (HTML → PDF) | `visual-renderer` → `.claude/scripts/render_carousel.py` must report `"ok": true` |
 
 HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend never route to a subagent.
@@ -36,7 +37,7 @@ HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend nev
 | Research (market, company, trend) | `alex:research-analyst`; `topic-landscape-analyst` for a single-topic year review | `research-brief-blueprint`, `competitive-analysis`, `market-signal-tracker` | — |
 | Content (posts, notes, comment loops) | `alex:content-correspondent` | `content-correspondent`, `pre-event-content`, `steering-interview`; read `.claude/skills/content-patterns/*.md` (reference files, not a skill) | editorial lead (calendar, format approval) → parent thread |
 | Architecture / design | `alex:cto-principal-architect` (Fable); `Plan` for an implementation plan | `cto-architect`, `trade-off-analysis-method`, `ai-agent-design-patterns`, `multi-agent-orchestration` | — |
-| Systems diagnosis ("why does this keep happening") | `alex:systems-analyst` (Fable) | `systems-thinking`, `systems-analyze`, `post-mortems-retrospectives` | single-incident debugger → `alex:systems-analyst` + `engineering:debug` |
+| Systems diagnosis ("why does this keep happening") | `alex:systems-analyst` (Fable) for recurring dysfunction; `alex:diagnostician` for a single failure (inspect the data first, propose, never fix) | `systems-thinking`, `systems-analyze`, `post-mortems-retrospectives` | — |
 | Build (scoped change, tests) | `alex:builder` | `karpathy-coder`, `tdd-workflow`, `git-collaboration-workflows` | agent engineer (prompts, skills) → `alex:builder` + `advanced-prompting-techniques`, `anthropic-skills:skill-creator` |
 | Review (diff, artifact) | `alex:reviewer`; `/judge-build` on its artifact-class triggers | `code-review` (built-in), `quality-review-checklist` | — |
 | Product / strategy | `alex:head-of-product` (Fable) | `ai-product-strategy`, `writing-prds`, `prioritizing-roadmap`, `consulting-roadmap-sequencing` | — |
@@ -67,7 +68,7 @@ A cap bounce or a spend-limit kill ends the wave: stop, report what landed, let 
 | T3 Notion writer | `notion-writer` | no | Notion create/update from a validated payload only | no |
 | T4 builder | `alex:builder` | no | repo files under the caller's allowlist; no MCP | no |
 | T5 renderer | `visual-renderer` | no | files in the named event folder only | no |
-| T6 reviewers / advisors | `output-evaluator`, `alex:reviewer`, `alex:systems-analyst`, `alex:cto-principal-architect`, `alex:head-of-product`, `alex:content-correspondent` | no | local files at most; Notion read only | read if the parent points to them |
+| T6 reviewers / advisors | `output-evaluator`, `alex:reviewer`, `alex:diagnostician`, `alex:systems-analyst`, `alex:cto-principal-architect`, `alex:head-of-product`, `alex:content-correspondent` | no | local files at most; Notion read only | read if the parent points to them |
 | T7 private-data advisor | `alex:career-strategist` | no | none | `me-model.md`, read-only |
 | Parent thread | the session itself | yes | HubSpot, spine, Linear, Notion inline (fallback) | yes |
 
