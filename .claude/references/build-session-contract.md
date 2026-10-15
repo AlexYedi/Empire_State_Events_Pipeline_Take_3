@@ -51,6 +51,7 @@ v3 adds a second, local-only event; the `build_session` row's shape is unchanged
 | `agent_id` | the subagent id (links to `<session>/subagents/agent-<id>.jsonl`) | `gen_ai.agent.id` |
 | `status` | `completed` / `async_launched` (still running) / `failed` / `killed` / `error` | — |
 | `is_error`, `error_class` | `cap` (20-agent limit), `spend` (account limit), `stall`, `registry`, `other`, or null | `error.type` |
+| `route_line`, `unexplained` | the `route:` / `gap:` line the parent wrote before the dispatch (agent-routing.md §1), and true when a `general-purpose` dispatch has no `gap:` line | — |
 | `concurrent_at_dispatch` | earlier dispatches still running when this one launched | — |
 | `sub_turns`, `sub_tool_calls`, `sub_tool_names` | the subagent's own activity | — |
 | `mcp_write_tool_names` | MCP tools the subagent called whose name implies a write | — |

@@ -11,7 +11,7 @@ Before any Agent dispatch:
 1. **Hard route?** (§2) Use it. No judgment.
 2. **Otherwise pick from §3** for the job family, and write one line before the call:
    `route: <agent> + <skills> · <why>` or `gap: no fitting agent · interim <agent>`.
-   That line is what the dispatch record and the scheduled review read. No line = an unexplained dispatch.
+   The dispatch record logs whether that line was present (`route_line`); a `general-purpose` dispatch with no `gap:` line is flagged `unexplained`. No line = an unexplained dispatch.
 3. **Model is a separate choice.** `model:` works on every agent: Fable for reasoning-heavy work, Opus for execution and prose, Sonnet for specialists and bulk.
 4. **Check §4 budgets** before a wave.
 
@@ -25,7 +25,7 @@ Before any Agent dispatch:
 | Public copy before it leaves `needs_review` | `.claude/scripts/output_checks.py` → `output-evaluator` (mode `quote` and/or `source`) |
 | Notion write from a validated payload | `.claude/scripts/notion_payload.py` prints VALID → `notion-writer` |
 | `post_event_brief` | `post-event-synthesizer` (being added; until it lands, the parent thread) |
-| Carousel render (HTML → PDF) | `visual-renderer` (being added; until it lands, the parent thread) |
+| Carousel render (HTML → PDF) | `visual-renderer` → `.claude/scripts/render_carousel.py` must report `"ok": true` |
 
 HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend never route to a subagent.
 
@@ -34,16 +34,16 @@ HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend nev
 | Family | Candidates (pick one, say why) | Skills to load | Gap → interim |
 |---|---|---|---|
 | Research (market, company, trend) | `alex:research-analyst`; `topic-landscape-analyst` for a single-topic year review | `research-brief-blueprint`, `competitive-analysis`, `market-signal-tracker` | — |
-| Content (posts, notes, comment loops) | `alex:content-correspondent` | `content-correspondent`, `pre-event-content`, `content-patterns`, `steering-interview` | editorial lead (calendar, format approval) → parent thread |
+| Content (posts, notes, comment loops) | `alex:content-correspondent` | `content-correspondent`, `pre-event-content`, `steering-interview`; read `.claude/skills/content-patterns/*.md` (reference files, not a skill) | editorial lead (calendar, format approval) → parent thread |
 | Architecture / design | `alex:cto-principal-architect` (Fable); `Plan` for an implementation plan | `cto-architect`, `trade-off-analysis-method`, `ai-agent-design-patterns`, `multi-agent-orchestration` | — |
 | Systems diagnosis ("why does this keep happening") | `alex:systems-analyst` (Fable) | `systems-thinking`, `systems-analyze`, `post-mortems-retrospectives` | single-incident debugger → `alex:systems-analyst` + `engineering:debug` |
 | Build (scoped change, tests) | `alex:builder` | `karpathy-coder`, `tdd-workflow`, `git-collaboration-workflows` | agent engineer (prompts, skills) → `alex:builder` + `advanced-prompting-techniques`, `anthropic-skills:skill-creator` |
-| Review (diff, artifact) | `alex:reviewer`; `/judge-build` on its artifact-class triggers | `code-review`, `quality-review-checklist` | — |
+| Review (diff, artifact) | `alex:reviewer`; `/judge-build` on its artifact-class triggers | `code-review` (built-in), `quality-review-checklist` | — |
 | Product / strategy | `alex:head-of-product` (Fable) | `ai-product-strategy`, `writing-prds`, `prioritizing-roadmap`, `consulting-roadmap-sequencing` | — |
-| Career (resume, positioning, offers) | `alex:head-of-product` for framing; parent for anything reading `me-model.md` | `interview-prep-dossier`, `value-story-framework`, `creating-financial-models` | career strategist (pending) → parent thread |
+| Career (resume, positioning, offers) | `alex:career-strategist` (fit · context · tailor · story · offer; the only agent that reads `me-model.md`, read-only); `alex:head-of-product` for strategy framing | `interview-prep-dossier`, `value-story-framework`, `positioning-messaging` | resume rendering → `/tailor-resume` (YED-258) |
 | Learning (primers, recaps) | `alex:learning-coach-mentor` | `book-distiller`, `visualization-patterns`, `ai-engineering-foundations` | — |
 | Data (schema, graph, queries) | `alex:cto-principal-architect`; `Explore` for read-only lookup | `knowledge-graph-modeling`, `database-designer`, `data-contract-framework`, `data:sql-queries` | data architect, DBA → `alex:cto-principal-architect` + these skills; DDL stays dashboard-only |
-| Security / privacy | `alex:reviewer` (read-only) | `security-review`, `api-security-and-lifecycle` | security reviewer → `alex:reviewer` + `security-review`; guard/filter diffs still get human review |
+| Security / privacy | `alex:reviewer` (read-only) | `security-review` (built-in), `api-security-and-lifecycle` | security reviewer → `alex:reviewer` + `security-review`; guard/filter diffs still get human review |
 | Ops (budgets, runs, health) | parent thread; `Explore` for log sweeps | `observability-designer`, `post-mortems-retrospectives` | system reviewer → `alex:systems-analyst` |
 | Harness / Claude Code questions | `claude-code-guide` | — | — |
 
@@ -58,15 +58,17 @@ HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend nev
 
 A cap bounce or a spend-limit kill ends the wave: stop, report what landed, let Alex re-plan.
 
-## 5. Trust tiers
+## 5. Trust tiers (one vocabulary: agent files cite these labels)
 
 | Tier | Agents | Web | Writes | Private files |
 |---|---|---|---|---|
-| Web/inbox readers | `company-researcher`, `person-researcher` (Gmail read), `competitive-signal-scanner`, `topic-landscape-analyst`, `alex:research-analyst`, `alex:learning-coach-mentor` | yes | local Write only (plugin pair); none for the specialists | no |
-| Text-in / text-out | `knowledge-conditioning`, `event-research-synthesizer`, `field-guide-renderer` | no | none | only what the parent passes |
-| Notion writer | `notion-writer` | no | Notion create/update, validated payload only | no |
-| Builder | `alex:builder` | no | repo files under the caller's allowlist; no MCP writes | no |
-| Reviewers / advisors | `output-evaluator`, `alex:reviewer`, `alex:systems-analyst`, `alex:cto-principal-architect`, `alex:head-of-product`, `alex:content-correspondent` | no | local Write at most; Notion read only | read if the parent points them at it |
-| Parent thread | the session itself | yes | HubSpot, spine, Linear, Notion inline | yes |
+| T1 web/inbox readers | `company-researcher`, `person-researcher` (both Gmail read), `competitive-signal-scanner`, `topic-landscape-analyst`, `alex:research-analyst`, `alex:learning-coach-mentor` | yes | **none**: they return text; the parent writes files | no |
+| T2 text-in / text-out | `knowledge-conditioning`, `event-research-synthesizer`, `field-guide-renderer`, `post-event-synthesizer` | no | none | only what the parent passes |
+| T3 Notion writer | `notion-writer` | no | Notion create/update from a validated payload only | no |
+| T4 builder | `alex:builder` | no | repo files under the caller's allowlist; no MCP | no |
+| T5 renderer | `visual-renderer` | no | files in the named event folder only | no |
+| T6 reviewers / advisors | `output-evaluator`, `alex:reviewer`, `alex:systems-analyst`, `alex:cto-principal-architect`, `alex:head-of-product`, `alex:content-correspondent` | no | local files at most; Notion read only | read if the parent points to them |
+| T7 private-data advisor | `alex:career-strategist` | no | none | `me-model.md`, read-only |
+| Parent thread | the session itself | yes | HubSpot, spine, Linear, Notion inline (fallback) | yes |
 
-Rule behind the tiers: no agent that reads untrusted web or inbox text holds an external write tool. `Bash` (builder, reviewer, CTO, systems analyst) is not a boundary: it can reach the network, so the tier holds by contract, not by tools line. An agent missing from the session's list means the registry is session-frozen: use a fresh session.
+Rule behind the tiers (CLAUDE.md invariant 5): no agent that reads untrusted text holds write tools, local Write included, because agent files and CLAUDE.md hot-reload. `Bash` (builder, renderer, reviewer, CTO, systems analyst) is not a boundary: it can reach the network, so those tiers hold by contract, not by tools line; none of them reads web text. **An `alex:*` agent missing from the session's list means the installed plugin is stale:** run `claude plugin update alex@alex-agents-skills --scope user` (and `--scope local` where a project pin exists), then restart. Project agents hot-reload (invariant 7).
