@@ -114,7 +114,6 @@ A removal only sticks if it reaches every file that *uses* the removed thing. `.
 | /rigor-review (weekly review) | `rigor-review` | 2026-09-28 | nothing scheduled; ask for a review when there is a question |
 | value-action-registry.md | `value-action-registry` | 2026-09-28 | the null-baseline rule in CLAUDE.md §5; outcomes via `/tag-outcome` |
 | correction-recurrence log | `correction-recurrence` | 2026-09-28 | the second-fix stop rule (`second-fix-stop-rule.md`) |
-| notion-writer agent | `notion-writer` | 2026-09-28 | inline parent-thread writes; mapping in `notion-schema.md` §Write order |
 
 ## Git / repo
 | Constraint | Cause | Workaround | Since |

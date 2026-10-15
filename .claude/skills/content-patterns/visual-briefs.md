@@ -251,7 +251,7 @@ no manual print dialog. Verified live 2026-08-12 (RevGenius "Where the Value Mov
    print); `.slide:not(:last-child){break-after:page}` (avoids a trailing blank page). Fonts
    must be CSP/offline-safe — **macOS system faces only** (e.g. Iowan Old Style + Menlo),
    never a webfont URL (it will silently fall back).
-2. **Render with headless Chrome:**
+2. **Render with headless Chrome** — preferred: `python3 .claude/scripts/render_carousel.py <file.html> --png <preview.png>` (renders, then checks overflow, page count and 4:5 size; the `visual-renderer` agent runs it). Manual equivalent:
    ```
    "/Applications/Tech Stack/Google Chrome.app/Contents/MacOS/Google Chrome" \
      --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=3000 \
