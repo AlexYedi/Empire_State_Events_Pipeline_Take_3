@@ -1,0 +1,28 @@
+/* carousel-base.css — Alex's house carousel tokens and base rules (YED-259).
+   Extracted 2026-10-15 from the 10-12 "Two stacks, one rulebook" carousel (the current house style).
+   Signature (brand decision 2026-09-30): dark ground, acid-green #8FE83A accent + name underline;
+   --mark is the per-post topic accent. System fonts only
+   (webfont URLs silently fall back in headless Chrome), one .slide per 4:5 page.
+   Start every carousel from this file; add slide-specific classes after it. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
