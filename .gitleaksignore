@@ -1,0 +1,3 @@
+# Reviewed 2026-10-15 (YED-259): documentation placeholders (sk_live_... / <your-key>), not secrets.
+659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:27
+659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:30
