@@ -91,7 +91,7 @@ every dispatch ahead of the entity list (fidelity rule from `/event-deep-researc
   friction: "papering over blind spots with confidence").
 - Confidence stated honestly per claim; thin research said so plainly, not padded.
 
-## Persistence (parent thread only — MCP not available in subagents)
+## Persistence (parent thread only — CLAUDE.md invariant 5)
 
 Notion only: write the dossier to Content Drafts (plain paragraphs, `needs_review`) for the comment-review
 loop, search-before-create. No graph write (the Postgres persist step was retired 2026-09-28 after one

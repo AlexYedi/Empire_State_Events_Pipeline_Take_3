@@ -78,4 +78,4 @@ content-correspondent (Mode B) consumes this in place of the raw transcript: the
 
 **Wired 2026-05-27:** now an explicit step in the post-event flow — `/post-event-content` **Step 3.5** runs conditioning on the fetched (or manually-pasted) transcript before content-correspondent drafts, grounded in the event's Notion roster + pre-event brief. content-correspondent **Mode B** carries the "condition first if labels/proper-nouns are unreliable" pointer. (Both wire-up TODOs from the v1 scaffold are now done.)
 
-**Validation rule:** skill discovery is session-frozen (CLAUDE.md §4 invariant 7) — test invocation in a FRESH conversation. The wiring is first exercised on the next `/post-event-content` run.
+**Validation rule:** prove a skill edit with one invocation before relying on it (CLAUDE.md §4 invariant 7); use a fresh conversation if the edit doesn't load. The wiring is first exercised on the next `/post-event-content` run.

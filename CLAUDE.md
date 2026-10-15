@@ -13,7 +13,7 @@ Alex is a senior enterprise B2B SaaS operator (12+ years: Meltwater, Bazaarvoice
 - Confidence as a percentage plus a plain-language qualifier. A stated 40% beats an inflated 80%.
 - Debugging: inspect the actual data at the failure point before proposing a fix. Verify live system state via MCP before assuming. Use `/calmate` after two failed attempts at the same problem.
 - Stack first, then free, then paid with rationale. Never commit secrets: keys live in `.env`.
-- Design and architecture questions go to `alex:cto-principal-architect` (Fable for reasoning-heavy work); systems diagnosis to `alex:systems-analyst`; `general-purpose` is a container for fan-out, not a thinker.
+- Design and architecture questions go to `alex:cto-principal-architect`; systems diagnosis to `alex:systems-analyst`; `general-purpose` is a container for fan-out, not a thinker. Model choice is separate from agent choice.
 
 ## 2. What this is
 
@@ -37,7 +37,7 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 |---|---|
 | How the workflows chain, rerun manual | `.claude/WORKFLOWS.md` |
 | Plan of record, decision log, shipped log | Notion "Empire State Roadmap" (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) |
-| What's open | To-dos: Notion To-dos database on the roadmap page (`collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`) · build work: Linear (team Yedibalian, `YED-n`) |
+| What's open | To-dos: Notion To-dos database on the roadmap page (`collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`) · build work: Linear (team EMPIRE-STATE, `YED-n`) |
 | Why the data layer is shaped this way | `docs/adr/README.md` (append-only; reversing an ADR means writing a new one) |
 | Environmental limits (harness, Notion, Supabase, vendors, git) | `.claude/references/platform-constraints.md` |
 | Notion/HubSpot schema and write order · MCP write formatting | `notion-schema.md` · `notion-write-gotchas.md` |
@@ -49,7 +49,7 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 **Notion database IDs** (parent page NYC AI Event Content Hub `338d3699c2db808781d5d4675dcc5e33`):
 Events `collection://9dcbc999-b4ed-4a51-b48a-10aaf171f1ba` · People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` · Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98` · Topics `collection://d61ce9df-94b3-4637-aa09-d77e09ab3a74` · Content Drafts `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775` · Project Ideas `collection://0956e6ed-8555-4d8f-8856-388966dedaab` · Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231` · To-dos `collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`. Live schema is the source of truth: `notion-fetch` before batch creates.
 
-**Supabase:** org `A.Yedi`, project `empire state ai` (`oicikjyzmxqfomrrqkvf`), REST with `SUPABASE_API_KEY` from `.env`.
+**Supabase:** org `A.Yedi`, project `The-Prod-Brain` (`oicikjyzmxqfomrrqkvf`), REST with `SUPABASE_API_KEY` from `.env`.
 
 ## 4. Invariants
 
@@ -59,9 +59,9 @@ These protect irreversible external effects. They do not get waived.
 2. **Supabase MCP is read-only.** Writes via REST + `spine_client.py`; DDL via dashboard from repo migrations after a twin rehearsal; the connector for `SELECT`, `list_*`, `get_advisors` only (write tools denied in `.claude/settings.json`).
 3. **One writer per event.** `.claude/hooks/event-claim.py claim "<event>"` at Step 1.0 of `/event-deep-research` and `/post-event-content` (exit 3 = held; claims expire after 4h). A second session that finds a run in progress goes read-only and reports. Duplicate effort is cheap; contradictory records that later runs read as fact are not.
 4. **Public repos, private inputs.** Both repos are public by design. `.env`, `me-model.md`, `target-companies.md`, inbox lists and other people's confidences never enter git; redact off-the-record material in the transcript and every derived file before commit. Never rewrite history to fix a leak without Alex.
-5. **MCP writes run in the parent thread.** claude.ai connectors (Notion, HubSpot, Calendar, Gmail) are not available for writes inside subagents; do every write inline. Subagents are for web research and text synthesis. A declared read tool may be delegated.
-6. **Subagents cannot spawn subagents.** Fan-out runs from the parent thread; every agent declares a minimal `tools:` line.
-7. **The agent registry is session-frozen.** Any edit to `.claude/agents/**` needs a fresh session to test.
+5. **Writes stay single-threaded, away from untrusted text (policy).** Every write runs in the parent, except Notion writes by the one `notion-writer` (after its sandbox test), which executes a parent-written, schema-checked payload. No agent that reads untrusted text holds write tools.
+6. **Fan-out runs from the parent (policy).** Every agent declares a minimal `tools:` line; a trust boundary earns an agent file, a way of thinking is a skill.
+7. **Prove an agent edit with a dispatch before relying on it.** Project agents hot-reload; plugin agents refresh on plugin update.
 8. **Search before create** in Notion and HubSpot (name + company; email is HubSpot's key). Notion has no native dedup.
 9. **HubSpot writes are post-event, selective, create-once**, with an inline confirmation table.
 
@@ -81,7 +81,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Size ceiling, held by Alex, no enforcement hook.** This file stays ≤1,800 words. At most 3 wired project hooks, none that can block a turn. After the paydown, additions to this file, the hook set, references, agents, commands and skills are one-in-one-out: name what the new thing replaces.
 
-**Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Starting a workflow unprompted:** research, drafting and analysis auto-fire when the moment matches; workflows with a built-in approval gate auto-start and pause there; publishing, CRM writes and credit spend (Apollo, Clay) wait for Alex. Unsure → the more cautious tier. "Proceed without prompting" raises the ceiling for that batch.
+**Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Autonomy levels.** Research and analysis auto-fire and stop at their gates (triage plan, brief). Drafts go to Notion `needs_review`; nothing publishes without Alex; an unapproved format, series or framework ships one pilot draft, then pauses. Publishing, CRM writes and credit spend (HubSpot, Apollo, Clay) wait for his go. "Proceed without prompting" runs the queue at these levels and never skips a gate; raising a level needs ≥95% completion on the dispatch record. Unsure → the more cautious level.
 
 **Parked thoughts and to-dos** go to the Notion To-dos database (on the roadmap page) in the same turn: anything owed after today, by Alex or a later session, gets a row with Who, Due, Why and Context, plus a Linear link if it ships as a PR. No free-floating "revisit later."
 

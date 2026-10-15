@@ -156,8 +156,7 @@ accumulated knowledge and compounds — without dumping stale, unfiltered prior 
 into the fresh pass. The pack carries **detail with provenance, framed as verify-first
 leads** (never a raw dump, never a thin summary).
 
-**All retrieval runs in the parent thread** — the Notion/Gmail MCP connectors are not
-available inside subagents ([[project_notion_writes_must_be_parent_thread]]); Supabase is
+**All retrieval runs in the parent thread** — so the specialists stay text-in/text-out; Supabase is
 REST-over-Bash. Only the conditioning distiller is a subagent (text-in / text-out).
 
 ### 1.7a: Retrieve (parent thread)
@@ -235,7 +234,7 @@ input:
   `Event Phase: pre_event`, `Content Status: needs_review`, icon 🗃️; body = the full pack
   (page-index callout per gotcha `i`). Relations to Event/People/Topics are set once the
   Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and relink +
-  mirror it in Step 4 (Notion writes run inline in the parent thread (subagents have no claude.ai connectors)).
+  mirror it in Step 4 (Notion writes run in the parent thread per CLAUDE.md invariant 5).
 - The Event-page mirror (a `## Prior-Context Pack` section) is appended inline in
   Step 4 (see 4e).
 
@@ -277,7 +276,7 @@ gather three things beyond today's snapshot, because the Deep Read (Step 4.5) is
 
 **Verbatim source-text rule (added 2026-06-23 — fidelity fix).** The raw calendar `description` is the source of truth and must reach every research subagent UNCHANGED, quoted as a `VERBATIM SOURCE` block, with any parsed-entity list or framing presented *alongside* it (supplementary), never *instead of* it. Entity parsing is a lossy summary: it reliably captures names but drops talk-abstract wording, explicitly-named themes (e.g. "partnerships", "go-to-market strategy"), attendee-mix cues, agenda ordering, and timezone notes. A 2026-06-23 defect built an entire run's outputs off the summarized artifact alone — entities survived, nuance did not. Rule: read the full description, extract everything, and only then layer framing on top. Same discipline applies to the synthesizer (it receives the raw invite) and to any hole-check (diff outputs against the verbatim text, not the summary).
 
-**Gmail as a research source (added 2026-06-21).** Before researching any person or company, check Alex's mailbox for prior correspondence — it is the highest-signal context he has and the web cannot see it (an existing thread, a prior intro, a warm contact, a cold-outbound already sent, an open deal). The `person-researcher` and `company-researcher` agents now carry `mcp__claude_ai_Gmail__search_threads` + `mcp__claude_ai_Gmail__get_thread` for this. Gmail is a connected MCP on an existing free quota (no incremental cost — automate per CLAUDE.md §5 automation defaults). Report only what the mailbox actually shows; never fabricate a relationship; summarize relationship state rather than pasting private contents into public-facing drafts. A found thread flips prioritization toward re-engage and changes the connection-note angle from cold-open to follow-up. **Registry caveat:** the agent registry is session-frozen, so if a run's agents predate this change, the parent thread should run the Gmail searches and pass the correspondence into the synthesizer.
+**Gmail as a research source (added 2026-06-21).** Before researching any person or company, check Alex's mailbox for prior correspondence — it is the highest-signal context he has and the web cannot see it (an existing thread, a prior intro, a warm contact, a cold-outbound already sent, an open deal). The `person-researcher` and `company-researcher` agents now carry `mcp__claude_ai_Gmail__search_threads` + `mcp__claude_ai_Gmail__get_thread` for this. Gmail is a connected MCP on an existing free quota (no incremental cost — automate per CLAUDE.md §5 automation defaults). Report only what the mailbox actually shows; never fabricate a relationship; summarize relationship state rather than pasting private contents into public-facing drafts. A found thread flips prioritization toward re-engage and changes the connection-note angle from cold-open to follow-up. **Registry caveat:** if a run's agents predate this change (CLAUDE.md invariant 7), the parent thread should run the Gmail searches and pass the correspondence into the synthesizer.
 
 ### 2a: Topics & Subtopics
 

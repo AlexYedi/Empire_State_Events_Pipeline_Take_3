@@ -32,7 +32,7 @@ No routine control runs: the control set runs only when the reviewer's model id 
    two-dot against a moving `origin/main`. Types: `skill` · `command` · `hook` · `code` · `ref` · `deep_read` · `dossier`.
    Exit 3 = privacy guard (nothing built). An EVIDENCE-PARITY warning means no spec reached the bundle: rebuild with
    `--spec-file` if one exists (a spec cannot be added later). The quote check covers every file, spec and the diff.
-2. **Dispatch the reviewer from the parent thread** (subagents cannot spawn subagents): `Agent` tool, `model: sonnet`,
+2. **Dispatch the reviewer from the parent thread** (CLAUDE.md invariant 6): `Agent` tool, `model: sonnet`,
    prompt exactly as `judge.py` prints it (read the brief, return only the JSON). Save the JSON where it says.
 3. **Log + verdict:** `python3 .claude/evals/judge.py run --resume <run-id> --verdict <json> [--judge-model claude:sonnet:<id>]`.
    `seat-log.py` is the only writer (never hand-write a row). Prints ONE line: **PASS** (done — do not ask Alex) or

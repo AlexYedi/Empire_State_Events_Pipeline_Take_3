@@ -5,7 +5,7 @@ argument-hint: "[paste calendar invite text after the command]"
 
 # /event-deep-research — Workflow A
 
-Run the full event research pipeline using multi-agent fan-out **from the parent thread** (the slash command's main conversation). Subagents cannot dispatch sub-agents per Anthropic SDK design, so the parent owns the fan-out and a downstream synthesizer assembles the final brief.
+Run the full event research pipeline using multi-agent fan-out **from the parent thread** (the slash command's main conversation). Per CLAUDE.md invariant 6 the parent owns the fan-out and a downstream synthesizer assembles the final brief.
 
 **Input:** pasted calendar invite text (or invite + Alex's natural-language context like "Speaker: Jane Smith, CTO at Acme; Topics: agentic systems, enterprise AI").
 
@@ -75,7 +75,7 @@ Before fan-out, load what the pipeline already knows about these entities so res
 
 ## Step 2 — Multi-agent research fan-out (this conversation)
 
-Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This must run in the parent thread because subagents cannot spawn other subagents (Anthropic SDK runtime constraint — see [code.claude.com/docs/en/sub-agents.md](https://code.claude.com/docs/en/sub-agents.md): *"Subagents cannot spawn other subagents. If your workflow requires nested delegation, use Skills or chain subagents from the main conversation."*).
+Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This runs in the parent thread so one place owns concurrency and the chain (CLAUDE.md invariant 6).
 
 The four parallel dispatches:
 
@@ -123,7 +123,7 @@ Iterate until Alex says "write it" / "proceed" / "looks good".
 
 ## Step 4 — Notion writes (this conversation)
 
-Notion writes run inline in the parent thread (subagents have no claude.ai connectors; CLAUDE.md invariant 5). Property mapping: `.claude/references/notion-schema.md`.
+Notion writes run inline in the parent thread (CLAUDE.md invariant 5). Property mapping: `.claude/references/notion-schema.md`.
 Inputs: approved brief + triage plan + raw invite text + today's date + Google Calendar Event ID (if captured in Step 1).
 
 Execute Steps 4a–4g of `.claude/skills/event-research/SKILL.md` inline, in dependency order:
@@ -177,7 +177,7 @@ If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 5. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. Step 6.5 will report the run incomplete, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record it in the Step 6 summary as waived (with the reason) rather than pending.
    In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
 
-**Registry note:** `field-guide-renderer` is session-frozen like every subagent — if this run predates the agent's registration, the render loop won't dispatch it; run the pipeline in a fresh conversation.
+**Registry note:** if `field-guide-renderer` won't dispatch in this session, run the pipeline in a fresh conversation (CLAUDE.md invariant 7).
 
 **Graph note (YED-205):** a Step 4.2 that did not stage is reported at Step 6.5; resolve it by re-running Step 4.2b.
 
@@ -232,9 +232,9 @@ See `.claude/WORKFLOWS.md` for the full picture of how the four workflows interr
 
 ## Why fan-out runs in the parent thread (architectural note)
 
-Per Anthropic SDK design, subagents dispatched via `Agent` (formerly `Task`) cannot themselves dispatch further subagents — `Agent`/`Task` is not exposed to subagent contexts and cannot be granted via frontmatter. This is a deliberate constraint to prevent runaway nesting. The documented workaround pattern is "chain subagents from the main conversation": orchestrate from the slash command's parent thread, where `Agent` is available.
+Parent fan-out is policy (CLAUDE.md invariant 6): one thread owns concurrency, ordering and the chain, which a predictable workflow needs (Anthropic, *Building Effective Agents*). History: until Claude Code v2.1.219 subagents could not dispatch subagents at all; the harness now allows nesting, and we choose not to use it here.
 
-A previous version of this pipeline used an `event-research-orchestrator` subagent intended to fan out the four specialists from inside its own context. Empirical testing on 2026-05-07 (across 5 different subagents + the orchestrator) confirmed the SDK constraint and validated the pivot to parent-driven fan-out + synthesizer-only downstream agent. See WORKFLOWS.md "✅ Resolved 2026-05-07" section for the full diagnostic record.
+A previous version of this pipeline used an `event-research-orchestrator` subagent intended to fan out the four specialists from inside its own context. Empirical testing on 2026-05-07 (across 5 different subagents + the orchestrator) confirmed the then-current constraint and validated the pivot to parent-driven fan-out + synthesizer-only downstream agent. See WORKFLOWS.md "✅ Resolved 2026-05-07" section for the full diagnostic record.
 
 ## Ground truth references
 
@@ -244,4 +244,4 @@ The orchestration shape is defined here. The actual research / write methodology
 - `.claude/agents/research/{company-researcher, person-researcher, topic-landscape-analyst, competitive-signal-scanner}.md` — specialist contracts (now w/ historical spine + novice on-ramp + Evidence Ledger)
 - `.claude/agents/content/field-guide-renderer.md` — Deep Read renderer contract (Opus, section-by-section + stitch, endnotes)
 - `docs/adr/ADR-5-event-field-guide.md` + `docs/archive/proposals/event-field-guide.md` — the one-artifact / two-layer / decoupled-render invariants
-- `.claude/references/notion-schema.md` (Notion/HubSpot schemas, write order) · `notion-write-gotchas.md` · CLAUDE.md §4 (SDK constraints)
+- `.claude/references/notion-schema.md` (Notion/HubSpot schemas, write order) · `notion-write-gotchas.md` · CLAUDE.md §4 (invariants 5–7)

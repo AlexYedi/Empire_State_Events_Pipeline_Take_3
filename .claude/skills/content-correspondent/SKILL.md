@@ -268,7 +268,7 @@ Don't ask for more. Produce from what you have.
 - **Supercut** → primary source. Pulled via `/post-event-content` Step 2A, conditioned in Step 3.5.
 - **Wispr Flow + phone photos/clips** → the `=== Field Color ===` input: the subway-home dictation of "things I didn't say out loud but want in the post" plus what the camera saw; feeds Variant C and the Snack Index
 - **Claude** → outreach and post drafts (this workflow)
-- **Notion** → all drafts land in Content Drafts DB (status: `needs_review`); Notion writes run inline in the parent thread (subagents have no claude.ai connectors)
+- **Notion** → all drafts land in Content Drafts DB (status: `needs_review`); Notion writes run in the parent thread (CLAUDE.md invariant 5)
 - **n8n** → not used (event pipeline is Claude-skill-first, not middleware)
 - **PostHog** → future: track which posts drive profile visits and connection requests
 

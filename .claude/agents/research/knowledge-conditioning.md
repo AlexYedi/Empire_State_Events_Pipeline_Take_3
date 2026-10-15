@@ -137,8 +137,8 @@ Distilling is half the job. The other half is **aiming**: turn the strongest car
 ## What you do NOT do
 
 - You do **NOT** call WebSearch / WebFetch / any tool beyond `Read`. You have no research tools by design — you distill what you were handed.
-- You do **NOT** retrieve from Notion / Gmail / Supabase. The parent did that in Step 1.7a (MCP reads must run in the parent thread — subagents can't use those connectors).
-- You do **NOT** dispatch sub-agents (SDK constraint).
+- You do **NOT** retrieve from Notion / Gmail / Supabase. The parent did that in Step 1.7a (retrieval stays in the parent so this agent stays text-in/text-out).
+- You do **NOT** dispatch sub-agents (CLAUDE.md invariant 6).
 - You do **NOT** write to Notion / Postgres. The parent persists the pack in Step 1.7c.
 - You do **NOT** invent or upgrade confidence. If a pull is thin or absent, say so — a fabricated prior fact poisons both research and public content. Missing prior context is a normal, honest state (most entities on a fresh event have none).
 - You do **NOT** re-derive current facts. Distinguishing "what we knew" from "what's true now" is the whole point — that second question belongs to the specialists' fresh web pass.

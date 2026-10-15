@@ -16,8 +16,8 @@ on its own bundle mechanics, so Alex was asked about runs where nothing was wron
    (bundle_version 3; telemetry and the judge layer are excluded from ranges). The privacy guard refuses anything
    gitignored, out of repo, symlinked or secret-looking. Deterministic pre-passes (`check-refs.sh`,
    `check-tombstones.py`, `density-check.sh` for `deep_read`) go into the bundle as ground truth.
-2. The parent thread dispatches the reviewer (`Agent`, `model: sonnet`) on the brief. Subagents cannot spawn
-   subagents, so this step cannot live inside a script.
+2. The parent thread dispatches the reviewer (`Agent`, `model: sonnet`) on the brief. A script cannot
+   dispatch an agent, so this step lives in the parent (CLAUDE.md invariant 6).
 3. `judge.py run --resume` logs the verdict through `.claude/hooks/seat-log.py`, the only writer of reviewer rows
    (real UTC time, content hash, harness-computed score). Quotes are verified against every file in the bundle.
 4. `judge_lib.finalize()` decides: **flag** if any of — score < 0.70 · reviewer's `privacy_layer_defect` ·
