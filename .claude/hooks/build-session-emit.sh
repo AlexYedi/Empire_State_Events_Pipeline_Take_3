@@ -12,7 +12,7 @@
 #   2. PROJECT to PostHog /capture/ ONLY if $POSTHOG_PROJECT_TOKEN is set (derived, swappable adapter).
 #
 # Content-gated by construction: emits metadata + counts ONLY — never prompt/tool-input/output bodies (YED-81).
-# Contract: .claude/references/build-session-contract.md (v2 — the DoD build_meta fold was retired 2026-09-28).
+# Contract: .claude/references/build-session-contract.md (v3 — adds the subagent_dispatch record; build_session shape unchanged).
 # Stop hooks emit a top-level `systemMessage` if anything; this one stays silent on success.
 
 set -uo pipefail
@@ -37,7 +37,7 @@ if [ -f "$SETTINGS_LOCAL" ]; then
   fi
 fi
 
-CONTRACT_VERSION="2"
+CONTRACT_VERSION="3"
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 PROJECT=$(basename "${CWD:-${CLAUDE_PROJECT_DIR:-$(pwd)}}")
@@ -95,6 +95,13 @@ RECORD=$(jq -nc \
 SHARD_ID=$(printf '%s' "$SESSION_ID" | tr -c 'A-Za-z0-9._-' '_')
 mkdir -p .claude/.state/telemetry/build-sessions
 printf '%s\n' "$RECORD" >> ".claude/.state/telemetry/build-sessions/${SHARD_ID}.jsonl"
+
+# --- 1b. dispatch record (contract v3, YED-259): one metadata row per subagent dispatch ---
+# Rebuilt from the transcript on every Stop (idempotent; background agents settle on a later Stop).
+# Local only, never projected to PostHog. Never blocks: the script swallows its own errors.
+if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] && command -v python3 >/dev/null 2>&1; then
+  python3 .claude/scripts/dispatch_record.py "$TRANSCRIPT" "$SESSION_ID" .claude/.state/telemetry/dispatches >/dev/null 2>&1 || true
+fi
 
 # --- 2. PostHog projection (derived; only if key present) ---
 if [ -n "${POSTHOG_PROJECT_TOKEN:-}" ]; then
