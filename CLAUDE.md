@@ -13,7 +13,7 @@ Alex is a senior enterprise B2B SaaS operator (12+ years: Meltwater, Bazaarvoice
 - Confidence as a percentage plus a plain-language qualifier. A stated 40% beats an inflated 80%.
 - Debugging: inspect the actual data at the failure point before proposing a fix. Verify live system state via MCP before assuming. Use `/calmate` after two failed attempts at the same problem.
 - Stack first, then free, then paid with rationale. Never commit secrets: keys live in `.env`.
-- Design and architecture questions go to `alex:cto-principal-architect`; systems diagnosis to `alex:systems-analyst`; `general-purpose` is a container for fan-out, not a thinker. Model choice is separate from agent choice.
+- Before any dispatch, pick from `.claude/references/agent-routing.md` and state the choice or the gap in one line; `general-purpose` is a container, not a thinker.
 
 ## 2. What this is
 

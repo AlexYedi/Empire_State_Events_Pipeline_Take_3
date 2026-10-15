@@ -19,6 +19,7 @@ CONTRACT_VERSION = "3"
 WRITE_TOOL = re.compile(r"(create|update|delete|manage|save|send|write|publish|upload|move|share)", re.I)
 TASK_ID = re.compile(r"<tool-use-id>([^<]+)</tool-use-id>")
 TASK_STATUS = re.compile(r"<status>([^<]+)</status>")
+ROUTE = re.compile(r"^\s*`?(route|gap):\s*[^\n]+", re.I | re.M)  # agent-routing.md §1: a line that starts with route:/gap:
 
 
 def load(path):
@@ -96,11 +97,14 @@ def build(transcript, session_id):
     rows = load(transcript)
     subdir = os.path.join(transcript[:-len(".jsonl")] if transcript.endswith(".jsonl") else transcript, "subagents")
     by_id, order = {}, []
+    last_text = ""  # most recent assistant text, for the routing file's `route:` / `gap:` line
     for r in rows:
         ts = r.get("timestamp")
         content = (r.get("message") or {}).get("content")
         if r.get("type") == "assistant" and isinstance(content, list):
             for b in content:
+                if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip():
+                    last_text = b["text"]
                 if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") in ("Agent", "Task"):
                     inp = b.get("input") or {}
                     rec = {
@@ -114,6 +118,9 @@ def build(transcript, session_id):
                         "agent_id": None, "status": "dispatched", "is_error": False,
                         "error_class": None, "handback_chars": None, "ended_at": None,
                     }
+                    m_route = ROUTE.search(last_text or "")
+                    rec["route_line"] = m_route.group(0)[:120] if m_route else None
+                    rec["unexplained"] = rec["agent"] == "general-purpose" and not (m_route and m_route.group(1).lower() == "gap")
                     by_id[b.get("id")] = rec
                     order.append(b.get("id"))
         if r.get("type") == "user":
