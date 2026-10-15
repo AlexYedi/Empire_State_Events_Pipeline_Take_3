@@ -336,9 +336,19 @@ content-correspondent then runs its standard logic per `.claude/skills/content-c
 
 **Length guardrail (added 2026-06-10):** every Tier 2 post content-correspondent returns must be **≤ 3,000 characters** (LinkedIn hard cap) — the roundtable / topics×perspectives format with verbatim quotes is the one that overruns. Cut each version to budget BEFORE Step 5 commits it; sources / resource links go to the **first comment**, never inline in the post body. Canonical rule: `.claude/references/content-style-guide.md` → LinkedIn Character Budget.
 
+## Step 4.5 — Output check (quote + source), before anything reaches Notion — YED-259
+
+Public copy only (posts, first comment, carousel copy); DMs skip this. The check is evidence for Alex's review, not a gate: every draft still lands as `needs_review`, with the verdict on top.
+
+1. **Write the inputs to local files** in the session scratchpad: each public draft *with its first comment and sources*, and the Step 3.7 `post_event_brief` (speaker map, quote bank, evidence). A check that can't see the sources reports false "unsourced" fails (validated 2026-10-15).
+2. **Run the deterministic pass** for each draft file:
+   `python3 .claude/scripts/output_checks.py quotes --draft <draft> --transcript <conditioned transcript>` (repeat `--transcript` per recording) and `python3 .claude/scripts/output_checks.py sources --draft <draft>`.
+3. **Dispatch `output-evaluator` twice in one message** (`model: opus`), mode `quote` and mode `source`, passing the draft, both JSON outputs, the transcript path(s), the brief file, and the event folder's slide photos. It is read-only; it never edits copy.
+4. **Carry the verdict into Step 5:** each draft page starts with a callout `Checks: PASS` or `Checks: FAIL n` plus the fails table (item · code · evidence · direction). Fix nothing silently: Alex decides each fail at review. A `PARAPHRASE-AS-QUOTE`, `MISATTRIBUTED` or off-the-record finding is named in the Step 6 summary.
+
 ## Step 5 — Write drafts to Notion (inline, parent thread)
 
-Once content-correspondent returns drafts, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5. Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
+Once content-correspondent returns drafts and Step 4.5 has checked them, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5. Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
 
 Each draft becomes one Content Drafts row with:
 - `Content Type` per draft (linkedin_post_post, linkedin_dm_speaker, linkedin_dm_host, etc.)
@@ -420,6 +430,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
 Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
+Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
 Drafts created: N
   - Tier 1 comment: [Notion URL]
   - Tier 2 post + visual brief: [Notion URL]
