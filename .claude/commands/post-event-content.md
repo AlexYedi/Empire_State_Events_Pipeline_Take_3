@@ -346,23 +346,24 @@ Public copy only (posts, first comment, carousel copy); DMs skip this. The check
 3. **Dispatch `output-evaluator` twice in one message** (`model: opus`), mode `quote` and mode `source`, passing the draft, both JSON outputs, the transcript path(s), the brief file, and the event folder's slide photos. It is read-only; it never edits copy.
 4. **Carry the verdict into Step 5:** each draft page starts with a callout `Checks: PASS` or `Checks: FAIL n` plus the fails table (item · code · evidence · direction). Fix nothing silently: Alex decides each fail at review. A `PARAPHRASE-AS-QUOTE`, `MISATTRIBUTED` or off-the-record finding is named in the Step 6 summary.
 
-## Step 5 — Write drafts to Notion (inline, parent thread)
+## Step 5 — Write drafts to Notion (via `notion-writer`, CLAUDE.md invariant 5) — YED-259
 
-Once content-correspondent returns drafts and Step 4.5 has checked them, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5. Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
+Once content-correspondent returns drafts and Step 4.5 has checked them, the parent **decides every write and hands them to the one Notion writer** as a payload. The parent never pastes draft text into `notion-create-pages` by hand on this step any more; the writer adds search-before-create, a per-event manifest (a retry can't duplicate a draft) and a read-back of every page.
 
-Each draft becomes one Content Drafts row with:
-- `Content Type` per draft (linkedin_post_post, linkedin_dm_speaker, linkedin_dm_host, etc.)
-- `Event Phase` = `post_event`
-- `Content Status` = `needs_review`
-- `Platform` = `linkedin`
-- `Event` relation = Notion Event URL
-- `People` relation = matched People DB rows for each bucketed contact
+1. **Build the payload** at `<scratchpad>/notion-payload-<event-slug>.json` (shape documented in `.claude/scripts/notion_payload.py`):
+   - `run`: the event name · `manifest`: `.claude/.state/notion-manifests/<event-slug>.json` (gitignored; reused across reruns of this event)
+   - one `create` operation per draft into Content Drafts (`parent: {"data_source_id": "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"}`), `key` = `draft:<event-slug>:<content-type>:<n>`, `dedup` = the draft title, `frozen_statuses: ["scheduled", "published"]`
+   - `properties`: `Content Type` per draft (linkedin_post_post, linkedin_dm_speaker, linkedin_dm_host, …) · `Event Phase` = `post_event` · `Content Status` = `needs_review` · `Platform` = `linkedin` · `Event` relation = Notion Event URL · `People` relation = matched People rows · `Goal` + `Target` per `content-patterns/goal-tagging.md`
+   - `content`: the draft as plain paragraphs (never code blocks; `notion-write-gotchas.md`), starting with the Step 4.5 `Checks:` callout
+2. **Validate:** `python3 .claude/scripts/notion_payload.py <payload>` must print `VALID`. Fix the payload, never the validator.
+3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / updated / skipped / failed table inline.
+4. **On `failed` rows:** read the error, fix that operation in the payload and re-dispatch; the manifest makes the rerun safe (done rows are skipped). If the writer itself is unavailable, write those drafts inline from the parent as before and say so in Step 6.
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
 
 **Spec + rationale:** `docs/archive/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot post-event, selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
 
-**Topology (hard rule):** all HubSpot writes happen **in the parent thread** — the HubSpot MCP is unavailable inside subagents, and the confirmation table must render inline (memory `project_notion_writes_must_be_parent_thread`).
+**Topology (hard rule):** all HubSpot writes happen **in the parent thread** — HubSpot writes stay in the parent by policy (CLAUDE.md invariant 5), and the confirmation table must render inline.
 
 ### 5.5a — Build the candidate list (selective — default is exclusion)
 A person qualifies for a HubSpot write **only if one holds**:
@@ -431,7 +432,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
 Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
 Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
-Drafts created: N
+Drafts created: N  (notion-writer: created C · skipped S · failed F · manifest <path>)
   - Tier 1 comment: [Notion URL]
   - Tier 2 post + visual brief: [Notion URL]
   - Bucket A outreach: N drafts
