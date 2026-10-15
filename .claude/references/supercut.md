@@ -13,8 +13,7 @@ in the repo `.env` (a **personal** token, `sk_u_…`). Never print it.
 | Tools / endpoints | `list_recordings` · `get_recording` · `get_transcript` · `get_frame` · `list_comments` · `list_reactions` · `list_playlists` · `get_playlist` · `list_playlist_recordings` · `add_playlist_recording` · `list_form_responses` | see below |
 | Use when | interactive runs in the parent thread (default) | MCP not loaded in this session, or a script needs it |
 
-**MCP first, REST fallback.** Like every claude.ai / MCP connector, the Supercut MCP is **not available
-inside subagents**, so call it from the parent thread. A connector added mid-session is not visible until
+**MCP first, REST fallback.** Call the Supercut MCP from the parent thread (CLAUDE.md invariant 5). A connector added mid-session is not visible until
 Claude Code restarts. Tool names in-session will be prefixed (e.g. `mcp__supercut__get_transcript` or
 `mcp__claude_ai_Supercut__…`); run ToolSearch `supercut` to find them.
 

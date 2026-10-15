@@ -31,8 +31,8 @@ Skip speakers who had no framework worth teaching (panel filler, a pure product 
 
 ## Step B — Fan out one drafting agent per presenter (parallel, parent thread)
 
-One `general-purpose` subagent per speaker, all dispatched in one message (subagents cannot spawn
-subagents; CLAUDE.md invariant 6). Each gets ONLY its slice plus the framing rules below. Agents do web
+One `general-purpose` subagent per speaker, all dispatched in one message (fan-out from the parent,
+CLAUDE.md invariant 6). Each gets ONLY its slice plus the framing rules below. Agents do web
 enrichment and text only: **no Notion, HubSpot or Gmail writes** (CLAUDE.md invariant 5).
 
 - Give each agent an **absolute** working path:

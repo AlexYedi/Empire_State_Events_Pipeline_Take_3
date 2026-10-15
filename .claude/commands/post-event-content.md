@@ -151,7 +151,7 @@ Before drafting, condition the transcript so speaker labels and proper nouns can
 
 ## Step 3.6 — Post-event enrichment (bounded · gated-on-use · cached)
 
-Research the **net-new** entities the room surfaced that the pre-event brief didn't cover, so the brief stands alone and proper nouns / concepts are correct (the folder-only ABB run missed web-enrichable facts — YED-96). **Topology (hard rule):** subagents do the research and return structured text; the **parent owns the fan-out list and does all writes** (subagents can't spawn subagents — SDK constraint).
+Research the **net-new** entities the room surfaced that the pre-event brief didn't cover, so the brief stands alone and proper nouns / concepts are correct (the folder-only ABB run missed web-enrichable facts — YED-96). **Topology (hard rule):** subagents do the research and return structured text; the **parent owns the fan-out list and does all writes** (CLAUDE.md invariants 5 and 6).
 
 **What to enrich:**
 - **Net-new speakers** flagged in the Step 3.7 Speaker Map (no pre-research) — full name · title · company · 1-line relevance · source URL · confidence.
@@ -338,7 +338,7 @@ content-correspondent then runs its standard logic per `.claude/skills/content-c
 
 ## Step 5 — Write drafts to Notion (inline, parent thread)
 
-Once content-correspondent returns drafts, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5 (claude.ai connectors are not available inside subagents). Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
+Once content-correspondent returns drafts, write them **inline in this (parent) thread** with `notion-create-pages` on the Content Drafts DB. Writes run inline in the parent thread per CLAUDE.md invariant 5. Follow `.claude/references/notion-write-gotchas.md` (post copy as plain paragraphs, never code blocks).
 
 Each draft becomes one Content Drafts row with:
 - `Content Type` per draft (linkedin_post_post, linkedin_dm_speaker, linkedin_dm_host, etc.)

@@ -80,7 +80,7 @@ You receive all rendered Deep-Read sections in order. Produce the final assemble
 
 - No WebSearch/WebFetch — you have no research tools by design. If the evidence pack is missing something, say so in a `> Gap:` note; the parent re-dispatches a specialist.
 - No Notion/HubSpot writes — the parent appends your output to the one research brief (ADR-5).
-- No sub-agent dispatch (SDK constraint).
+- No sub-agent dispatch (CLAUDE.md invariant 6).
 - No fabrication, no padding, no generic explainer filler, no bullet-lattice fallback, no duplicating the scan layer or pre-event content.
 - **No inventing or altering a name** — reproduce every person/company/product name exactly as given; never confabulate a person's first name (see "Name fidelity" above).
 - **No inferring pronouns from a name** — default they/them until a primary source in the pack states otherwise; an un-sourced gendered pronoun is a confabulation (see "Pronoun fidelity" above).

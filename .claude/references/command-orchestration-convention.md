@@ -20,7 +20,7 @@ lands. If a command only lists agents under an "Invocations" heading, it is a sp
 2. **Dispatch / fan-out (parent thread, explicit).** State exactly which agents run, **in parallel or
    serially**, and *why*. Parallel = independent `Agent` calls **in one message**. Each dispatch leads
    with the verbatim source block + a one-line framing of what that specialist returns.
-   **SDK constraint (hard):** subagents cannot spawn subagents — **fan-out happens in the parent thread,
+   **Policy (CLAUDE.md invariant 6):** **fan-out happens in the parent thread,
    not inside a "lead/orchestrator" agent.** A command that says "agent X orchestrates the others" is wrong.
 3. **Collect & handle thin returns.** Wait for all dispatched agents. If one returns thin, **re-invoke
    just that one** with deeper scope — don't restart the whole run.

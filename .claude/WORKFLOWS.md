@@ -43,7 +43,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 ## ✅ Resolved 2026-05-07 — orchestrator → synthesizer pivot
 
-Subagents cannot spawn subagents (Anthropic SDK design, not configurable), so the original `event-research-orchestrator` could never fan out. It was replaced by `event-research-synthesizer` (text-in, brief-out); `/event-deep-research` fans out the four specialists from the parent thread. The same day showed the agent registry is session-frozen and that every agent needs a minimal `tools:` line. Record: the Claude Code harness rows of `.claude/references/platform-constraints.md` (the full May 2026 diagnostic is in git history, tag `archive/pre-reset-2026-09-28`).
+At the time subagents could not spawn subagents (lifted in Claude Code v2.1.219; parent fan-out is now policy, CLAUDE.md invariant 6), so the original `event-research-orchestrator` could never fan out. It was replaced by `event-research-synthesizer` (text-in, brief-out); `/event-deep-research` fans out the four specialists from the parent thread. The same day showed the agent registry was session-frozen (agents now hot-reload; CLAUDE.md invariant 7) and that every agent needs a minimal `tools:` line. Record: the Claude Code harness rows of `.claude/references/platform-constraints.md` (the full May 2026 diagnostic is in git history, tag `archive/pre-reset-2026-09-28`).
 
 ---
 
@@ -84,10 +84,10 @@ The full pre-event research pipeline. Replaces the monolithic `event-research` s
 |---|---|---|---|
 | 1 | Main conversation | Parse invite into entities (Event/People/Companies/Topics); confirm with Alex | Confirmed entity list |
 | 1.5 | Main conversation | Dedup search Notion (5 DBs) + canonicalize names + classify NEW/REFRESH/SKIP per entity, present plan, get approval | Triage plan |
-| 2 | Main conversation (parallel fan-out) | Dispatch 4 specialists in parallel from the parent thread (subagents cannot dispatch sub-agents per Anthropic SDK design): `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner` | 4 specialist returns |
+| 2 | Main conversation (parallel fan-out) | Dispatch 4 specialists in parallel from the parent thread (CLAUDE.md invariant 6): `company-researcher`, `person-researcher`, `topic-landscape-analyst`, `competitive-signal-scanner` | 4 specialist returns |
 | 2.5 | `event-research-synthesizer` agent (sonnet) | Reconciles cross-references; surfaces verification flags; writes Quick Take, Success Signals, Documentarian Angle; formats brief in Step 3 schema | Assembled brief |
 | 3 | Main conversation | Present brief, iterate with Alex | Approved brief |
-| 4 | Main conversation (inline MCP writes; subagents have no claude.ai connectors) | Dependency-ordered writes: Companies → Topics → People → Event → Content Draft per Step 4 of event-research SKILL.md and `notion-schema.md` §Write order | Notion confirmation block + page URLs |
+| 4 | Main conversation (inline MCP writes; CLAUDE.md invariant 5) | Dependency-ordered writes: Companies → Topics → People → Event → Content Draft per Step 4 of event-research SKILL.md and `notion-schema.md` §Write order | Notion confirmation block + page URLs |
 | 5 | Main conversation | HubSpot recurrence check + Companies + Contacts (with associations) + Notes (event name body) | HubSpot confirmation block |
 | 6 | Main conversation | Final summary | Summary report |
 

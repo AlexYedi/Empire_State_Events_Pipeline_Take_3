@@ -1,6 +1,6 @@
 # Goal-tagging convention (Content Drafts) — assigned goal at creation
 
-Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal** + **Target** *at creation*, so the measurement layer can later grade **outcome vs. assigned goal** (the acted-on-value north-star). Imported by the content skills (`pre-event-content`, `content-correspondent`, `pattern-synthesis`) and applied by whoever creates the row (Notion writes run inline in the parent thread (subagents have no claude.ai connectors)).
+Added 2026-06-26 (Linear YED-90 / PRD US-4). Every Content Draft gets a **Goal** + **Target** *at creation*, so the measurement layer can later grade **outcome vs. assigned goal** (the acted-on-value north-star). Imported by the content skills (`pre-event-content`, `content-correspondent`, `pattern-synthesis`) and applied by whoever creates the row (Notion writes run in the parent thread per CLAUDE.md invariant 5).
 
 ## Notion fields (Content Drafts DB `6c24c9f5…`)
 - **Goal** (select): `reach` · `engagement` · `connection` · `meeting` · `hybrid` · `internal`
