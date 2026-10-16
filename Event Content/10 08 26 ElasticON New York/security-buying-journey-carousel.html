@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Security Buying Journey</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #0F172A; --ink: #F5F3EE; --soft: #C9CED8; --dim: #9AA3B5; --line: #2C3A55; --card: #16213A;
+    --nyl: #F59E0B; --vg: #38BDF8; --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 80px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 26px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--nyl); margin-bottom: 32px; }
+  h1 { font: 700 68px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 44px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 92% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 44px; display: flex; justify-content: space-between; align-items: center;
+          font: 24px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .12em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { position: absolute; left: 80px; right: 80px; bottom: 92px; font: 21px/1.4 var(--mono); color: var(--dim); }
+  .sub { font: 40px/1.3 var(--serif); color: var(--soft); }
+  .tag { font: 700 24px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  .nyl { color: var(--nyl); } .vg { color: var(--vg); }
+
+  /* 1 cover */
+  .s1 h1 { font-size: 100px; margin-top: 40px; }
+  .who { margin-top: auto; margin-bottom: 150px; display: grid; gap: 28px; }
+  .who div { border-left: 8px solid; padding: 8px 0 8px 32px; }
+  .who .a { border-color: var(--nyl); } .who .b { border-color: var(--vg); }
+  .who b { display: block; font: 700 46px/1.15 var(--serif); }
+  .who span { display: block; font: 30px/1.3 var(--serif); color: var(--soft); margin-top: 6px; }
+
+  /* 2 timeline */
+  .tl { display: grid; gap: 22px; margin-top: 8px; }
+  .row { display: grid; grid-template-columns: 250px 1fr; align-items: center; gap: 28px; }
+  .row .dur { font: 700 52px/1 var(--serif); color: var(--nyl); text-align: right; }
+  .row .bar { background: var(--card); border-left: 10px solid var(--nyl); padding: 22px 28px; font: 36px/1.2 var(--serif); }
+  .row .bar small { display: block; font: 26px/1.3 var(--mono); color: var(--dim); margin-top: 8px; }
+  .row.end .bar { border-left-color: var(--sig); }
+  .row.end .dur { color: var(--sig); }
+  .note { font: 26px/1.4 var(--mono); color: var(--dim); margin-top: 30px; }
+
+  /* 3 matrix */
+  table { width: 100%; border-collapse: collapse; }
+  th { font: 700 26px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); text-align: left; padding: 0 16px 18px; }
+  td { font: 31px/1.2 var(--serif); padding: 13px 14px; border-top: 2px solid var(--line); vertical-align: middle; }
+  td:first-child { font: 700 24px/1.2 var(--mono); color: var(--soft); letter-spacing: .04em; text-transform: uppercase; width: 200px; padding-left: 0; }
+  td.bad { color: var(--nyl); } td.bad:before { content: "✕ "; font-weight: 700; }
+  td.ok:before { content: "✓ "; color: var(--ink); font-weight: 700; }
+  td.na { color: var(--dim); font-size: 26px; }
+  .verdict { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .verdict div { background: var(--card); padding: 20px 26px; font: 32px/1.22 var(--serif); }
+  .verdict b { display: block; font: 700 24px/1 var(--mono); color: var(--nyl); letter-spacing: .08em; margin-bottom: 12px; }
+
+  /* 4 criteria */
+  .grid6 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid6 div, .grid4 div { background: var(--card); padding: 16px 22px; font: 33px/1.18 var(--serif); position: relative; }
+  .grid6 div { border-top: 6px solid var(--nyl); }
+  .grid6 i, .grid4 i { font: 700 24px/1 var(--mono); font-style: normal; display: block; margin-bottom: 8px; }
+  .grid6 i { color: var(--nyl); } .grid4 i { color: var(--vg); }
+  .grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid4 div { border-top: 6px solid var(--vg); }
+  .lab { margin: 0 0 16px; }
+  .plus { margin: 16px 0 26px; font: 30px/1.3 var(--serif); color: var(--soft); }
+  .plus b { color: var(--nyl); }
+
+  /* 5 gantt */
+  .months { display: grid; grid-template-columns: repeat(6, 1fr); margin-bottom: 12px; font: 700 26px/1 var(--mono); color: var(--dim); text-align: center; letter-spacing: .08em; }
+  .axis { height: 12px; background: linear-gradient(90deg, var(--nyl), var(--sig)); margin-bottom: 30px; border-radius: 6px; }
+  .phase { display: grid; grid-template-columns: 90px 1fr; gap: 24px; margin-bottom: 14px; align-items: stretch; }
+  .phase .n { background: var(--nyl); color: var(--bg); font: 700 46px/1 var(--serif); display: flex; align-items: center; justify-content: center; }
+  .phase .t { background: var(--card); padding: 18px 24px; }
+  .phase .t b { display: block; font: 700 38px/1.15 var(--serif); }
+  .phase .t span { display: block; font: 27px/1.35 var(--mono); color: var(--soft); margin-top: 8px; }
+  .phase.last .n { background: var(--sig); }
+  .callout { margin-top: 16px; font: 32px/1.3 var(--serif); color: var(--soft); border-left: 6px solid var(--sig); padding-left: 24px; }
+  .callout b { color: var(--ink); }
+
+  /* 7 future */
+  .pipe { display: grid; gap: 14px; }
+  .step { display: grid; grid-template-columns: 1fr 210px; align-items: center; background: var(--card); padding: 20px 28px; border-left: 10px solid var(--vg); }
+  .step b { font: 700 40px/1.15 var(--serif); }
+  .step span { font: 700 24px/1.2 var(--mono); color: var(--vg); text-align: right; letter-spacing: .08em; }
+  .step.h { background: var(--ink); color: var(--bg); border-left-color: var(--sig); }
+  .step.h span { color: var(--bg); }
+  .arrow { text-align: center; font: 30px/1 var(--mono); color: var(--dim); margin: -6px 0; }
+  .hire { margin-top: 30px; font: 34px/1.3 var(--serif); color: var(--soft); }
+  .hire b { color: var(--ink); }
+
+  /* 8 cheat */
+  .cheat { display: grid; gap: 0; }
+  .cheat div { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: baseline; padding: 19px 0; border-top: 2px solid var(--line); }
+  .cheat i { font: 700 24px/1.2 var(--mono); font-style: normal; color: var(--nyl); letter-spacing: .06em; text-transform: uppercase; }
+  .cheat span { font: 37px/1.22 var(--serif); }
+
+  .kicker .st { color: var(--sig); }
+  h1.m { font-size: 60px; margin-bottom: 14px; }
+  .lede { font: 30px/1.3 var(--serif); color: var(--soft); margin-bottom: 30px; }
+  .lede.q { font-style: italic; }
+  /* card stacks */
+  .cards { display: grid; gap: 14px; }
+  .cards.c2 { grid-template-columns: 1fr 1fr; }
+  .card { background: var(--card); padding: 20px 24px; border-top: 6px solid var(--nyl); }
+  .card.v { border-top-color: var(--vg); } .card.g { border-top-color: var(--sig); }
+  .card i { font: 700 22px/1 var(--mono); font-style: normal; color: var(--nyl); display: block; margin-bottom: 8px; letter-spacing: .06em; }
+  .card.v i { color: var(--vg); } .card.g i { color: var(--sig); }
+  .card b { display: block; font: 700 34px/1.15 var(--serif); margin-bottom: 8px; }
+  .card span { display: block; font: 27px/1.32 var(--serif); color: var(--soft); }
+  .card.row { display: grid; grid-template-columns: 70px 1fr; gap: 18px; align-items: start; }
+  .card.row i { font-size: 36px; margin: 4px 0 0; }
+  .down { text-align: center; font: 26px/1 var(--mono); color: var(--dim); margin: -4px 0; }
+  .pull { margin-top: 24px; font: italic 31px/1.3 var(--serif); color: var(--ink); border-left: 6px solid var(--sig); padding-left: 22px; }
+  .pull small { display: block; font: 22px/1.3 var(--mono); font-style: normal; color: var(--dim); margin-top: 8px; }
+  /* matrix */
+  .mx { width: 100%; border-collapse: separate; border-spacing: 6px; margin-left: -6px; }
+  .mx th { font: 700 22px/1.1 var(--mono); padding: 0 4px 6px; color: var(--soft); text-align: center; }
+  .mx td { font: 600 23px/1.18 var(--serif); padding: 12px 8px; text-align: center; border: 0; vertical-align: middle; border-radius: 4px; }
+  .mx td.k { font: 700 20px/1.1 var(--mono); color: var(--soft); text-align: left; text-transform: uppercase; width: 150px; padding-left: 0; background: none; }
+  .mx td.s { background: rgba(143,232,58,.16); color: #B8F27A; }
+  .mx td.x { background: rgba(248,113,113,.16); color: #FCA5A5; }
+  .mx td.m { background: rgba(251,191,36,.14); color: #FCD34D; }
+  .mx td.n { background: #131C30; color: var(--dim); }
+  .legend { display: flex; gap: 26px; font: 21px/1 var(--mono); color: var(--dim); margin: 10px 0 22px; }
+  .legend span:before { content: ""; display: inline-block; width: 16px; height: 16px; margin-right: 8px; vertical-align: -2px; }
+  .legend .s:before { background: #8FE83A; } .legend .m:before { background: #FBBF24; } .legend .x:before { background: #F87171; }
+  .needs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .needs div { background: #2A2248; padding: 12px 16px; font: 25px/1.22 var(--serif); }
+  .needs i { font: 700 21px/1 var(--mono); font-style: normal; color: #C4B5FD; margin-right: 8px; }
+  .needhd { font: 700 22px/1 var(--mono); letter-spacing: .1em; color: #C4B5FD; margin-bottom: 10px; }
+  /* need -> get */
+  .ng { display: grid; grid-template-columns: 1fr 44px 1.25fr; gap: 10px 8px; align-items: stretch; }
+  .ng .h { font: 700 22px/1 var(--mono); letter-spacing: .1em; padding-bottom: 6px; }
+  .ng .a { background: var(--card); padding: 14px 16px; font: 700 25px/1.2 var(--serif); }
+  .ng .z { background: #2A2248; padding: 14px 16px; font: 25px/1.25 var(--serif); }
+  .ng .ar { display: flex; align-items: center; justify-content: center; font: 700 28px/1 var(--mono); color: var(--sig); }
+  .vgcrit { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 26px; }
+  .vgcrit div { background: var(--card); border-top: 6px solid var(--vg); padding: 14px 14px; font: 700 24px/1.2 var(--serif); }
+  .vgcrit i { display: block; font: 700 20px/1 var(--mono); font-style: normal; color: var(--vg); margin-bottom: 6px; }
+  /* why */
+  .why { display: grid; gap: 10px; }
+  .why div { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: center; background: var(--card); padding: 14px 20px; }
+  .why b { font: 700 27px/1.15 var(--serif); color: var(--nyl); }
+  .why span { font: 25px/1.28 var(--serif); color: var(--soft); }
+  .decision { margin-top: 18px; background: #2A2248; padding: 22px 26px; font: 30px/1.3 var(--serif); }
+  .decision b { display: block; font: 700 22px/1 var(--mono); color: #C4B5FD; letter-spacing: .1em; margin-bottom: 10px; }
+  /* gantt */
+  .gt { display: grid; grid-template-columns: 250px repeat(6, 1fr); row-gap: 12px; align-items: center; }
+  .gt .mo { font: 700 22px/1 var(--mono); color: var(--dim); text-align: center; border-left: 2px dashed var(--line); padding: 6px 0; }
+  .gt .ph { font: 700 24px/1.15 var(--serif); }
+  .gt .ph small { display: block; font: 700 18px/1 var(--mono); color: var(--dim); margin-bottom: 4px; }
+  .gt .bar { height: 26px; border-radius: 13px; }
+  .gt .ms { font: 700 19px/1.15 var(--mono); color: #FB923C; }
+  .del { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 24px; }
+  .del div { background: var(--card); padding: 14px 14px; border-top: 6px solid; }
+  .del b { display: block; font: 700 23px/1.15 var(--serif); margin-bottom: 8px; }
+  .del span { display: block; font: 21px/1.3 var(--mono); color: var(--soft); }
+  /* road */
+  .road { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+  .road:before { content: ""; position: absolute; left: 40px; right: 40px; top: 74px; height: 22px; background: #2A3550; border-radius: 11px; }
+  .road div { position: relative; text-align: center; }
+  .road b { display: block; font: 700 28px/1 var(--serif); margin-bottom: 18px; }
+  .road em { display: inline-flex; width: 54px; height: 54px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 700 28px/54px var(--serif); font-style: normal; justify-content: center; border: 4px solid var(--nyl); }
+  .road span { display: block; font: 23px/1.28 var(--serif); color: var(--soft); margin-top: 14px; }
+  .bar3 { margin-top: 26px; background: var(--sig); color: var(--bg); text-align: center; padding: 18px; font: 700 29px/1.2 var(--serif); }
+  /* future */
+  .fut { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .fut > div { background: var(--card); padding: 18px 18px 20px; border-top: 6px solid var(--vg); }
+  .fut > div.h { border-top-color: var(--sig); }
+  .fut i { font: 700 19px/1 var(--mono); font-style: normal; color: var(--vg); letter-spacing: .06em; }
+  .fut > div.h i { color: var(--sig); }
+  .fut b { display: block; font: 700 29px/1.12 var(--serif); margin: 10px 0 10px; }
+  .fut p { font: 22px/1.3 var(--serif); color: var(--soft); margin-bottom: 12px; }
+  .fut li { font: 21px/1.3 var(--mono); color: var(--ink); margin: 0 0 8px 22px; }
+  .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 26px; }
+  .flow div { background: var(--card); padding: 12px 8px; text-align: center; font: 700 21px/1.18 var(--serif); border-bottom: 5px solid var(--vg); }
+  .flow div.h { background: var(--ink); color: var(--bg); border-bottom-color: var(--sig); }
+  .flowhd { font: 700 21px/1 var(--mono); color: var(--vg); letter-spacing: .08em; margin-top: 26px; }
+  /* v3 tightening */
+  .slide { padding-top: 76px; }
+  .stages { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 40px; }
+  .stages div { border-top: 6px solid var(--sig); padding-top: 12px; font: 700 18px/1.2 var(--mono); color: var(--soft); letter-spacing: .03em; text-transform: uppercase; }
+  .kicker { margin-bottom: 22px; }
+  h1.m { font-size: 52px; margin-bottom: 10px; }
+  .lede { font-size: 26px; margin-bottom: 18px; }
+  .cards { gap: 10px; }
+  .card { padding: 13px 20px 15px; }
+  .card b { font-size: 29px; margin-bottom: 4px; }
+  .card span { font-size: 23px; line-height: 1.28; }
+  .card.row { grid-template-columns: 56px 1fr; }
+  .card.row i { font-size: 30px; }
+  .down { display: none; }
+  .pull { margin-top: 18px; font-size: 26px; }
+  .src { bottom: 88px; font-size: 19px; }
+  .mx td { font-size: 21px; padding: 8px 6px; }
+  .mx td.k { font-size: 18px; }
+  .legend { margin: 6px 0 14px; }
+  .needs div { font-size: 21px; padding: 8px 12px; }
+  .ng { gap: 8px 6px; }
+  .ng .a, .ng .z { font-size: 22px; padding: 10px 14px; }
+  .vgcrit { margin-top: 12px; } .vgcrit div { font-size: 22px; }
+  .why div { padding: 10px 18px; grid-template-columns: 300px 1fr; }
+  .why b { font-size: 25px; } .why span { font-size: 22px; }
+  .decision { margin-top: 12px; padding: 14px 22px; font-size: 25px; }
+  .del span { font-size: 19px; }
+  .fut p { font-size: 20px; } .fut li { font-size: 19px; }
+
+</style>
+</head>
+<body>
+
+<section class="slide s1">
+  <div class="kicker">Elastic{ON} New York · Oct 8 · post-event</div>
+  <h1 style="font-size:84px">How regulated security buys in the AI era, <u>as the buyers told it</u></h1>
+  <div class="sub">Their slides, redrawn in talk order. Every stage from first pain to what's next.</div>
+  <div class="stages"><div>Problem</div><div>What AI changed</div><div>Criteria</div><div>Landscape</div><div>Why they bought</div><div>Build</div><div>Next</div></div>
+  <div class="who">
+    <div class="a"><b>Sal Picheria</b><span>CVP Security Engineering · <span class="nyl" style="display:inline">New York Life</span></span></div>
+    <div class="b"><b>Jonathan Reitnauer</b><span>Head of Cyber Security Detection &amp; Orchestration · <span class="vg" style="display:inline">Vanguard</span></span></div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">01 Problem</span> · <span class="nyl">New York Life</span></div>
+  <h1 class="m">Raising the bar: <u>where we wanted to grow</u></h1>
+  <div class="lede q">"Took us two years to get there for reasons which you'll see shortly."</div>
+  <div class="cards c2">
+    <div class="card"><i>01</i><b>SIEM data management</b><span>Our legacy SIEM served us well as a structured database. But traditional SIEMs were not designed as fast analytics engines, and we wanted large-scale searches to be fast and routine.</span></div>
+    <div class="card"><i>02</i><b>Scaling with our data</b><span>With hundreds of log sources spanning network, endpoint, cloud, and application layers, our previous tooling served us well but was not keeping pace with the growth in our data.</span></div>
+    <div class="card"><i>03</i><b>Detection engineering</b><span>Years of custom detections captured real expertise. We wanted a platform that makes managing, tuning, and evolving them easier as threats change.</span></div>
+    <div class="card"><i>04</i><b>SOC workflow</b><span>SOAR and analyst workflows have evolved significantly over the past five years. Our previous tool served its era well, but it was not designed for the modern SOC.</span></div>
+  </div>
+  <div class="pull">"…we're spending fifty percent of the cost of the tool on retention, which is absurd."<small>Picheria, on the old tool</small></div>
+  <div class="src">Source: Sal Picheria, New York Life, slide 3 (00:20) · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">01 Problem</span> · <span class="vg">Vanguard</span></div>
+  <h1 class="m">Security data was scaling faster than <u>manual operations</u></h1>
+  <div class="lede">Cloud, applications, services, and AI increased both telemetry and investigative demand.</div>
+  <div class="cards">
+    <div class="card v row"><i>01</i><div><b>More services</b><span>Cloud, applications, and AI solutions expanded the monitoring footprint.</span></div></div>
+    <div class="down">↓</div>
+    <div class="card v row"><i>02</i><div><b>More signals</b><span>Each new service introduced more logs, alerts, and investigative context.</span></div></div>
+    <div class="down">↓</div>
+    <div class="card v row"><i>03</i><div><b>More analysis</b><span>Analysts had to connect identity, endpoint, cloud, network, and threat data.</span></div></div>
+    <div class="down">↓</div>
+    <div class="card v row"><i>04</i><div><b>More workload</b><span>The volume was growing faster than a team could reasonably staff.</span></div></div>
+    <div class="down">↓</div>
+    <div class="card g row"><i>05</i><div><b>Automation required</b><span>We needed to automate triage, investigations, hunting, and repetitive work.</span></div></div>
+  </div>
+  <div class="src">Source: Jonathan Reitnauer, Vanguard, keynote slide (01:53) · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">02 What AI changed</span> · both, in their words</div>
+  <h1 class="m">AI raised the threat <u>and</u> rewired the tooling</h1>
+  <div class="tag vg lab" style="margin-top:6px">Threats</div>
+  <div class="cards">
+    <div class="card v"><b style="font-size:26px;font-style:italic">"Bad actors have access to frontier models. They have access to Chinese models."</b><span>Reitnauer: enterprises have to build AI responsibly, so attackers start ahead. "We cannot wait five years from now."</span></div>
+    <div class="card"><b style="font-size:26px;font-style:italic">"The velocity of threat actors is definitely increasing."</b><span>Picheria: an optimized analyst experience is "really the only way to make this work."</span></div>
+  </div>
+  <div class="tag lab" style="margin-top:16px;color:var(--sig)">Tooling</div>
+  <div class="cards c2">
+    <div class="card g"><b style="font-size:25px">The schema became an AI feature</b><span>ECS is "in the training set of essentially every frontier model," so nobody has to explain the data model to Claude.</span></div>
+    <div class="card g"><b style="font-size:25px">Non-SOC teams build with agents</b><span>"We hand them the Elastic Agent Builder… 'I want this dashboard on this data.' Boom, boom, boom."</span></div>
+    <div class="card g"><b style="font-size:25px">SOAR + AI</b><span>SOAR did "a pretty good job." Add AI: "a force multiplier." Autonomous triage is "critical."</span></div>
+    <div class="card g"><b style="font-size:25px">Static rules are done</b><span>UI-based rule management and static versions "absolutely does not work anymore."</span></div>
+  </div>
+  <div class="src">Sources: Reitnauer keynote · Picheria breakout · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">03 Criteria · 04 Landscape</span> · <span class="nyl">New York Life</span></div>
+  <h1 class="m">Data lake or SIEM? <u>Breaking down what we found</u></h1>
+  <div class="lede" style="margin-bottom:14px">After exhaustive research, we concluded that neither was a good fit for us on its own.</div>
+  <table class="mx">
+    <tr><th></th><th>Data lakes</th><th>SIEMs</th></tr>
+    <tr><td class="k">Data model</td><td class="x">No mature standard</td><td class="m">Structured; maturity varies</td></tr>
+    <tr><td class="k">Analytics</td><td class="s">Essentially limitless</td><td class="x">Not designed for freeform analytics</td></tr>
+    <tr><td class="k">Rules</td><td class="n">—</td><td class="s">Optimized for rules</td></tr>
+    <tr><td class="k">Ease of use</td><td class="x">High bar, usually SQL-style</td><td class="n">—</td></tr>
+    <tr><td class="k">Retention</td><td class="s">Low-cost</td><td class="x">Costly</td></tr>
+    <tr><td class="k">Deployment</td><td class="x">Typically tied to one cloud &amp; region</td><td class="x">Typically tied to one cloud &amp; region</td></tr>
+    <tr><td class="k">Portability</td><td class="n">—</td><td class="x">Data hard to get out</td></tr>
+    <tr><td class="k">Pricing</td><td class="x">Unpredictable</td><td class="m">Mostly ingest-based</td></tr>
+  </table>
+  <div class="legend"><span class="s">Strength</span><span class="m">Mixed</span><span class="x">Trade-off</span></div>
+  <div class="needhd">WHAT WE NEEDED</div>
+  <div class="needs">
+    <div><i>1</i>Robust, stable data model</div><div><i>2</i>Freeform analytics and rules, in balance</div>
+    <div><i>3</i>Low barrier for non-SOC security users</div><div><i>4</i>Raw and schematized data, side by side</div>
+    <div><i>5</i>Deploys where our data and compute live, across regions and clouds</div><div><i>6</i>Dial up performance when needed, balance cost</div>
+  </div>
+  <div class="src">Source: Picheria, slide 4 (02:35). Buying both "was quickly axed by leadership for cost reasons." · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">04 Vendor evaluation</span> · <span class="soft">both buyers</span></div>
+  <h1 class="m">What we needed, and <u>what we get</u></h1>
+  <div class="ng" style="margin-top:20px"><div class="h nyl">NYL NEEDED</div><div></div><div class="h" style="color:#C4B5FD">WHAT THEY GET</div><div class="a">Robust, stable data model</div><div class="ar">›››</div><div class="z">An open, mature common schema shared across all our data</div><div class="a">Freeform analytics and rules, in balance</div><div class="ar">›››</div><div class="z">Fast freeform search and detection rules on the same data, in one platform</div><div class="a">Low barrier for non-SOC security users</div><div class="ar">›››</div><div class="z">Intuitive search and dashboards any security team member can use</div><div class="a">Raw and schematized data, side by side</div><div class="ar">›››</div><div class="z">Normalized fields and the original raw event, stored together</div><div class="a">Deploys where our data and compute live</div><div class="ar">›››</div><div class="z">Runs in the clouds and regions where our data already lives, searchable as one</div><div class="a">Dial up performance, balance cost</div><div class="ar">›››</div><div class="z">Tiered storage: performance where it matters, low-cost retention everywhere else</div></div>
+  <div class="tag vg" style="margin-top:20px">Vanguard · its four criteria</div>
+  <div class="vgcrit">
+    <div><i>01</i>Reliability: no re-architecting "every six months"</div>
+    <div><i>02</i>Automation first</div>
+    <div><i>03</i>The AI direction</div>
+    <div><i>04</i>A partner to "help build it"</div>
+  </div>
+  <div class="src">Sources: Picheria, slide 5 (09:30) · Reitnauer, keynote · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>6 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">05 Why they bought</span> · <span class="soft">both buyers</span></div>
+  <h1 class="m">Why we chose <u>Elastic</u></h1>
+  <div class="why" style="margin-top:20px">
+    <div><b>Enterprise scale without compromise</b><span>A distributed architecture built for our data's volume, velocity, and variety, with no artificial ingest limits.</span></div>
+    <div><b>Unified SIEM + security analytics</b><span>SIEM, threat hunting, and data lake in one platform, so analysts work in one place.</span></div>
+    <div><b>Open ecosystem</b><span>An open data model that fits our existing pipelines, bringing hundreds of sources onto one platform.</span></div>
+    <div><b>Enterprise security &amp; compliance</b><span>The governance, access, and retention controls our risk and compliance teams require.</span></div>
+    <div><b>A true implementation partnership</b><span>Elastic experts alongside our team, from design through handover.</span></div>
+  </div>
+  <div class="decision"><b>NYL · THE DECISION</b>After rigorous evaluation, Elastic was the clear answer: one platform for SIEM, data lake scale, open ecosystem flexibility, and enterprise governance.</div>
+  <div class="decision" style="background:var(--card);border-left:8px solid var(--vg)"><b style="color:var(--vg)">VANGUARD · BOUGHT THE ROADMAP</b>"Elastic was still very, very early in their AI direction when we went with them." A roadmap sneak peek, and "hard conversations and transparent road-map alignment."</div>
+  <div class="src">Sources: Picheria, slide 9 (18:46) · Reitnauer, keynote + slide "The Foundation Is Already Delivering Value" · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>7 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">06 Implementation</span> · <span class="nyl">New York Life</span></div>
+  <h1 class="m">The implementation journey: <u>6 months</u></h1>
+  <div class="lede q">"Six months, started in October, we were done by March."</div>
+  <div class="gt">
+    <div></div><div class="mo">OCT</div><div class="mo">NOV</div><div class="mo">DEC</div><div class="mo">JAN</div><div class="mo">FEB</div><div class="mo">MAR</div>
+    <div class="ms" style="color:var(--dim)">MILESTONES</div><div class="ms" style="grid-column:2/4;white-space:nowrap">◆ Kickoff</div><div class="ms" style="grid-column:5/7;white-space:nowrap">◆ Clusters online</div><div class="ms" style="grid-column:7/8;text-align:right;white-space:nowrap">Go-live ◆</div>
+    <div></div><div class="ms" style="grid-column:4/7;text-align:right;white-space:nowrap;margin-top:-6px">All sources ingested ◆</div><div></div>
+    <div class="ph"><small>PHASE 1</small>Initiation &amp; design</div><div class="bar" style="grid-column:2/3;background:#6366F1"></div><div style="grid-column:3/8"></div>
+    <div class="ph"><small>PHASE 2</small>Platform build</div><div></div><div class="bar" style="grid-column:3/5;background:#22C55E"></div><div style="grid-column:5/8"></div>
+    <div class="ph"><small>PHASE 3</small>Ingest &amp; detections</div><div></div><div></div><div class="bar" style="grid-column:4/7;background:#A855F7"></div><div></div>
+    <div class="ph"><small>PHASE 4</small>Go-live &amp; handover</div><div></div><div></div><div></div><div></div><div class="bar" style="grid-column:6/8;background:#8FE83A"></div>
+  </div>
+  <div class="del">
+    <div style="border-color:#6366F1"><b>Initiation &amp; design</b><span>Kickoff &amp; planning · use cases &amp; milestones · RBAC &amp; ILM strategy · architecture designed</span></div>
+    <div style="border-color:#22C55E"><b>Platform build</b><span>Elastic Cloud clusters · non-prod &amp; prod · SAML/SSO &amp; RBAC · 3rd-party integrations</span></div>
+    <div style="border-color:#A855F7"><b>Ingest &amp; detections</b><span>All log sources · custom + OOTB pipelines · rules migrated · dashboards · dual operations</span></div>
+    <div style="border-color:#8FE83A"><b>Go-live &amp; handover</b><span>Production go-live · QA/UAT · runbooks · SOC up and running · old SIEM decommissioned</span></div>
+  </div>
+  <div class="pull" style="font-size:27px">"The strategic aspect of it, I think, was the hardest part."<small>Picheria. A long POC came first; two Elastic services people embedded; ~1 month of parallel run.</small></div>
+  <div class="src">Source: Picheria, slide 8 (16:53) + talk · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>8 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">06 Implementation</span> · <span class="nyl">New York Life</span></div>
+  <h1 class="m">Elastic cyber data architecture: <u>3 clusters</u></h1>
+  <svg width="920" height="860" style="margin-top:16px" viewBox="0 0 920 860" role="img" aria-label="New York Life's architecture: tens of thousands of devices and hundreds of log sources feed an enterprise log pipeline in NYL's AWS, which connects over AWS PrivateLink to Elastic Cloud on AWS. Inside, a data lake cluster, a SIEM cluster and a monitoring cluster are joined by cross-cluster search, with a SOAR-style orchestration layer on top.">
+    <g font-family="Menlo, monospace">
+      <!-- sources -->
+      <rect x="0" y="0" width="920" height="96" rx="8" fill="#16213A" stroke="#2C3A55" stroke-width="2"/>
+      <text x="32" y="44" font-size="30" font-weight="700" fill="#F5F3EE">SOURCES</text>
+      <text x="32" y="80" font-size="26" fill="#C9CED8">tens of thousands of devices · 100s of log sources</text>
+      <path d="M460 104 L460 140" stroke="#9AA3B5" stroke-width="4"/><path d="M448 136 L460 156 L472 136 Z" fill="#9AA3B5"/>
+      <!-- pipeline -->
+      <rect x="0" y="160" width="920" height="96" rx="8" fill="#16213A" stroke="#2C3A55" stroke-width="2"/>
+      <text x="32" y="204" font-size="30" font-weight="700" fill="#F5F3EE">LOG PIPELINE</text>
+      <text x="32" y="240" font-size="26" fill="#C9CED8">enterprise pipeline in NYL's own AWS</text>
+      <!-- privatelink -->
+      <path d="M460 264 L460 330" stroke="#F59E0B" stroke-width="6"/><path d="M444 326 L460 350 L476 326 Z" fill="#F59E0B"/>
+      <rect x="500" y="272" width="420" height="64" rx="32" fill="#F59E0B"/>
+      <text x="710" y="314" font-size="27" font-weight="700" fill="#0F172A" text-anchor="middle">AWS PRIVATELINK</text>
+      <text x="0" y="300" font-size="24" fill="#9AA3B5">no public-internet</text>
+      <text x="0" y="330" font-size="24" fill="#9AA3B5">transfer charges</text>
+      <!-- elastic cloud -->
+      <rect x="0" y="360" width="920" height="420" rx="12" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="10 8"/>
+      <text x="32" y="404" font-size="26" font-weight="700" fill="#F59E0B" letter-spacing="2">ELASTIC CLOUD · AWS</text>
+      <!-- three clusters -->
+      <g text-anchor="middle">
+        <rect x="32" y="440" width="260" height="150" rx="8" fill="#F5F3EE"/>
+        <text x="162" y="508" font-size="32" font-weight="700" fill="#0F172A">DATA LAKE</text>
+        <text x="162" y="550" font-size="22" fill="#0F172A">whole security org</text>
+        <rect x="330" y="440" width="260" height="150" rx="8" fill="#F5F3EE"/>
+        <text x="460" y="508" font-size="32" font-weight="700" fill="#0F172A">SIEM</text>
+        <text x="460" y="550" font-size="22" fill="#0F172A">SOC detections</text>
+        <rect x="628" y="440" width="260" height="150" rx="8" fill="#F5F3EE"/>
+        <text x="758" y="508" font-size="32" font-weight="700" fill="#0F172A">MONITORING</text>
+        <text x="758" y="550" font-size="22" fill="#0F172A">audit + query logs</text>
+      </g>
+      <!-- CCS -->
+      <path d="M162 600 L162 640 L758 640 L758 600 M460 600 L460 640" fill="none" stroke="#8FE83A" stroke-width="5"/>
+      <text x="460" y="684" font-size="27" font-weight="700" fill="#8FE83A" text-anchor="middle">CROSS-CLUSTER SEARCH</text>
+      <text x="460" y="730" font-size="24" fill="#C9CED8" text-anchor="middle">separate clusters = NYL's choice, not a requirement</text>
+      <!-- SOAR -->
+      <path d="M460 784 L460 800" stroke="#9AA3B5" stroke-width="4"/>
+      <rect x="0" y="800" width="920" height="60" rx="8" fill="#16213A" stroke="#2C3A55" stroke-width="2"/>
+      <text x="460" y="840" font-size="26" font-weight="700" fill="#F5F3EE" text-anchor="middle">SOAR-STYLE ORCHESTRATION ON TOP</text>
+    </g>
+  </svg>
+  <div class="src">Source: Sal Picheria, New York Life, Elastic{ON} NYC 2026-10-08 (slide 6, 12:20, simplified; separate non-prod lane not shown)</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>9 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">06 Adoption</span> · <span class="nyl">New York Life</span></div>
+  <h1 class="m">A paved road <u>into Elastic</u></h1>
+  <div class="lede">How we onboarded 20 teams and 200 users in a year.</div>
+  <div class="road">
+    <div><b>Request</b><em>1</em><span>Team opens a ticket</span></div>
+    <div><b>Code</b><em>2</em><span>We add the team to Terraform vars</span></div>
+    <div><b>Automate</b><em>3</em><span>Spaces, roles, RBAC &amp; API keys deploy automatically</span></div>
+    <div><b>Access</b><em>4</em><span>Users request access; SSO groups map to roles</span></div>
+    <div><b>Land</b><em>5</em><span>Team signs in with SSO, straight into its own space</span></div>
+  </div>
+  <div class="tag" style="color:var(--dim);margin:30px 0 10px">Built on</div>
+  <div class="cards">
+    <div class="card"><b style="font-size:30px">Kibana Spaces</b><span>Native separation of each team's dashboards, rules, and content</span></div>
+    <div class="card"><b style="font-size:30px">Granular RBAC</b><span>Fine-grained, role-based access down to the data each team should see</span></div>
+    <div class="card"><b style="font-size:30px">Terraform</b><span>The glue: every role, space, mapping, and key managed as code</span></div>
+  </div>
+  <div class="bar3">New teams onboarded in hours, not weeks, with no manual cluster changes</div>
+  <div class="src">Source: Picheria, slide 7 (14:14). Spoken: "data lake as code," 10–15 minutes per team · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>10 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">06 Implementation</span> · <span class="vg">Vanguard</span></div>
+  <h1 class="m">The foundation is <u>already delivering value</u></h1>
+  <div class="lede">Elastic on AWS improved day-to-day operations and changed how the team approaches scale.</div>
+  <div class="cards">
+    <div class="card v row"><i>01</i><div><b>Faster resolution</b><span>Analysts resolve alerts in minutes instead of hours.</span></div></div>
+    <div class="card v row"><i>02</i><div><b>Greater stability</b><span>Better uptime, fewer monitoring errors, and fewer incomplete searches.</span></div></div>
+    <div class="card v row"><i>03</i><div><b>Automation at scale</b><span>As Elastic scales, automation scales alongside it.</span></div></div>
+    <div class="card v row"><i>04</i><div><b>Culture shift</b><span>Every new task starts with: "How do we automate that?"</span></div></div>
+    <div class="card g row"><i>05</i><div><b>Partnership</b><span>Hard conversations and transparent road-map alignment helped produce value.</span></div></div>
+  </div>
+  <div class="pull">"Every single alert has automation built into it. No alert doesn't."<small>Reitnauer. Handlers took a while to trust alerts that close themselves.</small></div>
+  <div class="src">Source: Reitnauer, keynote slide (04:06). Vendor-event slide; no before/after figures given · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>11 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker"><span class="st">07 What's next</span> · <span class="vg">Vanguard</span></div>
+  <h1 class="m">The future SOC: AI executes, <u>humans govern</u></h1>
+  <div class="lede">Machine-speed investigation operates on trusted data, with people accountable for consequential decisions.</div>
+  <div class="fut">
+    <div><i>01 · TRUSTED</i><b>Trusted data foundation</b><p>Connect identity, endpoint, cloud, network, application, and threat intelligence context.</p><ul><li>Unified identity &amp; endpoint logs</li><li>Real-time cloud &amp; network telemetry</li><li>Integrated threat intelligence</li></ul></div>
+    <div><i>02 · AI POWERED</i><b>AI-powered execution</b><p>Automate triage, correlation, investigation, timelines, and response recommendations.</p><ul><li>Machine-speed alert triage</li><li>Automated cross-signal correlation</li><li>Generated investigation timelines</li></ul></div>
+    <div class="h"><i>03 · GOVERNANCE</i><b>Human accountability</b><p>Retain people for risk decisions, sensitive containment, business impact, governance, and AI oversight.</p><ul><li>Strategic risk assessment</li><li>Sensitive action authorization</li><li>Continuous model &amp; policy oversight</li></ul></div>
+  </div>
+  <div class="flowhd">THE DETECTION LIFECYCLE HE'S BUILDING</div>
+  <div class="flow"><div>Threat intel in</div><div>Scored for our environment</div><div>Auto hunt</div><div>Detection drafted + back-tested</div><div class="h">"I wanna hit the button"</div><div>Deployed: SIEM · EDR · IPS</div></div>
+  <div class="pull" style="font-size:27px">"We don't wanna just hire analysts anymore."<small>Next hire: AI skills + developer skills + security background. NYL's next step: federated search over data still in other clouds.</small></div>
+  <div class="src">Sources: Reitnauer, keynote slide (06:29) + talk · Picheria (12:20) · Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>12 / 13</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">For sellers in regulated security</div>
+  <h1>The seller's <u>cheat sheet</u></h1>
+  <div class="cheat">
+    <div><i>Problem</i><span>Discover the old setup's economics, not a missing feature</span></div>
+    <div><i>AI shift</i><span>Pitch pace against an AI-equipped attacker</span></div>
+    <div><i>Criteria</i><span>Sell predictability; multi-thread past the SOC</span></div>
+    <div><i>Landscape</i><span>Their category isn't yours. Forecast the survey years</span></div>
+    <div><i>Why</i><span>Diagnose maturity buyer vs roadmap buyer</span></div>
+    <div><i>Build</i><span>Services and change management belong in the deal</span></div>
+    <div><i>Next</i><span>Your next champion is a builder, not an analyst</span></div>
+  </div>
+  <div class="src">Derived from Picheria (New York Life) + Reitnauer (Vanguard), Elastic{ON} NYC 2026-10-08</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>13 / 13</span></div>
+</section>
+
+</body>
+</html>

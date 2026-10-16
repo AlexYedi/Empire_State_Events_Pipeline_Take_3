@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two Buyers, One Platform</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --soft: #C9CCD2; --dim: #8A8F98; --line: #2A2F36; --card: #181C22;
+    --nyl: #F5A524; --vg: #7CB8FF; --sig: #8FE83A;
+    --good: #34D399; --mix: #FBBF24; --bad: #F87171;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 92px 80px 150px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  h1 { font: 700 70px/1.05 var(--serif); letter-spacing: -.01em; margin-bottom: 26px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 94% / 100% 10px no-repeat; }
+  .sub { font: 34px/1.3 var(--serif); color: var(--soft); margin-bottom: 44px; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 48px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .14em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { position: absolute; left: 80px; right: 80px; bottom: 96px; font: 20px/1.4 var(--mono); color: var(--dim); }
+  .nyl { color: var(--nyl); } .vg { color: var(--vg); }
+  .tag { font: 700 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+
+  /* 1 cover */
+  .s1 h1 { font-size: 104px; margin-top: 70px; margin-bottom: 40px; }
+  .s1 .sub { font-size: 38px; }
+  .who { margin-top: auto; display: grid; gap: 30px; }
+  .who div { border-left: 8px solid; padding: 6px 0 6px 30px; }
+  .who .a { border-color: var(--nyl); } .who .b { border-color: var(--vg); }
+  .who b { display: block; font: 700 44px/1.15 var(--serif); }
+  .who span { display: block; font: 28px/1.3 var(--serif); color: var(--soft); margin-top: 6px; }
+
+  /* 2 journey map */
+  .map { display: grid; grid-template-columns: 210px 1fr 1fr; gap: 0; border-top: 2px solid var(--line); }
+  .map > div { padding: 34px 18px; border-bottom: 2px solid var(--line); font: 34px/1.25 var(--serif); }
+  .map .st { font: 700 22px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-left: 0; }
+  .map .hd { font: 700 24px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding-top: 0; border-bottom-width: 4px; }
+  .map .hd.nyl { border-color: var(--nyl); } .map .hd.vg { border-color: var(--vg); }
+
+  /* 3 matrix */
+  table { width: 100%; border-collapse: collapse; }
+  th { font: 700 24px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); text-align: left; padding: 0 16px 18px; }
+  td { font: 29px/1.2 var(--serif); padding: 17px 16px; border-top: 2px solid var(--line); vertical-align: middle; }
+  td:first-child { font: 700 24px/1.2 var(--mono); color: var(--soft); width: 230px; padding-left: 0; }
+  .c { display: flex; align-items: center; gap: 14px; }
+  .c i { font-style: normal; font: 700 26px/1 var(--mono); width: 40px; height: 40px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex: none; color: #111418; }
+  .g i { background: var(--good); } .m i { background: var(--mix); } .r i { background: var(--bad); }
+  .na { color: var(--dim); }
+  .legend { display: flex; gap: 34px; margin-top: 26px; font: 24px/1 var(--mono); color: var(--soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 10px; }
+  .legend i { font-style: normal; font: 700 22px/1 var(--mono); width: 32px; height: 32px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: #111418; }
+  .verdict { margin-top: 34px; border-left: 8px solid var(--nyl); padding: 6px 0 6px 28px; font: italic 36px/1.3 var(--serif); }
+
+  /* 4 criteria */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+  .col h2 { font: 700 46px/1.1 var(--serif); margin: 14px 0 26px; }
+  .col ol { list-style: none; counter-reset: n; display: grid; gap: 20px; }
+  .col li { counter-increment: n; font: 29px/1.25 var(--serif); padding-left: 52px; position: relative; color: var(--soft); }
+  .col li:before { content: counter(n); position: absolute; left: 0; top: 2px; font: 700 24px/1 var(--mono); }
+  .col.a li:before { color: var(--nyl); } .col.b li:before { color: var(--vg); }
+  .col { border-top: 6px solid; padding-top: 22px; }
+  .col.a { border-color: var(--nyl); } .col.b { border-color: var(--vg); }
+
+  /* 5 gantt */
+  .gantt { position: relative; margin-top: 8px; }
+  .months { display: grid; grid-template-columns: 250px repeat(6, 1fr); font: 700 24px/1 var(--mono); color: var(--dim); margin-bottom: 18px; }
+  .months span { text-align: center; }
+  .gr { display: grid; grid-template-columns: 250px repeat(6, 1fr); align-items: center; height: 84px; border-top: 2px solid var(--line); }
+  .gr .lb { font: 27px/1.15 var(--serif); padding-right: 14px; }
+  .bar { height: 46px; border-radius: 6px; background: var(--nyl); opacity: .9; }
+  .msl { margin-top: 24px; font: 24px/1.4 var(--mono); color: var(--soft); } .msl b { color: var(--sig); font-weight: 700; }
+  .ms { display: grid; grid-template-columns: 250px repeat(6, 1fr); margin-top: 22px; font: 22px/1.25 var(--mono); color: var(--soft); }
+  .ms div { border-left: 3px solid var(--sig); padding-left: 10px; }
+  .callouts { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+  .co { background: var(--card); border-top: 6px solid var(--sig); padding: 24px 22px; }
+  .co b { display: block; font: 700 46px/1 var(--serif); margin-bottom: 12px; white-space: nowrap; }
+  .co span { display: block; font: 25px/1.3 var(--serif); color: var(--soft); }
+  .co small { display: block; font: 21px/1.3 var(--mono); color: var(--dim); margin-top: 12px; }
+
+  /* 6 paved road */
+  .road { display: grid; gap: 0; margin-top: 4px; }
+  .step { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 26px; padding: 22px 0; border-top: 2px solid var(--line); }
+  .step b { font: 700 54px/1 var(--serif); color: var(--nyl); text-align: center; }
+  .step div { font: 32px/1.25 var(--serif); }
+  .step small { display: block; font: 24px/1.3 var(--mono); color: var(--dim); margin-top: 6px; }
+  .big { margin-top: auto; display: flex; gap: 60px; align-items: baseline; }
+  .big div b { display: block; font: 700 120px/1 var(--serif); }
+  .big div span { font: 28px/1.2 var(--mono); color: var(--soft); }
+
+  /* 7 govern */
+  .flow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .fl { background: var(--card); border-top: 6px solid var(--vg); padding: 24px 20px; }
+  .fl .n { font: 700 22px/1 var(--mono); color: var(--vg); letter-spacing: .1em; }
+  .fl h3 { font: 700 34px/1.1 var(--serif); margin: 12px 0 14px; }
+  .fl p { font: 24px/1.3 var(--serif); color: var(--soft); }
+  .fl.h { border-color: var(--sig); } .fl.h .n { color: var(--sig); }
+  .mirror { margin-top: 40px; border-top: 2px dashed var(--line); padding-top: 34px; }
+  .mirror .tag { color: var(--bad); }
+  .mirror h3 { font: 700 44px/1.15 var(--serif); margin: 14px 0 22px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; } .split b { display: block; font: 700 96px/1 var(--serif); margin-bottom: 10px; } .split .r2 { color: var(--bad); } .split span { font: 27px/1.3 var(--serif); color: var(--soft); }
+  .bars { display: grid; gap: 16px; }
+  .hb { display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 18px; font: 26px/1.2 var(--serif); }
+  .hb .track { height: 50px; background: var(--card); position: relative; }
+  .hb .fill { position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 16px; font: 700 26px/1 var(--mono); color: #111418; }
+
+  /* 8 begin */
+  .cl { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .cl ul { list-style: none; display: grid; gap: 30px; }
+  .cl li { font: 32px/1.25 var(--serif); padding-left: 30px; position: relative; color: var(--soft); }
+  .cl li:before { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 12px; background: var(--sig); }
+  .cl h2 { font: 700 40px/1.1 var(--serif); margin-bottom: 26px; }
+  .ask { margin-top: auto; font: 700 42px/1.2 var(--serif); border-left: 8px solid var(--sig); padding-left: 28px; }
+</style>
+</head>
+<body>
+
+<!-- 1 COVER -->
+<section class="slide s1">
+  <div class="kicker">Elastic{ON} New York · Oct 8, 2026</div>
+  <h1>Two buyers.<br>One platform.<br><u>Opposite</u> reasons.</h1>
+  <div class="sub">How two regulated financial firms bought their security data platform, stage by stage, from their own slides.</div>
+  <div class="who">
+    <div class="a"><b>New York Life</b><span>Sal Picheria · Corporate VP, Security Engineering</span></div>
+    <div class="b"><b>Vanguard</b><span>Jonathan Reitnauer · Head of Cyber Security Detection &amp; Orchestration</span></div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 8 →</span></div>
+</section>
+
+<!-- 2 JOURNEY MAP -->
+<section class="slide">
+  <div class="kicker">The journey on one page</div>
+  <h1>Same vendor, <u>different</u> path</h1>
+  <div class="map">
+    <div class="st hd"></div><div class="hd nyl">New York Life</div><div class="hd vg">Vanguard</div>
+    <div class="st">Broke</div><div>Data in, but slow and costly to get out</div><div>Alerts outgrew a team it couldn't hire for</div>
+    <div class="st">Reframe</div><div>A platform for the whole security org</div><div>Handlers become decision-makers</div>
+    <div class="st">Chose</div><div>A mature schema</div><div>An AI roadmap and a co-builder</div>
+    <div class="st">Built</div><div>6-month cutover, onboarding as code</div><div>Automation on every alert</div>
+    <div class="st">Next</div><div>Federated search</div><div>Federated search + AI that executes</div>
+  </div>
+  <div class="src">Source: speakers' slides and talks, Elastic{ON} New York, Oct 8, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 8</span></div>
+</section>
+
+<!-- 3 MATRIX -->
+<section class="slide">
+  <div class="kicker nyl">NYL · the market survey</div>
+  <h1>Data lake or SIEM? <u>Neither</u>.</h1>
+  <table>
+    <tr><th></th><th>Data lakes</th><th>SIEMs</th></tr>
+    <tr><td>Data model</td><td><span class="c r"><i>−</i>No mature standard</span></td><td><span class="c m"><i>~</i>Maturity varies</span></td></tr>
+    <tr><td>Analytics</td><td><span class="c g"><i>+</i>Essentially limitless</span></td><td><span class="c r"><i>−</i>Not built for freeform</span></td></tr>
+    <tr><td>Rules</td><td class="na">—</td><td><span class="c g"><i>+</i>Optimized for rules</span></td></tr>
+    <tr><td>Ease of use</td><td><span class="c r"><i>−</i>High bar, SQL-style</span></td><td class="na">—</td></tr>
+    <tr><td>Retention</td><td><span class="c g"><i>+</i>Low-cost</span></td><td><span class="c r"><i>−</i>Costly</span></td></tr>
+    <tr><td>Deployment</td><td><span class="c r"><i>−</i>One cloud &amp; region</span></td><td><span class="c r"><i>−</i>One cloud &amp; region</span></td></tr>
+    <tr><td>Portability</td><td class="na">—</td><td><span class="c r"><i>−</i>Data hard to get out</span></td></tr>
+    <tr><td>Pricing</td><td><span class="c r"><i>−</i>Unpredictable</span></td><td><span class="c m"><i>~</i>Mostly ingest-based</span></td></tr>
+  </table>
+  <div class="legend"><span><i style="background:var(--good)">+</i>Strength</span><span><i style="background:var(--mix)">~</i>Mixed</span><span><i style="background:var(--bad)">−</i>Trade-off</span></div>
+  <div class="verdict">"Neither was a good fit for us on its own." Buying both was vetoed by leadership on cost.</div>
+  <div class="src">Source: NYL slide "Data Lake or SIEM?", Elastic{ON} New York, Oct 8, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 8</span></div>
+</section>
+
+<!-- 4 CRITERIA -->
+<section class="slide">
+  <div class="kicker">The criteria</div>
+  <h1>One bought <u>maturity</u>. One bought a roadmap.</h1>
+  <div class="cols">
+    <div class="col a">
+      <div class="tag nyl">NYL · needed</div>
+      <h2>A schema that's been around</h2>
+      <ol>
+        <li>Robust, stable data model</li>
+        <li>Freeform analytics and rules, in balance</li>
+        <li>Low barrier for non-SOC users</li>
+        <li>Raw and schematized data side by side</li>
+        <li>Deploys across our regions and clouds</li>
+        <li>Performance when needed, cost balanced</li>
+      </ol>
+    </div>
+    <div class="col b">
+      <div class="tag vg">Vanguard · wanted</div>
+      <h2>A partner that builds with us</h2>
+      <ol>
+        <li>Reliability that scales without re-architecting</li>
+        <li>Automation first</li>
+        <li>The AI direction, while still "very, very early"</li>
+        <li>A partner to "take our feedback, and help build it"</li>
+      </ol>
+    </div>
+  </div>
+  <div class="src">Source: NYL slide "What We Needed"; Vanguard keynote, Elastic{ON} New York, Oct 8, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 8</span></div>
+</section>
+
+<!-- 5 GANTT -->
+<section class="slide">
+  <div class="kicker nyl">NYL · the build</div>
+  <h1>Clusters took minutes. <u>Decisions</u> took months.</h1>
+  <div class="gantt">
+    <div class="months"><span></span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span></div>
+    <div class="gr"><div class="lb">Initiation &amp; design</div><div class="bar" style="grid-column: 2 / 3"></div></div>
+    <div class="gr"><div class="lb">Platform build</div><div class="bar" style="grid-column: 3 / 5"></div></div>
+    <div class="gr"><div class="lb">Ingest &amp; detections</div><div class="bar" style="grid-column: 4 / 7"></div></div>
+    <div class="gr"><div class="lb">Go-live &amp; handover</div><div class="bar" style="grid-column: 6 / 8"></div></div>
+    <div class="msl">Milestones: kickoff Oct · <b>clusters online end of Dec</b> · all sources ingested end of Feb · go-live and old SIEM off end of Mar</div>
+  </div>
+  <div class="callouts">
+    <div class="co"><b>20–30 min</b><span>to spin up a cluster</span><small>vs "Clusters online" at month 3</small></div>
+    <div class="co"><b>~1 month</b><span>running both SIEMs in parallel</span><small>IDC mean: 52 days</small></div>
+    <div class="co"><b>2 people</b><span>from Elastic professional services</span><small>IDC median services, 10k+ staff: $1.175M</small></div>
+  </div>
+  <div class="src">Sources: NYL slide "The Implementation Journey: 6 Months" + talk; IDC Worldwide Views on SIEM Survey, Jan 2024 (Google-sponsored).</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 8</span></div>
+</section>
+
+<!-- 6 PAVED ROAD -->
+<section class="slide">
+  <div class="kicker nyl">NYL · adoption</div>
+  <h1>Onboarding as a <u>pull request</u></h1>
+  <div class="road">
+    <div class="step"><b>1</b><div>Request<small>Team opens a ticket</small></div></div>
+    <div class="step"><b>2</b><div>Code<small>Team added to Terraform vars</small></div></div>
+    <div class="step"><b>3</b><div>Automate<small>Spaces, roles, RBAC and API keys deploy</small></div></div>
+    <div class="step"><b>4</b><div>Access<small>SSO groups map to roles</small></div></div>
+    <div class="step"><b>5</b><div>Land<small>Team signs in, straight into its own space</small></div></div>
+  </div>
+  <div class="big"><div><b>20</b><span>teams</span></div><div><b>200</b><span>users, in a year</span></div></div>
+  <div class="src">Source: NYL slide "A Paved Road into Elastic". No public benchmark exists for this.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>6 / 8</span></div>
+</section>
+
+<!-- 7 GOVERN -->
+<section class="slide">
+  <div class="kicker vg">Vanguard · the future SOC</div>
+  <h1>AI executes. <u>Humans govern.</u></h1>
+  <div class="flow">
+    <div class="fl"><div class="n">01 · TRUSTED</div><h3>Data foundation</h3><p>Identity, endpoint, cloud, network and threat intel in one place</p></div>
+    <div class="fl"><div class="n">02 · AI POWERED</div><h3>Execution</h3><p>Triage, correlation, timelines and response recommendations</p></div>
+    <div class="fl h"><div class="n">03 · GOVERNANCE</div><h3>Human accountability</h3><p>Risk decisions, sensitive containment, AI oversight</p></div>
+  </div>
+  <div class="mirror">
+    <div class="tag">The attackers' version</div>
+    <h3>Anthropic's 2025 espionage disclosure: same shape</h3>
+    <div class="split">
+      <div><b class="r2">80–90%</b><span>of the tactical work done by AI</span></div>
+      <div><b>4–6</b><span>human decision points per campaign (Anthropic: "perhaps")</span></div>
+    </div>
+  </div>
+  <div class="src">Sources: Vanguard slide "The Future SOC: AI Executes, Humans Govern"; Anthropic GTG-1002 report, Nov 2025.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>7 / 8</span></div>
+</section>
+
+<!-- 8 BEGIN -->
+<section class="slide">
+  <div class="kicker">Where to begin</div>
+  <h1>Taking on one of these?</h1>
+  <div class="cl">
+    <div>
+      <h2 class="nyl">If you're buying</h2>
+      <ul>
+        <li>Price retention as a share of the tool. That's your baseline.</li>
+        <li>Decide: a SIEM, or a platform for every security team?</li>
+        <li>Run a long POC on your own data. Spend the risk there.</li>
+        <li>Put humans at the irreversible step. Log both sides.</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="vg">If you're selling</h2>
+      <ul>
+        <li>Diagnose maturity buyer vs roadmap buyer first.</li>
+        <li>Sell predictable pricing, not cheap pricing.</li>
+        <li>Put a decision workshop in the deal.</li>
+        <li>Lead AI with governance, not autonomy.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ask">Which buyer do you see more: maturity or roadmap?</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>8 / 8</span></div>
+</section>
+
+</body>
+</html>
