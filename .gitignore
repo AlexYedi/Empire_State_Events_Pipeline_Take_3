@@ -116,3 +116,17 @@ docs/adr/evidence/plans/green-light-encapsulated-cupcake.md
 Event Content/08 24 26 The Shortlist August Founder Showcase/SHOWCASE_BRIEF.md
 Event Content/08 24 26 The Shortlist August Founder Showcase/apollo_enrichment_upload.csv
 **/apollo_*upload*.csv
+
+# --- Recorded speech under non-transcript names, wave 2 (2026-10-16: ElasticON, Durable State) ---
+# Wave 1 was the one-off paths above (2026-09-28). The failure is always a *name*, so the rule is by
+# extension: every .txt under Event Content is recorded speech unless re-included here.
+Event Content/**/*.txt
+!Event Content/**/keyterms.txt
+!Event Content/**/*-prompt.txt
+# Word / Google-Docs exports of the same transcripts; .gdoc stubs carry Alex's email + a private doc id
+Event Content/**/*.docx
+Event Content/**/*.gdoc
+# Hand-written ingest notes: speaker map, audience timestamps, slide<->transcript alignment table
+Event Content/**/INGEST-NOTES.md
+# Personal kickoff prompt, kept local (2026-10-16)
+Event Content/10 16 26 Daytona HackSprint/build-prep-kickoff-prompt.md
