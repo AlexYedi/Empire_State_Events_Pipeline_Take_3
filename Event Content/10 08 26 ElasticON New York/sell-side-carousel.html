@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Deal Map</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --soft: #C9CCD2; --dim: #8A8F98; --line: #2A2F36; --card: #181C22;
+    --nyl: #F5A524; --vg: #7CB8FF; --sig: #8FE83A;
+    --good: #34D399; --mix: #FBBF24; --bad: #F87171;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 92px 80px 150px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  h1 { font: 700 70px/1.05 var(--serif); letter-spacing: -.01em; margin-bottom: 26px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 94% / 100% 10px no-repeat; }
+  .sub { font: 34px/1.3 var(--serif); color: var(--soft); margin-bottom: 44px; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 48px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .14em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { position: absolute; left: 80px; right: 80px; bottom: 96px; font: 20px/1.4 var(--mono); color: var(--dim); }
+  .nyl { color: var(--nyl); } .vg { color: var(--vg); }
+  .tag { font: 700 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+
+  /* 1 cover */
+  .s1 h1 { font-size: 104px; margin-top: 70px; margin-bottom: 40px; }
+  .s1 .sub { font-size: 38px; }
+  .who { margin-top: auto; display: grid; gap: 30px; }
+  .who div { border-left: 8px solid; padding: 6px 0 6px 30px; }
+  .who .a { border-color: var(--nyl); } .who .b { border-color: var(--vg); }
+  .who b { display: block; font: 700 44px/1.15 var(--serif); }
+  .who span { display: block; font: 28px/1.3 var(--serif); color: var(--soft); margin-top: 6px; }
+
+  /* 2 journey map */
+  .map { display: grid; grid-template-columns: 210px 1fr 1fr; gap: 0; border-top: 2px solid var(--line); }
+  .map > div { padding: 34px 18px; border-bottom: 2px solid var(--line); font: 34px/1.25 var(--serif); }
+  .map .st { font: 700 22px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-left: 0; }
+  .map .hd { font: 700 24px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding-top: 0; border-bottom-width: 4px; }
+  .map .hd.nyl { border-color: var(--nyl); } .map .hd.vg { border-color: var(--vg); }
+
+  /* 3 matrix */
+  table { width: 100%; border-collapse: collapse; }
+  th { font: 700 24px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); text-align: left; padding: 0 16px 18px; }
+  td { font: 29px/1.2 var(--serif); padding: 17px 16px; border-top: 2px solid var(--line); vertical-align: middle; }
+  td:first-child { font: 700 24px/1.2 var(--mono); color: var(--soft); width: 230px; padding-left: 0; }
+  .c { display: flex; align-items: center; gap: 14px; }
+  .c i { font-style: normal; font: 700 26px/1 var(--mono); width: 40px; height: 40px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex: none; color: #111418; }
+  .g i { background: var(--good); } .m i { background: var(--mix); } .r i { background: var(--bad); }
+  .na { color: var(--dim); }
+  .legend { display: flex; gap: 34px; margin-top: 26px; font: 24px/1 var(--mono); color: var(--soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 10px; }
+  .legend i { font-style: normal; font: 700 22px/1 var(--mono); width: 32px; height: 32px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: #111418; }
+  .verdict { margin-top: 34px; border-left: 8px solid var(--nyl); padding: 6px 0 6px 28px; font: italic 36px/1.3 var(--serif); }
+
+  /* 4 criteria */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+  .col h2 { font: 700 46px/1.1 var(--serif); margin: 14px 0 26px; }
+  .col ol { list-style: none; counter-reset: n; display: grid; gap: 20px; }
+  .col li { counter-increment: n; font: 29px/1.25 var(--serif); padding-left: 52px; position: relative; color: var(--soft); }
+  .col li:before { content: counter(n); position: absolute; left: 0; top: 2px; font: 700 24px/1 var(--mono); }
+  .col.a li:before { color: var(--nyl); } .col.b li:before { color: var(--vg); }
+  .col { border-top: 6px solid; padding-top: 22px; }
+  .col.a { border-color: var(--nyl); } .col.b { border-color: var(--vg); }
+
+  /* 5 gantt */
+  .gantt { position: relative; margin-top: 8px; }
+  .months { display: grid; grid-template-columns: 250px repeat(6, 1fr); font: 700 24px/1 var(--mono); color: var(--dim); margin-bottom: 18px; }
+  .months span { text-align: center; }
+  .gr { display: grid; grid-template-columns: 250px repeat(6, 1fr); align-items: center; height: 84px; border-top: 2px solid var(--line); }
+  .gr .lb { font: 27px/1.15 var(--serif); padding-right: 14px; }
+  .bar { height: 46px; border-radius: 6px; background: var(--nyl); opacity: .9; }
+  .msl { margin-top: 24px; font: 24px/1.4 var(--mono); color: var(--soft); } .msl b { color: var(--sig); font-weight: 700; }
+  .ms { display: grid; grid-template-columns: 250px repeat(6, 1fr); margin-top: 22px; font: 22px/1.25 var(--mono); color: var(--soft); }
+  .ms div { border-left: 3px solid var(--sig); padding-left: 10px; }
+  .callouts { margin-bottom: 40px; margin-top: auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+  .co { background: var(--card); border-top: 6px solid var(--sig); padding: 24px 22px; }
+  .co b { display: block; font: 700 46px/1 var(--serif); margin-bottom: 12px; white-space: nowrap; }
+  .co span { display: block; font: 25px/1.3 var(--serif); color: var(--soft); }
+  .co small { display: block; font: 21px/1.3 var(--mono); color: var(--dim); margin-top: 12px; }
+
+  /* 6 paved road */
+  .road { display: grid; gap: 0; margin-top: 4px; }
+  .step { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 26px; padding: 22px 0; border-top: 2px solid var(--line); }
+  .step b { font: 700 54px/1 var(--serif); color: var(--nyl); text-align: center; }
+  .step div { font: 32px/1.25 var(--serif); }
+  .step small { display: block; font: 24px/1.3 var(--mono); color: var(--dim); margin-top: 6px; }
+  .big { margin-top: auto; display: flex; gap: 60px; align-items: baseline; }
+  .big div b { display: block; font: 700 120px/1 var(--serif); }
+  .big div span { font: 28px/1.2 var(--mono); color: var(--soft); }
+
+  /* 7 govern */
+  .flow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .fl { background: var(--card); border-top: 6px solid var(--vg); padding: 24px 20px; }
+  .fl .n { font: 700 22px/1 var(--mono); color: var(--vg); letter-spacing: .1em; }
+  .fl h3 { font: 700 34px/1.1 var(--serif); margin: 12px 0 14px; }
+  .fl p { font: 26px/1.3 var(--serif); color: var(--soft); }
+  .fl.h { border-color: var(--sig); } .fl.h .n { color: var(--sig); }
+  .mirror { margin-top: 40px; border-top: 2px dashed var(--line); padding-top: 34px; }
+  .mirror .tag { color: var(--bad); }
+  .mirror h3 { font: 700 44px/1.15 var(--serif); margin: 14px 0 22px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; } .split b { display: block; font: 700 96px/1 var(--serif); margin-bottom: 10px; } .split .r2 { color: var(--bad); } .split span { font: 27px/1.3 var(--serif); color: var(--soft); }
+  .bars { display: grid; gap: 16px; }
+  .hb { display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 18px; font: 26px/1.2 var(--serif); }
+  .hb .track { height: 50px; background: var(--card); position: relative; }
+  .hb .fill { position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 16px; font: 700 26px/1 var(--mono); color: #111418; }
+
+  /* 8 begin */
+  .cl { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .cl ul { list-style: none; display: grid; gap: 30px; }
+  .cl li { font: 32px/1.25 var(--serif); padding-left: 30px; position: relative; color: var(--soft); }
+  .cl li:before { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 12px; background: var(--sig); }
+  .cl h2 { font: 700 40px/1.1 var(--serif); margin-bottom: 26px; }
+  .ask { margin-top: auto; font: 700 42px/1.2 var(--serif); border-left: 8px solid var(--sig); padding-left: 28px; }
+</style>
+
+</head>
+<body>
+<style>
+  .tl { display: grid; gap: 18px; }
+  .ph { background: var(--card); border-left: 10px solid var(--dim); padding: 26px 30px; }
+  .ph .tag { color: var(--dim); }
+  .ph h3 { font: 700 44px/1.1 var(--serif); margin: 10px 0 12px; }
+  .ph p { font: 28px/1.3 var(--serif); color: var(--soft); }
+  .ph.p1 { border-color: var(--nyl); } .ph.p2 { border-color: var(--sig); } .ph.p3 { border-color: var(--vg); }
+  .ph .champ { display: block; margin-top: 14px; font: 700 22px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .brk { font: 23px/1.35 var(--mono); color: var(--soft); border-left: 3px solid var(--sig); padding-left: 16px; margin-top: 22px; }
+  .dx td { font: 31px/1.25 var(--serif); padding: 28px 14px; vertical-align: top; }
+  .dx td:first-child { font: 700 22px/1.3 var(--mono); width: 190px; padding-left: 0; }
+  .dx th.nyl { color: var(--nyl); } .dx th.vg { color: var(--vg); }
+  .price { display: grid; gap: 34px; margin-top: 16px; }
+  .pm { background: var(--card); padding: 36px 34px; border-top: 6px solid var(--bad); }
+  .pm .tag { color: var(--soft); }
+  .pm q, .pm .pq { display: block; font: italic 44px/1.22 var(--serif); margin: 16px 0 14px; } .pm .pq { font-style: normal; font-weight: 700; }
+  .pm small { font: 24px/1.3 var(--mono); color: var(--dim); }
+  .pm.ok { border-color: var(--sig); }
+  .pack { list-style: none; display: grid; gap: 28px; margin-top: 34px; }
+  .pack li { font: 34px/1.25 var(--serif); padding-left: 34px; position: relative; color: var(--soft); }
+  .pack li:before { content: ""; position: absolute; left: 0; top: 13px; width: 14px; height: 14px; background: var(--sig); }
+  .pack-h { margin-top: 44px; font: 700 40px/1.1 var(--serif); }
+</style>
+
+<!-- 1 COVER -->
+<section class="slide s1">
+  <div class="kicker">Elastic{ON} New York · Oct 8, 2026 · for sellers</div>
+  <h1>Same platform. <u>Opposite</u> reasons to buy.</h1>
+  <div class="sub">The regulated security deal, stage by stage: what two buyers needed, how they decided, how long it took.</div>
+  <div class="who">
+    <div class="a"><b>New York Life</b><span>Sal Picheria · Corporate VP, Security Engineering</span></div>
+    <div class="b"><b>Vanguard</b><span>Jonathan Reitnauer · Head of Cyber Security Detection &amp; Orchestration</span></div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5 →</span></div>
+</section>
+
+<!-- 2 DEAL TIMELINE -->
+<section class="slide">
+  <div class="kicker nyl">NYL · the deal on one timeline</div>
+  <h1>A <u>two-year</u> motion with a fast back end</h1>
+  <div class="tl">
+    <div class="ph p1"><div class="tag">Evaluate</div><h3>Survey, matrix, long POC</h3><p>8-row market matrix · "buy both" vetoed by leadership · "a really long POC"</p><span class="champ">Champion: the data-platform owner</span></div>
+    <div class="ph p2"><div class="tag">Cut over · Oct → Mar</div><h3>6 months</h3><p>2 Elastic services people · ~1-month parallel run · old SIEM off in March</p><span class="champ">Champion: platform team + the SOC</span></div>
+    <div class="ph p3"><div class="tag">Expand · year one</div><h3>20 teams, 200 users</h3><p>Onboarding by Terraform · each run takes 10–15 minutes</p><span class="champ">Champion: every security sub-team</span></div>
+  </div>
+  <div class="brk">"Took us two years to get there": NYL's end-to-end figure. The talk didn't split evaluation from build.</div>
+  <div class="src">Source: NYL talk and slides, Elastic{ON} New York, Oct 8, 2026. Champion lane: my read.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- 3 DIAGNOSTIC -->
+<section class="slide">
+  <div class="kicker">Diagnose before the first demo</div>
+  <h1>Maturity buyer or <u>roadmap</u> buyer?</h1>
+  <table class="dx">
+    <tr><th></th><th class="nyl">Maturity · NYL</th><th class="vg">Roadmap · Vanguard</th></tr>
+    <tr><td class="na">They said</td><td>A data model "around for a long period of time"</td><td>AI "very, very early" when they signed</td></tr>
+    <tr><td class="na">Buying</td><td>Stability at petabyte scale</td><td>A co-builder that will "help build it"</td></tr>
+    <tr><td class="na">Proof</td><td>A long POC on their own data</td><td>A roadmap "sneak peek"</td></tr>
+    <tr><td class="na">Bring</td><td>Parity matrix, scale references</td><td>Design-partner access, product contacts</td></tr>
+    <tr><td class="na">Contract</td><td>Stability terms + services</td><td>Roadmap commitments in writing</td></tr>
+  </table>
+  <div class="src">Row 1 and quotes: the talks, Oct 8, 2026. Rows 2–5: my read of them.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- 4 PRICING -->
+<section class="slide">
+  <div class="kicker nyl">NYL · pricing as the buyer hears it</div>
+  <h1>Predictable beats <u>cheap</u></h1>
+  <div class="price">
+    <div class="pm"><div class="tag">Ingest-based</div><q>You have to pick and choose what data is worth ingesting.</q><small>Rationed data, blind spots</small></div>
+    <div class="pm"><div class="tag">Pay-per-query</div><q>Whoa, hold on. Don't run that.</q><small>Rationed analytics, hesitant analysts</small></div>
+    <div class="pm ok"><div class="tag">What NYL wanted</div><div class="pq">No dollar signs on the analytics people do</div><small>The model NYL landed on wasn't disclosed</small></div>
+  </div>
+  <div class="src">Source: NYL talk, Elastic{ON} New York, Oct 8, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- 5 GOVERN -->
+<section class="slide">
+  <div class="kicker vg">Vanguard · the future SOC</div>
+  <h1>AI executes. <u>Humans govern.</u></h1>
+  <div class="flow">
+    <div class="fl"><div class="n">01 · TRUSTED</div><h3>Data foundation</h3><p>Identity, endpoint, cloud, network and threat intel in one place</p></div>
+    <div class="fl"><div class="n">02 · AI POWERED</div><h3>Execution</h3><p>Triage, correlation, timelines and response recommendations</p></div>
+    <div class="fl h"><div class="n">03 · GOVERNANCE</div><h3>Human accountability</h3><p>Risk decisions, sensitive containment, AI oversight</p></div>
+  </div>
+  <div class="pack-h">So bring the governance pack:</div>
+  <ul class="pack">
+    <li>An identity for every agent, with scoped permissions</li>
+    <li>An audit log of what the AI queried and did</li>
+    <li>An approval gate on anything that deploys</li>
+    <li>A contract addendum mapped to their regulator</li>
+  </ul>
+  <div class="src">Source: Vanguard slide "The Future SOC: AI Executes, Humans Govern". Checklist: my read.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>

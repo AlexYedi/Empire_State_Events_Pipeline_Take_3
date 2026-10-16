@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Year in Quantum — AI Week Past &amp; Present 1/2, Oct 8 2026</title>
+<style>
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #0F172A; --ink: #F5F3EE; --dim: #8A93A6; --line: #26324A; --accent: #3B82F6; --soft: #C9CED8;
+    --card: #141E33; --sig: #8FE83A; --warn: #F59E0B; --mute: #3A4560;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 104px 88px 80px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; margin-bottom: 48px; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 92% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 88px; right: 88px; bottom: 52px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .12em; }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { font: 19px/1.4 var(--mono); color: var(--dim); margin-top: auto; padding-bottom: 60px; }
+  .sub { font: 40px/1.3 var(--serif); color: var(--soft); }
+
+  /* s1 */
+  .s1 h1 { font-size: 104px; margin-top: 40px; }
+  .s1 svg { margin-top: 80px; }
+
+  /* s2 glossary */
+  .gl { display: grid; gap: 0; }
+  .gl .row { padding: 28px 0; border-bottom: 2px solid var(--line); display: grid; grid-template-columns: 300px 1fr; column-gap: 36px; align-items: baseline; }
+  .gl .row:first-child { border-top: 2px solid var(--line); }
+  .gl .t { font: 700 26px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--sig); }
+  .gl .m { font: 34px/1.3 var(--serif); color: var(--soft); }
+
+  /* s3 dots */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; }
+  .pl { font: 700 22px/1.3 var(--mono); letter-spacing: .1em; color: var(--dim); text-transform: uppercase; margin-bottom: 18px; }
+  .arrow { font: 28px/1.2 var(--serif); color: var(--soft); margin: 12px 0; }
+  .big { font: 700 60px/1 var(--serif); color: var(--ink); margin-top: 18px; }
+  .big span { font: 26px/1 var(--mono); color: var(--dim); letter-spacing: .06em; }
+
+  /* s4 timeline */
+  .tl { position: relative; margin-left: 20px; padding-left: 48px; border-left: 3px solid var(--line); display: grid; gap: 17px; }
+  .tl div { position: relative; font: 31px/1.25 var(--serif); color: var(--soft); }
+  .tl div:before { content: ""; position: absolute; left: -59px; top: 9px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); }
+  .tl div.w:before { background: var(--warn); }
+  .tl div.now:before { background: var(--sig); }
+  .tl div.now { color: var(--ink); }
+  .tl b { font: 700 22px/1 var(--mono); color: var(--dim); letter-spacing: .06em; display: inline-block; width: 120px; }
+  .legend { font: 20px/1 var(--mono); color: var(--dim); margin: 0 0 26px; display: flex; gap: 30px; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 10px; vertical-align: -1px; }
+  .ahead { margin-top: 34px; font: 24px/1.5 var(--mono); color: var(--dim); }
+  .ahead b { color: var(--ink); }
+
+  /* s5 */
+  .s5 h1 { font-size: 96px; margin-top: 60px; }
+  .q { font: 42px/1.35 var(--serif); color: var(--soft); max-width: 880px; }
+  .ev { margin-top: auto; margin-bottom: 120px; font: 26px/1.5 var(--mono); color: var(--dim); }
+  .ev b { color: var(--ink); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — HOOK -->
+<section class="slide s1">
+  <div class="kicker">AI Week · Past &amp; Present · 1/2</div>
+  <h1>Quantum won by <u>21 minutes</u>.</h1>
+  <div class="sub">Then a team in Singapore matched it on ordinary chips, and IBM added them to the paper.</div>
+  <svg width="904" height="470" viewBox="0 0 904 470" role="img" aria-label="Time to solve the same problem: IBM's quantum computer 16.1 minutes; 256 ordinary graphics chips 37.3 minutes.">
+    <g font-family="Menlo, monospace" font-size="22" fill="#8A93A6" letter-spacing="2">
+      <text x="0" y="24">IBM'S QUANTUM COMPUTER</text>
+      <text x="0" y="234">256 ORDINARY GRAPHICS CHIPS (GPUs)</text>
+    </g>
+    <rect x="0" y="48" width="390" height="96" rx="6" fill="#38BDF8"/>
+    <text x="414" y="114" font-family="Iowan Old Style, Georgia, serif" font-size="52" font-weight="700" fill="#F5F3EE">16.1 min</text>
+    <rect x="0" y="258" width="904" height="96" rx="6" fill="#F59E0B"/>
+    <text x="28" y="324" font-family="Iowan Old Style, Georgia, serif" font-size="52" font-weight="700" fill="#0F172A">37.3 min</text>
+    <text x="0" y="410" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-style="italic" fill="#8A93A6">Same problem, same answers. Faster isn't the same as</text><text x="0" y="450" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-style="italic" fill="#8A93A6">"impossible without quantum."</text>
+  </svg>
+  <div class="src">IBM + Algorithmiq, Jul 30 (arXiv 2607.25941, v3 adds the SUTD authors). SUTD reproduction: arXiv 2608.13110.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5</span></div>
+</section>
+
+<!-- SLIDE 2 — PRIMER -->
+<section class="slide">
+  <div class="kicker">Quantum in 60 seconds</div>
+  <h1>Four words to know</h1>
+  <div class="gl">
+    <div class="row"><div class="t">Qubit</div><div class="m">A quantum bit. Not a strict 0 or 1: it can hold a blend of both, and link with other qubits. Powerful, and very fragile.</div></div>
+    <div class="row"><div class="t">Logical qubit</div><div class="m">Many fragile qubits bundled into one dependable qubit that catches its own errors.</div></div>
+    <div class="row"><div class="t">Fault-tolerant</div><div class="m">A machine reliable enough to run long, useful jobs. The goal of the whole field. Nobody has one yet.</div></div>
+    <div class="row"><div class="t">Quantum advantage</div><div class="m">A quantum computer doing something useful that no normal computer can match.</div></div>
+  </div>
+  <div class="src">Heat, vibration or a stray signal scrambles a qubit. That's why everything below is about errors.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- SLIDE 3 — OVERHEAD -->
+<section class="slide">
+  <div class="kicker">The real story of the year</div>
+  <h1>How few fragile qubits can you <u>get away with</u>?</h1>
+  <div class="panels">
+    <div>
+      <div class="pl">Jan · Google</div>
+      <svg width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="About 100 fragile qubits"><circle cx="12" cy="12" r="10" fill="#3A4560"/><circle cx="42" cy="12" r="10" fill="#3A4560"/><circle cx="72" cy="12" r="10" fill="#3A4560"/><circle cx="102" cy="12" r="10" fill="#3A4560"/><circle cx="132" cy="12" r="10" fill="#3A4560"/><circle cx="162" cy="12" r="10" fill="#3A4560"/><circle cx="192" cy="12" r="10" fill="#3A4560"/><circle cx="222" cy="12" r="10" fill="#3A4560"/><circle cx="252" cy="12" r="10" fill="#3A4560"/><circle cx="282" cy="12" r="10" fill="#3A4560"/><circle cx="12" cy="42" r="10" fill="#3A4560"/><circle cx="42" cy="42" r="10" fill="#3A4560"/><circle cx="72" cy="42" r="10" fill="#3A4560"/><circle cx="102" cy="42" r="10" fill="#3A4560"/><circle cx="132" cy="42" r="10" fill="#3A4560"/><circle cx="162" cy="42" r="10" fill="#3A4560"/><circle cx="192" cy="42" r="10" fill="#3A4560"/><circle cx="222" cy="42" r="10" fill="#3A4560"/><circle cx="252" cy="42" r="10" fill="#3A4560"/><circle cx="282" cy="42" r="10" fill="#3A4560"/><circle cx="12" cy="72" r="10" fill="#3A4560"/><circle cx="42" cy="72" r="10" fill="#3A4560"/><circle cx="72" cy="72" r="10" fill="#3A4560"/><circle cx="102" cy="72" r="10" fill="#3A4560"/><circle cx="132" cy="72" r="10" fill="#3A4560"/><circle cx="162" cy="72" r="10" fill="#3A4560"/><circle cx="192" cy="72" r="10" fill="#3A4560"/><circle cx="222" cy="72" r="10" fill="#3A4560"/><circle cx="252" cy="72" r="10" fill="#3A4560"/><circle cx="282" cy="72" r="10" fill="#3A4560"/><circle cx="12" cy="102" r="10" fill="#3A4560"/><circle cx="42" cy="102" r="10" fill="#3A4560"/><circle cx="72" cy="102" r="10" fill="#3A4560"/><circle cx="102" cy="102" r="10" fill="#3A4560"/><circle cx="132" cy="102" r="10" fill="#3A4560"/><circle cx="162" cy="102" r="10" fill="#3A4560"/><circle cx="192" cy="102" r="10" fill="#3A4560"/><circle cx="222" cy="102" r="10" fill="#3A4560"/><circle cx="252" cy="102" r="10" fill="#3A4560"/><circle cx="282" cy="102" r="10" fill="#3A4560"/><circle cx="12" cy="132" r="10" fill="#3A4560"/><circle cx="42" cy="132" r="10" fill="#3A4560"/><circle cx="72" cy="132" r="10" fill="#3A4560"/><circle cx="102" cy="132" r="10" fill="#3A4560"/><circle cx="132" cy="132" r="10" fill="#3A4560"/><circle cx="162" cy="132" r="10" fill="#3A4560"/><circle cx="192" cy="132" r="10" fill="#3A4560"/><circle cx="222" cy="132" r="10" fill="#3A4560"/><circle cx="252" cy="132" r="10" fill="#3A4560"/><circle cx="282" cy="132" r="10" fill="#3A4560"/><circle cx="12" cy="162" r="10" fill="#3A4560"/><circle cx="42" cy="162" r="10" fill="#3A4560"/><circle cx="72" cy="162" r="10" fill="#3A4560"/><circle cx="102" cy="162" r="10" fill="#3A4560"/><circle cx="132" cy="162" r="10" fill="#3A4560"/><circle cx="162" cy="162" r="10" fill="#3A4560"/><circle cx="192" cy="162" r="10" fill="#3A4560"/><circle cx="222" cy="162" r="10" fill="#3A4560"/><circle cx="252" cy="162" r="10" fill="#3A4560"/><circle cx="282" cy="162" r="10" fill="#3A4560"/><circle cx="12" cy="192" r="10" fill="#3A4560"/><circle cx="42" cy="192" r="10" fill="#3A4560"/><circle cx="72" cy="192" r="10" fill="#3A4560"/><circle cx="102" cy="192" r="10" fill="#3A4560"/><circle cx="132" cy="192" r="10" fill="#3A4560"/><circle cx="162" cy="192" r="10" fill="#3A4560"/><circle cx="192" cy="192" r="10" fill="#3A4560"/><circle cx="222" cy="192" r="10" fill="#3A4560"/><circle cx="252" cy="192" r="10" fill="#3A4560"/><circle cx="282" cy="192" r="10" fill="#3A4560"/><circle cx="12" cy="222" r="10" fill="#3A4560"/><circle cx="42" cy="222" r="10" fill="#3A4560"/><circle cx="72" cy="222" r="10" fill="#3A4560"/><circle cx="102" cy="222" r="10" fill="#3A4560"/><circle cx="132" cy="222" r="10" fill="#3A4560"/><circle cx="162" cy="222" r="10" fill="#3A4560"/><circle cx="192" cy="222" r="10" fill="#3A4560"/><circle cx="222" cy="222" r="10" fill="#3A4560"/><circle cx="252" cy="222" r="10" fill="#3A4560"/><circle cx="282" cy="222" r="10" fill="#3A4560"/><circle cx="12" cy="252" r="10" fill="#3A4560"/><circle cx="42" cy="252" r="10" fill="#3A4560"/><circle cx="72" cy="252" r="10" fill="#3A4560"/><circle cx="102" cy="252" r="10" fill="#3A4560"/><circle cx="132" cy="252" r="10" fill="#3A4560"/><circle cx="162" cy="252" r="10" fill="#3A4560"/><circle cx="192" cy="252" r="10" fill="#3A4560"/><circle cx="222" cy="252" r="10" fill="#3A4560"/><circle cx="252" cy="252" r="10" fill="#3A4560"/><circle cx="282" cy="252" r="10" fill="#3A4560"/><circle cx="12" cy="282" r="10" fill="#3A4560"/><circle cx="42" cy="282" r="10" fill="#3A4560"/><circle cx="72" cy="282" r="10" fill="#3A4560"/><circle cx="102" cy="282" r="10" fill="#3A4560"/><circle cx="132" cy="282" r="10" fill="#3A4560"/><circle cx="162" cy="282" r="10" fill="#3A4560"/><circle cx="192" cy="282" r="10" fill="#3A4560"/><circle cx="222" cy="282" r="10" fill="#3A4560"/><circle cx="252" cy="282" r="10" fill="#3A4560"/><circle cx="282" cy="282" r="10" fill="#3A4560"/></svg>
+      <div class="arrow">↓ bundled into</div>
+      <svg width="300" height="30" viewBox="0 0 300 30" role="img" aria-label="1 dependable qubit"><circle cx="14" cy="14" r="12" fill="#8FE83A"/></svg>
+      <div class="big">~100 → 1</div>
+    </div>
+    <div>
+      <div class="pl">Mar · Quantinuum</div>
+      <svg width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="98 fragile qubits"><circle cx="12" cy="12" r="10" fill="#3A4560"/><circle cx="42" cy="12" r="10" fill="#3A4560"/><circle cx="72" cy="12" r="10" fill="#3A4560"/><circle cx="102" cy="12" r="10" fill="#3A4560"/><circle cx="132" cy="12" r="10" fill="#3A4560"/><circle cx="162" cy="12" r="10" fill="#3A4560"/><circle cx="192" cy="12" r="10" fill="#3A4560"/><circle cx="222" cy="12" r="10" fill="#3A4560"/><circle cx="252" cy="12" r="10" fill="#3A4560"/><circle cx="282" cy="12" r="10" fill="#3A4560"/><circle cx="12" cy="42" r="10" fill="#3A4560"/><circle cx="42" cy="42" r="10" fill="#3A4560"/><circle cx="72" cy="42" r="10" fill="#3A4560"/><circle cx="102" cy="42" r="10" fill="#3A4560"/><circle cx="132" cy="42" r="10" fill="#3A4560"/><circle cx="162" cy="42" r="10" fill="#3A4560"/><circle cx="192" cy="42" r="10" fill="#3A4560"/><circle cx="222" cy="42" r="10" fill="#3A4560"/><circle cx="252" cy="42" r="10" fill="#3A4560"/><circle cx="282" cy="42" r="10" fill="#3A4560"/><circle cx="12" cy="72" r="10" fill="#3A4560"/><circle cx="42" cy="72" r="10" fill="#3A4560"/><circle cx="72" cy="72" r="10" fill="#3A4560"/><circle cx="102" cy="72" r="10" fill="#3A4560"/><circle cx="132" cy="72" r="10" fill="#3A4560"/><circle cx="162" cy="72" r="10" fill="#3A4560"/><circle cx="192" cy="72" r="10" fill="#3A4560"/><circle cx="222" cy="72" r="10" fill="#3A4560"/><circle cx="252" cy="72" r="10" fill="#3A4560"/><circle cx="282" cy="72" r="10" fill="#3A4560"/><circle cx="12" cy="102" r="10" fill="#3A4560"/><circle cx="42" cy="102" r="10" fill="#3A4560"/><circle cx="72" cy="102" r="10" fill="#3A4560"/><circle cx="102" cy="102" r="10" fill="#3A4560"/><circle cx="132" cy="102" r="10" fill="#3A4560"/><circle cx="162" cy="102" r="10" fill="#3A4560"/><circle cx="192" cy="102" r="10" fill="#3A4560"/><circle cx="222" cy="102" r="10" fill="#3A4560"/><circle cx="252" cy="102" r="10" fill="#3A4560"/><circle cx="282" cy="102" r="10" fill="#3A4560"/><circle cx="12" cy="132" r="10" fill="#3A4560"/><circle cx="42" cy="132" r="10" fill="#3A4560"/><circle cx="72" cy="132" r="10" fill="#3A4560"/><circle cx="102" cy="132" r="10" fill="#3A4560"/><circle cx="132" cy="132" r="10" fill="#3A4560"/><circle cx="162" cy="132" r="10" fill="#3A4560"/><circle cx="192" cy="132" r="10" fill="#3A4560"/><circle cx="222" cy="132" r="10" fill="#3A4560"/><circle cx="252" cy="132" r="10" fill="#3A4560"/><circle cx="282" cy="132" r="10" fill="#3A4560"/><circle cx="12" cy="162" r="10" fill="#3A4560"/><circle cx="42" cy="162" r="10" fill="#3A4560"/><circle cx="72" cy="162" r="10" fill="#3A4560"/><circle cx="102" cy="162" r="10" fill="#3A4560"/><circle cx="132" cy="162" r="10" fill="#3A4560"/><circle cx="162" cy="162" r="10" fill="#3A4560"/><circle cx="192" cy="162" r="10" fill="#3A4560"/><circle cx="222" cy="162" r="10" fill="#3A4560"/><circle cx="252" cy="162" r="10" fill="#3A4560"/><circle cx="282" cy="162" r="10" fill="#3A4560"/><circle cx="12" cy="192" r="10" fill="#3A4560"/><circle cx="42" cy="192" r="10" fill="#3A4560"/><circle cx="72" cy="192" r="10" fill="#3A4560"/><circle cx="102" cy="192" r="10" fill="#3A4560"/><circle cx="132" cy="192" r="10" fill="#3A4560"/><circle cx="162" cy="192" r="10" fill="#3A4560"/><circle cx="192" cy="192" r="10" fill="#3A4560"/><circle cx="222" cy="192" r="10" fill="#3A4560"/><circle cx="252" cy="192" r="10" fill="#3A4560"/><circle cx="282" cy="192" r="10" fill="#3A4560"/><circle cx="12" cy="222" r="10" fill="#3A4560"/><circle cx="42" cy="222" r="10" fill="#3A4560"/><circle cx="72" cy="222" r="10" fill="#3A4560"/><circle cx="102" cy="222" r="10" fill="#3A4560"/><circle cx="132" cy="222" r="10" fill="#3A4560"/><circle cx="162" cy="222" r="10" fill="#3A4560"/><circle cx="192" cy="222" r="10" fill="#3A4560"/><circle cx="222" cy="222" r="10" fill="#3A4560"/><circle cx="252" cy="222" r="10" fill="#3A4560"/><circle cx="282" cy="222" r="10" fill="#3A4560"/><circle cx="12" cy="252" r="10" fill="#3A4560"/><circle cx="42" cy="252" r="10" fill="#3A4560"/><circle cx="72" cy="252" r="10" fill="#3A4560"/><circle cx="102" cy="252" r="10" fill="#3A4560"/><circle cx="132" cy="252" r="10" fill="#3A4560"/><circle cx="162" cy="252" r="10" fill="#3A4560"/><circle cx="192" cy="252" r="10" fill="#3A4560"/><circle cx="222" cy="252" r="10" fill="#3A4560"/><circle cx="252" cy="252" r="10" fill="#3A4560"/><circle cx="282" cy="252" r="10" fill="#3A4560"/><circle cx="12" cy="282" r="10" fill="#3A4560"/><circle cx="42" cy="282" r="10" fill="#3A4560"/><circle cx="72" cy="282" r="10" fill="#3A4560"/><circle cx="102" cy="282" r="10" fill="#3A4560"/><circle cx="132" cy="282" r="10" fill="#3A4560"/><circle cx="162" cy="282" r="10" fill="#3A4560"/><circle cx="192" cy="282" r="10" fill="#3A4560"/><circle cx="222" cy="282" r="10" fill="#3A4560"/></svg>
+      <div class="arrow">↓ bundled into</div>
+      <svg width="300" height="176" viewBox="0 0 300 176" role="img" aria-label="48 dependable qubits"><circle cx="14" cy="14" r="12" fill="#8FE83A"/><circle cx="50" cy="14" r="12" fill="#8FE83A"/><circle cx="86" cy="14" r="12" fill="#8FE83A"/><circle cx="122" cy="14" r="12" fill="#8FE83A"/><circle cx="158" cy="14" r="12" fill="#8FE83A"/><circle cx="194" cy="14" r="12" fill="#8FE83A"/><circle cx="230" cy="14" r="12" fill="#8FE83A"/><circle cx="266" cy="14" r="12" fill="#8FE83A"/><circle cx="14" cy="50" r="12" fill="#8FE83A"/><circle cx="50" cy="50" r="12" fill="#8FE83A"/><circle cx="86" cy="50" r="12" fill="#8FE83A"/><circle cx="122" cy="50" r="12" fill="#8FE83A"/><circle cx="158" cy="50" r="12" fill="#8FE83A"/><circle cx="194" cy="50" r="12" fill="#8FE83A"/><circle cx="230" cy="50" r="12" fill="#8FE83A"/><circle cx="266" cy="50" r="12" fill="#8FE83A"/><circle cx="14" cy="86" r="12" fill="#8FE83A"/><circle cx="50" cy="86" r="12" fill="#8FE83A"/><circle cx="86" cy="86" r="12" fill="#8FE83A"/><circle cx="122" cy="86" r="12" fill="#8FE83A"/><circle cx="158" cy="86" r="12" fill="#8FE83A"/><circle cx="194" cy="86" r="12" fill="#8FE83A"/><circle cx="230" cy="86" r="12" fill="#8FE83A"/><circle cx="266" cy="86" r="12" fill="#8FE83A"/><circle cx="14" cy="122" r="12" fill="#8FE83A"/><circle cx="50" cy="122" r="12" fill="#8FE83A"/><circle cx="86" cy="122" r="12" fill="#8FE83A"/><circle cx="122" cy="122" r="12" fill="#8FE83A"/><circle cx="158" cy="122" r="12" fill="#8FE83A"/><circle cx="194" cy="122" r="12" fill="#8FE83A"/><circle cx="230" cy="122" r="12" fill="#8FE83A"/><circle cx="266" cy="122" r="12" fill="#8FE83A"/><circle cx="14" cy="158" r="12" fill="#8FE83A"/><circle cx="50" cy="158" r="12" fill="#8FE83A"/><circle cx="86" cy="158" r="12" fill="#8FE83A"/><circle cx="122" cy="158" r="12" fill="#8FE83A"/><circle cx="158" cy="158" r="12" fill="#8FE83A"/><circle cx="194" cy="158" r="12" fill="#8FE83A"/><circle cx="230" cy="158" r="12" fill="#8FE83A"/><circle cx="266" cy="158" r="12" fill="#8FE83A"/><circle cx="14" cy="194" r="12" fill="#8FE83A"/><circle cx="50" cy="194" r="12" fill="#8FE83A"/><circle cx="86" cy="194" r="12" fill="#8FE83A"/><circle cx="122" cy="194" r="12" fill="#8FE83A"/><circle cx="158" cy="194" r="12" fill="#8FE83A"/><circle cx="194" cy="194" r="12" fill="#8FE83A"/><circle cx="230" cy="194" r="12" fill="#8FE83A"/><circle cx="266" cy="194" r="12" fill="#8FE83A"/></svg>
+      <div class="big">98 → 48</div>
+    </div>
+  </div>
+  <div class="src" style="padding-bottom:40px">Grey = fragile (physical) qubits · green = dependable (logical). Different error-correction schemes, so not like-for-like; Google ratio approximate (Willow, 101 qubits).</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- SLIDE 4 — TIMELINE -->
+<section class="slide">
+  <div class="kicker">Developments · dated</div>
+  <h1>Quantum's 2026, dated</h1>
+  <div class="legend"><span><i style="background:#3B82F6"></i>science / hardware</span><span><i style="background:#F59E0B"></i>money</span></div>
+  <div class="tl">
+    <div><b>MAR 10</b>Quantinuum: 48 dependable qubits from 98</div>
+    <div><b>MAR 16</b>NVIDIA: graphics chips fix errors live</div>
+    <div class="w"><b>JUN 2</b>IBM commits $10B+ over five years</div>
+    <div class="w"><b>JUN 4</b>Quantinuum IPO raises $1.68B</div>
+    <div class="w"><b>JUL 3</b>IQM goes public</div>
+    <div><b>JUL 30</b>IBM claims "quantum advantage"</div>
+    <div><b>AUG</b>Singapore team matches it on GPUs</div>
+    <div><b>AUG 19</b>IBM links two ultra-cold fridges</div>
+    <div class="w"><b>SEP 8</b>US awards that take equity stakes</div>
+    <div class="now"><b>OCT 8</b>Tonight: IBM's Muir Kumph</div>
+  </div>
+  <div class="ahead">Ahead: <b>Jan 1, 2027</b> US national-security buys need quantum-safe encryption · <b>2029</b> IBM &amp; Microsoft fault-tolerant targets</div>
+  <div class="src">Sources: Quantinuum; NVIDIA; IBM; CNBC; Commerce Dept.; arXiv. Full links in the first comment.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- SLIDE 5 — CTA -->
+<section class="slide s5">
+  <div class="kicker">The question I'm taking in</div>
+  <h1>What would convince you <u>Kookaburra</u> works?</h1>
+  <div class="q">IBM's first error-corrected building block, due this year. Not shown as of mid-September.</div>
+  <div class="ev"><b>NYC Quantum Computing Meetup</b><br>Muir Kumph · IBM Research<br>IBM's path to fault tolerance<br>Thu Oct 8 · 6pm · 417 5th Ave<br>Next: what the room said · 2/2</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>

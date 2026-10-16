@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Cost Per Meeting Ladder</title>
+<style>
+/* Revolt! 2026 S1 (Joey Gilkey, TitanX): cost-per-meeting ladder, redrawn with each rung labelled. Five 1080x1350 slides. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --amber:#F59E0B; --sig:#8FE83A;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:104px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:124px;line-height:1.0;margin-top:44px}
+h2{font-size:76px;line-height:1.05;margin-top:24px}
+u{text-decoration:none;background:linear-gradient(var(--sig),var(--sig)) 0 94%/100% 10px no-repeat}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:36px;max-width:860px}
+.src{position:absolute;left:96px;right:96px;bottom:110px;font-family:var(--mono);font-size:19px;line-height:1.45;color:var(--muted)}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:22px;color:var(--muted)}
+.mark{display:inline-flex;align-items:center;gap:12px;letter-spacing:.14em;color:var(--ink);font-weight:700}
+.mark:before{content:"";width:16px;height:16px;background:var(--sig)}
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:16px 30px;margin-top:34px;font-family:var(--mono);font-size:21px;color:var(--ink);letter-spacing:.04em}
+.legend span{display:inline-flex;align-items:center;gap:12px}
+.sw{width:34px;height:26px;display:inline-block}
+.sw.obs{background:var(--amber)}
+.sw.mod{background:repeating-linear-gradient(45deg,var(--amber) 0 6px,#5A3A06 6px 13px)}
+.sw.clm{border:3px dashed var(--ink)}
+svg text{font-family:Menlo,"SF Mono",monospace}
+/* slide 1 */
+.s1 h1{margin-top:60px}
+.s1 .big{margin-top:auto;margin-bottom:40px;display:flex;align-items:baseline;gap:28px;font-family:var(--display);font-weight:600}
+.s1 .big b{font-size:124px;line-height:1}
+.s1 .big i{font-style:normal;font-size:70px;color:var(--muted)}
+.s1 .big .to{color:var(--amber)}
+.s1 .q{font-family:var(--body);font-size:36px;color:var(--ink);margin-bottom:30px}
+/* slide 4 */
+.panel{margin-top:40px;border-top:3px solid var(--rule);padding-top:26px}
+.ph{font-family:var(--mono);font-size:21px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pt{font-family:var(--display);font-weight:600;font-size:44px;line-height:1.1;margin-top:10px}
+/* slide 5 */
+.rungs{margin-top:46px;display:grid;gap:0}
+.rg{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:24px;padding:24px 0;border-top:2px solid var(--rule)}
+.rg b{font-family:var(--mono);font-size:30px;color:var(--amber)}
+.rg div{font-family:var(--display);font-size:40px;line-height:1.15}
+.rg small{display:block;font-family:var(--body);font-size:25px;color:var(--muted);margin-top:6px}
+.rg .tag{font-family:var(--mono);font-size:19px;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:2px solid var(--rule);color:var(--muted);white-space:nowrap}
+.rg .tag.free{border-color:var(--sig);color:var(--sig)}
+.ask{margin-top:auto;font-family:var(--display);font-weight:600;font-size:56px;line-height:1.15;border-left:8px solid var(--sig);padding-left:28px}
+</style></head><body>
+
+<!-- 1 HOOK -->
+<section class="slide s1">
+  <div class="eyebrow">Revolt! 2026 · Day 1 · Oct 14</div>
+  <h1>One meeting cost <u>$9,311</u>.</h1>
+  <p class="sub">Joey Gilkey (TitanX) walked it down a five-rung ladder. Here it is redrawn, with each rung labelled for what it is.</p>
+  <div class="big"><b>$9,311</b><i>→</i><b class="to">$812</b></div>
+  <p class="q">Which rungs were measured?</p>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5 →</span></div>
+</section>
+
+<!-- 2 WATERFALL -->
+<section class="slide">
+  <div class="eyebrow">The ladder, rung by rung</div>
+  <h2>Only the first two are <u>measured</u></h2>
+  <div class="legend">
+    <span><i class="sw obs"></i>Observed / arithmetic</span>
+    <span><i class="sw mod"></i>Modeled</span>
+    <span><i class="sw clm"></i>TitanX product claim</span>
+  </div>
+  <svg width="888" height="770" viewBox="0 0 888 770" role="img" aria-label="Cost per meeting by rung" style="margin-top:20px">
+    <defs>
+      <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="13" height="13" fill="#5A3A06"/><rect width="6" height="13" fill="#F59E0B"/>
+      </pattern>
+    </defs>
+    <!-- axis y=600; scale 520/9311 -->
+    <line x1="0" y1="600" x2="888" y2="600" stroke="#2A3550" stroke-width="3"/>
+    <!-- 01 baseline 9311 -> h520 -->
+    <rect x="30" y="80" width="118" height="520" fill="#F59E0B"/>
+    <text x="89" y="62" fill="#F1F3F8" font-size="30" font-weight="700" text-anchor="middle">$9,311</text>
+    <!-- 02 7242 -> h404.4 ; drop ghost 80..195.6 -->
+    <rect x="207" y="80" width="118" height="115.6" fill="none" stroke="#9AA6BF" stroke-width="2" stroke-dasharray="6 6"/>
+    <text x="266" y="145" fill="#9AA6BF" font-size="21" text-anchor="middle">−$2,069</text>
+    <rect x="207" y="195.6" width="118" height="404.4" fill="#F59E0B"/>
+    <text x="266" y="235" fill="#0E1320" font-size="28" font-weight="700" text-anchor="middle">$7,242</text>
+    <!-- 03 2504 -> h139.8 ; ghost 195.6..460.2 -->
+    <rect x="384" y="195.6" width="118" height="264.6" fill="none" stroke="#9AA6BF" stroke-width="2" stroke-dasharray="6 6"/>
+    <text x="443" y="335" fill="#9AA6BF" font-size="21" text-anchor="middle">−$4,738</text>
+    <rect x="384" y="460.2" width="118" height="139.8" fill="url(#hatch)"/>
+    <text x="443" y="445" fill="#F1F3F8" font-size="28" font-weight="700" text-anchor="middle">$2,504</text>
+    <!-- 04 2292 -> h128 ; ghost 460.2..472 -->
+    <rect x="561" y="460.2" width="118" height="11.8" fill="none" stroke="#9AA6BF" stroke-width="2" stroke-dasharray="4 4"/>
+    <text x="620" y="440" fill="#9AA6BF" font-size="21" text-anchor="middle">−$212</text>
+    <rect x="561" y="472" width="118" height="128" fill="url(#hatch)"/>
+    <text x="620" y="412" fill="#F1F3F8" font-size="28" font-weight="700" text-anchor="middle">$2,292</text>
+    <!-- 05 812 -> h45.3 ; ghost 472..554.7 -->
+    <rect x="738" y="472" width="118" height="82.7" fill="none" stroke="#9AA6BF" stroke-width="2" stroke-dasharray="6 6"/>
+    <text x="797" y="520" fill="#9AA6BF" font-size="21" text-anchor="middle">−$1,480</text>
+    <rect x="740" y="556" width="114" height="42" fill="none" stroke="#F1F3F8" stroke-width="3" stroke-dasharray="8 6"/>
+    <text x="797" y="455" fill="#F1F3F8" font-size="28" font-weight="700" text-anchor="middle">$812</text>
+    <!-- x labels -->
+    <g fill="#F1F3F8" font-size="22" text-anchor="middle">
+      <text x="89" y="640">01</text><text x="266" y="640">02</text><text x="443" y="640">03</text><text x="620" y="640">04</text><text x="797" y="640">05</text>
+    </g>
+    <g fill="#9AA6BF" font-size="19" text-anchor="middle">
+      <text x="89" y="672">Baseline</text>
+      <text x="266" y="672">Cut 0-meeting</text><text x="266" y="696">reps (22%)</text>
+      <text x="443" y="672">Parallel →</text><text x="443" y="696">single-line</text>
+      <text x="620" y="672">Fix spam</text><text x="620" y="696">labels</text>
+      <text x="797" y="672">TitanX</text><text x="797" y="696">high-intent list</text>
+    </g>
+    <g font-size="17" text-anchor="middle" font-weight="700">
+      <text x="89" y="740" fill="#F59E0B">OBSERVED</text>
+      <text x="266" y="740" fill="#F59E0B">ARITHMETIC</text>
+      <text x="443" y="740" fill="#F59E0B">MODELED</text>
+      <text x="620" y="740" fill="#F59E0B">MODELED</text>
+      <text x="797" y="740" fill="#F1F3F8">PRODUCT CLAIM</text>
+    </g>
+  </svg>
+  <div class="src">Data: TitanX (Titan Arena), Revolt! 2026 — method unpublished. Baseline: 1,204 reps, $80K OTE, 10,345 meetings. Labels: Alex Yedi.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- 3 IMPLIED MEETINGS -->
+<section class="slide">
+  <div class="eyebrow">What the model assumes</div>
+  <h2>Same ~940 reps. <u>3x</u> the meetings?</h2>
+  <p class="sub">Hold the payroll after rung 02 fixed. Each lower cost per meeting implies this many meetings a year.</p>
+  <svg width="888" height="560" viewBox="0 0 888 560" role="img" aria-label="Implied meetings by rung" style="margin-top:44px">
+    <!-- scale: 92,300 -> 600px; label col 230 -->
+    <g font-size="24" fill="#F1F3F8">
+      <text x="0" y="52">01–02</text>
+      <text x="0" y="172">03</text>
+      <text x="0" y="292">04</text>
+      <text x="0" y="412">05</text>
+    </g>
+    <g font-size="18" fill="#9AA6BF">
+      <text x="0" y="80">Observed</text>
+      <text x="0" y="200">Modeled</text>
+      <text x="0" y="320">Modeled</text>
+      <text x="0" y="440">Product claim</text>
+    </g>
+    <rect x="170" y="22" width="67" height="64" fill="#F59E0B"/>
+    <text x="252" y="64" font-size="28" font-weight="700" fill="#F1F3F8">10,345 · 1.0x</text>
+    <rect x="170" y="142" width="194" height="64" fill="#F59E0B" opacity=".55"/>
+    <text x="379" y="184" font-size="28" font-weight="700" fill="#F1F3F8">≈29,900 · 2.9x</text>
+    <rect x="170" y="262" width="212" height="64" fill="#F59E0B" opacity=".55"/>
+    <text x="397" y="304" font-size="28" font-weight="700" fill="#F1F3F8">≈32,700 · 3.2x</text>
+    <rect x="172" y="383" width="596" height="60" fill="none" stroke="#F1F3F8" stroke-width="3" stroke-dasharray="10 7"/>
+    <text x="190" y="424" font-size="28" font-weight="700" fill="#F1F3F8">≈92,300 · 8.9x</text>
+    <line x1="170" y1="0" x2="170" y2="470" stroke="#2A3550" stroke-width="3"/>
+    <text x="0" y="530" font-size="22" fill="#9AA6BF">Biggest single drop on the ladder = rung 03, a model.</text>
+  </svg>
+  <div class="src">My arithmetic off TitanX's slide: ($7,242 × 10,345) ÷ each rung's cost per meeting. Data: TitanX (Titan Arena), Revolt! 2026 — method unpublished.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- 4 EVIDENCE -->
+<section class="slide">
+  <div class="eyebrow">What rungs 03 and 04 rest on</div>
+  <h2>One case study. One spread.</h2>
+  <div class="panel">
+    <div class="ph">Rung 03 · Dials per booked meeting · one customer, 12 months</div>
+    <div class="pt">Same list, same reps: 30x apart</div>
+    <svg width="888" height="170" viewBox="0 0 888 170" role="img" aria-label="81 versus 2,420 dials per meeting" style="margin-top:22px">
+      <text x="0" y="46" font-size="22" fill="#F1F3F8">Single-line</text>
+      <rect x="190" y="18" width="23" height="44" fill="#F59E0B"/>
+      <text x="228" y="50" font-size="28" font-weight="700" fill="#F1F3F8">81</text>
+      <text x="0" y="128" font-size="22" fill="#F1F3F8">Parallel</text>
+      <rect x="190" y="100" width="560" height="44" fill="#F59E0B" opacity=".55"/>
+      <text x="765" y="132" font-size="28" font-weight="700" fill="#F1F3F8">2,420</text>
+    </svg>
+  </div>
+  <div class="panel">
+    <div class="ph">Rung 04 · Share of dials on spam-flagged numbers · 12 teams</div>
+    <div class="pt">0% to 85%. Same market, same phones.</div>
+    <svg width="888" height="210" viewBox="0 0 888 210" role="img" aria-label="Spam share across 12 teams from 0 to 85 percent, average 29 percent" style="margin-top:22px">
+      <!-- axis 0..100% -> x 20..868 (8.48/pt) -->
+      <line x1="20" y1="110" x2="868" y2="110" stroke="#2A3550" stroke-width="3"/>
+      <line x1="266" y1="40" x2="266" y2="150" stroke="#8FE83A" stroke-width="3" stroke-dasharray="6 5"/>
+      <text x="276" y="40" font-size="20" fill="#8FE83A">Avg 29%</text>
+      <g fill="#F59E0B">
+        <circle cx="20" cy="110" r="13"/><circle cx="45" cy="88" r="13"/><circle cx="54" cy="110" r="13"/><circle cx="54" cy="132" r="13"/>
+        <circle cx="368" cy="110" r="13"/><circle cx="385" cy="88" r="13"/><circle cx="393" cy="132" r="13"/><circle cx="410" cy="110" r="13"/><circle cx="410" cy="88" r="13"/>
+        <circle cx="520" cy="110" r="13"/><circle cx="639" cy="110" r="13"/><circle cx="741" cy="110" r="13"/>
+      </g>
+      <g font-size="20" fill="#9AA6BF" text-anchor="middle">
+        <text x="20" y="190">0%</text><text x="444" y="190">50%</text><text x="741" y="190">85%</text><text x="868" y="190" text-anchor="end">100%</text>
+      </g>
+    </svg>
+  </div>
+  <div class="src">Data: TitanX (Titan Arena), Revolt! 2026 — method unpublished. Case study customer unnamed; team sample frame not stated.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- 5 TAKE + ASK -->
+<section class="slide">
+  <div class="eyebrow">Before it goes in a 2027 plan</div>
+  <h2>Pull the <u>free</u> rungs first</h2>
+  <div class="rungs">
+    <div class="rg"><b>02</b><div>Cut zero-meeting reps<small>A management decision</small></div><span class="tag free">No PO</span></div>
+    <div class="rg"><b>03</b><div>Test single-line on a matched slice<small>30 days, your list, your reps</small></div><span class="tag free">No PO</span></div>
+    <div class="rg"><b>04</b><div>Audit your number labels<small>Know your own spam share</small></div><span class="tag">Measure</span></div>
+    <div class="rg"><b>05</b><div>Wait for the method<small>Titan Arena opens Nov 1</small></div><span class="tag">Verify</span></div>
+  </div>
+  <div class="ask">Which rung have you actually measured?</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+</body></html>
