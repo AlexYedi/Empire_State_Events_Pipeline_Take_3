@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Five rooms, tonight through Saturday</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined so the file is self-contained */
+:root{
+  --ground:#0F172A; --panel:#162036; --rule:#334155; --ink:#F8FAFC; --muted:#94A3B8;
+  --accent:#8FE83A; --mark:#D97706;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:100px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:120px;line-height:1.0;margin-top:44px}
+h2{font-size:80px;line-height:1.04;margin-top:22px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px;letter-spacing:.08em}
+.src{position:absolute;left:96px;right:96px;bottom:112px;font-family:var(--mono);font-size:20px;line-height:1.4;color:var(--muted)}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---------- slide 1: week map ---------- */
+.s1 h1{margin-top:60px;max-width:900px;font-size:116px}
+.strip{position:relative;height:330px;margin-top:80px}
+.strip svg{position:absolute;left:0;top:0}
+.stop{position:absolute;top:214px;width:176px;margin-left:-88px;text-align:center}
+.stop b{display:block;font-family:var(--mono);font-size:24px;font-weight:700;color:var(--mark);letter-spacing:.04em}
+.stop span{display:block;font-family:var(--body);font-size:30px;line-height:1.2;color:var(--ink);margin-top:12px}
+.s1 .sub{margin-top:60px;padding-top:36px;border-top:2px solid var(--rule);font-family:var(--display);font-style:italic;font-size:44px;line-height:1.25;color:var(--ink);max-width:880px}
+
+/* ---------- shared room frame, slides 2-5 ---------- */
+.room .label{font-family:var(--mono);font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);line-height:1.3}
+.room .event{font-family:var(--body);font-size:26px;line-height:1.3;color:var(--muted);margin-top:14px}
+.room .zone{position:relative;margin-top:44px;flex:1}
+.room .band{position:absolute;left:96px;right:96px;bottom:158px;background:var(--mark);color:var(--ground);border-radius:6px;padding:26px 34px 30px}
+.band .q-k{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.band .q{font-family:var(--display);font-weight:600;font-size:44px;line-height:1.15;margin-top:10px}
+
+/* node boxes */
+.node{position:absolute;background:var(--panel);border:2px solid var(--rule);border-radius:8px;padding:24px 28px}
+.node .n{font-family:var(--display);font-weight:600;font-size:42px;line-height:1.1}
+.node .r{font-family:var(--body);font-size:26px;line-height:1.3;color:var(--muted);margin-top:8px}
+.path{display:flex;align-items:center;gap:14px;margin-top:20px;font-family:var(--mono);font-size:24px;font-weight:700;color:var(--mark)}
+.path i{font-style:normal;border:2px solid var(--mark);border-radius:999px;padding:6px 16px}
+.path svg{flex:none}
+.edge-l{position:absolute;font-family:var(--mono);font-size:24px;color:var(--muted);letter-spacing:.06em}
+
+/* stat chips */
+.chips{position:absolute;left:0;right:0;bottom:0;display:flex;gap:24px}
+.chip{flex:1;border:2px solid var(--rule);border-radius:8px;padding:20px 26px;font-family:var(--body);font-size:28px;color:var(--muted);display:flex;align-items:baseline;gap:14px;white-space:nowrap}
+.chip b{font-family:var(--display);font-size:54px;font-weight:600;color:var(--ink);line-height:1}
+
+/* slide 3 timer bar */
+.bar{display:flex;height:132px;border-radius:8px;overflow:hidden}
+.bar .demo{flex:6;background:var(--mark);color:var(--ground);display:flex;align-items:center;padding:0 30px;font-family:var(--body);font-weight:700;font-size:34px}
+.bar .qa{flex:4;border:3px solid var(--ink);border-left:none;border-radius:0 8px 8px 0;display:flex;align-items:center;padding:0 28px;font-family:var(--body);font-weight:600;font-size:34px}
+.facts{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:0;margin-top:46px;border-top:2px solid var(--rule)}
+.facts div{padding:22px 20px 0 0}
+.facts div+div{padding-left:24px;border-left:2px solid var(--rule)}
+.facts .k{display:block;font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.facts .v{display:block;font-family:var(--display);font-weight:600;font-size:40px;line-height:1.1;margin-top:10px}
+.host{font-family:var(--body);font-size:28px;line-height:1.35;margin-top:48px}
+.host em{font-style:normal;color:var(--muted)}
+.formats{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.formats span{font-family:var(--mono);font-size:22px;color:var(--muted);border:2px solid var(--rule);border-radius:999px;padding:8px 18px}
+
+/* slide 5 gauge + struck list */
+.gauge-row{display:flex;gap:56px;align-items:center}
+.gauge{position:relative;width:420px;height:300px;flex:none}
+.gauge svg{position:absolute;left:0;top:0}
+.gauge .num{position:absolute;left:0;right:0;top:118px;text-align:center;font-family:var(--display);font-weight:600;font-size:96px;line-height:1}
+.gauge .lbl{position:absolute;left:0;right:0;top:230px;text-align:center;font-family:var(--mono);font-size:22px;color:var(--ink);white-space:nowrap}
+.struck{list-style:none;display:grid;gap:22px}
+.struck li{font-family:var(--display);font-size:46px;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--mark);text-decoration-thickness:5px}
+.credit{font-family:var(--body);font-size:26px;line-height:1.4;color:var(--muted);margin-top:48px;border-top:2px solid var(--rule);padding-top:24px}
+.credit b{color:var(--ink);font-weight:600}
+
+/* slide 6 build day */
+.s6 .band{bottom:160px;padding:24px 32px 26px}
+.tl{position:relative;height:96px}
+.tl .t{position:absolute;top:0;font-family:var(--mono);font-size:24px;color:var(--ink)}
+.tl .end{position:absolute;right:0;top:62px;font-family:var(--body);font-weight:600;font-size:26px;color:var(--mark)}
+.flow{display:flex;align-items:center;gap:10px;margin-top:26px}
+.flow div{border:2px solid var(--rule);background:var(--panel);border-radius:8px;padding:14px 16px;font-family:var(--body);font-size:25px;line-height:1.2;text-align:center;flex:1}
+.flow div:first-child{flex:1.5}
+.flow svg{flex:none}
+.people{font-family:var(--body);font-size:24px;line-height:1.4;color:var(--muted);margin-top:26px}
+.people b{color:var(--ink);font-weight:600}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.opts div{border:2px solid var(--ground);border-radius:6px;padding:14px 14px;font-family:var(--body);font-weight:600;font-size:26px;line-height:1.2;text-align:center;display:flex;align-items:center;justify-content:center;min-height:92px}
+.ask{font-family:var(--body);font-weight:700;font-size:28px;margin-top:18px}
+
+/* slide 1 livestream stop (stacked above the Thursday tick) */
+.live{position:absolute;left:478px;top:18px}
+.live .row{display:flex;align-items:center;gap:16px}
+.live b{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--mark);letter-spacing:.04em}
+.live i{font-style:normal;font-family:var(--mono);font-size:20px;color:var(--mark);border:2px dashed var(--mark);border-radius:999px;padding:4px 14px}
+.live span{display:block;font-family:var(--body);font-size:30px;line-height:1.2;color:var(--ink);margin-top:10px}
+
+/* slide 4 livestream */
+.stream .zone svg text{font-family:var(--body)}
+.stream .band{bottom:178px;padding:24px 32px 26px}
+.stream .opts div{min-height:0;padding:10px 14px}
+</style>
+</head>
+<body>
+
+<!-- ============ SLIDE 1 ============ -->
+<!-- alt: A timeline of five events from Tuesday October 20 to Saturday October 24: a fireside, open-call demos, a Thursday conference livestream from noon to 9 PM Eastern, a no-agenda happy hour the same evening, and a 9-hour build day. -->
+<section class="slide s1">
+  <div class="eyebrow">The Upcoming Week</div>
+  <h1>Five rooms, tonight through Saturday</h1>
+  <div class="strip">
+    <!-- stops: Tue 90, Wed 267, Thu 444 (livestream stacked above, happy hour on the line), (Fri gap), Sat 798 -->
+    <svg width="888" height="200" viewBox="0 0 888 200" aria-hidden="true">
+      <line x1="444" y1="72" x2="444" y2="148" stroke="#D97706" stroke-width="3" stroke-dasharray="6 7"/>
+      <circle cx="444" cy="48" r="20" fill="#0F172A" stroke="#D97706" stroke-width="4" stroke-dasharray="7 6"/>
+      <line x1="90" y1="170" x2="444" y2="170" stroke="#F8FAFC" stroke-width="4"/>
+      <line x1="444" y1="170" x2="798" y2="170" stroke="#94A3B8" stroke-width="4" stroke-dasharray="4 14" stroke-linecap="round"/>
+      <circle cx="90" cy="170" r="20" fill="#D97706"/>
+      <circle cx="267" cy="170" r="20" fill="#D97706"/>
+      <circle cx="444" cy="170" r="20" fill="#D97706"/>
+      <circle cx="798" cy="170" r="20" fill="#D97706"/>
+    </svg>
+    <div class="live"><div class="row"><b>THU 10/22</b><i>watch anywhere</i></div><span>Livestream, 12&ndash;9 PM ET</span></div>
+    <div class="stop" style="left:90px"><b>TUE 10/20</b><span>Fireside</span></div>
+    <div class="stop" style="left:267px"><b>WED 10/21</b><span>Open-call demos</span></div>
+    <div class="stop" style="left:444px"><b>THU 10/22</b><span>No-agenda happy hour</span></div>
+    <div class="stop" style="left:798px"><b>SAT 10/24</b><span>9-hour build day</span></div>
+  </div>
+  <p class="sub">Build it, buy it, or own it?</p>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">1 / 6 →</span></div>
+</section>
+
+<!-- ============ SLIDE 2 ============ -->
+<!-- alt: A stage diagram connecting Ramp's Max Freeman and MeritFirst's Zack Ganieany, with Ramp's AE-built Mo copilot alongside and Ramp's $60B valuation and above-$2B annualized revenue as stats. -->
+<section class="slide room s2">
+  <div class="label">TUE 10/20 · FIRESIDE</div>
+  <div class="event">GTM Intelligence: AI Night with Ramp + MeritFirst</div>
+  <h2>Tue: the first SDR, now SVP</h2>
+  <div class="zone">
+    <svg width="888" height="460" viewBox="0 0 888 460" style="position:absolute;left:0;top:0" aria-hidden="true">
+      <line x1="150" y1="132" x2="150" y2="190" stroke="#94A3B8" stroke-width="3"/>
+      <path d="M140 178 L150 192 L160 178" fill="none" stroke="#94A3B8" stroke-width="3"/>
+      <line x1="540" y1="292" x2="584" y2="292" stroke="#94A3B8" stroke-width="3" stroke-dasharray="6 7"/>
+    </svg>
+    <div class="node" style="left:0;top:0;width:680px">
+      <div class="n">Zack Ganieany</div>
+      <div class="r">CEO, MeritFirst (assessment-based hiring)</div>
+    </div>
+    <div class="edge-l" style="left:174px;top:146px">moderates</div>
+    <div class="node" style="left:0;top:196px;width:540px;border-color:#D97706">
+      <div class="n">Max Freeman</div>
+      <div class="r">SVP Sales, Ramp</div>
+      <div class="path"><i>First SDR</i>
+        <svg width="44" height="20" viewBox="0 0 44 20"><line x1="0" y1="10" x2="38" y2="10" stroke="#D97706" stroke-width="3"/><path d="M30 3 L40 10 L30 17" fill="none" stroke="#D97706" stroke-width="3"/></svg>
+        <i>SVP Sales</i></div>
+    </div>
+    <div class="node" style="left:584px;top:226px;width:304px;border-style:dashed;padding:20px 22px">
+      <div class="n">Mo</div>
+      <div class="r" style="font-size:24px">real-time call copilot, built by a Ramp AE</div>
+    </div>
+    <div class="chips" style="bottom:auto;top:426px">
+      <div class="chip"><b>$60B</b> valuation</div>
+      <div class="chip">Annualized revenue <b>&gt; $2B</b></div>
+    </div>
+  </div>
+  <div class="band"><div class="q-k">Open question</div><div class="q">Where does human judgment remain essential?</div></div>
+  <div class="src">Source: Ramp release (PR Newswire), 2026; Luma event page, 2026</div>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">2 / 6 →</span></div>
+</section>
+
+<!-- ============ SLIDE 3 ============ -->
+<!-- alt: A ten-minute bar split into a six-minute live demo and four minutes of Q&A, with a five-dollar entry, open applications and an unpublished lineup, hosted by Joshua Ness of Startup Grind NYC. -->
+<section class="slide room s3">
+  <div class="label">WED 10/21 · OPEN-CALL DEMOS · THE YARD: HERALD SQUARE</div>
+  <div class="event">The Startup Pitch: Demo Showcase by Startup Grind</div>
+  <h2>Wed: ten minutes per founder</h2>
+  <div class="zone">
+    <div class="bar"><div class="demo">6 min · live demo</div><div class="qa">4 min · Q&amp;A</div></div>
+    <div class="facts">
+      <div><span class="k">Entry</span><span class="v">$5</span></div>
+      <div><span class="k">Presenters</span><span class="v">open application</span></div>
+      <div><span class="k">Lineup</span><span class="v">unpublished</span></div>
+    </div>
+    <p class="host"><em>Host:</em> Joshua Ness, Director, Startup Grind NYC</p>
+    <div class="formats"><span>Mixer</span><span>AI Briefing</span><span>Demo nights (Oct 13 + Oct 21 at The Yard)</span></div>
+  </div>
+  <div class="band"><div class="q-k">Open question</div><div class="q">What survives if the model provider ships it?</div></div>
+  <div class="src">Source: Luma event pages, 2026</div>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">3 / 6 →</span></div>
+</section>
+
+<!-- ============ SLIDE 4 ============ -->
+<!-- alt: A noon-to-9 PM Eastern timeline for the AGNTCon and MCPCon livestream, showing more than 150 talks narrowing to one broadcast, two keynotes as solid markers, three breakouts as outlined markers with coverage unconfirmed, and three unranked open questions: agent identity, trusting tool output and verifying agent work. -->
+<section class="slide room stream">
+  <div class="label">THU 10/22 · LIVESTREAM · 12&ndash;9 PM ET</div>
+  <div class="event">Live from AGNTCon + MCPCon North America · Agentic AI Foundation (Linux Foundation)</div>
+  <h2>Thu: one stream, 150+ talks</h2>
+  <div class="zone">
+    <svg width="888" height="416" viewBox="0 0 888 416" style="position:absolute;left:0;top:0" aria-hidden="true">
+      <!-- funnel inset: 11 tracks converge into 1 broadcast -->
+      <text x="0" y="34" fill="#F8FAFC" font-family="Iowan Old Style, Palatino, Georgia, serif" font-weight="600" font-size="38">150+ talks</text>
+      <text x="0" y="62" fill="#94A3B8" font-family="Menlo, SF Mono, monospace" font-size="20" letter-spacing="2">11 TRACKS</text>
+      <g stroke="#94A3B8" stroke-width="2" fill="none" opacity=".7">
+        <path d="M220 4 C290 4 300 31 350 31"/>
+        <path d="M220 9.4 C290 9.4 300 31 350 31"/>
+        <path d="M220 14.8 C290 14.8 300 31 350 31"/>
+        <path d="M220 20.2 C290 20.2 300 31 350 31"/>
+        <path d="M220 25.6 C290 25.6 300 31 350 31"/>
+        <path d="M220 31 C290 31 300 31 350 31"/>
+        <path d="M220 36.4 C290 36.4 300 31 350 31"/>
+        <path d="M220 41.8 C290 41.8 300 31 350 31"/>
+        <path d="M220 47.2 C290 47.2 300 31 350 31"/>
+        <path d="M220 52.6 C290 52.6 300 31 350 31"/>
+        <path d="M220 58 C290 58 300 31 350 31"/>
+      </g>
+      <line x1="350" y1="31" x2="404" y2="31" stroke="#D97706" stroke-width="6"/>
+      <path d="M398 21 L412 31 L398 41" fill="none" stroke="#D97706" stroke-width="4"/>
+      <text x="430" y="43" fill="#F8FAFC" font-family="Iowan Old Style, Palatino, Georgia, serif" font-weight="600" font-size="34">1 free broadcast</text>
+
+      <!-- bracket 5-8 PM (x 395-592) -->
+      <path d="M395 100 V80 H592 V100" fill="none" stroke="#94A3B8" stroke-width="2"/>
+      <text x="606" y="84" fill="#94A3B8" font-size="20">overlaps Thu-night</text>
+      <text x="606" y="108" fill="#94A3B8" font-size="20">happy hour (slide 5)</text>
+
+      <!-- keynote labels (above the bar) -->
+      <text x="34" y="144" fill="#F8FAFC" font-size="24" font-weight="600">12:30 · David Soria Parra</text>
+      <text x="34" y="170" fill="#94A3B8" font-size="20">MCP co-creator</text>
+      <text x="395" y="144" fill="#F8FAFC" font-size="24" font-weight="600">5:00 · Sarah Drasner</text>
+      <text x="395" y="170" fill="#94A3B8" font-size="20">Google Chrome · The Agentic Web</text>
+      <line x1="49" y1="180" x2="49" y2="190" stroke="#D97706" stroke-width="2"/>
+      <line x1="395" y1="180" x2="395" y2="190" stroke="#D97706" stroke-width="2"/>
+
+      <!-- bar 12 PM-9 PM ET; overlap window shaded -->
+      <rect x="395" y="192" width="197" height="28" rx="4" fill="#334155" opacity=".55"/>
+      <line x1="0" y1="206" x2="888" y2="206" stroke="#F8FAFC" stroke-width="4"/>
+      <g stroke="#F8FAFC" stroke-width="3"><line x1="2" y1="198" x2="2" y2="214"/><line x1="296" y1="198" x2="296" y2="214"/><line x1="592" y1="198" x2="592" y2="214"/><line x1="886" y1="198" x2="886" y2="214"/></g>
+
+      <!-- breakout leaders (below the bar), drawn before markers -->
+      <g stroke="#D97706" stroke-width="2" opacity=".8">
+        <line x1="427" y1="218" x2="427" y2="282"/>
+        <line x1="222" y1="218" x2="222" y2="316"/>
+        <line x1="156" y1="218" x2="156" y2="350"/>
+      </g>
+      <!-- markers -->
+      <circle cx="49" cy="206" r="15" fill="#D97706"/>
+      <circle cx="395" cy="206" r="15" fill="#D97706"/>
+      <circle cx="156" cy="206" r="11" fill="#0F172A" stroke="#D97706" stroke-width="4"/>
+      <circle cx="222" cy="206" r="11" fill="#0F172A" stroke="#D97706" stroke-width="4"/>
+      <circle cx="427" cy="206" r="11" fill="#0F172A" stroke="#D97706" stroke-width="4"/>
+
+      <!-- axis: ET, faint PDT beneath -->
+      <g font-family="Menlo, SF Mono, monospace" font-size="20" fill="#F8FAFC">
+        <text x="0" y="246">12 PM</text><text x="296" y="246" text-anchor="middle">3 PM</text><text x="592" y="246" text-anchor="middle">6 PM</text><text x="888" y="246" text-anchor="end">9 PM ET</text>
+      </g>
+      <g font-family="Menlo, SF Mono, monospace" font-size="20" fill="#94A3B8" opacity=".55">
+        <text x="0" y="270">9 AM</text><text x="296" y="270" text-anchor="middle">12 PM</text><text x="592" y="270" text-anchor="middle">3 PM</text><text x="888" y="270" text-anchor="end">6 PM PDT</text>
+      </g>
+
+      <!-- breakout labels, staircase -->
+      <text x="437" y="298" fill="#F8FAFC" font-size="24"><tspan font-weight="600">5:20</tspan> MCP Security, Two Years In</text>
+      <text x="232" y="332" fill="#F8FAFC" font-size="24"><tspan font-weight="600">2:45</tspan> Software verifiers</text>
+      <text x="166" y="366" fill="#F8FAFC" font-size="24"><tspan font-weight="600">1:35</tspan> MCP + OAuth</text>
+
+      <!-- legend: word + shape -->
+      <circle cx="10" cy="400" r="9" fill="#D97706"/>
+      <text x="28" y="407" fill="#94A3B8" font-size="20">keynote, likeliest on the broadcast</text>
+      <circle cx="388" cy="400" r="8" fill="#0F172A" stroke="#D97706" stroke-width="3"/>
+      <text x="406" y="407" fill="#94A3B8" font-size="20">breakout, on the schedule, coverage unconfirmed</text>
+    </svg>
+  </div>
+  <div class="band">
+    <div class="q-k">Open question</div>
+    <div class="q">After stateless MCP, which problem comes next?</div>
+    <div class="opts"><div>Agent identity</div><div>Trusting tool output</div><div>Verifying agent work</div></div>
+  </div>
+  <div class="src">Source: Linux Foundation Events schedule; AAIF livestream listing (Luma), 2026</div>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">4 / 6 →</span></div>
+</section>
+
+<!-- ============ SLIDE 5 ============ -->
+<!-- alt: A room-capacity gauge showing about 30 product marketers with the event full and waitlisted, a struck-through list of panels, pitches and forced icebreakers, and the organizer and host credits. -->
+<section class="slide room s5">
+  <div class="label">THU 10/22 · HAPPY HOUR · EAST VILLAGE</div>
+  <div class="event">Product Marketing Happy Hour Hosted by GTM Studios</div>
+  <h2>Thu: thirty PMMs, no agenda</h2>
+  <div class="zone">
+    <div class="gauge-row">
+      <div class="gauge">
+        <svg width="420" height="230" viewBox="0 0 420 230" aria-hidden="true">
+          <path d="M30 210 A180 180 0 0 1 390 210" fill="none" stroke="#334155" stroke-width="36"/>
+          <path d="M30 210 A180 180 0 0 1 390 210" fill="none" stroke="#D97706" stroke-width="36"/>
+        </svg>
+        <div class="num">~30</div>
+        <div class="lbl">going · full · waitlist open</div>
+      </div>
+      <ul class="struck"><li>Panels</li><li>Pitches</li><li>Forced icebreakers</li></ul>
+    </div>
+    <div class="credit">
+      <b>Organizer:</b> GTM Studios (NYC product marketing agency, founded 2025)<br><b>Host:</b> Autumn Mayo<br>
+      Billed as GTM Studios' first-ever happy hour
+    </div>
+  </div>
+  <div class="band"><div class="q-k">Open question</div><div class="q">Who owns AI-search visibility: PMM, content or SEO?</div></div>
+  <div class="src">Source: Luma event page; GTM Studios LinkedIn, 2026</div>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">5 / 6 →</span></div>
+</section>
+
+<!-- ============ SLIDE 6 ============ -->
+<!-- alt: A nine-hour build-day timeline and a flow from VC data vendors through an MCP server to a team's agent and a live demo, ending in three unranked options for where the edge sits: proprietary data, a firm's memory of past deals, or the workflow. -->
+<section class="slide room s6">
+  <div class="label">SAT 10/24 · BUILD DAY · BETAWORKS</div>
+  <div class="event">Deal Flow: NYC's First VC Hackathon @ Betaworks</div>
+  <h2>Sat: nine hours, teams of four</h2>
+  <div class="zone">
+    <div class="tl">
+      <span class="t" style="left:0">9 AM</span>
+      <span class="t" style="right:0">6 PM</span>
+      <svg width="888" height="40" viewBox="0 0 888 40" style="position:absolute;left:0;top:30px" aria-hidden="true">
+        <line x1="8" y1="14" x2="866" y2="14" stroke="#F8FAFC" stroke-width="4"/>
+        <circle cx="8" cy="14" r="8" fill="#F8FAFC"/>
+        <circle cx="868" cy="14" r="14" fill="#D97706"/>
+      </svg>
+      <span class="end">Live demos → 6 judges → intros to funds</span>
+    </div>
+    <div class="flow">
+      <div>VC data vendors (Affinity, akta.pro)</div>
+      <svg width="30" height="20" viewBox="0 0 30 20"><line x1="0" y1="10" x2="26" y2="10" stroke="#94A3B8" stroke-width="3"/><path d="M18 3 L28 10 L18 17" fill="none" stroke="#94A3B8" stroke-width="3"/></svg>
+      <div>MCP server</div>
+      <svg width="30" height="20" viewBox="0 0 30 20"><line x1="0" y1="10" x2="26" y2="10" stroke="#94A3B8" stroke-width="3"/><path d="M18 3 L28 10 L18 17" fill="none" stroke="#94A3B8" stroke-width="3"/></svg>
+      <div>team's agent</div>
+      <svg width="30" height="20" viewBox="0 0 30 20"><line x1="0" y1="10" x2="26" y2="10" stroke="#94A3B8" stroke-width="3"/><path d="M18 3 L28 10 L18 17" fill="none" stroke="#94A3B8" stroke-width="3"/></svg>
+      <div>live demo</div>
+    </div>
+    <p class="people">Abeera Saeed · Michael Barone · D. J. Patel · Garrett Higgins · Radhika Khandelwal · Bettina Sosa<br><b>Hosts:</b> localhost:nyc + VCLab · Tracy Huang</p>
+  </div>
+  <div class="band">
+    <div class="q-k">Open question</div>
+    <div class="q">Where does the edge sit now?</div>
+    <div class="opts"><div>Proprietary data</div><div>A firm's memory of past deals</div><div>The workflow</div></div>
+    <div class="ask">Have a question for one of these rooms? Send it.</div>
+  </div>
+  <div class="src">Source: Luma event page; Affinity blog; mcpservers.org, 2026</div>
+  <div class="foot"><span class="name">ALEX YEDI</span><span class="page">6 / 6</span></div>
+</section>
+
+</body>
+</html>

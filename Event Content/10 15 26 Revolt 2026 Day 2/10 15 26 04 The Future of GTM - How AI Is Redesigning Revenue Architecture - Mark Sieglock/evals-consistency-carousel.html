@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Three surfaces. One answer.</title>
+<style>
+/* Revolt! 2026 Day 2 S2 (Apollo, Mark Sieglock) post-event carousel: five 1080x1350 slides.
+   Series tokens reused from the Day 1 Revolt carousels and the Day 2 Clay deck. Brand: dark base,
+   signature acid green #8FE83A (underline + name mark only). ONE accent, blue #60A5FA = Alex's eval layer
+   (his annotations, never Apollo's material). Slides 1 and 5 share one frame; slide 3's panels share one frame. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --line:#4A5878; --ink:#F1F3F8; --muted:#9AA6BF;
+  --sig:#8FE83A; --acc:#60A5FA;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:124px;line-height:1.0}
+h2{font-size:76px;line-height:1.05;margin-top:26px}
+u{text-decoration:none;background:linear-gradient(var(--sig),var(--sig)) 0 92%/100% 10px no-repeat}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:888px}
+.foot{position:absolute;left:96px;right:96px;bottom:60px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:22px;color:var(--muted)}
+.mark{display:inline-flex;align-items:center;gap:12px;letter-spacing:.14em;color:var(--ink)}
+.mark:before{content:"";width:16px;height:16px;background:var(--sig)}
+.src{position:absolute;left:96px;right:96px;bottom:108px;font-family:var(--mono);font-size:20px;line-height:1.4;color:var(--muted)}
+.key{margin-top:28px;display:flex;align-items:center;gap:14px;font:700 21px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.key i{width:26px;height:26px;border-radius:5px;background:var(--acc)}
+
+/* 1 + 5 shared cover frame */
+.cover .motif{margin-top:56px}
+.cover h1{margin-top:auto}
+.who{margin-top:52px;margin-bottom:10px;border-left:8px solid var(--rule);padding:6px 0 6px 30px}
+.who b{display:block;font:600 40px/1.2 var(--display)}
+.who span{display:block;font:28px/1.35 var(--body);color:var(--muted);margin-top:8px}
+
+/* shared box language */
+.box{position:absolute;background:var(--panel);border:2px solid var(--rule);border-radius:8px;padding:16px 22px;display:flex;flex-direction:column;justify-content:flex-start}
+.box .k{font:700 20px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.box .t{font:600 40px/1.1 var(--display);margin-top:8px}
+.box .d{font:24px/1.3 var(--body);color:var(--muted);margin-top:10px}
+.box .d b{color:var(--ink);font-weight:600}
+.surf{position:absolute;background:var(--panel);border:2px solid var(--rule);border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 32px/1 var(--display)}
+.gate{position:absolute;background:var(--acc);color:#0E1320;border-radius:6px;font:700 22px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center}
+.lbl{position:absolute;font:24px/1.3 var(--body);color:var(--muted);text-align:center}
+.lbl b{color:var(--ink);font-weight:600}
+
+/* 2 diagram */
+.dia{position:relative;width:888px;height:690px;margin-top:30px}
+.dia svg,.pan svg{position:absolute;left:0;top:0}
+.note{margin-top:22px;border-left:6px solid var(--acc);padding:4px 0 4px 22px;font:26px/1.35 var(--body);color:var(--ink)}
+
+/* 3 split frame */
+.split{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.pan{position:relative;height:640px;border:2px solid var(--rule);border-radius:10px}
+.pan .ph{position:absolute;left:28px;top:26px;font:700 22px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.pan .surf{left:60px;width:310px;height:64px;font-size:30px}
+.eq{position:absolute;left:175px;width:80px;height:80px;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font:600 52px/1 var(--display)}
+.ref{position:absolute;left:40px;width:350px;height:110px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ref.on{border:3px solid var(--acc);color:var(--ink);font:600 30px/1.15 var(--display)}
+.ref.on span{display:block;font:24px/1.2 var(--body);color:var(--muted);margin-top:6px}
+.ref.off{border:3px dashed var(--rule)}
+.res{position:absolute;left:0;right:0;text-align:center;font:600 44px/1 var(--display)}
+.res.on{color:var(--acc)}
+.bottom{margin-top:40px;font:italic 600 46px/1.2 var(--display);text-wrap:balance}
+
+/* 4 vertical timeline */
+.tl{position:relative;margin-top:56px;display:grid;gap:44px}
+.tl:before{content:"";position:absolute;left:21px;top:24px;bottom:24px;width:3px;background:var(--rule)}
+.row{position:relative;padding-left:76px}
+.row:before{content:"";position:absolute;left:10px;top:8px;width:24px;height:24px;border-radius:50%;background:var(--ground);border:3px solid var(--muted)}
+.row .a{font:28px/1.25 var(--body);color:var(--muted)}
+.row .a b{font:700 24px/1 var(--mono);color:var(--muted);margin-right:14px;letter-spacing:.06em}
+.row .x{font:600 48px/1.1 var(--display);color:var(--acc);margin-top:6px}
+.legend{margin-top:auto;margin-bottom:24px;display:flex;gap:36px;font:700 21px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:12px}
+.legend i{width:26px;height:26px;border-radius:5px}
+</style></head><body>
+
+<!-- Alt text (slide 1): Title card reading "Three surfaces. One answer." with three small boxes for Claude, ChatGPT and Slack converging on one point labelled "same answer". -->
+<section class="slide cover s1">
+  <div class="eyebrow">Revolt! 2026 · Post-event · Oct 15</div>
+  <svg class="motif" width="888" height="260" viewBox="0 0 888 260" aria-hidden="true">
+    <g fill="#161D2E" stroke="#2A3550" stroke-width="2">
+      <rect x="1" y="1" width="220" height="70" rx="8"/><rect x="1" y="95" width="220" height="70" rx="8"/><rect x="1" y="189" width="220" height="70" rx="8"/>
+    </g>
+    <g font-family="Iowan Old Style,Palatino,Georgia,serif" font-size="30" font-weight="600" fill="#F1F3F8" text-anchor="middle">
+      <text x="111" y="46">Claude</text><text x="111" y="140">ChatGPT</text><text x="111" y="234">Slack</text>
+    </g>
+    <g stroke="#4A5878" stroke-width="4" fill="none">
+      <path d="M222 36 C420 36 440 130 560 130"/><path d="M222 130 H560"/><path d="M222 224 C420 224 440 130 560 130"/>
+    </g>
+    <circle cx="578" cy="130" r="18" fill="#F1F3F8"/>
+    <text x="620" y="141" font-family="Menlo,SF Mono,monospace" font-size="26" font-weight="700" letter-spacing="2" fill="#F1F3F8">SAME ANSWER</text>
+  </svg>
+  <h1>Three surfaces. One <u>answer</u>.</h1>
+  <p class="sub">How Apollo's CPO says to hold it together.</p>
+  <div class="who"><b>Mark Sieglock, Apollo</b><span>Revolt! 2026 · Day 2</span></div>
+  <div class="src">Source: Mark Sieglock, Apollo, Revolt! 2026 (RevGenius), Oct 15 2026</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5 →</span></div>
+</section>
+
+<!-- Alt text (slide 2): Diagram of Apollo's Data to Intelligence to Execution loop with a dashed "learn from execution" return arrow. Below it, dashed lines labelled "Apollo's stated aim: API first, available everywhere" fan out to Claude, ChatGPT and Slack, with a blue eval gate on each line marked as Alex's annotation. -->
+<section class="slide s2">
+  <div class="eyebrow">Mechanism · Apollo's loop</div>
+  <h2>Where the evals sit</h2>
+  <div class="key"><i></i>Blue = my annotation</div>
+  <div class="dia">
+    <svg width="888" height="690" viewBox="0 0 888 690" aria-hidden="true">
+      <defs>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4A5878"/></marker>
+      </defs>
+      <g stroke="#4A5878" stroke-width="4" fill="none">
+        <path d="M230 110 H270" marker-end="url(#a2)"/>
+        <path d="M614 110 H654" marker-end="url(#a2)"/>
+        <path d="M773 262 V300 H115 V268" stroke-dasharray="12 9" marker-end="url(#a2)"/>
+        <path d="M0 384 V400 H888 V384"/>
+      </g>
+      <g stroke="#4A5878" stroke-width="4" fill="none" stroke-dasharray="12 9">
+        <path d="M444 400 V470 C444 520 135 520 135 600"/>
+        <path d="M444 470 V600"/>
+        <path d="M444 470 C444 520 753 520 753 600"/>
+      </g>
+    </svg>
+    <div class="box" style="left:0;top:0;width:230px;height:262px"><div class="k">1</div><div class="t">Data</div><div class="d">internal · external</div></div>
+    <div class="box" style="left:274px;top:0;width:340px;height:262px"><div class="k">2</div><div class="t">Intelligence</div><div class="d"><b>Profile · GTM Harness</b><br>governance · skills · orchestration · context · memory</div></div>
+    <div class="box" style="left:658px;top:0;width:230px;height:262px"><div class="k">3</div><div class="t">Execution</div><div class="d">act on what's recommended</div></div>
+    <div class="lbl" style="left:0;right:0;top:312px">learn from execution</div>
+    <div class="lbl" style="left:0;right:0;top:416px"><b>Apollo's stated aim:</b> 'API first', available everywhere</div>
+    <div class="gate" style="left:226px;top:508px;width:96px;height:44px">eval</div>
+    <div class="gate" style="left:396px;top:508px;width:96px;height:44px">eval</div>
+    <div class="gate" style="left:566px;top:508px;width:96px;height:44px">eval</div>
+    <div class="surf" style="left:20px;top:600px;width:230px;height:86px">Claude</div>
+    <div class="surf" style="left:329px;top:600px;width:230px;height:86px">ChatGPT</div>
+    <div class="surf" style="left:638px;top:600px;width:230px;height:86px">Slack</div>
+  </div>
+  <p class="note">Gates = my annotation of the 'evals, evals, evals' line. The loop is Apollo's.</p>
+  <div class="src">Source: Apollo, "The AI GTM System" (Revolt! 2026); eval gates annotated by Alex Yedi. Redrawn.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 3): Two matching panels. The left, a consistency eval, checks that Claude, ChatGPT and Slack give the same answer: they match. The right, a correctness eval, also checks that answer against a set of known-good answers from real accounts: they're right. -->
+<section class="slide s3">
+  <div class="eyebrow">Counterpoint · builder's note</div>
+  <h2>Agreeing isn't the same as right</h2>
+  <div class="split">
+    <div class="pan">
+      <svg width="430" height="640" viewBox="0 0 430 640" aria-hidden="true"><g stroke="#4A5878" stroke-width="4" fill="none"><path d="M215 300 V330"/><path d="M215 410 V440"/><path d="M215 550 V570"/></g></svg>
+      <div class="ph">Consistency eval</div>
+      <div class="surf" style="top:76px">Claude</div>
+      <div class="surf" style="top:152px">ChatGPT</div>
+      <div class="surf" style="top:228px">Slack</div>
+      <div class="eq" style="top:330px">=</div>
+      <div class="ref off" style="top:440px"></div>
+      <div class="res" style="top:578px">they match ✓</div>
+    </div>
+    <div class="pan">
+      <svg width="430" height="640" viewBox="0 0 430 640" aria-hidden="true"><g stroke="#4A5878" stroke-width="4" fill="none"><path d="M215 300 V330"/><path d="M215 410 V440"/><path d="M215 550 V570"/></g></svg>
+      <div class="ph">Correctness eval</div>
+      <div class="surf" style="top:76px">Claude</div>
+      <div class="surf" style="top:152px">ChatGPT</div>
+      <div class="surf" style="top:228px">Slack</div>
+      <div class="eq" style="top:330px">=</div>
+      <div class="ref on" style="top:440px">known-good answers<span>(real accounts)</span></div>
+      <div class="res on" style="top:578px">they're right ✓</div>
+    </div>
+  </div>
+  <p class="bottom">Run both. Three surfaces can agree on the wrong number.</p>
+  <div class="src">Builder's note: Alex Yedi. Prompted by Sieglock, Revolt! 2026 (S2 18:10)</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 4): Timeline of Apollo's five strategic recommendations, each paired with a short test a builder could run: map the slowest stage, one record per account, alert on drift, swap a surface and rerun evals, eval the recommendations too. -->
+<section class="slide s4">
+  <div class="eyebrow">Checklist · Apollo's five</div>
+  <h2>Five recommendations, five tests</h2>
+  <div class="tl">
+    <div class="row"><div class="a"><b>01</b>Find constraints &amp; bottlenecks</div><div class="x">Map the slowest stage</div></div>
+    <div class="row"><div class="a"><b>02</b>Unify data, context &amp; execution</div><div class="x">One record per account</div></div>
+    <div class="row"><div class="a"><b>03</b>No downtime; alert when wrong</div><div class="x">Alert on drift</div></div>
+    <div class="row"><div class="a"><b>04</b>Integration flexibility &amp; velocity</div><div class="x">Swap a surface, rerun evals</div></div>
+    <div class="row"><div class="a"><b>05</b>Proactively find opportunities</div><div class="x">Eval the recommendations too</div></div>
+  </div>
+  <div class="legend"><span><i style="background:var(--muted)"></i>Grey line: Apollo</span><span><i style="background:var(--acc)"></i>Blue line: my test</span></div>
+  <div class="src">Source: Mark Sieglock, Apollo, "5 Strategic Recommendations", Revolt! 2026; tests annotated by Alex Yedi</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 5): Closing card asking "What's your first consistency eval?", with the sub-line "Same question, every surface, same answer?" and the Alex Yedi name mark. -->
+<section class="slide cover s5">
+  <div class="eyebrow">Your turn</div>
+  <svg class="motif" width="888" height="260" viewBox="0 0 888 260" aria-hidden="true">
+    <g fill="#161D2E" stroke="#2A3550" stroke-width="2">
+      <rect x="1" y="1" width="220" height="70" rx="8"/><rect x="1" y="95" width="220" height="70" rx="8"/><rect x="1" y="189" width="220" height="70" rx="8"/>
+    </g>
+    <g stroke="#4A5878" stroke-width="4" fill="none">
+      <path d="M222 36 C420 36 440 130 560 130"/><path d="M222 130 H560"/><path d="M222 224 C420 224 440 130 560 130"/>
+    </g>
+    <circle cx="578" cy="130" r="30" fill="none" stroke="#F1F3F8" stroke-width="4"/>
+    <text x="578" y="144" font-family="Iowan Old Style,Palatino,Georgia,serif" font-size="40" font-weight="600" fill="#F1F3F8" text-anchor="middle">?</text>
+  </svg>
+  <h1 style="font-size:112px">What's your first consistency eval?</h1>
+  <p class="sub">Same question, every surface, same answer?</p>
+  <div class="who"><b><u>Alex Yedi</u></b></div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+</body></html>

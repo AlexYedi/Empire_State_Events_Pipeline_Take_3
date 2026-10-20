@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>150+ talks. One free stream.</title>
+<style>
+  /* House frame per carousel-base.css and the E6 sibling; accent = Tech/agents cobalt per the E5 brief. */
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --soft: #C9CCD2; --dim: #8A8F98; --line: #3A4048; --ghost: #4A4F57;
+    --mark: #2563EB; --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --sans: "Avenir Next", "Helvetica Neue", Helvetica, sans-serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 92px 80px 150px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .slide > * { flex-shrink: 0; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; text-wrap: balance; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 94% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 48px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .14em; color: var(--ink); }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { position: absolute; left: 80px; right: 80px; bottom: 100px; font: 22px/1.4 var(--mono); color: var(--dim); }
+
+  /* Shared stream-status markers: shape carries the meaning, never colour alone. */
+  .dot { display: inline-block; width: 24px; height: 24px; border-radius: 50%; flex: none; }
+  .dot.solid { background: var(--mark); }
+  .dot.open { border: 4px solid var(--mark); background: var(--bg); }
+
+  /* ---- Slide 1: funnel ---- */
+  .s1 h1 { font-size: 104px; line-height: 1.02; margin-top: 4px; }
+  .tag { position: absolute; right: 80px; top: 84px; font: 600 22px/1 var(--mono); letter-spacing: .08em; color: var(--soft);
+         border: 2px solid var(--line); border-radius: 999px; padding: 12px 20px; }
+  .funnel { position: relative; height: 420px; margin-top: 64px; }
+  .funnel svg { position: absolute; inset: 0; width: 920px; height: 420px; }
+  .fl { position: absolute; font: 600 30px/1.2 var(--sans); }
+  .fl small { display: block; font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .card { margin-top: 56px; display: grid; grid-template-columns: auto 1fr auto; border: 3px solid var(--mark); border-radius: 12px; }
+  .card > div { padding: 26px 30px; font: 600 34px/1.15 var(--sans); display: flex; flex-direction: column; justify-content: center; }
+  .card > div + div { border-left: 2px solid var(--line); }
+  .card small { font: 400 24px/1.2 var(--mono); color: var(--soft); margin-top: 8px; }
+  .card .k { font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .host { margin-top: 26px; font: 26px/1.4 var(--sans); color: var(--soft); }
+
+  /* ---- Slide 2: timeline ---- */
+  .legend { display: flex; flex-direction: column; gap: 14px; margin-top: 30px; font: 26px/1.2 var(--sans); color: var(--soft); }
+  .legend div { display: flex; align-items: center; gap: 16px; }
+  .legend b { color: var(--ink); font-weight: 600; }
+  .tl { position: absolute; left: 80px; top: 372px; width: 920px; height: 700px; }
+  .tl svg { position: absolute; left: 0; top: 0; width: 920px; height: 700px; overflow: visible; }
+  .pin { position: absolute; padding-left: 14px; white-space: nowrap; }
+  .pin.r { padding-left: 0; padding-right: 14px; text-align: right; }
+  .pin .t { font: 600 24px/1 var(--mono); color: var(--soft); }
+  .pin .n { font: 600 30px/1.15 var(--sans); color: var(--ink); margin-top: 8px; }
+  .pin .d { font: 24px/1.2 var(--sans); color: var(--soft); margin-top: 2px; }
+  .pin.ghost .t, .pin.ghost .n { color: var(--dim); }
+  .hr { position: absolute; font: 22px/1 var(--mono); color: var(--soft); transform: translateX(-50%); white-space: nowrap; }
+  .hr.p { color: var(--dim); }
+  .rowtag { position: absolute; left: 0; font: 600 18px/1 var(--mono); letter-spacing: .1em; color: var(--dim); }
+  .clash { position: absolute; left: 80px; right: 80px; top: 1052px; border-left: 4px dashed var(--line); padding: 2px 0 2px 22px;
+           font: 24px/1.35 var(--sans); color: var(--soft); }
+  .clash .k { font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+  .clash b { color: var(--ink); font-weight: 600; }
+
+  /* ---- Slide 3: roadmap matrix ---- */
+  .cap { font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 36px 0 12px; }
+  .rm { border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .band { margin: 14px; }
+  .row { display: grid; grid-template-columns: 360px 1fr; border-top: 2px solid var(--line); min-height: 70px; }
+  .row .p { padding: 12px 22px; font: 600 28px/1.12 var(--serif); display: flex; align-items: center; border-right: 2px solid var(--line); }
+  .row .c { padding: 10px 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 14px; border: 3px solid var(--mark); border-radius: 10px; padding: 9px 16px;
+          font: 600 25px/1.2 var(--sans); color: var(--ink); }
+  .chip .tm { font: 600 24px/1 var(--mono); color: var(--soft); }
+  .chip.dash { border-style: dashed; font-weight: 400; color: var(--soft); }
+  .chip.wide { display: flex; }
+  .chip i { font-style: normal; font-weight: 400; color: var(--soft); }
+  .outside { margin-top: 30px; padding-top: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+  .divider { height: 0; border-top: 2px solid var(--soft); margin-top: 26px; }
+
+  /* ---- Slide 4: checklist ---- */
+  .list { margin-top: 40px; display: flex; flex-direction: column; }
+  .item { display: grid; grid-template-columns: 40px 118px 1fr; column-gap: 24px; align-items: start; padding: 15px 0; border-top: 2px solid var(--line); }
+  .item:last-child { border-bottom: 2px solid var(--line); }
+  .box { width: 36px; height: 36px; border: 3px solid var(--soft); border-radius: 6px; margin-top: 2px; }
+  .when { display: flex; align-items: center; gap: 10px; font: 600 26px/1.5 var(--mono); color: var(--soft); }
+  .when .dot { width: 18px; height: 18px; }
+  .when .dot.open { border-width: 3px; }
+  .what .n { font: 600 28px/1.2 var(--sans); color: var(--ink); }
+  .what .l { font: 30px/1.25 var(--serif); color: var(--soft); margin-top: 4px; }
+  .also { margin-top: 22px; font: 22px/1.45 var(--mono); color: var(--dim); }
+  .also b { color: var(--soft); font-weight: 600; }
+  .ask { margin-top: 28px; font: 700 54px/1.08 var(--serif); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- 1 HOOK
+ALT: Eleven conference tracks with more than 150 talks narrowing into one free broadcast, streamed Thursday October 22 from 12 to 9 PM Eastern. -->
+<section class="slide s1">
+  <div class="kicker">Watch-along</div>
+  <div class="tag">San Jose → your desk</div>
+  <h1>150+ talks.<br><u>One free stream.</u></h1>
+  <div class="funnel">
+    <svg viewBox="0 0 920 420">
+      <g stroke="#8A8F98" stroke-width="3" fill="none" stroke-linecap="round">
+        <path d="M0 50 C300 50 380 250 560 250"/>
+        <path d="M0 80 C300 80 380 250 560 250"/>
+        <path d="M0 110 C300 110 380 250 560 250"/>
+        <path d="M0 140 C300 140 380 250 560 250"/>
+        <path d="M0 170 C300 170 380 250 560 250"/>
+        <path d="M0 200 C300 200 380 250 560 250"/>
+        <path d="M0 230 C300 230 380 250 560 250"/>
+        <path d="M0 260 C300 260 380 250 560 250"/>
+        <path d="M0 290 C300 290 380 250 560 250"/>
+        <path d="M0 320 C300 320 380 250 560 250"/>
+        <path d="M0 350 C300 350 380 250 560 250"/>
+      </g>
+      <path d="M556 250 H900" stroke="#2563EB" stroke-width="22" stroke-linecap="round"/>
+    </svg>
+    <div class="fl" style="left:0; top:370px; font-size:30px;">11 tracks · 150+ talks</div>
+    <div class="fl" style="right:0; top:180px; text-align:right;">1 free broadcast</div>
+  </div>
+  <div class="card">
+    <div><span class="k">Thu</span>10/22</div>
+    <div>12–9 PM ET<small>9 AM–6 PM PDT</small></div>
+    <div><span class="k">YouTube</span>free</div>
+  </div>
+  <div class="host">Live from AGNTCon + MCPCon North America · Agentic AI Foundation (Linux Foundation)</div>
+  <div class="src">Source: Linux Foundation Events (organizers' figures), 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 4 →</span></div>
+</section>
+
+<!-- 2 EVIDENCE
+ALT: A timeline from noon to 9 PM Eastern showing three keynote picks as solid markers and three breakout picks as outlined markers, with a note that three talks share the 2:45 slot. -->
+<section class="slide s2">
+  <div class="kicker">The day, mapped</div>
+  <h1>Six picks, in Eastern time</h1>
+  <div class="legend">
+    <div><span class="dot solid"></span><span><b>keynote</b>, likeliest on the broadcast</span></div>
+    <div><span class="dot open"></span><span><b>breakout</b>, on the schedule, stream unconfirmed</span></div>
+  </div>
+  <div class="tl">
+    <!-- axis y=330; x(t) = 60 + 95.56 * hours after 12 PM ET -->
+    <svg viewBox="0 0 920 700">
+      <g stroke="#3A4048" stroke-width="2">
+        <path d="M60 322 V338"/><path d="M156 322 V338"/><path d="M251 322 V338"/><path d="M347 322 V338"/><path d="M442 322 V338"/>
+        <path d="M538 322 V338"/><path d="M633 322 V338"/><path d="M729 322 V338"/><path d="M824 322 V338"/><path d="M920 322 V338"/>
+      </g>
+      <path d="M60 330 H920" stroke="#C9CCD2" stroke-width="3"/>
+      <!-- leaders -->
+      <g stroke="#2563EB" stroke-width="3">
+        <path d="M108 160 V316"/><path d="M490 20 V316"/><path d="M538 160 V316"/>
+        <path d="M211 344 V670"/><path d="M323 344 V550"/><path d="M570 344 V550"/>
+      </g>
+      <path d="M896 20 V322" stroke="#4A4F57" stroke-width="3" stroke-dasharray="6 6"/>
+      <!-- keynote markers: solid -->
+      <g fill="#2563EB"><circle cx="108" cy="330" r="15"/><circle cx="490" cy="330" r="15"/><circle cx="538" cy="330" r="15"/></g>
+      <!-- breakout markers: outlined -->
+      <g fill="#111418" stroke="#2563EB" stroke-width="4"><circle cx="211" cy="330" r="13"/><circle cx="323" cy="330" r="13"/><circle cx="570" cy="330" r="13"/></g>
+      <!-- reception: small grey square, not a pick -->
+      <rect x="889" y="323" width="14" height="14" fill="#4A4F57"/>
+    </svg>
+    <!-- keynotes above the axis -->
+    <div class="pin" style="left:108px; top:160px;"><div class="t">12:30</div><div class="n">Soria Parra</div><div class="d">keynote</div></div>
+    <div class="pin" style="left:490px; top:20px;"><div class="t">4:30</div><div class="n">Dawn Song</div><div class="d">keynote</div></div>
+    <div class="pin" style="left:538px; top:160px;"><div class="t">5:00</div><div class="n">Drasner</div><div class="d">The Agentic Web</div></div>
+    <div class="pin r ghost" style="right:24px; top:20px;"><div class="t">8:45 PM ET</div><div class="n">reception</div></div>
+    <!-- hour rows -->
+    <div class="rowtag" style="top:360px;">ET</div>
+    <div class="rowtag" style="top:392px;">PDT</div>
+    <div class="hr" style="left:60px; top:358px;">12</div><div class="hr" style="left:156px; top:358px;">1</div><div class="hr" style="left:251px; top:358px;">2</div>
+    <div class="hr" style="left:347px; top:358px;">3</div><div class="hr" style="left:442px; top:358px;">4</div><div class="hr" style="left:538px; top:358px;">5</div>
+    <div class="hr" style="left:633px; top:358px;">6</div><div class="hr" style="left:729px; top:358px;">7</div><div class="hr" style="left:824px; top:358px;">8</div>
+    <div class="hr" style="left:910px; top:358px;">9 PM</div>
+    <div class="hr p" style="left:60px; top:390px;">9</div><div class="hr p" style="left:156px; top:390px;">10</div><div class="hr p" style="left:251px; top:390px;">11</div>
+    <div class="hr p" style="left:347px; top:390px;">12</div><div class="hr p" style="left:442px; top:390px;">1</div><div class="hr p" style="left:538px; top:390px;">2</div>
+    <div class="hr p" style="left:633px; top:390px;">3</div><div class="hr p" style="left:729px; top:390px;">4</div><div class="hr p" style="left:824px; top:390px;">5</div>
+    <div class="hr p" style="left:910px; top:390px;">6 PM</div>
+    <!-- breakouts below the axis (pins hang from leaders, label bottom = leader end) -->
+    <div class="pin" style="left:211px; top:570px;"><div class="t">1:35</div><div class="n">Parecki</div><div class="d">MCP + OAuth</div></div>
+    <div class="pin" style="left:323px; top:450px;"><div class="t">2:45</div><div class="n">Horthy</div><div class="d">Software verifiers</div></div>
+    <div class="pin" style="left:570px; top:450px;"><div class="t">5:20</div><div class="n">Delimarsky</div><div class="d">MCP Security, Two Years In</div></div>
+  </div>
+  <div class="clash">
+    <div class="k">Also at 2:45</div>
+    <b>Austin Parker</b> (Honeycomb), "What Your MCP Server Does When Nobody's Looking" · <b>Michael Grinich</b>, "Auth.md"
+  </div>
+  <div class="src">Source: Linux Foundation AGNTCon + MCPCon NA schedule, 2026 (ET = PDT + 3).</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 4 →</span></div>
+</section>
+
+<!-- 3 MECHANISM
+ALT: A grid of the five MCP roadmap priorities with each talk pick placed under the priority it addresses, two picks under agent identity and enterprise security, and three picks in a separate column for topics outside the spec. -->
+<section class="slide s3">
+  <div class="kicker">Why now</div>
+  <h1>Where each pick meets the roadmap</h1>
+  <div class="cap">Roadmap priorities</div>
+  <div class="rm">
+    <div class="band"><span class="chip wide"><span class="dot solid"></span><span class="tm">12:30</span>Soria Parra · <i>co-author of the roadmap</i></span></div>
+    <div class="row"><div class="p">Agentic messaging</div><div class="c"><span class="chip dash"><span class="dot open"></span><span class="tm">5:55</span>McCaffrey · Agentic Messaging Primitives (alternate)</span></div></div>
+    <div class="row"><div class="p">HTTP-native transport (incl. local servers)</div><div class="c"></div></div>
+    <div class="row"><div class="p">Agent identity + enterprise security</div><div class="c">
+      <span class="chip"><span class="dot open"></span><span class="tm">1:35</span>Parecki</span>
+      <span class="chip"><span class="dot open"></span><span class="tm">5:20</span>Delimarsky</span></div></div>
+    <div class="row"><div class="p">Better primitives</div><div class="c"></div></div>
+    <div class="row"><div class="p">SDK experience</div><div class="c"></div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="cap" style="margin-top:20px;">Outside the spec</div>
+  <div class="outside" style="margin-top:0;">
+    <span class="chip"><span class="dot open"></span><span class="tm">2:45</span>Horthy · <i>verifiers</i></span>
+    <span class="chip"><span class="dot solid"></span><span class="tm">4:30</span>Song · <i>agent safety research</i></span>
+    <span class="chip"><span class="dot solid"></span><span class="tm">5:00</span>Drasner · <i>WebMCP (W3C incubation)</i></span>
+  </div>
+  <div class="src">Source: MCP blog, "The New MCP Roadmap", Aug 2026; LF schedule, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 4 →</span></div>
+</section>
+
+<!-- 4 CTA
+ALT: A six-item checklist pairing each talk pick with what to listen for, a footer listing three more talks on the schedule, and a closing question asking which hour the viewer will watch. -->
+<section class="slide s4">
+  <div class="kicker">What to hear</div>
+  <h1>What to listen for</h1>
+  <div class="list">
+    <div class="item"><div class="box"></div><div class="when"><span class="dot solid"></span>12:30</div><div class="what"><div class="n">Soria Parra</div><div class="l">What comes after stateless?</div></div></div>
+    <div class="item"><div class="box"></div><div class="when"><span class="dot open"></span>1:35</div><div class="what"><div class="n">Parecki</div><div class="l">How a client proves who it is</div></div></div>
+    <div class="item"><div class="box"></div><div class="when"><span class="dot open"></span>2:45</div><div class="what"><div class="n">Horthy</div><div class="l">A verifier beyond "tests pass"</div></div></div>
+    <div class="item"><div class="box"></div><div class="when"><span class="dot solid"></span>4:30</div><div class="what"><div class="n">Song</div><div class="l">What "safe and secure" requires of agents</div></div></div>
+    <div class="item"><div class="box"></div><div class="when"><span class="dot solid"></span>5:00</div><div class="what"><div class="n">Drasner</div><div class="l">WebMCP, and who it's for</div></div></div>
+    <div class="item"><div class="box"></div><div class="when"><span class="dot open"></span>5:20</div><div class="what"><div class="n">Delimarsky</div><div class="l">Tool output as untrusted input</div></div></div>
+  </div>
+  <div class="also"><b>Also on the schedule, if the stream carries it:</b> 2:10 A2A v1 Deep Dive · 5:55 Agentic Messaging Primitives · 6:30 MCP Rug Pulls in the Wild</div>
+  <div class="ask">Which hour are you blocking out?</div>
+  <div class="src">Source: LF schedule abstracts, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 4</span></div>
+</section>
+
+</body>
+</html>

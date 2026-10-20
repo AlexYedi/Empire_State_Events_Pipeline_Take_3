@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>The approval step was the training data</title>
+<style>
+/* Revolt! 2026 Day 2 S1 (Clay, Davide Grieco) post-event carousel: five 1080x1350 slides.
+   Series tokens reused from the Day 1 Revolt carousels. Brand: dark base, signature acid green #8FE83A
+   (underline + name mark), GTM amber topic accent = human step. Slides 2 and 3 share one frame (.flow). */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --sig:#8FE83A; --acc:#F5A524;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:124px;line-height:1.0;margin-top:44px}
+h2{font-size:76px;line-height:1.05;margin-top:26px}
+u{text-decoration:none;background:linear-gradient(var(--sig),var(--sig)) 0 92%/100% 10px no-repeat}
+.sub{font-family:var(--body);font-size:32px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:888px}
+.foot{position:absolute;left:96px;right:96px;bottom:60px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:22px;color:var(--muted)}
+.mark{display:inline-flex;align-items:center;gap:12px;letter-spacing:.14em;color:var(--ink)}
+.mark:before{content:"";width:16px;height:16px;background:var(--sig)}
+.src{position:absolute;left:96px;right:96px;bottom:108px;font-family:var(--mono);font-size:19px;line-height:1.4;color:var(--muted)}
+
+/* 1 cover */
+.s1 h1{margin-top:auto}
+.s1 .who{margin-top:56px;margin-bottom:10px;border-left:8px solid var(--acc);padding:6px 0 6px 30px}
+.s1 .who b{display:block;font:600 40px/1.2 var(--display)}
+.s1 .who span{display:block;font:28px/1.35 var(--body);color:var(--muted);margin-top:8px}
+
+/* 2-3 shared flow frame: identical coordinates on both slides */
+.key{margin-top:30px;display:flex;align-items:center;gap:14px;font:700 21px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.key i{width:26px;height:26px;border-radius:5px;background:var(--acc)}
+.flow{position:relative;width:888px;height:690px;margin-top:30px}
+.flow svg{position:absolute;left:0;top:0}
+.box{position:absolute;background:var(--panel);border:2px solid var(--rule);border-radius:8px;padding:14px 22px;display:flex;flex-direction:column;justify-content:center}
+.box .k{font:700 19px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.box .t{font:600 32px/1.15 var(--display);margin-top:6px}
+.box .d{font:24px/1.25 var(--body);color:var(--muted);margin-top:6px}
+.box.human{background:var(--acc);border-color:var(--acc);color:#0E1320}
+.box.human .k,.box.human .d{color:#2A1A00}
+.box.loop{background:transparent;border:2px dashed var(--acc)}
+.box.loop .t{color:var(--acc)}
+.box.ghost{background:transparent;border:3px dashed var(--muted)}
+.box.ghost .k{color:var(--muted);text-decoration:line-through}
+.box.ghost .t{color:var(--muted);font-style:italic;font-weight:400}
+.box.note{background:transparent;border:none;border-left:6px solid var(--muted);border-radius:0;padding-left:24px}
+.box.note .t{font:italic 600 32px/1.2 var(--display);color:var(--ink)}
+.tag{position:absolute;font:700 19px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+
+/* 4 three columns */
+.cols{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.colh{font:700 21px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);min-height:84px;border-bottom:4px solid var(--rule);padding-bottom:14px}
+.colh span{display:block;color:var(--muted)}
+.strip{position:relative;margin-top:22px;display:grid;grid-template-rows:repeat(4,156px);gap:14px}
+.strip:before{content:"";position:absolute;left:21px;top:20px;bottom:20px;width:3px;background:var(--rule)}
+.stop{position:relative;display:flex;flex-direction:column;justify-content:center;padding-left:58px;border-radius:8px}
+.stop:before{content:"";position:absolute;left:12px;top:50%;margin-top:-10px;width:20px;height:20px;border-radius:50%;background:var(--ground);border:3px solid var(--muted)}
+.stop .k{font:700 21px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stop.h{background:var(--acc)}
+.stop.h:before{background:#0E1320;border-color:#0E1320}
+.stop.h .k{color:#2A1A00}
+.stop.h .c{font:600 31px/1.12 var(--display);color:#0E1320;margin-top:6px}
+
+/* 5 checklist */
+.qs{margin-top:56px;list-style:none;display:grid;gap:40px;counter-reset:n}
+.qs li{counter-increment:n;position:relative;padding-left:96px}
+.qs li:before{content:counter(n);position:absolute;left:0;top:0;width:66px;height:66px;border-radius:8px;background:var(--acc);color:#0E1320;font:700 36px/66px var(--mono);text-align:center}
+.qs b{display:block;font:600 46px/1.1 var(--display)}
+.qs small{display:block;font:28px/1.3 var(--body);color:var(--muted);margin-top:10px}
+.ask{margin-top:auto;margin-bottom:20px;border-left:8px solid var(--sig);padding:8px 0 8px 30px;font:italic 600 40px/1.2 var(--display)}
+</style></head><body>
+
+<!-- Alt text (slide 1): A title card reading "The approval step was the training data," crediting Davide Grieco of Clay at Revolt! 2026. -->
+<section class="slide s1">
+  <div class="eyebrow">Revolt! 2026 · Post-event · Oct 15</div>
+  <h1>The approval step was the <u>training data</u>.</h1>
+  <p class="sub">Clay's outbound message generator, Revolt! 2026 · Day 2</p>
+  <div class="who"><b>Davide Grieco</b><span>Head of Growth, Clay · Oct 15, 2026</span></div>
+  <div class="src">Source: Davide Grieco, Revolt! 2026 (RevGenius), Oct 15, 2026</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 5 →</span></div>
+</section>
+
+<!-- Alt text (slide 2): A flow diagram from a 7am trigger through contact data, signals and messaging to a drafted email and call script, then an SDR review step before send, with a loop comparing proposed and sent copy back into model tuning; a human-fed box of winning replies retraining the hooks weekly sits upstream. -->
+<section class="slide s2">
+  <div class="eyebrow">Before · gate on</div>
+  <h2>At launch: SDRs review drafts before send</h2>
+  <div class="key"><i></i>Amber = human step</div>
+  <div class="flow">
+    <svg width="888" height="690" viewBox="0 0 888 690" aria-hidden="true">
+      <defs>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4A5878"/></marker>
+        <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#F5A524"/></marker>
+      </defs>
+      <g stroke="#4A5878" stroke-width="4" fill="none">
+        <path d="M250 100 V125 M140 125 H748 M140 125 V146 M444 125 V146 M748 125 V146" />
+        <path d="M140 270 V295 M444 270 V295 M748 270 V295 M140 295 H748 M280 295 V316" marker-end="url(#a2)"/>
+        <path d="M280 410 V456" marker-end="url(#a2)"/>
+        <path d="M280 560 V606" marker-end="url(#a2)"/>
+      </g>
+      <path d="M820 100 V146" stroke="#F5A524" stroke-width="4" fill="none" marker-end="url(#m2)"/>
+      <g stroke="#F5A524" stroke-width="4" fill="none" stroke-dasharray="12 9">
+        <path d="M560 365 H616" marker-end="url(#m2)"/>
+        <path d="M560 650 H754 V534" marker-end="url(#m2)"/>
+      </g>
+    </svg>
+    <div class="box" style="left:0;top:0;width:500px;height:100px"><div class="k">Trigger</div><div class="t">Every weekday, 7am · tier 1 contacts</div></div>
+    <div class="box human" style="left:540px;top:0;width:348px;height:100px"><div class="d" style="margin:0;font-size:24px;color:#0E1320;font-weight:600">Best reps' winning replies → retrain the hooks every week</div></div>
+    <div class="box" style="left:0;top:150px;width:280px;height:120px"><div class="t">Contact data</div></div>
+    <div class="box" style="left:304px;top:150px;width:280px;height:120px"><div class="t">Signals</div><div class="d">new role, hiring SDRs</div></div>
+    <div class="box" style="left:608px;top:150px;width:280px;height:120px"><div class="t">Messaging</div><div class="d">use cases, proof points</div></div>
+    <div class="box" style="left:0;top:320px;width:560px;height:90px"><div class="t">Draft email + call script</div></div>
+    <div class="box human" style="left:0;top:460px;width:560px;height:100px;align-items:center"><div class="t" style="margin:0;font-size:38px">SDR reviews</div></div>
+    <div class="box" style="left:0;top:610px;width:560px;height:80px;align-items:center"><div class="t" style="margin:0">Send</div></div>
+    <div class="box loop" style="left:620px;top:310px;width:268px;height:220px"><div class="k" style="color:var(--acc)">Compare</div><div class="t">proposed vs. sent</div><div class="d" style="color:var(--ink)">→ tune the model</div></div>
+  </div>
+  <div class="src">Source: Clay deck (slide 'Email generator tuned for use across all GTM plays'); Grieco, 19:30. Redrawn.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 3): The same flow diagram with the SDR review step removed and drawn as an empty outline, the draft going straight to send, and a human-fed box of winning replies retraining the message hooks weekly at the start of the flow, where humans also sit. -->
+<section class="slide s3">
+  <div class="eyebrow">After · gate off</div>
+  <h2>Now: end to end</h2>
+  <div class="key"><i></i>Amber = human step</div>
+  <div class="flow">
+    <svg width="888" height="690" viewBox="0 0 888 690" aria-hidden="true">
+      <defs>
+        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4A5878"/></marker>
+        <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#F5A524"/></marker>
+        <marker id="g3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8FE83A"/></marker>
+      </defs>
+      <g stroke="#4A5878" stroke-width="4" fill="none">
+        <path d="M250 100 V125 M140 125 H748 M140 125 V146 M444 125 V146 M748 125 V146" />
+        <path d="M140 270 V295 M444 270 V295 M748 270 V295 M140 295 H748 M280 295 V316" marker-end="url(#a3)"/>
+      </g>
+      <path d="M820 100 V146" stroke="#F5A524" stroke-width="4" fill="none" marker-end="url(#m3)"/>
+      <path d="M500 410 V606" stroke="#F1F3F8" stroke-width="5" fill="none" marker-end="url(#a3)"/>
+    </svg>
+    <div class="tag" style="left:540px;top:-30px">Humans also sit upstream</div>
+    <div class="box" style="left:0;top:0;width:500px;height:100px"><div class="k">Trigger</div><div class="t">Every weekday, 7am · tier 1 contacts</div></div>
+    <div class="box human" style="left:540px;top:0;width:348px;height:100px"><div class="d" style="margin:0;font-size:24px;color:#0E1320;font-weight:600">Best reps' winning replies → retrain the hooks every week</div></div>
+    <div class="box" style="left:0;top:150px;width:280px;height:120px"><div class="t">Contact data</div></div>
+    <div class="box" style="left:304px;top:150px;width:280px;height:120px"><div class="t">Signals</div><div class="d">new role, hiring SDRs</div></div>
+    <div class="box" style="left:608px;top:150px;width:280px;height:120px"><div class="t">Messaging</div><div class="d">use cases, proof points</div></div>
+    <div class="box" style="left:0;top:320px;width:560px;height:90px"><div class="t">Draft email + call script</div></div>
+    <div class="box ghost" style="left:0;top:460px;width:560px;height:100px"><div class="k">SDR reviews</div><div class="t">removed once 'pretty confident'</div></div>
+    <div class="box" style="left:0;top:610px;width:560px;height:80px;align-items:center"><div class="t" style="margin:0">Send</div></div>
+    <div class="box note" style="left:620px;top:340px;width:268px;height:190px"><div class="t">No exit threshold was named on stage.</div></div>
+  </div>
+  <div class="src">Source: Clay deck (slide 'SDR + Growth + PMM built the message generator'); Grieco, ~20:00. Redrawn.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 4): Three columns comparing where a human sits in three AI workflows shown on Oct 15: at the inputs for Clay's outbound email, at the trigger for Clay's event workflow, and at send for Apollo's sequence-change demo. -->
+<section class="slide s4">
+  <div class="eyebrow">What changed · where the human sits</div>
+  <h2>Same day, three places for the line</h2>
+  <div class="cols">
+    <div>
+      <div class="colh">Clay<span>outbound email</span></div>
+      <div class="strip">
+        <div class="stop"><div class="k">Trigger</div></div>
+        <div class="stop h"><div class="k">Inputs</div><div class="c">examples, not edits</div></div>
+        <div class="stop"><div class="k">Draft</div></div>
+        <div class="stop"><div class="k">Send</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="colh">Clay<span>event invites &amp; briefs</span></div>
+      <div class="strip">
+        <div class="stop h"><div class="k">Trigger</div><div class="c">field marketer starts and instructs it</div></div>
+        <div class="stop"><div class="k">Inputs</div></div>
+        <div class="stop"><div class="k">Draft</div></div>
+        <div class="stop"><div class="k">Send</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="colh">Apollo<span>sequence changes (demo)</span></div>
+      <div class="strip">
+        <div class="stop"><div class="k">Trigger</div></div>
+        <div class="stop"><div class="k">Inputs</div></div>
+        <div class="stop"><div class="k">Draft</div></div>
+        <div class="stop h"><div class="k">Send</div><div class="c">human approves each change</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="src">Sources: Grieco (Clay) 19:30, 26:28; Sieglock (Apollo) demo, 20:13. Revolt! 2026, Oct 15.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 5</span></div>
+</section>
+
+<!-- Alt text (slide 5): A closing card with three questions to answer before adding an approval step: what it collects, what turns it off, and where the human goes next. -->
+<section class="slide s5">
+  <div class="eyebrow">So what</div>
+  <h2>Before you add a gate, name its <u>exit</u></h2>
+  <ol class="qs">
+    <li><b>What does it collect?</b><small>keep the diff: proposed vs. sent</small></li>
+    <li><b>What turns it off?</b><small>a number, not 'confident'</small></li>
+    <li><b>Where does the human go next?</b><small>upstream: the examples</small></li>
+  </ol>
+  <p class="ask">Which approval step would you switch off with the data to prove it?</p>
+  <div class="src">Synthesis: Alex Yedi, from Grieco (Clay), Revolt! 2026</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>5 / 5</span></div>
+</section>
+</body></html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Who owns the claim after the doc?</title>
+<style>
+  /* House tokens per carousel-base.css; ground/ink/accent overridden by the E6 brief palette. */
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #111418; --ink: #F5F3EE; --soft: #C9CCD2; --dim: #8A8F98; --line: #3A4048; --ghost: #4A4F57;
+    --mark: #D97706; --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --sans: "Avenir Next", "Helvetica Neue", Helvetica, sans-serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 92px 80px 150px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .kicker { font: 600 24px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  h1 { font: 700 76px/1.06 var(--serif); letter-spacing: -.01em; text-wrap: balance; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 94% / 100% 10px no-repeat; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 48px; display: flex; justify-content: space-between; align-items: center;
+          font: 22px/1.3 var(--mono); color: var(--dim); }
+  .mark { display: inline-flex; align-items: center; gap: 12px; letter-spacing: .14em; color: var(--ink); }
+  .mark:before { content: ""; width: 16px; height: 16px; background: var(--sig); }
+  .src { position: absolute; left: 80px; right: 80px; bottom: 100px; font: 22px/1.4 var(--mono); color: var(--dim); }
+
+  /* ---- Slides 1-2: the handoff chain (identical frame) ---- */
+  .chain { position: absolute; left: 80px; top: 360px; width: 920px; height: 800px; }
+  .box { position: absolute; left: 0; width: 560px; border: 3px solid var(--ink); border-radius: 10px;
+         display: flex; flex-direction: column; justify-content: center; padding: 0 30px;
+         font: 600 34px/1.15 var(--sans); }
+  .box.hot { border-color: var(--mark); border-width: 5px; }
+  .box.off { border-color: var(--ghost); color: var(--ghost); }
+  .box.off:after { content: ""; position: absolute; left: 18px; right: 18px; top: 50%; height: 3px; background: var(--ghost); }
+  .box .tag { font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .box.claim { font-size: 32px; line-height: 1.12; }
+  .r1 { top: 0;   height: 110px; }
+  .r2 { top: 150px; height: 110px; }
+  .r3 { top: 300px; height: 110px; }
+  .r4 { top: 450px; height: 190px; }
+  .r5 { top: 680px; height: 110px; }
+  .split { position: absolute; left: 0; top: 450px; width: 560px; height: 190px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .split .box { position: relative; width: auto; height: 100%; padding: 0 22px; font-size: 28px; }
+  .split .box small { display: block; font: 400 24px/1.2 var(--sans); color: var(--soft); margin-top: 6px; }
+  .split .box em { font: 600 22px/1 var(--mono); font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-top: 14px; }
+  .arrows { position: absolute; left: 0; top: 0; width: 560px; height: 800px; overflow: visible; }
+  .note { position: absolute; left: 600px; width: 320px; font: 26px/1.3 var(--sans); color: var(--soft);
+          border-left: 3px solid var(--line); padding-left: 20px; }
+  .note.hot { color: var(--ink); border-color: var(--mark); }
+  .note b { font-weight: 700; }
+
+  /* ---- Slide 3: one number ---- */
+  .hero { font: 700 168px/1 var(--serif); color: var(--mark); letter-spacing: -.02em; margin-top: 54px; }
+  .hero-l { font: 34px/1.25 var(--sans); color: var(--ink); margin-top: 14px; }
+  .s3row { display: flex; gap: 56px; margin-top: 52px; align-items: flex-start; }
+  .grid { display: grid; grid-template-columns: repeat(10, 30px); gap: 9px; flex: none; }
+  .grid i { width: 30px; height: 30px; border: 2px solid var(--line); border-radius: 3px; }
+  .grid i.on { background: var(--mark); border-color: var(--mark); }
+  .side { display: flex; flex-direction: column; gap: 30px; padding-top: 2px; }
+  .stat2 { font: 600 34px/1.25 var(--sans); color: var(--ink); }
+  .stat2 b { font: 700 46px/1.1 var(--serif); display: block; margin-bottom: 6px; }
+  .method { font: 24px/1.4 var(--mono); color: var(--dim); }
+  .annot { margin-top: 48px; font: italic 38px/1.3 var(--serif); color: var(--ink); border-left: 6px solid var(--line); padding: 4px 0 4px 26px; }
+
+  /* ---- Slide 4: who owns it ---- */
+  .own { position: relative; height: 560px; margin-top: 52px; }
+  .own svg { position: absolute; inset: 0; }
+  .cand { position: absolute; width: 300px; height: 112px; border: 3px solid var(--ink); border-radius: 10px;
+          display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 20px;
+          font: 600 32px/1.15 var(--sans); background: var(--bg); }
+  .c1 { left: 0; top: 0; } .c2 { right: 0; top: 0; } .c3 { left: 0; bottom: 0; } .c4 { right: 0; bottom: 0; }
+  .core { position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; margin: -170px 0 0 -170px; border-radius: 50%;
+          border: 5px solid var(--mark); background: var(--bg); display: flex; align-items: center; justify-content: center;
+          text-align: center; padding: 0 44px; font: 600 34px/1.2 var(--serif); }
+  .credit { margin-top: 44px; font: 24px/1.45 var(--mono); color: var(--dim); }
+  .ask { margin-top: 26px; font: 700 54px/1.1 var(--serif); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- 1 BEFORE
+ALT: A five-step flow from PMM positioning to the buyer, with launch content highlighted as the bottleneck and a rep adapting messaging live before it reaches the buyer. -->
+<section class="slide s1">
+  <div class="kicker">Before</div>
+  <h1>When making assets was the <u>hard part</u></h1>
+  <div class="chain">
+    <svg class="arrows" viewBox="0 0 560 800">
+      <g stroke="#8A8F98" stroke-width="3" fill="none">
+        <path d="M280 114 V144"/><path d="M280 264 V294"/><path d="M280 414 V444"/><path d="M280 644 V674"/>
+      </g>
+      <g fill="#8A8F98">
+        <path d="M270 136 L280 148 L290 136 Z"/><path d="M270 286 L280 298 L290 286 Z"/>
+        <path d="M270 436 L280 448 L290 436 Z"/><path d="M270 666 L280 678 L290 666 Z"/>
+      </g>
+    </svg>
+    <div class="box r1">Positioning (PMM)</div>
+    <div class="box r2 hot">Launch content</div>
+    <div class="box r3">Sales enablement</div>
+    <div class="box r4">Rep adapts it live</div>
+    <div class="box r5">Buyer</div>
+    <div class="note hot" style="top:150px">the bottleneck: time and headcount to produce</div>
+    <div class="note" style="top:490px">a human fixes weak lines mid-call</div>
+  </div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>1 / 4 →</span></div>
+</section>
+
+<!-- 2 AFTER
+ALT: The same five-step flow with launch content greyed out as commoditized, positioning highlighted as the scarce input, and the live rep replaced by automated sequences and answer-engine summaries. -->
+<section class="slide s2">
+  <div class="kicker">After</div>
+  <h1>Content is the floor now</h1>
+  <div class="chain">
+    <svg class="arrows" viewBox="0 0 560 800">
+      <g stroke="#8A8F98" stroke-width="3" fill="none">
+        <path d="M280 114 V144"/><path d="M280 264 V294"/>
+        <path d="M280 414 V428 H135 V444"/><path d="M280 428 H425 V444"/>
+        <path d="M135 644 V658 H280 V674"/><path d="M425 644 V658 H280"/>
+      </g>
+      <g fill="#8A8F98">
+        <path d="M270 136 L280 148 L290 136 Z"/><path d="M270 286 L280 298 L290 286 Z"/>
+        <path d="M125 436 L135 448 L145 436 Z"/><path d="M415 436 L425 448 L435 436 Z"/>
+        <path d="M270 666 L280 678 L290 666 Z"/>
+      </g>
+    </svg>
+    <div class="box r1 hot claim">The claim: true, specific, different</div>
+    <div class="box r2 off">Launch content</div>
+    <div class="box r3">Sales enablement</div>
+    <div class="split">
+      <div class="box">Automated sequence<small>(GTM engineering)</small><em>can skip a human edit</em></div>
+      <div class="box">Answer engine summary<small>(ChatGPT, Perplexity)</small><em>can skip a human edit</em></div>
+    </div>
+    <div class="box r5">Buyer</div>
+    <div class="note" style="top:150px"><b>96%</b> of B2B marketers use AI</div>
+  </div>
+  <div class="src">Source: MarketScale roundup of industry surveys, 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>2 / 4 →</span></div>
+</section>
+
+<!-- 3 WHAT CHANGED
+ALT: A grid of 100 squares with one highlighted, showing that under 1 in 100 repeated AI responses returned the same brand list, and under 1 in 1,000 returned it in the same order. -->
+<section class="slide s3">
+  <div class="kicker">What changed</div>
+  <h1>Same prompt. Different answer.</h1>
+  <div class="hero">&lt;1 in 100</div>
+  <div class="hero-l">runs returned an identical brand list</div>
+  <div class="s3row">
+    <div class="grid">
+      <i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="side">
+      <div class="stat2"><b>&lt;1 in 1,000</b>returned the same list in the same order</div>
+      <div class="method">600 volunteers · 12 prompts · 2,961 responses</div>
+    </div>
+  </div>
+  <div class="annot">Track share across many runs, not one query.</div>
+  <div class="src">Source: SparkToro, Jan 2026.</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>3 / 4 →</span></div>
+</section>
+
+<!-- 4 SO WHAT
+ALT: A central question about who owns a company's narrative once it leaves product marketing, surrounded by four equal candidate owners: PMM, content, SEO and whoever built the workflow. -->
+<section class="slide s4">
+  <div class="kicker">So what</div>
+  <h1>Who owns the claim after the doc?</h1>
+  <div class="own">
+    <svg viewBox="0 0 920 560">
+      <g stroke="#4A4F57" stroke-width="3" stroke-dasharray="8 10" fill="none">
+        <path d="M150 56 L460 280"/><path d="M770 56 L460 280"/><path d="M150 504 L460 280"/><path d="M770 504 L460 280"/>
+      </g>
+    </svg>
+    <div class="cand c1">PMM</div>
+    <div class="cand c2">Content</div>
+    <div class="cand c3">SEO</div>
+    <div class="cand c4">Whoever built the workflow</div>
+    <div class="core">The narrative, once it leaves the PMM's doc</div>
+  </div>
+  <div class="credit">Taking this to the Product Marketing Happy Hour, NYC · Organized by GTM Studios · Hosted by Autumn Mayo</div>
+  <div class="ask">PMMs: who signs off at yours?</div>
+  <div class="foot"><span class="mark">ALEX YEDI</span><span>4 / 4</span></div>
+</section>
+
+</body>
+</html>
