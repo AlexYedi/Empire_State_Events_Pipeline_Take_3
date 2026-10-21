@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The seller out-built the co-founder</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#D97706;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel (paired with E3-pre-event-carousel: same tokens, amber GTM mark) ---- */
+.eyebrow{color:var(--muted)}
+.eyebrow b{color:var(--mark);font-weight:700}
+h2{font-size:88px}
+h2 u{text-decoration:none;background:linear-gradient(var(--accent),var(--accent)) 0 92%/100% 8px no-repeat}
+.amber{color:var(--mark)}
+.nw{white-space:nowrap}
+.s2 h2{font-size:80px}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.4;color:var(--muted)}
+.lbl{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stage{position:relative;width:888px}
+.stage svg{position:absolute;left:0;top:0}
+
+/* slide 1 timeline */
+.s1 .stage{height:620px;margin-top:70px}
+.beat{position:absolute}
+.beat .lbl{margin-bottom:12px}
+.beat p{font-family:var(--display);font-weight:600;font-size:40px;line-height:1.12}
+.beat.mo .lbl{color:var(--mark)}
+.beat.mo p{color:var(--mark)}
+.beat.big p{font-size:64px;line-height:1}
+.caption{margin-top:10px;font-family:var(--body);font-size:32px;line-height:1.35;color:var(--ink);max-width:820px;border-left:6px solid var(--mark);padding-left:24px}
+
+/* slide 2 checklist */
+.toggle{display:flex;align-items:center;gap:22px;margin-top:36px}
+.sw{width:112px;height:58px;border-radius:29px;background:var(--mark);position:relative}
+.sw:after{content:"";position:absolute;right:7px;top:7px;width:44px;height:44px;border-radius:50%;background:var(--ground)}
+.toggle span{font-family:var(--mono);font-size:30px;letter-spacing:.06em;color:var(--ink)}
+.toggle span b{color:var(--mark)}
+.dump{margin-top:28px;background:var(--panel);padding:26px 36px 18px;border-top:8px solid var(--rule)}
+.dump .head{display:flex;justify-content:space-between;align-items:baseline}
+.dump .head .tag{font-family:var(--mono);font-size:20px;color:var(--muted);border:2px solid var(--rule);padding:6px 12px}
+.dump ul{list-style:none;margin-top:14px}
+.dump li{display:flex;align-items:center;gap:26px;font-family:var(--display);font-weight:600;font-size:40px;line-height:1.1;padding:11px 0;border-bottom:2px solid var(--rule)}
+.dump li:last-child{border-bottom:none}
+.box{flex:none;width:34px;height:34px;border:4px solid var(--muted)}
+.endwith{margin-top:20px;border:4px solid var(--mark);padding:16px 26px;display:flex;align-items:center;gap:22px}
+.endwith .lbl{color:var(--mark)}
+.endwith code{font-family:var(--mono);font-size:36px;color:var(--ink)}
+.note{margin-top:18px;font-family:var(--body);font-size:28px;line-height:1.35;color:var(--muted)}
+.note b{font-family:var(--display);font-size:40px;color:var(--ink);font-weight:600}
+
+/* slide 3 loop */
+.s3 .stage{height:800px;margin-top:30px}
+.node{position:absolute;background:var(--panel);border-top:6px solid var(--muted);padding:20px 20px 22px}
+.node .n{font-family:var(--mono);font-size:20px;letter-spacing:.14em;color:var(--muted)}
+.node h3{font-family:var(--display);font-weight:600;font-size:40px;line-height:1.08;margin-top:6px}
+.node .s{font-family:var(--body);font-size:26px;line-height:1.3;color:var(--muted);margin-top:8px}
+.node.hot{border-top-color:var(--mark)}
+.node.hot .n{color:var(--mark)}
+.ex{margin-top:14px;font-family:var(--body);font-size:23px;line-height:1.32;color:var(--ink);border-left:4px solid var(--rule);padding-left:14px}
+.ex i{font-style:normal;font-family:var(--mono);font-size:18px;letter-spacing:.12em;color:var(--muted);display:block;margin-bottom:4px}
+.chipsrow{display:flex;gap:14px;margin-top:14px;justify-content:center}
+.chip{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:.12em;background:var(--mark);color:#1A1206;padding:10px 18px}
+.prompt{margin-top:14px;background:#0A0E18;border:2px solid var(--rule);padding:12px 10px;font-family:var(--mono);font-size:20px;white-space:nowrap;line-height:1.55;color:var(--ink)}
+.prompt span{color:var(--mark)}
+.center{position:absolute;left:340px;width:208px;top:318px;text-align:center}
+.center .lbl{color:var(--mark)}
+.center p{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.1;margin-top:10px}
+
+/* slide 4 wall */
+.s4 .stage{height:560px;margin-top:60px}
+.col{position:absolute;top:0}
+.col .lbl{margin-bottom:12px}
+.col p{font-family:var(--display);font-weight:600;font-size:36px;line-height:1.12}
+.col.grey .lbl,.col.grey p{color:#5E6A84}
+.walltag{position:absolute;top:470px;left:430px;width:458px;text-align:center}
+.walltag .lbl{color:var(--mark)}
+.walltag p{font-family:var(--display);font-weight:600;font-size:38px;line-height:1.12;margin-top:8px}
+.pull{margin-top:30px;font-family:var(--display);font-weight:600;font-size:68px;line-height:1.05;border-left:8px solid var(--mark);padding-left:30px}
+.pull small{display:block;font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:16px;font-weight:400}
+
+/* slide 5 staircase */
+.stairs{position:relative;width:888px;height:420px;margin-top:50px}
+.step{position:absolute;bottom:0;width:210px;background:var(--panel);border-top:8px solid var(--muted);padding:20px 20px 0}
+.step .n{font-family:var(--mono);font-size:20px;letter-spacing:.14em;color:var(--muted)}
+.step p{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.12;margin-top:8px}
+.step.top{background:var(--mark);border-top-color:var(--mark);color:#1A1206}
+.step.top .n{color:#3A2408}
+.step.top p{color:#1A1206}
+.proof{margin-top:20px;font-family:var(--body);font-size:25px;line-height:1.3;color:var(--muted)}
+.proof b{color:var(--ink);font-weight:600}
+.ask{margin-top:auto;margin-bottom:180px;font-family:var(--display);font-weight:600;font-size:68px;line-height:1.06;text-wrap:balance}
+.ask u{text-decoration:none;background:linear-gradient(var(--accent),var(--accent)) 0 92%/100% 8px no-repeat}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 · Hook
+Alt text: A timeline from Gene Lee posting a competing call copilot the night before the deadline, to Jack shipping Mo the next day and winning Ramp's first AI hackathon. -->
+<section class="slide s1">
+  <div class="eyebrow"><b>01</b> · The night before</div>
+  <h2>The seller <u class="nw">out-built</u> the co-founder</h2>
+  <div class="stage">
+    <svg width="888" height="620" viewBox="0 0 888 620" aria-hidden="true">
+      <!-- axis: grey until Jack's call, amber after -->
+      <line x1="24" y1="300" x2="300" y2="300" stroke="#2A3550" stroke-width="8"/>
+      <line x1="300" y1="300" x2="864" y2="300" stroke="#D97706" stroke-width="8"/>
+      <!-- stems -->
+      <line x1="24" y1="300" x2="24" y2="250" stroke="#F1F3F8" stroke-width="3"/>
+      <line x1="300" y1="300" x2="300" y2="350" stroke="#D97706" stroke-width="3"/>
+      <line x1="576" y1="300" x2="576" y2="250" stroke="#D97706" stroke-width="3"/>
+      <line x1="864" y1="300" x2="864" y2="350" stroke="#D97706" stroke-width="3"/>
+      <!-- dots -->
+      <circle cx="24" cy="300" r="16" fill="#F1F3F8"/>
+      <circle cx="300" cy="300" r="16" fill="#0E1320" stroke="#D97706" stroke-width="6"/>
+      <circle cx="576" cy="300" r="16" fill="#D97706"/>
+      <circle cx="864" cy="300" r="22" fill="#D97706"/>
+    </svg>
+    <div class="beat" style="left:0;bottom:380px;width:500px">
+      <div class="lbl">Night before deadline</div>
+      <p>Ramp co-founder Gene Lee posts a live-call copilot</p>
+    </div>
+    <div class="beat mo" style="left:552px;bottom:380px;width:336px">
+      <div class="lbl">Next day</div>
+      <p class="" style="font-size:64px;line-height:1">Mo ships</p>
+    </div>
+    <div class="beat mo" style="left:276px;top:366px;width:300px">
+      <div class="lbl">Jack's call</div>
+      <p>&ldquo;closer to the problem&rdquo;</p>
+    </div>
+    <div class="beat mo" style="right:0;top:366px;width:290px;text-align:right">
+      <div class="lbl">Two weeks later</div>
+      <p>Mo wins Ramp's first AI hackathon</p>
+    </div>
+  </div>
+  <div class="caption">Built in one week in April, on a couch, between deals.</div>
+  <div class="src-line">Source: Jack (Ramp), GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 2 · Mechanism, step 1
+Alt text: A checklist of what to brain-dump into a model in plan mode before building, ending with the instruction to ask clarifying questions. -->
+<section class="slide s2">
+  <div class="eyebrow"><b>02</b> · Step 1 &middot; Plan</div>
+  <h2>Plan mode, then <u class="nw">brain-dump</u> everything</h2>
+  <div class="toggle"><div class="sw"></div><span>Plan mode: <b>ON</b></span></div>
+  <div class="dump">
+    <div class="head"><div class="lbl">Hold a button and say:</div><div class="tag">voice &middot; Wispr Flow</div></div>
+    <ul>
+      <li><span class="box"></span>What I want to build</li>
+      <li><span class="box"></span>Why</li>
+      <li><span class="box"></span>What I want to solve</li>
+      <li><span class="box"></span>What I'm nervous about</li>
+      <li><span class="box"></span>What I don't understand yet</li>
+    </ul>
+  </div>
+  <div class="endwith"><span class="lbl">End with</span><code>ask clarifying questions.</code></div>
+  <div class="note"><b>First pass &asymp; 60&ndash;70%</b> of the way there. That's where most people quit.</div>
+  <div class="src-line">Source: Jack (Ramp), GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 3 · Mechanism, step 2
+Alt text: A four-step loop: let the model build, validate each piece, check it against the speed and accuracy non-negotiables, then type "Not fast enough" and repeat. -->
+<section class="slide s3">
+  <div class="eyebrow"><b>03</b> · Step 2 &middot; Loop</div>
+  <h2>Validate, calibrate, <u>&ldquo;Not fast enough&rdquo;</u> &#x23CE;</h2>
+  <div class="stage">
+    <svg width="888" height="800" viewBox="0 0 888 800" aria-hidden="true">
+      <ellipse cx="444" cy="400" rx="380" ry="320" fill="none" stroke="#2A3550" stroke-width="6"/>
+      <g fill="#D97706">
+        <polygon points="-16,-14 16,0 -16,14" transform="translate(712.7 173.7) rotate(40.1)"/>
+        <polygon points="-16,-14 16,0 -16,14" transform="translate(712.7 626.3) rotate(139.9)"/>
+        <polygon points="-16,-14 16,0 -16,14" transform="translate(175.3 626.3) rotate(220.1)"/>
+        <polygon points="-16,-14 16,0 -16,14" transform="translate(175.3 173.7) rotate(319.9)"/>
+      </g>
+    </svg>
+    <div class="node" style="left:234px;top:0;width:420px;text-align:center">
+      <div class="n">01</div>
+      <h3>Let it build</h3>
+      <div class="s">(you keep selling)</div>
+    </div>
+    <div class="node" style="right:0;top:256px;width:340px">
+      <div class="n">02</div>
+      <h3>Ding: validate the piece</h3>
+      <div class="ex"><i>e.g.</i>Transcription layer built from scratch, so it works on Zoom, Teams, any call</div>
+    </div>
+    <div class="node hot" style="left:194px;bottom:0;width:500px;text-align:center">
+      <div class="n">03</div>
+      <h3>Check the North Stars</h3>
+      <div class="chipsrow"><span class="chip">SPEED</span><span class="chip">ACCURACY</span></div>
+    </div>
+    <div class="node" style="left:0;top:280px;width:340px">
+      <div class="n">04</div>
+      <h3>Tell it what's off</h3>
+      <div class="prompt">Not fast enough <span>&#x23CE;</span><br>Not fast enough still <span>&#x23CE;</span></div>
+    </div>
+    <div class="center">
+      <div class="lbl">Repeat</div>
+      <p>Every single aspect of Mo.</p>
+    </div>
+  </div>
+  <div class="src-line">Source: Jack (Ramp), GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 4 · Counterpoint
+Alt text: A flow from Mo's launch to a few hundred downloads and requests from other teams, ending at a wall labeled local devices only. -->
+<section class="slide s4">
+  <div class="eyebrow"><b>04</b> · The catch</div>
+  <h2>Then it hits the <u>laptop wall</u></h2>
+  <div class="stage">
+    <svg width="888" height="600" viewBox="0 0 888 600" aria-hidden="true">
+      <defs>
+        <linearGradient id="flow" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#D97706" stop-opacity=".18"/>
+          <stop offset="1" stop-color="#D97706" stop-opacity=".75"/>
+        </linearGradient>
+      </defs>
+      <!-- momentum band widening into the wall -->
+      <path d="M0 340 L640 270 L640 450 L0 380 Z" fill="url(#flow)"/>
+      <!-- stage ticks -->
+      <line x1="10" y1="180" x2="10" y2="345" stroke="#2A3550" stroke-width="3" stroke-dasharray="3 9"/>
+      <line x1="200" y1="180" x2="200" y2="320" stroke="#2A3550" stroke-width="3" stroke-dasharray="3 9"/>
+      <line x1="430" y1="180" x2="430" y2="296" stroke="#2A3550" stroke-width="3" stroke-dasharray="3 9"/>
+      <!-- the wall -->
+      <rect x="640" y="150" width="44" height="310" fill="#D97706"/>
+      <!-- beyond the wall: ghosted continuation -->
+      <path d="M700 290 L888 270 L888 450 L700 430 Z" fill="none" stroke="#3A4560" stroke-width="3" stroke-dasharray="10 10"/>
+    </svg>
+    <div class="col" style="left:0;width:180px"><div class="lbl">01</div><p>Launch</p></div>
+    <div class="col" style="left:190px;width:230px"><div class="lbl">02</div><p>A few hundred downloads, used a lot</p></div>
+    <div class="col" style="left:420px;width:210px"><div class="lbl">03</div><p>Asks: research interviews, CX</p></div>
+    <div class="col grey" style="left:706px;width:182px"><div class="lbl">Not built yet</div><p>Salesforce write-back</p></div>
+    <div class="walltag"><div class="lbl">Today</div><p>Local devices, mostly sellers</p></div>
+  </div>
+  <div class="pull">&ldquo;Distribution is really hard.&rdquo;</div>
+  <div class="src-line">Source: Jack (Ramp), Q&amp;A, GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 5 · CTA
+Alt text: A staircase showing a seller-built tool moving from the builder to leader inspection to a growth-engineering team that scales it, with a closing question to the reader. -->
+<section class="slide s5">
+  <div class="eyebrow"><b>05</b> · The way out</div>
+  <h2>How a seller's tool <u>gets out</u></h2>
+  <div class="stairs">
+    <div class="step" style="left:0;height:150px"><div class="n">01</div><p>IC builds it</p></div>
+    <div class="step" style="left:226px;height:225px"><div class="n">02</div><p>IC or leader speaks up</p></div>
+    <div class="step" style="left:452px;height:315px"><div class="n">03</div><p>2nd- and 3rd-line leaders inspect</p></div>
+    <div class="step top" style="left:678px;height:420px"><div class="n">04</div><p>Growth-engineering pod scales it across the segment</p></div>
+  </div>
+  <div class="proof"><b>Done once already:</b> another rep's deal-maintenance tool took this path.</div>
+  <div class="ask">What's on your laptop that should be on <u>your team's</u>?</div>
+  <div class="src-line">Source: Max Freeman (Ramp), fireside, GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>

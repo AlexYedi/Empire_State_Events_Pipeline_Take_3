@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Govern money, govern intelligence</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#D97706; --ghost:#5E6A84;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.eyebrow b{color:var(--mark);font-weight:700}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:124px;line-height:1.0;margin-top:44px}
+h2{font-size:74px;line-height:1.05;margin-top:28px}
+.s1 h2,.s2 h2{font-size:66px}
+h1 u,h2 u{text-decoration:none;background:linear-gradient(var(--accent),var(--accent)) 0 92%/100% 8px no-repeat}
+.nw{white-space:nowrap}
+.amber{color:var(--mark)}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.4;color:var(--muted)}
+.lbl{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.read{font-family:var(--mono);font-size:20px;letter-spacing:.08em;color:var(--muted)}
+
+/* ---- slides 1-2: one shared four-verb frame (same class, same positions) ---- */
+.verbs{position:relative;margin-top:40px}
+.vrow{display:grid;grid-template-columns:290px 1fr;column-gap:24px;align-items:center;min-height:112px;background:var(--panel);border-left:8px solid var(--rule);padding:16px 24px 16px 26px}
+.vrow + .vrow{margin-top:30px}
+.vrow .v{display:flex;flex-direction:column}
+.vrow .v .lbl{font-size:20px}
+.vrow .v b{font-family:var(--display);font-weight:600;font-size:50px;line-height:1;margin-top:4px;letter-spacing:.01em}
+.vrow .q{font-family:var(--body);font-size:28px;line-height:1.3;color:var(--ink)}
+.vrow .q.same{font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+/* arrows between rows */
+.vrow + .vrow:before{content:"";position:absolute;left:24px;margin-top:-24px;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:16px solid var(--muted)}
+.vrow{position:relative}
+.vrow + .vrow:before{top:0}
+/* slide 2 deltas: what changed is amber */
+.vrow.new{border-left-color:var(--mark)}
+.vrow.new .v b,.vrow.new .v .lbl{color:var(--mark)}
+.vrow.new .q{color:var(--mark)}
+/* product column (slide 2 only); the verb column stays in the same place */
+.s2 .vrow{grid-template-columns:290px 1fr 220px}
+.s2 .vrow .q{font-size:26px}
+.chip{border:3px solid var(--mark);padding:8px 12px;align-self:center}
+.chip p{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.05;color:var(--ink)}
+.chip span{display:block;font-family:var(--body);font-size:24px;line-height:1.2;color:var(--muted);margin-top:4px}
+.span-chip{position:absolute;right:24px;width:220px;border:3px solid var(--mark);background:var(--ground);padding:14px 16px;display:flex;flex-direction:column;justify-content:center}
+.span-chip p{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.05}
+.span-chip span{display:block;font-family:var(--body);font-size:24px;line-height:1.25;color:var(--muted);margin-top:6px}
+.bottom{margin-top:40px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.stat{font-family:var(--body);font-size:28px;line-height:1.3;border-left:6px solid var(--mark);padding-left:20px}
+.stat b{font-family:var(--display);font-size:44px;font-weight:600;color:var(--mark)}
+.buyer{font-family:var(--mono);font-size:24px;letter-spacing:.06em;border:3px solid var(--rule);padding:14px 18px;white-space:nowrap}
+.buyer em{font-style:normal;color:var(--muted)}
+
+/* ---- slide 3: the buyer split ---- */
+.story{margin-top:36px;display:flex;justify-content:center;gap:14px;font-family:var(--mono);font-size:22px;letter-spacing:.1em;color:var(--muted)}
+.story span{border:2px solid var(--rule);padding:8px 12px}
+.fork{display:block;margin:0 auto}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.col{background:var(--panel);padding:24px 28px 30px;border-top:8px solid var(--ghost)}
+.col.eng{border-top-color:var(--mark)}
+.col h3{font-family:var(--display);font-weight:600;font-size:34px;line-height:1.12;min-height:76px}
+.col.eng h3{color:var(--mark)}
+.col .lbl{margin-top:14px}
+.col ul{list-style:none;margin-top:10px}
+.col li{font-family:var(--display);font-weight:600;font-size:38px;line-height:1.1;padding:11px 0;border-bottom:2px solid var(--rule)}
+.col li:last-child{border-bottom:none}
+.band{margin-top:24px;border:3px solid var(--mark);padding:20px 26px}
+.band .q{font-family:var(--display);font-weight:600;font-size:36px;line-height:1.2}
+.band .then{font-family:var(--body);font-size:28px;line-height:1.3;color:var(--ink);margin-top:10px}
+.band .then i{font-style:normal;color:var(--mark)}
+
+/* ---- slide 4: the reader's org ---- */
+.s4 h1{margin-top:90px}
+.calls{display:flex;gap:20px;margin-top:44px}
+.calls div{flex:1;height:14px;background:var(--ghost)}
+.calls div.e{background:var(--mark)}
+.ask{font-family:var(--body);font-size:40px;line-height:1.3;margin-top:80px;max-width:860px}
+.ticks{list-style:none;margin-top:40px}
+.ticks li{display:flex;align-items:center;gap:28px;font-family:var(--display);font-weight:600;font-size:52px;padding:18px 0;border-bottom:2px solid var(--rule)}
+.ticks li:last-child{border-bottom:none}
+.ticks .box{flex:none;width:52px;height:52px;border:5px solid var(--muted)}
+.ticks li.none{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 · Before: governing money
+Alt text: Four connected boxes, spend, route for approval, control and account, describing Ramp's core money business, sold to the office of the CFO. -->
+<section class="slide s1">
+  <div class="eyebrow"><b>01</b> · Before · Max Freeman, Ramp</div>
+  <h2>Ramp's core: govern the movement of <u>money</u></h2>
+  <div class="verbs">
+    <div class="vrow"><div class="v"><span class="lbl">01</span><b>SPEND</b></div><div class="q">&ldquo;an employee needs to spend&rdquo;</div></div>
+    <div class="vrow"><div class="v"><span class="lbl">02</span><b>ROUTE</b></div><div class="q">&ldquo;for approval&rdquo;</div></div>
+    <div class="vrow"><div class="v"><span class="lbl">03</span><b>CONTROL</b></div><div class="q">&ldquo;that spend&rdquo;</div></div>
+    <div class="vrow"><div class="v"><span class="lbl">04</span><b>ACCOUNT</b></div><div class="q">&ldquo;for it&rdquo;</div></div>
+  </div>
+  <div class="bottom">
+    <div class="stat">Built a <b>$2B+</b><br>annualized-revenue business.</div>
+    <div class="buyer"><em>Buyer:</em> office of the CFO</div>
+  </div>
+  <div class="src-line">Source: Max Freeman (Ramp), GTM Intelligence: AI Night, Oct 2026; revenue: TNW, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 4 &rarr;</span></div>
+</section>
+
+<!-- Slide 2 · After: governing intelligence (same frame)
+Alt text: The same four-box frame relabeled work, route to the best model at the lowest cost, control and account, with Ramp's Glass, Router and AI spend management products placed under the matching verbs. -->
+<section class="slide s2">
+  <div class="eyebrow"><b>02</b> · After · Max Freeman, Ramp</div>
+  <h2>Same verbs: govern the consumption of <u>intelligence</u></h2>
+  <div class="verbs">
+    <div class="vrow new"><div class="v"><span class="lbl">01</span><b>WORK</b></div><div class="q">&ldquo;an employee needs to perform work or perhaps an agent needs to perform work&rdquo;</div>
+      <div class="chip"><p>Glass</p><span>internal AI workspace</span></div></div>
+    <div class="vrow new"><div class="v"><span class="lbl">02</span><b>ROUTE</b></div><div class="q">&ldquo;the best possible model at the lowest possible cost&rdquo;</div>
+      <div class="chip"><p>Router</p><span>one endpoint, cheapest model that meets the bar</span></div></div>
+    <div class="vrow" id="r3"><div class="v"><span class="lbl">03</span><b>CONTROL</b></div><div class="q same">same verb</div><div></div></div>
+    <div class="vrow" id="r4"><div class="v"><span class="lbl">04</span><b>ACCOUNT</b></div><div class="q same">same verb</div><div></div></div>
+    <div class="span-chip" id="spanchip"><p>AI spend management</p></div>
+  </div>
+  <div class="bottom">
+    <div class="read">Product-to-verb mapping: Alex's read.</div>
+  </div>
+  <div class="src-line">Source: Max Freeman (Ramp), Oct 2026; Router: TechCrunch, Aug 2026; Glass: Ramp via Crypto Briefing, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 4 &rarr;</span></div>
+</section>
+
+<!-- Slide 3 · What changed: the buyer
+Alt text: A side-by-side of the finance buyer and the engineering buyer for Ramp's products, with what each one buys and Max Freeman's note that the go-to-market design is the hardest part of his job. -->
+<section class="slide s3">
+  <div class="eyebrow"><b>03</b> · What changed · the buyer</div>
+  <h2>Same story. <u>Different buyer.</u></h2>
+  <div class="story"><span>SPEND / WORK</span><span>ROUTE</span><span>CONTROL</span><span>ACCOUNT</span></div>
+  <svg class="fork" width="888" height="70" viewBox="0 0 888 70" aria-hidden="true">
+    <path d="M444 4 L444 26 L216 26 L216 66" fill="none" stroke="#5E6A84" stroke-width="4"/>
+    <path d="M444 26 L672 26 L672 66" fill="none" stroke="#D97706" stroke-width="4"/>
+  </svg>
+  <div class="cols">
+    <div class="col">
+      <h3>Office of the CFO</h3>
+      <div class="lbl">Buys</div>
+      <ul><li>Control</li><li>A clean close</li><li>Fewer surprises</li></ul>
+    </div>
+    <div class="col eng">
+      <h3>Developers · Engineers · CIOs · CTOs</h3>
+      <div class="lbl">Buys</div>
+      <ul><li>Latency</li><li>Model choice</li><li>No friction</li></ul>
+    </div>
+  </div>
+  <div class="band">
+    <div class="q">Max: &ldquo;the hardest part of my job at the moment, by far.&rdquo;</div>
+    <div class="then"><i>&rarr;</i> a specialized AE team finding repeatability first</div>
+  </div>
+  <div class="read" style="margin-top:18px">What each side buys: Alex's read.</div>
+  <div class="src-line">Source: Max Freeman (Ramp), fireside, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 4 &rarr;</span></div>
+</section>
+
+<!-- Slide 4 · So what: the reader's org
+Alt text: A closing card asking whether finance or engineering owns AI spend at the reader's company, or nobody yet. -->
+<section class="slide s4">
+  <div class="eyebrow"><b>04</b> · Your turn</div>
+  <h1>One story. <u>Two</u> discovery calls.</h1>
+  <div class="calls"><div></div><div class="e"></div></div>
+  <div class="ask">Who owns AI spend at your company: finance or engineering?</div>
+  <ul class="ticks">
+    <li><span class="box"></span>Finance</li>
+    <li><span class="box"></span>Engineering</li>
+    <li class="none"><span class="box"></span>Nobody yet</li>
+  </ul>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 4</span></div>
+</section>
+
+<script>
+/* size the AI-spend-management chip to span rows 3 and 4 exactly */
+(function(){
+  const r3=document.getElementById('r3'), r4=document.getElementById('r4'), c=document.getElementById('spanchip');
+  if(!r3||!r4||!c) return;
+  c.style.top=(r3.offsetTop+14)+'px';
+  c.style.height=(r4.offsetTop+r4.offsetHeight-r3.offsetTop-28)+'px';
+})();
+</script>
+</body>
+</html>

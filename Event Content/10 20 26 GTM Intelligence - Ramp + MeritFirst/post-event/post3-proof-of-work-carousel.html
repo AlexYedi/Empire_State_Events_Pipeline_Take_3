@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proof of work beat proxies. Three times.</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#D97706; --ghost:#5E6A84;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.eyebrow b{color:var(--mark);font-weight:700}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:124px;line-height:1.0;margin-top:44px}
+h2{font-size:84px;line-height:1.04;margin-top:28px}
+h1 u,h2 u{text-decoration:none;background:linear-gradient(var(--accent),var(--accent)) 0 92%/100% 8px no-repeat}
+.nw{white-space:nowrap}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.4;color:var(--muted)}
+.lbl{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- slide 1 cover ---- */
+.trio{display:flex;gap:24px;margin-top:110px}
+.trio div{flex:1;border-top:8px solid var(--mark);background:var(--panel);padding:22px 24px 28px}
+.trio .lbl{color:var(--mark)}
+.trio p{font-family:var(--display);font-weight:600;font-size:52px;margin-top:10px}
+.event{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:22px;line-height:1.4;color:var(--muted)}
+
+/* ---- slides 2-4: shared proxy -> proof frame ---- */
+.split{display:grid;grid-template-columns:1fr 64px 1fr;margin-top:44px;align-items:stretch}
+.side{padding:22px 26px 26px;background:var(--panel)}
+.side.proxy{border-top:6px solid var(--ghost)}
+.side.proof{border-top:6px solid var(--mark)}
+.side .lbl{margin-bottom:12px}
+.side.proof .lbl{color:var(--mark)}
+.side p{font-family:var(--display);font-weight:600;font-size:38px;line-height:1.14}
+.side.proxy p{color:var(--ghost);text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:var(--muted)}
+.side.proof p{color:var(--mark)}
+.side .small{font-family:var(--body);font-weight:400;font-size:26px;line-height:1.3;color:var(--ink);margin-top:12px}
+.arrow{display:flex;align-items:center;justify-content:center}
+.mech{margin-top:40px}
+.mech > .lbl{margin-bottom:16px}
+.strip{margin-top:30px;border-left:6px solid var(--mark);padding-left:24px;font-family:var(--body);font-size:28px;line-height:1.35;color:var(--ink)}
+.strip .lbl{display:block;margin-bottom:6px}
+
+/* slide 2: the A->B gap */
+.gap{display:grid;grid-template-columns:260px 1fr 260px;height:150px}
+.gbox{background:var(--panel);border:3px solid var(--rule);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px}
+.gbox b{font-family:var(--mono);font-size:22px;color:var(--muted);letter-spacing:.12em}
+.gbox span{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.1;margin-top:4px}
+.void{position:relative;border-top:3px dashed var(--mark);border-bottom:3px dashed var(--mark);background:repeating-linear-gradient(135deg,rgba(217,119,6,.22) 0 14px,rgba(217,119,6,.04) 14px 28px);display:flex;align-items:center;justify-content:center}
+.void span{font-family:var(--mono);font-size:24px;color:var(--ink);background:var(--ground);padding:6px 14px}
+.lost{text-align:center;margin-top:12px;font-family:var(--mono);font-size:26px;letter-spacing:.1em;color:var(--mark);text-transform:uppercase}
+.funnel{display:flex;align-items:stretch;gap:0;margin-top:10px}
+.fstep{flex:1;border:3px solid var(--rule);padding:12px 16px}
+.fstep p{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1}
+.fstep small{display:block;font-family:var(--body);font-size:24px;color:var(--muted);margin-top:4px}
+.fa{flex:none;width:44px;display:flex;align-items:center;justify-content:center;color:var(--mark);font-family:var(--mono);font-size:30px}
+
+/* slides 3-4: chain */
+.chain{display:flex;align-items:stretch}
+.cnode{flex:1;background:var(--panel);border-top:6px solid var(--muted);padding:18px 20px 22px}
+.cnode .n{font-family:var(--mono);font-size:20px;letter-spacing:.14em;color:var(--muted)}
+.cnode p{font-family:var(--display);font-weight:600;font-size:34px;line-height:1.12;margin-top:6px}
+.cnode.hot{background:var(--mark);border-top-color:var(--mark)}
+.cnode.hot .n,.cnode.hot p{color:#1A1206}
+.cnode.hot small{display:block;font-family:var(--mono);font-size:20px;color:#3A2408;margin-top:8px}
+.ca{flex:none;width:52px;display:flex;align-items:center;justify-content:center}
+
+/* ---- slide 5 synthesis ---- */
+.ask{margin-top:48px;font-family:var(--mono);font-size:26px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tests{list-style:none;margin-top:18px}
+.tests li{display:flex;align-items:center;gap:30px;padding:30px 0;border-bottom:2px solid var(--rule)}
+.tests li:first-child{border-top:2px solid var(--rule)}
+.box{flex:none;width:44px;height:44px;border:4px solid var(--mark)}
+.tests .q{flex:1;font-family:var(--display);font-weight:600;font-size:44px;line-height:1.1}
+.tests .who{flex:none;font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;width:120px}
+.close{margin-top:48px;font-family:var(--display);font-weight:600;font-size:64px;line-height:1.06;color:var(--mark);text-wrap:balance}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 · The question
+Alt text: A title card saying proof of work beat proxies three times, across hiring, building and selling, at the Ramp and MeritFirst AI night. -->
+<section class="slide s1">
+  <div class="eyebrow"><b>01</b> · One night, three talks</div>
+  <h1>Proof of work beat proxies. <u class="nw">Three times.</u></h1>
+  <div class="trio">
+    <div><div class="lbl">02</div><p>Hiring</p></div>
+    <div><div class="lbl">03</div><p>Building</p></div>
+    <div><div class="lbl">04</div><p>Selling</p></div>
+  </div>
+  <div class="event">GTM Intelligence: AI Night · Ramp &times; MeritFirst · NYC · Oct 20, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 2 · Zack Ganieany, MeritFirst: hiring
+Alt text: A comparison showing résumé proxies and a static case study, where the work between prompt and answer is lost, versus an immersive virtual-computer assessment that records how a candidate works. -->
+<section class="slide s2">
+  <div class="eyebrow"><b>02</b> · Hiring · Zack Ganieany, MeritFirst</div>
+  <h2>Watch the path, <u class="nw">not the PDF</u></h2>
+  <div class="split">
+    <div class="side proxy"><div class="lbl">Proxy</div><p>School · résumé logos · a static case-study PDF</p></div>
+    <div class="arrow"><svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true"><path d="M2 18 H34 M22 4 L38 18 L22 32" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+    <div class="side proof"><div class="lbl">Proof</div><p>Virtual computer</p><div class="small">Stakeholders, files, Claude Code. Watch the decisions as variables change.</div></div>
+  </div>
+  <div class="mech">
+    <div class="lbl">What the take-home hides</div>
+    <div class="gap">
+      <div class="gbox"><b>A</b><span>PDF prompt</span></div>
+      <div class="void"><span>days, unseen</span></div>
+      <div class="gbox"><b>B</b><span>Final artifact</span></div>
+    </div>
+    <div class="lost">lost: A &rarr; B</div>
+  </div>
+  <div class="strip"><span class="lbl">Funnel</span>
+    <div class="funnel">
+      <div class="fstep"><p>Light screener</p><small>friction vs AI spam</small></div>
+      <div class="fa">&rarr;</div>
+      <div class="fstep"><p>1–2 interviews</p></div>
+      <div class="fa">&rarr;</div>
+      <div class="fstep"><p>Case study</p><small>1 hour to a weekend</small></div>
+    </div>
+  </div>
+  <div class="src-line">Source: Zack Ganieany (MeritFirst), GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 3 · Jack, Ramp: building
+Alt text: A comparison showing a job title as the proxy and proximity to the problem as the proof, using a Ramp sales team lead who out-built a co-founder's version of the same tool. -->
+<section class="slide s3">
+  <div class="eyebrow"><b>03</b> · Building · Jack, Ramp</div>
+  <h2>Proximity beat <u class="nw">the job title</u></h2>
+  <div class="split">
+    <div class="side proxy"><div class="lbl">Proxy</div><p>Title: engineer / co-founder</p></div>
+    <div class="arrow"><svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true"><path d="M2 18 H34 M22 4 L38 18 L22 32" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+    <div class="side proof"><div class="lbl">Proof</div><p>Closest to the problem</p></div>
+  </div>
+  <div class="mech">
+    <div class="lbl">How proximity turns into a build</div>
+    <div class="chain">
+      <div class="cnode"><div class="n">01</div><p>5+ hours a day on live calls</p></div>
+      <div class="ca"><svg width="36" height="32" viewBox="0 0 36 32" aria-hidden="true"><path d="M2 16 H28 M18 4 L32 16 L18 28" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+      <div class="cnode"><div class="n">02</div><p>Knows which question costs the deal</p></div>
+      <div class="ca"><svg width="36" height="32" viewBox="0 0 36 32" aria-hidden="true"><path d="M2 16 H28 M18 4 L32 16 L18 28" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+      <div class="cnode hot"><div class="n">03</div><p>Shipped Mo in one week</p></div>
+    </div>
+  </div>
+  <div class="strip">Night before the deadline, a co-founder posts the same idea. The seller ships anyway, and wins.</div>
+  <div class="src-line">Source: Jack (Ramp), GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 4 · Max Freeman, Ramp: selling
+Alt text: A comparison showing years of quota and SaaS experience as the proxy and learning pace and obsession as the proof, with a career path from startup controller to SDR to Ramp's top AE. -->
+<section class="slide s4">
+  <div class="eyebrow"><b>04</b> · Selling · Max Freeman, Ramp</div>
+  <h2>Learning pace over <u class="nw">years of quota</u></h2>
+  <div class="split">
+    <div class="side proxy"><div class="lbl">Proxy</div><p>5 years of quota carrying · SaaS experience</p></div>
+    <div class="arrow"><svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true"><path d="M2 18 H34 M22 4 L38 18 L22 32" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+    <div class="side proof"><div class="lbl">Proof</div><p>Accelerated learning · all in, obsessed · what's not on the résumé</p></div>
+  </div>
+  <div class="mech">
+    <div class="lbl">One career path</div>
+    <div class="chain">
+      <div class="cnode"><div class="n">Before</div><p>Startup controller + college club promoter</p></div>
+      <div class="ca"><svg width="36" height="32" viewBox="0 0 36 32" aria-hidden="true"><path d="M2 16 H28 M18 4 L32 16 L18 28" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+      <div class="cnode"><div class="n">Then</div><p>SDR</p></div>
+      <div class="ca"><svg width="36" height="32" viewBox="0 0 36 32" aria-hidden="true"><path d="M2 16 H28 M18 4 L32 16 L18 28" fill="none" stroke="#D97706" stroke-width="5"/></svg></div>
+      <div class="cnode hot"><div class="n">Now</div><p>Ramp's top AE</p><small>(per Max)</small></div>
+    </div>
+  </div>
+  <div class="strip">SDR team = &lsquo;talent vortex&rsquo;, by design; largely new grads.</div>
+  <div class="src-line">Source: Max Freeman (Ramp), fireside, GTM Intelligence: AI Night, Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 &rarr;</span></div>
+</section>
+
+<!-- Slide 5 · Synthesis: the standard cuts both ways
+Alt text: A closing checklist turning the three speakers' ideas into three hiring tests, ending with the line that experienced candidates should show the work, not the years. -->
+<section class="slide s5">
+  <div class="eyebrow"><b>05</b> · Synthesis</div>
+  <h2>The standard <u class="nw">cuts both ways</u></h2>
+  <div class="ask">If you hire on proof, ask for proof:</div>
+  <ul class="tests">
+    <li><span class="box"></span><span class="q">How did they get from A to B?</span><span class="who">after Zack</span></li>
+    <li><span class="box"></span><span class="q">How close are they to the problem?</span><span class="who">after Jack</span></li>
+    <li><span class="box"></span><span class="q">What's not on their résumé?</span><span class="who">after Max</span></li>
+  </ul>
+  <div class="close">Experienced? Show the work, not the years.</div>
+  <div class="src-line">Sources: Zack Ganieany (MeritFirst), Jack (Ramp), Max Freeman (Ramp), Oct 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>
