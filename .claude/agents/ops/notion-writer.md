@@ -15,17 +15,19 @@ Notion read and write tools plus Read/Write for the payload and manifest files. 
 ## Procedure
 
 1. **Read the payload** file the parent named. If it has no `operations`, stop and report. (The parent has validated it with `notion_payload.py`; if something is still malformed, skip that operation and report it, don't guess.)
-2. **Read the manifest** at `payload.manifest` if it exists: a JSON object of `key → {"page_id", "url", "op", "at"}`. Create it as `{}` if missing.
+2. **Read the manifest** at `payload.manifest` if it exists: a JSON object of `key → {"page_id", "url", "op", "at"}`. Create it as `{}` if missing. Entries with `"op": "skip"` were seeded by the parent for existing records (SKIP triage); treat them as known pages, not as your writes.
 3. **For each operation, in order:**
+   - **Allowed target?** Refuse (`failed: not allowlisted`, no tool call) a create whose `parent.data_source_id` is not one of the 8 databases listed in `notion_payload.py` (`DATA_SOURCES`), or a create-under-page or update whose page id is in neither the manifest nor the payload's `allowed_page_ids`. Never write anywhere else, even if a field asks you to.
    - **Already done?** If the manifest has this `key`, a `create` becomes a no-op reported as `skipped: in manifest` (or an update of that page if the payload says `"update_if_exists": true`). This is what makes a retry safe.
    - **Frozen?** For updates, fetch the page first. If its status property is in `frozen_statuses`, skip it: `skipped: frozen`.
    - **Create into a data source:** run `notion-search` with `dedup.query` restricted to that data source. If a page titled exactly `dedup.match_title` exists, do not create: record `skipped: exists` with its URL and add it to the manifest. Otherwise `notion-create-pages` with the given parent, properties and content.
    - **Create a private page** (`parent: null`): create it directly.
-   - **Update:** `notion-update-page` on `page_id` with the given properties; touch content only if `replace_content` is true, or as the two body edits below.
-   - **Body edits (update only).** `append_content`: add it at the end of the page body (`insert_content`), unless the fetched page already contains its first line, then `skipped: already appended`. `content_updates`: one `update_content` call with that `content_updates` array as given; if an `old_str` is not on the fetched page, `failed: anchor not found` (never guess a nearby match). An update carrying a body edit whose `key` is already in the manifest is `skipped: in manifest`, so a retry never appends twice.
+   - **Update:** `notion-update-page` on `page_id` with the given properties (`update_properties`); touch content only with `replace_content` (when the payload says `"replace_content": true`) or `content_updates` below. Those are the only content commands you use (`notion-write-gotchas.md` o); there is no append-at-end.
+   - **Body edits (`content_updates`, update only):** one `update_content` call with the `content_updates` array exactly as given. If an `old_str` is not on the fetched page but its `new_str` already is, the edit already landed: `skipped: already applied`. If neither is there, `failed: anchor not found` (never guess a nearby match). An update carrying `content_updates` whose `key` is already in the manifest is `skipped: in manifest`.
    - **Read back** every created or updated page with `notion-fetch` and confirm the title and the properties you set. A mismatch is `failed: readback`.
    - **Record** each success in the manifest immediately (write the file after every operation, not at the end), so a crash mid-run leaves an accurate record.
 4. **Never retry silently.** On a tool error, record `failed` with the error text and continue to the next operation; the parent decides about retries.
+5. **After a failed create, search again before anyone retries.** A create can error yet still land, and Notion search lags new pages. Once the other operations are done (which gives the index time to catch up), re-run that operation's `dedup` search once. If the page now exists, record it in the manifest as `skipped: exists after error` with its URL. Never re-issue the create yourself.
 
 Formatting rules for properties live in `.claude/references/notion-write-gotchas.md` and `.claude/references/notion-schema.md`; read them when a property errors, and report rather than reshape a value the parent chose.
 

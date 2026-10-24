@@ -1,85 +1,129 @@
 #!/usr/bin/env python3
 """test_notion_payload.py — the notion-writer payload validator (YED-259 rollout). Offline, free.
 
-Pins what the parent may hand the one Notion writer: creates with search-before-create, updates with a page id,
-and the two body edits the research flow needs (append a section · replace one marked section), plus the two
-formatting traps that land silently in Notion (literal \\n in update bodies, gotcha m; code fences in draft copy,
-gotcha p).
+Pins what the parent may hand the one Notion writer:
+- creates only into the 8 known databases, with search-before-create (invariant 8);
+- updates only to pages the run already knows (in the manifest or the payload's allowed_page_ids), by bare UUID;
+- body edits only as bounded content_updates on a marker the parent wrote (no append-at-end);
+- no research-written Email / Phone on People (ADR-9 tier 1) unless the op says alex_provided;
+- the two formatting traps that land silently: literal \\n in update bodies (gotcha m), code fences in draft copy (gotcha p).
 """
 import importlib.util, json, sys, tempfile
+from pathlib import Path
 
-spec = importlib.util.spec_from_file_location("np", ".claude/scripts/notion_payload.py")
+VALIDATOR = Path(__file__).resolve().parents[1] / "scripts" / "notion_payload.py"
+spec = importlib.util.spec_from_file_location("np", VALIDATOR)
 np_ = importlib.util.module_from_spec(spec); spec.loader.exec_module(np_)
 ok = n = 0
 DRAFTS = {"data_source_id": "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"}
-PID = "3e8d3699-c2db-81c7-aef6-d002d5cdcf26"
+PEOPLE = {"data_source_id": "4a1af67f-9141-4ba5-aa9d-88b07dcd5f86"}
+PID = "3e8d3699-c2db-81c7-aef6-d002d5cdcf26"           # in allowed_page_ids
+PERSON_PID = "3ffd3699-c2db-8198-8ecd-ffa26b7f2dec"    # in the manifest as person:max-freeman
+UNKNOWN = "11111111-2222-3333-4444-555555555555"
+
+manifest = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+json.dump({"person:max-freeman": {"page_id": PERSON_PID, "url": "https://app.notion.com/p/x", "op": "skip", "at": "2026-10-24"}},
+          manifest); manifest.close()
 
 
 def ck(name, cond):
     global ok, n; n += 1; ok += bool(cond); print(("  ✓ " if cond else "  ✗ ") + name)
 
 
-def pay(*ops):
-    return {"run": "test", "manifest": "/tmp/m.json", "operations": list(ops)}
-
-
-def errs(*ops):
-    return np_.problems(pay(*ops))
+def errs(*ops, allowed=(PID,)):
+    return np_.problems({"run": "test", "manifest": manifest.name, "allowed_page_ids": list(allowed), "operations": list(ops)})
 
 
 def has(es, needle):
     return any(needle in e for e in es)
 
 
-# --- existing contract still holds
+def upd(**kw):
+    return dict({"key": "a", "op": "update", "page_id": PID}, **kw)
+
+
+MARK = "<!-- deep_read_rendered: pending -->\n<!-- /deep_read -->"
+DONE = "<!-- deep_read_rendered: 2026-10-24 -->\nThe Frame...\n<!-- /deep_read -->"
+
+# --- base contract
 ck("a create into a data source without dedup is refused (invariant 8)",
-   has(errs({"key": "a", "op": "create", "parent": DRAFTS, "properties": {}}), "dedup"))
-ck("an update without page_id is refused",
-   has(errs({"key": "a", "op": "update", "properties": {}}), "page_id"))
-ck("a plain property update is valid", errs({"key": "a", "op": "update", "page_id": PID, "properties": {"X": "y"}}) == [])
+   has(errs({"key": "a", "op": "create", "parent": DRAFTS, "properties": {"Content Type": "research_brief"}}), "dedup"))
+ck("an update without page_id is refused", has(errs({"key": "a", "op": "update", "properties": {"X": "y"}}), "page_id"))
+ck("a plain property update to an allowed page is valid", errs(upd(properties={"X": "y"})) == [])
 
-# --- append_content: add a section at the end of an existing page body
-ck("update with append_content is valid",
-   errs({"key": "a", "op": "update", "page_id": PID, "append_content": "## Refresh 2026-10-24\nnew research"}) == [])
-ck("append_content must be a non-empty string",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "append_content": ""}), "append_content"))
-ck("append_content on a create is refused (put it in content)",
-   has(errs({"key": "a", "op": "create", "parent": None, "append_content": "x"}), "append_content"))
+# --- item 10: allowlists
+ck("a create into an unknown data source is refused",
+   has(errs({"key": "a", "op": "create", "parent": {"data_source_id": "deadbeef-0000-0000-0000-000000000000"},
+             "dedup": {"query": "x", "match_title": "x"}}), "not one of the 8"))
+ck("an update to a page in neither the manifest nor allowed_page_ids is refused",
+   has(errs(upd(page_id=UNKNOWN, properties={"X": "y"})), "not in the manifest"))
+ck("an update to a page known from the manifest is valid",
+   errs(upd(key="person:max-freeman:2026-10-24", page_id=PERSON_PID, properties={"Current Title": "SVP"})) == [])
+ck("page_id given as a URL is refused (gotcha o)",
+   has(errs(upd(page_id="https://app.notion.com/p/3e8d3699c2db81c7aef6d002d5cdcf26", properties={"X": "y"})), "bare UUID"))
 
-# --- content_updates: replace one marked section (Deep Read, Research Brief re-run)
-good_cu = [{"old_str": "## Deep Read\n<!-- deep_read_rendered: pending -->",
-            "new_str": "## Deep Read\n<!-- deep_read_rendered: 2026-10-24 -->\n\nThe Frame..."}]
-ck("update with content_updates is valid", errs({"key": "a", "op": "update", "page_id": PID, "content_updates": good_cu}) == [])
-ck("content_updates needs a non-empty old_str",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "content_updates": [{"old_str": "", "new_str": "x"}]}), "old_str"))
-ck("content_updates must be a non-empty list",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "content_updates": []}), "content_updates"))
+# --- item 9 negatives
+ck("an update with no properties and no body edit is refused", has(errs(upd()), "nothing to do"))
+ck("frozen_statuses as a string is refused", has(errs(upd(properties={"X": "y"}, frozen_statuses="scheduled")), "frozen_statuses"))
+ck("a fenced body on a draft create lacking Content Type is refused",
+   has(errs({"key": "d", "op": "create", "parent": DRAFTS, "dedup": {"query": "X", "match_title": "X"},
+             "properties": {"Title": "X"}, "content": "```\nhi\n```"}), "Content Type"))
+
+# --- item 1: append_content is gone; content_updates only
+ck("append_content is refused (use content_updates on a marker)", has(errs(upd(append_content="## A\nB")), "append_content"))
+ck("content_updates on a marker is valid", errs(upd(content_updates=[{"old_str": MARK, "new_str": DONE}])) == [])
+ck("content_updates must be a non-empty list", has(errs(upd(content_updates=[])), "content_updates"))
 ck("a no-op content_update (old == new) is refused",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "content_updates": [{"old_str": "x", "new_str": "x"}]}), "identical"))
-ck("replace_content plus a section edit on the same op is refused (ambiguous)",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "replace_content": True, "content": "x",
-             "append_content": "y"}), "replace_content"))
+   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": MARK}])), "identical"))
+ck("replace_content plus content_updates on the same op is refused",
+   has(errs(upd(replace_content=True, content="x", content_updates=[{"old_str": MARK, "new_str": DONE}])), "replace_content"))
+ck("content_updates on a create is refused",
+   has(errs({"key": "a", "op": "create", "parent": None, "content_updates": [{"old_str": MARK, "new_str": DONE}]}), "update-only"))
 
-# --- gotcha m: notion-update-page turns literal \n into a stray "n"
+# --- item 4: bounded anchors
+ck("a short old_str with no marker is refused (unbounded anchor)",
+   has(errs(upd(content_updates=[{"old_str": "## Deep Read", "new_str": "## Deep Read\nx"}])), "anchor"))
+ck("a start marker without its end marker is refused (header-only match)",
+   has(errs(upd(content_updates=[{"old_str": "<!-- deep_read_rendered: 2026-10-01 -->",
+                                   "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nnew"}])), "end marker"))
+ck("a replacement that drops the end marker is refused (next re-render would be unbounded)",
+   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nnew"}])), "end marker"))
+ck("legacy page: start marker bounded by the next ## heading (kept in new_str) is valid",
+   errs(upd(content_updates=[{"old_str": "<!-- deep_read_rendered: pending -->\n\n## Prior Snapshots",
+                              "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nx\n<!-- /deep_read -->\n\n## Prior Snapshots"}])) == [])
+ck("a terminal-marker append (insert before <!-- /research_log -->) is valid",
+   errs(upd(content_updates=[{"old_str": "<!-- /research_log -->",
+                              "new_str": "## Refresh 2026-10-24\nnew\n\n<!-- /research_log -->"}])) == [])
+
+# --- item 2: PII on People
+ck("Email on a People create is refused (ADR-9 tier 1)",
+   has(errs({"key": "person:a", "op": "create", "parent": PEOPLE, "dedup": {"query": "A", "match_title": "A"},
+             "properties": {"Name": "A", "Email": "a@x.com"}}), "ADR-9"))
+ck("...unless the op says alex_provided",
+   errs({"key": "person:a", "op": "create", "parent": PEOPLE, "dedup": {"query": "A", "match_title": "A"},
+         "properties": {"Name": "A", "Email": "a@x.com"}, "alex_provided": True}) == [])
+ck("Phone on an update to a People page known from the manifest is refused",
+   has(errs(upd(key="refresh:x", page_id=PERSON_PID, properties={"Phone": "555"})), "ADR-9"))
+ck("Phone Number on an update keyed person: is refused",
+   has(errs(upd(key="person:b:2026-10-24", properties={"Phone Number": "555"})), "ADR-9"))
+ck("Email on a non-People page is not a PII refusal", not has(errs(upd(properties={"Email": "a@x.com"})), "ADR-9"))
+
+# --- gotcha m / p
 ck("a literal backslash-n in an update body is refused (gotcha m)",
-   has(errs({"key": "a", "op": "update", "page_id": PID, "append_content": "## A\\nB"}), "gotcha m"))
+   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": DONE + "\\nmore"}])), "gotcha m"))
 ck("...but a create body may carry it (create-pages handles \\n)",
    errs({"key": "a", "op": "create", "parent": None, "content": "## A\\nB"}) == [])
-
-# --- gotcha p: draft copy is plain paragraphs, never code blocks
 post = {"key": "d", "op": "create", "parent": DRAFTS, "dedup": {"query": "X", "match_title": "X — Pre-Event Post"},
         "properties": {"Title": "X — Pre-Event Post", "Content Type": "linkedin_post_pre"}}
 ck("a post draft in plain paragraphs is valid", errs(dict(post, content="Variant 1\n\nPara one.\n\nPara two.")) == [])
-ck("a post draft wrapped in a code fence is refused (gotcha p)",
-   has(errs(dict(post, content="Variant 1\n\n```\nPara one.\n```")), "gotcha p"))
-note = dict(post, properties={"Title": "Connection Note — A", "Content Type": "linkedin_dm_speaker"})
-ck("a connection note in a code fence is refused too", has(errs(dict(note, content="```\nhi\n```")), "gotcha p"))
+ck("a post draft wrapped in a code fence is refused (gotcha p)", has(errs(dict(post, content="```\nPara one.\n```")), "gotcha p"))
 brief = dict(post, properties={"Title": "X — Research Brief", "Content Type": "research_brief"})
 ck("a non-copy draft (research_brief) is not fence-checked", errs(dict(brief, content="```\nx\n```")) == [])
 
 # --- CLI end to end
 f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
-json.dump(pay({"key": "a", "op": "update", "page_id": PID, "content_updates": good_cu}), f); f.close()
+json.dump({"run": "t", "manifest": manifest.name, "allowed_page_ids": [PID],
+           "operations": [upd(content_updates=[{"old_str": MARK, "new_str": DONE}])]}, f); f.close()
 sys.argv = ["notion_payload.py", f.name]
 ck("CLI exits 0 on a valid payload", np_.main() == 0)
 
