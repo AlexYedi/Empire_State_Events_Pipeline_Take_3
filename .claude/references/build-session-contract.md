@@ -45,13 +45,14 @@ v3 adds a second, local-only event; the `build_session` row's shape is unchanged
 | `dispatched_at`, `ended_at` | ISO timestamps; `ended_at` falls back to the subagent's last record if no completion was seen | span start/end |
 | `agent` | `subagent_type` (default `general-purpose`) | `gen_ai.agent.name` |
 | `description` | the 3-5 word dispatch label (parent-authored, ≤80 chars) | `gen_ai.agent.description` |
-| `model_requested`, `model_resolved` | `model:` override, and what the harness actually ran | `gen_ai.request.model`, `gen_ai.response.model` |
+| `model_requested`, `model_resolved` | the model asked for (see `model_source`), and what the harness actually ran | `gen_ai.request.model`, `gen_ai.response.model` |
+| `model_source` | `call` (`model:` on the Agent call), `frontmatter-default` (no call model; the agent file's `model:`, read at parse time), `default` (neither; `model_requested` is null). Rows written before 2026-10-24 lack it and carry the call model only | — |
 | `background`, `isolation` | `run_in_background`, `isolation` inputs | — |
 | `prompt_chars`, `handback_chars` | sizes only | — |
 | `agent_id` | the subagent id (links to `<session>/subagents/agent-<id>.jsonl`) | `gen_ai.agent.id` |
 | `status` | `completed` / `async_launched` (still running) / `failed` / `killed` / `error` | — |
 | `is_error`, `error_class` | `cap` (20-agent limit), `spend` (account limit), `stall`, `registry`, `other`, or null | `error.type` |
-| `route_line`, `unexplained` | the `route:` / `gap:` line the parent wrote before the dispatch (agent-routing.md §1), and true when a `general-purpose` dispatch has no `gap:` line | — |
+| `route_line`, `unexplained` | the `gap:` line (or legacy `route:`) the parent wrote in the same turn, after the previous dispatch and before this one (agent-routing.md §1); each line credits one dispatch. `unexplained` is true when a `general-purpose` dispatch has no `gap:` line | — |
 | `concurrent_at_dispatch` | earlier dispatches still running when this one launched | — |
 | `sub_turns`, `sub_tool_calls`, `sub_tool_names` | the subagent's own activity | — |
 | `mcp_write_tool_names` | MCP tools the subagent called whose name implies a write | — |
