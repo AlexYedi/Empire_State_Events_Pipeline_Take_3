@@ -1,0 +1,25 @@
+# Agent tools lint (SEC-03, follow-up to YED-259). Every agent declares a minimal `tools:` line, and no
+# agent that reads untrusted text (Web*, Gmail, external search/fetch) also holds an MCP write tool
+# (CLAUDE.md invariants 5-6). Stdlib Python, no third-party action; a violation fails the check.
+name: agent-tools-lint
+on:
+  pull_request:
+    paths:
+      - '.claude/agents/**'
+      - '.claude/scripts/lint_agent_tools.py'
+      - '.github/workflows/agent-tools-lint.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude/agents/**'
+      - '.claude/scripts/lint_agent_tools.py'
+      - '.github/workflows/agent-tools-lint.yml'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint self-test (the rule can fail)
+        run: python3 .claude/scripts/lint_agent_tools.py --selftest
+      - name: Lint every agent file
+        run: python3 .claude/scripts/lint_agent_tools.py .claude/agents
