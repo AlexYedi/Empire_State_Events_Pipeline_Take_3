@@ -6,9 +6,13 @@ dispatch file from the transcript on every Stop, so reruns are idempotent and a 
 final status lands on a later Stop. Content-gated by construction: no prompt, tool input or result
 bodies, only metadata and counts (the 3-5 word dispatch description is kept; it is parent-authored).
 
+Also writes one `skill_load` row per `Skill` tool_use (parent and subagents) to a sibling `skills/`
+directory next to <out_dir>: skill name, where it ran, timestamp. No skill args.
+
 Usage: dispatch_record.py <transcript.jsonl> <session_id> <out_dir>
 Contract: .claude/references/build-session-contract.md (v3).
 """
+import glob
 import json
 import os
 import re
@@ -19,7 +23,9 @@ CONTRACT_VERSION = "3"
 WRITE_TOOL = re.compile(r"(create|update|delete|manage|save|send|write|publish|upload|move|share)", re.I)
 TASK_ID = re.compile(r"<tool-use-id>([^<]+)</tool-use-id>")
 TASK_STATUS = re.compile(r"<status>([^<]+)</status>")
-ROUTE = re.compile(r"^\s*`?(route|gap):\s*[^\n]+", re.I | re.M)  # agent-routing.md §1: a line that starts with route:/gap:
+# agent-routing.md §1: a line that starts with gap: (route: was dropped 2026-10-24; still parsed for old transcripts)
+ROUTE = re.compile(r"^\s*`?(route|gap):\s*[^\n]+", re.I | re.M)
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def load(path):
@@ -93,34 +99,94 @@ def seconds_between(a, b):
         return None
 
 
-def build(transcript, session_id):
+def frontmatter(path):
+    """(name, model) from an agent file's YAML frontmatter; either may be None."""
+    name = model = None
+    try:
+        with open(path, errors="ignore") as fh:
+            if fh.readline().strip() != "---":
+                return None, None
+            for line in fh:
+                if line.strip() == "---":
+                    break
+                key, _, val = line.partition(":")
+                val = val.strip().strip("'\"") or None
+                if key.strip() == "name":
+                    name = val
+                elif key.strip() == "model":
+                    model = val
+    except OSError:
+        pass
+    return name, model
+
+
+def agent_models(repo=REPO, home=os.path.expanduser("~")):
+    """agent name -> frontmatter `model:` (or None) for project, user and plugin agents.
+
+    Read at parse time, so a frontmatter edit after a dispatch is credited to that older dispatch too."""
+    out = {}
+
+    def index(agents_dir, prefix=""):
+        for path in glob.glob(os.path.join(agents_dir, "**", "*.md"), recursive=True):
+            name, model = frontmatter(path)
+            out.setdefault(prefix + (name or os.path.basename(path)[:-3]), model)
+
+    index(os.path.join(repo, ".claude", "agents"))
+    index(os.path.join(home, ".claude", "agents"))
+    try:
+        with open(os.path.join(home, ".claude", "plugins", "installed_plugins.json")) as fh:
+            plugins = json.load(fh).get("plugins", {})
+    except (OSError, ValueError, AttributeError):
+        plugins = {}
+    for key, installs in plugins.items():
+        installs = sorted(installs or [], key=lambda i: i.get("projectPath") != repo)  # this repo's install first
+        if installs and installs[0].get("installPath"):
+            index(os.path.join(installs[0]["installPath"], "agents"), key.split("@")[0] + ":")
+    return out
+
+
+def build(transcript, session_id, models=None):
     rows = load(transcript)
+    models = agent_models() if models is None else models
     subdir = os.path.join(transcript[:-len(".jsonl")] if transcript.endswith(".jsonl") else transcript, "subagents")
     by_id, order = {}, []
-    last_text = ""  # most recent assistant text, for the routing file's `route:` / `gap:` line
+    # assistant text since the last user row (tool results are user rows) and the last dispatch:
+    # a gap: line counts only for the next dispatch in the same turn
+    turn_text = []
     for r in rows:
         ts = r.get("timestamp")
         content = (r.get("message") or {}).get("content")
+        if r.get("type") == "user":
+            turn_text = []
         if r.get("type") == "assistant" and isinstance(content, list):
             for b in content:
                 if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip():
-                    last_text = b["text"]
+                    turn_text.append(b["text"])
                 if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") in ("Agent", "Task"):
                     inp = b.get("input") or {}
+                    agent = inp.get("subagent_type") or "general-purpose"
+                    if inp.get("model"):
+                        model_requested, model_source = inp["model"], "call"
+                    elif models.get(agent) and models[agent] != "inherit":
+                        model_requested, model_source = models[agent], "frontmatter-default"
+                    else:
+                        model_requested, model_source = None, "default"
                     rec = {
                         "event": "subagent_dispatch", "contract_version": CONTRACT_VERSION,
                         "session_id": session_id, "tool_use_id": b.get("id"),
-                        "dispatched_at": ts, "agent": inp.get("subagent_type") or "general-purpose",
+                        "dispatched_at": ts, "agent": agent,
                         "description": (inp.get("description") or "")[:80],
-                        "model_requested": inp.get("model"), "model_resolved": None,
+                        "model_requested": model_requested, "model_source": model_source, "model_resolved": None,
                         "background": inp.get("run_in_background"), "isolation": inp.get("isolation"),
                         "prompt_chars": len(inp.get("prompt") or ""),
                         "agent_id": None, "status": "dispatched", "is_error": False,
                         "error_class": None, "handback_chars": None, "ended_at": None,
                     }
-                    m_route = ROUTE.search(last_text or "")
+                    routes = list(ROUTE.finditer("\n".join(turn_text)))
+                    m_route = routes[-1] if routes else None  # the line nearest the call
+                    turn_text = []  # consumed: the next dispatch needs its own line
                     rec["route_line"] = m_route.group(0)[:120] if m_route else None
-                    rec["unexplained"] = rec["agent"] == "general-purpose" and not (m_route and m_route.group(1).lower() == "gap")
+                    rec["unexplained"] = agent == "general-purpose" and not (m_route and m_route.group(1).lower() == "gap")
                     by_id[b.get("id")] = rec
                     order.append(b.get("id"))
         if r.get("type") == "user":
@@ -179,21 +245,51 @@ def build(transcript, session_id):
     return out
 
 
-def main():
-    if len(sys.argv) != 4:
-        return 0
-    transcript, session_id, out_dir = sys.argv[1:4]
-    recs = build(transcript, session_id)
-    if not recs:
-        return 0
+def skill_loads(transcript, session_id, dispatches=()):
+    """One row per Skill tool_use in the parent transcript and every subagent transcript."""
+    base = transcript[:-len(".jsonl")] if transcript.endswith(".jsonl") else transcript
+    agent_of = {d["agent_id"]: d["agent"] for d in dispatches if d.get("agent_id")}
+    sources = [(transcript, "parent", None)]
+    for path in sorted(glob.glob(os.path.join(base, "subagents", "agent-*.jsonl"))):
+        sources.append((path, "subagent", os.path.basename(path)[len("agent-"):-len(".jsonl")]))
+    out = []
+    for path, where, agent_id in sources:
+        for r in load(path):
+            content = (r.get("message") or {}).get("content")
+            if r.get("type") != "assistant" or not isinstance(content, list):
+                continue
+            for b in content:
+                if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "Skill":
+                    out.append({
+                        "event": "skill_load", "contract_version": CONTRACT_VERSION,
+                        "session_id": session_id, "tool_use_id": b.get("id"), "ts": r.get("timestamp"),
+                        "skill": str((b.get("input") or {}).get("skill") or "")[:120],
+                        "where": where, "agent_id": agent_id, "agent": agent_of.get(agent_id),
+                    })
+    return out
+
+
+def write_shard(out_dir, session_id, rows):
     os.makedirs(out_dir, exist_ok=True)
     shard = re.sub(r"[^A-Za-z0-9._-]", "_", session_id)
     target = os.path.join(out_dir, f"{shard}.jsonl")
     fd, tmp = tempfile.mkstemp(dir=out_dir, prefix=".tmp-")
     with os.fdopen(fd, "w") as fh:
-        for r in recs:
+        for r in rows:
             fh.write(json.dumps(r, sort_keys=True) + "\n")
     os.replace(tmp, target)  # whole-file rewrite = idempotent across Stops
+
+
+def main():
+    if len(sys.argv) != 4:
+        return 0
+    transcript, session_id, out_dir = sys.argv[1:4]
+    recs = build(transcript, session_id)
+    if recs:
+        write_shard(out_dir, session_id, recs)
+    skills = skill_loads(transcript, session_id, recs)
+    if skills:  # sibling of the dispatches dir: .claude/.state/telemetry/skills/
+        write_shard(os.path.join(os.path.dirname(os.path.normpath(out_dir)), "skills"), session_id, skills)
     return 0
 
 
