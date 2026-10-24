@@ -217,7 +217,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 **Also write the brief to the Event page + set the idempotency marker (v2 — YED-96):**
 - **Event page:** append a `## Post-Event Brief` section to the resolved Event row's page body (mirroring how the pre-event research brief sits on the Event page), so pre + post sit **side-by-side** for in-context comparison. The canonical Content Draft above stays the downstream source-of-truth; the Event-page copy is the readable surface. (For long briefs, the Event-page section may be a rich summary + a link to the canonical Content Draft — never truncate the canonical copy.)
-- **Idempotency marker:** before the first write, check the Event page for a `post_event_processed: YYYY-MM-DD` marker (a callout at the top of the `## Post-Event Brief` section). If present, do NOT re-create the brief/Content Draft — update in place. Prevents double-writes on a re-run (there is no state store).
+- **Idempotency marker:** before the first write, check the Event page for a `post_event_processed: YYYY-MM-DD` marker (a callout at the top of the `## Post-Event Brief` section). Notion returns it escaped, as `post\_event\_processed:` (gotcha q); treat either spelling as present, and copy the escaped form if you ever anchor an edit on it. If present, do NOT re-create the brief/Content Draft — update in place. Prevents double-writes on a re-run (there is no state store).
 - **Rollback / safety:** the Event-page write is **append-only** under its own `## Post-Event Brief` heading — never `replace_content` the page (protects the pre-event brief already on the page).
 
 **Why this step exists:** without the brief, the post-event content is one-shot — written once, then orphaned. With it, the data store survives the publishing of any single draft and feeds future synthesis posts, weekly recaps, knowledge-base mining, and re-engagement DMs. The pre-event flow has this (research_brief); the post-event flow now mirrors it.
@@ -362,7 +362,7 @@ Once content-correspondent returns drafts and Step 4.5 has checked them, the par
    - **Body edits** (rare here): the writer edits only at parent-chosen `⟦markers⟧` (it does not use `insert_content`). Use `content_updates` on a marker, as in `/event-deep-research` Step 4: insert a dated section before `⟦/research-log⟧`; on a legacy page without the marker, `old_str` = the exact stored last block (≥20 chars) and `new_str` = that block + the section + `⟦/research-log⟧`.
 2. **Validate:** `python3 .claude/scripts/notion_payload.py <payload>` must print `VALID`. Fix the payload, never the validator.
 3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / updated / skipped / failed table inline.
-4. **On `failed` rows:** read the error, fix that operation in the payload and re-dispatch; the manifest makes the rerun safe (done rows are skipped). If the writer itself is unavailable, write those drafts inline from the parent as before and say so in Step 6.
+4. **On `failed` rows:** read the error, fix that operation in the payload and re-dispatch; the manifest makes the rerun safe (done rows are skipped). If the writer itself is unavailable, stop: do not write inline. Keep the payload, tell Alex which drafts are unwritten, and re-dispatch when the writer is back (CLAUDE.md invariant 5). Report it in Step 6.
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
 
@@ -488,7 +488,7 @@ Summary + transcript together is intentional: the summary drives angle/thesis de
 - **Downstream skill**: `.claude/skills/content-correspondent/SKILL.md` — content generation logic, bucket sorting, ladder
 - **Speaker deep-dives (Step 5.6)**: `.claude/skills/content-patterns/speaker-deep-dive.md` — replaces the retired `/evergreen-deep-dive` command
 - **Supercut (Step 2A)**: `.claude/references/supercut.md` — auth, endpoints, MCP vs REST, verified/unverified facts
-- **Notion write rules (Step 5, inline)**: `.claude/references/notion-write-gotchas.md` + `.claude/references/notion-schema.md` (full property mapping; writes run inline in the parent thread per CLAUDE.md invariant 5)
+- **Notion write rules (Step 5, via `notion-writer`)**: `.claude/references/notion-write-gotchas.md` + `.claude/references/notion-schema.md` (full property mapping; Step 5 writes go through the writer per CLAUDE.md invariant 5)
 - **HubSpot step spec (Step 5.5)**: `docs/archive/proposals/post-event-hubspot-step.md` — the gated selective create-once pattern + pre-mortem
 - **HubSpot CRM schema + Notes convention**: `.claude/references/notion-schema.md` (canonical fields for all three write destinations)
 - **Notion Events DB ID**: `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`
