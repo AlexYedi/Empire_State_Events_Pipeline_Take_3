@@ -1,0 +1,1 @@
+{"ts": "2026-10-24T05:38:22Z", "session": "bc965937-5a2b-4fa8-bc00-5a560f5379ed", "table": "company", "name": "Minerva", "why": "qualified twin(s) exist; bare -> qualified is never auto-resolved", "existing": [{"id": "711bdc0b-bc63-4708-af99-e1787b2e40aa", "name": "Minerva (minerva.io)", "source": "substrate:notion", "company_id": null}]}
