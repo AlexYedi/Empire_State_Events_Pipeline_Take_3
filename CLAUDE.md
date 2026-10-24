@@ -77,9 +77,9 @@ These protect irreversible external effects. They do not get waived.
 
 **Second-fix stop rule** (`second-fix-stop-rule.md`). On the second fix to the same component in one workstream, judge round 3+, or a Linear issue whose purpose is to follow up something built in the last 7 days: stop patching and ask `alex:cto-principal-architect` one question, "is this a design problem, and what should we remove?" Removal and revert are first-class outcomes.
 
-**Every build removes a named friction on the publishing path.** Speculative architecture with no publishing friction behind it is skipped. A new hook, gate, judge seat, ledger or dashboard needs a named product failure observed at least twice.
+**Every build removes a named friction**: on the publishing path, or in how we build when the dispatch record or git shows the failure twice (hooks, gates, judges, ledgers and dashboards included). Anything else is speculative and skipped.
 
-**Size ceiling, held by Alex, no enforcement hook.** This file stays ≤1,800 words. At most 3 wired project hooks, none that can block a turn. After the paydown, additions to this file, the hook set, references, agents, commands and skills are one-in-one-out: name what the new thing replaces.
+**Size ceiling, held by Alex, no enforcement hook.** This file stays ≤1,800 words. At most 3 wired project hooks, none that can block a turn. This file, hooks, references, commands: one-in-one-out, name the replacement. Agents and skills enter per invariant 6 and leave only after a 30-day re-test.
 
 **Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Autonomy levels.** Research and analysis auto-fire and stop at their gates (triage plan, brief). Drafts go to Notion `needs_review`; nothing publishes without Alex; an unapproved format, series or framework ships one pilot draft, then pauses. Publishing, CRM writes and credit spend (HubSpot, Apollo, Clay) wait for his go. "Proceed without prompting" runs the queue at these levels and never skips a gate; raising a level needs ≥95% completion on the dispatch record. Unsure → the more cautious level.
 
@@ -93,6 +93,6 @@ Pipeline contracts that are not voice rules:
 - Every post ships **3 inline variants**; connection notes ship **2** (A talk-anchored, B adjacent-work-anchored; 200-char cap; only ship a variant with a real anchor). Ship all variants to Notion `needs_review`; never pre-select.
 - **Notion first.** Drafts and variants go to Content Drafts as plain paragraphs (never code blocks); the local event folder holds inputs and rendered finals (carousel HTML/PDF) only.
 - Every post ships with a **3–5 slide visual brief** that adds information (`visual-briefs.md`); Claude-authored HTML/SVG → headless Chrome → 4:5 PDF. Gemini for pictorial imagery. No Gamma.
-- **Source-check any firm- or person-level thesis claim** (the old "Rule 12") before it appears in public copy; unsourced → verify, soften or cut.
+- **`output-evaluator` source-checks every firm- or person-level claim and quote** before copy leaves `needs_review` (the old Rule 12); unsourced → verify, soften or cut.
 - The **Upcoming Week roundup** is built from event briefs only and sets the table without taking a side.
 - Once Alex has **scheduled** a post, it is frozen; record the chosen variant on the draft and wait for the published copy.
