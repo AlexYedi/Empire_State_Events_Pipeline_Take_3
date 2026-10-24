@@ -290,7 +290,9 @@ After Step 6 writes the Content Draft (post + embedded brief) to Notion:
 3. **Pictorial imagery** (conceptual, editorial, photographic; no dense labels): Gemini.
 4. Save the final rendered PDF/HTML in the event folder (final outputs only) and link it from the
    Notion Content Draft: a one-operation `notion-writer` payload, `update` on the draft's page id
-   with `append_content` (`key` = `carousel:<event-slug>:<n>`, same manifest and loop as Step 6).
+   (already in the manifest from Step 6) with `content_updates`: `old_str` = `<!-- carousel_link -->`,
+   `new_str` = `**Carousel (rendered):** <path>` + a blank line + `<!-- carousel_link -->` (`key` =
+   `carousel:<event-slug>:<n>`, same manifest and loop as Step 6).
 
 ### Step 3b.6: Other rules
 
@@ -474,7 +476,10 @@ text into `notion-create-pages` by hand.
      `../content-patterns/goal-tagging.md` + `Themes` on posts; relations as full page URLs (gotcha c)
    - `content`: **plain paragraphs, never code blocks** (`notion-write-gotchas.md` p). Each variant is
      its own run of paragraphs under a bold label; the format blocks shown below are layout guides,
-     not fences to copy. The validator refuses a code fence in any `linkedin_*` draft.
+     not fences to copy. The validator refuses a code fence in any `linkedin_*` draft, and a
+     Content Drafts create with no `Content Type`.
+   - every post draft's body ends with the line `<!-- carousel_link -->`, the marker Step 3b.5
+     inserts the rendered-carousel link before (the writer has no append-at-end)
 2. **Validate:** `python3 .claude/scripts/notion_payload.py <payload>` must print `VALID`. Fix the
    payload, never the validator.
 3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / skipped /

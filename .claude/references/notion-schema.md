@@ -121,8 +121,9 @@ HubSpot (post-event, gated, create-once; search name + company first)
   3. Note on each Contact (event name + role + talking points in the body)
 ```
 
-**Step 4 routing (folded from the retired `notion-writer` agent, 2026-09-28).** Writes run inline in the parent
-thread; formatting rules are in `notion-write-gotchas.md`.
+**Step 4 routing.** Writes run through the one `notion-writer` (live since YED-259; CLAUDE.md invariant 5): the
+parent builds the payload, `.claude/scripts/notion_payload.py` validates it, the writer executes it (waves and keys in
+`/event-deep-research` Step 4). Formatting rules are in `notion-write-gotchas.md`.
 - Per triage path: **NEW** → `create-pages` with the full schema · **REFRESH-light / REFRESH-full** → `update-page`
   with event-research SKILL Step 4b–4d refresh semantics · **SKIP** → no write, but pass the URL through to the
   Event's relations · **APPEND-CURRENT-EVENTS-ONLY** (Topics) → touch Current Events + Last Updated only.
