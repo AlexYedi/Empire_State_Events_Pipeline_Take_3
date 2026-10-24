@@ -1,0 +1,495 @@
+{
+  "name": "Halyard Ventures Fund I, L.P.",
+  "fictional": true,
+  "legal_form": "Delaware limited partnership",
+  "general_partner_entity": "Halyard Ventures GP I, LLC",
+  "management_company": "Halyard Ventures Management, LLC",
+  "vintage_year": 2023,
+  "first_close": "2023-02-15",
+  "final_close": "2023-09-29",
+  "total_commitments_usd": 40000000,
+  "gp_commitment_usd": 400000,
+  "reporting_currency": "USD",
+  "strategy": "Pre-seed and seed, US and EU, sector-agnostic with a B2B software tilt",
+  "target_portfolio_size": 22,
+  "term": "10 years from final close, plus two 1-year extensions",
+  "investment_period_end": "2028-02-15",
+  "management_fee": "2.0% per annum of total commitments during the investment period, charged quarterly in advance",
+  "carried_interest": "20% over an 8% preferred return, European (whole-fund) waterfall",
+  "general_partners": [
+    {
+      "name": "Theodora Halloway",
+      "title": "Managing Partner",
+      "email": "theodora@halyard.example"
+    },
+    {
+      "name": "Marcus Penwright",
+      "title": "General Partner",
+      "email": "marcus@halyard.example"
+    }
+  ],
+  "fund_administrator": "Brightledger Fund Services (fictional)",
+  "auditor": "Corbel & Vane LLP (fictional)",
+  "updates_inbox": "updates@halyard.example",
+  "fx_assumption": {
+    "pair": "EURUSD",
+    "rate": 1.085,
+    "as_of": "2026-09-30",
+    "note": "Fictional fixed rate for the demo. Use it only for USD roll-ups; extract EUR figures as EUR."
+  },
+  "lps": [
+    {
+      "lp_id": "LP-01",
+      "name": "LP-01 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-02",
+      "name": "LP-02 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-03",
+      "name": "LP-03 Individual",
+      "type": "Individual",
+      "commitment_usd": 700000,
+      "pct_of_fund": 1.75
+    },
+    {
+      "lp_id": "LP-04",
+      "name": "LP-04 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 750000,
+      "pct_of_fund": 1.875
+    },
+    {
+      "lp_id": "LP-05",
+      "name": "LP-05 Foundation",
+      "type": "Foundation",
+      "commitment_usd": 3000000,
+      "pct_of_fund": 7.5
+    },
+    {
+      "lp_id": "LP-06",
+      "name": "LP-06 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "LP-07",
+      "name": "LP-07 Endowment",
+      "type": "Endowment",
+      "commitment_usd": 650000,
+      "pct_of_fund": 1.625
+    },
+    {
+      "lp_id": "LP-08",
+      "name": "LP-08 Pension",
+      "type": "Pension",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "LP-09",
+      "name": "LP-09 Pension",
+      "type": "Pension",
+      "commitment_usd": 1550000,
+      "pct_of_fund": 3.875
+    },
+    {
+      "lp_id": "LP-10",
+      "name": "LP-10 Pension",
+      "type": "Pension",
+      "commitment_usd": 1600000,
+      "pct_of_fund": 4.0
+    },
+    {
+      "lp_id": "LP-11",
+      "name": "LP-11 Individual",
+      "type": "Individual",
+      "commitment_usd": 1700000,
+      "pct_of_fund": 4.25
+    },
+    {
+      "lp_id": "LP-12",
+      "name": "LP-12 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-13",
+      "name": "LP-13 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "LP-14",
+      "name": "LP-14 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 750000,
+      "pct_of_fund": 1.875
+    },
+    {
+      "lp_id": "LP-15",
+      "name": "LP-15 Foundation",
+      "type": "Foundation",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-16",
+      "name": "LP-16 Corporate",
+      "type": "Corporate",
+      "commitment_usd": 2600000,
+      "pct_of_fund": 6.5
+    },
+    {
+      "lp_id": "LP-17",
+      "name": "LP-17 Individual",
+      "type": "Individual",
+      "commitment_usd": 500000,
+      "pct_of_fund": 1.25
+    },
+    {
+      "lp_id": "LP-18",
+      "name": "LP-18 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "LP-19",
+      "name": "LP-19 Individual",
+      "type": "Individual",
+      "commitment_usd": 850000,
+      "pct_of_fund": 2.125
+    },
+    {
+      "lp_id": "LP-20",
+      "name": "LP-20 Endowment",
+      "type": "Endowment",
+      "commitment_usd": 1550000,
+      "pct_of_fund": 3.875
+    },
+    {
+      "lp_id": "LP-21",
+      "name": "LP-21 Corporate",
+      "type": "Corporate",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "LP-22",
+      "name": "LP-22 Foundation",
+      "type": "Foundation",
+      "commitment_usd": 650000,
+      "pct_of_fund": 1.625
+    },
+    {
+      "lp_id": "LP-23",
+      "name": "LP-23 Individual",
+      "type": "Individual",
+      "commitment_usd": 500000,
+      "pct_of_fund": 1.25
+    },
+    {
+      "lp_id": "LP-24",
+      "name": "LP-24 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 2000000,
+      "pct_of_fund": 5.0
+    },
+    {
+      "lp_id": "LP-25",
+      "name": "LP-25 Corporate",
+      "type": "Corporate",
+      "commitment_usd": 700000,
+      "pct_of_fund": 1.75
+    },
+    {
+      "lp_id": "LP-26",
+      "name": "LP-26 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 500000,
+      "pct_of_fund": 1.25
+    },
+    {
+      "lp_id": "LP-27",
+      "name": "LP-27 Endowment",
+      "type": "Endowment",
+      "commitment_usd": 750000,
+      "pct_of_fund": 1.875
+    },
+    {
+      "lp_id": "LP-28",
+      "name": "LP-28 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 1250000,
+      "pct_of_fund": 3.125
+    },
+    {
+      "lp_id": "LP-29",
+      "name": "LP-29 Corporate",
+      "type": "Corporate",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-30",
+      "name": "LP-30 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 500000,
+      "pct_of_fund": 1.25
+    },
+    {
+      "lp_id": "LP-31",
+      "name": "LP-31 Family Office",
+      "type": "Family Office",
+      "commitment_usd": 750000,
+      "pct_of_fund": 1.875
+    },
+    {
+      "lp_id": "LP-32",
+      "name": "LP-32 Individual",
+      "type": "Individual",
+      "commitment_usd": 550000,
+      "pct_of_fund": 1.375
+    },
+    {
+      "lp_id": "LP-33",
+      "name": "LP-33 Individual",
+      "type": "Individual",
+      "commitment_usd": 1050000,
+      "pct_of_fund": 2.625
+    },
+    {
+      "lp_id": "LP-34",
+      "name": "LP-34 Fund of Funds",
+      "type": "Fund of Funds",
+      "commitment_usd": 7850000,
+      "pct_of_fund": 19.625
+    },
+    {
+      "lp_id": "LP-35",
+      "name": "LP-35 Corporate",
+      "type": "Corporate",
+      "commitment_usd": 600000,
+      "pct_of_fund": 1.5
+    },
+    {
+      "lp_id": "GP",
+      "name": "Halyard Ventures GP I, LLC (GP commitment)",
+      "type": "General Partner",
+      "commitment_usd": 400000,
+      "pct_of_fund": 1.0
+    }
+  ],
+  "lp_count": 35,
+  "portfolio": [
+    {
+      "company_id": "C01",
+      "company": "Loomvale Systems",
+      "sector": "Logistics software",
+      "stage_at_entry": "Seed",
+      "hq": "New York, NY",
+      "founder": "Mara Quillfeather",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C02",
+      "company": "Tidewright Labs",
+      "sector": "Developer tools",
+      "stage_at_entry": "Seed",
+      "hq": "Brooklyn, NY",
+      "founder": "Jonah Tidewell",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C03",
+      "company": "Ossmere Health",
+      "sector": "Digital health",
+      "stage_at_entry": "Seed",
+      "hq": "Boston, MA",
+      "founder": "Priyanka Ossler",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C04",
+      "company": "Brackenfold",
+      "sector": "Climate analytics",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Denver, CO",
+      "founder": "Wes Bracklund",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C05",
+      "company": "Quarrytone AI",
+      "sector": "AI infrastructure",
+      "stage_at_entry": "Seed",
+      "hq": "San Francisco, CA",
+      "founder": "Ines Quarrow",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C06",
+      "company": "Murrelwick Robotics",
+      "sector": "Robotics",
+      "stage_at_entry": "Seed",
+      "hq": "Pittsburgh, PA",
+      "founder": "Teodor Murrelind",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C07",
+      "company": "Gantrell Dental Cloud",
+      "sector": "Vertical SaaS (dental)",
+      "stage_at_entry": "Seed",
+      "hq": "Austin, TX",
+      "founder": "Dana Gantrell",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C08",
+      "company": "Corvellum Pay",
+      "sector": "Fintech (B2B payments)",
+      "stage_at_entry": "Seed",
+      "hq": "New York, NY",
+      "founder": "Felix Corvellis",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C09",
+      "company": "Stillmote Studios",
+      "sector": "Creator tools",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Los Angeles, CA",
+      "founder": "June Stillmore",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C10",
+      "company": "Vellstrom Data GmbH",
+      "sector": "Data infrastructure",
+      "stage_at_entry": "Seed",
+      "hq": "Berlin, DE",
+      "founder": "Katrin Vellstrom",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C11",
+      "company": "Kettleworn Commerce",
+      "sector": "E-commerce enablement",
+      "stage_at_entry": "Seed",
+      "hq": "Chicago, IL",
+      "founder": "Ravi Kettleby",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C12",
+      "company": "Halcyra Security",
+      "sector": "Cybersecurity",
+      "stage_at_entry": "Seed",
+      "hq": "New York, NY",
+      "founder": "Odessa Halcyon",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C13",
+      "company": "Pebblequill Learning",
+      "sector": "Edtech",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Philadelphia, PA",
+      "founder": "Bram Pebbleton",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C14",
+      "company": "Wrenfield Cover",
+      "sector": "Insurtech",
+      "stage_at_entry": "Seed",
+      "hq": "Hartford, CT",
+      "founder": "Lena Wrenfield",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C15",
+      "company": "Dunmarsh Grid",
+      "sector": "Energy software",
+      "stage_at_entry": "Seed",
+      "hq": "Houston, TX",
+      "founder": "Silas Dunmarsh",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C16",
+      "company": "Ashvane Legal",
+      "sector": "Legal AI",
+      "stage_at_entry": "Seed",
+      "hq": "New York, NY",
+      "founder": "Noor Ashvane",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C17",
+      "company": "Velloway Mobility",
+      "sector": "Fleet software",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Detroit, MI",
+      "founder": "Tomas Vellow",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C18",
+      "company": "Thistlecrumb Foods",
+      "sector": "Consumer packaged goods",
+      "stage_at_entry": "Seed",
+      "hq": "Portland, OR",
+      "founder": "Hattie Thistlewood",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C19",
+      "company": "Marrowlight Bio",
+      "sector": "Biotech tools",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Cambridge, MA",
+      "founder": "Elio Marrowby",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C20",
+      "company": "Sorrel & Pike People",
+      "sector": "HR software",
+      "stage_at_entry": "Seed",
+      "hq": "Atlanta, GA",
+      "founder": "Gemma Sorrel",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C21",
+      "company": "Lanternwick Agents",
+      "sector": "AI agents",
+      "stage_at_entry": "Pre-seed",
+      "hq": "New York, NY",
+      "founder": "Kit Lanternby",
+      "founder_title": "CEO"
+    },
+    {
+      "company_id": "C22",
+      "company": "Cinderquay Games",
+      "sector": "Gaming",
+      "stage_at_entry": "Pre-seed",
+      "hq": "Seattle, WA",
+      "founder": "Rosalind Cinderby",
+      "founder_title": "CEO"
+    }
+  ]
+}

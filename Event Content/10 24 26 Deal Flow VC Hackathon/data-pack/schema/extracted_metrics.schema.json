@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://halyard.example/schema/extracted_metrics.schema.json",
+  "title": "Extracted metrics for one portfolio company, one quarter",
+  "description": "FICTIONAL demo schema. One file per company (predictions dir) or a list under `companies` (answer key). Money values are whole units of `currency` (e.g. 141500, not 141.5). Offsets are Python str indices (Unicode code points) into the UTF-8-decoded source file, end-exclusive.",
+  "type": "object",
+  "required": [
+    "company_id",
+    "company",
+    "period",
+    "update_status",
+    "source_file",
+    "revenue_type",
+    "fields",
+    "flags"
+  ],
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "pattern": "^C[0-9]{2}$"
+    },
+    "company": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string",
+      "examples": [
+        "2026-Q3"
+      ]
+    },
+    "update_status": {
+      "enum": [
+        "received",
+        "received_no_numbers",
+        "not_received"
+      ]
+    },
+    "source_file": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path relative to the data-pack root."
+    },
+    "revenue_type": {
+      "enum": [
+        "recurring",
+        "non_recurring",
+        "none",
+        null
+      ]
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "monthly_revenue",
+        "arr",
+        "monthly_burn",
+        "cash",
+        "runway_months",
+        "headcount",
+        "customers",
+        "key_highlight",
+        "key_risk"
+      ],
+      "properties": {
+        "monthly_revenue": {
+          "$ref": "#/$defs/metric"
+        },
+        "arr": {
+          "$ref": "#/$defs/metric"
+        },
+        "monthly_burn": {
+          "$ref": "#/$defs/metric"
+        },
+        "cash": {
+          "$ref": "#/$defs/metric"
+        },
+        "runway_months": {
+          "$ref": "#/$defs/metric"
+        },
+        "headcount": {
+          "$ref": "#/$defs/metric"
+        },
+        "customers": {
+          "$ref": "#/$defs/metric"
+        },
+        "key_highlight": {
+          "$ref": "#/$defs/metric"
+        },
+        "key_risk": {
+          "$ref": "#/$defs/metric"
+        }
+      },
+      "additionalProperties": false
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/flag"
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "required": [
+        "value",
+        "unit",
+        "currency",
+        "period",
+        "source_file",
+        "source_span",
+        "quote",
+        "confidence"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ],
+          "description": "Normalized value; null if not reported."
+        },
+        "unit": {
+          "enum": [
+            "currency",
+            "months",
+            "count",
+            "text"
+          ]
+        },
+        "currency": {
+          "enum": [
+            "USD",
+            "EUR",
+            null
+          ],
+          "description": "As reported. Do not convert."
+        },
+        "period": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "examples": [
+            "2026-09",
+            "2026-Q3",
+            "2026-09-30"
+          ]
+        },
+        "source_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_span": {
+          "$ref": "#/$defs/span"
+        },
+        "quote": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Must equal file_text[start:end]."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "derivation": {
+          "type": "string",
+          "description": "Optional. How a value not stated verbatim was computed."
+        },
+        "alt_spans": {
+          "type": "array",
+          "description": "Optional (answer key). Other spans stating the same value."
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "flag": {
+      "type": "object",
+      "required": [
+        "flag"
+      ],
+      "properties": {
+        "flag": {
+          "enum": [
+            "missing_update",
+            "no_numbers_reported",
+            "low_runway",
+            "revenue_decline",
+            "conflicting_figures",
+            "non_recurring_arr",
+            "non_usd_currency",
+            "unit_inconsistency"
+          ]
+        },
+        "source_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_span": {
+          "$ref": "#/$defs/span"
+        },
+        "quote": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

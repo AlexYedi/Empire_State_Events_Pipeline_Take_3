@@ -1,0 +1,23 @@
+company_id,company,sector,stage_at_entry,hq,initial_investment_date,last_round_date,last_round_post_money_usd,cost_basis_usd,realized_cost_usd,realized_proceeds_usd,ownership_pct_q2_2026,ownership_pct_q3_2026,mark_q2_2026_usd,mark_q3_2026_usd,valuation_method_q2,valuation_method_q3
+C01,Loomvale Systems,Logistics software,Seed,"New York, NY",2023-05-18,2026-08-27,48000000,1500000,0,0,7.5,6.5625,1500000,3150000,Last round (post-money),Last round (post-money)
+C02,Tidewright Labs,Developer tools,Seed,"Brooklyn, NY",2023-03-09,2023-03-09,20000000,900000,300000,1150000,4.5,4.5,3450000,3450000,Secondary transaction,Secondary transaction
+C03,Ossmere Health,Digital health,Seed,"Boston, MA",2023-08-22,2025-02-11,36000000,1000000,0,0,5.0,5.0,1800000,1800000,Last round (post-money),Last round (post-money)
+C04,Brackenfold,Climate analytics,Pre-seed,"Denver, CO",2024-06-04,2024-06-04,10000000,600000,0,0,6.0,6.0,600000,600000,Cost,Cost
+C05,Quarrytone AI,AI infrastructure,Seed,"San Francisco, CA",2023-10-10,2025-09-30,52000000,1250000,0,0,4.6,4.6,2392000,2392000,Last round (post-money),Last round (post-money)
+C06,Murrelwick Robotics,Robotics,Seed,"Pittsburgh, PA",2024-01-23,2025-05-20,40000000,1400000,0,0,5.2,5.2,2080000,2080000,Last round (post-money),Last round (post-money)
+C07,Gantrell Dental Cloud,Vertical SaaS (dental),Seed,"Austin, TX",2023-12-05,2025-01-14,30000000,1100000,0,0,5.5,5.5,1650000,1650000,Last round (post-money),Last round (post-money)
+C08,Corvellum Pay,Fintech (B2B payments),Seed,"New York, NY",2024-02-27,2025-07-08,45000000,1750000,0,0,6.0,6.0,2700000,2700000,Last round (post-money),Last round (post-money)
+C09,Stillmote Studios,Creator tools,Pre-seed,"Los Angeles, CA",2024-03-19,2024-03-19,10000000,500000,0,0,5.0,5.0,500000,500000,Cost,Cost
+C10,Vellstrom Data GmbH,Data infrastructure,Seed,"Berlin, DE",2024-04-16,2025-03-03,30000000,1000000,0,0,4.0,4.0,1200000,1200000,Last round (post-money),Last round (post-money)
+C11,Kettleworn Commerce,E-commerce enablement,Seed,"Chicago, IL",2023-07-11,2024-11-12,24000000,900000,0,0,4.5,4.5,1080000,1080000,Last round (post-money),Last round (post-money)
+C12,Halcyra Security,Cybersecurity,Seed,"New York, NY",2023-06-20,2026-09-15,60000000,1250000,0,0,5.0,4.3333,1500000,2600000,Last round (post-money),Last round (post-money)
+C13,Pebblequill Learning,Edtech,Pre-seed,"Philadelphia, PA",2023-11-02,2023-11-02,10000000,600000,0,0,6.0,6.0,420000,420000,Last round less 30% discount,Last round less 30% discount
+C14,Wrenfield Cover,Insurtech,Seed,"Hartford, CT",2024-07-30,2025-04-22,32000000,1000000,0,0,4.0,4.0,1280000,1280000,Last round (post-money),Last round (post-money)
+C15,Dunmarsh Grid,Energy software,Seed,"Houston, TX",2024-03-12,2024-12-09,28000000,1250000,0,0,5.0,5.0,1400000,1400000,Last round (post-money),Last round (post-money)
+C16,Ashvane Legal,Legal AI,Seed,"New York, NY",2024-10-22,2025-06-17,26000000,1000000,0,0,5.0,5.0,1300000,1300000,Last round (post-money),Last round (post-money)
+C17,Velloway Mobility,Fleet software,Pre-seed,"Detroit, MI",2024-08-06,2024-08-06,10000000,500000,0,0,5.0,5.0,500000,500000,Cost,Cost
+C18,Thistlecrumb Foods,Consumer packaged goods,Seed,"Portland, OR",2023-09-14,2024-05-28,22000000,1000000,0,0,5.0,5.0,1100000,1100000,Last round (post-money),Last round (post-money)
+C19,Marrowlight Bio,Biotech tools,Pre-seed,"Cambridge, MA",2025-10-21,2025-10-21,12500000,750000,0,0,6.0,6.0,750000,750000,Cost,Cost
+C20,Sorrel & Pike People,HR software,Seed,"Atlanta, GA",2024-02-06,2025-01-29,24000000,1000000,0,0,5.0,5.0,1200000,1200000,Last round (post-money),Last round (post-money)
+C21,Lanternwick Agents,AI agents,Pre-seed,"New York, NY",2026-01-13,2026-01-13,12000000,600000,0,0,5.0,5.0,600000,600000,Cost,Cost
+C22,Cinderquay Games,Gaming,Pre-seed,"Seattle, WA",2024-10-01,2024-10-01,10000000,500000,0,0,5.0,5.0,500000,500000,Cost,Cost

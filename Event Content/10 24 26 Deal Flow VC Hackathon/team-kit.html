@@ -1,0 +1,367 @@
+<title>Provable LP Update</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column like a fund's quarterly statement, with ledger-style tables and one red "unexplained" row as the signature. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #18202b;
+  --muted: #5a6575;
+  --rule: #d9dee6;
+  --accent: #1f4fbf;
+  --accent-soft: #e6edfb;
+  --alert: #b3261e;
+  --alert-soft: #fbe9e7;
+  --ok: #1d7a4a;
+  --font-display: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b; --surface: #181e26; --ink: #e8ecf2; --muted: #9aa5b4; --rule: #2a3340;
+    --accent: #8fb0ff; --accent-soft: #1c2840; --alert: #ff8a80; --alert-soft: #3a1d1b; --ok: #6fd39c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b; --surface: #181e26; --ink: #e8ecf2; --muted: #9aa5b4; --rule: #2a3340;
+  --accent: #8fb0ff; --accent-soft: #1c2840; --alert: #ff8a80; --alert-soft: #3a1d1b; --ok: #6fd39c;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+header { display: flex; flex-direction: column; gap: 12px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-size: clamp(30px, 6vw, 44px); line-height: 1.1; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-size: 22px; margin: 0 0 12px; font-weight: 600; text-wrap: balance; }
+h3 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.lede { font-size: 18px; color: var(--ink); }
+.muted { color: var(--muted); }
+.pitch { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 18px 20px; border-radius: 4px; font-size: 17px; }
+nav { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
+nav a { color: var(--accent); text-decoration: none; }
+nav a:hover, nav a:focus-visible { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--font-data); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; }
+td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.unexplained td { background: var(--alert-soft); }
+.flag { display: inline-block; font-family: var(--font-data); font-size: 11px; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.flag.red { color: var(--alert); }
+.flag.green { color: var(--ok); }
+.flag.blue { color: var(--accent); }
+.quote { font-family: var(--font-data); font-size: 13px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; overflow-x: auto; white-space: pre-wrap; }
+mark { background: var(--alert-soft); color: var(--alert); padding: 0 2px; border-radius: 2px; }
+ol, ul { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; max-width: 65ch; }
+.roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.role { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.role .seat { font-family: var(--font-data); font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.timeline { display: grid; grid-template-columns: 76px 1fr; gap: 8px 14px; font-size: 15px; }
+.timeline .t { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--muted); }
+.timeline .hard { color: var(--alert); font-weight: 600; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; overflow-x: auto; }
+code { font-family: var(--font-data); font-size: 13px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.two > div { min-width: 0; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 16px; }
+@media (max-width: 560px) {
+  .roles, .two { grid-template-columns: 1fr; }
+  .timeline { grid-template-columns: 64px 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Deal Flow VC Hackathon · Betaworks · Sat Oct 24 · Funds / LP track</span>
+  <h1>Your quarterly LP update, explained and provable.</h1>
+  <p class="lede">Messy founder updates become a GP letter where every number traces to its source and every change from last quarter is explained, so a Fund I manager can earn the trust that closes Fund II.</p>
+  <nav aria-label="Sections">
+    <a href="#problem">Problem</a><a href="#pitch">Pitch</a><a href="#trace">Challenge → value</a><a href="#why">Why this</a><a href="#demo">Demo</a><a href="#roles">Roles</a><a href="#build">Build kit</a><a href="#data">Data pack</a><a href="#schedule">Run of show</a><a href="#vision">Vision</a><a href="#judges">Judges</a>
+  </nav>
+</header>
+
+<section id="problem">
+  <h2>The problem we're solving (organizers' words)</h2>
+  <p class="muted">Every feature, task and demo step below traces to one of these clauses. If it doesn't, we don't build it.</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>ID</th><th>Challenge, verbatim</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td class="num">F1</td><td>"LPs commit capital for ten years and get PDFs in return."</td><td>Track 4 · Funds</td></tr>
+        <tr><td class="num">F2</td><td>"Yearly K-1s and quarterly reports arrive in different formats."</td><td>Track 4 · Funds</td></tr>
+        <tr><td class="num">F3</td><td>"Valuation marks move with little explanation."</td><td>Track 4 · Funds</td></tr>
+        <tr><td class="num">F4</td><td>"Judging a GP's real track record means rebuilding it by hand."</td><td>Track 4 · Funds</td></tr>
+        <tr><td class="num">P1</td><td>"A fund with 40 portfolio companies gets 40 updates in 40 formats, when it gets them at all."</td><td>Track 3 · Portfolio</td></tr>
+        <tr><td class="num">P2</td><td>"Partners often learn a company is in trouble when it asks for a bridge."</td><td>Track 3 · Portfolio</td></tr>
+        <tr><td class="num">E1</td><td>"Venture capital runs on spreadsheets, gut feel and endless inbox triage."</td><td>Event problem statement</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Track goal:</strong> "Make LPs as informed as their GPs." <strong>Why it can be a company (organizers):</strong> "Every LP gets these documents every quarter, so a tool that reads them is used every quarter."</p>
+  <p class="muted">Out of scope on purpose: secondary pricing (Track 4's last clause). Selling clarity to secondary buyers works against the GP who pays us.</p>
+</section>
+
+<section id="pitch">
+  <h2>The 45-second pitch</h2>
+  <p class="pitch">The Funds track says it plainly: LPs commit capital for ten years and get PDFs, and marks move with little explanation. At emerging funds the GP writes that letter by hand from founder emails that come in 40 formats. LPs can't check any of it, and 79% of LPs declined to re-up with at least one GP last year. We're building the layer that reads whatever founders send, pulls every metric with its source, flags anything that changed without an explanation, and drafts the letter only from verified numbers. The LP can click any figure and land on the founder's sentence. Carta traces numbers for the GP; we trace them for the LP. I've built the data set, the answer key and the scorer, so we start coding at 10:30. I need a backend/extraction person, a front-end person and a data/eval person.</p>
+</section>
+
+<section id="why">
+  <h2>Why this, and why it can win</h2>
+  <div class="two">
+    <div>
+      <h3>The gap</h3>
+      <ul>
+        <li>Collecting and extracting portfolio data is crowded (Carta, Visible, Standard Metrics).</li>
+        <li>Nobody owns the GP's "what moved and why" narrative for small funds on AngelList, Sydecar or spreadsheets.</li>
+        <li>ILPA's 2025 templates standardize the fund ledger, which the admin owns. The portfolio narrative stays unstandardized.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>The insight</h3>
+      <ul>
+        <li>The scarce thing for a Fund I is LP trust, not GP hours.</li>
+        <li>A fluent AI letter can hide more. Our letter renders only from reconciled numbers that have sources.</li>
+        <li>Provenance stands in for a track record a new manager doesn't have yet.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Business</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Buyer</td><td>Emerging-manager GP, Fund I/II, under ~$100M</td></tr>
+        <tr><td>Price</td><td class="num">~$6k / fund / year</td></tr>
+        <tr><td>Anchor</td><td>Small funds already pay their admin ~$18–60k a year. We're the companion to the admin's ILPA package, not a replacement.</td></tr>
+        <tr><td>Distribution</td><td>The LP view is free. An LP who sees it asks their other GPs for it.</td></tr>
+        <tr><td>Privacy</td><td>Names are tokenized before any model call. A local-model option is on the roadmap.</td></tr>
+        <tr><td>Roadmap</td><td>The quarters add up to a Fund II data room, then one shared founder update for every investor on the cap table.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="demo">
+  <h2>The demo: one company, two quarters, three minutes</h2>
+  <p>We demo Gantrell Dental Cloud (C07) from the data pack. The founder's email is upbeat, and the trouble sits in the footer:</p>
+  <div class="quote">Q3 was a foundation-building quarter for us… the Q4 pipeline is the biggest it has ever been…
+--
+* Cash at 9/30: $290K; <mark>~4 months at current burn</mark>. Exploring options incl. a bridge.</div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Metric</th><th>Q2 2026</th><th>Q3 2026</th><th>Change</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>MRR</td><td class="num">$61.0K</td><td class="num">$52.8K</td><td class="num">−13%</td><td><span class="flag blue">explained by founder</span></td></tr>
+        <tr><td>Net burn / mo</td><td class="num">$55K</td><td class="num">$68K</td><td class="num">+24%</td><td><span class="flag blue">explained by founder</span></td></tr>
+        <tr><td>Cash</td><td class="num">$494K</td><td class="num">$290K</td><td class="num">−41%</td><td><span class="flag green">sourced</span></td></tr>
+        <tr><td>Runway</td><td class="num">9 mo</td><td class="num">4 mo</td><td class="num">−5 mo</td><td><span class="flag red">low runway</span></td></tr>
+        <tr><td>Customers</td><td class="num">87</td><td class="num">74</td><td class="num">−13</td><td><span class="flag blue">explained by founder</span></td></tr>
+        <tr class="unexplained"><td><strong>Fund mark</strong></td><td class="num">$1.65M</td><td class="num">$1.65M</td><td class="num">0%</td><td><span class="flag red">unexplained · GP note required</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ol>
+    <li><strong>Read the challenge out loud</strong> (F1, F3): "LPs get PDFs, and marks move with little explanation." Then a buyer's words from Friday's calls.</li>
+    <li>Drop in the Q2 and Q3 founder emails (<strong>P1</strong>: a different format each quarter).</li>
+    <li>Extracted metrics appear with their source text highlighted (<strong>F2, E1</strong>).</li>
+    <li>The founder is "exploring a bridge", and the low-runway flag catches it a quarter early (<strong>P2</strong>, almost word for word).</li>
+    <li>The mark is unchanged while runway fell to 4 months, so that row turns red. It can be annotated but not deleted (<strong>F3</strong>).</li>
+    <li>The letter renders only from reconciled numbers (<strong>F1</strong>: GP hours back).</li>
+    <li><strong>LP view</strong>: click "4 months" and land on the founder's footer line (<strong>track goal</strong>: LPs as informed as their GPs).</li>
+    <li><strong>Close:</strong> accuracy next to the do-nothing baseline (18%), hours today vs. with the tool, price, then the roadmap as <strong>F4</strong>: quarters add up to a track record that doesn't need rebuilding by hand.</li>
+  </ol>
+</section>
+
+<section id="trace">
+  <h2>Challenge → feature → value</h2>
+  <p>The build in one table. The rows are the demo path and the must-haves. Anything without a challenge ID is on the cut list.</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Feature</th><th>Solves</th><th>Value delivered</th><th>Who feels it</th></tr></thead>
+      <tbody>
+        <tr><td>Reads any founder format (prose, table, deck, bullets, EUR)</td><td class="num">P1 · F2 · E1</td><td>No new form for founders and no re-keying for the GP</td><td>Founder, GP</td></tr>
+        <tr><td>Every value carries its source span; no span, no number</td><td class="num">F1 · F4</td><td>Numbers that can be checked instead of a PDF that has to be trusted</td><td>LP, GP</td></tr>
+        <tr><td>Q2 → Q3 reconciliation diff</td><td class="num">F3 · E1</td><td>What moved is visible in seconds instead of by gut feel</td><td>GP, LP</td></tr>
+        <tr><td>Red "unexplained" flag on a mark that didn't move while the company changed; annotate, can't delete</td><td class="num">F3</td><td>Marks come with a reason, so LPs ask fewer surprise questions and Fund II comes easier</td><td>LP, GP</td></tr>
+        <tr><td>Low-runway and missing-update flags</td><td class="num">P2 · P1</td><td>The GP learns about trouble before the bridge request, not with it</td><td>GP, founder</td></tr>
+        <tr><td>Letter that renders only from reconciled deltas</td><td class="num">F1 · E1</td><td>GP hours back, and nothing ships that can't be sourced</td><td>GP</td></tr>
+        <tr><td>LP view: click any number, land on the founder's sentence</td><td class="num">F1 · F4</td><td>"LPs as informed as their GPs", the track goal itself</td><td>LP</td></tr>
+        <tr><td>Quarters accumulate into a sourced history (roadmap)</td><td class="num">F4</td><td>A Fund II track record that doesn't have to be rebuilt by hand</td><td>GP, prospective LP</td></tr>
+        <tr><td>Names tokenized before any model call</td><td class="num">F1 · P1</td><td>Funds can adopt it without data leaving their control (Track 3: "their data cannot leave the firm")</td><td>GP, founder</td></tr>
+        <tr><td>Accuracy shown next to the do-nothing baseline</td><td class="num">F1 · F3</td><td>Proof the numbers are right, not just well written</td><td>Judges, GP</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="roles">
+  <h2>The team: five seats (proposed; we confirm at 10:30)</h2>
+  <div class="roles">
+    <div class="role"><span class="seat">Bhavkaran · tech lead · F2 P1 E1</span><h3>Pipeline + architecture calls</h3><p>Redact → extract → validate. The LLM call that returns schema-valid JSON with source spans, and the span check that rejects any value whose quote doesn't match. Owns the API contract the front end builds against, and has the final say on technical calls.</p></div>
+    <div class="role"><span class="seat">Ashraful · reconcile + eval · F3 P2</span><h3>Diff, flags, accuracy</h3><p>The Q2→Q3 reconciliation with the flags: unexplained mark, low runway, conflict, non-recurring ARR, missing update. Runs <code>eval/score.py</code> on our output every hour and tunes prompts against the answer key. His number is the accuracy-vs-baseline slide.</p></div>
+    <div class="role"><span class="seat">Nakib · front end · F1 F3</span><h3>Diff + click-to-source UI</h3><p>The reconciliation table with the red row and the GP note, the letter view with clickable numbers, and the LP view (click → founder's sentence). Builds against mocked JSON from 10:45 so he never waits on the pipeline.</p></div>
+    <div class="role"><span class="seat">Jennifer · domain + business · F1 F4</span><h3>LP truth, letter, model</h3><p>Pressure-tests what a real GP would send and an LP would click. Owns the letter template (renders only from deltas), pricing, the business slide and finance Q&amp;A. Gets a GP or LP quote from her network this morning if she can.</p></div>
+    <div class="role"><span class="seat">Alex · product / pitch · all IDs</span><h3>Scope, story, demo</h3><p>The run of show and the 2:30 cut call (no challenge ID, no build). The data pack, the judge Q&amp;A and the vision slide. Drives the 3-minute demo; Jennifer co-presents the business.</p></div>
+  </div>
+  <p class="note">Lanes keep three product people from designing by committee: technical calls go to Bhavkaran, LP and finance truth to Jennifer, scope and timing to Alex.</p>
+</section>
+
+<section id="build">
+  <h2>Build kit</h2>
+  <pre class="mermaid">
+flowchart LR
+  A[Founder updates<br/>txt / md / deck export] --> B[Redact<br/>tokenize names]
+  B --> C[Extract<br/>LLM → JSON with spans]
+  C --> D[Validate<br/>schema + span = quote]
+  D --> E[Reconcile<br/>Q2 vs Q3, flags]
+  E --> F[GP review<br/>annotate red rows]
+  F --> G[Letter<br/>renders only from deltas]
+  G --> H[LP view<br/>click any number → source]
+  </pre>
+  <div class="two">
+    <div>
+      <h3>Must have</h3>
+      <ul>
+        <li>Extraction to <code>extracted_metrics.schema.json</code>, with every value carrying <code>source_span</code> and <code>quote</code></li>
+        <li>A span check: the quote must equal the text at the span, or the value is rejected</li>
+        <li>The Q2→Q3 diff with flags: unexplained, low runway, conflict, non-recurring ARR, missing update</li>
+        <li>GP annotation on red rows</li>
+        <li>A letter paragraph where every number links to its span</li>
+        <li>The LP click-through view</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Cut first at 2:30 if behind (rule: no challenge ID, no build)</h3>
+      <ul>
+        <li>PDF export</li>
+        <li>Rollup across all 22 companies (demo 3: Gantrell, Corvellum, Loomvale)</li>
+        <li>Fund-level NAV / TVPI page (numbers are in the answer key if needed)</li>
+        <li>Upload UI (preload files instead)</li>
+      </ul>
+      <h3 style="margin-top:14px">Stretch only if green at 2:30</h3>
+      <ul>
+        <li>One “path to liquidity” line per company in the letter: runway, last round, exit path (feeds the vision slide; Track 4 secondary clause)</li>
+      </ul>
+      <h3 style="margin-top:14px">Suggested stack</h3>
+      <p>Python or TypeScript backend calling the Claude API with structured output; a single-page web UI (Next.js or plain Vite + React). Whoever claims seat 1 picks.</p>
+    </div>
+  </div>
+  <h3>Extraction prompt rules (starting point)</h3>
+  <ul>
+    <li>Return only values that appear in the text. If a value isn't there, return null with the reason "not reported".</li>
+    <li>For every value, copy the exact quote it came from.</li>
+    <li>Keep the founder's currency and units; don't convert.</li>
+    <li>"ARR" counts only if the revenue is recurring. Otherwise flag non_recurring_arr.</li>
+    <li>If the summary and a table disagree, return both and flag conflicting_figures.</li>
+  </ul>
+</section>
+
+<section id="data">
+  <h2>Data pack (fictional, ready to copy into our repo)</h2>
+  <p>Halyard Ventures Fund I: $40M, 2023 vintage, 22 companies, 35 LPs. Q2 updates are clean; Q3 updates are messy on purpose. Python standard library only, no keys needed.</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Messy case</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>Numbers buried in prose</td><td class="num">C01 Loomvale</td></tr>
+        <tr><td>Pasted table</td><td class="num">C02 Tidewright</td></tr>
+        <tr><td>Deck export</td><td class="num">C03 Ossmere</td></tr>
+        <tr><td>"All good, will send numbers next week"</td><td class="num">C05 Quarrytone</td></tr>
+        <tr><td>No update at all</td><td class="num">C06 Murrelwick</td></tr>
+        <tr><td>Quietly in trouble, mark left stale</td><td class="num">C07 Gantrell</td></tr>
+        <tr><td>Summary disagrees with the table</td><td class="num">C08 Corvellum</td></tr>
+        <tr><td>One-off project revenue called "ARR"</td><td class="num">C09 Stillmote</td></tr>
+        <tr><td>EUR, k vs $K vs thousands</td><td class="num">C10 Vellstrom · C11 Kettleworn</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">Scorer: <code>python3 eval/score.py predictions/</code> prints field accuracy, abstention, flag recall and traceback, always next to the carry-forward baseline (18.2% field accuracy, 0% traceback).</p>
+</section>
+
+<section id="schedule">
+  <h2>Run of show</h2>
+  <div class="timeline">
+    <span class="t">9:00</span><span>Check-in opens 8:45 (not before). Entry is first come, first served until capacity, so all five should be there by 8:45. Intros start 10:00 sharp. Prizes: $500 cash for the winners, plus $150 for best content.</span>
+    <span class="t">10:30</span><span>Kickoff: read this page and agree the schema (5 min). Everyone codes by 10:45.</span>
+    <span class="t">12:30</span><span>End to end on Gantrell, even if ugly.</span>
+    <span class="t">1:30</span><span>Scorer run #1. Note the accuracy number.</span>
+    <span class="t hard">2:30</span><span class="hard">Cut-list checkpoint. Drop anything not on the demo path.</span>
+    <span class="t hard">3:30</span><span class="hard">Feature freeze. Only bug fixes after this.</span>
+    <span class="t">4:00</span><span>Two full demo rehearsals, timed at 3 minutes. Screenshots as backup.</span>
+    <span class="t">4:30</span><span>Judging.</span>
+  </div>
+</section>
+
+<section id="vision">
+  <h2>Vision slide (roadmap, not today's build)</h2>
+  <p><strong>“Venture's bottleneck isn't capital, it's cash back. You can't sell what nobody trusts, so we start by making every number provable.”</strong></p>
+  <div class="roles">
+    <div class="role"><span class="seat">−$202B</span><p>Net cash flow to venture LPs since 2022 (PitchBook-NVCA Venture Monitor, Q3 2026).</p></div>
+    <div class="role"><span class="seat">4.5%</span><p>First-time funds' share of 2026 US VC capital, our buyer (Venture Monitor, Q3 2026).</p></div>
+    <div class="role"><span class="seat">86%</span><p>Share of secondary trading value in just 20 names. Seed-stage portfolios have no market at all (PitchBook Secondary Market Watch, Q2 2026).</p></div>
+  </div>
+  <h3 style="margin-top:14px">One ledger, three layers</h3>
+  <ol>
+    <li><strong>Today: the provable update</strong> (F1–F4, P1, P2, E1). Every number traces to its source; every change is explained.</li>
+    <li><strong>Next: path to liquidity</strong> (Track 4's secondary-pricing clause, from the seller's side). For each company: exit readiness, likely acquirers (akta.pro company data), and the fund's DPI if it sells now vs. holds. M&A is the primary exit route ($465B, a decade high) and no tool serves a small GP here. Subscription pricing, no success fee, so no broker-dealer licence is needed. Verified numbers in a sale data room should narrow the ~22% opacity discount (a hypothesis).</li>
+    <li><strong>Feature: LP engagement signals</strong> (F4, Fund II re-up). The same facts go to every LP and only the framing is personalised, which avoids selective disclosure. What LPs click shows the GP who will re-up.</li>
+  </ol>
+  <p class="note">Expect the question “why not build a secondaries marketplace?”. Answer: it's crowded, it only reaches late-stage names, and charging a success fee requires a broker-dealer licence. Detail is in <code>liquidity-and-lp-expansion.md</code>.</p>
+</section>
+
+<section id="judges">
+  <h2>Judge lens</h2>
+  <p class="pitch"><strong>First 20 seconds to judges:</strong> “LPs commit capital for ten years and get PDFs in return. Others build tools to read those PDFs after they arrive. We make the PDF provable before it's sent: every number traces to the founder's own words, every unexplained change is flagged, and the GP approves before an LP sees anything.”</p>
+  <p class="note">No judge has written about LP reporting. Four point the same way: <strong>trust comes from inspection and approval, and value comes from owning a workflow with a measurable outcome, not from model IQ.</strong> Lead with the gate, not the model. No rubric is published; the working rule is “business and code count equally.”</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Judge</th><th>What they've said (level)</th><th>Our moment</th></tr></thead>
+      <tbody>
+        <tr><td>Michael Barone, Everywhere</td><td>“Differentiation will shift from providing intelligence to owning the workflow and delivering a measurable outcome” (<a href="https://www.michaeljbarone.com/ideas/beyond-the-token">his essay</a>, Sep 4). He also wrote that companies optimize for “throughput, latency, token cost, reliability, and security.” His fund profiled <a href="https://ideas.everywhere.vc/p/tamarix-andrea-carnelli-dompe-founders-everywhere">Tamarix</a> (AI extraction and reconciliation <em>for LPs</em>) and Tangible (private-markets liquidity).</td><td>Accuracy and hours against the baseline; cost per letter. Draw the Tamarix line early: they serve the LP reading the PDF; we fix the GP's report at the source. The liquidity vision slide fits his fund's themes.</td></tr>
+        <tr><td>Bettina Sosa, Yaven</td><td>Yaven: “Inspect and edit its memory, choose what agents can access, and approve what goes to clients” (company). Her GitHub interests: quant finance and AI; she pins a model that runs on encrypted data.</td><td>Show the redaction log, then GP approval, before the LP view. Have a one-sentence answer to “what exactly leaves the laptop?”</td></tr>
+        <tr><td>Radhika Khandelwal, Wand AI</td><td>Event page: she'll want “both slick code &amp; a real business.” Wand AI: “Verification establishes whether the intended outcome was achieved” (company).</td><td>Live: a number with no source span is blocked from the letter. Scorer result next to the baseline.</td></tr>
+        <tr><td>Garrett Higgins, PointOne</td><td>No posts found. PointOne's CEO: “When time data is accurate, everything downstream improves” (company).</td><td>Reconciliation catches Corvellum's “$210K” vs. the true $192,400 before it reaches the letter.</td></tr>
+        <tr><td>Abeera Saeed, Plug and Play</td><td>Co-authored issue: “The real bottleneck is not power, it's consent.” Team issue: “the fight is over who owns the learning.”</td><td>The GP's corrections stay the GP's data and train no vendor model. LP trust is the bottleneck.</td></tr>
+        <tr><td>D.J. Patel</td><td>Bio: “VC | 3x exited founder.” Nothing else found.</td><td>Founder view: the flag says “unexplained”, not “bad”, and the founder's own sentence is the source.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h2>Questions to expect</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Likely question</th><th>Our answer</th></tr></thead>
+      <tbody>
+        <tr><td>"How is this different from Tamarix?"</td><td>Tamarix helps LPs read and reconcile what GPs send. We work upstream, for the GP: founder updates in, a provable report out. The two are complementary, since an LP tool reads a provable report better.</td></tr>
+        <tr><td>"Isn't this a Carta feature?"</td><td>Carta serves its own admin customers and stops at tearsheets. We work with any admin and own the letter, and the LP can verify it.</td></tr>
+        <tr><td>"What if the model invents a revenue number?"</td><td>No span, no number. The quote must match the source text exactly, "not reported" is a valid answer, and nothing ships without GP sign-off.</td></tr>
+        <tr><td>"Where does our data go?"</td><td>Names are tokenized before the model call, the GP decides what the LP sees, and a local-model option is on the roadmap.</td></tr>
+        <tr><td>"How accurate is it?"</td><td>Scored against a hand-built answer key, shown next to the do-nothing baseline.</td></tr>
+        <tr><td>"Small market, small ACV?"</td><td>Emerging managers are the wedge. The same source-linked ledger sells upmarket to LPs and fund-of-funds who need to verify GP claims.</td></tr>
+        <tr><td>"Would founders hate this?"</td><td>Founders send what they already send. There's no new form to fill in.</td></tr>
+        <tr><td>"Won't GPs just switch off the LP links?"</td><td>For a Fund I raising Fund II, provable numbers are the signal an incumbent's narrative can't fake.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Built Oct 23 for Deal Flow. All fund, company, founder and LP data is fictional. Market figures are from public sources: Coller Barometer (re-up), Jefferies (secondaries), ILPA (2025 templates), AngelList (admin pricing).
+</footer>
+
+</div>

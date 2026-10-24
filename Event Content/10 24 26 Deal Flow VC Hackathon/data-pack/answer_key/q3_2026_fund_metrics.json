@@ -1,0 +1,57 @@
+{
+  "quarter": "2026-Q3",
+  "as_of": "2026-09-30",
+  "total_commitments_usd": 40000000,
+  "paid_in_capital_usd": 25800000,
+  "unfunded_commitment_usd": 14200000,
+  "cumulative_distributions_usd": 1150000,
+  "portfolio_cost_basis_usd": 21350000,
+  "portfolio_fair_value_usd": 32252000,
+  "fund_cash_usd": 325000,
+  "nav_usd": 32577000,
+  "tvpi": 1.31,
+  "dpi": 0.04,
+  "rvpi": 1.26,
+  "gross_moic_on_invested": 1.54,
+  "net_irr_estimate_pct": 11.5,
+  "irr_method": "Since-inception XIRR on LP cash flows (calls negative, distributions positive) dated at quarter end, ending NAV as terminal value. Net of fees and expenses; no carried-interest accrual modeled.",
+  "quarter_activity": {
+    "capital_called": 300000,
+    "investments": 0,
+    "management_fees": 200000,
+    "fund_expenses": 35000,
+    "realized_proceeds": 0,
+    "distributions": 0
+  },
+  "unrealized_change_usd": 2750000,
+  "marks_changed": [
+    {
+      "company_id": "C01",
+      "from": 1500000,
+      "to": 3150000
+    },
+    {
+      "company_id": "C12",
+      "from": 1500000,
+      "to": 2600000
+    }
+  ],
+  "prior_quarter": {
+    "quarter": "2026-Q2",
+    "as_of": "2026-06-30",
+    "total_commitments_usd": 40000000,
+    "paid_in_capital_usd": 25500000,
+    "unfunded_commitment_usd": 14500000,
+    "cumulative_distributions_usd": 1150000,
+    "portfolio_cost_basis_usd": 21350000,
+    "portfolio_fair_value_usd": 29502000,
+    "fund_cash_usd": 260000,
+    "nav_usd": 29762000,
+    "tvpi": 1.21,
+    "dpi": 0.05,
+    "rvpi": 1.17,
+    "gross_moic_on_invested": 1.42,
+    "net_irr_estimate_pct": 8.9,
+    "irr_method": "Since-inception XIRR on LP cash flows (calls negative, distributions positive) dated at quarter end, ending NAV as terminal value. Net of fees and expenses; no carried-interest accrual modeled."
+  }
+}

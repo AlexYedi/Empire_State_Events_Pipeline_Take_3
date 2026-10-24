@@ -1,0 +1,207 @@
+{
+  "period": "2026-Q3",
+  "requested": "2026-10-02",
+  "due": "2026-10-16",
+  "as_of": "2026-10-23",
+  "updates": [
+    {
+      "company_id": "C01",
+      "company": "Loomvale Systems",
+      "file": "updates/Q3_2026/C01_loomvale_2026-10-06.txt",
+      "from": "Mara Quillfeather <mara@loomvale.example>",
+      "received_date": "2026-10-06",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C02",
+      "company": "Tidewright Labs",
+      "file": "updates/Q3_2026/C02_tidewright_2026-10-09.txt",
+      "from": "Jonah Tidewell <jonah@tidewright.example>",
+      "received_date": "2026-10-09",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C03",
+      "company": "Ossmere Health",
+      "file": "updates/Q3_2026/C03_ossmere_Q3-2026-deck-export.md",
+      "from": "Priyanka Ossler <priyanka@ossmere.example>",
+      "received_date": "2026-10-12",
+      "channel": "email attachment (deck export)",
+      "status": "received"
+    },
+    {
+      "company_id": "C04",
+      "company": "Brackenfold",
+      "file": "updates/Q3_2026/C04_brackenfold_2026-10-14.md",
+      "from": "Wes Bracklund <wes@brackenfold.example>",
+      "received_date": "2026-10-14",
+      "channel": "email attachment",
+      "status": "received"
+    },
+    {
+      "company_id": "C05",
+      "company": "Quarrytone AI",
+      "file": "updates/Q3_2026/C05_quarrytone_2026-10-17.txt",
+      "from": "Ines Quarrow <ines@quarrytone.example>",
+      "received_date": "2026-10-17",
+      "channel": "email reply",
+      "status": "received_no_numbers"
+    },
+    {
+      "company_id": "C06",
+      "company": "Murrelwick Robotics",
+      "file": null,
+      "from": null,
+      "received_date": null,
+      "channel": null,
+      "status": "not_received",
+      "note": "No Q3 update received as of 2026-10-23. Requested 2026-10-02, reminder sent 2026-10-16."
+    },
+    {
+      "company_id": "C07",
+      "company": "Gantrell Dental Cloud",
+      "file": "updates/Q3_2026/C07_gantrell_2026-10-15.txt",
+      "from": "Dana Gantrell <dana@gantrell.example>",
+      "received_date": "2026-10-15",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C08",
+      "company": "Corvellum Pay",
+      "file": "updates/Q3_2026/C08_corvellum_2026-10-07.txt",
+      "from": "Felix Corvellis <felix@corvellum.example>",
+      "received_date": "2026-10-07",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C09",
+      "company": "Stillmote Studios",
+      "file": "updates/Q3_2026/C09_stillmote_Q3-deck.md",
+      "from": "June Stillmore <june@stillmote.example>",
+      "received_date": "2026-10-13",
+      "channel": "email attachment (deck export)",
+      "status": "received"
+    },
+    {
+      "company_id": "C10",
+      "company": "Vellstrom Data GmbH",
+      "file": "updates/Q3_2026/C10_vellstrom_2026-10-08.md",
+      "from": "Katrin Vellstrom <katrin@vellstrom.example>",
+      "received_date": "2026-10-08",
+      "channel": "email attachment",
+      "status": "received"
+    },
+    {
+      "company_id": "C11",
+      "company": "Kettleworn Commerce",
+      "file": "updates/Q3_2026/C11_kettleworn_2026-10-12.txt",
+      "from": "Ravi Kettleby <ravi@kettleworn.example>",
+      "received_date": "2026-10-12",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C12",
+      "company": "Halcyra Security",
+      "file": "updates/Q3_2026/C12_halcyra_2026-10-05.txt",
+      "from": "Odessa Halcyon <odessa@halcyra.example>",
+      "received_date": "2026-10-05",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C13",
+      "company": "Pebblequill Learning",
+      "file": "updates/Q3_2026/C13_pebblequill_2026-10-16.md",
+      "from": "Bram Pebbleton <bram@pebblequill.example>",
+      "received_date": "2026-10-16",
+      "channel": "email attachment",
+      "status": "received"
+    },
+    {
+      "company_id": "C14",
+      "company": "Wrenfield Cover",
+      "file": "updates/Q3_2026/C14_wrenfield_2026-10-13.txt",
+      "from": "Lena Wrenfield <lena@wrenfield.example>",
+      "received_date": "2026-10-13",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C15",
+      "company": "Dunmarsh Grid",
+      "file": "updates/Q3_2026/C15_dunmarsh_Q3-FY26-deck.md",
+      "from": "Silas Dunmarsh <silas@dunmarsh.example>",
+      "received_date": "2026-10-19",
+      "channel": "email attachment (deck export)",
+      "status": "received"
+    },
+    {
+      "company_id": "C16",
+      "company": "Ashvane Legal",
+      "file": "updates/Q3_2026/C16_ashvane_2026-10-08.txt",
+      "from": "Noor Ashvane <noor@ashvane.example>",
+      "received_date": "2026-10-08",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C17",
+      "company": "Velloway Mobility",
+      "file": "updates/Q3_2026/C17_velloway_2026-10-20.md",
+      "from": "Tomas Vellow <tomas@velloway.example>",
+      "received_date": "2026-10-20",
+      "channel": "email attachment",
+      "status": "received"
+    },
+    {
+      "company_id": "C18",
+      "company": "Thistlecrumb Foods",
+      "file": "updates/Q3_2026/C18_thistlecrumb_2026-10-16.txt",
+      "from": "Hattie Thistlewood <hattie@thistlecrumb.example>",
+      "received_date": "2026-10-16",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C19",
+      "company": "Marrowlight Bio",
+      "file": "updates/Q3_2026/C19_marrowlight_2026-10-14.txt",
+      "from": "Elio Marrowby <elio@marrowlight.example>",
+      "received_date": "2026-10-14",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C20",
+      "company": "Sorrel & Pike People",
+      "file": "updates/Q3_2026/C20_sorrelpike_Q3-update-deck.md",
+      "from": "Gemma Sorrel <gemma@sorrelpike.example>",
+      "received_date": "2026-10-09",
+      "channel": "email attachment (deck export)",
+      "status": "received"
+    },
+    {
+      "company_id": "C21",
+      "company": "Lanternwick Agents",
+      "file": "updates/Q3_2026/C21_lanternwick_2026-10-11.txt",
+      "from": "Kit Lanternby <kit@lanternwick.example>",
+      "received_date": "2026-10-11",
+      "channel": "email body",
+      "status": "received"
+    },
+    {
+      "company_id": "C22",
+      "company": "Cinderquay Games",
+      "file": "updates/Q3_2026/C22_cinderquay_2026-10-20.txt",
+      "from": "Rosalind Cinderby <rosalind@cinderquay.example>",
+      "received_date": "2026-10-20",
+      "channel": "email body",
+      "status": "received"
+    }
+  ]
+}

@@ -1,0 +1,2840 @@
+{
+  "fund": "Halyard Ventures Fund I, L.P.",
+  "period": "2026-Q2",
+  "fictional": true,
+  "companies": [
+    {
+      "company_id": "C01",
+      "company": "Loomvale Systems",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 118000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 278,
+            "end": 286
+          },
+          "quote": "$118,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 1416000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 294,
+            "end": 304
+          },
+          "quote": "$1,416,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 165000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 325,
+            "end": 333
+          },
+          "quote": "$165,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2900000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 360,
+            "end": 370
+          },
+          "quote": "$2,900,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 18,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 381,
+            "end": 390
+          },
+          "quote": "18 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 14,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 404,
+            "end": 406
+          },
+          "quote": "14",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 41,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 440,
+            "end": 442
+          },
+          "quote": "41",
+          "confidence": 1.0,
+          "note": "Paying customers (brokerages)"
+        },
+        "key_highlight": {
+          "value": "signed our first two enterprise brokerages on annual contracts",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 455,
+            "end": 517
+          },
+          "quote": "signed our first two enterprise brokerages on annual contracts",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "sales cycle for enterprise brokerages is running 4-5 months",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C01_loomvale_2026-07-07.txt",
+          "source_span": {
+            "start": 540,
+            "end": 599
+          },
+          "quote": "sales cycle for enterprise brokerages is running 4-5 months",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C02",
+      "company": "Tidewright Labs",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 96400,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 279,
+            "end": 286
+          },
+          "quote": "$96,400",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 1156800,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 294,
+            "end": 304
+          },
+          "quote": "$1,156,800",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 140000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 325,
+            "end": 333
+          },
+          "quote": "$140,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 3100000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 360,
+            "end": 370
+          },
+          "quote": "$3,100,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 22,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 381,
+            "end": 390
+          },
+          "quote": "22 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 12,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 404,
+            "end": 406
+          },
+          "quote": "12",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 220,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 423,
+            "end": 426
+          },
+          "quote": "220",
+          "confidence": 1.0,
+          "note": "Paying teams"
+        },
+        "key_highlight": {
+          "value": "crossed 200 paying teams on self-serve",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 439,
+            "end": 477
+          },
+          "quote": "crossed 200 paying teams on self-serve",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "a well-funded competitor launched a free tier",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C02_tidewright_2026-07-08.txt",
+          "source_span": {
+            "start": 500,
+            "end": 545
+          },
+          "quote": "a well-funded competitor launched a free tier",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C03",
+      "company": "Ossmere Health",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 58000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 277,
+            "end": 284
+          },
+          "quote": "$58,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 696000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 292,
+            "end": 300
+          },
+          "quote": "$696,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 190000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 321,
+            "end": 329
+          },
+          "quote": "$190,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 4200000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 356,
+            "end": 366
+          },
+          "quote": "$4,200,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 22,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 377,
+            "end": 386
+          },
+          "quote": "22 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 16,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 400,
+            "end": 402
+          },
+          "quote": "16",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 9,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 425,
+            "end": 426
+          },
+          "quote": "9",
+          "confidence": 1.0,
+          "note": "Clinic groups live"
+        },
+        "key_highlight": {
+          "value": "went live with our ninth clinic group",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 439,
+            "end": 476
+          },
+          "quote": "went live with our ninth clinic group",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "payer reimbursement code for our remote-monitoring workflow is under review",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C03_ossmere_2026-07-09.txt",
+          "source_span": {
+            "start": 499,
+            "end": 574
+          },
+          "quote": "payer reimbursement code for our remote-monitoring workflow is under review",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C04",
+      "company": "Brackenfold",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 14500,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 273,
+            "end": 280
+          },
+          "quote": "$14,500",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 174000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 288,
+            "end": 296
+          },
+          "quote": "$174,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 62000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 317,
+            "end": 324
+          },
+          "quote": "$62,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 1450000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 351,
+            "end": 361
+          },
+          "quote": "$1,450,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 23,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 372,
+            "end": 381
+          },
+          "quote": "23 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 5,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 395,
+            "end": 396
+          },
+          "quote": "5",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 6,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 417,
+            "end": 418
+          },
+          "quote": "6",
+          "confidence": 1.0,
+          "note": "Paying customers"
+        },
+        "key_highlight": {
+          "value": "first municipal customer signed",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 431,
+            "end": 462
+          },
+          "quote": "first municipal customer signed",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "pilots take 6+ months to convert",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C04_brackenfold_2026-07-10.txt",
+          "source_span": {
+            "start": 485,
+            "end": 517
+          },
+          "quote": "pilots take 6+ months to convert",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C05",
+      "company": "Quarrytone AI",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 72000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 281,
+            "end": 288
+          },
+          "quote": "$72,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 864000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 296,
+            "end": 304
+          },
+          "quote": "$864,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 210000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 325,
+            "end": 333
+          },
+          "quote": "$210,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 5100000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 360,
+            "end": 370
+          },
+          "quote": "$5,100,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 24,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 381,
+            "end": 390
+          },
+          "quote": "24 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 15,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 404,
+            "end": 406
+          },
+          "quote": "15",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 18,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 427,
+            "end": 429
+          },
+          "quote": "18",
+          "confidence": 1.0,
+          "note": "Paying customers"
+        },
+        "key_highlight": {
+          "value": "inference cost per request down 40% after the scheduler rewrite",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 442,
+            "end": 505
+          },
+          "quote": "inference cost per request down 40% after the scheduler rewrite",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "GPU capacity contracts renew in Q4 at higher prices",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C05_quarrytone_2026-07-11.txt",
+          "source_span": {
+            "start": 528,
+            "end": 579
+          },
+          "quote": "GPU capacity contracts renew in Q4 at higher prices",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C06",
+      "company": "Murrelwick Robotics",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+      "revenue_type": "non_recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 35000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 303,
+            "end": 310
+          },
+          "quote": "$35,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": null,
+          "unit": "currency",
+          "currency": null,
+          "period": null,
+          "source_file": null,
+          "source_span": null,
+          "quote": null,
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 260000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 331,
+            "end": 339
+          },
+          "quote": "$260,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 3800000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 366,
+            "end": 376
+          },
+          "quote": "$3,800,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 15,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 387,
+            "end": 396
+          },
+          "quote": "15 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 21,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 410,
+            "end": 412
+          },
+          "quote": "21",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 4,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 437,
+            "end": 438
+          },
+          "quote": "4",
+          "confidence": 1.0,
+          "note": "Paid pilot customers"
+        },
+        "key_highlight": {
+          "value": "fourth paid pilot started with a regional 3PL",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 451,
+            "end": 496
+          },
+          "quote": "fourth paid pilot started with a regional 3PL",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "pilot-to-fleet conversion still unproven",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C06_murrelwick_2026-07-12.txt",
+          "source_span": {
+            "start": 519,
+            "end": 559
+          },
+          "quote": "pilot-to-fleet conversion still unproven",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C07",
+      "company": "Gantrell Dental Cloud",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 61000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 281,
+            "end": 288
+          },
+          "quote": "$61,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 732000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 296,
+            "end": 304
+          },
+          "quote": "$732,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 55000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 325,
+            "end": 332
+          },
+          "quote": "$55,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 494000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 359,
+            "end": 367
+          },
+          "quote": "$494,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 9,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 378,
+            "end": 386
+          },
+          "quote": "9 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 11,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 400,
+            "end": 402
+          },
+          "quote": "11",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 87,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 428,
+            "end": 430
+          },
+          "quote": "87",
+          "confidence": 1.0,
+          "note": "Practices on platform"
+        },
+        "key_highlight": {
+          "value": "launched the imaging integration beta",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 443,
+            "end": 480
+          },
+          "quote": "launched the imaging integration beta",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "two mid-size practices gave churn notice",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C07_gantrell_2026-07-13.txt",
+          "source_span": {
+            "start": 503,
+            "end": 543
+          },
+          "quote": "two mid-size practices gave churn notice",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C08",
+      "company": "Corvellum Pay",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 168000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 277,
+            "end": 285
+          },
+          "quote": "$168,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 2016000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 293,
+            "end": 303
+          },
+          "quote": "$2,016,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 230000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 324,
+            "end": 332
+          },
+          "quote": "$230,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 4600000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 359,
+            "end": 369
+          },
+          "quote": "$4,600,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 20,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 380,
+            "end": 389
+          },
+          "quote": "20 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 22,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 403,
+            "end": 405
+          },
+          "quote": "22",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 34,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 419,
+            "end": 421
+          },
+          "quote": "34",
+          "confidence": 1.0,
+          "note": "Customers"
+        },
+        "key_highlight": {
+          "value": "processed our first month above $40M in payment volume",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 434,
+            "end": 488
+          },
+          "quote": "processed our first month above $40M in payment volume",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "sponsor bank renegotiation due in Q4",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C08_corvellum_2026-07-14.txt",
+          "source_span": {
+            "start": 511,
+            "end": 547
+          },
+          "quote": "sponsor bank renegotiation due in Q4",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C09",
+      "company": "Stillmote Studios",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+      "revenue_type": "non_recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 78000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 296,
+            "end": 303
+          },
+          "quote": "$78,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": null,
+          "unit": "currency",
+          "currency": null,
+          "period": null,
+          "source_file": null,
+          "source_span": null,
+          "quote": null,
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 45000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 324,
+            "end": 331
+          },
+          "quote": "$45,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 880000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 358,
+            "end": 366
+          },
+          "quote": "$880,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 20,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 377,
+            "end": 386
+          },
+          "quote": "20 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 7,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 400,
+            "end": 401
+          },
+          "quote": "7",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 11,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 419,
+            "end": 421
+          },
+          "quote": "11",
+          "confidence": 1.0,
+          "note": "Brand clients"
+        },
+        "key_highlight": {
+          "value": "booked our largest brand campaign to date",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 434,
+            "end": 475
+          },
+          "quote": "booked our largest brand campaign to date",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "revenue is lumpy and project-based",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C09_stillmote_2026-07-15.txt",
+          "source_span": {
+            "start": 498,
+            "end": 532
+          },
+          "quote": "revenue is lumpy and project-based",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C10",
+      "company": "Vellstrom Data GmbH",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 31200,
+          "unit": "currency",
+          "currency": "EUR",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 305,
+            "end": 312
+          },
+          "quote": "€31,200",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 374400,
+          "unit": "currency",
+          "currency": "EUR",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 320,
+            "end": 328
+          },
+          "quote": "€374,400",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 118000,
+          "unit": "currency",
+          "currency": "EUR",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 349,
+            "end": 357
+          },
+          "quote": "€118,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2780000,
+          "unit": "currency",
+          "currency": "EUR",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 384,
+            "end": 394
+          },
+          "quote": "€2,780,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 23,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 405,
+            "end": 414
+          },
+          "quote": "23 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 13,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 428,
+            "end": 430
+          },
+          "quote": "13",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 17,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 444,
+            "end": 446
+          },
+          "quote": "17",
+          "confidence": 1.0,
+          "note": "Customers"
+        },
+        "key_highlight": {
+          "value": "signed our first DAX-listed customer pilot",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 459,
+            "end": 501
+          },
+          "quote": "signed our first DAX-listed customer pilot",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "German enterprise procurement cycles are long",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 524,
+            "end": 569
+          },
+          "quote": "German enterprise procurement cycles are long",
+          "confidence": 1.0
+        }
+      },
+      "flags": [
+        {
+          "flag": "non_usd_currency",
+          "source_file": "updates/Q2_2026/C10_vellstrom_2026-07-16.txt",
+          "source_span": {
+            "start": 270,
+            "end": 289
+          },
+          "quote": "All figures in EUR."
+        }
+      ]
+    },
+    {
+      "company_id": "C11",
+      "company": "Kettleworn Commerce",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 83000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 279,
+            "end": 286
+          },
+          "quote": "$83,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 996000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 294,
+            "end": 302
+          },
+          "quote": "$996,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 128000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 323,
+            "end": 331
+          },
+          "quote": "$128,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2040000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 358,
+            "end": 368
+          },
+          "quote": "$2,040,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 16,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 379,
+            "end": 388
+          },
+          "quote": "16 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 10,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 402,
+            "end": 404
+          },
+          "quote": "10",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 140,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 423,
+            "end": 426
+          },
+          "quote": "140",
+          "confidence": 1.0,
+          "note": "Merchants live"
+        },
+        "key_highlight": {
+          "value": "launched the returns module",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 439,
+            "end": 466
+          },
+          "quote": "launched the returns module",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "two large merchants are evaluating in-house builds",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C11_kettleworn_2026-07-17.txt",
+          "source_span": {
+            "start": 489,
+            "end": 539
+          },
+          "quote": "two large merchants are evaluating in-house builds",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C12",
+      "company": "Halcyra Security",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 141000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 276,
+            "end": 284
+          },
+          "quote": "$141,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 1692000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 292,
+            "end": 302
+          },
+          "quote": "$1,692,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 260000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 323,
+            "end": 331
+          },
+          "quote": "$260,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 3300000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 358,
+            "end": 368
+          },
+          "quote": "$3,300,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 13,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 379,
+            "end": 388
+          },
+          "quote": "13 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 18,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 402,
+            "end": 404
+          },
+          "quote": "18",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 26,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 429,
+            "end": 431
+          },
+          "quote": "26",
+          "confidence": 1.0,
+          "note": "Enterprise customers"
+        },
+        "key_highlight": {
+          "value": "closed two enterprise logos in financial services",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 444,
+            "end": 493
+          },
+          "quote": "closed two enterprise logos in financial services",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "SOC 2 Type II audit scheduled for Q3",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C12_halcyra_2026-07-06.txt",
+          "source_span": {
+            "start": 516,
+            "end": 552
+          },
+          "quote": "SOC 2 Type II audit scheduled for Q3",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C13",
+      "company": "Pebblequill Learning",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 22400,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 282,
+            "end": 289
+          },
+          "quote": "$22,400",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 268800,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 297,
+            "end": 305
+          },
+          "quote": "$268,800",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 58000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 326,
+            "end": 333
+          },
+          "quote": "$58,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 1120000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 360,
+            "end": 370
+          },
+          "quote": "$1,120,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 19,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 381,
+            "end": 390
+          },
+          "quote": "19 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 6,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 404,
+            "end": 405
+          },
+          "quote": "6",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 31,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 417,
+            "end": 419
+          },
+          "quote": "31",
+          "confidence": 1.0,
+          "note": "Schools"
+        },
+        "key_highlight": {
+          "value": "expanded to two new districts",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 432,
+            "end": 461
+          },
+          "quote": "expanded to two new districts",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "district budgets set in August could slip",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C13_pebblequill_2026-07-07.txt",
+          "source_span": {
+            "start": 484,
+            "end": 525
+          },
+          "quote": "district budgets set in August could slip",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C14",
+      "company": "Wrenfield Cover",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 47300,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 277,
+            "end": 284
+          },
+          "quote": "$47,300",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 567600,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 292,
+            "end": 300
+          },
+          "quote": "$567,600",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 175000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 321,
+            "end": 329
+          },
+          "quote": "$175,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 3950000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 356,
+            "end": 366
+          },
+          "quote": "$3,950,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 22,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 377,
+            "end": 386
+          },
+          "quote": "22 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 15,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 400,
+            "end": 402
+          },
+          "quote": "15",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 2140,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 422,
+            "end": 427
+          },
+          "quote": "2,140",
+          "confidence": 1.0,
+          "note": "Active policies"
+        },
+        "key_highlight": {
+          "value": "crossed 2,000 active policies",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 440,
+            "end": 469
+          },
+          "quote": "crossed 2,000 active policies",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "reinsurance capacity renews in January",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C14_wrenfield_2026-07-08.txt",
+          "source_span": {
+            "start": 492,
+            "end": 530
+          },
+          "quote": "reinsurance capacity renews in January",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C15",
+      "company": "Dunmarsh Grid",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 39000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 282,
+            "end": 289
+          },
+          "quote": "$39,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 468000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 297,
+            "end": 305
+          },
+          "quote": "$468,000",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 155000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 326,
+            "end": 334
+          },
+          "quote": "$155,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 4400000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 361,
+            "end": 371
+          },
+          "quote": "$4,400,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 28,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 382,
+            "end": 391
+          },
+          "quote": "28 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 13,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 405,
+            "end": 407
+          },
+          "quote": "13",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 5,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 429,
+            "end": 430
+          },
+          "quote": "5",
+          "confidence": 1.0,
+          "note": "Utility customers"
+        },
+        "key_highlight": {
+          "value": "fifth utility signed a 3-year contract",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 443,
+            "end": 481
+          },
+          "quote": "fifth utility signed a 3-year contract",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "utility procurement timelines are slow",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C15_dunmarsh_2026-07-09.txt",
+          "source_span": {
+            "start": 504,
+            "end": 542
+          },
+          "quote": "utility procurement timelines are slow",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C16",
+      "company": "Ashvane Legal",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 88600,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 269,
+            "end": 276
+          },
+          "quote": "$88,600",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 1063200,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 284,
+            "end": 294
+          },
+          "quote": "$1,063,200",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 150000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 315,
+            "end": 323
+          },
+          "quote": "$150,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 3600000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 350,
+            "end": 360
+          },
+          "quote": "$3,600,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 24,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 371,
+            "end": 380
+          },
+          "quote": "24 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 12,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 394,
+            "end": 396
+          },
+          "quote": "12",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 37,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 410,
+            "end": 412
+          },
+          "quote": "37",
+          "confidence": 1.0,
+          "note": "Law firms"
+        },
+        "key_highlight": {
+          "value": "net revenue retention at 128%",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 425,
+            "end": 454
+          },
+          "quote": "net revenue retention at 128%",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "incumbent research vendors bundling drafting tools",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C16_ashvane_2026-07-10.txt",
+          "source_span": {
+            "start": 477,
+            "end": 527
+          },
+          "quote": "incumbent research vendors bundling drafting tools",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C17",
+      "company": "Velloway Mobility",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 18200,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 275,
+            "end": 282
+          },
+          "quote": "$18,200",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 218400,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 290,
+            "end": 298
+          },
+          "quote": "$218,400",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 85000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 319,
+            "end": 326
+          },
+          "quote": "$85,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 1300000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 353,
+            "end": 363
+          },
+          "quote": "$1,300,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 15,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 374,
+            "end": 383
+          },
+          "quote": "15 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 8,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 397,
+            "end": 398
+          },
+          "quote": "8",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 3,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 418,
+            "end": 419
+          },
+          "quote": "3",
+          "confidence": 1.0,
+          "note": "Fleet operators"
+        },
+        "key_highlight": {
+          "value": "third fleet operator went live",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 432,
+            "end": 462
+          },
+          "quote": "third fleet operator went live",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "fleet electrification budgets are shifting",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C17_velloway_2026-07-11.txt",
+          "source_span": {
+            "start": 485,
+            "end": 527
+          },
+          "quote": "fleet electrification budgets are shifting",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C18",
+      "company": "Thistlecrumb Foods",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+      "revenue_type": "non_recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 210000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 306,
+            "end": 314
+          },
+          "quote": "$210,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": null,
+          "unit": "currency",
+          "currency": null,
+          "period": null,
+          "source_file": null,
+          "source_span": null,
+          "quote": null,
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 120000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 335,
+            "end": 343
+          },
+          "quote": "$120,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2200000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 370,
+            "end": 380
+          },
+          "quote": "$2,200,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 18,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 391,
+            "end": 400
+          },
+          "quote": "18 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 17,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 414,
+            "end": 416
+          },
+          "quote": "17",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 410,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 433,
+            "end": 436
+          },
+          "quote": "410",
+          "confidence": 1.0,
+          "note": "Retail doors"
+        },
+        "key_highlight": {
+          "value": "entered a 120-store regional grocery chain",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 449,
+            "end": 491
+          },
+          "quote": "entered a 120-store regional grocery chain",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "promo spend is high in new doors",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C18_thistlecrumb_2026-07-12.txt",
+          "source_span": {
+            "start": 514,
+            "end": 546
+          },
+          "quote": "promo spend is high in new doors",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C19",
+      "company": "Marrowlight Bio",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+      "revenue_type": "none",
+      "fields": {
+        "monthly_revenue": {
+          "value": 0,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 273,
+            "end": 275
+          },
+          "quote": "$0",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": null,
+          "unit": "currency",
+          "currency": null,
+          "period": null,
+          "source_file": null,
+          "source_span": null,
+          "quote": null,
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 95000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 310,
+            "end": 317
+          },
+          "quote": "$95,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2600000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 344,
+            "end": 354
+          },
+          "quote": "$2,600,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 27,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 365,
+            "end": 374
+          },
+          "quote": "27 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 7,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 388,
+            "end": 389
+          },
+          "quote": "7",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 0,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 410,
+            "end": 411
+          },
+          "quote": "0",
+          "confidence": 1.0,
+          "note": "Paying customers"
+        },
+        "key_highlight": {
+          "value": "assay hit target sensitivity on first design-partner samples",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 424,
+            "end": 484
+          },
+          "quote": "assay hit target sensitivity on first design-partner samples",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "lab hiring is slow",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C19_marrowlight_2026-07-13.txt",
+          "source_span": {
+            "start": 507,
+            "end": 525
+          },
+          "quote": "lab hiring is slow",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C20",
+      "company": "Sorrel & Pike People",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 64800,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 289,
+            "end": 296
+          },
+          "quote": "$64,800",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 777600,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 304,
+            "end": 312
+          },
+          "quote": "$777,600",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 140000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 333,
+            "end": 341
+          },
+          "quote": "$140,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 2900000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 368,
+            "end": 378
+          },
+          "quote": "$2,900,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 20,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 389,
+            "end": 398
+          },
+          "quote": "20 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 14,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 412,
+            "end": 414
+          },
+          "quote": "14",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 58,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 428,
+            "end": 430
+          },
+          "quote": "58",
+          "confidence": 1.0,
+          "note": "Customers"
+        },
+        "key_highlight": {
+          "value": "launched payroll-sync integrations",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 443,
+            "end": 477
+          },
+          "quote": "launched payroll-sync integrations",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "SMB churn ticked up to 2.1% monthly",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C20_sorrelpike_2026-07-14.txt",
+          "source_span": {
+            "start": 500,
+            "end": 535
+          },
+          "quote": "SMB churn ticked up to 2.1% monthly",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C21",
+      "company": "Lanternwick Agents",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+      "revenue_type": "recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 9800,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 287,
+            "end": 293
+          },
+          "quote": "$9,800",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": 117600,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 301,
+            "end": 309
+          },
+          "quote": "$117,600",
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 70000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 330,
+            "end": 337
+          },
+          "quote": "$70,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 1900000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 364,
+            "end": 374
+          },
+          "quote": "$1,900,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 27,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 385,
+            "end": 394
+          },
+          "quote": "27 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 6,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 408,
+            "end": 409
+          },
+          "quote": "6",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 4,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 430,
+            "end": 431
+          },
+          "quote": "4",
+          "confidence": 1.0,
+          "note": "Paying customers"
+        },
+        "key_highlight": {
+          "value": "first four paying customers on the agent platform",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 444,
+            "end": 493
+          },
+          "quote": "first four paying customers on the agent platform",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "pricing model still being tested",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C21_lanternwick_2026-07-15.txt",
+          "source_span": {
+            "start": 516,
+            "end": 548
+          },
+          "quote": "pricing model still being tested",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    },
+    {
+      "company_id": "C22",
+      "company": "Cinderquay Games",
+      "period": "2026-Q2",
+      "update_status": "received",
+      "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+      "revenue_type": "non_recurring",
+      "fields": {
+        "monthly_revenue": {
+          "value": 31000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 303,
+            "end": 310
+          },
+          "quote": "$31,000",
+          "confidence": 1.0
+        },
+        "arr": {
+          "value": null,
+          "unit": "currency",
+          "currency": null,
+          "period": null,
+          "source_file": null,
+          "source_span": null,
+          "quote": null,
+          "confidence": 1.0
+        },
+        "monthly_burn": {
+          "value": 90000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 331,
+            "end": 338
+          },
+          "quote": "$90,000",
+          "confidence": 1.0
+        },
+        "cash": {
+          "value": 1500000,
+          "unit": "currency",
+          "currency": "USD",
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 365,
+            "end": 375
+          },
+          "quote": "$1,500,000",
+          "confidence": 1.0
+        },
+        "runway_months": {
+          "value": 16,
+          "unit": "months",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 386,
+            "end": 395
+          },
+          "quote": "16 months",
+          "confidence": 1.0
+        },
+        "headcount": {
+          "value": 9,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 409,
+            "end": 410
+          },
+          "quote": "9",
+          "confidence": 1.0
+        },
+        "customers": {
+          "value": 3900,
+          "unit": "count",
+          "currency": null,
+          "period": "2026-06-30",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 427,
+            "end": 432
+          },
+          "quote": "3,900",
+          "confidence": 1.0,
+          "note": "Paying users"
+        },
+        "key_highlight": {
+          "value": "soft-launched in two test markets",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 445,
+            "end": 478
+          },
+          "quote": "soft-launched in two test markets",
+          "confidence": 1.0
+        },
+        "key_risk": {
+          "value": "paid user acquisition costs are rising",
+          "unit": "text",
+          "currency": null,
+          "period": "2026-Q2",
+          "source_file": "updates/Q2_2026/C22_cinderquay_2026-07-16.txt",
+          "source_span": {
+            "start": 501,
+            "end": 539
+          },
+          "quote": "paid user acquisition costs are rising",
+          "confidence": 1.0
+        }
+      },
+      "flags": []
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+<title>Alex Yedi Stack Card</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; the stack map is a layer-by-layer ledger of chips coloured by share mode */
+:root{
+  --bg:#f6f7f3; --surface:#ffffff; --fg:#14170f; --muted:#5b6152; --line:#dde1d5;
+  --accent:#3f8f0c; --accent-ink:#0d1a03; --mark:#8FE83A;
+  --shared:#2f7d14; --artifact:#2a6fb0; --pattern:#8a5a00; --private:#8b8f86;
+  --shared-bg:#e6f4dc; --artifact-bg:#e2edf8; --pattern-bg:#f6ecd8; --private-bg:#eceee9;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Public Sans", "Helvetica Neue", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f120c; --surface:#171b13; --fg:#eef1e8; --muted:#a3ab97; --line:#2a3022;
+  --accent:#8FE83A; --accent-ink:#0d1a03; --mark:#8FE83A;
+  --shared:#9fe36b; --artifact:#8cc3f5; --pattern:#f0c36e; --private:#9aa093;
+  --shared-bg:#1d2c12; --artifact-bg:#14243a; --pattern-bg:#2e2412; --private-bg:#20241c;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f120c; --surface:#171b13; --fg:#eef1e8; --muted:#a3ab97; --line:#2a3022;
+  --accent:#8FE83A; --accent-ink:#0d1a03; --mark:#8FE83A;
+  --shared:#9fe36b; --artifact:#8cc3f5; --pattern:#f0c36e; --private:#9aa093;
+  --shared-bg:#1d2c12; --artifact-bg:#14243a; --pattern-bg:#2e2412; --private-bg:#20241c;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+h1 .name{background:linear-gradient(transparent 68%,var(--mark) 68%,var(--mark) 92%,transparent 92%);color:var(--fg)}
+h2{font-size:1.6rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0;max-width:68ch}
+.eyebrow{font:600 .72rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+section{display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.15rem;max-width:62ch}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+
+/* pair box */
+.pair{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;display:grid;grid-template-columns:1.3fr 1fr;gap:24px}
+.pair ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+.pair .actions{display:flex;flex-direction:column;gap:10px;align-self:center}
+button{font:600 .95rem var(--f-body);border-radius:8px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--fg);text-align:left}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.status{font:.82rem var(--f-mono);color:var(--muted);min-height:1.2em}
+textarea{width:100%;min-height:160px;font:12px/1.4 var(--f-mono);background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px}
+@media (max-width:720px){.pair{grid-template-columns:1fr}}
+
+/* legend + map */
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px}
+.legend span{display:inline-flex;gap:8px;align-items:baseline;font-size:.9rem}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;transform:translateY(1px)}
+.map{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.layer{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.layer > div{min-width:0}
+.layer .lname{font:600 .78rem/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-top:6px}
+.layer .ldesc{font-size:.85rem;color:var(--muted);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border-radius:6px;padding:6px 10px;font-size:.88rem;line-height:1.3;border:1px solid transparent;cursor:help;max-width:100%}
+.chip[data-s=shared]{background:var(--shared-bg);color:var(--fg);border-color:color-mix(in srgb,var(--shared) 40%,transparent)}
+.chip[data-s=artifact]{background:var(--artifact-bg);color:var(--fg);border-color:color-mix(in srgb,var(--artifact) 40%,transparent)}
+.chip[data-s=pattern]{background:var(--pattern-bg);color:var(--fg);border-color:color-mix(in srgb,var(--pattern) 40%,transparent)}
+.chip[data-s=private]{background:var(--private-bg);color:var(--muted);border-style:dashed;border-color:var(--private)}
+.chip .if{font:.7rem var(--f-mono);color:var(--muted);margin-left:6px}
+.detail{margin-top:10px;font-size:.9rem;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+@media (max-width:640px){.layer{grid-template-columns:1fr;gap:6px}}
+
+/* project */
+.thesis{font-family:var(--f-display);font-size:1.35rem;font-weight:600;line-height:1.3;max-width:40ch;border-left:4px solid var(--mark);padding-left:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card .k{font:600 .72rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+@media (prefers-color-scheme: light){.card .k{color:var(--shared)}}
+.card p{font-size:.92rem}
+.card.me{border-color:var(--accent)}
+@media (max-width:860px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:1fr}}
+@media (max-width:480px){.grid4{grid-template-columns:1fr}}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .72rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+td.id{font:600 .85rem var(--f-mono);white-space:nowrap}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.88rem}
+.flow span{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 9px}
+.flow i{color:var(--muted);font-style:normal}
+ul.clean{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;max-width:72ch}
+footer{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){.chip{transition:transform .12s}.chip:hover{transform:translateY(-1px)}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Stack card · Deal Flow VC Hackathon · Betaworks · Oct 24</div>
+  <h1><span class="name">Alex Yedi</span>'s stack, ready to pair with yours</h1>
+  <p class="lede">These are the tools, agents, skills and working rules I'm bringing today. There are two versions: this page for you, and a file for your AI. Give your agent the file and it'll show where our setups overlap, where they fill each other's gaps, and how to split the build.</p>
+</header>
+
+<section class="pair" aria-labelledby="pair-h">
+  <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+    <h2 id="pair-h">Pair up in two minutes</h2>
+    <ol>
+      <li>Copy the agent file.</li>
+      <li>Paste it into whatever you build with (Claude, Cursor, Copilot, ChatGPT, Codex) and add: <em>"Compare this with my setup and the project."</em></li>
+      <li>It sends back an overlap table, the seat that fits you, an architecture split by owner, and your first 90 minutes. Show me what it says.</li>
+    </ol>
+  </div>
+  <div class="actions">
+    <button class="primary" id="copy-agent" type="button">Copy the agent file (Markdown + JSON)</button>
+    <button id="copy-json" type="button">Copy the raw JSON only</button>
+    <div class="status" id="copy-status" role="status" aria-live="polite"></div>
+    <textarea id="fallback" hidden aria-label="Agent file text" readonly></textarea>
+  </div>
+</section>
+
+<section aria-labelledby="map-h">
+  <div class="eyebrow">The stack</div>
+  <h2 id="map-h">Layer by layer, coloured by what you can use</h2>
+  <div class="legend" id="legend"></div>
+  <div class="map" id="map"></div>
+  <p class="muted" style="font-size:.88rem">Tap any chip to see what it does and how it connects. MCP servers work from any MCP client, so if we both use Vercel, Railway, Supabase or Linear, each of our agents can attach to the same project.</p>
+</section>
+
+<section aria-labelledby="proj-h">
+  <div class="eyebrow">Today's project</div>
+  <h2 id="proj-h">Provable LP Update</h2>
+  <p class="thesis">Your quarterly LP update, explained and provable.</p>
+  <p>Messy founder updates go in. Out comes a GP letter where every number traces to its source and every change from last quarter is explained, so a Fund I manager can earn the trust that closes Fund II. Funds / LP track. The buyer is the emerging-manager GP.</p>
+  <div class="flow" id="flow"></div>
+  <div class="grid4" id="seats"></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ID</th><th>The organizers' words</th></tr></thead>
+      <tbody id="challenges"></tbody>
+    </table>
+  </div>
+  <p class="muted" style="font-size:.9rem">Rule: anything that can't be traced to one of these IDs gets cut. Out of scope on purpose: secondary pricing.</p>
+</section>
+
+<section aria-labelledby="seam-h">
+  <div class="eyebrow">Where stacks plug together</div>
+  <h2 id="seam-h">Collaboration seams</h2>
+  <p>Our tools don't need to match. What has to match is the handful of places our work meets. Each of these works with any editor or agent.</p>
+  <div class="grid3" id="seams"></div>
+</section>
+
+<section aria-labelledby="rules-h">
+  <div class="eyebrow">How I work on a team</div>
+  <h2 id="rules-h">Working rules</h2>
+  <div class="grid3" id="rules"></div>
+</section>
+
+<section aria-labelledby="kit-h">
+  <div class="eyebrow">Ready before 9 AM</div>
+  <h2 id="kit-h">What's already built</h2>
+  <ul class="clean">
+    <li><strong>A synthetic fund to build against:</strong> Halyard Ventures Fund I, 22 companies, with clean Q2 and deliberately messy Q3 founder updates. Everything in it is fictional.</li>
+    <li><strong>An answer key:</strong> the true value for every metric, with the exact quote and character span it came from.</li>
+    <li><strong>A scorer:</strong> <code>python3 eval/score.py predictions/</code> prints accuracy next to the do-nothing baseline (carry last quarter forward: 18.2% field accuracy, 0% traceback).</li>
+    <li><strong>The contract:</strong> <code>schema/extracted_metrics.schema.json</code>, so the front end, backend and eval can start in parallel at 10:45.</li>
+    <li>Python standard library only. No keys, no network.</li>
+  </ul>
+</section>
+
+<footer>All fund, company, founder and LP data in the pack is fictional. Private connectors (email, calendar, CRM, meeting notes) are listed so you know they exist; they're never shared. Keys stay in a gitignored <code>.env</code>, never in chat.</footer>
+</div>
+
+<script>
+const STACK = __DATA__;
+const AGENT_MD = __AGENT_MD__;
+const MODES = {shared:"Use it with me today", artifact:"I send you the output", pattern:"Copy the design", private:"Mine only (personal data)"};
+const LAYER_NAMES = {agent_runtime:"Agent runtime", agents:"Agents", skills:"Skills", build_and_deploy:"Build & deploy", design_and_presentation:"Design & pitch", media:"Media", knowledge_and_docs:"Knowledge & docs", private_data:"Private data", data_assets:"Data assets", working_rules:"Working rules"};
+const $ = s => document.querySelector(s);
+const el = (t, a = {}, txt) => { const e = document.createElement(t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+
+const lg = $("#legend");
+for (const [k, v] of Object.entries(MODES)) { const s = el("span"); const d = el("i", {class: "dot"}); d.style.background = `var(--${k})`; s.append(d, el("b", {}, k), document.createTextNode(" " + v)); lg.append(s); }
+
+const map = $("#map");
+for (const L of STACK.layers.filter(l => l.layer !== "working_rules")) {
+  const row = el("div", {class: "layer"});
+  row.append(el("div", {class: "lname"}, LAYER_NAMES[L.layer] || L.layer));
+  const right = el("div");
+  if (L.description) right.append(el("div", {class: "ldesc"}, L.description));
+  const chips = el("div", {class: "chips"}); const det = el("div", {class: "detail"}); det.hidden = true;
+  for (const n of L.nodes) {
+    const c = el("button", {class: "chip", type: "button", "data-s": n.share, "aria-expanded": "false"});
+    c.append(document.createTextNode(n.name), el("span", {class: "if"}, n.interface));
+    c.addEventListener("click", () => {
+      const open = c.getAttribute("aria-expanded") === "true";
+      chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-expanded", "false"));
+      if (open) { det.hidden = true; return; }
+      c.setAttribute("aria-expanded", "true"); det.replaceChildren();
+      det.append(el("strong", {}, n.name + " · "), document.createTextNode(MODES[n.share] + (n.does ? ". " + n.does + "." : ".")));
+      if (n.notes) det.append(el("div", {class: "muted"}, n.notes + "."));
+      if (n.equivalents) det.append(el("div", {class: "muted"}, "If you use " + n.equivalents.join(", ") + " instead, that works too."));
+      if (n.entry_points) det.append(el("div", {class: "mono"}, n.entry_points.join("  ·  ")));
+      det.hidden = false;
+    });
+    chips.append(c);
+  }
+  right.append(chips, det); row.append(right); map.append(row);
+}
+
+const P = STACK.project_spec;
+const flow = $("#flow");
+P.pipeline.forEach((s, i) => { if (i) flow.append(el("i", {}, "→")); flow.append(el("span", {}, s)); });
+const seats = $("#seats");
+for (const s of P.seats) { const c = el("div", {class: "card" + (s.seat === 4 ? " me" : "")}); c.append(el("div", {class: "k"}, "Seat " + s.seat), el("h3", {}, s.role), el("p", {}, s.owns)); seats.append(c); }
+const ch = $("#challenges");
+for (const c of P.challenges) { const tr = el("tr"); tr.append(el("td", {class: "id"}, c.id), el("td", {}, "“" + c.clause + "”")); ch.append(tr); }
+const seams = $("#seams");
+for (const s of STACK.collaboration_seams) { const c = el("div", {class: "card"}); c.append(el("h3", {}, s.seam), el("p", {}, s.why)); seams.append(c); }
+const rules = $("#rules");
+for (const r of STACK.layers.find(l => l.layer === "working_rules").nodes) { const c = el("div", {class: "card"}); c.append(el("h3", {}, r.name), el("p", {}, r.does)); rules.append(c); }
+
+async function copy(text, label) {
+  const st = $("#copy-status"), fb = $("#fallback");
+  try { await navigator.clipboard.writeText(text); st.textContent = label + " copied. Paste it into your agent."; fb.hidden = true; }
+  catch (e) { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); st.textContent = "Your browser blocked copying. The text is selected below: copy it by hand."; }
+}
+$("#copy-agent").addEventListener("click", () => copy(AGENT_MD, "Agent file"));
+$("#copy-json").addEventListener("click", () => copy(JSON.stringify(STACK, null, 2), "JSON"));
+</script>

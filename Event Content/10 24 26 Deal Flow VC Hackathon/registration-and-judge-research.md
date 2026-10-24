@@ -4,6 +4,8 @@
 - **Tracks:** Sourcing · Diligence · Portfolio ops · LP reporting ([GarysGuide listing](https://www.garysguide.com/events/l2mm85l/Deal-Flow-NYC-s-First-VC-Hackathon)).
 - **Prepared:** 2026-10-18, pre-registration. Judge research by two `alex:research-analyst` runs, public sources only.
 
+> **Update 2026-10-23: track switched.** Alex moved from Sourcing (idea 1 below) to the **Funds / LP track, GP-side**: "the quarterly LP update writes itself from founder updates, and every number is one click from its source," aimed at emerging managers (Fund I/II). The team forms on the day (9 AM). The organizers' track doc (10-19) frames Track 4 as "Funds: make LPs as informed as their GPs"; the registration text below is kept as the historical record. Prep for the new idea: `outreach-and-interview-guide.md`, `data-pack/`, and the team kit.
+
 ## Event problem statement (as published)
 
 > Venture capital runs on spreadsheets, gut feel and endless inbox triage. Firms move billions of dollars with tools that haven't changed in a decade. Your challenge is to build software that helps VCs find better companies, make faster decisions and support their founders after the check clears.
