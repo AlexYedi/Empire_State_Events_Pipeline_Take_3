@@ -87,7 +87,8 @@ For each canonicalized entity, run a `notion-search` against its database:
 | Topics | `d61ce9df-94b3-4637-aa09-d77e09ab3a74` | Topic (title) + alias check |
 | Events | `9dcbc999-b4ed-4a51-b48a-10aaf171f1ba` | Event Name (title) — detect re-runs of the same event |
 
-For each hit, capture: page URL, `Last Researched` / `Last Updated` date, and (for Companies)
+For each hit, capture: page URL, page `last_edited_time` (Step 4 compares it before merging),
+`Last Researched` / `Last Updated` date, and (for Companies)
 the existing `Recent Developments` text (you'll need it for the audit trail in 4b) and whether
 the record **has a Value Frame** (its `Description` starts with `Value prop:`; YED-233).
 
@@ -225,7 +226,7 @@ was handed.
 If NO entity had any prior record (a genuinely first-touch event), skip 1.7b/1.7c, note
 "no prior context — first-touch event," and proceed to Step 2 as a from-scratch run.
 
-### 1.7c: Persist the pack (parent thread, Notion)
+### 1.7c: Persist the pack (parent decides, `notion-writer` executes)
 
 Write the pack as an auditable internal artifact (mirrors the `post_event_brief` pattern) so
 "what prior knowledge fed this brief" is a first-class, reviewable record and a rigor-loop
@@ -234,8 +235,9 @@ input:
   `Event Phase: pre_event`, `Content Status: needs_review`, icon 🗃️; body = the full pack
   (page-index callout per gotcha `i`). Relations to Event/People/Topics are set once the
   Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and relink +
-  mirror it in Step 4 (Notion writes run in the parent thread per CLAUDE.md invariant 5).
-- The Event-page mirror (a `## Prior-Context Pack` section) is appended inline in
+  mirror it in Step 4. The create is a one-operation `notion-writer` payload (CLAUDE.md
+  invariant 5; loop in `/event-deep-research` Step 1.7c).
+- The Event-page mirror (a `## Prior-Context Pack` section) goes into the Event page body in
   Step 4 (see 4e).
 
 Then move to Step 2 — pass each specialist its relevant pack slice, and the Continuity
@@ -485,6 +487,20 @@ Iterate until Alex says to proceed. Then move to Step 4.
 
 Write to all 5 databases in dependency order. Capture page URLs at each step for relations.
 
+**Who writes (CLAUDE.md invariant 5).** The sections below specify *what* to write: the triage
+path, the property values, the page body. The parent turns them into `notion-writer` payload
+operations (`create` · `update` · `content_updates` for a dated section inserted before a
+terminal marker, or a marker-bounded section replace), validates each with `.claude/scripts/notion_payload.py`, and
+dispatches the writer in four waves: Companies + Topics → People → Event → Content Draft. The
+wave table, key names and manifest live in `/event-deep-research` Step 4. Wherever a section
+says "merge" or "append to the property", the parent computes the final value from the fetched
+page and the payload carries that value; the writer never merges. Re-fetch every page you will
+update with a merged value while building its wave, and re-merge if its `last_edited_time` is
+newer than the Step 1.5b capture. "Append a section" below means a `content_updates` that inserts
+before the page's `⟦/research-log⟧` marker (every create below ends its body with that
+marker; legacy pages: see the command's Step 4 legacy rule). "Capture page URLs" below means read
+them from the event's manifest.
+
 ### 4a: Apply Triage Actions (GATE — set by Step 1.5)
 
 Dedup and freshness classification already happened in Step 1.5. This gate converts that
@@ -523,16 +539,18 @@ Create a page with these properties:
 ```
 
 Page body content: a `## Value Frame` section FIRST (the full frame block from Step 2c), then the
-expanded company research (full analysis from Step 2c).
+expanded company research (full analysis from Step 2c), ending with the line `⟦/research-log⟧`.
 
 #### Refresh path (REFRESH light | full)
 
 Do NOT overwrite the company page blindly. Steps:
 
-1. **Audit trail** — before any property write, append a dated block to the **Event page
-   body** (created in 4e) capturing the prior Company.Recent Developments text:
+1. **Audit trail** — before any property write, capture the prior Company.Recent Developments
+   text as a dated block for the **Event page body** (it goes into the 4e create's
+   `## Prior Snapshots` section; on a re-run where the Event exists, a `content_updates` inserting
+   it before `⟦/prior-snapshots⟧`). The heading names this event, so repeats stay distinct:
    ```
-   ### Prior [Company] snapshot (as of [prior Last Researched date])
+   ### Prior [Company] snapshot (as of [prior Last Researched date]) — [event-slug] [YYYY-MM-DD]
    [prior Recent Developments text]
    ```
    This preserves history without bloating the Company record.
@@ -573,7 +591,7 @@ No write. The Event's Companies relation in 4e picks up this company via its exi
 
 2. **Select properties must exactly match a defined option.** If the API returns `Invalid select value for property "Funding Stage": "Pre-IPO"`, the error message lists the valid options — trust the error, not the doc. The Companies DB has NO `Pre-IPO` option; use `Series F`/`Series G`/etc. for late-stage private companies.
 
-3. **Relations take a JSON-array-string of full page URLs** (not bare page IDs). Use the `url` field returned by create-pages exactly as-is.
+3. **Relations take a JSON-array-string of full page URLs** (not bare page IDs). Use the `url` field from the event's notion-writer manifest exactly as-is.
    - ✅ `"Company": "[\"https://www.notion.so/347d3699c2db818aa325c06cc5777252\"]"`
 
 4. **Date properties must use expanded format:**
@@ -609,7 +627,8 @@ For each new topic:
 Note: even on create, format `Current Events` as a dated block so the refresh path can
 always append consistently.
 
-Page body content: expanded topic research (full analysis from Step 2a).
+Page body content: expanded topic research (full analysis from Step 2a), ending with the line
+`⟦/research-log⟧`.
 
 #### Refresh path (REFRESH selective merge | full)
 
@@ -658,10 +677,8 @@ For each new person:
 ```
 "Name": "[full name]"                               — title
 "Current Title": "[title]"                          — text
-"Email": "[email if known]"                         — email (often empty pre-enrichment)
 "LinkedIn URL": "[url if found]"                    — url
 "Known POV / Bio": "[what they're known for]"       — text
-"Notes": "[talking points (personal / professional hooks), prioritization signals, open on-site questions]"  — text
 "Role Context": "[\"speaker\", \"host\", ...]"      — multi_select (JSON array)
 "Company": "[company page URL from Step 4b]"        — relation (JSON array of page URLs)
 "date:Last Researched:start": "2026-04-09"          — date
@@ -673,6 +690,11 @@ Page body content: expanded person research (full analysis from Step 2b), struct
 - `## Recent Activity`
 - `## Talking Points` (Personal hook / Professional hook — split, one each)
 - `## Prioritization Signals` (Prioritize because / De-prioritize because / Open on-site)
+- ending with the line `⟦/research-log⟧`
+
+Never write `Email`, `Phone Number` or `Notes` from research (ADR-9 tier 1, gotcha n): contact
+detail only when Alex provided it (the op then carries `"alex_provided": true`), and talking
+points live in the page body above, not in `Notes`.
 
 #### Refresh path (REFRESH light | full)
 
@@ -683,17 +705,15 @@ change per event.
   `date:Last Researched:start` (today).
 - Merge (union, no drops): `Role Context` multi-select — if this event adds a new context
   (e.g., "organizer" in addition to prior "speaker"), add it.
-- Fill-if-empty only: `Email`, `LinkedIn URL` — if triage found a stronger identifier
-  missing from the record, backfill it. Never overwrite a non-empty email or LinkedIn.
+- Fill-if-empty only: `LinkedIn URL` — if triage found it missing from the record, backfill it.
+  Never overwrite a non-empty LinkedIn. Never write `Email` / `Phone Number` from research.
 - `Company` relation — if the person has switched companies, add the new Company URL to
   the relation. Keep the prior company in the relation (career history is useful).
-- `Notes` — append a dated section, don't overwrite:
-  ```
-  ## [Event Name] — [YYYY-MM-DD]
-  [new connection angles, recent public activity]
-  ```
+- `Notes` — never written from research (gotcha n). New connection angles and recent public
+  activity go in the dated body section below.
 
-Page body: append a new dated research section, same pattern as Companies refresh.
+Page body: append a new dated research section before `⟦/research-log⟧`, same pattern
+as Companies refresh.
 
 #### Skip path (SKIP)
 
@@ -727,10 +747,10 @@ Page body content: the full research brief from Step 3 (formatted in markdown), 
 **Structure the Event page body with these top-level sections so Step 4.5 and the Step 7 retro can
 find and append cleanly (ADR-5 two-layer brief):**
 - `## Quick Take` (2–3 sentence synthesis from 2f — first block, mobile-readable)
-- `## Research Brief` (the **Scan head** from Step 3: People at-a-glance, Questions to ask, Verification Flags — NOT the old topic/company lattice; that depth is the Deep Read)
+- `## Research Brief` (the **Scan head** from Step 3: People at-a-glance, Questions to ask, Verification Flags — NOT the old topic/company lattice; that depth is the Deep Read), wrapped in `⟦research-brief⟧` … `⟦/research-brief⟧` so a re-run replaces exactly this section
 - `## Success Signals` (3–5 signals from 2e)
-- `## Deep Read` — **leave empty here with a `<!-- deep_read_rendered: pending -->` marker; Step 4.5 renders and appends the prose Deep Read under it, decoupled, after this write commits.** Never block the Step-4 commit waiting on it.
-- `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes — omit section if none)
+- `## Deep Read` — **leave empty here with a `⟦deep-read: pending⟧` marker followed by `⟦/deep-read⟧`; Step 4.5 renders and appends the prose Deep Read under it, decoupled, after this write commits.** Never block the Step-4 commit waiting on it.
+- `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes, ending with `⟦/prior-snapshots⟧`; on a first run with none, write the heading and marker only, so a later re-run can insert)
 - `## Prior-Context Pack` (append-only mirror of the Step 1.7 pack, if one was produced — the readable side-by-side surface; the canonical copy is the `prior_context_pack` Content Draft from 1.7c. Omit section if this was a first-touch event with no prior context. Relink the `prior_context_pack` Content Draft's Event/People/Topics relations to this Event row here.)
 - `## Retro` — leave empty; Step 7 appends here after the event
 
@@ -753,8 +773,9 @@ find and append cleanly (ADR-5 two-layer brief):**
 ```
 
 Page body content: the **Scan head** (same as the Event page's `## Research Brief` +
-`## Quick Take` + `## Success Signals` + `## Verification Flags`), plus an empty
-`## Deep Read` section carrying the `<!-- deep_read_rendered: pending -->` marker. Step 4.5
+`## Quick Take` + `## Success Signals` + `## Verification Flags`, inside the same
+`⟦research-brief⟧` … `⟦/research-brief⟧` markers), plus an empty `## Deep Read`
+section carrying `⟦deep-read: pending⟧` and `⟦/deep-read⟧`. Step 4.5
 appends the rendered prose Deep Read here too, so Alex gets the full two-layer artifact from
 either the Event or the Content Drafts view. Having it in both places means the content
 pipeline (`pre-event-content`, etc.) can read the one richer brief from Content Drafts.
@@ -770,6 +791,12 @@ a stale funding/stat number). Do **NOT** create a second `research_brief`: the s
   (corrected) brief; keep `Content Status: needs_review`.
 - **Replace the Event page `## Research Brief` section** with the corrected brief (this one section
   is replaced; everything else on the page stays append-only).
+- Both are `update` operations with `content_updates`: `old_str` = the whole stale section from
+  `⟦research-brief⟧` through `⟦/research-brief⟧`, copied from a fresh `notion-fetch`;
+  `new_str` = the corrected brief inside the same two markers. Keys
+  `event:<slug>:rerun:<YYYY-MM-DD>` and `draft:<slug>:research_brief:rerun:<YYYY-MM-DD>`, so a
+  correction is never skipped as already in the manifest. Never `replace_content`, which would wipe
+  a Deep Read already appended below it.
 - **Audit-trail the change:** prepend a one-line note to both —
   `> Re-researched [date] — corrections: [what changed, e.g. "Claygent 1B→5B runs; framework attribution Berry→Amin; dropped unverified deliverability benchmarks"]`.
 This is what makes a verify-pass correction actually reach downstream content. Without it the
@@ -778,7 +805,8 @@ brief.
 
 ### 4g: Confirm Notion Writes
 
-After all pages are created/refreshed/skipped, report:
+After all pages are created/refreshed/skipped, report from the writer's wave tables (the
+manifest is the record; a `failed` row is reported, never rounded up to done):
 > **Notion writes complete:**
 > - Companies: [X created, Y refreshed, Z skipped] ([names per bucket])
 > - Topics: [X created, Y refreshed, Z append-only] ([names per bucket])
@@ -796,9 +824,8 @@ The Deep Read is the prose "commute read" half of the one brief. It is rendered 
 has committed the Scan head + entity records, and **appended** under the `## Deep Read` marker.
 This phase is **decoupled and non-blocking**: a render failure is a warning, never a pipeline
 failure — the Scan head, the entity records, and the content pipeline are already intact and
-depend on nothing here (ADR-5 Decision 3). Runs **in the parent thread** — the render dispatches
-and the Notion append both happen inline (MCP writes are parent-thread only;
-[[project_notion_writes_must_be_parent_thread]]).
+depend on nothing here (ADR-5 Decision 3). Runs **from the parent thread**: the parent dispatches
+the renders and builds the append payload; `notion-writer` executes it (CLAUDE.md invariant 5).
 
 **Precondition (GATE):** Step 4 confirmed the Scan-head write (4g). If Step 4 didn't commit, do
 NOT render — fix Step 4 first. Never render into a page that doesn't exist yet.
@@ -838,15 +865,21 @@ the "how to read this" opener, smooths transitions into one voice, and consolida
 one numbered list — **without adding, changing, or removing any fact or citation.** The result is
 the final Deep Read.
 
-### 4.5d: Append under the marker (parent-inline, idempotent)
+### 4.5d: Append under the marker (`notion-writer`, idempotent)
 
 Replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content
-Draft with the stitched Deep Read, and flip the marker `<!-- deep_read_rendered: pending -->` →
-`<!-- deep_read_rendered: [YYYY-MM-DD] -->`. Everything else on the page stays append-only; only
+Draft with the stitched Deep Read, and flip the marker `⟦deep-read: pending⟧` →
+`⟦deep-read: [YYYY-MM-DD]⟧`. Everything else on the page stays append-only; only
 this one marked section is replaced (idempotent — a re-run replaces just the Deep Read).
 
-- Use `notion-update-page` with **real newlines**, not `\n` escapes (gotcha m /
-  [[project_notion_updatepage_newline_gotcha]]).
+- One payload, two `update` operations, each with `content_updates` (`old_str` = the whole section
+  from `⟦deep-read: …⟧` through `⟦/deep-read⟧`, copied from a fresh fetch;
+  `new_str` = flipped marker + Deep Read + `⟦/deep-read⟧`). Pages from before this version carry
+  the escaped legacy marker `\<!-- deep\_read\_rendered: pending -->` instead: see the command's Step 4
+  legacy rule. Never write an HTML comment as a marker (Notion stores it as visible escaped text). Keys and loop:
+  `/event-deep-research` Step 4.5.
+- **Real newlines**, not `\n` escapes (gotcha m /
+  [[project_notion_updatepage_newline_gotcha]]); `notion_payload.py` refuses a literal `\n`.
 - The `## Deep Read` body reads cleanly aloud (endnotes, no inline URLs) — it's the substrate for
   a later audio step and for `pre-event-content`.
 
