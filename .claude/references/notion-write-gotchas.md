@@ -86,3 +86,16 @@ Post, first-comment, connection-note and DM copy in Content Drafts is written as
 separated by blank lines (line breaks survive copy-paste fine). Never wrap it in code blocks or quote-as-code:
 they render as monospace blocks that are hard to read and hard to comment on inline, and Alex reviews by inline
 comment. Metadata (char counts, sources, self-checks) can sit around the copy as bold labels or bullets.
+
+## (q) Notion does not keep HTML comments; use `⟦name⟧` markers (live sandbox 2026-10-24, YED-259)
+Writing `<!-- /research_log -->` into a page body stores it as **visible escaped text**: it fetches back as
+`\<!-- /research\_log -->` (a backslash before `<` and before every `_`). `update_content` matches only that
+escaped form: `old_str` `<!-- /research_log -->` returns 400 "No matches found"; `old_str`
+`\<!-- /research\_log -->` succeeds. So never use HTML comments as markers. Use `⟦name⟧` / `⟦/name⟧`
+(U+27E6 / U+27E7, hyphenated names, no underscores, e.g. `⟦/deep-read⟧`), which round-trip byte-identical.
+Legacy Event pages carry the old Deep Read marker as `\<!-- deep\_read\_rendered: pending -->` (or a date);
+copy that escaped form from a fetch when anchoring on it, and readers must accept both forms.
+`notion_payload.py` refuses a raw `<!--` in any body or anchor.
+
+Also: the live `notion-update-page` offers `insert_content` (position start|end). The `notion-writer` does not use
+it: every insert is a `content_updates` on a parent-chosen marker, so anchors stay parent-owned and bounded.
