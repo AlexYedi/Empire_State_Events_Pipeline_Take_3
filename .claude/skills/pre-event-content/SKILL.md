@@ -484,7 +484,7 @@ text into `notion-create-pages` by hand.
    payload, never the validator.
 3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / skipped /
    failed table inline; on `failed` rows fix the operation and re-dispatch (the manifest skips done rows).
-   If the writer itself is unavailable, write inline from the parent and say so in Step 7.
+   If the writer itself is unavailable, stop: do not write inline. Keep the payload, tell Alex which drafts are unwritten, and re-dispatch when the writer is back (CLAUDE.md invariant 5). Report it in Step 7.
 
 > **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. Step 3b.5 renders the carousel with Claude design (Gemini for pictorial imagery). The brief remains in the page body for human reference and for later iteration. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 6 schema gap — go back and run it.
 
