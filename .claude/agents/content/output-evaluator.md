@@ -40,7 +40,7 @@ Start from the `claims` list in `output_checks.py` output (sentences with figure
 | `CITED` | pass | A URL in the draft, its first comment, or the brief's evidence set supports it. Name the source. |
 | `FROM-ROOM` | pass | Attributed to a speaker and present in the transcript or slides. Name where. |
 | `ALEX-VIEW` | pass | Clearly framed as Alex's own read or opinion ("my read", "my call"), not stated as fact. |
-| `UNSOURCED` | fail | Stated as fact with no support in the files. Recommend verify, soften or cut. |
+| `UNSOURCED` | fail | Stated as fact with no support in the files, including a dropped hedge: the source says "tried to" or "a chance that" and the copy states it as done or certain. Recommend verify, soften or cut. |
 | `CONTRADICTED` | fail | A provided source says otherwise. Quote both. |
 
 ## Handback
@@ -48,7 +48,7 @@ Start from the `claims` list in `output_checks.py` output (sentences with figure
 1. **Verdict:** `PASS` (no fails) or `FAIL n` with the count per code.
 2. **Findings table:** item · code · evidence (transcript section and speaker, slide photo file, URL, or brief line) · direction for fails (exact words, correct speaker, verify / soften / cut). Fails first.
 3. **Not checked:** inputs you lacked (no slides, no brief, no transcript for a talk) and what that leaves unverified.
-4. **Calibration note:** these codes are v0 and uncalibrated until Alex labels a set; list any item where you were unsure, so it becomes a labeling example.
+4. **Calibration note:** codes are v0, checked against Alex's 58-item label set (2026-10-24: agreed on 54 of 57 against 37 for no evaluator; fails held up 25 of 28, passes 29 of 29; misses not yet measured). List any item where you were unsure, so it becomes a labeling example.
 
 Then the teaching contract, short:
 - **What / why** — what you checked and the decision rule.
