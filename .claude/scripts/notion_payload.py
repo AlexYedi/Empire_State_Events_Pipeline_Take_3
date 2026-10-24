@@ -18,10 +18,17 @@ Payload shape (JSON):
       "dedup": {"query": "<search text>", "match_title": "<exact title>"},  # create into a data source: required
       "properties": { ... },                   # Notion MCP property format (see notion-write-gotchas.md)
       "content": "<markdown body>",            # optional; create only, or update with "replace_content": true
+      "append_content": "<markdown>",          # optional; update only: add a section at the END of the page body
+      "content_updates": [{"old_str": "<exact stored text>", "new_str": "<replacement>"}],
+                                               # optional; update only: replace one marked section in place
+                                               # (Deep Read marker, Research Brief re-run); old_str copied from a fetch
       "frozen_statuses": ["scheduled", "published"]  # optional; never touch a page whose status is one of these
     }
   ]
 }
+
+Body edits on an update must use real newlines (a literal backslash-n lands as a stray "n", gotcha m).
+Post / connection-note / DM copy (Content Type linkedin_*) is plain paragraphs, never code fences (gotcha p).
 
 Usage: notion_payload.py <payload.json>
 """
@@ -29,6 +36,43 @@ import json
 import sys
 
 OPS = {"create", "update"}
+COPY_TYPE_PREFIX = "linkedin_"   # Content Drafts copy Alex reviews by inline comment (gotcha p)
+
+
+def body_problems(tag, o):
+    """Checks on append_content / content_updates and on body text (gotchas m, p)."""
+    out = []
+    op = o.get("op")
+    has_append = "append_content" in o
+    has_cu = "content_updates" in o
+    if (has_append or has_cu) and op != "update":
+        out.append(f"{tag} append_content / content_updates are update-only (a create puts its body in 'content')")
+    if has_append and (not isinstance(o["append_content"], str) or not o["append_content"].strip()):
+        out.append(f"{tag} 'append_content' must be a non-empty string")
+    if has_cu:
+        cu = o["content_updates"]
+        if not isinstance(cu, list) or not cu:
+            out.append(f"{tag} 'content_updates' must be a non-empty list of {{old_str, new_str}}")
+        else:
+            for j, u in enumerate(cu):
+                if not isinstance(u, dict) or not isinstance(u.get("old_str"), str) or not u["old_str"].strip() \
+                        or not isinstance(u.get("new_str"), str):
+                    out.append(f"{tag} content_updates[{j}] needs a non-empty old_str and a string new_str")
+                elif u["old_str"] == u["new_str"]:
+                    out.append(f"{tag} content_updates[{j}] old_str and new_str are identical (no-op)")
+    if o.get("replace_content") and (has_append or has_cu):
+        out.append(f"{tag} replace_content replaces the whole body; do not combine it with append_content / content_updates")
+    updates = [u for u in (o.get("content_updates") if isinstance(o.get("content_updates"), list) else [])
+               if isinstance(u, dict)]
+    texts = [o.get("content"), o.get("append_content")] + [u.get("new_str") for u in updates]
+    if op == "update" and any(isinstance(t, str) and "\\n" in t for t in texts):
+        out.append(f"{tag} update body contains a literal backslash-n; use real newlines (gotcha m)")
+    props = o.get("properties") if isinstance(o.get("properties"), dict) else {}
+    ctype = props.get("Content Type")
+    if isinstance(ctype, str) and ctype.startswith(COPY_TYPE_PREFIX) \
+            and any(isinstance(t, str) and "```" in t for t in texts):
+        out.append(f"{tag} {ctype} copy contains a code fence; drafts are plain paragraphs (gotcha p)")
+    return out
 
 
 def problems(p):
@@ -71,6 +115,7 @@ def problems(p):
             out.append(f"{tag} 'properties' must be an object")
         if "content" in o and not isinstance(o["content"], str):
             out.append(f"{tag} 'content' must be a string")
+        out += body_problems(tag, o)
     return out
 
 

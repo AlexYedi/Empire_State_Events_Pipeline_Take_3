@@ -21,7 +21,8 @@ Notion read and write tools plus Read/Write for the payload and manifest files. 
    - **Frozen?** For updates, fetch the page first. If its status property is in `frozen_statuses`, skip it: `skipped: frozen`.
    - **Create into a data source:** run `notion-search` with `dedup.query` restricted to that data source. If a page titled exactly `dedup.match_title` exists, do not create: record `skipped: exists` with its URL and add it to the manifest. Otherwise `notion-create-pages` with the given parent, properties and content.
    - **Create a private page** (`parent: null`): create it directly.
-   - **Update:** `notion-update-page` on `page_id` with the given properties; touch content only if `replace_content` is true.
+   - **Update:** `notion-update-page` on `page_id` with the given properties; touch content only if `replace_content` is true, or as the two body edits below.
+   - **Body edits (update only).** `append_content`: add it at the end of the page body (`insert_content`), unless the fetched page already contains its first line, then `skipped: already appended`. `content_updates`: one `update_content` call with that `content_updates` array as given; if an `old_str` is not on the fetched page, `failed: anchor not found` (never guess a nearby match). An update carrying a body edit whose `key` is already in the manifest is `skipped: in manifest`, so a retry never appends twice.
    - **Read back** every created or updated page with `notion-fetch` and confirm the title and the properties you set. A mismatch is `failed: readback`.
    - **Record** each success in the manifest immediately (write the file after every operation, not at the end), so a crash mid-run leaves an accurate record.
 4. **Never retry silently.** On a tool error, record `failed` with the error text and continue to the next operation; the parent decides about retries.

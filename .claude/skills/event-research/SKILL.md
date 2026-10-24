@@ -225,7 +225,7 @@ was handed.
 If NO entity had any prior record (a genuinely first-touch event), skip 1.7b/1.7c, note
 "no prior context — first-touch event," and proceed to Step 2 as a from-scratch run.
 
-### 1.7c: Persist the pack (parent thread, Notion)
+### 1.7c: Persist the pack (parent decides, `notion-writer` executes)
 
 Write the pack as an auditable internal artifact (mirrors the `post_event_brief` pattern) so
 "what prior knowledge fed this brief" is a first-class, reviewable record and a rigor-loop
@@ -234,8 +234,9 @@ input:
   `Event Phase: pre_event`, `Content Status: needs_review`, icon 🗃️; body = the full pack
   (page-index callout per gotcha `i`). Relations to Event/People/Topics are set once the
   Event row exists (Step 4) — if it doesn't exist yet, create the Content Draft now and relink +
-  mirror it in Step 4 (Notion writes run in the parent thread per CLAUDE.md invariant 5).
-- The Event-page mirror (a `## Prior-Context Pack` section) is appended inline in
+  mirror it in Step 4. The create is a one-operation `notion-writer` payload (CLAUDE.md
+  invariant 5; loop in `/event-deep-research` Step 1.7c).
+- The Event-page mirror (a `## Prior-Context Pack` section) goes into the Event page body in
   Step 4 (see 4e).
 
 Then move to Step 2 — pass each specialist its relevant pack slice, and the Continuity
@@ -485,6 +486,16 @@ Iterate until Alex says to proceed. Then move to Step 4.
 
 Write to all 5 databases in dependency order. Capture page URLs at each step for relations.
 
+**Who writes (CLAUDE.md invariant 5).** The sections below specify *what* to write: the triage
+path, the property values, the page body. The parent turns them into `notion-writer` payload
+operations (`create` · `update` · `append_content` for a dated body section · `content_updates`
+for a one-section replace), validates each with `.claude/scripts/notion_payload.py`, and
+dispatches the writer in four waves: Companies + Topics → People → Event → Content Draft. The
+wave table, key names and manifest live in `/event-deep-research` Step 4. Wherever a section
+says "merge" or "append to the property", the parent computes the final value from the fetched
+page and the payload carries that value; the writer never merges. "Capture page URLs" below
+means read them from the event's manifest.
+
 ### 4a: Apply Triage Actions (GATE — set by Step 1.5)
 
 Dedup and freshness classification already happened in Step 1.5. This gate converts that
@@ -529,8 +540,9 @@ expanded company research (full analysis from Step 2c).
 
 Do NOT overwrite the company page blindly. Steps:
 
-1. **Audit trail** — before any property write, append a dated block to the **Event page
-   body** (created in 4e) capturing the prior Company.Recent Developments text:
+1. **Audit trail** — before any property write, capture the prior Company.Recent Developments
+   text as a dated block for the **Event page body** (it goes into the 4e create's
+   `## Prior Snapshots` section; on a re-run where the Event exists, an `append_content` on it):
    ```
    ### Prior [Company] snapshot (as of [prior Last Researched date])
    [prior Recent Developments text]
@@ -573,7 +585,7 @@ No write. The Event's Companies relation in 4e picks up this company via its exi
 
 2. **Select properties must exactly match a defined option.** If the API returns `Invalid select value for property "Funding Stage": "Pre-IPO"`, the error message lists the valid options — trust the error, not the doc. The Companies DB has NO `Pre-IPO` option; use `Series F`/`Series G`/etc. for late-stage private companies.
 
-3. **Relations take a JSON-array-string of full page URLs** (not bare page IDs). Use the `url` field returned by create-pages exactly as-is.
+3. **Relations take a JSON-array-string of full page URLs** (not bare page IDs). Use the `url` field from the event's notion-writer manifest exactly as-is.
    - ✅ `"Company": "[\"https://www.notion.so/347d3699c2db818aa325c06cc5777252\"]"`
 
 4. **Date properties must use expanded format:**
@@ -770,6 +782,9 @@ a stale funding/stat number). Do **NOT** create a second `research_brief`: the s
   (corrected) brief; keep `Content Status: needs_review`.
 - **Replace the Event page `## Research Brief` section** with the corrected brief (this one section
   is replaced; everything else on the page stays append-only).
+- Both are `update` operations with `content_updates`: `old_str` = the stale Scan-head text copied
+  from a fresh `notion-fetch`, `new_str` = the corrected brief. Never `replace_content`, which would
+  wipe a Deep Read already appended below it.
 - **Audit-trail the change:** prepend a one-line note to both —
   `> Re-researched [date] — corrections: [what changed, e.g. "Claygent 1B→5B runs; framework attribution Berry→Amin; dropped unverified deliverability benchmarks"]`.
 This is what makes a verify-pass correction actually reach downstream content. Without it the
@@ -778,7 +793,8 @@ brief.
 
 ### 4g: Confirm Notion Writes
 
-After all pages are created/refreshed/skipped, report:
+After all pages are created/refreshed/skipped, report from the writer's wave tables (the
+manifest is the record; a `failed` row is reported, never rounded up to done):
 > **Notion writes complete:**
 > - Companies: [X created, Y refreshed, Z skipped] ([names per bucket])
 > - Topics: [X created, Y refreshed, Z append-only] ([names per bucket])
@@ -796,9 +812,8 @@ The Deep Read is the prose "commute read" half of the one brief. It is rendered 
 has committed the Scan head + entity records, and **appended** under the `## Deep Read` marker.
 This phase is **decoupled and non-blocking**: a render failure is a warning, never a pipeline
 failure — the Scan head, the entity records, and the content pipeline are already intact and
-depend on nothing here (ADR-5 Decision 3). Runs **in the parent thread** — the render dispatches
-and the Notion append both happen inline (MCP writes are parent-thread only;
-[[project_notion_writes_must_be_parent_thread]]).
+depend on nothing here (ADR-5 Decision 3). Runs **from the parent thread**: the parent dispatches
+the renders and builds the append payload; `notion-writer` executes it (CLAUDE.md invariant 5).
 
 **Precondition (GATE):** Step 4 confirmed the Scan-head write (4g). If Step 4 didn't commit, do
 NOT render — fix Step 4 first. Never render into a page that doesn't exist yet.
@@ -838,15 +853,18 @@ the "how to read this" opener, smooths transitions into one voice, and consolida
 one numbered list — **without adding, changing, or removing any fact or citation.** The result is
 the final Deep Read.
 
-### 4.5d: Append under the marker (parent-inline, idempotent)
+### 4.5d: Append under the marker (`notion-writer`, idempotent)
 
 Replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content
 Draft with the stitched Deep Read, and flip the marker `<!-- deep_read_rendered: pending -->` →
 `<!-- deep_read_rendered: [YYYY-MM-DD] -->`. Everything else on the page stays append-only; only
 this one marked section is replaced (idempotent — a re-run replaces just the Deep Read).
 
-- Use `notion-update-page` with **real newlines**, not `\n` escapes (gotcha m /
-  [[project_notion_updatepage_newline_gotcha]]).
+- One payload, two `update` operations, each with `content_updates` (`old_str` = the pending
+  marker, or on a re-render the current Deep Read section from a fresh fetch; `new_str` = flipped
+  marker + Deep Read). Keys and loop: `/event-deep-research` Step 4.5.
+- **Real newlines**, not `\n` escapes (gotcha m /
+  [[project_notion_updatepage_newline_gotcha]]); `notion_payload.py` refuses a literal `\n`.
 - The `## Deep Read` body reads cleanly aloud (endnotes, no inline URLs) — it's the substrate for
   a later audio step and for `pre-event-content`.
 

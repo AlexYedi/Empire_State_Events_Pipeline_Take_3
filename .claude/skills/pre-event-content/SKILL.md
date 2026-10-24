@@ -281,7 +281,7 @@ mode is repeating across runs.
 `../content-patterns/visual-briefs.md` → `## Execution — Claude design (default) + Gemini (pictorial)`
 and its `### Export` subsection. This step only says when to run it and what to hand over.
 
-After Step 4 writes the Content Draft (post + embedded brief) to Notion:
+After Step 6 writes the Content Draft (post + embedded brief) to Notion:
 1. Offer the **four format options** from visual-briefs.md (2 singles + 3-slide +
    5-slide carousel); let Alex pick, or generate the recommended option.
 2. **Structured / label-dense visuals** (diagrams, matrices, stat cards, carousels): Claude authors
@@ -289,7 +289,8 @@ After Step 4 writes the Content Draft (post + embedded brief) to Notion:
    Claude renders exactly what is authored, so labels and numbers stay intact.
 3. **Pictorial imagery** (conceptual, editorial, photographic; no dense labels): Gemini.
 4. Save the final rendered PDF/HTML in the event folder (final outputs only) and link it from the
-   Notion Content Draft.
+   Notion Content Draft: a one-operation `notion-writer` payload, `update` on the draft's page id
+   with `append_content` (`key` = `carousel:<event-slug>:<n>`, same manifest and loop as Step 6).
 
 ### Step 3b.6: Other rules
 
@@ -456,6 +457,30 @@ Write all approved content to the **Content Drafts** database.
 
 **Database:** `collection://6c24c9f5-66c9-4eed-a61d-3f9b87c3f775`
 
+**Who writes (CLAUDE.md invariant 5).** The parent decides every page below and hands them to the
+one Notion writer as a payload, the same loop as `/post-event-content` Step 5. Never paste draft
+text into `notion-create-pages` by hand.
+
+1. **Build the payload** at `<scratchpad>/notion-payload-<event-slug>-pre.json` (shape in
+   `.claude/scripts/notion_payload.py`):
+   - `run`: the event name · `manifest`: `.claude/.state/notion-manifests/<event-slug>.json` (the
+     same per-event manifest `/event-deep-research` used; The Upcoming Week uses
+     `upcoming-week-<start-date>.json`)
+   - one `create` per page below, `parent: {"data_source_id": "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"}`,
+     `dedup` = the exact title (search-before-create, invariant 8), `frozen_statuses: ["scheduled", "published"]`
+   - `key`: `draft:<event-slug>:linkedin_post_pre` · `draft:<event-slug>:connection_note:<person-slug>` ·
+     `draft:<event-slug>:prepared_questions` · `draft:upcoming-week-<start-date>:linkedin_post_pre`
+   - `properties`: the fields listed per page below + `Goal` and `Target` per
+     `../content-patterns/goal-tagging.md` + `Themes` on posts; relations as full page URLs (gotcha c)
+   - `content`: **plain paragraphs, never code blocks** (`notion-write-gotchas.md` p). Each variant is
+     its own run of paragraphs under a bold label; the format blocks shown below are layout guides,
+     not fences to copy. The validator refuses a code fence in any `linkedin_*` draft.
+2. **Validate:** `python3 .claude/scripts/notion_payload.py <payload>` must print `VALID`. Fix the
+   payload, never the validator.
+3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / skipped /
+   failed table inline; on `failed` rows fix the operation and re-dispatch (the manifest skips done rows).
+   If the writer itself is unavailable, write inline from the parent and say so in Step 7.
+
 > **Visual carousel persistence rule (revised 2026-05-12):** Every LinkedIn post Content Draft (`linkedin_post_pre`, `linkedin_post_post`, `linkedin_post_synthesis`) MUST include the Step 3b carousel brief in the same page body, appended below the post copy under a `## Visual Brief — N-slide carousel` H2. The brief is one 3-5 slide carousel, not three single-image briefs — see `.claude/skills/content-patterns/visual-briefs.md` for the canonical shape. The carousel brief lives with the post it supports so Alex has both the copy and the per-slide prompts in one place. Step 3b.5 renders the carousel with Claude design (Gemini for pictorial imagery). The brief remains in the page body for human reference and for later iteration. If Step 3b was skipped for a given post, that's a Step 3b execution gap, not a Step 6 schema gap — go back and run it.
 
 ### Content pages to create:
@@ -552,7 +577,7 @@ All drafts set to "needs_review" — Alex reviews and moves to "approved" when r
 
 - **Research brief not found:** Ask Alex to run event-research skill first or paste the brief directly.
 - **No people in the brief:** Skip connection-note generation (Step 4). Only produce posts.
-- **MCP write fails:** Report exactly what failed. Offer to retry or present content in conversation for manual copy.
+- **Notion write fails** (a `failed` row in the writer's table): Report exactly what failed. Fix that operation and re-dispatch (the manifest makes it safe), or present the content in conversation for manual copy.
 - **Anti-pattern detected in own output:** Flag it, explain why, and regenerate that section.
 - **Personalization below Level 3:** Flag the DM as weak and explain what's missing. Offer to regenerate with more context or skip.
 
