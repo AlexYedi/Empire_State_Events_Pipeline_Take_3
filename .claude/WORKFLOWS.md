@@ -167,7 +167,7 @@ The command file is the orchestration shape. The skill is the methodology. The a
 - `transcript-analysis/` — extract from sales/event transcripts
 - `objection-mining/` — friction signal extraction
 
-**Removed 2026-09-28** (verbatim copies of `alex:*` plugin skills): `company-deep-research/`, `content-quality/`, `icp-research/`, `cold-email/`, `research-methodology/`, `copywriting/`, `brand-storytelling/` (`pre-event-content` now loads `alex:brand-storytelling`, `alex:message-architecture`, `alex:cold-email-personalization`). Archived to `docs/archive/skills/`: `marketing-autoresearch/` (pre-event optimization pass retired), `project-ideation/`. Use the plugin versions (`alex:battlecard-library`, `alex:market-signal-tracker`, `alex:executive-briefing-kit`, `alex:voice-guidelines`, `alex:persona-development`, `alex:account-qualification`, `alex:copy-frameworks`, `alex:personalization-engine`, `alex:sequence-architecture`).
+**Removed 2026-09-28** (verbatim copies of `alex:*` plugin skills): `company-deep-research/`, `content-quality/`, `icp-research/`, `cold-email/`, `research-methodology/`, `copywriting/`, `brand-storytelling/` (`pre-event-content` now loads `alex:brand-storytelling`, `alex:message-architecture`, `alex:cold-email-personalization`). Archived to `docs/archive/skills/`: `marketing-autoresearch/` (pre-event optimization pass retired), `project-ideation/`. Use the plugin versions (`alex:battlecard-library`, `alex:market-signal-tracker`, `alex:exec-briefing`, `alex:voice-guidelines`, `alex:persona-development`, `alex:account-qualification`, `alex:copy-frameworks`, `alex:personalization-engine`, `alex:sequence-architecture`).
 
 ### Agents imported
 
@@ -194,8 +194,7 @@ None remain; the five imported commands were pruned 2026-09-28 (see the status t
 
 Per Alex's decision (2026-05-04): Tier 2 imports skipped this round. Includes:
 - `positioning-messaging`, `launch-marketing`, `media-relations` (GTM Marketing)
-- `value-story-framework`, `cxo-briefing-kit` (Enterprise Sales)
-- `vertical-solution-templates` (Growth Strategist)
+- `value-story-framework`, `exec-briefing` (Enterprise Sales)
 - `partnership-bd`
 - `business-intelligence/*`, `statistical-analyst/`
 
