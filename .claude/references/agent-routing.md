@@ -17,6 +17,8 @@ Before any Agent dispatch:
 
 `general-purpose` is a container for fan-out, not a thinker: use it only when no row fits, and log the gap. Plugin agents dispatch as `alex:<name>`. Bare skill names live in `.claude/skills/` or the plugin (load as `alex:<name>`); prefixed names (`engineering:`, `data:`, `anthropic-skills:`) are other installed plugins.
 
+**Re-test before removal.** Before removing an agent or skill for non-use: confirm it is in §3 with a description that names its trigger, then wait 30 days of dispatch-record data; remove only if still unused. Non-use before that is a routing measurement, not a value measurement (09-28 prune, 10-15 audit).
+
 ## 2. Hard routes (fixed chains)
 
 | Trigger | Chain |

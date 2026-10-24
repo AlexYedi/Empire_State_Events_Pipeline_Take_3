@@ -38,3 +38,5 @@ reviewer's model id changes (`judge.py` prints the trigger) · the judge layer i
 
 ## When to run it
 The artifact-class trigger list lives in `.claude/skills/judge-build/SKILL.md`. It replaced DoD item 4 (the DoD gate itself was retired 2026-09-28 for `.github/pull_request_template.md`).
+
+**Scope (2026-10-24).** YED-231 governs build judges only. Pipeline-output evaluators — today `output-evaluator`, modes `quote` and `source` — are a product control on public copy, not a build gate: binary per item, evidence first, flag-never-rewrite, hard-routed before copy leaves `needs_review`, calibrated on Alex's labels (v0 2026-10-23: 54/57 vs 37/57 pass-everything). A new evaluator mode needs a named public-copy failure observed twice; it never becomes a judge seat and the judge never grades content.

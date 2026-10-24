@@ -20,7 +20,7 @@ deterministic path rule (below), not arithmetic.
 | New skill or command | **Once, at first ship.** Later edits fall under "edits & refs". |
 | Code | When the change is **> ~150 lines** or touches a **guarded path** (spine write path, privacy filters, allow/deny lists). |
 | Edits to existing skills/commands, references, docs | **No judge.** Deterministic checks only: `check-refs.sh`, `check-tombstones.py`, the offline tests. |
-| Content (posts, notes, DMs) | **No judge.** Style-guide screen (`content-style-guide.md` + `content-anti-patterns.md`) before Notion. |
+| Content (posts, notes, DMs) | **No judge.** `output-evaluator` (quote + source) plus the style-guide screen before copy leaves `needs_review`. |
 | The judge layer itself (`.claude/evals/` judge files, this skill, `/judge-build`, `seat-log.py`, `judge.md`) | **Never judged by itself.** `judge.py` refuses it; its offline tests are the check. |
 
 No routine control runs: the control set runs only when the reviewer's model id changes (`judge.py` prints the trigger).
