@@ -497,7 +497,7 @@ says "merge" or "append to the property", the parent computes the final value fr
 page and the payload carries that value; the writer never merges. Re-fetch every page you will
 update with a merged value while building its wave, and re-merge if its `last_edited_time` is
 newer than the Step 1.5b capture. "Append a section" below means a `content_updates` that inserts
-before the page's `<!-- /research_log -->` marker (every create below ends its body with that
+before the page's `⟦/research-log⟧` marker (every create below ends its body with that
 marker; legacy pages: see the command's Step 4 legacy rule). "Capture page URLs" below means read
 them from the event's manifest.
 
@@ -539,7 +539,7 @@ Create a page with these properties:
 ```
 
 Page body content: a `## Value Frame` section FIRST (the full frame block from Step 2c), then the
-expanded company research (full analysis from Step 2c), ending with the line `<!-- /research_log -->`.
+expanded company research (full analysis from Step 2c), ending with the line `⟦/research-log⟧`.
 
 #### Refresh path (REFRESH light | full)
 
@@ -548,7 +548,7 @@ Do NOT overwrite the company page blindly. Steps:
 1. **Audit trail** — before any property write, capture the prior Company.Recent Developments
    text as a dated block for the **Event page body** (it goes into the 4e create's
    `## Prior Snapshots` section; on a re-run where the Event exists, a `content_updates` inserting
-   it before `<!-- /prior_snapshots -->`). The heading names this event, so repeats stay distinct:
+   it before `⟦/prior-snapshots⟧`). The heading names this event, so repeats stay distinct:
    ```
    ### Prior [Company] snapshot (as of [prior Last Researched date]) — [event-slug] [YYYY-MM-DD]
    [prior Recent Developments text]
@@ -628,7 +628,7 @@ Note: even on create, format `Current Events` as a dated block so the refresh pa
 always append consistently.
 
 Page body content: expanded topic research (full analysis from Step 2a), ending with the line
-`<!-- /research_log -->`.
+`⟦/research-log⟧`.
 
 #### Refresh path (REFRESH selective merge | full)
 
@@ -690,7 +690,7 @@ Page body content: expanded person research (full analysis from Step 2b), struct
 - `## Recent Activity`
 - `## Talking Points` (Personal hook / Professional hook — split, one each)
 - `## Prioritization Signals` (Prioritize because / De-prioritize because / Open on-site)
-- ending with the line `<!-- /research_log -->`
+- ending with the line `⟦/research-log⟧`
 
 Never write `Email`, `Phone Number` or `Notes` from research (ADR-9 tier 1, gotcha n): contact
 detail only when Alex provided it (the op then carries `"alex_provided": true`), and talking
@@ -712,7 +712,7 @@ change per event.
 - `Notes` — never written from research (gotcha n). New connection angles and recent public
   activity go in the dated body section below.
 
-Page body: append a new dated research section before `<!-- /research_log -->`, same pattern
+Page body: append a new dated research section before `⟦/research-log⟧`, same pattern
 as Companies refresh.
 
 #### Skip path (SKIP)
@@ -747,10 +747,10 @@ Page body content: the full research brief from Step 3 (formatted in markdown), 
 **Structure the Event page body with these top-level sections so Step 4.5 and the Step 7 retro can
 find and append cleanly (ADR-5 two-layer brief):**
 - `## Quick Take` (2–3 sentence synthesis from 2f — first block, mobile-readable)
-- `## Research Brief` (the **Scan head** from Step 3: People at-a-glance, Questions to ask, Verification Flags — NOT the old topic/company lattice; that depth is the Deep Read), wrapped in `<!-- research_brief -->` … `<!-- /research_brief -->` so a re-run replaces exactly this section
+- `## Research Brief` (the **Scan head** from Step 3: People at-a-glance, Questions to ask, Verification Flags — NOT the old topic/company lattice; that depth is the Deep Read), wrapped in `⟦research-brief⟧` … `⟦/research-brief⟧` so a re-run replaces exactly this section
 - `## Success Signals` (3–5 signals from 2e)
-- `## Deep Read` — **leave empty here with a `<!-- deep_read_rendered: pending -->` marker followed by `<!-- /deep_read -->`; Step 4.5 renders and appends the prose Deep Read under it, decoupled, after this write commits.** Never block the Step-4 commit waiting on it.
-- `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes, ending with `<!-- /prior_snapshots -->`; on a first run with none, write the heading and marker only, so a later re-run can insert)
+- `## Deep Read` — **leave empty here with a `⟦deep-read: pending⟧` marker followed by `⟦/deep-read⟧`; Step 4.5 renders and appends the prose Deep Read under it, decoupled, after this write commits.** Never block the Step-4 commit waiting on it.
+- `## Prior Snapshots` (any audit-trail blocks from 4b Company refreshes, ending with `⟦/prior-snapshots⟧`; on a first run with none, write the heading and marker only, so a later re-run can insert)
 - `## Prior-Context Pack` (append-only mirror of the Step 1.7 pack, if one was produced — the readable side-by-side surface; the canonical copy is the `prior_context_pack` Content Draft from 1.7c. Omit section if this was a first-touch event with no prior context. Relink the `prior_context_pack` Content Draft's Event/People/Topics relations to this Event row here.)
 - `## Retro` — leave empty; Step 7 appends here after the event
 
@@ -774,8 +774,8 @@ find and append cleanly (ADR-5 two-layer brief):**
 
 Page body content: the **Scan head** (same as the Event page's `## Research Brief` +
 `## Quick Take` + `## Success Signals` + `## Verification Flags`, inside the same
-`<!-- research_brief -->` … `<!-- /research_brief -->` markers), plus an empty `## Deep Read`
-section carrying `<!-- deep_read_rendered: pending -->` and `<!-- /deep_read -->`. Step 4.5
+`⟦research-brief⟧` … `⟦/research-brief⟧` markers), plus an empty `## Deep Read`
+section carrying `⟦deep-read: pending⟧` and `⟦/deep-read⟧`. Step 4.5
 appends the rendered prose Deep Read here too, so Alex gets the full two-layer artifact from
 either the Event or the Content Drafts view. Having it in both places means the content
 pipeline (`pre-event-content`, etc.) can read the one richer brief from Content Drafts.
@@ -792,7 +792,7 @@ a stale funding/stat number). Do **NOT** create a second `research_brief`: the s
 - **Replace the Event page `## Research Brief` section** with the corrected brief (this one section
   is replaced; everything else on the page stays append-only).
 - Both are `update` operations with `content_updates`: `old_str` = the whole stale section from
-  `<!-- research_brief -->` through `<!-- /research_brief -->`, copied from a fresh `notion-fetch`;
+  `⟦research-brief⟧` through `⟦/research-brief⟧`, copied from a fresh `notion-fetch`;
   `new_str` = the corrected brief inside the same two markers. Keys
   `event:<slug>:rerun:<YYYY-MM-DD>` and `draft:<slug>:research_brief:rerun:<YYYY-MM-DD>`, so a
   correction is never skipped as already in the manifest. Never `replace_content`, which would wipe
@@ -868,13 +868,15 @@ the final Deep Read.
 ### 4.5d: Append under the marker (`notion-writer`, idempotent)
 
 Replace the `## Deep Read` section on **both** the Event page and the `research_brief` Content
-Draft with the stitched Deep Read, and flip the marker `<!-- deep_read_rendered: pending -->` →
-`<!-- deep_read_rendered: [YYYY-MM-DD] -->`. Everything else on the page stays append-only; only
+Draft with the stitched Deep Read, and flip the marker `⟦deep-read: pending⟧` →
+`⟦deep-read: [YYYY-MM-DD]⟧`. Everything else on the page stays append-only; only
 this one marked section is replaced (idempotent — a re-run replaces just the Deep Read).
 
 - One payload, two `update` operations, each with `content_updates` (`old_str` = the whole section
-  from `<!-- deep_read_rendered: … -->` through `<!-- /deep_read -->`, copied from a fresh fetch;
-  `new_str` = flipped marker + Deep Read + `<!-- /deep_read -->`). Keys and loop:
+  from `⟦deep-read: …⟧` through `⟦/deep-read⟧`, copied from a fresh fetch;
+  `new_str` = flipped marker + Deep Read + `⟦/deep-read⟧`). Pages from before this version carry
+  the escaped legacy marker `\<!-- deep\_read\_rendered: pending -->` instead: see the command's Step 4
+  legacy rule. Never write an HTML comment as a marker (Notion stores it as visible escaped text). Keys and loop:
   `/event-deep-research` Step 4.5.
 - **Real newlines**, not `\n` escapes (gotcha m /
   [[project_notion_updatepage_newline_gotcha]]); `notion_payload.py` refuses a literal `\n`.

@@ -42,8 +42,9 @@ def upd(**kw):
     return dict({"key": "a", "op": "update", "page_id": PID}, **kw)
 
 
-MARK = "<!-- deep_read_rendered: pending -->\n<!-- /deep_read -->"
-DONE = "<!-- deep_read_rendered: 2026-10-24 -->\nThe Frame...\n<!-- /deep_read -->"
+MARK = "⟦deep-read: pending⟧\n⟦/deep-read⟧"
+DONE = "⟦deep-read: 2026-10-24⟧\nThe Frame...\n⟦/deep-read⟧"
+LEGACY = "\\<!-- deep\\_read\\_rendered: pending -->"   # how Notion stores the old HTML comment (sandbox 2026-10-24)
 
 # --- base contract
 ck("a create into a data source without dedup is refused (invariant 8)",
@@ -84,16 +85,30 @@ ck("content_updates on a create is refused",
 ck("a short old_str with no marker is refused (unbounded anchor)",
    has(errs(upd(content_updates=[{"old_str": "## Deep Read", "new_str": "## Deep Read\nx"}])), "anchor"))
 ck("a start marker without its end marker is refused (header-only match)",
-   has(errs(upd(content_updates=[{"old_str": "<!-- deep_read_rendered: 2026-10-01 -->",
-                                   "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nnew"}])), "end marker"))
+   has(errs(upd(content_updates=[{"old_str": "⟦deep-read: 2026-10-01⟧",
+                                   "new_str": "⟦deep-read: 2026-10-24⟧\nnew\n⟦/deep-read⟧"}])), "end marker"))
 ck("a replacement that drops the end marker is refused (next re-render would be unbounded)",
-   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nnew"}])), "end marker"))
-ck("legacy page: start marker bounded by the next ## heading (kept in new_str) is valid",
-   errs(upd(content_updates=[{"old_str": "<!-- deep_read_rendered: pending -->\n\n## Prior Snapshots",
-                              "new_str": "<!-- deep_read_rendered: 2026-10-24 -->\nx\n<!-- /deep_read -->\n\n## Prior Snapshots"}])) == [])
-ck("a terminal-marker append (insert before <!-- /research_log -->) is valid",
-   errs(upd(content_updates=[{"old_str": "<!-- /research_log -->",
-                              "new_str": "## Refresh 2026-10-24\nnew\n\n<!-- /research_log -->"}])) == [])
+   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": "⟦deep-read: 2026-10-24⟧\nnew"}])), "end marker"))
+ck("research-brief start without its end marker is refused",
+   has(errs(upd(content_updates=[{"old_str": "⟦research-brief⟧\n## Research Brief\nold",
+                                   "new_str": "⟦research-brief⟧\n## Research Brief\nnew\n⟦/research-brief⟧"}])), "end marker"))
+ck("a terminal-marker insert (before ⟦/research-log⟧) is valid",
+   errs(upd(content_updates=[{"old_str": "⟦/research-log⟧",
+                              "new_str": "## Refresh 2026-10-24\nnew\n\n⟦/research-log⟧"}])) == [])
+
+# --- sandbox 2026-10-24: Notion escapes HTML comments, so a raw <!-- --> anchor never matches
+ck("a raw HTML-comment old_str is refused (Notion stores it escaped)",
+   has(errs(upd(content_updates=[{"old_str": "<!-- /research_log -->", "new_str": "x\n<!-- /research_log -->"}])), "escaped"))
+ck("a raw HTML comment in new_str is refused (would land as visible text)",
+   has(errs(upd(content_updates=[{"old_str": MARK, "new_str": DONE + "\n<!-- note -->"}])), "escaped"))
+ck("legacy page: the escaped stored marker bounded by the next ## heading (kept in new_str) is valid",
+   errs(upd(content_updates=[{"old_str": LEGACY + "\n\n## Prior Snapshots",
+                              "new_str": DONE + "\n\n## Prior Snapshots"}])) == [])
+ck("legacy page: the escaped marker alone (no heading bound) is refused",
+   has(errs(upd(content_updates=[{"old_str": LEGACY, "new_str": DONE}])), "end marker"))
+ck("legacy replace must write the new ⟦⟧ form, not the escaped comment back",
+   has(errs(upd(content_updates=[{"old_str": LEGACY + "\n\n## Prior Snapshots",
+                                   "new_str": "\\<!-- deep\\_read\\_rendered: 2026-10-24 -->\nx\n\n## Prior Snapshots"}])), "⟦deep-read"))
 
 # --- item 2: PII on People
 ck("Email on a People create is refused (ADR-9 tier 1)",
@@ -107,6 +122,9 @@ ck("Phone on an update to a People page known from the manifest is refused",
 ck("Phone Number on an update keyed person: is refused",
    has(errs(upd(key="person:b:2026-10-24", properties={"Phone Number": "555"})), "ADR-9"))
 ck("Email on a non-People page is not a PII refusal", not has(errs(upd(properties={"Email": "a@x.com"})), "ADR-9"))
+
+ck("a raw HTML comment in a create body is refused (lands as visible text)",
+   has(errs({"key": "a", "op": "create", "parent": None, "content": "## A\n<!-- x -->"}), "escaped"))
 
 # --- gotcha m / p
 ck("a literal backslash-n in an update body is refused (gotcha m)",

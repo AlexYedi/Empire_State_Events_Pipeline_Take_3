@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a notion-writer payload before dispatch (YED-259, CLAUDE.md invariant 5).
+r"""Validate a notion-writer payload before dispatch (YED-259, CLAUDE.md invariant 5).
 
 The parent decides every write; the notion-writer agent only executes this file. A payload that
 fails validation is never dispatched. Exit 0 = valid (prints a one-line summary), 1 = invalid
@@ -29,11 +29,16 @@ Payload shape (JSON):
   ]
 }
 
+Markers are ⟦name⟧ / ⟦/name⟧ with hyphenated names (Notion stores them byte-identical). Notion does NOT keep
+HTML comments: <!-- x_y --> is stored and fetched back as visible text \<!-- x\_y --> (sandbox 2026-10-24), so a raw
+<!-- in any body or anchor is refused.
 Body-edit rules (content_updates):
-- Bounded: each old_str is >= 20 chars or contains an HTML-comment marker.
-- A section start marker (<!-- deep_read_rendered: ... -->, <!-- research_brief -->) in old_str must come with
-  its end marker (<!-- /deep_read -->, <!-- /research_brief -->), or, on a legacy page without one, old_str must
-  end on the next "## " heading and new_str must end on the same heading; new_str always carries both markers.
+- Bounded: each old_str is >= 20 chars or contains a ⟦marker⟧ (or the escaped legacy form \<!--).
+- A section start marker (⟦deep-read: ...⟧, ⟦research-brief⟧) in old_str or new_str must come with its end
+  marker (⟦/deep-read⟧, ⟦/research-brief⟧).
+- Legacy pages carry the escaped Deep Read marker \<!-- deep\_read\_rendered: pending --> (JSON:
+  "\\<!-- deep\\_read\\_rendered: pending -->") with no end marker: old_str must run from it through the next "## "
+  heading, new_str must end on the same heading and write the new ⟦deep-read: ...⟧ … ⟦/deep-read⟧ pair.
 - Real newlines only (a literal backslash-n lands as a stray "n", gotcha m).
 People pages never get Email / Phone / Phone Number unless "alex_provided": true (ADR-9 tier 1).
 Post / connection-note / DM copy (Content Type linkedin_*) is plain paragraphs, never code fences (gotcha p).
@@ -61,7 +66,10 @@ DRAFTS_DS = "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"
 PII_PROPS = {"Email", "Phone", "Phone Number"}
 COPY_TYPE_PREFIX = "linkedin_"   # Content Drafts copy Alex reviews by inline comment (gotcha p)
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-SECTIONS = {"<!-- deep_read_rendered:": "<!-- /deep_read -->", "<!-- research_brief -->": "<!-- /research_brief -->"}
+SECTIONS = {"⟦deep-read:": "⟦/deep-read⟧", "⟦research-brief⟧": "⟦/research-brief⟧"}
+LEGACY_STARTS = {"\\<!-- deep\\_read\\_rendered:": ("⟦deep-read:", "⟦/deep-read⟧")}  # as Notion stores the old comment
+MARKER_RE = re.compile(r"⟦[^⟧\n]+⟧")
+RAW_COMMENT_RE = re.compile(r"(?<!\\)<!--")
 MIN_ANCHOR = 20
 
 
@@ -88,17 +96,26 @@ def last_heading(s):
 
 def anchor_problems(tag, j, old, new):
     out = []
-    if len(old) < MIN_ANCHOR and "<!--" not in old:
+    for name, text in (("old_str", old), ("new_str", new)):
+        if RAW_COMMENT_RE.search(text):
+            out.append(f"{tag} content_updates[{j}] {name} has a raw <!-- comment; Notion stores comments escaped "
+                       "(\\<!-- …), so use a ⟦name⟧ marker (or the escaped fetched form for a legacy anchor)")
+    if len(old) < MIN_ANCHOR and not MARKER_RE.search(old) and "\\<!--" not in old:
         out.append(f"{tag} content_updates[{j}] old_str is a short anchor with no marker (needs >= {MIN_ANCHOR} chars "
-                   "or an HTML-comment marker)")
+                   "or a ⟦marker⟧)")
     for start, end in SECTIONS.items():
         if start in old and end not in old:
-            legacy = last_heading(old)
-            if not (legacy and last_heading(new) == legacy):
-                out.append(f"{tag} content_updates[{j}] old_str has {start} without its end marker {end} "
-                           "(or, on a legacy page, the next ## heading kept in new_str)")
+            out.append(f"{tag} content_updates[{j}] old_str has {start} without its end marker {end}")
         if start in new and end not in new:
             out.append(f"{tag} content_updates[{j}] new_str has {start} without its end marker {end}")
+    for start, (new_start, new_end) in LEGACY_STARTS.items():
+        if start in old:
+            bound = last_heading(old)
+            if not (bound and last_heading(new) == bound):
+                out.append(f"{tag} content_updates[{j}] legacy {start} has no end marker: old_str must run through the "
+                           "next ## heading and new_str must end on the same heading")
+            if new_start not in new or new_end not in new:
+                out.append(f"{tag} content_updates[{j}] legacy replace must write {new_start} … {new_end} in new_str")
     return out
 
 
@@ -128,6 +145,8 @@ def body_problems(tag, o):
                     out += anchor_problems(tag, j, u["old_str"], u["new_str"])
     if o.get("replace_content") and has_cu:
         out.append(f"{tag} replace_content replaces the whole body; do not combine it with content_updates")
+    if isinstance(o.get("content"), str) and RAW_COMMENT_RE.search(o["content"]):
+        out.append(f"{tag} content has a raw <!-- comment; Notion stores it as visible escaped text, use a ⟦name⟧ marker")
     texts = [o.get("content")] + [u["new_str"] for u in updates]
     if op == "update" and any(isinstance(t, str) and "\\n" in t for t in texts):
         out.append(f"{tag} update body contains a literal backslash-n; use real newlines (gotcha m)")
