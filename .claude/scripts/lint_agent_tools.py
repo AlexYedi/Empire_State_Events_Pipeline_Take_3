@@ -6,10 +6,10 @@ Rules, per agent .md (frontmatter between the first two `---` lines):
   1. A non-empty `tools:` line. Missing, empty, or any `*` wildcard fails (not minimal).
   2. READERS (untrusted text in): WebSearch, WebFetch, any Gmail MCP tool, and any MCP tool whose name
      contains `search` or `fetch` on a server that is not INTERNAL_SERVERS.
-     WRITERS (external effect out): any MCP tool whose name contains create/update/delete/write/send/
-     manage/set (case-insensitive), plus every HubSpot/Supabase tool that is not a plain read
-     (get_/list_/search_/fetch_/read_ prefix). A server-level grant (`mcp__x` with no tool part)
-     counts as both. Built-in local tools (Read, Write, Edit, Bash, ...) are not MCP writers.
+     WRITERS (external effect out): Bash (it can curl/POST anywhere), any MCP tool whose name contains
+     create/update/delete/write/send/manage/set/save (case-insensitive), plus every HubSpot/Supabase
+     tool that is not a plain read (get_/list_/search_/fetch_/read_ prefix). A server-level grant
+     (`mcp__x` with no tool part) counts as both. Local file tools (Read, Write, Edit) are not writers.
      An agent holding any READER and any WRITER fails.
   3. Every failure prints `file: reason`; exit 1 if any failed, 0 if clean.
 
@@ -27,7 +27,7 @@ import glob, os, re, sys
 INTERNAL_SERVERS = {"notion", "claude_ai_notion"}          # invariant 5: internal reads, not untrusted text
 GUARDED_SERVERS = ("hubspot", "supabase")                    # any non-read tool here is a write
 READ_PREFIXES = ("get", "list", "search", "fetch", "read")
-WRITE_VERBS = re.compile(r"create|update|delete|write|send|manage|set", re.I)
+WRITE_VERBS = re.compile(r"create|update|delete|write|send|manage|set|save", re.I)
 EXTERNAL_READ = re.compile(r"search|fetch", re.I)
 
 
@@ -81,6 +81,8 @@ def is_reader(tool: str) -> bool:
 
 
 def is_writer(tool: str) -> bool:
+    if tool == "Bash" or tool.startswith("Bash("):          # shell = arbitrary network egress
+        return True
     mcp = split_mcp(tool)
     if not mcp:
         return False
@@ -135,7 +137,9 @@ def selftest() -> int:
         (fm("tools: mcp__claude_ai_Gmail__get_thread, mcp__hubspot__manage_crm_objects"), False),
         (fm("tools: WebSearch, mcp__supabase__execute_sql"), False),
         (fm("tools: WebSearch, mcp__supabase__list_tables"), True),
-        (fm("tools: mcp__linear__search_issues, mcp__linear__save_issue"), True),   # spec boundary: `save` is not a listed verb
+        (fm("tools: mcp__linear__search_issues, mcp__linear__save_issue"), False),  # `save` is a write verb
+        (fm("tools: WebFetch, Read, Bash"), False),                       # Bash can POST anywhere
+        (fm("tools: Read, Write, Edit, Bash"), True),                     # Bash alone, no reader
         (fm("tools: mcp__exa__web_search, mcp__linear__create_issue"), False),
         (fm("tools: WebFetch, mcp__claude_ai_HubSpot"), False),             # server-level grant
         (fm("tools:\n  - WebFetch\n  - mcp__notion__notion-update-page"), False),
