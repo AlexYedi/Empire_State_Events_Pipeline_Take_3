@@ -9,9 +9,9 @@ A menu, not a hard-code. Hard routes cover fixed chains only; everything else is
 Before any Agent dispatch:
 
 1. **Hard route?** (§2) Use it. No judgment.
-2. **Otherwise pick from §3** for the job family, and write one line before the call:
-   `route: <agent> + <skills> · <why>` or `gap: no fitting agent · interim <agent>`.
-   The dispatch record logs whether that line was present (`route_line`); a `general-purpose` dispatch with no `gap:` line is flagged `unexplained`. No line = an unexplained dispatch.
+2. **Otherwise pick from §3** for the job family. A fitting pick needs no line. When nothing fits, write one line before the call:
+   `gap: no fitting agent · interim <agent>`.
+   The dispatch record logs that line (`route_line`); a `general-purpose` dispatch with no `gap:` line is flagged `unexplained`. (The `route:` line was dropped 2026-10-24: written on 16 of 173 dispatches; CTO review, second-fix rule.)
 3. **Model is a separate choice.** `model:` works on every agent: Fable for reasoning-heavy work, Opus for execution and prose, Sonnet for specialists and bulk.
 4. **Check §4 budgets** before a wave.
 
