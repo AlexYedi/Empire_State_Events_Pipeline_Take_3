@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "//": "Only build-session-emit.sh is wired (telemetry \u2192 gitignored .claude/.state/telemetry/). All other project hooks were unwired 2026-09-28 (YED-229, complexity reset) and their scripts deleted (second-fix-nudge.sh stays until Alex wires it, YED-237); the rest of .claude/hooks/ runs by hand or from the judge. event-claim.py runs inline from the pipeline commands, not from here. User-scope hooks live in ~/.claude/settings.json.",
+  "//": "Only build-session-emit.sh is wired (telemetry \u2192 gitignored .claude/.state/telemetry/). All other project hooks were unwired 2026-09-28 (YED-229, complexity reset) and their scripts deleted; the rest of .claude/hooks/ runs by hand or from the judge. event-claim.py runs inline from the pipeline commands, not from here. User-scope hooks live in ~/.claude/settings.json.",
   "//permissions": "Invariant 2 (Supabase MCP is read-only) and ADR-11 (inbox lane retired) as constraints, not prose (YED-254, 2026-10-02). Supabase writes go through spine_client.py over REST; DDL via the dashboard from repo migrations. execute_sql stays on ask: SELECT use is legitimate. Gmail stays read + draft only.",
   "permissions": {
     "deny": [

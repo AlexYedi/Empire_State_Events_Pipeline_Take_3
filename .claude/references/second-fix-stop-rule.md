@@ -14,8 +14,8 @@ incl. "Fable: design ADR-8", "Fable: Postgres health review") — which execute 
 ## The rule
 
 **Trigger — any one of:**
-1. You're about to make the **second fix to the same component** (file, script, skill, hook, or the
-   same Linear issue family) within one workstream. The first fix is normal iteration; the second is a signal.
+1. You're about to make the **third fix to the same component** (file, script, skill, hook, or the
+   same Linear issue family) within one workstream. The first two are normal iteration; the third is a signal. Fixes inside the session that shipped the component don't count (softened 2026-10-30).
 2. You're about to dispatch **judge round 3+** on the same build.
 3. You're about to **open a new Linear issue whose purpose is to fix or follow up something built in
    the last 7 days**.
@@ -29,7 +29,7 @@ incl. "Fable: design ADR-8", "Fable: Postgres health review") — which execute 
    the architect says the design is sound and names why.
 4. **No new Linear issue** for the fix until the answer is in. If one is opened, it cites the answer.
 
-**Exempt:** typos, one-line config, and fixes to *content* (posts, briefs) — this rule is for system parts.
+**Exempt:** fixes in the same session that shipped the component, typos, one-line config, and fixes to *content* (posts, briefs) — this rule is for system parts.
 
 ## Agent routing default (the second half)
 
