@@ -14,7 +14,7 @@ D4's one retrieval path (Amendment 1: the job-search lens), not removed without 
 seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
             "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365}
 
-What it does:
+What it does (for every lens):
   1 resolve seed entities (notion_page_id, else exact name) — unresolved names are REPORTED, never guessed
   2 relational pull — RPC entity_neighborhood (0010); before 0010 lands, a REST fallback serves the
     events + roster half from today's tables and the audit line says so
@@ -27,9 +27,15 @@ What it does:
     claim line carries [tier · status · date] c:<8> so later usage can be traced
 LOUD FAILURE (exit 5): the graph holds claims for these entities but the pack kept none — the
 "filled substrate silently stops being read" failure the review named (finding 6). Never a shrug.
+
+The `company` lens (YED-260; spec of record docs/prd-company-dossier.md §4) adds the missing person
+hop on top of the same pull/score/budget path: person.company_id = seed -> their asserted_by/about
+claims, plus first-hand claims whose text names the company (whole words only, kept only when the
+claim's event also involves the company or a person at the company is linked — §9 mitigation).
+Company-specific claims are ordered first, room context after; the weights are the only knob (ADR-10).
 """
 from __future__ import annotations
-import argparse, datetime as dt, json, math, os, sys
+import argparse, datetime as dt, json, math, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -40,6 +46,10 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
 LENSES = {  # the weights ARE the lens. w_use is 0 everywhere until >=20 outcome rows (decision 5)
     "event": {"sem": .30, "rel": .35, "rec": .15, "prov": .10, "conf": .10, "use": 0.0, "budget": 6000},
+    # company (YED-260, docs/prd-company-dossier.md §4): relational + provenance up, semantic down —
+    # the pack is a documented graph walk (people at the company, then text-named first-hand claims),
+    # so provenance/relational carry it and the semantic rank is a tiebreaker, not the spine.
+    "company": {"sem": .10, "rel": .40, "rec": .10, "prov": .25, "conf": .15, "use": 0.0, "budget": 6000},
 }
 PROV = {"first_hand": 1.0, "web_verified": .9, "email_signal": .7, "notion_prior": .6, "reference": .5,
         "model_inferred": .3}
@@ -48,6 +58,10 @@ HALF_LIFE_DAYS = 90
 
 def tokens(s: str) -> int:
     return math.ceil(len(s) / 4)
+
+
+CLAIM_COLS = ("id,claim_text,claim_type,provenance_tier,confidence,asserted_at,event_id,"
+              "document_id,status,metadata")
 
 
 def get(path: str):
@@ -132,6 +146,78 @@ def claim_layer_live() -> bool:
     return st == 200
 
 
+def fetch_claims(ids: list[str]) -> list[dict]:
+    """Claim rows by id (chunked), excluding rejected. Empty ids -> no call."""
+    out: list[dict] = []
+    for i in range(0, len(ids), 80):
+        out += get(f"/claim?id=in.({','.join(ids[i:i + 80])})&status=neq.rejected&select={CLAIM_COLS}") or []
+    return out
+
+
+def name_pattern(name: str) -> re.Pattern:
+    """PRD §9 (common-word names): a company name matches as whole words only, case-insensitive,
+    whitespace-normalized — 'Seek' matches 'what Seek announced', never 'seeking' or 'Seekr'."""
+    words = [re.escape(w) for w in name.split() if w]
+    return re.compile(r"(?<![A-Za-z0-9])" + r"\s+".join(words) + r"(?![A-Za-z0-9])", re.I)
+
+
+def text_match_qualifies(claim: dict, name: str, nb_event_ids: set[str], person_claim_ids: set[str]) -> bool:
+    """PRD §4 text pull with the §9 mitigation: the whole-word name match counts only when the claim's
+    event also involves the company (in the seed neighborhood) or a person at the company is linked —
+    a text match alone is never enough. Pure."""
+    if not name_pattern(name).search(claim.get("claim_text") or ""):
+        return False
+    return claim.get("event_id") in nb_event_ids or claim.get("id") in person_claim_ids
+
+
+def prioritize_company(ranked: list[dict], company_specific: set[str]) -> list[dict]:
+    """PRD §4 ordering: company-specific claims first, room context from the same events after.
+    ranked arrives score-sorted; stable bucket concatenation keeps score order inside each bucket."""
+    return ([c for c in ranked if c["id"] in company_specific]
+            + [c for c in ranked if c["id"] not in company_specific])
+
+
+def company_hop(found: list[dict], nb: dict) -> tuple[list[dict], set[str], list[dict]]:
+    """YED-260 — the missing hop (PRD §4, evidenced §6): the `event` lens kept 28 company-relevant
+    claims but 0 of the 8 people at the company. This pulls, for the company seeds:
+      1 people at the company (person.company_id = seed),
+      2 the claims those people asserted (asserted_by) or are about,
+      3 first-hand claims whose text names a seed company (whole words + §9 mitigation).
+    Returns (extra claims, company-specific claim ids, company people). Company-specific covers the
+    person-hop and text pulls PLUS claims already linked directly to a seed company. No DDL, no writer.
+    Pure when `found` holds no company (returns empty without touching the network)."""
+    cos = [f for f in found if f["type"] == "company"]
+    if not cos:
+        return [], set(), []
+    co_ids = [c["id"] for c in cos]
+    direct: set[str] = set()
+    for i in range(0, len(co_ids), 80):
+        direct |= {r["claim_id"] for r in get(f"/claim_entity?entity_id=in.({','.join(co_ids[i:i + 80])})"
+                                              f"&entity_type=eq.company&select=claim_id") or []}
+    people: list[dict] = []
+    for i in range(0, len(co_ids), 80):
+        people += get(f"/person?company_id=in.({','.join(co_ids[i:i + 80])})&select=id,name,title") or []
+    person_ids = sorted({p["id"] for p in people if p.get("id")})
+    person_claims: set[str] = set()
+    for i in range(0, len(person_ids), 80):
+        person_claims |= {r["claim_id"] for r in
+                          get(f"/claim_entity?entity_id=in.({','.join(person_ids[i:i + 80])})&entity_type=eq.person"
+                              f"&role=in.(asserted_by,about)&select=claim_id") or []}
+    extra: dict[str, dict] = {}
+    for c in fetch_claims(sorted(person_claims - direct)):      # nb claims arrive separately; skip doubles
+        extra[c["id"]] = {**c, "_direct": True, "_person_hop": True}
+    nb_ev = {e["id"] for e in nb.get("events", [])}
+    for co in cos:
+        rows = get(f"/claim?claim_text=ilike.{q('*' + co['name'] + '*')}&provenance_tier=eq.first_hand"
+                   f"&status=neq.rejected&select={CLAIM_COLS}&order=asserted_at.desc&limit=200") or []
+        for c in rows:
+            if c["id"] in extra or c["id"] in direct:
+                continue
+            if text_match_qualifies(c, co["name"], nb_ev, person_claims):
+                extra[c["id"]] = {**c, "_text_match": co["name"]}
+    return list(extra.values()), direct | set(extra), [p for p in people if p.get("id")]
+
+
 def semantic_claims(text: str, ids: list[str], n: int) -> list[dict]:
     from dockb_common import embed_query, vec_literal
     st, body = rpc("match_claims_hybrid", {"query_embedding": vec_literal(embed_query(text)), "query_text": text,
@@ -201,11 +287,19 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     nb, hiring, job_path = isolate_job_lens(nb, {f["id"]: f["name"] for f in found if f["type"] == "company"})
     live = claim_layer_live()
     claims = {c["id"]: {**c, "_direct": True} for c in nb.get("claims", [])}
+    company_specific: set[str] = set()
+    company_people: list[dict] = []
+    if lens == "company":                          # YED-260: the person hop + text pull (PRD §4)
+        extra, company_specific, company_people = company_hop(found, nb)
+        for c in extra:
+            claims.setdefault(c["id"], c)
     if live and seed.get("text"):
         for c in semantic_claims(seed["text"], ids, 30):
             claims.setdefault(c["id"], c)["_semantic"] = True
     nb_ev = {e["id"] for e in nb["events"]}
     ranked = score_claims(list(claims.values()), set(ids), nb_ev, w)
+    if lens == "company":                          # PRD §4: company-specific first, room context after
+        ranked = prioritize_company(ranked, company_specific)
     ev_by_id = {e["id"]: e for e in nb["events"]}
 
     # ---- sections -------------------------------------------------------------------------------
@@ -224,10 +318,18 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
             ev = ev_by_id.get(x["event_id"])
             if ev:
                 p["seen"].append(f"{str(ev.get('event_date') or '')[:10]} {ev['title'][:48]} ({x['role']})")
+    if lens == "company":      # YED-260: people at the company get cards even without a shared occasion
+        for p in company_people:
+            if p["id"] not in people and p["id"] not in seed_names:
+                people[p["id"]] = {"name": p["name"], "seen": [], "title": p.get("title"),
+                                   "_company_roster": True}
     cards = ["## People — seeds and returning faces", ""]
     for pid, p in sorted(people.items(), key=lambda kv: (-len(kv[1]["seen"]), kv[1]["name"])):
-        if pid in seed_names or len(p["seen"]) >= 2:
-            cards.append(f"- **{p['name']}** — seen at {len(p['seen'])}: " + "; ".join(p["seen"][:4]))
+        if pid in seed_names or len(p["seen"]) >= 2 or p.get("_company_roster"):
+            title = f" ({p['title']})" if p.get("title") else ""
+            seen = (f" — seen at {len(p['seen'])}: " + "; ".join(p["seen"][:4]) if p["seen"]
+                    else " — person at the company (no shared occasion in this pack)")
+            cards.append(f"- **{p['name']}**{title}{seen}")
     topics: dict[str, set] = {}
     for x in nb["edges"]:
         if x["entity_type"] == "topic" and x.get("name"):
@@ -251,6 +353,7 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     # Pass 2: spend the remaining budget in score order. (Acceptance run 2026-09-18: a one-source
     # neighborhood kept 3/46 claims at 352/6000 tokens under a hard cap — diversity must not starve depth.)
     kept, deferred, cut = [], [], []
+    kept_ids: list[str] = []                       # YED-262: what a read kept, so usage can be logged
     per_src: dict[str, int] = {}
     for c in ranked:
         src = c.get("document_id") or c.get("event_id") or "none"
@@ -264,12 +367,14 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
         per_src[src] = per_src.get(src, 0) + 1
         used += tokens(line)
         kept.append(line)
+        kept_ids.append(c["id"])
     for c, line in deferred:
         if used + tokens(line) > budget:
             cut.append(c)
             continue
         used += tokens(line)
         kept.append(line)
+        kept_ids.append(c["id"])
     cl = ["## Claims (scored)", ""] + (kept or ["- (none)"])
     if cut:
         cl += ["", f"_Cut for budget/diversity: {len(cut)} more claims._"]
@@ -278,11 +383,16 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
              "seeds_resolved": len(found), "seeds_unresolved": missing, "events": len(nb["events"]),
              "edges": len(nb["edges"]), "claims_candidates": len(ranked), "claims_kept": len(kept),
              "claims_cut": len(cut), "tokens": used, "budget": budget,
-             "hiring_companies": len(hiring), "job_lens_filter": job_path}
+             "hiring_companies": len(hiring), "job_lens_filter": job_path, "kept_claim_ids": kept_ids}
+    if lens == "company":
+        audit["company_specific"] = len(company_specific)
+        audit["company_people"] = len(company_people)
     audit_line = (f"AUDIT · lens={lens} · seeds={len(found)} resolved/{len(missing)} unresolved · "
                   f"events={audit['events']} · claims {len(kept)} kept/{len(cut)} cut · docs={len(nb.get('documents', []))} · "
                   f"tokens {used}/{budget} · graph={mode} · claims-layer={audit['claims_layer']} · "
                   f"job-lens filter={job_path}")
+    if lens == "company":
+        audit_line += f" · company-specific={len(company_specific)} · company-people={len(company_people)}"
     lines += [f"_{audit_line}_", ""]
     if missing:
         lines += [f"**Unresolved seeds (reported, not guessed):** {', '.join(missing)}", ""]
@@ -329,6 +439,30 @@ def selftest() -> bool:
         ("rest-fallback path is labelled as such, never 'partial'",
          isolate_job_lens({**nb, "hiring": [], "_hiring_path": "rest-fallback"}, {"co1": "Harvey"})[2]
          == "rest-fallback (no hiring counts)"),
+    ]
+    # ---- company lens (YED-260) — pure helpers on inline fixtures, no network --------------------
+    w_ev, w_co = LENSES["event"], LENSES["company"]
+    ranked = [{"id": "a", "_score": .9}, {"id": "b", "_score": .8}, {"id": "c", "_score": .7}]
+    checks += [
+        ("company lens: rel+prov up, sem down, w_use still 0 (ADR-10 decision 5)",
+         w_co["rel"] > w_ev["rel"] and w_co["prov"] > w_ev["prov"] and w_co["sem"] < w_ev["sem"]
+         and w_co["use"] == 0),
+        ("company lens: weights still sum to 1", abs(sum(v for k, v in w_co.items() if k != "budget") - 1) < 1e-9),
+        ("name_pattern: whole words only, case-insensitive, multi-space ok",
+         bool(name_pattern("Seek").search("what Seek announced"))
+         and not name_pattern("Seek").search("seeking")
+         and not name_pattern("Seek").search("Seekr builds")
+         and bool(name_pattern("Veris AI").search("when  VERIS   ai  shipped"))),
+        ("text_match_qualifies: event overlap or person link required (PRD §9)",
+         text_match_qualifies({"claim_text": "Seek ships X", "id": "t1", "event_id": "e1"}, "Seek", {"e1"}, set())
+         and text_match_qualifies({"claim_text": "Seek ships X", "id": "t1", "event_id": None}, "Seek", set(), {"t1"})
+         and not text_match_qualifies({"claim_text": "Seek ships X", "id": "t1", "event_id": None},
+                                      "Seek", {"e1"}, set())
+         and not text_match_qualifies({"claim_text": "Seeking teams", "id": "t1", "event_id": "e1"},
+                                      "Seek", {"e1"}, set())),
+        ("prioritize_company: specific first, score order kept in each bucket",
+         [c["id"] for c in prioritize_company(ranked, {"b"})] == ["b", "a", "c"]),
+        ("company_hop: no company seed -> empty, no network", company_hop([], {}) == ([], set(), [])),
     ]
     for name, good in checks:
         print(f"  {'✓' if good else '✗'} {name}")
