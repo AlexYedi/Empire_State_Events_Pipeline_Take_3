@@ -8,8 +8,8 @@ The A/B (YED-172) kept the legacy pre-event pull, so no command calls this today
 D4's one retrieval path (Amendment 1: the job-search lens), not removed without a successor ADR.
 
     .venv/bin/python .claude/scripts/retrieve.py --lens event --seed seed.json [--budget-tokens 6000]
-                     [--out pack.md] [--json]
-    .venv/bin/python .claude/scripts/retrieve.py --selftest      (offline: job-lens isolation, YED-149)
+                     [--out pack.md] [--json] [--log-usage event --usage-document <documents.uuid>]
+    .venv/bin/python .claude/scripts/retrieve.py --selftest      (offline: job-lens isolation + company lens + usage, YED-149/260/262)
 
 seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
             "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365}
@@ -33,13 +33,20 @@ hop on top of the same pull/score/budget path: person.company_id = seed -> their
 claims, plus first-hand claims whose text names the company (whole words only, kept only when the
 claim's event also involves the company or a person at the company is linked — §9 mitigation).
 Company-specific claims are ordered first, room context after; the weights are the only knob (ADR-10).
+
+Usage logging (YED-262): `--log-usage event --usage-document <documents.id>` writes one `claim_usage`
+row per kept claim through spine_client (ADR-9) — the read loop closing the loop. Read-before-write
+against the unique (claim_id, document_id) pair, so a re-run of the same pack is a no-op. Best-effort
+but LOUD: the result lands on the audit line (`usage=logged N | not logged (<reason>) | failed (code)`);
+a write failure prints to stderr and never fails the pack itself. Without --usage-document the audit
+says why nothing was logged — the caller attributes usage once the consuming document id is known.
 """
 from __future__ import annotations
 import argparse, datetime as dt, json, math, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from spine_client import q, req  # noqa: E402
+from spine_client import q, req, write  # noqa: E402  (write: YED-262 claim_usage, the one write path)
 from substrate import JOB_LENS_KINDS, norm_text, pid_variants  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -54,6 +61,9 @@ LENSES = {  # the weights ARE the lens. w_use is 0 everywhere until >=20 outcome
 PROV = {"first_hand": 1.0, "web_verified": .9, "email_signal": .7, "notion_prior": .6, "reference": .5,
         "model_inferred": .3}
 HALF_LIFE_DAYS = 90
+# claim_usage.consumer — pinned to migration 0009's check constraint (--selftest asserts the tuple)
+USAGE_CONSUMERS = ("event", "content", "job", "ideation", "dev")
+USAGE_BATCH = 80
 
 
 def tokens(s: str) -> int:
@@ -414,6 +424,45 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     return "\n".join(lines), {**audit, "audit_line": audit_line}, rc
 
 
+# ---- usage logging (YED-262) -------------------------------------------------------------------
+
+def usage_plan(kept_ids: list[str], document_id: str | None, existing: set[str],
+               consumer: str) -> tuple[list[dict], str | None]:
+    """Pure. claim_usage rows to log for one pack read -> (rows, skip_reason). Read-before-write:
+    kept claims already linked to this document are dropped (unique (claim_id, document_id)), so a
+    re-run is a no-op. A missing attribute is a REPORTED skip, never a guessed document id."""
+    if not document_id:
+        return [], "no --usage-document (attribute once the consuming document id is known)"
+    if not kept_ids:
+        return [], "no kept claims"
+    rows = [{"claim_id": cid, "document_id": document_id, "consumer": consumer}
+            for cid in kept_ids if cid not in existing]
+    if not rows:
+        return [], "already logged for this document"
+    return rows, None
+
+
+def log_usage(kept_ids: list[str], document_id: str, consumer: str) -> str:
+    """Write claim_usage via spine_client (ADR-9; on the allowlist). Best-effort but LOUD: the
+    outcome lands on the audit line either way, a failure prints to stderr, and the pack itself
+    never fails because logging did."""
+    existing_rows = get(f"/claim_usage?document_id=eq.{q(document_id)}&select=claim_id&limit=2000")
+    existing = {r["claim_id"] for r in (existing_rows or [])}
+    rows, skip = usage_plan(kept_ids, document_id, existing, consumer)
+    if skip:
+        return f"not logged ({skip})"
+    written = 0
+    for i in range(0, len(rows), USAGE_BATCH):
+        code, _body = write("claim_usage", rows[i:i + USAGE_BATCH], prefer="return=minimal")
+        if code not in (200, 201):
+            print(f"  ⚠️ claim_usage write failed ({code}) at rows {i}..{i + USAGE_BATCH} — usage NOT "
+                  f"logged; the pack is unaffected. Re-run with the same --usage-document to retry "
+                  f"(read-before-write skips what landed).", file=sys.stderr)
+            return f"failed ({code})"
+        written += len(rows[i:i + USAGE_BATCH])
+    return f"logged {written}"
+
+
 def selftest() -> bool:
     """Offline (no network): the job-lens isolation contract (YED-149)."""
     nb = {"events": [{"id": "e1", "kind": "attended", "title": "Demo Night", "event_date": "2026-09-01"},
@@ -463,6 +512,19 @@ def selftest() -> bool:
         ("prioritize_company: specific first, score order kept in each bucket",
          [c["id"] for c in prioritize_company(ranked, {"b"})] == ["b", "a", "c"]),
         ("company_hop: no company seed -> empty, no network", company_hop([], {}) == ([], set(), [])),
+        ("usage: consumers pinned to migration 0009's check constraint",
+         USAGE_CONSUMERS == ("event", "content", "job", "ideation", "dev")),
+        ("usage: no --usage-document is a reported skip, never a guessed id",
+         usage_plan(["c1"], None, set(), "event")[1].startswith("no --usage-document")),
+        ("usage: no kept claims is a reported skip", usage_plan([], "d1", set(), "event")[1] == "no kept claims"),
+        ("usage: rows carry exactly the allowed claim_usage keys",
+         usage_plan(["c1", "c2"], "d1", set(), "event")[0]
+         == [{"claim_id": "c1", "document_id": "d1", "consumer": "event"},
+             {"claim_id": "c2", "document_id": "d1", "consumer": "event"}]),
+        ("usage: read-before-write — already-logged claims dropped (idempotent re-run)",
+         usage_plan(["c1", "c2"], "d1", {"c1"}, "event") == ([{"claim_id": "c2", "document_id": "d1",
+                                                                  "consumer": "event"}], None)
+         and usage_plan(["c1"], "d1", {"c1"}, "event") == ([], "already logged for this document")),
     ]
     for name, good in checks:
         print(f"  {'✓' if good else '✗'} {name}")
@@ -480,9 +542,19 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--budget-tokens", type=int)
     ap.add_argument("--out")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--log-usage", choices=USAGE_CONSUMERS,
+                    help="log kept claims as claim_usage rows (YED-262), e.g. --log-usage event")
+    ap.add_argument("--usage-document",
+                    help="documents.id the pack fed; required with --log-usage (claim_usage FK)")
     a = ap.parse_args(argv)
+    if a.log_usage and not a.usage_document:
+        ap.error("--log-usage needs --usage-document <documents.id> — claim_usage requires the "
+                 "consuming document; without it the audit line will say 'not logged'")
     seed = json.load(open(a.seed, encoding="utf-8"))
     pack, audit, rc = build_pack(seed, a.lens, a.budget_tokens or LENSES[a.lens]["budget"])
+    if a.log_usage:
+        audit["usage"] = log_usage(audit["kept_claim_ids"], a.usage_document, a.log_usage)
+        audit["audit_line"] += f" · usage={audit['usage']}"
     if a.out:
         with open(a.out, "w", encoding="utf-8") as f:
             f.write(pack)
