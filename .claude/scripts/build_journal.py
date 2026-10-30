@@ -148,8 +148,115 @@ def load_telemetry_by_day(since):
     return days
 
 
-def main():
-    args = sys.argv[1:]
+# ---------------------------------------------------------------------------
+# selftest — parse and generate from an inline fixture repo (E-07)
+# ---------------------------------------------------------------------------
+def selftest():
+    """--selftest: build a throwaway git repo whose fixture commits carry the two ship
+    conventions (squash "(#N)" and GitHub-Desktop merge commits), plus fixture telemetry
+    and prose files, then run the generator with every output path pointed at a temp dir.
+    Nothing outside the temp dir is read or written; no network."""
+    import shutil
+    import tempfile
+
+    checks = []
+
+    def ck(name, cond):
+        checks.append((name, bool(cond)))
+
+    td = tempfile.mkdtemp(prefix="build_journal_selftest_")
+    old = {k: globals()[k] for k in ("REPOS", "TELEMETRY", "TELEMETRY_SHARDS",
+                                     "TELEMETRY_SHARDS_GITIGNORED", "PROSE", "DEFAULT_OUT")}
+    try:
+        repo = os.path.join(td, "fixture-repo")
+        env = {**os.environ, "GIT_AUTHOR_DATE": "2026-10-01 12:00:00 +0000",
+               "GIT_COMMITTER_DATE": "2026-10-01 12:00:00 +0000"}
+        def git(*args, date=None):
+            e = dict(env)
+            if date:
+                e["GIT_AUTHOR_DATE"] = e["GIT_COMMITTER_DATE"] = date
+            subprocess.run(["git", "-C", repo, "-c", "user.name=Fixture",
+                            "-c", "user.email=fixture@example.com", *args],
+                           check=True, capture_output=True, env=e)
+        subprocess.run(["git", "init", "-q", "-b", "main", repo], check=True, capture_output=True)
+        git("remote", "add", "origin", "https://github.com/AlexYedi/fixture-repo.git")
+        # 2026-10-01: two squash-style ships, one YED ref among them, plus a churn commit
+        git("commit", "--allow-empty", "-m", "Fix the carousel pipeline (#57)")
+        git("commit", "--allow-empty", "-m", "YED-119: journal improvements (#58)")
+        git("commit", "--allow-empty", "-m", "churn: build session log update")
+        # 2026-10-02: a GitHub-Desktop-style merge-commit PR on a branch
+        git("checkout", "-q", "-b", "feature/widget-flow")
+        git("commit", "--allow-empty", "-m", "widget work",
+            date="2026-10-02 09:00:00 +0000")
+        git("checkout", "-q", "main")
+        git("merge", "--no-ff", "-m", "Merge pull request #59 from AlexYedi/feature/widget-flow",
+            "feature/widget-flow", date="2026-10-02 10:00:00 +0000")
+
+        telemetry = os.path.join(td, "build-sessions.jsonl")
+        with open(telemetry, "w") as fh:
+            fh.write('{"started_at": "2026-10-01T10:00:00Z", "tool_uses": 7}\n')
+            fh.write('{"ended_at": "2026-10-01T18:00:00Z", "tool_uses": 3}\n')
+        shards = os.path.join(td, "shards")
+        os.makedirs(shards)
+        with open(os.path.join(shards, "2026-10-02.jsonl"), "w") as fh:
+            fh.write('{"started_at": "2026-10-02T09:00:00Z", "tool_uses": 1}\n')
+        prose = os.path.join(td, "prose.json")
+        with open(prose, "w") as fh:
+            json.dump({"2026-10-01": {"headline": "Curated headline", "summary": "Why it mattered."}}, fh)
+        out_path = os.path.join(td, "build-journal.json")
+
+        # point the generator at the fixtures and a temp output; a nonexistent second repo
+        # exercises the resilient paths (no remote, unreadable log) without crashing
+        globals().update(REPOS=[("fixture-repo", repo), ("missing-repo", os.path.join(td, "no-such-repo"))],
+                         TELEMETRY=telemetry, TELEMETRY_SHARDS=shards,
+                         TELEMETRY_SHARDS_GITIGNORED=os.path.join(td, "no-such-shards"),
+                         PROSE=prose, DEFAULT_OUT=out_path)
+
+        # NOTE: pass --since as a bare date the day before the fixtures. git fills a bare
+        # date's missing time from the current wall clock, while the telemetry filter
+        # string-compares it against YYYY-MM-DD prefixes — a same-day bare date is
+        # non-deterministic for the former, and a full timestamp breaks the latter.
+        main(["--dry-run", "--out", out_path, "--since", "2026-09-30"])
+        ck("dry-run: writes nothing", not os.path.exists(out_path))
+
+        main(["--out", out_path, "--since", "2026-09-30"])
+        with open(out_path) as fh:
+            doc = json.load(fh)
+        ck("output: written to the requested temp path with the right shape",
+           doc["since"] == "2026-09-30" and len(doc["entries"]) == 2
+           and doc["generated_at"].endswith("Z"))
+        day2, day1 = doc["entries"][0], doc["entries"][1]
+        ck("parse: squash-style ships (#N) land with titles, urls, and no churn",
+           [(s["num"], s["title"]) for s in day1["shipped"]] == [(58, "YED-119: journal improvements"),
+                                                                 (57, "Fix the carousel pipeline")]
+           and all(s["url"].startswith("https://github.com/AlexYedi/fixture-repo/pull/") for s in day1["shipped"]))
+        ck("parse: YED refs harvested from commit titles", day1["linear"] == ["YED-119"])
+        ck("parse: merge-commit PR detected from the branch slug (pass 2)",
+           day2["shipped"][0]["num"] == 59 and day2["shipped"][0]["title"] == "widget flow")
+        ck("metrics: commits counted per day, PRs per convention",
+           day1["metrics"]["commits"] == 3 and day1["metrics"]["prs"] == 2
+           and day2["metrics"]["commits"] == 1 and day2["metrics"]["prs"] == 1)
+        ck("metrics: telemetry sessions/tools aggregated per day",
+           day1["metrics"]["sessions"] == 2 and day1["metrics"]["tools"] == 10
+           and day2["metrics"]["sessions"] == 1 and day2["metrics"]["tools"] == 1)
+        ck("prose: curated headline wins on its day; fallback is the top ship title",
+           day1["headline"] == "Curated headline" and day1["summary"] == "Why it mattered."
+           and day2["headline"] == "widget flow" and day2["summary"] == "" and not day2["curated"])
+    finally:
+        globals().update(old)
+        shutil.rmtree(td, ignore_errors=True)
+
+    fails = [n for n, ok in checks if not ok]
+    for n, ok in checks:
+        print(f"  {'✓' if ok else '✗'} {n}")
+    print(f"selftest: {len(checks) - len(fails)}/{len(checks)} build-journal cases pass")
+    return 0 if not fails else 1
+
+
+def main(argv=None):
+    args = sys.argv[1:] if argv is None else argv
+    if "--selftest" in args:
+        return selftest()
 
     def argval(flag, default):
         # guard against a flag given with no following value (avoids an IndexError)
@@ -252,4 +359,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
