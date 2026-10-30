@@ -238,7 +238,229 @@ def problems(p):
     return out
 
 
+# ---------------------------------------------------------------------------
+# selftest — pin every rejection branch + one valid payload (E-07)
+# ---------------------------------------------------------------------------
+def selftest():
+    """--selftest: at least one case per rejection branch of problems()/body_problems()/
+    anchor_problems(), plus one valid payload end-to-end through main(). Fixtures are
+    synthetic and *.example-only; nothing is dispatched, no network, and the only files
+    written are tempfiles this function removes."""
+    import contextlib
+    import io
+    import os
+    import shutil
+    import tempfile
+
+    EV_DS = "9dcbc999-b4ed-4a51-b48a-10aaf171f1ba"  # Events
+    good_uuid = "44444444-4444-4444-4444-444444444444"
+
+    checks = []
+
+    def ck(name, cond):
+        checks.append((name, bool(cond)))
+
+    def hits(p, needle):
+        return [e for e in problems(p) if needle in e]
+
+    def create_op(**o):
+        op = {"key": "event:selftest", "op": "create",
+              "parent": {"data_source_id": EV_DS},
+              "dedup": {"query": "Selftest Event", "match_title": "Selftest Event"},
+              "properties": {"Name": {"title": [{"text": {"content": "Selftest Event"}}]}}}
+        op.update(o)
+        return op
+
+    def update_op(**o):
+        op = {"key": "update:selftest", "op": "update", "page_id": good_uuid,
+              "properties": {"Name": {"rich_text": [{"text": {"content": "Selftest Co"}}]}}}
+        op.update(o)
+        return op
+
+    def pay(ops, **o):
+        p = {"run": "selftest", "manifest": "selftest-no-such-manifest.json", "operations": ops}
+        p.update(o)
+        return p
+
+    ck("top-level: non-object payload rejected",
+       problems(["nope"]) == ["payload is not a JSON object"])
+    for k in ("run", "manifest", "operations"):
+        p = pay([create_op()])
+        del p[k]
+        ck(f"top-level: missing '{k}' rejected", bool(hits(p, f"missing top-level '{k}'")))
+    ck("top-level: empty operations rejected",
+       bool(hits(pay([], allowed_page_ids=[good_uuid]), "'operations' must be a non-empty list")))
+    ck("top-level: allowed_page_ids that is not a list rejected",
+       bool(hits(pay([create_op()], allowed_page_ids="x"), "'allowed_page_ids' must be a list")))
+
+    ck("op: unknown op rejected", bool(hits(pay([create_op(op="delete")]), "'op' must be create or update")))
+    p = pay([create_op()])
+    del p["operations"][0]["key"]
+    ck("idempotency: missing key rejected", bool(hits(p, "missing 'key'")))
+    ck("idempotency: duplicate key rejected",
+       bool(hits(pay([create_op(), create_op(key="event:selftest")]), "duplicate key")))
+
+    p = pay([create_op()])
+    del p["operations"][0]["parent"]
+    ck("create: missing parent rejected", bool(hits(p, "create needs 'parent'")))
+    ck("create: unknown data_source_id rejected",
+       bool(hits(pay([create_op(parent={"data_source_id": "not-a-uuid"})]),
+                 "not one of the 8 known databases")))
+    p = pay([create_op()])
+    del p["operations"][0]["dedup"]
+    ck("create: missing dedup rejected",
+       bool(hits(p, "needs dedup.query and dedup.match_title")))
+    ck("create: parent page_id outside the manifest/allowlist rejected",
+       bool(hits(pay([create_op(parent={"page_id": good_uuid})]),
+                 "parent page_id is not in the manifest or allowed_page_ids")))
+
+    p = pay([update_op()])
+    del p["operations"][0]["page_id"]
+    ck("update: missing page_id rejected", bool(hits(p, "update needs 'page_id'")))
+    ck("update: URL instead of bare UUID rejected (gotcha o)",
+       bool(hits(pay([update_op(page_id="https://notion.so/" + good_uuid)]),
+                 "must be a bare UUID")))
+    ck("update: page_id outside manifest/allowlist rejected",
+       bool(hits(pay([update_op(page_id="33333333-3333-3333-3333-333333333333")], allowed_page_ids=[]),
+                 "is not in the manifest or allowed_page_ids")))
+    p = pay([update_op()])
+    del p["operations"][0]["properties"]
+    ck("update: nothing-to-do rejected",
+       bool(hits(p, "update has nothing to do")))
+    ck("update: properties that are not an object rejected",
+       bool(hits(pay([update_op(properties="oops")]), "'properties' must be an object")))
+    ck("update: content that is not a string rejected",
+       bool(hits(pay([update_op(content=5)]), "'content' must be a string")))
+    ck("frozen_statuses: non-list rejected",
+       bool(hits(pay([update_op(frozen_statuses="scheduled")]), "'frozen_statuses' must be a list")))
+
+    # PII (ADR-9 tier 1) — three detection routes, plus the alex_provided escape hatch
+    pii_prop = {"Email": {"rich_text": [{"text": {"content": "someone@example.com"}}]}}
+    ck("PII: People data-source create with Email refused without alex_provided",
+       bool(hits(pay([create_op(parent={"data_source_id": "4a1af67f-9141-4ba5-aa9d-88b07dcd5f86"},
+                                properties=pii_prop)]), "ADR-9 tier 1")))
+    ck("PII: person:-prefixed key with Email refused without alex_provided",
+       bool(hits(pay([create_op(key="person:selftest", properties=pii_prop)]), "ADR-9 tier 1")))
+    ck("PII: alex_provided=true lets a People page carry Email",
+       not hits(pay([create_op(parent={"data_source_id": "4a1af67f-9141-4ba5-aa9d-88b07dcd5f86"},
+                               properties=pii_prop, alex_provided=True)]), "ADR-9 tier 1"))
+
+    ck("body: removed append_content refused",
+       bool(hits(pay([create_op(append_content="x")]), "'append_content' was removed")))
+    ck("body: content_updates on a create refused",
+       bool(hits(pay([create_op(content_updates=[{"old_str": "x", "new_str": "y"}])]),
+                 "content_updates is update-only")))
+    ck("body: empty content_updates refused",
+       bool(hits(pay([update_op(content_updates=[])]), "must be a non-empty list")))
+    ck("body: content_updates entry without old_str refused",
+       bool(hits(pay([update_op(content_updates=[{"old_str": "", "new_str": "y"}])]),
+                 "needs a non-empty old_str")))
+    ck("body: identical old_str/new_str (no-op) refused",
+       bool(hits(pay([update_op(content_updates=[{"old_str": "same text same text same text",
+                                                  "new_str": "same text same text same text"}])]),
+                 "are identical")))
+
+    # anchor_problems branches
+    ck("anchor: raw <!-- in old_str refused",
+       bool(hits(pay([update_op(content_updates=[{"old_str": "x " * 20 + " <!--",
+                                                  "new_str": "y " * 25}])]),
+                 "has a raw <!-- comment")))
+    ck("anchor: short old_str with no marker refused",
+       bool(hits(pay([update_op(content_updates=[{"old_str": "short",
+                                                  "new_str": "short but different"}])]),
+                 "short anchor with no marker")))
+    ck("anchor: section start without its end marker in old_str refused",
+       bool(hits(pay([update_op(content_updates=[
+           {"old_str": "⟦deep-read: 2026-10-01⟧ " + "body " * 10, "new_str": "fresh " * 12}])]),
+           "old_str has ⟦deep-read: without its end marker")))
+    ck("anchor: section start without its end marker in new_str refused",
+       bool(hits(pay([update_op(content_updates=[
+           {"old_str": "⟦research-brief⟧ old body one two three ⟦/research-brief⟧",
+            "new_str": "⟦research-brief⟧ new body one two three four"}])]),
+           "new_str has ⟦research-brief⟧ without its end marker")))
+
+    # legacy Deep Read marker: old_str must run through the next ## heading and new_str must
+    # end on the same heading with the fresh ⟦deep-read⟧ pair written
+    legacy_old = "\\<!-- deep\\_read\\_rendered: pending -->\nLegacy body line one two three four\n\n## Deep Read"
+    ck("anchor: legacy marker whose new_str ends on a different heading refused",
+       bool(hits(pay([update_op(content_updates=[
+           {"old_str": legacy_old,
+            "new_str": "⟦deep-read: 2026-10-01⟧\nNew body one two three\n⟦/deep-read⟧\n\n## Other"}])]),
+           "must run through the next ## heading")))
+    ck("anchor: legacy replace that writes no fresh marker pair refused",
+       bool(hits(pay([update_op(content_updates=[
+           {"old_str": legacy_old,
+            "new_str": "Replacement body one two three four\n\n## Deep Read"}])]),
+           "legacy replace must write")))
+    ck("anchor: a well-formed legacy replace is accepted",
+       not hits(pay([update_op(content_updates=[
+           {"old_str": legacy_old,
+            "new_str": "⟦deep-read: 2026-10-01⟧\nFresh body one two three\n⟦/deep-read⟧\n\n## Deep Read"}])]),
+           "legacy"))
+
+    ck("body: replace_content combined with content_updates refused",
+       bool(hits(pay([update_op(replace_content=True,
+                                content_updates=[{"old_str": "long enough old_str here",
+                                                  "new_str": "long enough new_str here"}])]),
+                 "do not combine it with content_updates")))
+    ck("body: raw <!-- in content refused",
+       bool(hits(pay([create_op(content="<!-- hidden note -->")]), "content has a raw <!-- comment")))
+    ck("body: literal backslash-n in an update body refused (gotcha m)",
+       bool(hits(pay([update_op(content="line one\\nline two")]), "literal backslash-n")))
+    ck("body: Content Drafts create without a Content Type refused",
+       bool(hits(pay([create_op(parent={"data_source_id": "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"})]),
+                 "a Content Drafts create needs a 'Content Type'")))
+    ck("body: linkedin_* copy with a code fence refused (gotcha p)",
+       bool(hits(pay([create_op(parent={"data_source_id": "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775"},
+                                properties={"Content Type": "linkedin_post"},
+                                content="paragraph one\n```\nfenced\n```")]),
+                 "code fence")))
+
+    # manifest-resolved people detection: an update to a page the manifest keys as person:*
+    tmpdir = tempfile.mkdtemp(prefix="notion_payload_selftest_")
+    try:
+        person_uuid = "22222222-2222-2222-2222-222222222222"
+        manifest_path = os.path.join(tmpdir, "manifest.json")
+        with open(manifest_path, "w") as fh:
+            json.dump({"person:jane-doe": {"page_id": person_uuid}}, fh)
+        p = pay([update_op(key="person:jane-doe", page_id=person_uuid, properties=pii_prop)],
+                manifest=manifest_path)
+        ck("PII: update to a manifest-keyed person page refused without alex_provided",
+           bool(hits(p, "ADR-9 tier 1")))
+
+        # the one valid payload, end-to-end through main(): prints VALID and exits 0
+        good = pay(
+            [create_op(content="A plain body paragraph."),
+             update_op()],
+            allowed_page_ids=[good_uuid])
+        ck("valid payload: problems() is clean", problems(good) == [])
+        payload_path = os.path.join(tmpdir, "payload.json")
+        with open(payload_path, "w") as fh:
+            json.dump(good, fh)
+        old_argv = sys.argv
+        sys.argv = ["notion_payload.py", payload_path]
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = main()
+            out = buf.getvalue()
+        finally:
+            sys.argv = old_argv
+        ck("valid payload: main() exits 0 and prints VALID with the create/update counts",
+           code == 0 and out.startswith("VALID: 2 operations (1 create, 1 update)"))
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    fails = [n for n, ok in checks if not ok]
+    for n, ok in checks:
+        print(f"  {'✓' if ok else '✗'} {n}")
+    print(f"selftest: {len(checks) - len(fails)}/{len(checks)} notion-payload cases pass")
+    return 0 if not fails else 1
+
+
 def main():
+    if "--selftest" in sys.argv:
+        return selftest()
     if len(sys.argv) != 2:
         print(__doc__)
         return 2
