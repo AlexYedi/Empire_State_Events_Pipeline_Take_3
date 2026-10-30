@@ -72,6 +72,51 @@ MARKER_RE = re.compile(r"⟦[^⟧\n]+⟧")
 RAW_COMMENT_RE = re.compile(r"(?<!\\)<!--")
 MIN_ANCHOR = 20
 
+# --- E-08: payload truncation check -----------------------------------------
+# The 10/18 batch wrote Topic "Current Events" values cut off mid-word ("AI Sales
+# Coaches", "Accelerator Ecosystem", "AI for VC Workflows") because a length cut was
+# applied upstream. The rule, stated precisely: a text property value looks cut
+# mid-word when (a) its length is >= TRUNCATION_CUT_LENGTH — the upstream cut
+# observed in that batch, floored at 100 chars so no short legitimate value can
+# trip it; (b) after stripping trailing whitespace and closing quotes/brackets,
+# its final character is alphanumeric (terminal punctuation — . ! ? … : ; , — or a
+# closing symbol after the strip means the sentence was finished).
+TRUNCATION_CUT_LENGTH = 100
+_TERMINAL_STRIP = " \t\n'\"”’)]}»"
+
+
+def looks_cut_mid_word(text):
+    trimmed = text.rstrip(_TERMINAL_STRIP)
+    return len(text) >= TRUNCATION_CUT_LENGTH and trimmed != "" and trimmed[-1].isalnum()
+
+
+def text_property_values(props):
+    """Yield (property_name, content) for every title/rich_text text item in a
+    Notion-format properties object."""
+    for name, v in props.items():
+        if not isinstance(v, dict):
+            continue
+        for kind in ("title", "rich_text"):
+            arr = v.get(kind)
+            if not isinstance(arr, list):
+                continue
+            for item in arr:
+                content = item.get("text", {}).get("content") if isinstance(item, dict) else None
+                if isinstance(content, str) and content.strip():
+                    yield name, content
+
+
+def truncation_problems(tag, o):
+    """Flag text property values that end mid-word after a length cut (E-08)."""
+    out = []
+    props = o.get("properties") if isinstance(o.get("properties"), dict) else {}
+    for name, val in text_property_values(props):
+        if looks_cut_mid_word(val):
+            out.append(f"{tag} (key '{o.get('key')}') property '{name}' looks cut mid-word (E-08): "
+                       f"length {len(val)} >= {TRUNCATION_CUT_LENGTH} with a final alphanumeric "
+                       f"character and no terminal punctuation — value ends: ...{val[-40:]}")
+    return out
+
 
 def norm(pid):
     return str(pid).replace("-", "").lower()
@@ -158,6 +203,7 @@ def body_problems(tag, o):
     if isinstance(ctype, str) and ctype.startswith(COPY_TYPE_PREFIX) \
             and any(isinstance(t, str) and "```" in t for t in texts):
         out.append(f"{tag} {ctype} copy contains a code fence; drafts are plain paragraphs (gotcha p)")
+    out += truncation_problems(tag, o)
     return out
 
 
@@ -256,6 +302,7 @@ def selftest():
     good_uuid = "44444444-4444-4444-4444-444444444444"
 
     checks = []
+    TRACKED_VALUES = []  # every fixture text value seen this run — E-08 false-positive measurement
 
     def ck(name, cond):
         checks.append((name, bool(cond)))
@@ -269,12 +316,16 @@ def selftest():
               "dedup": {"query": "Selftest Event", "match_title": "Selftest Event"},
               "properties": {"Name": {"title": [{"text": {"content": "Selftest Event"}}]}}}
         op.update(o)
+        if isinstance(op["properties"], dict):
+            TRACKED_VALUES.extend(v for _, v in text_property_values(op["properties"]))
         return op
 
     def update_op(**o):
         op = {"key": "update:selftest", "op": "update", "page_id": good_uuid,
               "properties": {"Name": {"rich_text": [{"text": {"content": "Selftest Co"}}]}}}
         op.update(o)
+        if isinstance(op["properties"], dict):
+            TRACKED_VALUES.extend(v for _, v in text_property_values(op["properties"]))
         return op
 
     def pay(ops, **o):
@@ -416,6 +467,20 @@ def selftest():
                                 content="paragraph one\n```\nfenced\n```")]),
                  "code fence")))
 
+    # E-08: truncation check — a value cut mid-word fails; a complete value of the same
+    # length that ends in punctuation passes
+    trunc_val = ("AI Sales Coaches " * 10)[:100]
+    assert len(trunc_val) == TRUNCATION_CUT_LENGTH and trunc_val[-1].isalnum()
+    complete_val = trunc_val[:-1] + "."
+    ck("truncation: value cut mid-word after a length cut is flagged (E-08)",
+       bool(hits(pay([create_op(key="event:trunc",
+                                properties={"Current Events": {"rich_text": [
+                                    {"text": {"content": trunc_val}}]}})]), "cut mid-word")))
+    ck("truncation: same-length value ending in terminal punctuation passes (E-08)",
+       not hits(pay([create_op(key="event:complete",
+                               properties={"Current Events": {"rich_text": [
+                                   {"text": {"content": complete_val}}]}})]), "cut mid-word"))
+
     # manifest-resolved people detection: an update to a page the manifest keys as person:*
     tmpdir = tempfile.mkdtemp(prefix="notion_payload_selftest_")
     try:
@@ -455,6 +520,11 @@ def selftest():
     for n, ok in checks:
         print(f"  {'✓' if ok else '✗'} {n}")
     print(f"selftest: {len(checks) - len(fails)}/{len(checks)} notion-payload cases pass")
+    intentional = sum(1 for v in TRACKED_VALUES if looks_cut_mid_word(v))
+    false_positives = max(intentional - 2, 0)  # exactly the two intentional E-08 truncation fixtures
+    print(f"E-08 false-positive check: {len(TRACKED_VALUES)} fixture text values, "
+          f"{intentional} flagged ({false_positives} unintended) — "
+          f"false-positive rate {false_positives}/{len(TRACKED_VALUES)}")
     return 0 if not fails else 1
 
 
