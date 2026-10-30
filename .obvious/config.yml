@@ -1,0 +1,7 @@
+# Repo policy — auto-detected from GitHub repo settings (2026-10-30).
+branches:
+  default: main
+merge:
+  method: merge
+  alternatives: [squash, rebase]
+  deleteBranchOnMerge: true
