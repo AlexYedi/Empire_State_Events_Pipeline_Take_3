@@ -55,8 +55,8 @@ HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend nev
 | Limit | Value | On breach |
 |---|---|---|
 | Events in one wave | ≤3 | split across sessions |
-| Live agents | ≤12 (harness hard cap 20) | stop and report; never re-dispatch silently |
-| Fable or Opus in the background | ≤2 | queue the rest |
+| Live agents | ≤20 (the harness hard cap) | stop and report; never re-dispatch silently |
+| Fable or Opus in the background | ≤4 | queue the rest |
 | WebSearch | 200, shared by every subagent | count in big waves; WebFetch primary sources |
 
 A cap bounce or a spend-limit kill ends the wave: stop, report what landed, let Alex re-plan.
