@@ -53,6 +53,17 @@
 | **Publishing recorded event speech** — any audio or video of a speaker or attendee, excerpted or audiogrammed | Transcripts are private inputs; only chosen, source-checked quotes go in text. Hallway lines are paraphrased and unnamed. (Added 2026-09-28 — voice v2.) |
 | **Private specifics in public copy** — names, comp, a target list or live processes in a Job Hunt post; personal life beyond the work | Counts and method only. (Added 2026-09-28 — voice v2; see `build-in-public.md`.) |
 
+## X Anti-Patterns (E-05 — additive; the sections above are unchanged)
+
+| Pattern | Why It Fails |
+|---|---|
+| **Reformatted LinkedIn copy** — pasting the LinkedIn post into a thread by splitting at the paragraph breaks | X is a native-format channel (E-05): the thread is re-cut from the approved draft for a 280-char feed, not trimmed. Readers of both see the recycling instantly. |
+| **Link in the hook** — putting the Hub/recap URL in post 1 | Kills the hook twice: the link eats characters the scroll-stopper needs, and a thread that opens with a redirect reads as a link drop. Link goes in the last post, at most one. |
+| **Hashtag walls on X** — multiple hashtags per post (LinkedIn's 2–5 habit carried over) | X posts carry at most 1 hashtag (house style). Hashtag walls read as spam at 280 chars. |
+| **Unverified @handles** — guessing a speaker's handle to boost the thread | A wrong-handle mention is a public message to a stranger. Plain names by default; @ only when the account is verified. |
+| **Restating posts in a thread** — post 3 says what post 2 said in other words | A 4–7-post thread advances one beat per post; a restating post is cut, not padded. |
+| **Posting X drafts automatically** — treating pilot status as approval | Nothing posts automatically; every X draft ships 3 variants to Notion `needs_review` and the first thread is a pilot awaiting Alex's verdict. |
+
 ## DM Anti-Patterns
 
 | Pattern | Why It Fails |
@@ -101,7 +112,8 @@
 
 ---
 
-*Last updated: 2026-09-28*
+*Last updated: 2026-10-30*
+*Version: 0.9 — Added the X Anti-Patterns section (E-05): reformatted LinkedIn copy, link in the hook, hashtag walls on X, unverified @handles, restating posts in a thread, posting X drafts automatically. Additive — no existing row changed. Alex reviews the voice.*
 *Version: 0.8 — Voice v2 (4-week test): self as protagonist → self as credential; I-led opener → the interchangeable opener; close self-trap → the bow; kicker and take-sides scoped to the roundup; added punching down, the predictable post, no personality line, reinventing a series, fake Alex on camera, publishing recorded event speech, private specifics in public copy, card-only feed; 9:16 / 16:9 video note.*
 *Version: 0.7 — Added the audience-first counterweight set (YED-103): self-erasure, false-modesty, the close self-trap, the mailed-in post, and dead-ending the curious reader (no Learn-More Set) — guarding against too-LITTLE self + under-serving the reader, the complement to the existing too-much-self rules. self-erasure + false-modesty are the Phase-3 charter deliverables. See `audience-north-star.md`.*
 *Version: 0.6 — Added the "Leading an event post with I" structural anti-pattern (lead with topic / stat / host-company / people / ecosystem instead). See memory `feedback-no-i-led-openers-2026-08-07`.*

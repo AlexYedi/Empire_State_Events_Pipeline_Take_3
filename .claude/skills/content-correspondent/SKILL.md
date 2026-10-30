@@ -1,7 +1,7 @@
 ---
 name: content-correspondent
 description: >
-  Post-event content and outreach sequencing for NYC AI/tech events. Use this skill any time Alex mentions attending an event, returning from an event, or wants to follow up after one — even casually ("just got back from a founder session", "I'm at PMF x AI tonight", "need to write something about last night"). Also triggers for: drafting LinkedIn posts from event observations, classifying contacts from an event, writing follow-up DMs after meeting someone, building a content sequence from field notes, or converting Wispr/Granola notes into outreach and posts. Also use when Alex asks about post-event strategy or how to turn room conversations into content. For reviewing how posts or outreach performed after the fact, use the event-signal-tracker skill instead.
+  Post-event content and outreach sequencing for NYC AI/tech events. Use this skill any time Alex mentions attending an event, returning from an event, or wants to follow up after one — even casually ("just got back from a founder session", "I'm at PMF x AI tonight", "need to write something about last night"). Also triggers for: drafting LinkedIn posts from event observations, classifying contacts from an event, writing follow-up DMs after meeting someone, building a content sequence from field notes, or converting Wispr/Granola notes into outreach and posts. Also covers X (Twitter) post-event cuts — the recap thread and the quote-post of the LinkedIn recap (E-05). Also use when Alex asks about post-event strategy or how to turn room conversations into content. For reviewing how posts or outreach performed after the fact, use the event-signal-tracker skill instead.
 ---
 
 # Content Correspondent — Post-Event Sequencing Skill
@@ -168,6 +168,38 @@ pages if product, etc.), the **contact-extraction → CRM + Apollo** flow (found
 called-out teammates in the crowd), and the sensitivities (**confidential "stays in the room"
 funding must never be published**; **verify garbled transcript names before anything public or
 CRM-bound**). First codified from The Shortlist — August Founder Showcase (2026-08-24).
+
+#### X cuts (E-05) — post-event archetypes
+
+X is a Core channel in **pilot** status; rules of record: `.claude/references/x-content.md`
+(read it first — the sourced rule table). **Native X formats only — never split the LinkedIn
+recap into a thread at the paragraph breaks.** This skill *describes* the step; drafts are cut
+in the parent run. No X API, key or posting code (E-05 Must-not); nothing posts automatically.
+
+Every event that gets a post-event LinkedIn post also gets, in the same `needs_review` flow:
+
+1. **1 recap thread (4–7 posts)** — cut from the **chosen** LinkedIn variant once Alex has
+   picked it (the channel map's source artifact), not drafted in parallel from scratch:
+   hook under 200 chars standing alone (rule 3), one beat per post, at most 1 link in the
+   LAST post — the Hub long read when it exists (owned beats rented, rules 4–5), at most
+   1 hashtag per post (rule 6), plain names / @handles only when verified (rule 8).
+   **Build events (hackathon):** the demo clip goes in post 1 (`spec-distribution-channels.md` §4).
+2. **1 quote-post of the LinkedIn recap** — a ≤280-char standalone take that quotes the
+   published LinkedIn post's URL. Quote-posts of our own recap are the only place a
+   LinkedIn link appears in an X draft.
+
+Each artifact ships **3 variants** to Notion as its own Content Drafts row with
+`Platform = X` (the `x` select option is a proposed schema addition — `notion-schema.md`
+→ "Proposed"; flag it in the hand-off if the live DB lacks it). X drafts are separate rows,
+not sections of the LinkedIn draft. Writes stay in the parent → `notion-writer` payload loop
+(invariant 5); this skill holds no write tools.
+
+**Machine checks before hand-off:** run `python3 .claude/scripts/output_checks.py x --draft
+<thread.md>` — zero findings required; state per-post character counts.
+
+**Pilot rule:** the first X thread under this spec ships one pilot draft, then pauses for
+Alex's verdict (`spec-distribution-channels.md` §2 principle 4). ⏳ **Voice review:** all X
+drafts are flagged for Alex's voice pass — generated prose is never final.
 
 ---
 

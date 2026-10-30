@@ -90,6 +90,17 @@ with `notion-fetch` on the data_source URL before any batch create (see
   Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
   Active projects tracked via Status select. No hard cap — Alex manages bandwidth manually (cap removed 2026-04-20).
 
+## Proposed (E-05 — pending in the live DB)
+
+**Content Drafts `Platform` select: add the `x` option.** X (Twitter) is a Core channel in
+pilot status (`docs/spec-distribution-channels.md`; spec E-05). X drafts are separate Content
+Drafts rows with `Platform = x` — the select currently offers only `linkedin` / `slack` /
+`notion_only` (verified against this reference, 2026-10-30). Docs-first: before the first X
+draft write, `notion-fetch` the live Content Drafts DB, add the `x` option to the `Platform`
+select (and confirm the write), then update this reference to move the entry out of
+"Proposed". Until then, writers flag the missing option in their hand-off instead of
+substituting another value.
+
 ## HubSpot (CRM — Contacts & Companies)
 
 - Standard contact fields: firstname, lastname, email, phone, company, jobtitle
