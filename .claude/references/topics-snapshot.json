@@ -1,6 +1,6 @@
 {
  "as_of": "2026-10-30",
- "source": "public.topic (id, name only); refreshed 2026-10-30 after 16 topic soft-merges (rows with metadata.merged_into excluded).",
+ "source": "public.topic (id, name only). topics = live rows; aliases = rows soft-merged away (metadata.merged_into), kept so name-keyed consumers can resolve old names to the live topic.",
  "topics": [
   {
    "id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
@@ -1001,6 +1001,88 @@
   {
    "id": "ed7bba47-cf97-4a17-b2bf-f00d44986b9e",
    "name": "Workflow Collapse — The 2026 GTM Pattern"
+  }
+ ],
+ "aliases": [
+  {
+   "id": "97c45592-03c8-435f-92ca-e8e2053b8a3d",
+   "name": "Agent Evaluation & Reliability in Production",
+   "merged_into": "be437931-7c9b-415d-bafb-be298f79177d"
+  },
+  {
+   "id": "379dbc8c-76c9-4166-93a3-b58c01d8da76",
+   "name": "Agent Observability & Management",
+   "merged_into": "988ceef1-bd03-48b5-a97f-1ec2850cc39a"
+  },
+  {
+   "id": "06ac33ef-ddd5-4bd6-9617-7abac828d030",
+   "name": "Agent Observability & Monitoring",
+   "merged_into": "988ceef1-bd03-48b5-a97f-1ec2850cc39a"
+  },
+  {
+   "id": "77a32dd5-3e20-4c79-9bb4-4f174dbe7511",
+   "name": "Agentic Commerce (thesis: real vs. narrative + who owns the relationship)",
+   "merged_into": "3c283ad9-6e4b-49f5-8871-439bfddaaa7c"
+  },
+  {
+   "id": "cdcb9d16-0033-4048-8d51-216c8004fa68",
+   "name": "Agentic Marketing Workflows",
+   "merged_into": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d"
+  },
+  {
+   "id": "4c11b238-a1e3-4d11-a797-61a04b8e1b2f",
+   "name": "Apache Spark & Spark 4.2",
+   "merged_into": "ce5d094e-f2a9-4b64-b6c1-8a66fdef6c51"
+  },
+  {
+   "id": "2f93c671-f29b-4ca6-884b-e582100ba3ed",
+   "name": "Context Engineering (data integration, quality, governance for AI)",
+   "merged_into": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2"
+  },
+  {
+   "id": "2adcf90b-9f81-4be2-b3c9-11ddc902cb57",
+   "name": "GTM Engineering (GTME) as a Discipline",
+   "merged_into": "61192274-1043-4a64-a5a9-87ea56fcf3e2"
+  },
+  {
+   "id": "cfb148cf-60ae-4dc2-9065-127748c768b0",
+   "name": "GTM Engineering (the emerging role)",
+   "merged_into": "61192274-1043-4a64-a5a9-87ea56fcf3e2"
+  },
+  {
+   "id": "614e3c88-a319-4f5f-9525-346c148a9b2e",
+   "name": "Go-to-Market Strategy for AI (and AI for GTM)",
+   "merged_into": "f23987a0-55f1-4555-9c21-7aafdc1d9c36"
+  },
+  {
+   "id": "18a297db-c26e-47a4-8e55-45015fc0000b",
+   "name": "LLM Evaluation Practice (2026 State of the Art)",
+   "merged_into": "37408825-adc1-443a-adee-6dd2b4821e93"
+  },
+  {
+   "id": "8b16c353-7636-4e2c-90ca-47179cbc510a",
+   "name": "Personal AI Computers / Personal Cloud",
+   "merged_into": "03da5cf8-856f-4b14-a74c-90dcb782cb3a"
+  },
+  {
+   "id": "d537c561-64dd-45ba-a0e1-f4a355e36e4b",
+   "name": "Personal Cloud Infrastructure & Democratized Computing",
+   "merged_into": "03da5cf8-856f-4b14-a74c-90dcb782cb3a"
+  },
+  {
+   "id": "6379d780-5730-4430-acdf-36facea27527",
+   "name": "RAG with Vector Databases (real-time / beyond-RAG)",
+   "merged_into": "2cbe11e4-ad23-41c9-b0fa-8e76da6c3939"
+  },
+  {
+   "id": "9e6b4041-8b67-47f4-9dc4-36831d7077f2",
+   "name": "The Marketing Engineer (AI-Native Marketing)",
+   "merged_into": "cb710b3d-cc13-4739-ba36-cce43c86c73c"
+  },
+  {
+   "id": "bd566924-79a6-4ba6-8172-c876b5d2eeec",
+   "name": "Voice AI Infrastructure & Ultra-Low-Latency RTC",
+   "merged_into": "bd9e089a-24f6-4a54-b3df-92a792c62efc"
   }
  ]
 }
