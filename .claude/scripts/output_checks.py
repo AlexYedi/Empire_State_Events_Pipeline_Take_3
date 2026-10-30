@@ -5,12 +5,16 @@
            Reports the best-matching transcript window, its score (0-1) and the speaker tag nearest it.
   sources  Every sentence carrying a figure (number, %, $, multiplier) or a funding/valuation verb,
            and whether the draft cites a URL anywhere. The evaluator judges each one; this only lists.
+  x        An X (Twitter) thread draft (posts separated by lines of ---). Checks per-post length
+           (280), hook length (post 1 < 200), link placement (at most 1 link, in the last post)
+           and hashtag count (at most 1 per post) — rules in .claude/references/x-content.md.
 
 The output is JSON for the evaluator agent to read. It never edits the draft.
 
 Usage:
   output_checks.py quotes  --draft DRAFT.md --transcript T1.md [--transcript T2.md ...] [--min 0.85]
   output_checks.py sources --draft DRAFT.md
+  output_checks.py x       --draft THREAD.md
 """
 import argparse
 import difflib
@@ -125,6 +129,58 @@ def cmd_sources(args):
     print(json.dumps(out, indent=1))
 
 
+# ---------------------------------------------------------------------------
+# x — X (Twitter) thread checks (E-05). Rules: .claude/references/x-content.md
+# ---------------------------------------------------------------------------
+X_POST_LIMIT = 280   # rule 1, X platform rule
+X_HOOK_LIMIT = 200   # rule 3, house style: the hook must land UNDER 200
+HASHTAG = re.compile(r"(?<!\w)#[A-Za-z0-9_]+")
+
+
+def split_thread(text):
+    """A thread draft is one or more posts separated by lines of ---."""
+    return [p.strip() for p in re.split(r"^---+\s*$", text, flags=re.M) if p.strip()]
+
+
+def check_x_thread(text):
+    """Pure check: per-post length, hook length, link placement, hashtag count (x-content.md
+    rules 1, 3, 5, 6). Lists findings as JSON; never edits the draft."""
+    posts = split_thread(text)
+    findings = []
+    if not posts:
+        return {"check": "x", "posts": [], "findings": [{"check": "empty_draft"}],
+                "summary": {"posts": 0, "findings": 1}}
+    report = []
+    for i, post in enumerate(posts):
+        n = len(post)
+        tags = HASHTAG.findall(post)
+        report.append({"post": i + 1, "chars": n, "hashtags": len(tags),
+                       "links": len(URL.findall(post))})
+        if n > X_POST_LIMIT:
+            findings.append({"post": i + 1, "check": "post_length",
+                             "detail": f"{n} chars > {X_POST_LIMIT} (x-content.md rule 1)"})
+        if i == 0 and n >= X_HOOK_LIMIT:
+            findings.append({"post": 1, "check": "hook_length",
+                             "detail": f"{n} chars, must be under {X_HOOK_LIMIT} (rule 3)"})
+        if len(tags) > 1:
+            findings.append({"post": i + 1, "check": "hashtag_count",
+                             "detail": f"{len(tags)} hashtags, at most 1 (rule 6)"})
+    links = [(i + 1, m.group()) for i, p in enumerate(posts) for m in URL.finditer(p)]
+    if len(links) > 1:
+        findings.append({"post": None, "check": "link_count",
+                         "detail": f"{len(links)} links in thread, at most 1 (rule 5)"})
+    if links and links[0][0] != len(posts):
+        findings.append({"post": links[0][0], "check": "link_placement",
+                         "detail": "link not in the last post (rule 5)"})
+    return {"check": "x", "posts": report, "findings": findings,
+            "summary": {"posts": len(posts), "findings": len(findings)}}
+
+
+def cmd_x(args):
+    draft = open(args.draft, errors="ignore").read()
+    print(json.dumps(check_x_thread(draft) | {"draft": args.draft}, indent=1))
+
+
 def main():
     if "--selftest" in sys.argv:
         return selftest()
@@ -136,8 +192,10 @@ def main():
     q.add_argument("--min", type=float, default=0.85)
     s = sub.add_parser("sources")
     s.add_argument("--draft", required=True)
+    x = sub.add_parser("x")
+    x.add_argument("--draft", required=True)
     a = p.parse_args()
-    {"quotes": cmd_quotes, "sources": cmd_sources}[a.cmd](a)
+    {"quotes": cmd_quotes, "sources": cmd_sources, "x": cmd_x}[a.cmd](a)
 
 
 # ---------------------------------------------------------------------------
@@ -210,6 +268,56 @@ def selftest():
         # sources — failing input: the unattributed claim is listed without a URL; the plain sentence is not
         ck("sources: the unattributed valuation claim is listed with no URL, the plain sentence is not",
            claims[1]["has_url_inline"] is False and all("plain closing" not in c["sentence"] for c in claims))
+
+        # ---- x (E-05): one passing thread, one failing input per check ----
+        hook = "Last night a founder said the quiet part: their AI stack costs more than the team it replaced."
+        good_thread = "\n---\n".join([
+            hook,
+            "Every vendor demo showed the same three slides. Nobody showed the invoice.",
+            "The pattern to watch: budgets moving from seats to outcomes, with no baseline to compare against.",
+            "More on what the room agreed and argued about: https://recap.example/room-12",
+        ])
+        ok_thread = os.path.join(td, "thread_ok.md")
+        with open(ok_thread, "w") as fh:
+            fh.write(good_thread)
+        out = run(["x", "--draft", ok_thread])
+        ck("x: a 4-post thread with one last-post link and no hashtags reports zero findings",
+           out["summary"]["posts"] == 4 and out["summary"]["findings"] == 0)
+
+        long_post = os.path.join(td, "thread_long.md")
+        with open(long_post, "w") as fh:
+            fh.write(hook + "\n---\n" + "word " * 60)  # 300 chars > 280
+        out = run(["x", "--draft", long_post])
+        ck("x: a post over 280 chars is flagged post_length",
+           any(f["check"] == "post_length" and f["post"] == 2 for f in out["findings"]))
+
+        long_hook = os.path.join(td, "thread_hook.md")
+        with open(long_hook, "w") as fh:
+            fh.write("Takeaway " * 25 + "\n---\nnext post")  # 225 chars, < 280 but >= 200
+        out = run(["x", "--draft", long_hook])
+        ck("x: a hook of 200+ chars is flagged hook_length even under the 280 cap",
+           any(f["check"] == "hook_length" and f["post"] == 1 for f in out["findings"]))
+
+        early_link = os.path.join(td, "thread_link.md")
+        with open(early_link, "w") as fh:
+            fh.write("Hook with the link up front: https://recap.example/room-12\n---\npost two")
+        out = run(["x", "--draft", early_link])
+        ck("x: a link in a non-last post is flagged link_placement",
+           any(f["check"] == "link_placement" and f["post"] == 1 for f in out["findings"]))
+
+        two_links = os.path.join(td, "thread_2links.md")
+        with open(two_links, "w") as fh:
+            fh.write("Hook post\n---\nmiddle post https://a.example/one\n---\nlast post https://b.example/two")
+        out = run(["x", "--draft", two_links])
+        ck("x: two links in one thread are flagged link_count",
+           any(f["check"] == "link_count" for f in out["findings"]))
+
+        tag_wall = os.path.join(td, "thread_tags.md")
+        with open(tag_wall, "w") as fh:
+            fh.write(hook + "\n---\npost two #AgenticAI #MLOps")
+        out = run(["x", "--draft", tag_wall])
+        ck("x: two hashtags on one post are flagged hashtag_count",
+           any(f["check"] == "hashtag_count" and f["post"] == 2 for f in out["findings"]))
     finally:
         shutil.rmtree(td, ignore_errors=True)
 

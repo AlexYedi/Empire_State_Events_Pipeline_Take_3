@@ -34,7 +34,7 @@ Pull the rows that apply to the event type.
 
 **Pre-event (any event)**
 1. LinkedIn pre-event post (existing `pre-event-content`).
-2. X: a 1–3 post "going to X tonight, here's what I'm watching" cut from the post's thesis.
+2. X: 1 single post + 1 thread (4–7 posts), re-cut from the post's thesis (aligned to E-05, 2026-10-30 — was "a 1–3 post cut"; rules in `.claude/references/x-content.md`).
 3. Newsletter: the event's line in that week's Upcoming Week roundup.
 
 **Post-event (talks, panels)**

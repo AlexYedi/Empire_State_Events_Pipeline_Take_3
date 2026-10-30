@@ -1,6 +1,6 @@
 ---
 name: pre-event-content
-description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host connection request notes (200-char free-tier cap), and prepared questions. Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "connection notes for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
+description: Generate pre-event content for NYC AI/tech events from completed research briefs. Produces LinkedIn posts (personal and "The Upcoming Week" roundup), speaker/host connection request notes (200-char free-tier cap), prepared questions, and X (Twitter) pre-event drafts (1 single post + 1 thread, E-05). Writes to Notion Content Drafts database. Use when Alex says "draft pre-event content for [event]", "write the LinkedIn post for [event]", "DMs for [speaker/host]", "connection notes for [speaker/host]", "Sunday roundup post", or anything similar. Requires a completed research brief in Notion.
 ---
 
 # Skill: Pre-Event Content Generation
@@ -309,6 +309,31 @@ After Step 6 writes the Content Draft (post + embedded brief) to Notion:
 
 ---
 
+## Step 3c: Generate X drafts (E-05)
+
+X is a Core channel in **pilot** status (`docs/spec-distribution-channels.md`); the rules of
+record are `.claude/references/x-content.md` — read it before this step. **Native X formats
+only: never reformat the LinkedIn post into a thread.** This skill *describes* the step; the
+drafts are cut in the parent run, and no X API, key or posting code is added (E-05 Must-not).
+
+**When:** if the event is getting a pre-event LinkedIn post (Step 3), it also gets X drafts in
+the same run and the same `needs_review` flow. Alex can skip X for an event by saying so.
+
+**Produce — each artifact ships 3 variants, never pre-selected:**
+
+1. **1 single X post** — the event hook re-cut from the post's thesis. ≤280 chars
+   (x-content.md rule 1).
+2. **1 thread, 4–7 posts** — hook under 200 chars (rule 3), one beat per post, at most 1 link
+   in the LAST post (rule 5), at most 1 hashtag per post (rule 6), plain names with @handles
+   only when verified (rule 8). Post 1 must stand alone.
+
+**Machine checks before hand-off:** write the thread to the scratchpad and run
+`python3 .claude/scripts/output_checks.py x --draft <thread.md>` — zero findings required.
+State the per-post character counts in the hand-off.
+
+**Pilot rule:** the first X thread under this spec is one pilot draft, then the channel pauses
+for Alex's verdict (`spec-distribution-channels.md` §2 principle 4).
+
 ## Step 4: Generate Speaker & Host Connection Request Notes
 
 **Operational reality (rule added 2026-05-20):** LinkedIn free tier limits direct messages to 1st-degree connections; Premium/Sales Navigator plans burn scarce InMail credits when sending to non-connections. The right primitive for first-touch outreach to speakers/hosts Alex doesn't already know is a **connection request note** — which carries a **200-character hard cap on the free plan** (300 char on Premium). Alex is on the free plan, so target 200 chars.
@@ -542,6 +567,24 @@ Pattern: [Pattern 1/2/3 from outreach-templates.md]
 ```
 If only one variant produced (per fallback rule), the page body includes that variant plus the "Variant B skipped — needs [X signal]" note. Alex picks the variant to send when he engages with the page in needs_review.
 
+**X drafts (E-05, if Step 3c ran):** separate Content Drafts rows — one page per X artifact
+(the single post and the thread), NOT sections on the LinkedIn draft. Same write loop as above
+(parent builds the payload, `notion-writer` executes — invariant 5).
+
+```
+"Title": "[Event Name] — X Single Post"  ·  "Title": "[Event Name] — X Thread"
+"Content Type": "linkedin_post_pre"
+"Event Phase": "pre_event"
+"Content Status": "needs_review"
+"Platform": "x"   # proposed new select option — see notion-schema.md → "Proposed"; if the live DB lacks it, flag in Step 7
+"Event": [relation to event page]
+"People": [relation to people mentioned]
+"Topics": [relation to topics covered]
+```
+
+Page body: all 3 variants of the artifact as plain paragraphs (never code blocks), the thread's
+variants with per-post character counts, and the `output_checks.py x` result summary.
+
 **Prepared Questions:**
 ```
 "Title": "Prepared Questions — [Event Name]"
@@ -565,6 +608,7 @@ Page body: the compiled question list from Step 5
 ### Generated
 - The Upcoming Week: [Yes/No] ([X] events covered) + carousel brief ([N] slides, Arc [name])
 - Pre-Event Post: 3 variants + carousel brief ([N] slides, Arc [name])
+- X drafts (E-05): single post 3 variants + thread (4–7 posts) 3 variants, Platform = X; `output_checks.py x` findings: [count]. If the live DB lacks the `x` Platform option, flag it here.
 - Speaker/Host Connection Notes: [count] people, [count] A-variants, [count] B-variants, [count] B-variants skipped (no adjacent-work signal), [count] flagged "needs more research" (avg rubric score: [X]/100; avg char count: [N]/200)
 - Prepared Questions: [count] questions compiled
 

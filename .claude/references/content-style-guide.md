@@ -134,6 +134,29 @@ CTA (varies by content type) — See Content Type CTAs below.
 - **When over 3,000, cut in this order:** the inline sources/resources block → repeated data points (keep 2–3 max) → throat-clearing preamble → any line the carousel already carries visually → adjective trimming.
 - **State the count on hand-off.** When presenting any LinkedIn post for review, show its character count (e.g. "1,420 / 3,000") so Alex sees at a glance it's ship-ready.
 
+## X (Twitter) — E-05 (additive; LinkedIn rules above are unchanged)
+
+X is a Core channel in pilot status (`docs/spec-distribution-channels.md`). The full rule
+table with sources lives in `x-content.md`; the voice-level rules here:
+
+- **Native X formats only.** A thread is not a chopped LinkedIn post and a single post is
+  not a shrunken one — re-cut from the approved draft/brief for the feed's speed, don't
+  reformat. Pre-event: 1 single post + 1 thread. Post-event: 1 thread + 1 quote-post of the
+  LinkedIn recap. In-event: 2–3 live-post templates.
+- **280 characters per post (X platform limit), thread hook under 200.** Front-load even
+  harder than LinkedIn's fold: post 1 must stand alone and stop the scroll on its own.
+- **One idea per post.** A 4–7-post thread earns its length by advancing one beat per post;
+  a post that only restates the last one is cut.
+- **At most 1 link per thread, in the last post; at most 1 hashtag per post.** Plain names
+  by default; @handles only when the account is verified. Alt text on every image.
+- **Same Substance/Insight Floor, tighter container.** 280 chars still hands the non-attendee
+  one specific observation, number-with-baseline, or question — thin hooks ship nowhere.
+- **Every X post ships 3 variants** to Notion `needs_review` (Platform = X). Nothing posts
+  automatically; the first thread is a pilot awaiting Alex's verdict.
+
+**⏳ Voice review:** this section and `x-content.md` are new (E-05) — Alex reviews the voice
+before the first pilot ships.
+
 ## The Learn-More Set (mandatory — every post)
 
 **3–5 "learn more" resources every post.** Every post ships with a curated set of **3–5 resources** — the key paper, the company's own announcement, a speaker's talk or writing, the publication/newsletter on the topic — spanning the post's topics, tech, companies, and people. This is the persona's *"points to where to go deeper"* and the mission's *"democratize access"* made concrete: the post delivers the translated insight; the set hands the curious reader the door to go further.

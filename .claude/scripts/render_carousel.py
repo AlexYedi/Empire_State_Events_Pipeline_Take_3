@@ -6,11 +6,12 @@ The deterministic half of carousel work, so a render can't "look done" and still
      slide, any element that spills past the 1080x1350 frame or any slide whose content overflows;
   2. PDF render — headless Chrome --print-to-pdf (method in content-patterns/visual-briefs.md);
   3. verify — page count equals the number of .slide elements and every page is 810x1013 pt;
-  4. preview — optional PNG of the stacked slides for a visual check.
+  4. preview — optional PNG of the stacked slides for a visual check;
+  5. --x — also export each slide as a 1:1 PNG for X (E-05): X has no PDF carousels.
 
 Prints a JSON report; exit 0 only if every check passes.
 
-Usage: render_carousel.py <in.html> [--out out.pdf] [--png preview.png]
+Usage: render_carousel.py <in.html> [--out out.pdf] [--png preview.png] [--x]
 """
 import argparse
 import json
@@ -92,6 +93,43 @@ def pdf_verify(probe: dict, pdf: bytes) -> dict:
                        "pages_are_4x5": sizes == ["810x1013"]}}
 
 
+# ---- X export (E-05): X has no PDF carousels, so each slide exports as a 1:1 PNG ----
+X_SQUARE_PX = 1080
+
+
+def x_export_geometry(slide_w: int, slide_h: int, out: int = X_SQUARE_PX) -> dict:
+    """Pure 1:1 sizing maths for --x. The slide (rendered 1080x1350, 4:5) fits inside a
+    square canvas with letterbox — never cropped. Returns the Chrome viewport, the uniform
+    scale, the on-canvas rendered size, and the letterbox offset."""
+    scale = min(out / slide_w, out / slide_h)
+    w, h = round(slide_w * scale), round(slide_h * scale)
+    return {"viewport": [out, out], "scale": scale, "rendered": [w, h],
+            "offset": [round((out - w) / 2), round((out - h) / 2)]}
+
+
+def x_export_js(index: int, geom: dict) -> str:
+    """The per-slide export script: hide every other .slide, scale and letterbox the target
+    one per the geometry. Injected before </body>; runs on load."""
+    return """
+<script>
+window.addEventListener('load', () => {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const s = slides[%d];
+  if (!s) return;
+  document.body.style.margin = '0';
+  document.body.style.overflow = 'hidden';
+  document.body.style.background = '#000';
+  slides.forEach(el => { if (el !== s) el.style.display = 'none'; });
+  s.style.position = 'fixed';
+  s.style.left = '%dpx';
+  s.style.top = '%dpx';
+  s.style.transformOrigin = 'top left';
+  s.style.transform = 'scale(%s)';
+});
+</script>
+""" % (index, geom["offset"][0], geom["offset"][1], geom["scale"])
+
+
 def selftest():
     """--selftest: the pure checks only — page count, 4:5 aspect maths, the overflow-findings
     gate, and probe-meta parsing — on inline synthetic fixtures. No Chrome, no network, no writes."""
@@ -136,6 +174,20 @@ def selftest():
     ck("probe parse: a missing probe degrades to slides None + a finding",
        parse_probe("<html></html>") == {"slides": None, "problems": ["probe did not run"]})
 
+    # X export maths (E-05): a 4:5 slide letterboxed into a 1:1 PNG, never cropped
+    geom = x_export_geometry(1080, 1350)
+    ck("x export: a 1080x1350 slide scales to 864x1080 centered on a 1080x1080 canvas",
+       geom == {"viewport": [1080, 1080], "scale": 0.8, "rendered": [864, 1080], "offset": [108, 0]})
+    ck("x export: the rendered area fits the canvas with the slide's aspect preserved",
+       geom["rendered"][0] <= X_SQUARE_PX and geom["rendered"][1] <= X_SQUARE_PX
+       and geom["rendered"][0] / geom["rendered"][1] == 1080 / 1350)
+    sq = x_export_geometry(1350, 1350)
+    ck("x export: an already-square slide gets zero letterbox offset",
+       sq["rendered"] == [1080, 1080] and sq["offset"] == [0, 0] and sq["scale"] == 0.8)
+    js = x_export_js(2, geom)
+    ck("x export: the per-slide script targets slide 3, scales and letterboxes it",
+       "slides[2]" in js and "scale(0.8)" in js and "left = '108px'" in js and "top = '0px'" in js)
+
     fails = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'✓' if ok else '✗'} {n}")
@@ -150,6 +202,8 @@ def main():
     ap.add_argument("html")
     ap.add_argument("--out")
     ap.add_argument("--png")
+    ap.add_argument("--x", action="store_true",
+                    help="also export each slide as a 1:1 PNG for X (E-05)")
     a = ap.parse_args()
     src = os.path.abspath(a.html)
     out = os.path.abspath(a.out or re.sub(r"\.html?$", "", src) + ".pdf")
@@ -190,6 +244,29 @@ def main():
         h = probe["slides"] * 1350
         run(bin_, ["--screenshot=" + os.path.abspath(a.png), f"--window-size=1080,{h}", "file://" + src])
         report["preview_png"] = os.path.abspath(a.png)
+
+    # 5. X export (E-05): one 1:1 PNG per slide — X has no PDF carousels
+    if a.x and probe["slides"]:
+        geom = x_export_geometry(1080, 1350)
+        base = re.sub(r"\.pdf$", "", out)
+        pngs = []
+        for i in range(probe["slides"]):
+            target = f"{base}-x-{i + 1:02d}.png"
+            html_i = html.replace("</body>", x_export_js(i, geom) + "</body>") if "</body>" in html \
+                else html + x_export_js(i, geom)
+            fd, tmp_i = tempfile.mkstemp(suffix=".html", dir=os.path.dirname(src), prefix=f".x-export-{i + 1:02d}-")
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(html_i)
+            try:
+                run(bin_, [f"--screenshot={target}", "--hide-scrollbars",
+                           f"--window-size={geom['viewport'][0]},{geom['viewport'][1]}", "file://" + tmp_i])
+            finally:
+                os.remove(tmp_i)
+            if not os.path.exists(target):
+                report.setdefault("x_export_errors", []).append(f"PNG not written: {target}")
+                continue
+            pngs.append(target)
+        report["x_pngs"] = pngs
 
     report["ok"] = all(report["checks"].values())
     print(json.dumps(report, indent=1))
