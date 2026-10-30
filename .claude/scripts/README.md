@@ -1,0 +1,35 @@
+# `.claude/scripts/` — pipeline scripts
+
+One row per script: purpose (from its docstring), how to run it, and its offline selftest
+command or "none". Facts only from the code and docstrings; pass counts observed in a clean
+checkout, 2026-10-30. Python 3.13 stdlib unless a run line says otherwise.
+
+| Script | Purpose | Run | Selftest |
+|---|---|---|---|
+| `align_slides.py` | Map slide photos to their offset in an event recording (YED-166). | `uv run --with pillow python .claude/scripts/align_slides.py --transcript … --audio … --slides-dir …` (see docstring for flags) | `python3 .claude/scripts/align_slides.py --selftest` |
+| `ats_pull.py` | role-radar Step 1 as code: registry → ATS boards → projected, title-filtered TSV (YED-255). | `python3 .claude/scripts/ats_pull.py [--registry R] [--only …] [--out F] [--floor N]` | `python3 .claude/scripts/ats_pull.py --selftest` (37/37) |
+| `build_journal.py` | Build-journal generator (YED-119 V1) — assembles a per-build-day journal from facts the repos already record. | `python3 .claude/scripts/build_journal.py [--dry-run] [--since DATE] [--out F]` | `python3 .claude/scripts/build_journal.py --selftest` (8/8) |
+| `check_aimed_questions.py` | Mechanical check of a Prior-Context Pack's `## Aimed Questions` section (YED-217). | `python3 .claude/scripts/check_aimed_questions.py PACK.md --invite INVITE.txt [--raw RAW.md]` | `python3 .claude/scripts/check_aimed_questions.py --selftest` |
+| `comp_gate.py` | role-radar's comp gate (rubric v2.3) as code — the only executable statement of the comp rules (YED-255, ADR-12). | `python3 .claude/scripts/comp_gate.py --text "…" [--emerging]` or `--low N --high N --label base` | `python3 .claude/scripts/comp_gate.py --selftest` (32/32) |
+| `dispatch_record.py` | One metadata row per subagent dispatch (build-session contract v3, YED-259); called by the Stop hook. | `python3 .claude/scripts/dispatch_record.py <transcript.jsonl> <session_id> <out_dir>` | none — offline regression: `python3 .claude/scripts/test_dispatch_record.py` (13/13) |
+| `dockb_common.py` | YED-118 Document Knowledge Base shared library — R2 blob store + Supabase vector index. | library; imported by the retired doc-KB lane (deps in `requirements-dockb.txt`) | none |
+| `inbox_boundary.py` | The inbox-scan boundary as a mechanism, not a convention (YED-161, ADR-7 D3); the lane it bounded is retired (ADR-11). | `python3 .claude/scripts/inbox_boundary.py {gate\|filter\|check\|report} …` | `python3 .claude/scripts/inbox_boundary.py --selftest` (28/30 in a clean checkout — the 2 live-file cases need `inbox-denylist.md` / `inbox-allowlist.md`, gitignored private inputs) |
+| `ingest_recording.py` | Locked recipe for recording → clean transcript (ElevenLabs; YED-95). | `uv run --with elevenlabs python .claude/scripts/ingest_recording.py --audio F --keyterms "…"` (needs `ELEVENLABS_API_KEY`) | none |
+| `lint_agent_tools.py` | Agent tool-boundary lint: minimal `tools:` line, no untrusted-text reader holds a write tool (SEC-03; CLAUDE.md invariants 5–6). | `python3 .claude/scripts/lint_agent_tools.py [.claude/agents]` | `python3 .claude/scripts/lint_agent_tools.py --selftest` (19/19) |
+| `notion_payload.py` | Validate a notion-writer payload before dispatch (YED-259, CLAUDE.md invariant 5). | `python3 .claude/scripts/notion_payload.py <payload.json>` | `python3 .claude/scripts/notion_payload.py --selftest` (43/43) |
+| `output_checks.py` | Deterministic pre-pass for the output-evaluator: quote matching and source-claim detection (YED-259). | `python3 .claude/scripts/output_checks.py quotes --draft D.md --transcript T.md [--min 0.85]` · `sources --draft D.md` | `python3 .claude/scripts/output_checks.py --selftest` (4/4) |
+| `recompute_relevance.py` | Relevance recompute for the Market-Intelligence graph — pure math over REST (YED-115 prereq 2); runs nightly via `.github/workflows/relevance-recompute.yml`. | `python3 .claude/scripts/recompute_relevance.py [--dry-run] [--top N]` (reads `SUPABASE_API_KEY` from `.env`) | `python3 .claude/scripts/recompute_relevance.py --selftest` (7/7) |
+| `render_carousel.py` | Render carousel HTML to an upload-ready 4:5 PDF and verify it (YED-259); requires Chrome. | `python3 .claude/scripts/render_carousel.py in.html [--out out.pdf] [--png preview.png]` | `python3 .claude/scripts/render_carousel.py --selftest` (9/9 — pure checks only, no Chrome) |
+| `resolve_claim_entities.py` | Link claims to entities via `claim.proposed_entities` (YED-264, S-01). | `python3 .claude/scripts/resolve_claim_entities.py [--apply] [--limit N] [--claim-id UUID] [--json]` | `python3 .claude/scripts/resolve_claim_entities.py --selftest` (15/15) |
+| `retrieve.py` | The ONE retrieval interface over the Knowledge Substrate (ADR-10, YED-170). | `python3 .claude/scripts/retrieve.py --lens {company\|event} --seed SEED.json [--out F] [--json]` | `python3 .claude/scripts/retrieve.py --selftest` (19/19) |
+| `spine_client.py` | The ONE write path to the Market-Intelligence spine (ADR-9, YED-81): every REST write goes through `req()`/`write()`, every body through `guard()` (hard-fail PII check). | library (`from spine_client import req, q`) | `python3 .claude/scripts/spine_client.py --selftest` (30/30) · `--check-writers` (0 offenders) |
+| `spine_write.py` | CLI front door to the guarded spine write path (ADR-9) — commands and skills call this instead of hand-rolling curl. | `python3 .claude/scripts/spine_write.py TABLE [--json J\|--stdin] [--patch F] [--dry-run]` | none |
+| `substrate.py` | The ONE producer library for the Knowledge Substrate (ADR-10, YED-160/169). | `python3 .claude/scripts/substrate.py [--evidence F] [--table …] [--from …] [--into …] [--dry-run] [--json]` | `python3 .claude/scripts/substrate.py --selftest` (133/133) |
+| `test_dispatch_record.py` | Offline regression for `dispatch_record.py` — synthetic transcripts only; pins the stale-attribution bug. | `python3 .claude/scripts/test_dispatch_record.py [path/to/dispatch_record.py]` | is itself a test (13/13; run directly, not via unittest discover) |
+
+## CI
+
+`.github/workflows/selftests.yml` runs every `--selftest` above on changes to this directory,
+except `inbox_boundary.py` (its 2 live-file cases need gitignored private inputs that never exist
+in CI). `lint_agent_tools` also runs from `.github/workflows/agent-tools-lint.yml`; gitleaks from
+`secret-scan.yml`.
