@@ -69,3 +69,8 @@ Recorded 2026-10-30, all passing (onboarding run).
 - Snapshot ID: `8p27v006a9lxkgc1vq1n:default`
 - Captured: 2026-10-30T14:54:31Z
 - State: fresh `main` checkout, all local checks passing (see Local verification).
+
+## Work queue and rules
+
+- **Rules:** read `AGENTS.md`, then `CLAUDE.md` §4. The `empire-guardrails` skill carries the invariants on every turn.
+- **Specs:** `docs/specs/` holds three tracks: Empire (`E-n`), Shared (`S-n`) and GTM (`G-n`). `docs/specs/README.md` indexes all four repos. Put the spec ID in each PR title.
