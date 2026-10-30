@@ -52,12 +52,12 @@ All strings are fake: `*.example` domains, 555 numbers. Every row was **executed
 | T8 | email after mailto | `mailto:jane@example.com` | caught |
 | T9 | email sentence end | `ping jane@example.com.` | caught |
 | T10 | email hyphen domain | `j.doe@ex-ample.example` | caught |
-| T11 | email long TLD | `jane.doe@example.travel` | caught |
-| T12 | email nyc TLD | `jane@example.nyc` | caught |
+| T11 | email long TLD | `jane.doe@mail.longer.example` | caught |
+| T12 | email nyc subdomain | `jane@nyc.example` | caught |
 | T13 | email minimal local | `a@b.example` | caught |
 | T14 | email digits local | `jane123@example.org` | caught |
 | T15 | email hyphen org | `contact@startup-xyz.example` | caught |
-| T16 | email .io | `jane@example.io` | caught |
+| T16 | email io subdomain | `jane@io.example` | caught |
 | T17 | phone E.164 compact | `+15551234567` | caught |
 | T18 | phone +1 spaced | `+1 555 123 4567` | caught |
 | T19 | phone +1 dashed | `+1-555-123-4567` | caught |
