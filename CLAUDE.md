@@ -36,8 +36,8 @@ Human-in-the-loop by design: Alex reads every brief and every draft in Notion an
 | Need | Go to |
 |---|---|
 | How the workflows chain, rerun manual | `.claude/WORKFLOWS.md` |
-| Plan of record, decision log, shipped log | Notion "Empire State Roadmap" (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) |
-| What's open | To-dos: Notion To-dos database on the roadmap page (`collection://1cd6d576-8a9e-4332-bb81-13a28b55f151`) · build work: Linear (team EMPIRE-STATE, `YED-n`) |
+| Plan of record (specs and ideas by horizon) | Notion "Empire State Roadmap" (https://app.notion.com/p/3e9d3699c2db8163919afb3040099d3c) |
+| What's open, decisions, follow-ups | Linear (team EMPIRE-STATE, `YED-n`; GTM-OS, `GTM-n`). Decisions are issues labelled `decision` |
 | Why the data layer is shaped this way | `docs/adr/README.md` (append-only; reversing an ADR means writing a new one) |
 | Environmental limits (harness, Notion, Supabase, vendors, git) | `.claude/references/platform-constraints.md` |
 | Notion/HubSpot schema and write order · MCP write formatting | `notion-schema.md` · `notion-write-gotchas.md` |
@@ -69,7 +69,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Git.** Branch → PR → merge for anything that adds or changes a skill, agent, command, hook, schema or data contract; references, content outputs and typos may go straight to `main`. One live session per checkout; worktrees for real parallelism, cut from `origin/main`, with `.env` symlinked in. The `main` checkout stays on `main`. Shared namespaces (ADR numbers, the Notion roadmap, this file, Linear status) are edited from one session at a time. PR the same hour you stop. When git and Linear disagree, git is the fact and Linear gets corrected. When branches need converging, one session runs `reconciliation-terminal-charter.md` and nobody else builds.
 
-**Linear holds build work that ships as a PR; to-dos live in Notion.** Linear issues for workstreams; the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
+**Linear is the one list: everything open, every decision, every follow-up.** Thread labels P / S / B / R, assignee Alex or label `session`; decisions are `decision`-labelled issues closed on the day they're made. the close of a build is a comment on its issue with the PR link. Do not mirror issue state into this file. Canceling an issue auto-closes a PR that says "Closes YED-n": merge first.
 
 **Build discipline lives in the PR template** (`.github/pull_request_template.md`): one adversarial pass on every PR; spec before code (PRD, or ADR / in-repo reference for infra and data contracts) and a linked Linear issue only for builds over about a day. No waiver log, no close-out ritual. Run `/judge-build` only on the artifact-class triggers in `.claude/skills/judge-build/SKILL.md` (one Sonnet reviewer; it flags, it does not gate; spec `.claude/references/judge.md`). A merged PR can still leave work uncommitted: sweep `git status`.
 
@@ -81,7 +81,7 @@ These protect irreversible external effects. They do not get waived.
 
 **Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Autonomy levels.** Research and analysis auto-fire and stop at their gates (triage plan, brief). Drafts go to Notion `needs_review`; nothing publishes without Alex; an unapproved format, series or framework ships one pilot draft, then pauses. Publishing, CRM writes and credit spend (HubSpot, Apollo, Clay) wait for his go. "Proceed without prompting" runs the queue at these levels and never skips a gate; raising a level needs ≥95% completion on the dispatch record. Unsure → the more cautious level.
 
-**Parked thoughts and to-dos** go to the Notion To-dos database (on the roadmap page) in the same turn: anything owed after today, by Alex or a later session, gets a row with Who, Due, Why and Context, plus a Linear link if it ships as a PR. No free-floating "revisit later."
+**Parked thoughts and to-dos** go to Linear in the same turn: anything owed after today, by Alex or a later session, gets an issue with owner, due date, and why/context in the body. No free-floating "revisit later."
 
 ## 6. Content
 
@@ -90,7 +90,7 @@ Voice, structure and anti-patterns live in `content-style-guide.md` and `content
 Pipeline contracts that are not voice rules:
 - Every post ships **3 inline variants**; connection notes ship **2** (A talk-anchored, B adjacent-work-anchored; 200-char cap; only ship a variant with a real anchor). Ship all variants to Notion `needs_review`; never pre-select.
 - **Notion first.** Drafts and variants go to Content Drafts as plain paragraphs (never code blocks); the local event folder holds inputs and rendered finals (carousel HTML/PDF) only.
-- Every post ships with a **3–5 slide visual brief** that adds information (`visual-briefs.md`); Claude-authored HTML/SVG → headless Chrome → 4:5 PDF. Gemini for pictorial imagery. Gamma for design-led, low-density visuals, decks and leave-behinds; never for label-dense technical slides.
+- Every post ships with a **3–5 slide visual brief** that adds information (`visual-briefs.md`); Claude-authored HTML/SVG → headless Chrome → 4:5 PDF. Gemini for pictorial imagery. Gamma is for presentation creation only, never for content PDFs or carousels.
 - **`output-evaluator` source-checks every firm- or person-level claim and quote** before copy leaves `needs_review` (the old Rule 12); unsourced → verify, soften or cut.
 - The **Upcoming Week roundup** is built from event briefs only and sets the table without taking a side.
 - Once Alex has **scheduled** a post, it is frozen; record the chosen variant on the draft and wait for the published copy.
