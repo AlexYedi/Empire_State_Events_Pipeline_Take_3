@@ -21,7 +21,7 @@ Distribution was locked to "LinkedIn only" in May. Since then X and Hub long rea
 | Core | **LinkedIn** | Primary: hiring managers, enterprise network | 3 variants per post, carousel PDF, one Learn-More comment | Content Draft | Live |
 | Core | **X** | Where AI builders and lab people talk first | Thread of 4–7 posts cut from the chosen LinkedIn variant; post 1 stands alone; the link goes last | Chosen LinkedIn variant | Pilot |
 | Core | **Hub long read** | Owned canonical version; Learn-More link target; interview leave-behind | Web-native long form, amended post-event | Brief + post-event brief | Planned |
-| Next | **Newsletter** | The only owned list. Working title "NYC AI Field Report", weekly | Upcoming Week roundup + one deeper item + one build note | Roundup + briefs | Pilot (platform open, §6) |
+| Next | **Newsletter** | The only owned list. Working title "NYC AI Field Report", weekly | Upcoming Week roundup + one deeper item + one build note | Roundup + briefs | Pilot (platform decided 2026-10-30: the Hub, no Substack — §6) |
 | Next | **GitHub** | A credential for AI-company hiring | Pinned repos (B1–B5, hackathon builds), README written as a story: problem → build → result → what I'd do next | Build repo | Live (pins pending) |
 | Next | **Communities**: AI Tinkerers NYC, Latent Space Discord, MLOps Community; Pavilion or RevGenius (GTM) | Recognition before reach; the AI-community standing goal | A value-first recap in the community's own format, never a link drop; follow each space's self-promo rules | Post-event brief | To join |
 | Test | **Short video** (LinkedIn native, YouTube Shorts) | Face and voice (content v2) | One 60-second recap | Post-event brief + footage | One pilot |
@@ -61,14 +61,25 @@ Event folder: `Event Content/10 30 26 Frontier Hackathon October/`. The pre-even
 | X | **Pilot thread** (first X thread under this spec) | Pilot rule: one draft, then Alex's verdict |
 | Community | One build share | Pick the space the sponsors and judges are in |
 | Video | Optional pilot | Only if there's demo footage |
-| Newsletter | Not yet | Platform decision pending (§6) |
+| Newsletter | Not yet | Platform decided: the Hub is the newsletter home, no Substack (§6) |
 
-## 6. Open decisions (Alex)
+## 6. Channel decision and open decisions (Alex)
 
-1. **Newsletter platform:** Substack (built-in discovery, separate home) or email capture on the Hub (Buttondown or beehiiv; the list lives next to the long reads). Recommendation: the Hub, so every channel points to one owned home.
-2. **Communities:** which two to join first. Recommendation: AI Tinkerers NYC (local, builder-heavy) and Latent Space Discord (lab and engineer audience).
+**Decided — 2026-10-30 (Alex).** The channel set is:
+
+1. **LinkedIn**
+2. **X**
+3. **Hub long reads** (`empire-state-hub`), with rich content — visualizations, images, and video embeds.
+
+**No Substack.** The Hub itself is the newsletter home, per this spec's own recommendation (owned beats rented; every channel points to one home).
+
+This decision unblocks **E-05** (X content contract) and **E-06** (X surfaces on the hub).
+
+**Still open:**
+
+1. **Communities:** which two to join first. Recommendation: AI Tinkerers NYC (local, builder-heavy) and Latent Space Discord (lab and engineer audience).
+2. **Video pilot:** which event; today's hackathon is the best candidate if there's footage.
 3. **X account:** confirm the handle and whether it's on Premium (affects post length).
-4. **Video pilot:** which event; today's hackathon is the best candidate if there's footage.
 
 ## 7. Measures (null-baseline rule)
 
