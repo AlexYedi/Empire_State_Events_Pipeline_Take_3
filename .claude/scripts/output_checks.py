@@ -126,6 +126,8 @@ def cmd_sources(args):
 
 
 def main():
+    if "--selftest" in sys.argv:
+        return selftest()
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("quotes")
@@ -136,6 +138,86 @@ def main():
     s.add_argument("--draft", required=True)
     a = p.parse_args()
     {"quotes": cmd_quotes, "sources": cmd_sources}[a.cmd](a)
+
+
+# ---------------------------------------------------------------------------
+# selftest — one passing and one failing input per check (E-07)
+# ---------------------------------------------------------------------------
+def selftest():
+    """--selftest: run the quotes and sources checks on inline fixtures — one passing and
+    one failing input per check. Temp files only; no network; no model; nothing edited."""
+    import contextlib
+    import io
+    import json
+    import os
+    import shutil
+    import tempfile
+
+    checks = []
+
+    def ck(name, cond):
+        checks.append((name, bool(cond)))
+
+    def run(argv):
+        old_argv = sys.argv
+        sys.argv = ["output_checks.py", *argv]
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                main()
+            return json.loads(buf.getvalue())
+        finally:
+            sys.argv = old_argv
+
+    td = tempfile.mkdtemp(prefix="output_checks_selftest_")
+    try:
+        transcript = os.path.join(td, "transcript.md")
+        with open(transcript, "w") as fh:
+            fh.write("## Keynote\n"
+                     "[speaker_0] We believe the world model is the next platform, and every "
+                     "company will be rebuilt on top of it within five years.\n")
+
+        # quotes — passing input: a quote lifted verbatim from the transcript
+        passing = os.path.join(td, "pass.md")
+        with open(passing, "w") as fh:
+            fh.write('On stage, he argued that "the world model is the next platform" twice.\n')
+        out = run(["quotes", "--draft", passing, "--transcript", transcript])
+        ck("quotes: verbatim quote scores above the threshold and reports its speaker",
+           out["summary"]["no_match"] == 0 and out["quotes"][0]["verdict"] == "match"
+           and out["quotes"][0]["score"] >= out["threshold"]
+           and out["quotes"][0]["speaker"] == "speaker_0")
+
+        # quotes — failing input: a quote that appears in no transcript
+        failing = os.path.join(td, "fail.md")
+        with open(failing, "w") as fh:
+            fh.write('He also claimed that "quantum synergy redefines everything" off stage.\n')
+        out = run(["quotes", "--draft", failing, "--transcript", transcript])
+        ck("quotes: fabricated quote is flagged no-match",
+           out["summary"]["no_match"] == 1 and out["quotes"][0]["verdict"] == "no-match"
+           and out["quotes"][0]["score"] < out["threshold"])
+
+        sources_draft = os.path.join(td, "sources.md")
+        with open(sources_draft, "w") as fh:
+            fh.write("Acme raised $20M in Series A funding (https://acme.example/round).\n"
+                     "Valuation tripled across the category last year.\n"
+                     "A plain closing sentence with no figures at all.\n")
+        out = run(["sources", "--draft", sources_draft])
+        claims = out["claims"]
+        # quotes — sources: passing input: the figure sentence is listed and its inline URL counted
+        ck("sources: the funding sentence is a claim candidate with its inline URL counted",
+           out["summary"]["claim_candidates"] == 2 and len(claims) == 2
+           and claims[0]["has_url_inline"] is True and out["urls_in_draft"] == 1)
+        # sources — failing input: the unattributed claim is listed without a URL; the plain sentence is not
+        ck("sources: the unattributed valuation claim is listed with no URL, the plain sentence is not",
+           claims[1]["has_url_inline"] is False and all("plain closing" not in c["sentence"] for c in claims))
+    finally:
+        shutil.rmtree(td, ignore_errors=True)
+
+    fails = [n for n, ok in checks if not ok]
+    for n, ok in checks:
+        print(f"  {'✓' if ok else '✗'} {n}")
+    print(f"selftest: {len(checks) - len(fails)}/{len(checks)} output-checks cases pass")
+    return 0 if not fails else 1
 
 
 if __name__ == "__main__":
