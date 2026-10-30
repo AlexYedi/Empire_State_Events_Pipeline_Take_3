@@ -379,6 +379,27 @@ def selftest() -> bool:
     code, _ = gate("extract", deny, Allowlist(status="SCAFFOLD")); ck("gate: extract CLOSED with an uncurated allowlist (exit 3)", code == 3)
     code, _ = gate("discover", Denylist(status="MISSING"), allow); ck("gate: missing denylist REFUSED (exit 2)", code == 2)
     ck("parse_from handles 'Name <addr>' and bare", parse_from("X Y <A@B.Com>") == ("a@b.com", "b.com") and parse_from("a@b.com") == ("a@b.com", "b.com"))
+    # E-07 item 8 — new cases below: each boundary layer tested on its own (CLAUDE.md: one layer per test).
+    ck("layer domain: subdomains match; a lookalike suffix (bank.example.evil.io) never does",
+       domain_matches("bank.example", deny.domains, deny.globs) is True
+       and domain_matches("alerts.bank.example", deny.domains, deny.globs) is True
+       and domain_matches("bank.example.evil.io", deny.domains, deny.globs) is False)
+    ck("layer glob: `myhealth*` anchors at the start; `*.gov` matches a plain host under .gov",
+       domain_matches("myhealthplus.example", set(), ["myhealth*"]) is True
+       and domain_matches("notmyhealth.example", set(), ["myhealth*"]) is False
+       and domain_matches("x.gov", set(), ["*.gov"]) is True)
+    ck("layer label: children match (`Me/Health/Dental` → Me); a near-miss (`Job HuntingX`) never does",
+       label_matches(["Me/Health/Dental"], deny.labels) == "Me"
+       and label_matches(["Job Hunting/Rejection"], deny.labels) == "Job Hunting"
+       and label_matches(["Job HuntingX"], deny.labels) is None)
+    ck("layer deny-wins: an allowlisted sender carrying a denylisted label is skipped as deny:label, even in Stage B",
+       classify({"from": "ship@info.vercel.com", "labels": ["Me"]}, deny, allow, "B") == {"skip": True, "reason": "deny:label"})
+    ck("layer stage-A metadata: a kept thread returns only the RETAIN_STAGE_A keys plus sender/domain — never snippet/body",
+       set(classify({"thread_id": "tX", "from": "a@b.example", "subject": "Hi", "labels": ["Inbox"],
+                    "snippet": "secret balance"}, deny, allow, "A")["thread"])
+       <= {"thread_id", "message_id", "subject", "date", "labels", "has_list_unsubscribe", "sender", "domain"})
+    ck("layer parse_from: a value with no @ yields an empty domain, so the domain layer can never match it",
+       parse_from("") == ("", "") and parse_from("Bare Name") == ("bare name", ""))
     live = load_denylist(); live_allow = load_allowlist()
     ck(f"live denylist parses (v{live.version} {live.status}: {len(live.domains)} domains, {len(live.globs)} globs, {len(live.senders)} senders, {len(live.labels)} labels; {len(live.prose_skipped)} prose tokens skipped)",
        live.status in ("DRAFT", "ACCEPTED") and len(live.domains) >= 10 and len(live.labels) >= 5 and len(live.senders) >= 2)
