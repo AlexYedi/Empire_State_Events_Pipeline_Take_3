@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eight controls, one non-engineer: a scorecard published before the day</title>
+
+<script>
+/* ==== PREDICTION DATA (slide 1) — the one place to edit before a re-render ====
+   Each control: "solo" | "help" | "out"   (out = out of reach)
+   The node borders, node tags, footer count and footer meter all read from here.
+   If you change it, also update the slide 1 alt-text comment below. */
+window.PREDICTION = {
+  specs:   "solo",
+  context: "solo",
+  skills:  "solo",
+  qa:      "help",
+  ci:      "out",
+  review:  "solo",
+  loops:   "help",
+  design:  "out"
+};
+window.MY_BAR = 5;               /* how many "solo" counts as a pass */
+window.RESULTS_LINE = "results after Oct 30";
+</script>
+
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate ground, white ink, ONE accent blue #60A5FA) ---- */
+:root{--ground:#0F172A; --panel:#1B2538; --rule:#2E3B55; --ink:#F8FAFC; --muted:#94A3B8; --mark:#60A5FA}
+.eyebrow{color:var(--muted)}
+h2{font-size:88px}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.45;color:var(--muted)}
+.foot{justify-content:flex-end}
+
+/* ---- slide 1: the production line ---- */
+.s1 h2{font-size:80px}
+.legend{display:flex;gap:40px;margin-top:34px;font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:12px}
+.sw{display:inline-block;width:44px;height:28px}
+.sw.solo{border:3px solid var(--mark)}
+.sw.help{border:3px dashed var(--ink)}
+.sw.out{border:3px dotted var(--muted)}
+.dia{position:relative;width:888px;height:612px;margin-top:40px}
+.dia svg{position:absolute;left:0;top:0}
+.node{position:absolute;width:182px;height:116px;background:var(--ground);display:flex;flex-direction:column;justify-content:center;gap:12px;padding:0 14px}
+.node .lb{font-family:var(--mono);font-size:28px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);line-height:1.05}
+.node .tg{font-family:var(--mono);font-size:18px;letter-spacing:.06em;text-transform:uppercase}
+.node.solo{border:3px solid var(--mark)} .node.solo .tg{color:var(--mark)}
+.node.help{border:3px dashed var(--ink)} .node.help .tg{color:var(--ink)}
+.node.out{border:3px dotted var(--muted)} .node.out .tg{color:var(--muted)}
+.node.wide{width:210px}
+.node.wide .lb{font-size:24px}
+.build{position:absolute;left:676px;top:152px;width:210px;height:116px;background:var(--panel);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--body);font-style:italic;font-size:26px;line-height:1.2;color:var(--muted)}
+.tally{position:absolute;left:96px;right:96px;bottom:206px;display:flex;align-items:center;gap:28px}
+.meter{position:relative;display:flex;gap:6px}
+.meter i{display:block;width:24px;height:24px;border:2px solid var(--rule)}
+.meter i.on{background:var(--mark);border-color:var(--mark)}
+.meter b{position:absolute;top:-8px;width:3px;height:40px;background:var(--ink)}
+.tally .t{font-family:var(--body);font-size:26px;color:var(--ink)}
+
+/* ---- slide 2: control -> where it lives ---- */
+.s2{padding-top:88px}
+.tbl-h{display:grid;grid-template-columns:200px 1fr;column-gap:28px;margin-top:40px;padding-bottom:14px;border-bottom:2px solid var(--rule);font-family:var(--mono);font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.r{display:grid;grid-template-columns:200px 1fr;column-gap:28px;padding:11px 0;border-bottom:2px solid var(--rule);align-items:center}
+.r:last-child{border-bottom:none}
+.r .c{font-family:var(--display);font-weight:600;font-size:34px;line-height:1.1}
+.r .v{font-family:var(--body);font-size:34px;line-height:1.18;color:var(--ink)}
+.r .v .d{color:var(--muted)}
+.r .v .hl{color:var(--mark)}
+.r .v.none{border:2px dashed var(--muted);padding:6px 18px;color:var(--muted);justify-self:start}
+
+/* ---- slide 3: the 2x2 test ---- */
+.strip{margin-top:36px;background:var(--panel);padding:18px 26px;font-family:var(--body);font-size:28px;line-height:1.3}
+.strip b{font-family:var(--mono);font-weight:400;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;margin-top:30px;padding:0 23px 12px;font-family:var(--mono);font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.run{border:2px solid var(--rule);padding:18px 20px 20px;margin-top:14px}
+.run.r2{border:4px solid var(--mark);padding:16px 18px 18px;margin-top:20px}
+.run .rl{font-family:var(--body);font-weight:600;font-size:28px;line-height:1.2}
+.run .rl span{font-family:var(--mono);font-weight:400;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:12px}
+.cells{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;margin-top:16px}
+.cell{background:var(--panel);padding:20px 22px;display:flex;gap:18px;align-items:flex-start;min-height:0}
+.cell i{flex:none;display:block;width:38px;height:38px;border:3px solid var(--muted);border-radius:6px;margin-top:2px}
+.cell p{font-family:var(--body);font-size:32px;line-height:1.2}
+.nw{white-space:nowrap}
+
+/* ---- slide 4: who may click merge ---- */
+.s4 .src-line{bottom:118px}
+.vend{margin-top:48px}
+.vr{display:grid;grid-template-columns:330px 1fr;column-gap:32px;padding:22px 0;border-bottom:2px solid var(--rule);align-items:center}
+.vr:first-child{border-top:2px solid var(--rule)}
+.vr .vn{font-family:var(--display);font-weight:600;font-size:36px;line-height:1.1;color:var(--mark)}
+.vr .vn small{display:block;font-family:var(--mono);font-weight:400;font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.vr .vt{font-family:var(--body);font-size:34px;line-height:1.2}
+.close{font-family:var(--display);font-weight:600;font-size:80px;line-height:1.05;letter-spacing:-.01em;margin-top:64px;text-wrap:balance}
+.s4 .foot{justify-content:space-between}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 4 · Hook
+Alt text: Eight software-factory controls drawn as a production line, with a prediction tag on each: the spec, context, skills and review ends marked solo, and the QA, CI, loops and design-system machinery in between marked as needing help or out of reach. -->
+<section class="slide s1">
+  <div class="eyebrow">Frontier Hackathon · NYC · Oct 30</div>
+  <h2>Eight controls. Which can I hold alone?</h2>
+  <div class="legend">
+    <span><i class="sw solo"></i>solo</span>
+    <span><i class="sw help"></i>needed help</span>
+    <span><i class="sw out"></i>out of reach</span>
+  </div>
+  <div class="dia">
+    <svg width="888" height="612" viewBox="0 0 888 612" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94A3B8"/></marker>
+      </defs>
+      <g stroke="#94A3B8" stroke-width="3" fill="none" marker-end="url(#ah)">
+        <!-- design systems feeds the build box -->
+        <line x1="781" y1="118" x2="781" y2="150"/>
+        <!-- row 1 -->
+        <line x1="223" y1="210" x2="251" y2="210"/>
+        <line x1="435" y1="210" x2="463" y2="210"/>
+        <line x1="647" y1="210" x2="675" y2="210"/>
+        <!-- build -> QA (line wrap) -->
+        <path d="M781 270 V336 Q781 352 765 352 H147 Q131 352 131 368 V378"/>
+        <!-- row 2 -->
+        <line x1="223" y1="438" x2="251" y2="438"/>
+        <line x1="435" y1="438" x2="463" y2="438"/>
+        <line x1="647" y1="438" x2="675" y2="438"/>
+        <!-- loops: return to specs -->
+        <path d="M781 498 V572 Q781 594 759 594 H40 Q16 594 16 570 V234 Q16 210 38 210"/>
+      </g>
+      <!-- brackets -->
+      <g stroke="#94A3B8" stroke-width="2" fill="none">
+        <path d="M40 278 V288 H646 V278"/>
+        <path d="M40 506 V516 H434 V506"/>
+        <path d="M464 506 V516 H646 V506"/>
+      </g>
+      <g font-family="Iowan Old Style, Palatino, Georgia, serif" font-style="italic" font-size="30" fill="#F8FAFC" text-anchor="middle">
+        <text x="343" y="324">words</text>
+        <text x="237" y="552">machinery</text>
+        <text x="555" y="552">judgment</text>
+      </g>
+    </svg>
+    <div class="node wide" data-k="design" style="left:676px;top:0"><div class="lb">Design<br>systems</div><div class="tg"></div></div>
+    <div class="node" data-k="specs"   style="left:40px;top:152px"><div class="lb">Specs</div><div class="tg"></div></div>
+    <div class="node" data-k="context" style="left:252px;top:152px"><div class="lb">Context</div><div class="tg"></div></div>
+    <div class="node" data-k="skills"  style="left:464px;top:152px"><div class="lb">Skills</div><div class="tg"></div></div>
+    <div class="build">agents build<br>in a sandbox</div>
+    <div class="node" data-k="qa"      style="left:40px;top:380px"><div class="lb">QA</div><div class="tg"></div></div>
+    <div class="node" data-k="ci"      style="left:252px;top:380px"><div class="lb">CI</div><div class="tg"></div></div>
+    <div class="node" data-k="review"  style="left:464px;top:380px"><div class="lb">Review</div><div class="tg"></div></div>
+    <div class="node wide" data-k="loops" style="left:676px;top:380px"><div class="lb">Loops</div><div class="tg"></div></div>
+  </div>
+  <div class="tally"><div class="meter" id="meter"></div><div class="t" id="tally-text"></div></div>
+  <div class="src-line">Control list: Frontier Build NYC 2 invite, 2026. Prediction: the author's.</div>
+  <div class="foot"><span class="page">1 / 4 →</span></div>
+</section>
+
+<!-- Slide 2 of 4 · Evidence
+Alt text: A table mapping each of the eight controls to the file, folder or setting that holds it in Obvious, with design systems marked as having no documentation found. -->
+<section class="slide s2">
+  <h2>Where each control lives</h2>
+  <div class="tbl-h"><div>Control</div><div>In Obvious (per its docs)</div></div>
+  <div class="rows">
+    <div class="r"><div class="c">Specs</div><div class="v">Product, UX, Technical phases<span class="d">; an agent can draft one from an idea</span></div></div>
+    <div class="r"><div class="c">Context</div><div class="v">AGENTS.md + .obvious/obvious.md<span class="d">; three clear rules beat thirty vague ones</span></div></div>
+    <div class="r"><div class="c">Skills</div><div class="v">SKILL.md folders, <span class="hl">default branch only</span><span class="d">, cached up to 15 min</span></div></div>
+    <div class="r"><div class="c">Review</div><div class="v">config.yml rules<span class="d">: first match wins, max 20</span></div></div>
+    <div class="r"><div class="c">QA</div><div class="v">tests once per changed package<span class="d">, in parallel</span></div></div>
+    <div class="r"><div class="c">CI</div><div class="v">your existing pipeline runs on every PR</div></div>
+    <div class="r"><div class="c">Loops</div><div class="v">Loop Designer<span class="d">: on demand, trigger or schedule</span></div></div>
+    <div class="r"><div class="c">Design systems</div><div class="v none">no Obvious doc found</div></div>
+  </div>
+  <div class="src-line">Sources: Obvious Help Center (spec framework, repository context, custom skills, config.yml reference) and Autobuild page, fetched Oct 2026</div>
+  <div class="foot"><span class="page">2 / 4 →</span></div>
+</section>
+
+<!-- Slide 3 of 4 · Mechanism
+Alt text: A two-by-two grid of the two test runs (CLAUDE.md alone, then with an AGENTS.md pointer) against whether the rule was followed, with what each outcome would mean for switching costs. -->
+<section class="slide s3">
+  <h2>Does the factory read my rules?</h2>
+  <div class="strip"><b>Test task:</b>one that only a CLAUDE.md rule can answer.</div>
+  <div class="cols"><div>Rule followed</div><div>Rule ignored</div></div>
+  <div class="run">
+    <div class="rl"><span>Run 1:</span>repo as-is (CLAUDE.md only)</div>
+    <div class="cells">
+      <div class="cell"><i></i><p>CLAUDE.md is read. Rules port <span class="nw">as-is</span>.</p></div>
+      <div class="cell"><i></i><p>Expected: Obvious's context page doesn't mention CLAUDE.md.</p></div>
+    </div>
+  </div>
+  <div class="run r2">
+    <div class="rl"><span>Run 2:</span>+ one-line AGENTS.md pointer</div>
+    <div class="cells">
+      <div class="cell"><i></i><p>A pointer is enough. Low switching cost.</p></div>
+      <div class="cell"><i></i><p>The rules file is the lock-in.</p></div>
+    </div>
+  </div>
+  <div class="src-line">Source: Obvious Help Center, "Give Autobuild repository context," fetched Oct 2026</div>
+  <div class="foot"><span class="page">3 / 4 →</span></div>
+</section>
+
+<!-- Slide 4 of 4 · CTA
+Alt text: Three vendors' documented rules (GitHub twice, Obvious, Vercel) for whether an agent may approve or merge a pull request, from advisory-only to human-merge-required, ending with a question to the reader. -->
+<section class="slide s4">
+  <h2>Who may click merge?</h2>
+  <div class="vend">
+    <div class="vr"><div class="vn">GitHub AI Scan<small>Oct 15</small></div><div class="vt">advisory: can't block a merge</div></div>
+    <div class="vr"><div class="vn">Copilot code review<small>Sept 1</small></div><div class="vt">can approve, on admin-chosen paths, off by default</div></div>
+    <div class="vr"><div class="vn">Obvious</div><div class="vt">require-human-merge, set per workspace</div></div>
+    <div class="vr"><div class="vn">Vercel Foreman template</div><div class="vt">stops at a draft PR; merge isn't one of its tools</div></div>
+  </div>
+  <div class="close">Where would you draw it on your repo?</div>
+  <div class="src-line">Sources: GitHub changelog, Sept 1 and Oct 15 2026 · Obvious Help Center, workspace settings · Vercel docs, Software factory, Sept 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 4</span></div>
+</section>
+
+<script>
+/* Applies window.PREDICTION to slide 1. Runs synchronously at parse time, before load/print. */
+(function(){
+  var P = window.PREDICTION, TAG = {solo:"Solo", help:"Help", out:"Out of reach"};
+  document.querySelectorAll('.s1 .node[data-k]').forEach(function(n){
+    var v = P[n.getAttribute('data-k')];
+    n.classList.add(v);
+    n.querySelector('.tg').textContent = TAG[v];
+  });
+  var keys = Object.keys(P), solo = keys.filter(function(k){return P[k]==="solo";}).length;
+  var m = document.getElementById('meter'), html = "";
+  for (var i = 0; i < keys.length; i++) html += '<i' + (i < solo ? ' class="on"' : '') + '></i>';
+  html += '<b style="left:' + (window.MY_BAR * 30 - 4.5) + 'px"></b>';
+  m.innerHTML = html;
+  document.getElementById('tally-text').textContent =
+    "Predicted " + solo + " of " + keys.length + " solo · my bar: " + window.MY_BAR + " · " + window.RESULTS_LINE;
+})();
+</script>
+</body>
+</html>

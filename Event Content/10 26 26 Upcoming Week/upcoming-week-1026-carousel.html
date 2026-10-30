@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Upcoming Week, Oct 26–30: six rooms, six open questions</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: slate ground, white ink; topic accent per slide via --mark ---- */
+:root{--ground:#0F172A; --panel:#1B2538; --rule:#2E3B55; --ink:#F8FAFC; --muted:#94A3B8; --mark:#1E40AF; --bar:#E2E8F0}
+.eyebrow{color:var(--muted)}
+h2{font-size:80px}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.45;color:var(--muted)}
+.foot{justify-content:flex-end}
+.lbl{font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+svg text{font-family:var(--body)}
+
+/* ---- slide 1: the week as a map ---- */
+.s1{padding-top:96px}
+.legend{display:flex;gap:40px;margin-top:30px;font-family:var(--body);font-size:32px;color:var(--ink);align-items:center}
+.legend span{display:flex;align-items:center;gap:14px}
+.legend i{display:inline-block;width:44px;height:28px}
+.legend .sol{background:var(--bar)}
+.legend .out{border:3px solid var(--ink)}
+.legend .hat{border:3px solid var(--muted);background:repeating-linear-gradient(45deg,var(--muted) 0 4px,transparent 4px 11px)}
+.map{margin-top:22px}
+
+/* ---- slide 2: one open question per room ---- */
+.s2{padding-top:88px}
+.th,.tr{display:grid;grid-template-columns:184px 214px 1fr;column-gap:22px}
+.th{margin-top:30px;padding-bottom:10px;border-bottom:2px solid var(--rule);font-size:20px;letter-spacing:.04em}
+.th > div{white-space:nowrap}
+.th .q{color:var(--ink)}
+.th .q b{font-weight:400;border-bottom:4px solid var(--mark);padding-bottom:4px}
+.tr{padding:9px 0;border-bottom:2px solid var(--rule);align-items:start}
+.tr:last-child{border-bottom:none}
+.tr .r{font-family:var(--body);font-weight:600;font-size:32px;line-height:1.18}
+.tr .c{font-family:var(--body);font-size:32px;line-height:1.18;color:var(--muted)}
+.tr .q{font-family:var(--body);font-size:32px;line-height:1.18;border-left:6px solid var(--mark);padding-left:18px}
+
+/* ---- slide 3: two numbers, mirrored panels ---- */
+.s3{--mark:#059669;padding-top:88px}
+.pair{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;margin-top:36px}
+.pn{border-top:6px solid var(--mark);padding-top:16px;display:flex;flex-direction:column}
+.fig{font-family:var(--display);font-weight:600;font-size:112px;line-height:1;letter-spacing:-.02em;height:112px;display:flex;align-items:flex-end;gap:14px}
+.fig small{font-family:var(--body);font-weight:400;font-size:36px;letter-spacing:0;color:var(--muted);padding-bottom:14px}
+.figsub{font-family:var(--body);font-size:36px;line-height:1.2;margin-top:12px;color:var(--ink)}
+.pn .lbl{margin-top:26px;margin-bottom:8px}
+.pn p{font-family:var(--body);font-size:32px;line-height:1.22}
+.base{margin-top:20px;padding:14px 18px 16px;font-family:var(--body);font-size:32px;line-height:1.22;height:160px}
+.base.known{border:3px solid var(--mark)}
+.base.unk{border:3px dashed var(--muted);color:var(--muted)}
+.psrc{font-family:var(--mono);font-size:20px;color:var(--muted);margin-top:10px}
+.verdict{margin-top:22px;font-family:var(--body);font-size:32px;line-height:1.25;padding-top:16px;border-top:2px solid var(--rule)}
+.verdict .d{color:var(--muted)}
+
+/* ---- slide 4: who owns the eval tools ---- */
+.s4{padding-top:88px}
+.tl{position:relative;width:888px;height:780px;margin-top:40px}
+.tl svg{position:absolute;left:0;top:0}
+.ev{position:absolute;left:176px;width:712px;font-family:var(--body);font-size:32px;line-height:1.25}
+.ev b{font-weight:600;color:var(--ink);margin-right:10px}
+.ev .d{display:block;color:var(--muted)}
+.ax{position:absolute;left:0;font-family:var(--mono);font-size:22px;letter-spacing:.1em;color:var(--muted)}
+
+/* ---- slide 5: synthesis, documentarian (off-white on slate, no accent) ---- */
+.s5{--ground:#1E2533;--ink:#EDEBE4;--rule:#3A4458;--muted:#A3ACBB;background:var(--ground);color:var(--ink);padding-top:96px}
+.st{display:grid;grid-template-columns:300px 1fr;column-gap:32px;padding:22px 0;border-bottom:2px solid var(--rule);align-items:start}
+.st:last-child{border-bottom:none}
+.st-wrap{margin-top:44px}
+.st .r{font-family:var(--display);font-weight:600;font-size:38px;line-height:1.1}
+.st .e{font-family:var(--body);font-size:32px;line-height:1.24}
+.s5 .foot{justify-content:space-between}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 · The week as a map
+Alt text: A Monday-to-Friday timeline of six AI events, with two Wednesday evening events overlapping between 5:30 and 8:30 pm. -->
+<section class="slide s1">
+  <div class="eyebrow">The Upcoming Week · Oct 26–30</div>
+  <h2>Six rooms, five days, one double-booked Wednesday</h2>
+  <div class="legend"><span><i class="sol"></i>in person</span><span><i class="out"></i>online</span><span><i class="hat"></i>format to confirm</span></div>
+  <div class="map">
+    <svg width="888" height="700" viewBox="0 0 888 700" aria-hidden="true">
+      <defs>
+        <pattern id="hatch" patternUnits="userSpaceOnUse" width="14" height="14" patternTransform="rotate(45)">
+          <rect width="14" height="14" fill="#0F172A"/><line x1="0" y1="0" x2="0" y2="14" stroke="#94A3B8" stroke-width="6"/>
+        </pattern>
+      </defs>
+      <!-- hour axis: 1 pm .. 9 pm, 99 px per hour from x=96 -->
+      <g fill="#94A3B8" font-size="30">
+        <text x="96" y="30">1 pm</text>
+        <text x="294" y="30" text-anchor="middle">3 pm</text>
+        <text x="492" y="30" text-anchor="middle">5 pm</text>
+        <text x="690" y="30" text-anchor="middle">7 pm</text>
+        <text x="888" y="30" text-anchor="end">9 pm</text>
+      </g>
+      <g stroke="#2E3B55" stroke-width="2" stroke-dasharray="4 8">
+        <line x1="96" y1="44" x2="96" y2="680"/><line x1="294" y1="44" x2="294" y2="680"/>
+        <line x1="492" y1="44" x2="492" y2="680"/><line x1="690" y1="44" x2="690" y2="680"/>
+        <line x1="888" y1="44" x2="888" y2="680"/>
+      </g>
+      <!-- day labels -->
+      <g fill="#F8FAFC" font-family="Menlo, monospace" font-size="30" letter-spacing="2">
+        <text x="0" y="108">MON</text><text x="0" y="196">TUE</text><text x="0" y="330">WED</text>
+        <text x="0" y="566">THU</text><text x="0" y="654">FRI</text>
+      </g>
+      <!-- MON: AWS 4:30-6:00 hatched (format to confirm), Shortlist 6:00-8:30 solid -->
+      <rect x="442.5" y="66" width="148.5" height="60" fill="url(#hatch)" stroke="#94A3B8" stroke-width="3"/>
+      <text x="428" y="92" text-anchor="end" font-size="32" fill="#F8FAFC">AWS NYC</text>
+      <text x="428" y="128" text-anchor="end" font-size="32" fill="#94A3B8">model evals</text>
+      <rect x="591" y="66" width="247.5" height="60" fill="#E2E8F0"/>
+      <text x="606" y="107" font-size="32" font-weight="600" fill="#0F172A">The Shortlist</text>
+      <!-- TUE: Datology 1:00-2:00 outlined (online) -->
+      <rect x="97.5" y="160" width="97.5" height="50" fill="none" stroke="#F8FAFC" stroke-width="3"/>
+      <text x="212" y="196" font-size="32" fill="#F8FAFC">DatologyAI · Curation Studio</text>
+      <!-- WED: overlap band 5:30-8:30 in the accent -->
+      <rect x="541.5" y="234" width="297" height="198" fill="#1E40AF"/>
+      <text x="556" y="268" font-size="30" font-weight="600" fill="#F8FAFC">overlap 5:30–8:30</text>
+      <rect x="541.5" y="294" width="297" height="56" fill="#E2E8F0"/>
+      <rect x="591" y="302" width="107.25" height="40" fill="#0F172A"/>
+      <text x="527" y="334" text-anchor="end" font-size="32" fill="#F8FAFC">Daytona AI Builders</text>
+      <rect x="541.5" y="364" width="346.5" height="56" fill="#E2E8F0"/>
+      <rect x="640.5" y="372" width="99" height="40" fill="#0F172A"/>
+      <text x="527" y="404" text-anchor="end" font-size="32" fill="#F8FAFC">Agents in NYC</text>
+      <rect x="96" y="446" width="26" height="26" fill="#0F172A" stroke="#F8FAFC" stroke-width="2"/>
+      <text x="136" y="470" font-size="32" fill="#94A3B8">talks: Daytona 6:00–7:05 · Agents 6:30–7:30</text>
+      <!-- THU: open lane -->
+      <line x1="96" y1="555" x2="888" y2="555" stroke="#94A3B8" stroke-width="2" stroke-dasharray="10 10"/>
+      <rect x="440" y="533" width="104" height="44" fill="#0F172A"/>
+      <text x="492" y="566" text-anchor="middle" font-size="32" fill="#94A3B8">open</text>
+      <!-- FRI: all day, no clock times (sources conflict) -->
+      <rect x="96" y="612" width="792" height="60" fill="#E2E8F0"/>
+      <text x="114" y="653" font-size="32" font-weight="600" fill="#0F172A">Frontier Build NYC <tspan font-weight="400">· all day</tspan></text>
+    </svg>
+  </div>
+  <div class="src-line">Source: event listings (Luma, Meetup) and invites, 2026.</div>
+  <div class="foot"><span class="page">1 / 5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 · One open question per room
+Alt text: A six-row table pairing each event with what it evaluates and one unanswered question for that room. -->
+<section class="slide s2">
+  <h2>Six rooms, six open questions</h2>
+  <div class="th lbl"><div>Room</div><div>What gets checked</div><div class="q"><b>The open question</b></div></div>
+  <div class="tb">
+    <div class="tr"><div class="r">AWS NYC</div><div class="c">a model before release</div><div class="q">“Can Bedrock use a judge from outside its own catalog?”</div></div>
+    <div class="tr"><div class="r">The Shortlist</div><div class="c">the hire</div><div class="q">“Which seats are open now, and where are they based?”</div></div>
+    <div class="tr"><div class="r">DatologyAI</div><div class="c">the training data</div><div class="q">“What does a buyer pay for: tokens curated, compute saved, or a seat?”</div></div>
+    <div class="tr"><div class="r">Daytona</div><div class="c">what the agent carries</div><div class="q">“When forked runs are scored, is the grader inside the sandbox or outside it?”</div></div>
+    <div class="tr"><div class="r">Agents in NYC</div><div class="c">the judge</div><div class="q">“What human-agreement rate made a no-explanation judge shippable?”</div></div>
+    <div class="tr"><div class="r">Frontier Build</div><div class="c">the merge</div><div class="q">“Can a reviewer agent satisfy branch protection, and on which paths never?”</div></div>
+  </div>
+  <div class="src-line">Source: event abstracts and public docs, Oct 2026.</div>
+  <div class="foot"><span class="page">2 / 5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 · Two Datology numbers
+Alt text: Two side-by-side panels separating Datology's 6x public-data compute claim from its under-20%-compute Thomson Reuters claim, noting that the Thomson Reuters baseline isn't public yet. -->
+<section class="slide s3">
+  <h2>Two numbers, two different measurements</h2>
+  <div class="pair">
+    <div class="pn">
+      <div class="fig">6x</div>
+      <div class="figsub">less compute</div>
+      <div class="lbl">What it measures</div>
+      <p>Models trained on Studio-curated public datasets matched the largest baseline.</p>
+      <div class="base known">Baseline: Datology's own 39-dataset public mix, scaled to 10T tokens.</div>
+      <div class="psrc">launch post, 2026-10-09</div>
+    </div>
+    <div class="pn">
+      <div class="fig"><small>under</small>20%</div>
+      <div class="figsub">of training compute</div>
+      <div class="lbl">What it measures</div>
+      <p>The Thomson Reuters segment, matching the strongest public data baselines.</p>
+      <div class="base unk">Baseline and compute method: not public.</div>
+      <div class="psrc">webinar invite</div>
+    </div>
+  </div>
+  <div class="verdict">Both are Datology's own figures, measured differently. <span class="d">The TR baseline isn't public yet.</span></div>
+  <div class="src-line">Source: DatologyAI launch post (2026-10-09); DatologyAI webinar invite (2026).</div>
+  <div class="foot"><span class="page">3 / 5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 · Who owns the eval tools now
+Alt text: A 2026 timeline of evaluation-tool acquisitions and integrations, ending with Bedrock's multi-vendor judge list. -->
+<section class="slide s4">
+  <h2>Who owns the eval tools now</h2>
+  <div class="tl">
+    <!-- axis: Jan 1 (y=20) to Oct 31 (y=760), dates placed to scale -->
+    <svg width="888" height="780" viewBox="0 0 888 780" aria-hidden="true">
+      <line x1="80" y1="20" x2="80" y2="760" stroke="#1E40AF" stroke-width="6"/>
+      <g stroke="#2E3B55" stroke-width="3">
+        <line x1="68" y1="20" x2="92" y2="20"/><line x1="68" y1="95.7" x2="92" y2="95.7"/><line x1="68" y1="164.1" x2="92" y2="164.1"/>
+        <line x1="68" y1="239.8" x2="92" y2="239.8"/><line x1="68" y1="313.1" x2="92" y2="313.1"/><line x1="68" y1="388.8" x2="92" y2="388.8"/>
+        <line x1="68" y1="462.1" x2="92" y2="462.1"/><line x1="68" y1="537.8" x2="92" y2="537.8"/><line x1="68" y1="613.5" x2="92" y2="613.5"/>
+        <line x1="68" y1="686.8" x2="92" y2="686.8"/><line x1="68" y1="760" x2="92" y2="760"/>
+      </g>
+      <!-- leaders -->
+      <g stroke="#94A3B8" stroke-width="2" fill="none">
+        <polyline points="92,183.6 164,183.6"/>
+        <polyline points="92,569.6 116,569.6 164,428"/>
+        <polyline points="92,672.4 120,672.4 164,528"/>
+        <polyline points="104,697 132,697 164,628"/>
+        <polyline points="120,723 140,723 164,700"/>
+      </g>
+      <!-- dated nodes -->
+      <g fill="#F8FAFC" stroke="#1E40AF" stroke-width="5">
+        <circle cx="80" cy="183.6" r="11"/><circle cx="80" cy="569.6" r="11"/><circle cx="80" cy="672.4" r="11"/>
+      </g>
+      <!-- early Oct (Oct 1-10) and Oct (undated docs: whole month) as brackets -->
+      <path d="M96 686.8 H104 V711 H96" fill="none" stroke="#F8FAFC" stroke-width="4"/>
+      <path d="M108 686.8 H120 V760 H108" fill="none" stroke="#F8FAFC" stroke-width="3" stroke-dasharray="6 5"/>
+    </svg>
+    <div class="ax" style="top:4px">JAN</div>
+    <div class="ax" style="top:672px;left:0">OCT</div>
+    <div class="ev" style="top:164px"><b>Mar 9</b>OpenAI acquires PromptFoo.</div>
+    <div class="ev" style="top:408px"><b>Aug 13</b>Dynatrace announces its Arize acquisition.</div>
+    <div class="ev" style="top:508px"><b>Sep 24</b>Datadog publishes running TypeSafe's Jev inside Agent Observability.</div>
+    <div class="ev" style="top:608px"><b>Early Oct</b>Dynatrace–Arize closes.</div>
+    <div class="ev" style="top:680px"><b>Oct</b>Bedrock's judge list spans OpenAI, Anthropic and other models, all Bedrock-hosted.<span class="d">per AWS docs, Oct 2026</span></div>
+  </div>
+  <div class="src-line">Source: SiliconANGLE (2026-03-09); Dynatrace press release (2026-08-13); GovConWire / 01net (Oct 2026); Datadog blog (2026-09-24); AWS Bedrock docs (fetched 2026-10-24).</div>
+  <div class="foot"><span class="page">4 / 5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 · Synthesis
+Alt text: Six short lines naming, for each event, the observable evidence that would answer its open question. -->
+<section class="slide s5">
+  <div class="eyebrow">The Upcoming Week · Oct 26–30</div>
+  <h2>What would settle it, room by room</h2>
+  <div class="st-wrap">
+    <div class="st"><div class="r">AWS NYC</div><div class="e">a named baseline next to cost-per-correct-answer.</div></div>
+    <div class="st"><div class="r">The Shortlist</div><div class="e">a named owner for each open seat.</div></div>
+    <div class="st"><div class="r">DatologyAI</div><div class="e">a billing unit, or a third party reproducing a multiplier.</div></div>
+    <div class="st"><div class="r">Daytona</div><div class="e">a vendor stating where its own product stops.</div></div>
+    <div class="st"><div class="r">Agents in NYC</div><div class="e">a latency or cost-per-task number, and a take count for the robot.</div></div>
+    <div class="st"><div class="r">Frontier Build</div><div class="e">one class of change no agent may merge.</div></div>
+  </div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>

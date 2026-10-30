@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Four numbers, four units: a buyer's read on a data-curation launch</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate ground, white ink, ONE accent emerald #34D399) ---- */
+:root{--ground:#0F172A; --panel:#1B2538; --rule:#2E3B55; --ink:#F8FAFC; --muted:#94A3B8; --mark:#34D399}
+.eyebrow{color:var(--muted)}
+h2{font-size:88px}
+.src-line{position:absolute;left:96px;right:96px;bottom:118px;font-family:var(--mono);font-size:20px;line-height:1.45;color:var(--muted)}
+.foot{justify-content:flex-end}
+.lbl{font-family:var(--mono);font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- slide 1: the sum that doesn't work (column addition) ---- */
+.sum{margin-top:56px;display:grid;grid-template-columns:60px 410px 1fr;column-gap:28px;align-items:baseline}
+.sum .op{font-family:var(--display);font-size:84px;line-height:1;color:var(--muted);text-align:center}
+.sum .fig{font-family:var(--display);font-weight:600;font-size:100px;line-height:1.16;text-align:right;letter-spacing:-.01em}
+.sum .unit{font-family:var(--body);font-size:32px;line-height:1.2;color:var(--muted)}
+.sum .bar{grid-column:1 / 3;height:4px;background:var(--ink);margin:14px 0 10px}
+.sum .spacer{height:1px}
+.sum .roi{text-decoration:line-through;text-decoration-color:var(--mark);text-decoration-thickness:10px}
+
+/* ---- slide 2: baselines table ---- */
+.s2{padding-top:88px}
+.s2 h2{font-size:80px}
+.th,.tr{display:grid;grid-template-columns:176px 1fr 196px;column-gap:24px}
+.th{margin-top:36px;font-size:22px;padding-bottom:12px;border-bottom:2px solid var(--rule)}
+.th .aw{color:var(--ink)}
+.th .aw b{font-weight:400;border-bottom:4px solid var(--mark);padding-bottom:4px}
+.th .aw i{font-style:normal;color:var(--muted)}
+.th.lbl{font-size:21px;letter-spacing:.06em}
+.th.lbl > div{white-space:nowrap}
+.tr{padding:12px 0;border-bottom:2px solid var(--rule);align-items:start}
+.tr:last-child{border-bottom:none}
+.tr .n{font-family:var(--display);font-weight:600;font-size:44px;line-height:1}
+.tr .n small{display:block;font-family:var(--body);font-weight:400;font-size:32px;color:var(--muted);margin-top:8px}
+.tr .b{font-family:var(--body);font-size:34px;line-height:1.16}
+.tr .b .m{display:block;font-size:32px;color:var(--muted);margin-top:4px}
+.tr .s{font-family:var(--body);font-size:34px;line-height:1.16}
+.tr .s .m{display:block;font-size:32px;color:var(--muted)}
+.tr .s.nf{border:3px dashed var(--muted);padding:8px 14px;color:var(--muted)}
+
+/* ---- slide 3: the refinery ---- */
+.s3{padding-top:88px}
+.s3 h2{font-size:80px}
+.dia{position:relative;width:888px;height:830px;margin-top:36px}
+.dia svg{position:absolute;left:0;top:0}
+.cloud{position:absolute;left:28px;top:-20px;background:var(--ground);padding:0 14px;font-family:var(--mono);font-size:28px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.io{position:absolute;left:32px}
+.io .lbl{display:block;margin-bottom:6px}
+.io p{font-family:var(--body);font-size:32px;line-height:1.2}
+.stg{position:absolute;left:32px;width:560px;background:var(--panel);border:2px solid var(--rule);padding:14px 24px 16px}
+.stg .k{font-family:var(--mono);font-size:32px;letter-spacing:.06em;line-height:1.1}
+.stg p{font-family:var(--body);font-size:32px;line-height:1.2;color:var(--muted);margin-top:6px}
+.nbm{position:absolute;left:628px;width:196px;border:2px solid var(--rule);padding:14px 18px;font-family:var(--body);font-size:32px;line-height:1.15}
+.loopq{position:absolute;left:628px;width:210px;font-family:var(--body);font-size:32px;line-height:1.25;color:var(--mark)}
+
+/* ---- slide 4: the buyer's checklist ---- */
+.chk-h{display:grid;grid-template-columns:300px 1fr;column-gap:36px;margin-top:56px;padding-bottom:14px;border-bottom:2px solid var(--rule)}
+.chk-h .a{color:var(--mark)}
+.cr{display:grid;grid-template-columns:300px 1fr;column-gap:36px;padding:28px 0;border-bottom:2px solid var(--rule);align-items:start}
+.cr:last-child{border-bottom:none}
+.cr .q{font-family:var(--display);font-weight:600;font-size:40px;line-height:1.1;color:var(--mark)}
+.cr .g{font-family:var(--body);font-size:34px;line-height:1.22}
+.cr .g .d{color:var(--muted)}
+.s4 .foot{justify-content:space-between}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 4 · Hook
+Alt text: Four figures, 6x, under 1%, about $450K and under 20%, each labelled with a different unit, followed by an equals sign and a crossed-out ROI. -->
+<section class="slide s1">
+  <div class="eyebrow">DatologyAI Curation Studio launch · Oct 27</div>
+  <h2>These four numbers don't add up</h2>
+  <div class="sum">
+    <div class="op"></div><div class="fig">6x</div><div class="unit">compute multiplier</div>
+    <div class="op">+</div><div class="fig">&lt;1%</div><div class="unit">of pretraining tokens</div>
+    <div class="op">+</div><div class="fig">~$450K</div><div class="unit">one final training run</div>
+    <div class="op">+</div><div class="fig">&lt;20%</div><div class="unit">of training compute</div>
+    <div class="bar"></div><div class="spacer"></div>
+    <div class="op">=</div><div class="fig"><span class="roi">ROI</span></div><div class="unit"></div>
+  </div>
+  <div class="src-line">Sources: Datology launch post &amp; TR case studies, 2026 · event invite, 2026</div>
+  <div class="foot"><span class="page">1 / 4 →</span></div>
+</section>
+
+<!-- Slide 2 of 4 · Evidence
+Alt text: A table listing five efficiency figures around the launch, what each was measured on, the baseline it was compared against, and whether a public source exists. No public source was found for the under-20% figure as of Oct 26. -->
+<section class="slide s2">
+  <h2>Same launch, five different baselines</h2>
+  <div class="th lbl"><div>Number</div><div class="aw"><b>Against what</b> <i>/ measured on</i></div><div>Public source?</div></div>
+  <div class="rows">
+    <div class="tr"><div class="n">6x<small>compute</small></div><div class="b">Datology's 39-dataset public baseline (built by Datology)<span class="m">Studio-curated public data</span></div><div class="s">Yes<span class="m">launch post, Oct 9</span></div></div>
+    <div class="tr"><div class="n">~1/5<small>compute</small></div><div class="b">30B-A3B baseline, 1T tokens<span class="m">12B-A1.4B curated model, 440B tokens</span></div><div class="s">Yes<span class="m">launch post (not TR)</span></div></div>
+    <div class="tr"><div class="n">&lt;1%<small>tokens</small></div><div class="b">15T pretraining tokens, 8B model<span class="m">TR April testbed: 100B legal tokens</span></div><div class="s">Yes<span class="m">Datology, Apr 9</span></div></div>
+    <div class="tr"><div class="n">~$450K</div><div class="b">~$40M program (press; durations differ)<span class="m">TR Thomson final training run</span></div><div class="s">Yes<span class="m">Datology, Sept 3</span></div></div>
+    <div class="tr"><div class="n">&lt;20%<small>compute</small></div><div class="b">“strongest public data baselines”<span class="m">TR, per the invite</span></div><div class="s nf">Not found<span class="m">as of<br>Oct 26</span></div></div>
+  </div>
+  <div class="src-line">Sources: Datology launch post (Oct 2026) · Datology TR case studies (Apr &amp; Sept 2026) · The Batch / LawNext (2026) · event invite</div>
+  <div class="foot"><span class="page">2 / 4 →</span></div>
+</section>
+
+<!-- Slide 3 of 4 · Mechanism
+Alt text: A four-stage pipeline, clean, curate, create and compose, turning raw data into a training mix inside the customer's cloud, with an open question marked on the loop back when the base model changes. -->
+<section class="slide s3">
+  <h2>A refinery that runs in your cloud</h2>
+  <div class="dia">
+    <svg width="888" height="830" viewBox="0 0 888 830" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94A3B8"/></marker>
+        <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#34D399"/></marker>
+      </defs>
+      <!-- the cloud boundary -->
+      <rect x="2" y="2" width="884" height="826" fill="none" stroke="#94A3B8" stroke-width="3" stroke-dasharray="14 10"/>
+      <!-- flow arrows -->
+      <g stroke="#94A3B8" stroke-width="3" fill="none" marker-end="url(#ah)">
+        <line x1="312" y1="114" x2="312" y2="146"/>
+        <line x1="312" y1="264" x2="312" y2="282"/>
+        <line x1="312" y1="398" x2="312" y2="416"/>
+        <line x1="312" y1="532" x2="312" y2="550"/>
+        <line x1="312" y1="704" x2="312" y2="726"/>
+      </g>
+      <!-- the rerun loop: new base model back to CLEAN -->
+      <path d="M824 588 H842 Q858 588 858 572 V222 Q858 206 842 206 H598" fill="none" stroke="#34D399" stroke-width="4" stroke-dasharray="12 9" marker-end="url(#ahg)"/>
+    </svg>
+    <div class="cloud">Your cloud · your GPUs</div>
+    <div class="io" style="top:36px"><span class="lbl">Crude in</span><p>raw web · code · math · your own documents</p></div>
+    <div class="stg" style="top:150px"><div class="k">CLEAN</div><p>drop junk + test-set leaks</p></div>
+    <div class="stg" style="top:284px"><div class="k">CURATE</div><p>score, de-duplicate, reweight</p></div>
+    <div class="stg" style="top:418px"><div class="k">CREATE</div><p>rephrase into cleaner text</p></div>
+    <div class="stg" style="top:552px"><div class="k">COMPOSE</div><p>pick the mix with small proxy models</p></div>
+    <div class="io" style="top:730px"><span class="lbl">Out</span><p>a training mix → pre-training or mid-training</p></div>
+    <div class="loopq" style="top:280px">Rerun?<br>Who owns it?<br>(open)</div>
+    <div class="nbm" style="top:552px">New base model</div>
+  </div>
+  <div class="src-line">Sources: Datology Curation Studio launch post, Oct 2026 · explainx, Oct 2026</div>
+  <div class="foot"><span class="page">3 / 4 →</span></div>
+</section>
+
+<!-- Slide 4 of 4 · CTA
+Alt text: A four-row checklist pairing each buyer question about a data-curation product with what a good answer would include. -->
+<section class="slide s4">
+  <h2>Before you buy a data refinery</h2>
+  <div class="chk-h lbl"><div class="a">Ask</div><div>A good answer names…</div></div>
+  <div class="chk">
+    <div class="cr"><div class="q">What's the unit?</div><div class="g">seat, tokens, compute share or outcome<span class="d">, plus a typical first-deal size</span></div></div>
+    <div class="cr"><div class="q">Against what baseline?</div><div class="g">who built it<span class="d">, and whether it was compute-matched</span></div></div>
+    <div class="cr"><div class="q">Which number is yours?</div><div class="g">a result on your data<span class="d">, scored on evals held out of curation</span></div></div>
+    <div class="cr"><div class="q">Who reruns it?</div><div class="g">who re-curates when the base model changes<span class="d">, and the cost</span></div></div>
+  </div>
+  <div class="src-line">DatologyAI Curation Studio launch · Oct 27, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 4</span></div>
+</section>
+
+</body>
+</html>

@@ -134,3 +134,7 @@ Event Content/10 16 26 Daytona HackSprint/build-prep-kickoff-prompt.md
 # Deal Flow day-of judge intel + resume log: carry Alex's private read on a judge's identity (2026-10-24)
 Event Content/10 24 26 Deal Flow VC Hackathon/judge-intel-day-of.md
 Event Content/10 24 26 Deal Flow VC Hackathon/research-resume-log.md
+# 2026-10-30: vendor slide decks, transcript low-confidence review notes and run logs stay local
+Event Content/**/*-Slides.pdf
+Event Content/**/*REVIEW (low-confidence spots)*
+Event Content/**/*.log
