@@ -6,6 +6,8 @@ Checks (spec: docs/specs/shared/S-03-reference-architecture-layers.md, YED-126):
   2. every layer id (and secondary) is one of the ten layers defined in
      reference-architecture.md
   3. every duplicate_of points at a real topic id (not itself)
+  4. every alias (a topic soft-merged away) points at a live snapshot topic,
+     and no alias id is still listed as a live topic or mapped
 It also prints per-layer counts. This is an offline check only — it never
 touches the Supabase topic table; applying layers via spine_client is a
 separate, human-approved step.
@@ -68,6 +70,14 @@ def run_checks(snapshot_path: Path, map_path: Path, arch_path: Path):
             errors.append(f"{tid}: duplicate_of {dup!r} is not a real topic id")
         if dup == tid:
             errors.append(f"{tid}: duplicate_of points at itself")
+
+    # 4. aliases: merged-away rows resolve to a live topic, never to another alias
+    for alias in snapshot.get("aliases", []):
+        aid, into = alias["id"], alias.get("merged_into")
+        if into not in snapshot_set:
+            errors.append(f"alias {alias['name']!r}: merged_into {into!r} is not a live topic")
+        if aid in snapshot_set or aid in topic_map:
+            errors.append(f"alias {alias['name']!r}: id is still a live or mapped topic")
 
     counts = Counter(e["layer"] for e in topic_map.values())
     return errors, counts, len(snapshot_ids)
