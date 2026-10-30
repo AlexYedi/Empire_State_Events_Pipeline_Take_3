@@ -1,0 +1,38 @@
+# Script selftests (E-07). Every gate script carries an offline `--selftest`; this runs all of them
+# on any change to a script, stdlib Python only. A new script that supports `--selftest` is picked
+# up automatically. One documented exception: inbox_boundary.py is skipped because two of its
+# live-file cases require inbox-denylist.md / inbox-allowlist.md — gitignored private inputs
+# (CLAUDE.md invariant 4) that can never exist in CI — so its selftest exits 1 here by design.
+name: selftests
+on:
+  pull_request:
+    paths:
+      - '.claude/scripts/**'
+      - '.github/workflows/selftests.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude/scripts/**'
+      - '.github/workflows/selftests.yml'
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run every offline --selftest
+        run: |
+          cd .claude/scripts
+          failed=0
+          for f in *.py; do
+            if [ "$f" = "inbox_boundary.py" ]; then
+              echo "skip  $f (live-file cases need gitignored private inputs — see workflow header)"
+              continue
+            fi
+            grep -q -- "--selftest" "$f" || continue
+            if python3 "$f" --selftest >/tmp/selftest.log 2>&1; then
+              echo "pass  $f — $(grep -o 'selftest:.*' /tmp/selftest.log | tail -1)"
+            else
+              echo "FAIL  $f"; tail -20 /tmp/selftest.log; failed=1
+            fi
+          done
+          exit $failed
