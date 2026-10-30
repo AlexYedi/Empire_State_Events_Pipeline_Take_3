@@ -19,6 +19,12 @@ function, grant, or Data-API config changes. Fully reversible (rollback = drop t
   matching the 0012 compute), not the frozen `topic_intelligence.topics` snapshot.
 - The tagging denominator reads `public.event_entity` (`role='tagged_topic'`, attended
   events) — the same surface the live compute reads.
+- **REVIEW FIX (runtime metric):** the spine's `runtime_snapshot_gap` took the max gap
+  between consecutive snapshots over **all history**, so the 2026-08→10 recompute outage
+  (49 days) tripped it forever. The ported tripwire now measures **freshness — days
+  since the latest snapshot** (`current_date - max(as_of_date)`), threshold unchanged
+  at 1: it clears as soon as the nightly recompute lands and trips only while the job
+  has actually stalled. Tripwire key kept for cockpit continuity.
 - **DEGRADED:** `signal.conflict_log` has no MI-graph counterpart, so
   `canonicalization_backlog` now counts unassigned topics only (its human_pending facet
   is omitted). Flagged in the migration header and PR body; re-add the facet if a
@@ -87,9 +93,28 @@ select * from topic_intelligence.topic_intelligence_health order by tripwire;
 Expect exactly 6 rows — `granularity_occupancy`, `granularity_insufficient`,
 `membership_confidence`, `canonicalization_backlog`, `runtime_snapshot_gap`,
 `bridge_inflation` — each with `status` in (`ok`, `watch`, `trip`, `no_data`).
-`no_data` on a metric means its source had no rows (e.g. before the next recompute
-lands a snapshot); it is not an error, but if every row is `no_data` a day after the
-nightly compute has run, investigate.
+
+Plausible sample output (illustrative — nightly recompute ran today; one thin cluster
+month; 96 topics not yet cluster-assigned):
+
+| tripwire | metric | status |
+|---|---|---|
+| granularity_occupancy | 0.181 | watch |
+| granularity_insufficient | 1.000 | trip |
+| membership_confidence | 0.106 | ok |
+| canonicalization_backlog | 96 | trip |
+| runtime_snapshot_gap | 0 | ok |
+| bridge_inflation | 3.00 | ok |
+
+`runtime_snapshot_gap` is **freshness** (days since the latest `topic_trend`
+snapshot), not the spine's all-history max gap: `0` means the nightly recompute
+landed today; it climbs only while the job has actually stalled and re-clears on the
+next successful run. A historical outage no longer trips it permanently.
+
+`no_data` on a metric means its source had no rows (e.g. before the first recompute
+lands a snapshot, or an empty `topic_trend` for the freshness measure); it is not an
+error, but if every row is `no_data` a day after the nightly compute has run,
+investigate.
 
 Cross-checks (optional, one metric is enough to trust the port):
 ```sql

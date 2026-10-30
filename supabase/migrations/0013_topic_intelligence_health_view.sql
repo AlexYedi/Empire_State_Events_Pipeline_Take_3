@@ -31,6 +31,17 @@
 --   tracks unassigned topics only. Threshold stays 5. If a conflict log lands on
 --   the MI graph later, re-add the facet with CREATE OR REPLACE.
 --
+-- REVIEW FIX (YED-122 second pass, runtime metric):
+--   The spine's `runtime_snapshot_gap` took the max gap between consecutive
+--   snapshots over ALL history, so the 2026-08->10 recompute outage (49 days)
+--   trips it forever, even under a perfect nightly job — a tripwire that can
+--   never clear. Replaced with a FRESHNESS measure: days since the latest
+--   snapshot (current_date - max(as_of_date)), threshold unchanged at 1. It
+--   clears as soon as the nightly recompute lands and trips only while the job
+--   has actually stalled. Empty table -> NULL -> 'no_data', as before. The
+--   tripwire KEY is kept (`runtime_snapshot_gap`) for cockpit continuity; the
+--   description column carries the new semantics.
+--
 -- SECURITY (cockpit-only): the view lives in `topic_intelligence`, which is NOT in
 --   the Data API exposed-schemas (0001/0003) — there is no PostgREST path to it.
 --   security_invoker=on means the view runs with the CALLER's privileges, so an
@@ -88,12 +99,12 @@ membership as (
 canon as (
   select (select count(*) from public.topic where cluster_id is null) as v
 ),
--- (5) runtime: largest gap (days) between consecutive trend snapshots (heartbeat / pg_cron health)
-gaps as (
-  select coalesce(max(gap),0) as v from (
-    select as_of_date - lag(as_of_date) over (order by as_of_date) as gap
-    from (select distinct as_of_date from topic_intelligence.topic_trend) s
-  ) g
+-- (5) runtime: days since the latest trend snapshot (freshness / pg_cron health).
+--     REVIEW FIX — replaces the spine's all-history max-gap measure, which tripped
+--     forever after the 2026-08->10 outage (see header). Clears as soon as the
+--     nightly recompute lands.
+freshness as (
+  select (current_date - max(as_of_date)) as v from topic_intelligence.topic_trend
 ),
 -- (6) bridge inflation: worst bridge:co-occurrence ratio among all-time pairs that share an event
 bridge as (
@@ -111,8 +122,8 @@ select * from (
      'topics assigned below 0.80 confidence'),
   ('canonicalization_backlog','MT-7',(select v::numeric from canon),      5.000,
      'unassigned topics (DEGRADED: spine conflict_log human_pending facet has no MI-graph counterpart and is omitted)'),
-  ('runtime_snapshot_gap',    'D4', (select v::numeric from gaps),        1.000,
-     'max days between trend snapshots'),
+  ('runtime_snapshot_gap',    'D4', (select v::numeric from freshness),  1.000,
+     'days since latest trend snapshot (REVIEW FIX: freshness — the spine''s all-history max gap tripped forever after the 2026-08->10 outage)'),
   ('bridge_inflation',        'B',  (select round(v,2) from bridge),     10.000,
      'worst bridge:co-occurrence ratio')
 ) as h(tripwire, decision, metric, threshold, description)
