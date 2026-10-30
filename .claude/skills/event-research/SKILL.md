@@ -185,18 +185,25 @@ URLs here breaks citations three stages downstream.
   `label:Content/newsletters newer_than:14d` (the **full nested label path is required** —
   leaf `label:newsletters` returns empty). Do this **once, centrally, here** — don't make
   each specialist re-run it.
-- **Supabase graph** (REST to `https://oicikjyzmxqfomrrqkvf.supabase.co/rest/v1/`,
-  `SUPABASE_API_KEY` from `Take_3/.env` via Bash — never the MCP; see
-  `.claude/references/market-intel-spine.md`): prior `market`-kind signals on these entities
-  via `event_entity` hyperedge joins
-  (`/event_entity?entity_type=eq.company&entity_id=eq.{id}`;
-  `/event?kind=eq.market&order=event_date.desc&limit=25`). **Expect near-empty returns**
-  until event-research write-back ships — wire the read, don't depend on the payload.
-  **Best-effort, non-blocking (v1.1, YED-132):** run every graph call with a bounded timeout
-  (`curl --max-time 8 -s -w '%{http_code}'`); on ANY non-2xx, timeout, error, or empty array,
-  record `graph: no signals (<reason>)` in the audit line and **continue immediately** — never
-  retry-loop, never let the graph read gate the run. The graph is the lowest-priority source;
-  a from-scratch pass is the correct fallback when it's empty or unreachable.
+- **Supabase graph** — via the ONE retrieval path (S-01, YED-261), never the MCP:
+  `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/seed.json --out <scratch>/context-pack.md`.
+  Build the seed from the Step 1.5b entities **with a prior record** (one
+  `{"type", "name", "notion_page_id"}` each, the resolved Notion id first; the verbatim invite as
+  `text`; `window_days: 365`). The script reads `SUPABASE_API_KEY` from `.env` itself and returns a
+  **Context Pack** — Continuity Ledger (prior occasions), People/Company/Topic cards, and scored
+  Claims, every claim line tagged `c:<8>` for traceability. Unresolved seed names are reported in
+  the pack, never guessed; the pack's AUDIT line (stderr, or `--json` for machine reading) is the
+  `graph:` entry of the mandatory audit below. The claims layer is live (S1a shipped) — expect real
+  returns. **Best-effort, non-blocking (v1.1, YED-132, now YED-261):** on ANY non-2xx, timeout,
+  script failure, or empty pack, record `graph: no signals (<reason>)` in the audit line and
+  **continue immediately** — never retry-loop, never let the graph read gate the run. The graph is
+  the lowest-priority source; a from-scratch pass is the correct fallback when it's empty or
+  unreachable. **Exit 5 = RETRIEVAL FAILURE** (the graph holds claims for these entities but the
+  pack kept none): surface it loudly to Alex — do not silently proceed as if there were no prior
+  knowledge. (Usage attribution, YED-262: at 1.7a time no consuming document id exists, so the
+  audit line reads `usage=not logged (no --usage-document …)` — expected. Once Step 4.2 has staged
+  the `research_brief` document row, a re-attribution run may pass
+  `--log-usage event --usage-document <documents.id>` to log the claim reads.)
 
 **Cost guard — an enforced selection procedure, not a soft cap (v1.1, YED-132).** The cap is
 a step with a deterministic ranking + a required audit artifact, so it can't be silently
@@ -210,7 +217,7 @@ skipped (the prose-only `≤8` was the "rigor-in-prose-not-execution-path" trap)
    candidate by name as "not pulled — on demand."
 4. **Mandatory audit line** (emit before dispatching the conditioner — this line *is* the
    enforcement; if it's absent, the cap wasn't applied):
-   `Prior-knowledge retrieval — pulled: [names] · skipped-no-prior: [n] · capped/not-pulled: [names] · graph: [ok N sigs | no signals (reason)]`
+   `Prior-knowledge retrieval — pulled: [names] · skipped-no-prior: [n] · capped/not-pulled: [names] · graph: [retrieve.py AUDIT line | no signals (reason)]`
 The conditioner re-applies a relevance filter downstream, but the *retrieval* cap lives here so
 cost is bounded **before** any large body is fetched.
 

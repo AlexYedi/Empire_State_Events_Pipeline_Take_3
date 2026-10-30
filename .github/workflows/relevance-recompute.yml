@@ -1,0 +1,59 @@
+# Nightly relevance recompute for the MI graph (S-01 / YED-265).
+#   .claude/scripts/recompute_relevance.py — REST-only via the guarded spine client (ADR-9):
+#   reads topics/signals, scores recency(14d half-life) × log-engagement + event-proximity boost,
+#   skips YED-47 tombstones, and PATCHes only topics past WRITE_EPSILON. Idempotent; safe to re-run.
+#   Runs at 07:00 UTC so fresh scores land BEFORE the 08:00 MI 2b health-check
+#   (mi-2b-nightly-healthcheck.yml) validates the just-written graph.
+# REQUIRED repo secret (Settings > Secrets and variables > Actions):
+#   SUPABASE_API_KEY     the spine service key the .env version holds (spine_client.load_key reads it
+#                        from the env first). No DDL is ever needed — the script is REST-only.
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+name: S-01 relevance recompute (nightly)
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC nightly — one hour ahead of the MI 2b health-check
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: s01-relevance-recompute
+  cancel-in-progress: false
+
+jobs:
+  recompute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Selftest the scoring functions (offline, no writes)
+        run: python3 .claude/scripts/recompute_relevance.py --selftest
+      - name: Recompute relevance scores (spine-guarded REST writes)
+        env:
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+        run: python3 .claude/scripts/recompute_relevance.py --top 15
+      # Same one-open-issue alerting as the MI 2b nightly: a persistent failure comments on the
+      # existing issue instead of opening a new one every night; closing the issue re-arms the alert.
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "S-01 relevance recompute FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "S-01 relevance recompute FAILED (since $TODAY)" \
+              --body "The nightly relevance-recompute job failed — the offline scoring selftest or the spine-guarded recompute errored. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
