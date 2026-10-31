@@ -139,6 +139,11 @@ Event Content/**/*-Slides.pdf
 Event Content/**/*REVIEW (low-confidence spots)*
 Event Content/**/*.log
 
+# Generated resumes/dossiers (E-09 /tailor-resume): every generated resume writes ONLY here —
+# the writer (render_resume.py resolve_output_path) refuses any path outside it. Intentionally
+# untracked, not an oversight.
+.claude/output/
+
 # 2026-10-30: Frontier Hackathon routing and integration notes reference private items (build-in-public.md); local only
 Event Content/10 30 26 Frontier Hackathon October/obvious-specs/07-linear-backlog.md
 Event Content/10 30 26 Frontier Hackathon October/obvious-specs/08-big-bets-and-integrations.md
