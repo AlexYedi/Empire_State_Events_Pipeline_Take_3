@@ -399,6 +399,42 @@ What stays: the **one sharp question or insight** that uses event context + a pe
 
 If person-research surfaces no Tier 1 signal (no recent talk, no recent post, no concrete moment to anchor on), flag the person as **"needs more research"** and do NOT generate a filler note. A weak Level 2 note burns the connection request impression — and you only get one shot per person. Better to surface "Alex, do you have a specific signal for [Person] you can share?" than to ship a generic note that gets rejected or ignored.
 
+### Approval-loop tuning for multi-speaker fan-out (Eric P5 — YED-220, added 2026-10-31)
+
+Step 4 for a multi-speaker event (a dozen-plus people in the brief) is distillation work: the same
+generation prompt applied person by person. Do NOT draft all of them in one pass, and do NOT fan
+out to parallel sub-agents on round one — tune the prompt on Alex's edits first:
+
+1. **Sample 1 — inline.** Draft ONE person's variants with the current prompt and present it.
+   Alex's edits are signal: fold every correction back into the working prompt (pattern choice,
+   question shape, what to cut) before touching person two.
+2. **Batch of 10 — inline.** Draft the next ten with the tuned prompt. Edits come back → fold
+   them in and run the next batch. Zero edits → that round counts toward the lock.
+3. **Lock after 2 consecutive zero-edit rounds.** When two rounds in a row come back with no
+   edits, the prompt is LOCKED — stop tuning it; further prompt changes are drift, not improvement.
+4. **Then fan out.** The remaining people are drafted by parallel Task-tool sub-agents (Claude
+   Code sub-agents — never an external Anthropic/OpenAI API key), each running the SAME locked
+   prompt. Sub-agents draft only: every result still flows through the P1 gates above
+   (Evidence-Set citation, 200-char cap, rubric ≥80) and the normal Step 4 HITL presentation —
+   nothing ships without Alex.
+
+**The first 1 + 10 always run inline.** Never fan out before Alex has edited (or zero-edited) at
+least one sample and one batch — the lock cannot exist without his edits in the loop.
+
+Worked fixture (fictional names, a 41-speaker showcase):
+
+| Round | Who | Inline or sub-agent | Alex's edits | Prompt state |
+|---|---|---|---|---|
+| 1 | 1 person (Dana Okafor, Northbeam Analytics) | inline | 2 — kill the praise opener; name the session title | tuned |
+| 2 | next 10 | inline | 1 — Variant B cites a post, not the abstract | tuned |
+| 3 | next 10 | inline | 0 | zero-edit round 1 |
+| 4 | next 10 | inline | 0 | **LOCKED** (2 consecutive zero-edit rounds) |
+| 5 | remaining 10 | parallel sub-agents | HITL presentation, as always | locked prompt |
+
+> Source: `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md` §3 row 5 (approval-loop
+> tuning: sample 1 → batch of 10 → edits → repeat; lock after 2 zero-edit rounds, then parallel
+> Task sub-agents) and §2 rule 6 (Claude Code sub-agents, never an external API key).
+
 ### Presentation Format
 
 Present variants grouped by person:
@@ -452,6 +488,7 @@ Suggestion: [what kind of signal would unlock this]
 - Specific person-signal is cited (not just "your work at [Company]")
 - **Source-check (added 2026-05-26):** any claim about the person's or their firm's thesis/positioning is source-backed — don't assert an unverified brief claim in a note the person may read
 - **Cites its Evidence-Set source (added 2026-10-31, Eric P1):** each variant names the Evidence-Set URL + person/topic block it was built from; a variant with no cited source has an EMPTY field (never "N/A" or a hedge) and nothing ships — gate: `python3 .claude/scripts/test_variant_signal_gate.py`
+- **Fan-out discipline (added 2026-10-31, Eric P5):** multi-speaker runs go sample 1 → batch of 10 → prompt LOCKS after 2 consecutive zero-edit rounds → only then do remaining people fan out to parallel sub-agents; the first 1 + 10 always run inline (see the approval-loop section above)
 
 ---
 
