@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """variant_signal_gate.py — Eric P1 fact-before-prose + abstain-empty, as code (E-09, YED-220).
 
-The model only turns facts a structured source (a research-brief signal row) has already
-proven into prose — it never establishes a fact. Each A/B outreach variant must cite the
-signal row it was built from; with no cited signal the variant field is the EMPTY STRING
-and nothing ships. Abstain is "", never "N/A", never a hedge. Dates, counts, and enums
-are computed in code from the row's machine values.
+The model only turns facts a structured source has already proven into prose — it never
+establishes a fact. Each A/B outreach variant must cite its signal: the **source URL from
+the research brief's Evidence Set** (the URL-carrying evidence ledger, per event-research
+Step 3 / ADR-5), plus the person/topic block it sits in. With no cited signal the variant
+field is the EMPTY STRING and nothing ships. Abstain is "", never "N/A", never a hedge.
+Dates, counts, and enums are computed in code from the source's machine values.
+
+The cited anchor is verifiable: `gate_variant` checks that the cited URL appears in the
+brief's Evidence Set — the same source-check discipline the output evaluator applies to
+claims. An invented citation fails the gate exactly like a missing one.
 
 Source: docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md §3 row 1
-(coldoutboundskills `clay-playbooks/SKILL.md` rules 2–4).
+(coldoutboundskills `clay-playbooks/SKILL.md` rules 2–4). Citation scheme re-pointed from
+row ids to Evidence-Set URLs per Alex's PR #243 second-look review (briefs are Notion
+pages with sections, not rows with ids — a row-id scheme would force invented citations).
 
 Offline proof: python3 .claude/scripts/test_variant_signal_gate.py
 Selftest:      python3 .claude/scripts/variant_signal_gate.py --selftest
@@ -36,44 +43,54 @@ def is_hedge(value):
     return v in HEDGES
 
 
-def gate_variant(text, signal_row_id, signal_rows):
-    """Verdict for one variant field against the structured source rows.
-
-    signal_rows: iterable of dicts, each with an "id" key (the structured source the
-    model may turn into prose). Returns {"verdict", "reason"}:
-
-    - "ship":    cites a known row and carries prose built from it
-    - "abstain": no cited row and the field is the empty string — correct; ships empty
-    - "fail":    no cited row but the field carries prose or a hedge (nothing ships);
-                 or cites a row while the field is empty (citation without output)
-    """
+def evidence_urls(evidence_set):
+    """The set of Evidence-Set URLs a variant may cite. Rows are the brief's URL-carrying
+    evidence ledger (dicts with a "url" key; may also carry tier/source/date)."""
     try:
-        rows = {r["id"] for r in signal_rows}
+        return {r["url"] for r in evidence_set}
     except (TypeError, KeyError) as e:
-        raise ValueError(f"signal_rows must be dicts with an 'id' key: {e}") from e
-    cited = signal_row_id in rows  # None is never a row id
+        raise ValueError(f"evidence_set must be dicts with a 'url' key: {e}") from e
+
+
+def gate_variant(text, source_url, evidence_set):
+    """Verdict for one variant field against the brief's Evidence Set.
+
+    source_url: the Evidence-Set URL the variant was built from (the citation anchor),
+    evidence_set: iterable of Evidence-Set row dicts. Returns {"verdict", "reason"}:
+
+    - "ship":    cites a URL present in the Evidence Set and carries prose built from it
+    - "abstain": no cited URL and the field is the empty string — correct; ships empty
+    - "fail":    no cited URL but the field carries prose or a hedge (nothing ships);
+                 cites a URL while the field is empty (citation without output); or cites
+                 a URL that is NOT in the Evidence Set — an invented citation is worse
+                 than no citation
+    """
+    cited = source_url in evidence_urls(evidence_set)  # None is never an Evidence-Set URL
     if cited:
         if text is None or text.strip() == "":
             return {"verdict": "fail",
-                    "reason": f"cites row {signal_row_id!r} but the field is empty — build the prose from the row, or drop the citation and abstain"}
-        return {"verdict": "ship", "reason": f"prose built from cited row {signal_row_id!r}"}
+                    "reason": f"cites {source_url!r} but the field is empty — build the prose from the cited source, or drop the citation and abstain"}
+        if is_hedge(text):
+            return {"verdict": "fail",
+                    "reason": f"hedge {text!r} with a citation is still nothing shipped — abstain is the empty string"}
+        return {"verdict": "ship", "reason": f"prose built from cited Evidence-Set source {source_url!r}"}
     if text is None or text.strip() == "":
         return {"verdict": "abstain",
-                "reason": "no cited signal row and the field is the empty string — nothing ships (correct abstain)"}
+                "reason": "no cited Evidence-Set source and the field is the empty string — nothing ships (correct abstain)"}
     if is_hedge(text):
         return {"verdict": "fail",
                 "reason": f"hedge {text!r} masquerading as an abstain — abstain is the empty string"}
     return {"verdict": "fail",
-            "reason": "prose with no cited signal row — the model never establishes a fact; nothing ships"}
+            "reason": "prose with no cited Evidence-Set source — the model never establishes a fact; nothing ships"}
 
 
-def run_variants(variants, signal_rows):
-    """Gate a batch of variants. Each is a dict {field, text, signal_row}; returns
-    [{field, signal_row, verdict, reason}] in input order."""
+def run_variants(variants, evidence_set):
+    """Gate a batch of variants. Each is a dict {field, text, source_url}; returns
+    [{field, source_url, verdict, reason}] in input order."""
     results = []
     for v in variants:
-        res = gate_variant(v["text"], v["signal_row"], signal_rows)
-        results.append({"field": v["field"], "signal_row": v["signal_row"], **res})
+        res = gate_variant(v["text"], v["source_url"], evidence_set)
+        results.append({"field": v["field"], "source_url": v["source_url"], **res})
     return results
 
 
@@ -113,18 +130,22 @@ def fmt_enum(value, allowed, label="enum"):
 _NUM_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 
 
-def unverified_numbers(text, row):
-    """Numbers stated in prose that the cited row does not back.
+def unverified_numbers(text, source_row):
+    """Numbers stated in prose that the cited source does not back.
 
     The executable half of fact-before-prose: every number in a variant's prose must
-    trace to a machine value in its cited row (as a number, or as a substring of one of
-    the row's string values — "70" traces to "70% of pilots die"). Returns the list of
-    untraced number tokens; empty list = every number is sourced. Generators run this
-    before shipping; the presentation channel's own constants (e.g. the 200-char cap)
-    are the caller's business and never pass through here.
+    trace to a machine value in its cited Evidence-Set row (as a number, or as a
+    substring of one of the row's string values — "70" traces to "70% of pilots die").
+    The row's citation keys ("url", "id") never back numbers: a URL is the anchor, not a
+    fact — its digits cannot legitimize prose. Returns the list of untraced number
+    tokens; empty list = every number is sourced. Generators run this before shipping;
+    the presentation channel's own constants (e.g. the 200-char cap) are the caller's
+    business and never pass through here.
     """
     backed = set()
-    for v in (row.values() if isinstance(row, dict) else [row]):
+    for k, v in (source_row.items() if isinstance(source_row, dict) else [(None, source_row)]):
+        if k in ("url", "id"):
+            continue
         if isinstance(v, bool):
             continue
         if isinstance(v, (int, float)):
@@ -147,23 +168,34 @@ def _is_decimal(tok):
 # --- selftest -------------------------------------------------------------
 
 def _selftest():
-    rows = [{"id": "sig-001", "fact": "Keynote at SignalFest on agent evaluation"},
-            {"id": "sig-002", "fact": "Posted that 70% of agent pilots die before production"}]
+    evidence = [
+        {"url": "https://example.com/dana-agent-keynote",
+         "source": "SignalFest keynote abstract",
+         "block": "Dana Okafor — person block",
+         "fact": "Keynote on evaluation-driven agent rollouts", "date": "2026-11-12"},
+        {"url": "https://example.com/dana-pilots-post",
+         "source": "LinkedIn post",
+         "block": "Dana Okafor — person block",
+         "fact": "70% of agent pilots die before production", "date": "2026-10-20"},
+    ]
     cases = [
-        ("zero cited rows + prose → fail", "fail",
-         gate_variant("Great keynote!", None, rows)["verdict"]),
-        ("zero cited rows + empty → abstain", "abstain",
-         gate_variant(EMPTY, None, rows)["verdict"]),
-        ("zero cited rows + hedge → fail", "fail",
-         gate_variant("N/A", None, rows)["verdict"]),
+        ("no cited source + prose → fail", "fail",
+         gate_variant("Great keynote!", None, evidence)["verdict"]),
+        ("no cited source + empty → abstain", "abstain",
+         gate_variant(EMPTY, None, evidence)["verdict"]),
+        ("no cited source + hedge → fail", "fail",
+         gate_variant("N/A", None, evidence)["verdict"]),
         ("hedge dash rejected", "fail",
-         gate_variant("—", None, rows)["verdict"]),
-        ("valid citation + prose → ship", "ship",
-         gate_variant("Your SignalFest keynote on agent evaluation — does it survive contact with production?", "sig-001", rows)["verdict"]),
-        ("unknown row id + prose → fail", "fail",
-         gate_variant("prose", "sig-999", rows)["verdict"]),
-        ("citation + empty field → fail", "fail",
-         gate_variant(EMPTY, "sig-001", rows)["verdict"]),
+         gate_variant("—", None, evidence)["verdict"]),
+        ("cited Evidence-Set URL + prose → ship", "ship",
+         gate_variant("Your SignalFest keynote on agent evaluation — does it survive contact with production?",
+                      "https://example.com/dana-agent-keynote", evidence)["verdict"]),
+        ("URL not in the Evidence Set → fail", "fail",
+         gate_variant("prose", "https://example.com/not-in-brief", evidence)["verdict"]),
+        ("cited URL + empty field → fail", "fail",
+         gate_variant(EMPTY, "https://example.com/dana-agent-keynote", evidence)["verdict"]),
+        ("cited URL + hedge → fail", "fail",
+         gate_variant("TBD", "https://example.com/dana-agent-keynote", evidence)["verdict"]),
         ("fmt_date computes from machine value", "November 12, 2026",
          fmt_date("2026-11-12")),
         ("fmt_date absent → empty abstain", EMPTY, fmt_date(None)),
@@ -172,9 +204,12 @@ def _selftest():
         ("fmt_enum passes an allowed value", "sales_led",
          fmt_enum("sales_led", {"sales_led", "plg", "partner"}, "gtm_motion")),
         ("unverified_numbers flags an unsourced number", ["99"],
-         unverified_numbers("70% of pilots die — you said 99%", rows[1])),
+         unverified_numbers("70% of pilots die — you said 99%", evidence[1])),
         ("unverified_numbers passes a sourced number", [],
-         unverified_numbers("You posted that 70% of agent pilots die", rows[1])),
+         unverified_numbers("You posted that 70% of agent pilots die", evidence[1])),
+        ("URL digits never back prose numbers", ["4042"],
+         unverified_numbers("See unit 4042", {"url": "https://example.com/row-4042",
+                                              "fact": "no digits in this fact"})),
         ("is_hedge catches TBD", True, is_hedge("TBD")),
     ]
     ok = 0

@@ -379,9 +379,9 @@ If person-research surfaces only one Tier 1 signal (e.g., they have a talk abstr
 
 Every variant is built **from a cited signal row** in the research brief — the model only turns facts a structured source has already proven into prose; it never establishes a fact:
 
-1. Each variant records `Signal row: [research-brief row id]` in the presentation block — the row it was built from. No cited row, no variant.
+1. Each variant records `Source: [evidence-set URL] — [person/topic block]` in the presentation block — the Evidence-Set source it was built from (event-research Step 3 / ADR-5; briefs are pages with sections, not rows with ids). The gate checks the cited URL against the brief's Evidence Set, so an invented citation fails exactly like a missing one. No cited source, no variant.
 2. **No cited signal row → the variant field is the EMPTY string and nothing ships.** Not "N/A", not "unknown", not "TBD", not a dash, not a hedge sentence — empty. (The "Variant B — skipped" line in the presentation block is presentation metadata; the field itself is `""`.)
-3. **Dates, counts, and enums are computed in code** from the row's machine values, never retyped as prose.
+3. **Dates, counts, and enums are computed in code** from the source's machine values, never retyped as prose.
 4. Executable gate: `.claude/scripts/variant_signal_gate.py` (`gate_variant`) — offline proof: `python3 .claude/scripts/test_variant_signal_gate.py`.
 
 > Source: `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md` §3 row 1 (coldoutboundskills `clay-playbooks/SKILL.md` rules 2–4).
@@ -409,13 +409,13 @@ Talk/Topic: [their specific talk or the event topic]
 
 **Variant A — Talk-anchored** ([N] chars / 200 cap)
 Signal anchored: [specific moment from their talk/abstract]
-Signal row: [research-brief row id]
+Source: [evidence-set URL] — [person/topic block]
 > [full note text]
 Rubric score: [X]/100
 
 **Variant B — Adjacent-work-anchored** ([N] chars / 200 cap)
 Signal anchored: [specific recent post / podcast / work outside the talk]
-Signal row: [research-brief row id]
+Source: [evidence-set URL] — [person/topic block]
 > [full note text]
 Rubric score: [X]/100
 ```
@@ -451,7 +451,7 @@ Suggestion: [what kind of signal would unlock this]
 - Cold-email-personalization rubric score ≥80
 - Specific person-signal is cited (not just "your work at [Company]")
 - **Source-check (added 2026-05-26):** any claim about the person's or their firm's thesis/positioning is source-backed — don't assert an unverified brief claim in a note the person may read
-- **Cites its signal row (added 2026-10-31, Eric P1):** each variant names the research-brief row it was built from; a variant with no cited row has an EMPTY field (never "N/A" or a hedge) and nothing ships — gate: `python3 .claude/scripts/test_variant_signal_gate.py`
+- **Cites its Evidence-Set source (added 2026-10-31, Eric P1):** each variant names the Evidence-Set URL + person/topic block it was built from; a variant with no cited source has an EMPTY field (never "N/A" or a hedge) and nothing ships — gate: `python3 .claude/scripts/test_variant_signal_gate.py`
 
 ---
 

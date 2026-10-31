@@ -121,14 +121,18 @@ The two variants must NOT be reworded versions of the same idea. They must be an
 The model only turns facts a structured source has already proven into prose. It never establishes
 a fact.
 
-1. **Every variant cites its signal row.** A variant is built FROM a specific research row, and says
-   which: `Signal row: [row id]` in the presentation block. No cited row, no variant.
+1. **Every variant cites its Evidence-Set source.** A variant is built FROM a specific source in the
+   research brief's Evidence Set (event-research Step 3 / ADR-5 — the URL-carrying evidence ledger;
+   briefs are Notion pages with sections, not rows with ids), and says which: `Source: [evidence-set
+   URL] — [person/topic block]` in the presentation block. The gate checks the cited URL against the
+   brief's Evidence Set — an invented citation fails exactly like a missing one. No cited source, no
+   variant.
 2. **No cited signal → the variant field is EMPTY and nothing ships.** The abstain is the empty
    string — never "N/A", never "unknown", never "TBD", never a dash, never a hedge sentence. (The
    "Variant B — skipped" line in the presentation block is presentation metadata about the skip;
    the variant field itself is empty.)
-3. **Dates, counts, and enums are computed in code** — rendered from the row's machine values by a
-   formatter, never retyped by hand into prose.
+3. **Dates, counts, and enums are computed in code** — rendered from the source's machine values
+   by a formatter, never retyped by hand into prose.
 
 Executable gate: `.claude/scripts/variant_signal_gate.py` (`gate_variant`); offline proof:
 `python3 .claude/scripts/test_variant_signal_gate.py`.
