@@ -27,7 +27,43 @@ For each artifact:
 - **`hybrid`** → pull both.
 
 ## Step 3 — Grade Outcome vs Target (HITL)
-Propose: **`hit`** (met/exceeded Target) · **`partial`** (real outcome, below Target) · **`miss`** (no meaningful outcome) · **`pending`** (not yet observable — leave it). Show the reasoning vs the Target; **Alex confirms or overrides** before writing.
+Propose: **`hit`** (met/exceeded Target) · **`partial`** (real outcome, below Target) · **`miss`** (no meaningful outcome) · **`pending`** (not yet observable — leave it). Show the reasoning vs the Target; **Alex confirms or overrides** before writing. For `connection` / `meeting` goals, grade the underlying replies with the 11-label taxonomy below; the Outcome grade draws on it.
+
+## Reply taxonomy — grading `connection` / `meeting` responses (E-09 / Eric P3, YED-220)
+
+Each response to a sent connection note or DM is classified into exactly **one** of 11 labels (classify the **first reply per person** only — later messages are the conversation, not the signal):
+
+| Label | Meaning | Positive? |
+|---|---|---|
+| `positive_interested` | "Yes, tell me more" / booked | ✅ |
+| `positive_soft` | "Send more info" / "reach out in Q3" | ✅ |
+| `positive_referral` | "Not me, but talk to X" | ✅ (referral is high-value) |
+| `neutral_question` | A question, no commitment yet | ❌ |
+| `negative_notnow` | "Not right now, maybe later" | ❌ |
+| `negative_notfit` | "Not a fit" / "we don't need this" | ❌ |
+| `negative_hostile` | Angry reply, complaint | ❌ — **track separately as a risk signal** |
+| `no_response` | No reply within the observation window | ❌ |
+| `ooo` | Out-of-office auto-reply | ❌ — **excluded from the denominator** |
+| `bounce` | Delivery failure (email lane) | ❌ — **excluded from the denominator** |
+| `other` | Can't tell (below classification confidence) | ❌ |
+
+**Outcome Value = positives ÷ sent, recorded alongside its null baseline (YED-212).** `positives` = `positive_interested + positive_soft + positive_referral`; the denominator is `sent − ooo − bounce` (auto-replies and bounces are not real replies). Record **both** the rate **and** the do-nothing baseline it is judged against — a metric without its baseline is not a metric (CLAUDE.md §5):
+
+`"[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing)"`
+
+**The null baseline lives in `.claude/references/value-action-registry.md`** — a private, registered reference; read it by path in Alex's session, never copy it into fixtures, tests or committed output. Pull the baseline for the action type from the registry row; if the registry has no row for it, record `baseline: none in registry` and surface the gap at close-out. **Never invent a baseline.**
+
+### Registry update (happens in Alex's session — not in a PR)
+The registry is private, so this skill only specifies the row to add; Alex edits the file in his session:
+
+| Action type | Metric | Null-baseline method | Source |
+|---|---|---|---|
+| `connection_note` (LinkedIn) | positive reply rate = positives ÷ sent | the measured do-nothing reply base rate for that action type, observed before/without the intervention | registry row, dated |
+| `linkedin_dm` (follow-up DM) | same | same method | registry row, dated |
+
+Worked fixture example (fictional end to end): `.claude/skills/tag-outcome/fixtures/reply-grading-fixture.md`.
+
+**Provenance + adaptation note:** the taxonomy and the positives-÷-sent metric are adapted from Eric Nowoslawski's `positive-reply-scoring` skill (`coldoutboundskills`), harvested in `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md` §3 row 3. One adaptation: the source's `unsubscribe` label (email opt-out at campaign scale) does not occur in 1:1 connection-note/DM outreach; `no_response` takes its slot — silence is the dominant outcome for a sent note, and the denominator needs an explicit home for it. The source's other rules are kept verbatim: hostile replies tracked as a risk signal, ooo/bounce excluded from the denominator, first-reply-only classification.
 
 ## Step 4 — Write back to the artifact
 `notion-update-page` on the artifact row:
@@ -46,5 +82,6 @@ Summarize: hit / partial / miss / still-pending counts, and any trend vs prior r
 
 ## Reuses / references
 - Assigned-goal side: `.claude/skills/content-patterns/goal-tagging.md`. Schema: `.claude/references/notion-schema.md` (Content Drafts).
+- Null baselines for outreach metrics: `.claude/references/value-action-registry.md` (private; the null-baseline rule is CLAUDE.md §5, YED-212).
 - Tools: `notion-search`/`notion-fetch`/`notion-update-page`, `mcp__claude_ai_HubSpot__search_crm_objects` (+ `get_crm_objects`).
 - Downstream: the north-star renders in the Empire State Hub dashboard (US-6); this ritual nests in the weekly review (US-7).

@@ -103,6 +103,7 @@ eleven_scribe_v2.json
 # Personal data — kept on disk for the skills that read them, never tracked (purged from history 2026-09-16)
 .claude/references/me-model.md
 .claude/references/target-companies.md
+.claude/references/value-action-registry.md
 .claude/references/inbox-allowlist.md
 .claude/references/inbox-denylist.md
 .claude/artifacts/inbox-discovery-*.md
