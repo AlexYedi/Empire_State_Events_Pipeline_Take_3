@@ -27,6 +27,7 @@ checkout, 2026-10-30. Python 3.13 stdlib unless a run line says otherwise.
 | `spine_write.py` | CLI front door to the guarded spine write path (ADR-9) — commands and skills call this instead of hand-rolling curl. | `python3 .claude/scripts/spine_write.py TABLE [--json J\|--stdin] [--patch F] [--dry-run]` | none |
 | `substrate.py` | The ONE producer library for the Knowledge Substrate (ADR-10, YED-160/169). | `python3 .claude/scripts/substrate.py [--evidence F] [--table …] [--from …] [--into …] [--dry-run] [--json]` | `python3 .claude/scripts/substrate.py --selftest` (133/133) |
 | `test_dispatch_record.py` | Offline regression for `dispatch_record.py` — synthetic transcripts only; pins the stale-attribution bug. | `python3 .claude/scripts/test_dispatch_record.py [path/to/dispatch_record.py]` | is itself a test (13/13; run directly, not via unittest discover) |
+| `test_mock_interviewer.py` | Offline convention checks for the mock-interviewer skill (E-09, YED-256): no-Notion-tool guard over the skill and its fixtures, fixture completeness (3 rounds × transcript/scoresheet/debrief + session debrief), scoresheet contract (7 dimensions, 1–5 range, evidence quoted verbatim from the transcript, rewrites at ≤2), privacy grep gate. | `python3 .claude/scripts/test_mock_interviewer.py` | `--selftest` (66/66: harness self-checks + full convention checks) |
 
 ## CI
 
