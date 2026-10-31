@@ -19,7 +19,6 @@ build judge is **one Sonnet reviewer that raises flags**: design `.claude/refere
 | `post-event-brief-template-evidence.md` | brief-template evidence, still cited by `/post-event-content` |
 | `test_judge_lib.py` · `test_judge_e2e.py` · `test_bundle_multifile.py` · `test_null_baseline.py` | offline, free; run all four (`python3 .claude/evals/test_<name>.py` from the repo root) before changing any of the above |
 | `test_event_claim.py` | the `event-claim.py` hook's tests (not the judge) |
-| `test_tag_outcome_taxonomy.py` | the tag-outcome reply-taxonomy convention checks (E-09 / Eric P3): 11 labels, positives ÷ sent alongside the null baseline, fixture arithmetic, privacy gates |
 
 ## Run-log rows
 Reviewer row (written by `seat-log.py`):

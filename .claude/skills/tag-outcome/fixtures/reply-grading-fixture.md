@@ -1,9 +1,9 @@
 # Worked fixture — reply grading for a `connection` goal (fictional)
 
 **Everything here is fictional** — people, companies, replies and numbers are invented for the
-fixture. A real tagging run reads the live null baseline from
-`.claude/references/value-action-registry.md` (private, by path, in Alex's session); this fixture
-never copies registry content and its baseline value is a placeholder demonstrating the *shape*.
+fixture. A real tagging run records the do-nothing baseline with the outcome itself (three
+fields in the Outcome Value line — see SKILL.md); this fixture's baseline values are labeled
+placeholders demonstrating the *shape*, never real measurements.
 
 Content artifact: a fictional speaker DM (`linkedin_dm_speaker` type) from the fictional event
 "Harbor City AI Builders Night" (2026-08-19, fictional). Goal = `connection`, Target = "1 accepted
@@ -37,15 +37,18 @@ Content artifact: a fictional speaker DM (`linkedin_dm_speaker` type) from the f
 ## Step 4 — Outcome Value line (both halves, per YED-212)
 
 ```
-[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing)
+[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing; method: measured do-nothing reply rate for connection_note; 2026-08-01→08-15)
 ```
 
-The `5%` is the **fictional fixture placeholder**. In a real run the number comes from the
-registry row for the action type (`connection_note`); if no row exists, record
-`baseline: none in registry` and surface the gap — never invent the baseline.
+The `5%`, its method and its date range are the **fictional fixture placeholders**. In a real run
+the three baseline fields are real: `null_baseline` = the do-nothing rate for the action type,
+`baseline_method` = how it was established, `baseline_date` = when it was measured. If no baseline
+has been established yet, record `null_baseline: none` and surface the gap — never invent one.
 
-## Registry row this fixture would produce (Alex's session, private file)
+## Baseline fields this fixture demonstrates
 
-| Action type | Metric | Null-baseline method | Source |
-|---|---|---|---|
-| `connection_note` (LinkedIn) | positive reply rate = positives ÷ sent | the measured do-nothing reply base rate for that action type, observed before/without the intervention | registry row, dated |
+| Field | Fixture (fictional) value | What a real run records |
+|---|---|---|
+| `null_baseline` | 5% | the measured do-nothing reply rate for `connection_note` |
+| `baseline_method` | do-nothing | how it was established (e.g. measured reply base rate without the intervention) |
+| `baseline_date` | 2026-08-01→08-15 | when it was measured |

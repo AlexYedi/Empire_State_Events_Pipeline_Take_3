@@ -47,19 +47,15 @@ Each response to a sent connection note or DM is classified into exactly **one**
 | `bounce` | Delivery failure (email lane) | ❌ — **excluded from the denominator** |
 | `other` | Can't tell (below classification confidence) | ❌ |
 
-**Outcome Value = positives ÷ sent, recorded alongside its null baseline (YED-212).** `positives` = `positive_interested + positive_soft + positive_referral`; the denominator is `sent − ooo − bounce` (auto-replies and bounces are not real replies). Record **both** the rate **and** the do-nothing baseline it is judged against — a metric without its baseline is not a metric (CLAUDE.md §5):
+**Outcome Value = positives ÷ sent, recorded alongside its null baseline (YED-212).** `positives` = `positive_interested + positive_soft + positive_referral`; the denominator is `sent − ooo − bounce` (auto-replies and bounces are not real replies). Record **both** the rate **and** the do-nothing baseline it is judged against — a metric without its baseline is not a metric (CLAUDE.md §5). The baseline travels with the outcome itself, as three fields in the Outcome Value line:
 
-`"[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing)"`
+- `null_baseline` — the do-nothing rate for this action type
+- `baseline_method` — how it was established (the measured do-nothing reply rate for that action type, observed before/without the intervention)
+- `baseline_date` — when it was measured
 
-**The null baseline lives in `.claude/references/value-action-registry.md`** — a private, registered reference; read it by path in Alex's session, never copy it into fixtures, tests or committed output. Pull the baseline for the action type from the registry row; if the registry has no row for it, record `baseline: none in registry` and surface the gap at close-out. **Never invent a baseline.**
+`"[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing; method: measured do-nothing reply rate for connection_note; 2026-09-01→09-15)"`
 
-### Registry update (happens in Alex's session — not in a PR)
-The registry is private, so this skill only specifies the row to add; Alex edits the file in his session:
-
-| Action type | Metric | Null-baseline method | Source |
-|---|---|---|---|
-| `connection_note` (LinkedIn) | positive reply rate = positives ÷ sent | the measured do-nothing reply base rate for that action type, observed before/without the intervention | registry row, dated |
-| `linkedin_dm` (follow-up DM) | same | same method | registry row, dated |
+If no baseline has been established for the action type yet, record `null_baseline: none` and surface the gap at close-out — **never invent a baseline**. (The value-action registry was deliberately retired — commit 5b1b1ed; baselines live in the outcome record, not in a resurrected private file.)
 
 Worked fixture example (fictional end to end): `.claude/skills/tag-outcome/fixtures/reply-grading-fixture.md`.
 
@@ -82,6 +78,5 @@ Summarize: hit / partial / miss / still-pending counts, and any trend vs prior r
 
 ## Reuses / references
 - Assigned-goal side: `.claude/skills/content-patterns/goal-tagging.md`. Schema: `.claude/references/notion-schema.md` (Content Drafts).
-- Null baselines for outreach metrics: `.claude/references/value-action-registry.md` (private; the null-baseline rule is CLAUDE.md §5, YED-212).
 - Tools: `notion-search`/`notion-fetch`/`notion-update-page`, `mcp__claude_ai_HubSpot__search_crm_objects` (+ `get_crm_objects`).
 - Downstream: the north-star renders in the Empire State Hub dashboard (US-6); this ritual nests in the weekly review (US-7).
