@@ -61,7 +61,7 @@ def load_pg(path):
     return pg
 
 
-def run(pg):
+def run(pg, script_path):
     ok = n = 0
 
     def ck(name, cond):
@@ -120,6 +120,21 @@ def run(pg):
     ck("out-of-scope family slug: role not scored",
        r["verdict"] == "NOT_SCOREABLE" and "out_of_scope_family" in r["reasons"])
 
+    # Drift guard (PR #244 review): every IN_SCOPE_FAMILIES slug must be named in role-radar's SKILL.md
+    # (THE FIVE SHAPES carries each shape's slug). The script gates the slug; the skill defines the shape —
+    # if either side renames, this fails loudly instead of the run-time guess ending in a silent Drop.
+    skill_md = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(script_path)),
+                                             "..", "skills", "role-radar", "SKILL.md"))
+    try:
+        with open(skill_md, encoding="utf-8") as fh:
+            skill_text = fh.read()
+    except OSError as exc:
+        ck(f"role-radar SKILL.md readable at {skill_md}", False)
+        print(f"    ({exc})")
+    else:
+        ck("every gate slug is named in role-radar SKILL.md (no drift)",
+           all(slug in skill_text for slug in pg.IN_SCOPE_FAMILIES))
+
     # Whole-phrase precision: stems and compounds across word boundaries never match.
     r = gated(P_STEM_TRAP)
     ck("whole-phrase precision: 'expansionary'/'reexpansion' never match",
@@ -164,7 +179,7 @@ def main(argv):
                     help="path to phrase_gate.py (default: alongside this test)")
     ap.add_argument("--selftest", action="store_true", help="accepted for the CI selftests loop; runs the suite")
     a = ap.parse_args(argv)
-    return run(load_pg(a.script))
+    return run(load_pg(a.script), a.script)
 
 
 if __name__ == "__main__":

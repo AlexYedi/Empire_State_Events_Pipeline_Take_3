@@ -150,10 +150,13 @@ undefined state, so no Held row and no Linear issue. **Comp verdicts still come 
 (v2.3)** — the phrase gate touches matching and preconditions only; it never reads or evaluates comp, and
 nothing here touches the comp-gate rules.
 
-> **THE FIVE SHAPES — nothing else is in scope (ruled by Alex 2026-09-24).**
-> **(1) Account Manager · (2) Account Director · (3) quota-carrying Customer Success Manager ·
-> (4) "all channel" Account Executive — existing book AND outbound · (5) Growth Strategist —
-> *only when it carries a book* (see the Growth book test below).**
+> **THE FIVE SHAPES — nothing else is in scope (ruled by Alex 2026-09-24). The slug next to each
+> shape is the `--family` value `phrase_gate.py` requires (Step 3 preconditions above); a slug
+> outside these five is out of scope by construction.**
+> **(1) Account Manager — slug `account-manager` · (2) Account Director — slug `account-director` ·
+> (3) quota-carrying Customer Success Manager — slug `quota-csm` · (4) "all channel" Account
+> Executive — existing book AND outbound — slug `all-channel-ae` · (5) Growth Strategist —
+> *only when it carries a book* — slug `growth-strategist` (see the Growth book test below).**
 >
 > **(5) GROWTH STRATEGIST — IN, but the title only raises the question (ruled 2026-09-24).** Alex:
 > *"growth strategist should be kept, but it is tough to keep up with all of the fun names that
