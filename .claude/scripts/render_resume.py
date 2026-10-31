@@ -12,11 +12,10 @@ The deterministic half of /tailor-resume, so a resume can't "look done" and stil
   4. rules — the seven locked content rules (Blueprint region "tailor-resume") are checked
      offline on the rendered HTML before anything is printed.
 
-An offline `--selftest` (template + content rules + path guard, no Chrome) lands in the
-following commit — that is the CI-exercised path. The Chrome render is exercised in-session
-where Chrome exists (same split as render_carousel.py, E-07): its chrome() probe targets
-macOS paths, so on the Linux sandbox the print step reports the miss instead of
-half-rendering.
+The offline `--selftest` exercises the template, the content rules and the path guard with no
+Chrome — that is the CI-exercised path. The Chrome render is exercised in-session where Chrome
+exists (same split as render_carousel.py, E-07): its chrome() probe targets macOS paths, so on
+the Linux sandbox the print step reports the miss instead of half-rendering.
 
 Usage: render_resume.py <me-model-or-fixture.md> [--mode general|posting-tailored]
                        [--out .claude/output/resume.pdf] [--jd posting.txt]
@@ -180,16 +179,117 @@ def check_reading_order(html: str) -> list:
     return []
 
 
+# ---- selftest: template + rules + path guard, no Chrome (the CI-exercised path) ------------
+FIXTURE = os.path.join(SCRIPTS, os.pardir, "skills", "tailor-resume", "fixtures",
+                       "me-model-fixture.md")
+
+GOOD_FIXTURE = """# Jordan Avery Ellis
+
+Positioning: Quota-carrying post-sales account executive who grew a book of business at
+two workflow-software companies; hunting wins are proof of account growth, not a side job.
+
+## Experience
+### Senior Account Executive — Meridian Workflow Systems (2024-Present)
+- Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).
+- Grew the average contract value 2.3x by attaching onboarding to every renewal save.
+
+## Key accounts
+Meridian Workflow Systems, Northwind Analytics Co (fictional), Beacon Sheets Ltd (fictional)
+
+## Proof links
+- https://github.com/jaellis-fixture/resume-proof-fixture
+- https://empire-state-hub.example/builds
+"""
+
+
+def selftest() -> int:
+    checks = []
+
+    def case(name, ok):
+        checks.append((name, ok))
+
+    # The committed fixture parses, renders, and passes every locked rule.
+    me = parse_me_model(FIXTURE) if os.path.exists(FIXTURE) else parse_me_model_str(GOOD_FIXTURE)
+    html = build_resume_html(me)
+    case("fixture renders all sections",
+         all([me["name"], me["positioning"], me["roles"], me["key_accounts"], me["proof_links"]]))
+    case("fixture passes all locked content rules", check_content_rules(html) == [])
+    case("reading order name→positioning→roles→Key accounts", check_reading_order(html) == [])
+
+    # Rule 1: a positioning line that doesn't lead with quota-carrying post-sales fails.
+    bad = build_resume_html({**me, "positioning": "Customer success leader with deep renewals focus."})
+    case("rule 1 catches non-quota-lead positioning",
+         any(r.startswith("rule 1") for r in check_content_rules(bad)))
+
+    # Rule 3: a vertical-territory label in a title fails.
+    tilted = html.replace("Senior Account Executive", "Financial Services Account Executive")
+    case("rule 3 catches vertical label in title",
+         any(r.startswith("rule 3") for r in check_content_rules(tilted)))
+
+    # Rule 4: a bare GitHub profile link fails; a specific repo passes.
+    bare = html.replace("https://github.com/jaellis-fixture/resume-proof-fixture",
+                        "https://github.com/jaellis-fixture")
+    case("rule 4 catches bare GitHub profile link",
+         any(r.startswith("rule 4") for r in check_content_rules(bare)))
+
+    # Rule 6: the gitignored private-input filenames never appear in committed text.
+    case("rule 6 catches private-input filename in output",
+         any(r.startswith("rule 6") for r in check_content_rules(html, "see me-model.md")))
+
+    # Rule 7 / addition 3: the writer refuses any path outside .claude/output/.
+    for bad_path in ("/tmp/resume.pdf", "./resume.pdf",
+                     os.path.join(OUTPUT_DIR, os.pardir, "resume.pdf")):
+        refused = False
+        try:
+            resolve_output_path(bad_path)
+        except SystemExit:
+            refused = True
+        case(f"path guard refuses {os.path.basename(os.path.dirname(bad_path)) or bad_path}",
+             refused)
+    allowed = resolve_output_path(os.path.join(OUTPUT_DIR, "resume.pdf"))
+    case("path guard allows .claude/output/resume.pdf", allowed == os.path.join(OUTPUT_DIR, "resume.pdf"))
+    nested = resolve_output_path(os.path.join(OUTPUT_DIR, "sub", "resume.pdf"))
+    case("path guard allows nested path under .claude/output/", nested.endswith("sub/resume.pdf"))
+    alias = resolve_output_path(os.path.join(OUTPUT_DIR, os.pardir, "output", "resume.pdf"))
+    case("path guard resolves ../output alias back into .claude/output/",
+         alias == os.path.join(OUTPUT_DIR, "resume.pdf"))
+
+    # Both modes render offline (PR A stub: identical locked template, mode is metadata).
+    case("both modes render without Chrome",
+         all(build_resume_html(me, m) for m in ("general", "posting-tailored")))
+
+    fails = [n for n, ok in checks if not ok]
+    for n, ok in checks:
+        print(f"  {'ok  ' if ok else 'FAIL'} {n}")
+    print(f"selftest: {len(checks) - len(fails)}/{len(checks)} render-resume cases pass")
+    return 0 if not fails else 1
+
+
+def parse_me_model_str(text: str) -> dict:
+    """Selftest shim: parse the inline GOOD_FIXTURE without touching disk."""
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
+        fh.write(text)
+        tmp = fh.name
+    try:
+        return parse_me_model(tmp)
+    finally:
+        os.remove(tmp)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("source", nargs="?", help="path to me-model.md or a me-model-shaped fixture")
     ap.add_argument("--mode", choices=("general", "posting-tailored"), default="general")
     ap.add_argument("--out", default=os.path.join(OUTPUT_DIR, "resume.pdf"))
     ap.add_argument("--jd", help="pasted JD text file (posting-tailored reweighting; PR B)")
+    ap.add_argument("--selftest", action="store_true", help="offline template+rules+guard checks, no Chrome")
     a = ap.parse_args()
 
+    if a.selftest:
+        return selftest()
     if not a.source:
-        ap.error("a me-model source path is required")
+        ap.error("a me-model source path is required (or run --selftest)")
 
     with open(a.source, encoding="utf-8") as fh:
         source_text = fh.read()
