@@ -1,0 +1,45 @@
+{
+  "name": "Jordan Avery Ellis",
+  "positioning": "Quota-carrying post-sales account executive who grew a book of business at two workflow-software companies; hunting wins are proof of account growth, not a side job.",
+  "roles": [
+    {
+      "title": "Senior Account Executive",
+      "company": "Meridian Workflow Systems",
+      "dates": "2024-Present",
+      "bullets": [
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: experience section, Meridian quota bullet (fictional)"
+        },
+        {
+          "text": "Grew the average contract value 2.3x by attaching onboarding to every renewal save.",
+          "source": "fixture: experience section, Meridian ACV bullet (fictional)"
+        }
+      ]
+    },
+    {
+      "title": "Account Executive",
+      "company": "Northwind Analytics Co (fictional)",
+      "dates": "2021-2024",
+      "bullets": [
+        {
+          "text": "Closed $860K of new and expansion revenue in a two-rep territory (proof of account growth).",
+          "source": "fixture: experience section, Northwind revenue bullet (fictional)"
+        },
+        {
+          "text": "Turned a stalled pilot into the account's first multi-team rollout.",
+          "source": "fixture: experience section, Northwind pilot bullet (fictional)"
+        }
+      ]
+    }
+  ],
+  "key_accounts": [
+    "Meridian Workflow Systems",
+    "Northwind Analytics Co (fictional)",
+    "Beacon Sheets Ltd (fictional)"
+  ],
+  "proof_links": [
+    "https://github.com/jaellis-fixture/resume-proof-fixture",
+    "https://empire-state-hub.example/builds"
+  ]
+}
