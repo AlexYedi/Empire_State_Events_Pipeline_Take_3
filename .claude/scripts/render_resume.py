@@ -328,15 +328,32 @@ def verify_proof_links(links: list, timeout: int = 10) -> list:
 
 
 # ---- PDF gate (PR B): one page + pdftotext reading order — exit code gates the run ----------
+def _squash(s: str) -> str:
+    """Lowercase alphanumerics only — immune to line breaks, hyphenation and spacing."""
+    return re.sub(r"[^a-z0-9]+", "", s.lower())
+
+
 def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
-    """Pure check on extracted text: name → positioning → role titles in order → Key accounts."""
-    flat = " ".join(pdf_text.split())
-    marks = [me["name"], " ".join(me["positioning"].split())] \
+    """Pure check on extracted text: name → positioning → role titles in order → Key accounts.
+
+    Matches on squashed text: pdftotext breaks lines mid-word at hyphens
+    ("workflow-software" extracts as "workflowsoftware"), so exact substring
+    matching on raw text would false-fail a perfectly ordered PDF.
+    """
+    flat = _squash(pdf_text)
+    marks = [me["name"], me["positioning"]] \
         + [r["title"] for r in me["roles"]] + ["Key accounts"]
-    positions = [flat.find(" ".join(m.split())) for m in marks]
-    if any(p == -1 for p in positions) or positions != sorted(positions):
-        return ["reading order broken in PDF text: expected name → positioning → "
-                "roles in order → Key accounts"]
+    # Monotonic search: each marker must appear AFTER the previous marker's position.
+    # Plain find() would match a later marker inside earlier prose — "Account Executive"
+    # occurs inside the positioning line "quota-carrying post-sales account executive".
+    cursor = 0
+    for m in marks:
+        found = flat.find(_squash(m), cursor)
+        if found == -1:
+            return ["reading order broken in PDF text: expected name → positioning → "
+                    "roles in order → Key accounts (marker "
+                    f"{m[:40]!r} not found after position {cursor})"]
+        cursor = found + len(_squash(m))
     return []
 
 
@@ -448,8 +465,8 @@ def selftest() -> int:
         + " Key accounts: everything after the roles"
     case("PDF reading-order check passes on ordered text",
          pdf_reading_order_errors(good_text, me) == [])
-    scrambled = f'{me["name"]} {me["positioning"]} {me["roles"][1]["title"]} ' \
-        f'{me["roles"][0]["title"]} Key accounts'
+    scrambled = f'Key accounts first. {me["name"]} {me["positioning"]} ' \
+        + " ".join(r["title"] for r in me["roles"])
     case("PDF reading-order check catches scrambled roles",
          pdf_reading_order_errors(scrambled, me) != [])
 
