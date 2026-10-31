@@ -105,9 +105,37 @@ The `pre-event-content` skill generates **2 variants per person — Variant A an
 
 The two variants must NOT be reworded versions of the same idea. They must be anchored to genuinely different research signals, so the picker decision is "which signal lands harder for this person" rather than "which phrasing reads better."
 
-**Fallback:** if only one Tier 1 signal exists (e.g., a talk abstract but no recent adjacent work), generate only that variant and explicitly note "Variant B (or A) skipped — no [X] signal found." Never ship a Level 2 filler variant just to have two.
+**Fallback:** if only one Tier 1 signal exists (e.g., a talk abstract but no recent adjacent work), generate only that variant and explicitly note "Variant B (or A) skipped — no [X] signal found." Never ship a Level 2 filler variant just to have two. The skipped variant's field is the empty string (abstain-empty, next section) — the skip note lives in the presentation block, not in the field.
 
 **For hosts/organizers** (rather than speakers): Variant A uses Pattern 1 if they're also presenting, or Pattern 3 (host-curation angle) if they're purely organizing. Variant B uses Pattern 2 (their adjacent work).
+
+---
+
+## Fact-before-prose + abstain-empty (added 2026-10-31 — Eric P1, YED-220)
+
+> From the coldoutboundskills harvest (`docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md`
+> §3 row 1 — "The model never establishes a fact"; "Abstain is empty string. Never 'N/A', never
+> 'unknown', never a guess."). Formalizes the Level-3 bar and the no-filler fallback above as a
+> hard rule.
+
+The model only turns facts a structured source has already proven into prose. It never establishes
+a fact.
+
+1. **Every variant cites its Evidence-Set source.** A variant is built FROM a specific source in the
+   research brief's Evidence Set (event-research Step 3 / ADR-5 — the URL-carrying evidence ledger;
+   briefs are Notion pages with sections, not rows with ids), and says which: `Source: [evidence-set
+   URL] — [person/topic block]` in the presentation block. The gate checks the cited URL against the
+   brief's Evidence Set — an invented citation fails exactly like a missing one. No cited source, no
+   variant.
+2. **No cited signal → the variant field is EMPTY and nothing ships.** The abstain is the empty
+   string — never "N/A", never "unknown", never "TBD", never a dash, never a hedge sentence. (The
+   "Variant B — skipped" line in the presentation block is presentation metadata about the skip;
+   the variant field itself is empty.)
+3. **Dates, counts, and enums are computed in code** — rendered from the source's machine values
+   by a formatter, never retyped by hand into prose.
+
+Executable gate: `.claude/scripts/variant_signal_gate.py` (`gate_variant`); offline proof:
+`python3 .claude/scripts/test_variant_signal_gate.py`.
 
 ---
 
@@ -140,7 +168,7 @@ When in doubt, count.
 
 ---
 
-*Last updated: 2026-05-20*
-*Version: 0.2 — Reframed from multi-sentence DMs to 200-char connection request notes.
+*Last updated: 2026-10-31*
+*Version: 0.3 — Added the fact-before-prose + abstain-empty rule (Eric P1, YED-220).
 LinkedIn free-tier operational reality made the prior 4-6-sentence DM spec wrong; replacement
 spec optimizes for connection request acceptance on the free plan.*
