@@ -377,10 +377,10 @@ If person-research surfaces only one Tier 1 signal (e.g., they have a talk abstr
 
 ### Fact-before-prose + abstain-empty (Eric P1 — YED-220, added 2026-10-31)
 
-Every variant is built **from a cited signal row** in the research brief — the model only turns facts a structured source has already proven into prose; it never establishes a fact:
+Every variant is built **from a cited Evidence-Set source** in the research brief — the model only turns facts a structured source has already proven into prose; it never establishes a fact:
 
 1. Each variant records `Source: [evidence-set URL] — [person/topic block]` in the presentation block — the Evidence-Set source it was built from (event-research Step 3 / ADR-5; briefs are pages with sections, not rows with ids). The gate checks the cited URL against the brief's Evidence Set, so an invented citation fails exactly like a missing one. No cited source, no variant.
-2. **No cited signal row → the variant field is the EMPTY string and nothing ships.** Not "N/A", not "unknown", not "TBD", not a dash, not a hedge sentence — empty. (The "Variant B — skipped" line in the presentation block is presentation metadata; the field itself is `""`.)
+2. **No cited Evidence-Set source → the variant field is the EMPTY string and nothing ships.** Not "N/A", not "unknown", not "TBD", not a dash, not a hedge sentence — empty. (The "Variant B — skipped" line in the presentation block is presentation metadata; the field itself is `""`.)
 3. **Dates, counts, and enums are computed in code** from the source's machine values, never retyped as prose.
 4. Executable gate: `.claude/scripts/variant_signal_gate.py` (`gate_variant`) — offline proof: `python3 .claude/scripts/test_variant_signal_gate.py`.
 
@@ -420,6 +420,14 @@ out to parallel sub-agents on round one — tune the prompt on Alex's edits firs
 
 **The first 1 + 10 always run inline.** Never fan out before Alex has edited (or zero-edited) at
 least one sample and one batch — the lock cannot exist without his edits in the loop.
+
+**Autonomous and batch runs: no loop, no fan-out.** CLAUDE.md's autonomy levels run the queue to
+first-pass completion and stop only at the defined gates — there is no interactive Alex in the loop
+to edit samples. In an autonomous or batch run (e.g. `/check-new-events`), do NOT run the approval
+loop and do NOT fan out: draft every person inline with the current prompt in one pass, ship all
+variants to Notion `needs_review` as usual, and record in the run summary that the approval loop
+was not run. The loop (and any sub-agent fan-out) only happens in an interactive session with Alex
+present.
 
 Worked fixture (fictional names, a 41-speaker showcase):
 

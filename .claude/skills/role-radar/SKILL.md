@@ -286,6 +286,12 @@ backlog runs), the fan-out follows the approval-loop discipline — never on rou
 **The first 1 + 10 always run inline.** The lock is earned from Alex's edits; without them there is
 nothing to freeze.
 
+**Unattended runs: no loop, no fan-out.** If a scan or backlog run ever executes unattended (no
+Alex present to edit samples), do NOT run the approval loop and do NOT fan out — distill every JD
+inline with the current prompt in one pass and present Step 4 as usual, noting in the run summary
+that the approval loop was not run. The loop (and any sub-agent fan-out) only happens in an
+interactive session with Alex present.
+
 Worked fixture (fictional posting, a 42-JD backlog run):
 
 | Round | JDs | Inline or sub-agent | Alex's edits | Distillation prompt |
