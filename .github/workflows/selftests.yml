@@ -3,16 +3,20 @@
 # up automatically. One documented exception: inbox_boundary.py is skipped because two of its
 # live-file cases require inbox-denylist.md / inbox-allowlist.md — gitignored private inputs
 # (CLAUDE.md invariant 4) that can never exist in CI — so its selftest exits 1 here by design.
+# Skill fixture tests (.claude/skills/*/fixtures/test_*.py — offline convention checks that live
+# beside the fixtures they check, e.g. the dossier field-presence test) run in a second step.
 name: selftests
 on:
   pull_request:
     paths:
       - '.claude/scripts/**'
+      - '.claude/skills/*/fixtures/**'
       - '.github/workflows/selftests.yml'
   push:
     branches: [main]
     paths:
       - '.claude/scripts/**'
+      - '.claude/skills/*/fixtures/**'
       - '.github/workflows/selftests.yml'
 jobs:
   selftest:
@@ -33,6 +37,18 @@ jobs:
               echo "pass  $f — $(grep -o 'selftest:.*' /tmp/selftest.log | tail -1)"
             else
               echo "FAIL  $f"; tail -20 /tmp/selftest.log; failed=1
+            fi
+          done
+          exit $failed
+      - name: Run skill fixture tests
+        run: |
+          failed=0
+          for f in .claude/skills/*/fixtures/test_*.py; do
+            [ -e "$f" ] || continue
+            if python3 "$f" >/tmp/fixture-test.log 2>&1; then
+              echo "pass  $f — $(tail -1 /tmp/fixture-test.log)"
+            else
+              echo "FAIL  $f"; tail -20 /tmp/fixture-test.log; failed=1
             fi
           done
           exit $failed
