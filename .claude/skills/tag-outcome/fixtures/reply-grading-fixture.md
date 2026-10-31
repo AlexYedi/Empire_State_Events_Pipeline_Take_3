@@ -1,0 +1,51 @@
+# Worked fixture — reply grading for a `connection` goal (fictional)
+
+**Everything here is fictional** — people, companies, replies and numbers are invented for the
+fixture. A real tagging run reads the live null baseline from
+`.claude/references/value-action-registry.md` (private, by path, in Alex's session); this fixture
+never copies registry content and its baseline value is a placeholder demonstrating the *shape*.
+
+Content artifact: a fictional speaker DM (`linkedin_dm_speaker` type) from the fictional event
+"Harbor City AI Builders Night" (2026-08-19, fictional). Goal = `connection`, Target = "1 accepted
++ one reply that moves the conversation forward". 10 notes sent.
+
+## Step 2 — realized signal, graded with the 11-label taxonomy
+
+| # | Person (fictional) | Lane | First reply | Label |
+|---|---|---|---|---|
+| 1 | Dana Reyes | LinkedIn DM | "This is relevant — what times work next week?" | `positive_interested` |
+| 2 | Priya Natarajan | LinkedIn DM | "Send over the details, happy to look at it in Q3." | `positive_soft` |
+| 3 | Tom Okafor | LinkedIn DM | "Not me — you want our head of growth, Lena Marsh." | `positive_referral` |
+| 4 | Sam Whitfield | LinkedIn DM | "Appreciate it, but we're set for this year." | `negative_notfit` |
+| 5 | Ada Kowalski | Email | "Not right now — circle back next quarter." | `negative_notnow` |
+| 6 | Jules Martin | LinkedIn DM | "Why are you messaging me? Who did you say you were with?" | `negative_hostile` |
+| 7 | Robin Chen | LinkedIn DM | "I'm out of the office until the 15th." | `ooo` |
+| 8 | Mei Zhou | Email | Delivery failure (invalid address) | `bounce` |
+| 9 | Leo Brandt | LinkedIn DM | — (no reply within 21 days) | `no_response` |
+| 10 | Ana Duarte | LinkedIn DM | "What does your company actually do?" | `neutral_question` |
+
+## Step 3 — grade (HITL; numbers computed, not vibes)
+
+- **positives** = `positive_interested` (1) + `positive_soft` (1) + `positive_referral` (1) = **3**
+- **denominator** = sent (10) − `ooo` (1) − `bounce` (1) = **8**
+- **positive reply rate** = 3 ÷ 8 = **37.5%**
+- **risk signal**: `negative_hostile` = 1 of 10 sent — one annoyed contact; read it before the next
+  send to this cohort.
+- **Outcome grade proposal**: `hit` — Target "1 accepted + one reply that moves the conversation
+  forward" is met (one `positive_interested`). Alex confirms or overrides.
+
+## Step 4 — Outcome Value line (both halves, per YED-212)
+
+```
+[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing)
+```
+
+The `5%` is the **fictional fixture placeholder**. In a real run the number comes from the
+registry row for the action type (`connection_note`); if no row exists, record
+`baseline: none in registry` and surface the gap — never invent the baseline.
+
+## Registry row this fixture would produce (Alex's session, private file)
+
+| Action type | Metric | Null-baseline method | Source |
+|---|---|---|---|
+| `connection_note` (LinkedIn) | positive reply rate = positives ÷ sent | the measured do-nothing reply base rate for that action type, observed before/without the intervention | registry row, dated |
