@@ -27,7 +27,39 @@ For each artifact:
 - **`hybrid`** → pull both.
 
 ## Step 3 — Grade Outcome vs Target (HITL)
-Propose: **`hit`** (met/exceeded Target) · **`partial`** (real outcome, below Target) · **`miss`** (no meaningful outcome) · **`pending`** (not yet observable — leave it). Show the reasoning vs the Target; **Alex confirms or overrides** before writing.
+Propose: **`hit`** (met/exceeded Target) · **`partial`** (real outcome, below Target) · **`miss`** (no meaningful outcome) · **`pending`** (not yet observable — leave it). Show the reasoning vs the Target; **Alex confirms or overrides** before writing. For `connection` / `meeting` goals, grade the underlying replies with the 11-label taxonomy below; the Outcome grade draws on it.
+
+## Reply taxonomy — grading `connection` / `meeting` responses (E-09 / Eric P3, YED-220)
+
+Each response to a sent connection note or DM is classified into exactly **one** of 11 labels (classify the **first reply per person** only — later messages are the conversation, not the signal):
+
+| Label | Meaning | Positive? |
+|---|---|---|
+| `positive_interested` | "Yes, tell me more" / booked | ✅ |
+| `positive_soft` | "Send more info" / "reach out in Q3" | ✅ |
+| `positive_referral` | "Not me, but talk to X" | ✅ (referral is high-value) |
+| `neutral_question` | A question, no commitment yet | ❌ |
+| `negative_notnow` | "Not right now, maybe later" | ❌ |
+| `negative_notfit` | "Not a fit" / "we don't need this" | ❌ |
+| `negative_hostile` | Angry reply, complaint | ❌ — **track separately as a risk signal** |
+| `no_response` | No reply within the observation window | ❌ |
+| `ooo` | Out-of-office auto-reply | ❌ — **excluded from the denominator** |
+| `bounce` | Delivery failure (email lane) | ❌ — **excluded from the denominator** |
+| `other` | Can't tell (below classification confidence) | ❌ |
+
+**Outcome Value = positives ÷ sent, recorded alongside its null baseline (YED-212).** `positives` = `positive_interested + positive_soft + positive_referral`; the denominator is `sent − ooo − bounce` (auto-replies and bounces are not real replies). Record **both** the rate **and** the do-nothing baseline it is judged against — a metric without its baseline is not a metric (CLAUDE.md §5). The baseline travels with the outcome itself, as three fields in the Outcome Value line:
+
+- `null_baseline` — the do-nothing rate for this action type
+- `baseline_method` — how it was established (the measured do-nothing reply rate for that action type, observed before/without the intervention)
+- `baseline_date` — when it was measured
+
+`"[LinkedIn/HubSpot] positives 3/8 sent = 37.5% vs null baseline 5% (do-nothing; method: measured do-nothing reply rate for connection_note; 2026-09-01→09-15)"`
+
+If no baseline has been established for the action type yet, record `null_baseline: none` and surface the gap at close-out — **never invent a baseline**. (The value-action registry was deliberately retired — commit 5b1b1ed; baselines live in the outcome record, not in a resurrected private file.)
+
+Worked fixture example (fictional end to end): `.claude/skills/tag-outcome/fixtures/reply-grading-fixture.md`.
+
+**Provenance + adaptation note:** the taxonomy and the positives-÷-sent metric are adapted from Eric Nowoslawski's `positive-reply-scoring` skill (`coldoutboundskills`), harvested in `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md` §3 row 3. One adaptation: the source's `unsubscribe` label (email opt-out at campaign scale) does not occur in 1:1 connection-note/DM outreach; `no_response` takes its slot — silence is the dominant outcome for a sent note, and the denominator needs an explicit home for it. The source's other rules are kept verbatim: hostile replies tracked as a risk signal, ooo/bounce excluded from the denominator, first-reply-only classification.
 
 ## Step 4 — Write back to the artifact
 `notion-update-page` on the artifact row:
