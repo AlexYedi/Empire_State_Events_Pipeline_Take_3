@@ -13,6 +13,14 @@ The pipeline is split so the renderer's private-input surface is zero:
     (name → positioning → roles in order → Key accounts), and prints it via headless
     Chrome `--print-to-pdf`, reusing render_carousel.py's chrome() path probe and run()
     method (no new render path — E-07's proven mechanism).
+  - **PR B (YED-258)** — the content half now ships for real: the me-model → resume-input
+    mapping is documented as the Blueprint default (Positioning → summary leading with
+    quota-carrying post-sales; Experience → role entries with hunting-wins-as-account-growth
+    framing; Key accounts → the logo list), posting-tailored mode **reweights** by reordering
+    roles/bullets against a pasted JD (reorder-only — rule 5 forbids writing a word), proof
+    links get an optional live check (`--verify-links`, rule 4 "verified live"), and the
+    rendered PDF is gated: exactly one page and `pdftotext` reading order intact, exit code
+    gates the run.
   - **Guard** — every generated resume writes ONLY to `.claude/output/` (gitignored); any
     other path is refused loudly.
 
@@ -29,8 +37,12 @@ import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
+import urllib.error
+import urllib.request
 
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 # The only writable destination for generated resumes and resume-input JSON
@@ -39,7 +51,7 @@ OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPTS, os.pardir, "output"))
 
 # Reuse the E-07 render path: same Chrome probe, same headless invocation. One render
 # mechanism in the repo, not two (the same "one executable copy" rule as comp_gate.py).
-from render_carousel import chrome, run  # noqa: E402
+from render_carousel import chrome, pdf_page_count, run  # noqa: E402
 
 # ---- locked content rules (Blueprint region "tailor-resume"; E-09 additions 1–4) -----------
 
@@ -71,7 +83,7 @@ def resolve_output_path(out: str) -> str:
 # ---- resume-input schema: validate, refuse unknown keys, never guess -----------------------
 RESUME_INPUT_KEYS = {"name", "positioning", "roles", "key_accounts", "proof_links"}
 ROLE_KEYS = {"title", "company", "dates", "bullets"}
-BULLET_KEYS = {"text", "source"}
+BULLET_KEYS = {"text", "source", "original"}
 
 
 def _nonempty_str(v) -> bool:
@@ -84,8 +96,11 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
     Contract (skill-owned, written to .claude/output/):
       name, positioning              non-empty strings
       roles[]                        non-empty; {title, company, dates, bullets[]}
-      bullets[]                      non-empty; {text, source} — `source` is the
-                                     trace-to-me-model note (rule 5), required per bullet
+      bullets[]                      non-empty; {text, source[, original]} — `source` is the
+                                     trace-to-me-model note (rule 5), required per bullet;
+                                     `original` (optional) is the verbatim me-model wording,
+                                     required whenever the skill reworded the bullet for a
+                                     posting (spec-walk decision 2, 2026-10-31)
       key_accounts[], proof_links[]  non-empty arrays of non-empty strings
     Unknown keys are refused at every level; nothing is coerced or dropped.
     """
@@ -133,6 +148,9 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     for key in ("text", "source"):
                         if not _nonempty_str(bullet.get(key, "")):
                             errors.append(f"{bw}.{key}: non-empty string required (rule 5 traceability)")
+                    if "original" in bullet and not _nonempty_str(bullet["original"]):
+                        errors.append(f"{bw}.original: non-empty string required when present "
+                                      "(verbatim me-model wording of a reworded bullet)")
     for key in ("key_accounts", "proof_links"):
         value = data.get(key)
         if not isinstance(value, list) or not value:
@@ -217,6 +235,35 @@ def check_content_rules(html: str, json_text: str = "") -> list:
     exp = html.find('id="experience"')
     if ka != -1 and exp != -1 and ka < exp:
         fails.append("rule 2: Key accounts line must come after the roles")
+    # Rule 2 (PR B): client names never appear in bullet copy — outcomes are unnamed.
+    # The account list is known only when the resume-input JSON is available. Match the
+    # full name AND its parenthetical-stripped form, so "Northwind Analytics Co" is caught
+    # even when the accounts list carries a "(fictional)" qualifier.
+    if json_text:
+        try:
+            data = json.loads(json_text)
+        except json.JSONDecodeError:
+            data = {}
+        accounts = data.get("key_accounts", [])
+        bullets = re.findall(r"<li>(.*?)</li>", html, re.S)
+        for account in accounts:
+            variants = {account.lower()}
+            stripped = re.sub(r"\s*\([^)]*\)", "", account).strip().lower()
+            if stripped:
+                variants.add(stripped)
+            for bullet in bullets:
+                for variant in variants:
+                    if variant in bullet.lower():
+                        fails.append(f"rule 2: client name {account!r} appears in bullet copy — "
+                                     "outcomes are described unnamed")
+            # Decision 2 (spec walk 2026-10-31): the verbatim `original` of a reworded
+            # bullet never names clients either — rule 2 covers BOTH texts.
+            for i, role in enumerate(data.get("roles", [])):
+                for j, b in enumerate(role.get("bullets", [])):
+                    original = b.get("original", "")
+                    if isinstance(original, str) and any(v in original.lower() for v in variants):
+                        fails.append(f"rule 2: client name {account!r} appears in the original "
+                                     f"of roles[{i}].bullets[{j}] — outcomes are described unnamed")
     # Rule 3 — no vertical-territory labels in titles (PR-B review addition).
     for title in re.findall(r'<h2 class="role-title">(.*?)</h2>', html, re.S):
         hit = [v for v in VERTICAL_LABELS if v in title.lower()]
@@ -245,6 +292,145 @@ def check_reading_order(html: str) -> list:
     if any(p == -1 for p in positions) or positions != sorted(positions):
         return ["reading order broken: expected name → positioning → roles → Key accounts"]
     return []
+
+
+# ---- posting-tailored reweighting (PR B): reorder, never rewrite ----------------------------
+def jd_terms(jd_text: str) -> set:
+    """Token set from a pasted JD; tokens of 2+ chars, lowercased, punctuation-split."""
+    return {w for w in re.findall(r"[a-z0-9#+]+", jd_text.lower()) if len(w) > 1}
+
+
+def _bullet_score(text: str, terms: set) -> int:
+    return sum(1 for w in set(re.findall(r"[a-z0-9#+]+", text.lower())) if w in terms)
+
+
+def reweight_for_jd(me: dict, jd_text: str) -> dict:
+    """Deterministic JD reweighting: reorder roles and bullets by JD-term overlap.
+
+    The SCRIPT never writes a word — it only reorders what the JSON contains.
+    Bullet REWORDING is model-side (the skill), constrained by spec-walk decision 2
+    (2026-10-31): a reworded bullet carries `original` (its verbatim me-model wording)
+    and rewording_fidelity_errors() pins its facts to that original. Sorting is stable,
+    so equal scores keep the me-model order and a JD with zero overlap is a no-op
+    (which makes posting-tailored with a disjoint JD degrade to the general resume,
+    visibly).
+    """
+    terms = jd_terms(jd_text)
+    scored = []
+    for i, role in enumerate(me["roles"]):
+        bullet_scores = [(_bullet_score(b["text"], terms), j, b)
+                         for j, b in enumerate(role["bullets"])]
+        bullets = [b for _, _, b in sorted(bullet_scores, key=lambda t: (-t[0], t[1]))]
+        role_score = sum(s for s, _, _ in bullet_scores)
+        scored.append((-role_score, i, {**role, "bullets": bullets}))
+    roles = [r for _, _, r in sorted(scored, key=lambda t: (t[0], t[1]))]
+    return {**me, "roles": roles}
+
+
+# ---- constrained-rewording fidelity gate (spec-walk decision 2, 2026-10-31) -----------------
+_FACT_RE = re.compile(r"\$?\d[\d,.]*[KMB%xX]?")
+_WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]*")
+
+
+def _fact_tokens(text: str) -> list:
+    """Facts the fidelity gate pins: numbers/$-figures/percentages + proper-noun
+    candidates (capitalized tokens that are not the bullet's first word — the first
+    word is capitalized by convention, not by being a proper noun; single-letter
+    tokens are unit suffixes like the K in $860K, except "I")."""
+    tokens = _FACT_RE.findall(text)
+    tokens += [w for i, w in enumerate(_WORD_RE.findall(text))
+               if i > 0 and w[0].isupper() and (len(w) > 1 or w == "I")]
+    return tokens
+
+
+def rewording_fidelity_errors(me: dict) -> list:
+    """Gate for spec-walk decision 2: a reworded bullet may use the posting's vocabulary
+    but may add NO new facts. Every number/$-figure/percentage and proper noun in the
+    reworded text must appear in the bullet's `original` (its verbatim me-model wording),
+    or the run fails naming the bullet. Bullets without `original` are not reworded and
+    pass untouched (marking a reworded bullet is the skill-side discipline; the renderer
+    cannot read the me-model by design)."""
+    fails = []
+    for i, role in enumerate(me.get("roles", [])):
+        for j, bullet in enumerate(role.get("bullets", [])):
+            original = bullet.get("original", "")
+            if not (isinstance(original, str) and original.strip()):
+                continue
+            missing = [t for t in _fact_tokens(bullet["text"])
+                       if not re.search(rf"(?<!\w){re.escape(t)}(?!\w)", original, re.I)]
+            if missing:
+                fails.append(f"rule 5 (rewording fidelity): roles[{i}].bullets[{j}] "
+                             f"introduces fact token(s) {missing} absent from its original "
+                             f"(verbatim me-model wording): {bullet['text'][:60]!r}")
+    return fails
+
+
+# ---- proof-link liveness (rule 4 "verified live"): opt-in, network-dependent ----------------
+def verify_proof_links(links: list, timeout: int = 10) -> list:
+    """HEAD each proof link; any failure means the link is not verified live (rule 4).
+
+    Opt-in (`--verify-links`) because CI has no network guarantee; the SKILL.md
+    in-session run passes it so a dead repo link never reaches the PDF.
+    """
+    errors = []
+    for url in links:
+        try:
+            req = urllib.request.Request(url, method="HEAD",
+                                         headers={"User-Agent": "resume-render/1.0 (link check)"})
+            urllib.request.urlopen(req, timeout=timeout)
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            errors.append(f"rule 4: proof link not live: {url} ({exc})")
+    return errors
+
+
+# ---- PDF gate (PR B): one page + pdftotext reading order — exit code gates the run ----------
+def _squash(s: str) -> str:
+    """Lowercase alphanumerics only — immune to line breaks, hyphenation and spacing."""
+    return re.sub(r"[^a-z0-9]+", "", s.lower())
+
+
+def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
+    """Pure check on extracted text: name → positioning → role titles in order → Key accounts.
+
+    Matches on squashed text: pdftotext breaks lines mid-word at hyphens
+    ("workflow-software" extracts as "workflowsoftware"), so exact substring
+    matching on raw text would false-fail a perfectly ordered PDF.
+    """
+    flat = _squash(pdf_text)
+    marks = [me["name"], me["positioning"]] \
+        + [r["title"] for r in me["roles"]] + ["Key accounts"]
+    # Monotonic search: each marker must appear AFTER the previous marker's position.
+    # Plain find() would match a later marker inside earlier prose — "Account Executive"
+    # occurs inside the positioning line "quota-carrying post-sales account executive".
+    cursor = 0
+    for m in marks:
+        found = flat.find(_squash(m), cursor)
+        if found == -1:
+            return ["reading order broken in PDF text: expected name → positioning → "
+                    "roles in order → Key accounts (marker "
+                    f"{m[:40]!r} not found after position {cursor})"]
+        cursor = found + len(_squash(m))
+    return []
+
+
+def verify_pdf(pdf_path: str, me: dict) -> list:
+    """One-page + reading-order gate on the rendered PDF. pdftotext-missing is a loud
+    skip (same pattern as the Chrome probe), never a silent pass."""
+    errors = []
+    with open(pdf_path, "rb") as fh:
+        pages = pdf_page_count(fh.read())
+    if pages != 1:
+        errors.append(f"PDF is {pages} pages — the resume is ONE page; fix content, not margins")
+    if shutil.which("pdftotext"):
+        proc = subprocess.run(["pdftotext", pdf_path, "-"], capture_output=True,
+                              text=True, timeout=30)
+        if proc.returncode != 0:
+            errors.append(f"pdftotext failed: {proc.stderr.strip()[:200]}")
+        else:
+            errors += pdf_reading_order_errors(proc.stdout, me)
+    else:
+        print("WARN pdftotext not found — PDF reading-order check skipped (install poppler-utils)")
+    return errors
 
 
 # ---- selftest: schema + rules + reading order + path guard, no Chrome (the CI path) --------
@@ -308,6 +494,86 @@ def selftest() -> int:
     case("rule 6 catches private-input filename in output",
          any(r.startswith("rule 6") for r in check_content_rules(html, 'source": "from me-model.md')))
 
+    # Rule 2 (PR B): a client name inside bullet copy fails; the Key accounts line is the only place.
+    client_leak = json.loads(fixture_text)
+    client_leak["roles"][0]["bullets"][0]["text"] += " Closed the Northwind Analytics Co deal."
+    leak_html = build_resume_html(client_leak)
+    case("rule 2 catches client name in bullet copy",
+         any("rule 2" in r and "bullet copy" in r
+             for r in check_content_rules(leak_html, json.dumps(client_leak))))
+
+    # PR B — spec-walk decision 2 (2026-10-31): constrained rewording. The skill may reword
+    # a bullet into the posting's vocabulary; it carries `original` (verbatim me-model
+    # wording) and the renderer pins the reworded text's facts to it.
+    reword_ok = json.loads(json.dumps(me))
+    reword_ok["roles"][0]["bullets"][0] = {
+        "text": "Drove $860K in new and expansion revenue across a two-rep territory "
+                "(proof of account growth).",
+        "source": reword_ok["roles"][0]["bullets"][0]["source"],
+        "original": "Closed $860K of new and expansion revenue in a two-rep territory "
+                    "(proof of account growth).",
+    }
+    case("rewording fidelity passes a faithful reword",
+         rewording_fidelity_errors(reword_ok) == [])
+    reword_num = json.loads(json.dumps(reword_ok))
+    reword_num["roles"][0]["bullets"][0]["text"] = \
+        "Drove $920K in new revenue across a two-rep territory."
+    case("rewording fidelity fails an invented number",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_num)))
+    reword_noun = json.loads(json.dumps(reword_ok))
+    reword_noun["roles"][0]["bullets"][0]["text"] = \
+        "Closed $860K of new and expansion revenue at Heliosoft."
+    case("rewording fidelity fails an invented proper noun",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_noun)))
+    reword_client = json.loads(json.dumps(reword_ok))
+    reword_client["roles"][0]["bullets"][0]["text"] = "Closed the Northwind Analytics Co deal."
+    case("rule 2 catches client name in reworded bullet copy",
+         any("rule 2" in r and "bullet copy" in r
+             for r in check_content_rules(build_resume_html(reword_client),
+                                          json.dumps(reword_client))))
+    reword_client_orig = json.loads(json.dumps(reword_ok))
+    reword_client_orig["roles"][0]["bullets"][0]["original"] = \
+        "Closed the Northwind Analytics Co deal."
+    case("rule 2 catches client name in a bullet's original",
+         any("rule 2" in r and "original" in r
+             for r in check_content_rules(build_resume_html(reword_client_orig),
+                                          json.dumps(reword_client_orig))))
+    case("schema accepts an optional original on a bullet",
+         schema_errors(reword_ok) == [])
+    bad_original = json.loads(json.dumps(reword_ok))
+    bad_original["roles"][0]["bullets"][0]["original"] = ""
+    case("schema refuses an empty original",
+         any("original" in e for e in schema_errors(bad_original)))
+
+    # PR B — posting-tailored reweighting: reorder-only, deterministic, no-op on disjoint JDs.
+    analytics_jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
+    reweighted = reweight_for_jd(me, analytics_jd)
+    case("reweight promotes the JD-relevant role first",
+         reweighted["roles"][0]["company"] == me["roles"][1]["company"])
+    before = [b["text"] for r in me["roles"] for b in r["bullets"]]
+    after = [b["text"] for r in reweighted["roles"] for b in r["bullets"]]
+    case("reweight reorders but never rewrites a word", sorted(before) == sorted(after))
+    case("reweight promotes the JD-relevant bullet within a role",
+         [b["text"] for b in reweighted["roles"][0]["bullets"]][0]
+         == me["roles"][1]["bullets"][1]["text"])
+    case("zero-overlap JD leaves the me-model order untouched",
+         reweight_for_jd(me, "xyzzy plugh zork")["roles"] == me["roles"])
+
+    # PR B — PDF gate: pure reading-order check over extracted pdftotext text.
+    good_text = f'{me["name"]} {me["positioning"]} ' + " ".join(r["title"] for r in me["roles"]) \
+        + " Key accounts: everything after the roles"
+    case("PDF reading-order check passes on ordered text",
+         pdf_reading_order_errors(good_text, me) == [])
+    scrambled = f'Key accounts first. {me["name"]} {me["positioning"]} ' \
+        + " ".join(r["title"] for r in me["roles"])
+    case("PDF reading-order check catches scrambled roles",
+         pdf_reading_order_errors(scrambled, me) != [])
+
+    # PR B — rule 4 liveness: an unparseable URL fails loudly without network.
+    case("link liveness fails loudly on a non-URL",
+         len(verify_proof_links(["not a url"])) == 1
+         and verify_proof_links(["not a url"])[0].startswith("rule 4"))
+
     # Rule 7 / addition 3: the writer refuses any path outside .claude/output/.
     for bad_path in ("/tmp/resume.pdf", "./resume.pdf",
                      os.path.join(OUTPUT_DIR, os.pardir, "resume.pdf")):
@@ -326,7 +592,7 @@ def selftest() -> int:
     case("path guard resolves ../output alias back into .claude/output/",
          alias == os.path.join(OUTPUT_DIR, "resume.pdf"))
 
-    # Both modes render offline (PR A stub: identical locked template, mode is metadata).
+    # Both modes render offline (reweighting happens before build; the template is mode-agnostic).
     case("both modes render without Chrome",
          all(build_resume_html(me, m) for m in ("general", "posting-tailored")))
 
@@ -342,7 +608,9 @@ def main() -> int:
     ap.add_argument("source", nargs="?", help="path to a resume-input JSON (written by the skill)")
     ap.add_argument("--mode", choices=("general", "posting-tailored"), default="general")
     ap.add_argument("--out", default=os.path.join(OUTPUT_DIR, "resume.pdf"))
-    ap.add_argument("--jd", help="pasted JD text file (posting-tailored reweighting; PR B)")
+    ap.add_argument("--jd", help="pasted JD text file (required for --mode posting-tailored)")
+    ap.add_argument("--verify-links", action="store_true",
+                    help="rule 4: HEAD-check every proof link before rendering (needs network)")
     ap.add_argument("--selftest", action="store_true",
                     help="offline schema+rules+reading-order+guard checks, no Chrome")
     a = ap.parse_args()
@@ -351,18 +619,33 @@ def main() -> int:
         return selftest()
     if not a.source:
         ap.error("a resume-input JSON path is required (or run --selftest)")
+    if a.mode == "posting-tailored" and not a.jd:
+        ap.error("--mode posting-tailored requires --jd <posting.txt>")
 
     me = load_resume_input(a.source)
+    jd_reweighted = False
+    if a.mode == "posting-tailored":
+        with open(a.jd, encoding="utf-8") as fh:
+            me = reweight_for_jd(me, fh.read())
+        jd_reweighted = True
     html = build_resume_html(me, a.mode)
 
     with open(a.source, encoding="utf-8") as fh:
         json_text = fh.read()
-    fails = check_content_rules(html, json_text) + check_reading_order(html)
+    fails = check_content_rules(html, json_text) + check_reading_order(html) \
+        + rewording_fidelity_errors(me)
     if fails:
         print("Content rules failed — nothing rendered:")
         for f in fails:
             print(f"  - {f}")
         return 1
+    if a.verify_links:
+        link_fails = verify_proof_links(me["proof_links"])
+        if link_fails:
+            print("Proof-link liveness failed — nothing rendered (rule 4: verified live):")
+            for f in link_fails:
+                print(f"  - {f}")
+            return 1
 
     out = resolve_output_path(a.out)
     bin_ = chrome()
@@ -381,7 +664,17 @@ def main() -> int:
 
     if not os.path.exists(out):
         sys.exit(f"Chrome did not write {out}")
-    print(json.dumps({"ok": True, "pdf": out, "mode": a.mode, "roles": len(me["roles"])}))
+
+    # The PDF gate: exactly one page, pdftotext reading order intact — exit code gates the run.
+    pdf_fails = verify_pdf(out, me)
+    if pdf_fails:
+        print("PDF gate failed:")
+        for f in pdf_fails:
+            print(f"  - {f}")
+        return 1
+
+    print(json.dumps({"ok": True, "pdf": out, "mode": a.mode,
+                      "jd_reweighted": jd_reweighted, "roles": len(me["roles"])}))
     return 0
 
 
