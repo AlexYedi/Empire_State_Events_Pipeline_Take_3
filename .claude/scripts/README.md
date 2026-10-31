@@ -28,6 +28,7 @@ checkout, 2026-10-30. Python 3.13 stdlib unless a run line says otherwise.
 | `substrate.py` | The ONE producer library for the Knowledge Substrate (ADR-10, YED-160/169). | `python3 .claude/scripts/substrate.py [--evidence F] [--table …] [--from …] [--into …] [--dry-run] [--json]` | `python3 .claude/scripts/substrate.py --selftest` (133/133) |
 | `variant_signal_gate.py` | Eric P1 fact-before-prose + abstain-empty as code (E-09, YED-220): `gate_variant` refuses prose/hedges with no cited signal row — the abstain is the empty string — plus computed-in-code date/count/enum formatters and the `unverified_numbers` fact-trace. | `from variant_signal_gate import gate_variant, fmt_date` (library); no CLI beyond `--selftest` | `python3 .claude/scripts/variant_signal_gate.py --selftest` (15/15) |
 | `test_dispatch_record.py` | Offline regression for `dispatch_record.py` — synthetic transcripts only; pins the stale-attribution bug. | `python3 .claude/scripts/test_dispatch_record.py [path/to/dispatch_record.py]` | is itself a test (13/13; run directly, not via unittest discover) |
+| `test_variant_signal_gate.py` | Offline regression for `variant_signal_gate.py` — pins the zero-cited-signal-run abstain (empty field, not prose) and the computed-in-code formatters; fictional fixtures only. | `python3 .claude/scripts/test_variant_signal_gate.py [path/to/variant_signal_gate.py]` | is itself a test (35/35; run directly, not via unittest discover) |
 
 ## CI
 
