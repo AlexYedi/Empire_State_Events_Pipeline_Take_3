@@ -56,6 +56,11 @@ def chrome():
             return os.path.join(app, "Contents/MacOS/Google Chrome")
     except (OSError, subprocess.SubprocessError):
         pass
+    # Linux fallbacks (E-09 YED-258 PR B): sandbox/CI containers ship chromium, not
+    # macOS Chrome. macOS probe stays first, so Alex's Mac behavior is unchanged.
+    for p in ("/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"):
+        if os.path.exists(p):
+            return p
     return None
 
 

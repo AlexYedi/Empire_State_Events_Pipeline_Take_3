@@ -19,8 +19,10 @@ is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome pr
 3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `positioning`,
    `roles[] {title, company, dates, bullets[] {text, source}}`, `key_accounts[]`,
    `proof_links[]`) and write it to `.claude/output/resume-input.json`. Every bullet
-   carries a `source` note (trace-to-me-model). Which me-model sections feed which fields
-   is a PRD decision for PR B with Alex — not encoded here.
+   carries a `source` note (trace-to-me-model). Use the **default mapping** (SKILL.md):
+   Positioning → summary leading with quota-carrying post-sales; Experience sections →
+   role entries in me-model order; Key accounts → the logo list. Alex can override the
+   mapping at PR-B review.
 
 ## Step 2 — Render (renderer never touches the me-model)
 
@@ -33,18 +35,20 @@ python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
   failure fails the render before Chrome runs — fix the JSON, not the checker.
 - Output path is guarded: anything outside `.claude/output/` is refused loudly. Never
   redirect it elsewhere.
+- Pass `--verify-links` on a networked machine so rule-4 liveness runs before Chrome.
 
 ## Step 3 — Verify in-session
 
-1. One page (fix content, not margins, if it spills).
-2. `pdftotext` reading order: name → positioning → roles in order → Key accounts.
-3. Proof links resolve live (rule 4) — open each one before handing the PDF over.
+The run itself is gated: it exits non-zero unless the PDF is exactly one page and the
+`pdftotext` reading order holds (name → positioning → roles in order → Key accounts).
+If `pdftotext` is missing the order check is skipped with a loud `WARN` — install
+poppler-utils rather than trust it.
 
 ## Failure modes
 
-- **Chrome not found** (Linux sandbox): the render path is macOS-probed (render_carousel's
-  chrome()). Run `--selftest` for the offline path; the visual render is Alex's in-session
-  run on the Mac.
+- **Chrome not found** (bare sandbox): the render path probes macOS Chrome first, then
+  chromium/chrome on Linux. Run `--selftest` for the offline path; the visual render
+  runs wherever a browser exists.
 - **me-model.md absent**: stop and ask (private input, not in git by design).
 - **Schema failure**: fix the resume-input JSON (unknown key, missing per-bullet `source`,
   wrong shape) — the renderer never guesses.

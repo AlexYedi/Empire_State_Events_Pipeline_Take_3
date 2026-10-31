@@ -4,18 +4,29 @@ Produce a **one-page, ATS-safe PDF resume** from the me-model: HTML template →
 Chrome `--print-to-pdf` → text-based PDF. The deterministic half lives in
 **`.claude/scripts/render_resume.py`** (chrome() probe and `--print-to-pdf` reused from
 `render_carousel.py` — one render path in the repo); this skill is the model-side half.
-PR A scaffolds the pipeline; PR B (resume-content) builds the real template reweighting.
+PR A shipped the pipeline; **PR B (this version) ships the content half** — the default
+me-model mapping, posting-tailored reweighting, and the one-page/reading-order PDF gate.
 
 ## The split contract (per Alex's 2026-10-31 review)
 
 1. **This skill (model-side, in session)** reads `.claude/references/me-model.md`
    **by path** and writes a structured **resume-input JSON** to `.claude/output/`.
-   Which me-model sections feed which fields is a **PRD decision for PR B with Alex**
-   (YED-258 walks one decision at a time) — this skill does not encode a mapping.
+   Which me-model sections feed which fields: the PR8 execution-input gate completed
+   **without recorded mapping notes**, so PR B ships the **Blueprint default mapping**
+   (below). Alex can override it at PR-B review — it is a documented default, not a
+   settled decision.
 2. **`render_resume.py`** consumes **only** that JSON: schema-validates it (refuses
    unknown keys), applies the locked content rules, renders. It **never opens
    `me-model.md`** — its private-input surface is zero.
 3. All outputs (the JSON and the PDF) write ONLY to `.claude/output/` (gitignored).
+
+## me-model → resume-input mapping (PR B default, stated for review)
+
+- **Positioning** → the resume-input `positioning` line — the summary block **leading
+  with quota-carrying post-sales**.
+- **Experience sections** → `roles[]` entries **in me-model order**; hunting wins are
+  framed as **proof of account growth**, never CSM/renewal-only framing.
+- **Key accounts** → the `key_accounts` logo list — client names appear nowhere else.
 
 ## resume-input JSON contract
 
@@ -54,30 +65,56 @@ PR A scaffolds the pipeline; PR B (resume-content) builds the real template rewe
 ## Modes
 
 - **general** — master resume from the me-model experience sections, in order, led by the
-  quota-carrying post-sales positioning line. *(PR A: renders the locked template with the
-  fixture fields. PR B: full master-resume content rules.)*
-- **posting-tailored** — reweighted against a pasted JD. *(PR A: mode is accepted and
-  recorded in the render metadata; reweighting rules land in PR B.)*
+  quota-carrying post-sales positioning line.
+- **posting-tailored** — reweighted against a pasted JD (`--jd posting.txt`, required in
+  this mode). Reweighting is **reorder-only, deterministic**: roles are ranked by JD-term
+  overlap across their bullets, bullets re-ranked inside each role; no word is written or
+  dropped (rule 5 forbids inventing anything the JSON doesn't already carry). Sorting is
+  stable — equal scores keep the me-model order, and a JD with zero overlap degrades
+  visibly to the general resume.
+
+## The PDF gate (PR B)
+
+After Chrome writes the PDF, the run is gated on:
+
+- **exactly one page** (a multi-page render fails the run — fix content, not margins);
+- **`pdftotext` reading order intact**: name → positioning → roles in order → Key
+  accounts. If `pdftotext` is missing, the check is skipped with a loud `WARN` — same
+  pattern as the Chrome probe, never a silent pass.
+
+## Proof-link liveness (`--verify-links`, rule 4)
+
+The locked rule says proof links are **verified live**. The renderer's always-on gate is
+the shape check (specific repos + the hub, never the bare profile — CI-safe). Pass
+`--verify-links` on a networked machine (the in-session run does) to HEAD-check every
+proof link first; any dead or unreachable link fails the run before Chrome starts.
 
 ## Running it
 
 ```bash
-# 1. In-session (Alex's Claude Code): build resume-input JSON from the me-model by path.
-#    Which sections feed which fields = PRD decision for PR B with Alex.
+# 1. In-session (Alex's Claude Code): build resume-input JSON from the me-model by path,
+#    using the default mapping above (Positioning → summary leading with quota-carrying
+#    post-sales; Experience → role entries; Key accounts → the logo list).
 # 2. Render from the JSON — the renderer never touches the me-model:
 python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
   --out .claude/output/resume.pdf
 
-# posting-tailored mode (JD reweighting lands in PR B)
+# posting-tailored mode — --jd is required; reweighting is reorder-only
 python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
   --mode posting-tailored --jd posting.txt --out .claude/output/resume.pdf
+
+# same, with rule-4 liveness (in-session run always passes this):
+python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
+  --verify-links --out .claude/output/resume.pdf
 
 # offline selftest — schema + content rules + reading order + path guard, no Chrome (CI)
 python3 .claude/scripts/render_resume.py --selftest
 ```
 
-The Chrome render runs in-session where Chrome exists (Alex's Mac); in a fresh sandbox the
-script reports "Chrome not found" rather than half-rendering — that is the E-07 split.
+The Chrome render runs wherever Chrome/Chromium exists (Alex's Mac, or a sandbox with
+chromium on PATH); in a fresh sandbox without either, the script reports "Chrome not
+found" rather than half-rendering — that is the E-07 split. The PDF gate runs after the
+render: exactly one page, `pdftotext` reading order intact, exit code gates the run.
 
 ## Fixture
 
