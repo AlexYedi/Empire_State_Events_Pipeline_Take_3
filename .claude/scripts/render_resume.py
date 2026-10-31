@@ -83,7 +83,7 @@ def resolve_output_path(out: str) -> str:
 # ---- resume-input schema: validate, refuse unknown keys, never guess -----------------------
 RESUME_INPUT_KEYS = {"name", "positioning", "roles", "key_accounts", "proof_links"}
 ROLE_KEYS = {"title", "company", "dates", "bullets"}
-BULLET_KEYS = {"text", "source"}
+BULLET_KEYS = {"text", "source", "original"}
 
 
 def _nonempty_str(v) -> bool:
@@ -96,8 +96,11 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
     Contract (skill-owned, written to .claude/output/):
       name, positioning              non-empty strings
       roles[]                        non-empty; {title, company, dates, bullets[]}
-      bullets[]                      non-empty; {text, source} — `source` is the
-                                     trace-to-me-model note (rule 5), required per bullet
+      bullets[]                      non-empty; {text, source[, original]} — `source` is the
+                                     trace-to-me-model note (rule 5), required per bullet;
+                                     `original` (optional) is the verbatim me-model wording,
+                                     required whenever the skill reworded the bullet for a
+                                     posting (spec-walk decision 2, 2026-10-31)
       key_accounts[], proof_links[]  non-empty arrays of non-empty strings
     Unknown keys are refused at every level; nothing is coerced or dropped.
     """
@@ -145,6 +148,9 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     for key in ("text", "source"):
                         if not _nonempty_str(bullet.get(key, "")):
                             errors.append(f"{bw}.{key}: non-empty string required (rule 5 traceability)")
+                    if "original" in bullet and not _nonempty_str(bullet["original"]):
+                        errors.append(f"{bw}.original: non-empty string required when present "
+                                      "(verbatim me-model wording of a reworded bullet)")
     for key in ("key_accounts", "proof_links"):
         value = data.get(key)
         if not isinstance(value, list) or not value:
@@ -235,9 +241,10 @@ def check_content_rules(html: str, json_text: str = "") -> list:
     # even when the accounts list carries a "(fictional)" qualifier.
     if json_text:
         try:
-            accounts = json.loads(json_text).get("key_accounts", [])
+            data = json.loads(json_text)
         except json.JSONDecodeError:
-            accounts = []
+            data = {}
+        accounts = data.get("key_accounts", [])
         bullets = re.findall(r"<li>(.*?)</li>", html, re.S)
         for account in accounts:
             variants = {account.lower()}
@@ -249,6 +256,14 @@ def check_content_rules(html: str, json_text: str = "") -> list:
                     if variant in bullet.lower():
                         fails.append(f"rule 2: client name {account!r} appears in bullet copy — "
                                      "outcomes are described unnamed")
+            # Decision 2 (spec walk 2026-10-31): the verbatim `original` of a reworded
+            # bullet never names clients either — rule 2 covers BOTH texts.
+            for i, role in enumerate(data.get("roles", [])):
+                for j, b in enumerate(role.get("bullets", [])):
+                    original = b.get("original", "")
+                    if isinstance(original, str) and any(v in original.lower() for v in variants):
+                        fails.append(f"rule 2: client name {account!r} appears in the original "
+                                     f"of roles[{i}].bullets[{j}] — outcomes are described unnamed")
     # Rule 3 — no vertical-territory labels in titles (PR-B review addition).
     for title in re.findall(r'<h2 class="role-title">(.*?)</h2>', html, re.S):
         hit = [v for v in VERTICAL_LABELS if v in title.lower()]
@@ -292,10 +307,13 @@ def _bullet_score(text: str, terms: set) -> int:
 def reweight_for_jd(me: dict, jd_text: str) -> dict:
     """Deterministic JD reweighting: reorder roles and bullets by JD-term overlap.
 
-    Locked-rule constraint (rule 5): reweighting NEVER writes a word — it can only
-    reorder what the resume-input JSON already contains. Sorting is stable, so equal
-    scores keep the me-model order and a JD with zero overlap is a no-op (which makes
-    posting-tailored with a disjoint JD degrade to the general resume, visibly).
+    The SCRIPT never writes a word — it only reorders what the JSON contains.
+    Bullet REWORDING is model-side (the skill), constrained by spec-walk decision 2
+    (2026-10-31): a reworded bullet carries `original` (its verbatim me-model wording)
+    and rewording_fidelity_errors() pins its facts to that original. Sorting is stable,
+    so equal scores keep the me-model order and a JD with zero overlap is a no-op
+    (which makes posting-tailored with a disjoint JD degrade to the general resume,
+    visibly).
     """
     terms = jd_terms(jd_text)
     scored = []
@@ -307,6 +325,44 @@ def reweight_for_jd(me: dict, jd_text: str) -> dict:
         scored.append((-role_score, i, {**role, "bullets": bullets}))
     roles = [r for _, _, r in sorted(scored, key=lambda t: (t[0], t[1]))]
     return {**me, "roles": roles}
+
+
+# ---- constrained-rewording fidelity gate (spec-walk decision 2, 2026-10-31) -----------------
+_FACT_RE = re.compile(r"\$?\d[\d,.]*[KMB%xX]?")
+_WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]*")
+
+
+def _fact_tokens(text: str) -> list:
+    """Facts the fidelity gate pins: numbers/$-figures/percentages + proper-noun
+    candidates (capitalized tokens that are not the bullet's first word — the first
+    word is capitalized by convention, not by being a proper noun; single-letter
+    tokens are unit suffixes like the K in $860K, except "I")."""
+    tokens = _FACT_RE.findall(text)
+    tokens += [w for i, w in enumerate(_WORD_RE.findall(text))
+               if i > 0 and w[0].isupper() and (len(w) > 1 or w == "I")]
+    return tokens
+
+
+def rewording_fidelity_errors(me: dict) -> list:
+    """Gate for spec-walk decision 2: a reworded bullet may use the posting's vocabulary
+    but may add NO new facts. Every number/$-figure/percentage and proper noun in the
+    reworded text must appear in the bullet's `original` (its verbatim me-model wording),
+    or the run fails naming the bullet. Bullets without `original` are not reworded and
+    pass untouched (marking a reworded bullet is the skill-side discipline; the renderer
+    cannot read the me-model by design)."""
+    fails = []
+    for i, role in enumerate(me.get("roles", [])):
+        for j, bullet in enumerate(role.get("bullets", [])):
+            original = bullet.get("original", "")
+            if not (isinstance(original, str) and original.strip()):
+                continue
+            missing = [t for t in _fact_tokens(bullet["text"])
+                       if not re.search(rf"(?<!\w){re.escape(t)}(?!\w)", original, re.I)]
+            if missing:
+                fails.append(f"rule 5 (rewording fidelity): roles[{i}].bullets[{j}] "
+                             f"introduces fact token(s) {missing} absent from its original "
+                             f"(verbatim me-model wording): {bullet['text'][:60]!r}")
+    return fails
 
 
 # ---- proof-link liveness (rule 4 "verified live"): opt-in, network-dependent ----------------
@@ -446,6 +502,49 @@ def selftest() -> int:
          any("rule 2" in r and "bullet copy" in r
              for r in check_content_rules(leak_html, json.dumps(client_leak))))
 
+    # PR B — spec-walk decision 2 (2026-10-31): constrained rewording. The skill may reword
+    # a bullet into the posting's vocabulary; it carries `original` (verbatim me-model
+    # wording) and the renderer pins the reworded text's facts to it.
+    reword_ok = json.loads(json.dumps(me))
+    reword_ok["roles"][0]["bullets"][0] = {
+        "text": "Drove $860K in new and expansion revenue across a two-rep territory "
+                "(proof of account growth).",
+        "source": reword_ok["roles"][0]["bullets"][0]["source"],
+        "original": "Closed $860K of new and expansion revenue in a two-rep territory "
+                    "(proof of account growth).",
+    }
+    case("rewording fidelity passes a faithful reword",
+         rewording_fidelity_errors(reword_ok) == [])
+    reword_num = json.loads(json.dumps(reword_ok))
+    reword_num["roles"][0]["bullets"][0]["text"] = \
+        "Drove $920K in new revenue across a two-rep territory."
+    case("rewording fidelity fails an invented number",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_num)))
+    reword_noun = json.loads(json.dumps(reword_ok))
+    reword_noun["roles"][0]["bullets"][0]["text"] = \
+        "Closed $860K of new and expansion revenue at Heliosoft."
+    case("rewording fidelity fails an invented proper noun",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_noun)))
+    reword_client = json.loads(json.dumps(reword_ok))
+    reword_client["roles"][0]["bullets"][0]["text"] = "Closed the Northwind Analytics Co deal."
+    case("rule 2 catches client name in reworded bullet copy",
+         any("rule 2" in r and "bullet copy" in r
+             for r in check_content_rules(build_resume_html(reword_client),
+                                          json.dumps(reword_client))))
+    reword_client_orig = json.loads(json.dumps(reword_ok))
+    reword_client_orig["roles"][0]["bullets"][0]["original"] = \
+        "Closed the Northwind Analytics Co deal."
+    case("rule 2 catches client name in a bullet's original",
+         any("rule 2" in r and "original" in r
+             for r in check_content_rules(build_resume_html(reword_client_orig),
+                                          json.dumps(reword_client_orig))))
+    case("schema accepts an optional original on a bullet",
+         schema_errors(reword_ok) == [])
+    bad_original = json.loads(json.dumps(reword_ok))
+    bad_original["roles"][0]["bullets"][0]["original"] = ""
+    case("schema refuses an empty original",
+         any("original" in e for e in schema_errors(bad_original)))
+
     # PR B — posting-tailored reweighting: reorder-only, deterministic, no-op on disjoint JDs.
     analytics_jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
     reweighted = reweight_for_jd(me, analytics_jd)
@@ -533,7 +632,8 @@ def main() -> int:
 
     with open(a.source, encoding="utf-8") as fh:
         json_text = fh.read()
-    fails = check_content_rules(html, json_text) + check_reading_order(html)
+    fails = check_content_rules(html, json_text) + check_reading_order(html) \
+        + rewording_fidelity_errors(me)
     if fails:
         print("Content rules failed — nothing rendered:")
         for f in fails:

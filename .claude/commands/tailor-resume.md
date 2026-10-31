@@ -5,6 +5,9 @@ argument-hint: "[general | posting-tailored + paste JD] — reads .claude/refere
 
 # /tailor-resume — Resume rendering lens
 
+**One in, one out (decided 2026-10-31):** this command retires the ad-hoc markdown →
+Google Doc resume flow and is the **only resume path**.
+
 Methodology, the split contract, the resume-input JSON schema, and the seven locked
 content rules: **`.claude/skills/tailor-resume/SKILL.md`**. Read it first. The render path
 is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome probe +
@@ -17,12 +20,17 @@ is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome pr
 2. Source is `.claude/references/me-model.md`, read **by path only**. If it is absent
    (fresh worktree without the local file): stop and ask — nothing renders without it.
 3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `positioning`,
-   `roles[] {title, company, dates, bullets[] {text, source}}`, `key_accounts[]`,
-   `proof_links[]`) and write it to `.claude/output/resume-input.json`. Every bullet
-   carries a `source` note (trace-to-me-model). Use the **default mapping** (SKILL.md):
-   Positioning → summary leading with quota-carrying post-sales; Experience sections →
-   role entries in me-model order; Key accounts → the logo list. Alex can override the
-   mapping at PR-B review.
+   `roles[] {title, company, dates, bullets[] {text, source[, original]}}`,
+   `key_accounts[]`, `proof_links[]`) and write it to `.claude/output/resume-input.json`.
+   Every bullet carries a `source` note (trace-to-me-model). Use the **decided mapping**
+   (SKILL.md — Alex's spec walk, 2026-10-31): Positioning → summary leading with
+   quota-carrying post-sales; Experience sections → role entries in me-model order;
+   Key accounts → the logo list.
+4. **Posting-tailored only** — rewording is constrained: bullets may be reworded into the
+   posting's vocabulary, adding **no new facts**. A reworded bullet keeps its `source`
+   note and carries **`original`** (the verbatim me-model bullet); the renderer fails the
+   run naming any bullet whose numbers, $-figures, percentages or proper nouns are absent
+   from its `original`. A client name in either text fails rule 2.
 
 ## Step 2 — Render (renderer never touches the me-model)
 
@@ -54,3 +62,7 @@ poppler-utils rather than trust it.
   wrong shape) — the renderer never guesses.
 - **Rule failure named `rule N`**: the seven locked rules in the SKILL.md are the contract;
   rework the content, never the checker.
+- **Rewording fidelity failure** (`rule 5 (rewording fidelity)`): a reworded bullet uses a
+  number, $-figure, percentage or proper noun its `original` (verbatim me-model wording)
+  doesn't carry. Rewrite the bullet to stay within the me-model's facts, or drop the
+  rewording — never widen the gate.
