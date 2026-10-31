@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""Render a one-page, ATS-safe resume PDF from a me-model source (YED-258, E-09 PR A).
+"""Render a one-page, ATS-safe resume PDF from a resume-input JSON (YED-258, E-09 PR A).
 
-The deterministic half of /tailor-resume, so a resume can't "look done" and still be wrong:
-  1. parse — reads a me-model-shaped markdown file BY PATH (never copied into any output);
-  2. render — builds the locked HTML template (name → positioning → roles in order →
-     Key accounts) and prints it via headless Chrome --print-to-pdf, reusing
-     render_carousel.py's chrome() path probe and run() method (no new render path — E-07's
-     proven mechanism, documented in content-patterns/visual-briefs.md);
-  3. guard — every generated resume writes ONLY to .claude/output/ (gitignored); any other
-     path is refused loudly;
-  4. rules — the seven locked content rules (Blueprint region "tailor-resume") are checked
-     offline on the rendered HTML before anything is printed.
+The deterministic half of /tailor-resume, so a resume can't "look done" and still be wrong.
+The pipeline is split so the renderer's private-input surface is zero:
 
-The offline `--selftest` exercises the template, the content rules and the path guard with no
-Chrome — that is the CI-exercised path. The Chrome render is exercised in-session where Chrome
-exists (same split as render_carousel.py, E-07): its chrome() probe targets macOS paths, so on
-the Linux sandbox the print step reports the miss instead of half-rendering.
+  - **The skill** (`.claude/skills/tailor-resume/`, model-side, in session) reads
+    `.claude/references/me-model.md` by path and writes a structured **resume-input JSON**
+    to `.claude/output/`. This script NEVER opens the me-model — parsing it is not here
+    (section-to-field mapping is a PRD decision for PR B with Alex).
+  - **This script** consumes only that JSON: schema-validates it (refuses unknown keys),
+    applies the locked content rules offline, builds the one-page ATS-safe template
+    (name → positioning → roles in order → Key accounts), and prints it via headless
+    Chrome `--print-to-pdf`, reusing render_carousel.py's chrome() path probe and run()
+    method (no new render path — E-07's proven mechanism).
+  - **Guard** — every generated resume writes ONLY to `.claude/output/` (gitignored); any
+    other path is refused loudly.
 
-Usage: render_resume.py <me-model-or-fixture.md> [--mode general|posting-tailored]
+The offline `--selftest` exercises the schema, the content rules, the reading order and the
+path guard with no Chrome — that is the CI-exercised path. The Chrome render is exercised
+in-session where Chrome exists (same split as render_carousel.py, E-07): its chrome() probe
+targets macOS paths, so on the Linux sandbox the print step reports the miss instead of
+half-rendering.
+
+Usage: render_resume.py <resume-input.json> [--mode general|posting-tailored]
                        [--out .claude/output/resume.pdf] [--jd posting.txt]
 """
 import argparse
@@ -28,7 +33,8 @@ import sys
 import tempfile
 
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
-# The only writable destination for generated resumes (E-09 addition 3; gitignored in PR A).
+# The only writable destination for generated resumes and resume-input JSON
+# (E-09 addition 3; gitignored in PR A).
 OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPTS, os.pardir, "output"))
 
 # Reuse the E-07 render path: same Chrome probe, same headless invocation. One render
@@ -44,8 +50,8 @@ VERTICAL_LABELS = (
     "retail", "energy", "telecom", "pharma", "logistics", "real estate",
 )
 
-# Rule 6 grep gate: the gitignored private inputs are referenced by path at run time and
-# their names must never appear inside any committed fixture, template, or output.
+# Rule 6 grep gate: the gitignored private inputs are read by the SKILL in-session only;
+# their filenames must never appear inside any committed fixture, template, or output.
 PRIVATE_INPUT_NAMES = ("me-model.md", "target-companies.md")
 
 POSITIONING_LEAD = "quota-carrying post-sales"  # rule 1: always the lead
@@ -62,31 +68,93 @@ def resolve_output_path(out: str) -> str:
     return target
 
 
-# ---- me-model parsing: by path, into a plain dict. Nothing here touches private content ----
-def parse_me_model(path: str) -> dict:
-    """Parse a me-model-shaped markdown source into template fields.
+# ---- resume-input schema: validate, refuse unknown keys, never guess -----------------------
+RESUME_INPUT_KEYS = {"name", "positioning", "roles", "key_accounts", "proof_links"}
+ROLE_KEYS = {"title", "company", "dates", "bullets"}
+BULLET_KEYS = {"text", "source"}
 
-    Shape: `# Name` · `Positioning: …` · `## Experience` with `### Title — Company (dates)`
-    blocks of `- ` bullets · `## Key accounts` one line · `## Proof links` URL list.
+
+def _nonempty_str(v) -> bool:
+    return isinstance(v, str) and v.strip() != ""
+
+
+def validate_resume_input(data, where: str = "resume-input") -> list:
+    """Validate the resume-input JSON contract; return a list of errors (empty = valid).
+
+    Contract (skill-owned, written to .claude/output/):
+      name, positioning              non-empty strings
+      roles[]                        non-empty; {title, company, dates, bullets[]}
+      bullets[]                      non-empty; {text, source} — `source` is the
+                                     trace-to-me-model note (rule 5), required per bullet
+      key_accounts[], proof_links[]  non-empty arrays of non-empty strings
+    Unknown keys are refused at every level; nothing is coerced or dropped.
     """
-    with open(path, encoding="utf-8") as fh:
-        text = fh.read()
-    name = (re.search(r"^# (.+)$", text, re.M) or [None, ""])[1].strip()
-    positioning = (re.search(r"^Positioning: (.+)$", text, re.M) or [None, ""])[1].strip()
-    roles = []
-    for block in re.findall(r"^### (.+)$\n((?:^- .+\n?)*)", text, re.M):
-        title_line, bullets_raw = block
-        m = re.match(r"(.+?) — (.+?) \((.+?)\)\s*$", title_line)
-        roles.append({
-            "title": m.group(1).strip() if m else title_line.strip(),
-            "company": m.group(2).strip() if m else "",
-            "dates": m.group(3).strip() if m else "",
-            "bullets": [b[2:].strip() for b in bullets_raw.splitlines()],
-        })
-    key_accounts = (re.search(r"^## Key accounts\s*\n(.+)$", text, re.M) or [None, ""])[1].strip()
-    proof_links = re.findall(r"^-\s+(https?://\S+)", text, re.M)
-    return {"name": name, "positioning": positioning, "roles": roles,
-            "key_accounts": key_accounts, "proof_links": proof_links}
+    errors = []
+    if not isinstance(data, dict):
+        return [f"{where}: expected an object, got {type(data).__name__}"]
+    unknown = sorted(set(data) - RESUME_INPUT_KEYS)
+    if unknown:
+        errors.append(f"{where}: unknown key(s) {unknown} — allowed: {sorted(RESUME_INPUT_KEYS)}")
+    missing = sorted(RESUME_INPUT_KEYS - set(data))
+    if missing:
+        errors.append(f"{where}: missing key(s) {missing}")
+    for key in ("name", "positioning"):
+        if key in data and not _nonempty_str(data[key]):
+            errors.append(f"{where}.{key}: non-empty string required")
+    roles = data.get("roles")
+    if not isinstance(roles, list) or not roles:
+        errors.append(f"{where}.roles: non-empty array required")
+    else:
+        for i, role in enumerate(roles):
+            rw = f"{where}.roles[{i}]"
+            if not isinstance(role, dict):
+                errors.append(f"{rw}: expected an object")
+                continue
+            unknown = sorted(set(role) - ROLE_KEYS)
+            if unknown:
+                errors.append(f"{rw}: unknown key(s) {unknown} — allowed: {sorted(ROLE_KEYS)}")
+            for key in ("title", "company", "dates"):
+                if key in role and not isinstance(role[key], str):
+                    errors.append(f"{rw}.{key}: string required")
+            if not _nonempty_str(role.get("title", "")):
+                errors.append(f"{rw}.title: non-empty string required")
+            bullets = role.get("bullets")
+            if not isinstance(bullets, list) or not bullets:
+                errors.append(f"{rw}.bullets: non-empty array required")
+            else:
+                for j, bullet in enumerate(bullets):
+                    bw = f"{rw}.bullets[{j}]"
+                    if not isinstance(bullet, dict):
+                        errors.append(f"{bw}: expected an object with text and source")
+                        continue
+                    unknown = sorted(set(bullet) - BULLET_KEYS)
+                    if unknown:
+                        errors.append(f"{bw}: unknown key(s) {unknown} — allowed: {sorted(BULLET_KEYS)}")
+                    for key in ("text", "source"):
+                        if not _nonempty_str(bullet.get(key, "")):
+                            errors.append(f"{bw}.{key}: non-empty string required (rule 5 traceability)")
+    for key in ("key_accounts", "proof_links"):
+        value = data.get(key)
+        if not isinstance(value, list) or not value:
+            errors.append(f"{where}.{key}: non-empty array required")
+        elif not all(_nonempty_str(x) for x in value):
+            errors.append(f"{where}.{key}: non-empty strings required")
+    return errors
+
+
+def load_resume_input(path: str) -> dict:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError as exc:
+        sys.exit(f"{path} is not valid JSON: {exc}")
+    errors = validate_resume_input(data)
+    if errors:
+        print(f"resume-input schema failed for {path} — nothing rendered:")
+        for e in errors:
+            print(f"  - {e}")
+        sys.exit(1)
+    return data
 
 
 # ---- template: fixed structure, ATS-safe, one page. PR A shape; PR B owns reweighting ----
@@ -94,7 +162,7 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
     roles_html = "\n".join(
         f'    <h2 class="role-title">{r["title"]}</h2>\n'
         f'    <p class="role-meta">{r["company"]} ({r["dates"]})</p>\n'
-        + "\n".join(f"    <li>{b}</li>" for b in r["bullets"])
+        + "\n".join(f"    <li>{b['text']}</li>" for b in r["bullets"])
         for r in me["roles"])
     links_html = "\n".join(f'    <li><a href="{u}">{u}</a></li>' for u in me["proof_links"])
     return f"""<!DOCTYPE html>
@@ -119,7 +187,7 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
   <section id="experience">
 {roles_html}
   </section>
-  <p class="key-accounts"><strong>Key accounts:</strong> {me['key_accounts']}</p>
+  <p class="key-accounts"><strong>Key accounts:</strong> {', '.join(me['key_accounts'])}</p>
   <section id="proof-links">
     <ul>
 {links_html}
@@ -131,7 +199,7 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
 
 
 # ---- offline checks: the locked rules, verifiable without Chrome ---------------------------
-def check_content_rules(html: str, source_text: str = "") -> list:
+def check_content_rules(html: str, json_text: str = "") -> list:
     """Return a list of rule-violation strings; empty means every locked rule holds."""
     fails = []
     # Rule 1 — quota-carrying post-sales is always the lead (addition 1).
@@ -162,9 +230,9 @@ def check_content_rules(html: str, source_text: str = "") -> list:
     for marker in ("TODO", "TBD", "Lorem", "PLACEHOLDER", "{{"):
         if marker in html:
             fails.append(f"rule 5: unsubstantiated template marker {marker!r} in output")
-    # Rule 6 — gitignored private-input filenames never appear in output or fixture text.
+    # Rule 6 — gitignored private-input filenames never appear in output or committed JSON.
     for needle in PRIVATE_INPUT_NAMES:
-        if needle in html or (source_text and needle in source_text):
+        if needle in html or (json_text and needle in json_text):
             fails.append(f"rule 6: private-input filename {needle!r} leaked into committed text")
     return fails
 
@@ -179,27 +247,9 @@ def check_reading_order(html: str) -> list:
     return []
 
 
-# ---- selftest: template + rules + path guard, no Chrome (the CI-exercised path) ------------
+# ---- selftest: schema + rules + reading order + path guard, no Chrome (the CI path) --------
 FIXTURE = os.path.join(SCRIPTS, os.pardir, "skills", "tailor-resume", "fixtures",
-                       "me-model-fixture.md")
-
-GOOD_FIXTURE = """# Jordan Avery Ellis
-
-Positioning: Quota-carrying post-sales account executive who grew a book of business at
-two workflow-software companies; hunting wins are proof of account growth, not a side job.
-
-## Experience
-### Senior Account Executive — Meridian Workflow Systems (2024-Present)
-- Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).
-- Grew the average contract value 2.3x by attaching onboarding to every renewal save.
-
-## Key accounts
-Meridian Workflow Systems, Northwind Analytics Co (fictional), Beacon Sheets Ltd (fictional)
-
-## Proof links
-- https://github.com/jaellis-fixture/resume-proof-fixture
-- https://empire-state-hub.example/builds
-"""
+                       "resume-input-fixture.json")
 
 
 def selftest() -> int:
@@ -208,13 +258,35 @@ def selftest() -> int:
     def case(name, ok):
         checks.append((name, ok))
 
-    # The committed fixture parses, renders, and passes every locked rule.
-    me = parse_me_model(FIXTURE) if os.path.exists(FIXTURE) else parse_me_model_str(GOOD_FIXTURE)
+    def schema_errors(data):
+        return validate_resume_input(data)
+
+    # The committed fixture validates and passes every locked rule + reading order.
+    with open(FIXTURE, encoding="utf-8") as fh:
+        fixture_text = fh.read()
+    me = json.loads(fixture_text)
     html = build_resume_html(me)
+    case("fixture JSON validates against the resume-input schema",
+         schema_errors(me) == [])
     case("fixture renders all sections",
          all([me["name"], me["positioning"], me["roles"], me["key_accounts"], me["proof_links"]]))
-    case("fixture passes all locked content rules", check_content_rules(html) == [])
+    case("fixture passes all locked content rules", check_content_rules(html, fixture_text) == [])
     case("reading order name→positioning→roles→Key accounts", check_reading_order(html) == [])
+
+    # Schema rejections — unknown keys, missing traceability, wrong shapes.
+    case("schema refuses unknown top-level key",
+         any("unknown key" in e for e in schema_errors({**me, "summary": "invented"})))
+    case("schema refuses unknown role key",
+         any("roles[0]" in e and "unknown key" in e
+             for e in schema_errors({**me, "roles": [{**me["roles"][0], "grade": "S"}]})))
+    bullet_missing_source = json.loads(fixture_text)
+    del bullet_missing_source["roles"][0]["bullets"][0]["source"]
+    case("schema refuses bullet without a trace-to-me-model source",
+         any("source" in e for e in schema_errors(bullet_missing_source)))
+    empty = json.loads(fixture_text)
+    empty["positioning"] = ""
+    case("schema refuses empty positioning", any("positioning" in e for e in schema_errors(empty)))
+    case("schema refuses a non-object input", schema_errors(["not", "an", "object"]) != [])
 
     # Rule 1: a positioning line that doesn't lead with quota-carrying post-sales fails.
     bad = build_resume_html({**me, "positioning": "Customer success leader with deep renewals focus."})
@@ -234,7 +306,7 @@ def selftest() -> int:
 
     # Rule 6: the gitignored private-input filenames never appear in committed text.
     case("rule 6 catches private-input filename in output",
-         any(r.startswith("rule 6") for r in check_content_rules(html, "see me-model.md")))
+         any(r.startswith("rule 6") for r in check_content_rules(html, 'source": "from me-model.md')))
 
     # Rule 7 / addition 3: the writer refuses any path outside .claude/output/.
     for bad_path in ("/tmp/resume.pdf", "./resume.pdf",
@@ -265,38 +337,27 @@ def selftest() -> int:
     return 0 if not fails else 1
 
 
-def parse_me_model_str(text: str) -> dict:
-    """Selftest shim: parse the inline GOOD_FIXTURE without touching disk."""
-    import tempfile
-    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
-        fh.write(text)
-        tmp = fh.name
-    try:
-        return parse_me_model(tmp)
-    finally:
-        os.remove(tmp)
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("source", nargs="?", help="path to me-model.md or a me-model-shaped fixture")
+    ap.add_argument("source", nargs="?", help="path to a resume-input JSON (written by the skill)")
     ap.add_argument("--mode", choices=("general", "posting-tailored"), default="general")
     ap.add_argument("--out", default=os.path.join(OUTPUT_DIR, "resume.pdf"))
     ap.add_argument("--jd", help="pasted JD text file (posting-tailored reweighting; PR B)")
-    ap.add_argument("--selftest", action="store_true", help="offline template+rules+guard checks, no Chrome")
+    ap.add_argument("--selftest", action="store_true",
+                    help="offline schema+rules+reading-order+guard checks, no Chrome")
     a = ap.parse_args()
 
     if a.selftest:
         return selftest()
     if not a.source:
-        ap.error("a me-model source path is required (or run --selftest)")
+        ap.error("a resume-input JSON path is required (or run --selftest)")
 
-    with open(a.source, encoding="utf-8") as fh:
-        source_text = fh.read()
-    me = parse_me_model(a.source)
+    me = load_resume_input(a.source)
     html = build_resume_html(me, a.mode)
 
-    fails = check_content_rules(html, source_text) + check_reading_order(html)
+    with open(a.source, encoding="utf-8") as fh:
+        json_text = fh.read()
+    fails = check_content_rules(html, json_text) + check_reading_order(html)
     if fails:
         print("Content rules failed — nothing rendered:")
         for f in fails:
@@ -307,7 +368,7 @@ def main() -> int:
     bin_ = chrome()
     if not bin_:
         sys.exit("Chrome not found — the Chrome render runs in-session where Chrome exists "
-                 "(Alex's Mac); CI exercises `--selftest` (template + rules + guard, no Chrome).")
+                 "(Alex's Mac); CI exercises `--selftest` (no Chrome).")
 
     # The intermediate HTML also lives under the gitignored output dir — nothing outside it.
     fd, tmp_html = tempfile.mkstemp(suffix=".html", dir=OUTPUT_DIR, prefix=".resume-")
