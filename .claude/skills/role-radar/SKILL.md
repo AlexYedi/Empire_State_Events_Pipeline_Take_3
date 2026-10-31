@@ -263,6 +263,45 @@ The JD responsibility pattern is the arbiter. When book-ownership can't be deter
   A range is no longer a Held case.
 - **Level flexibility — Mid-Market is IN at top-tier companies** *(wired into the Role-mechanism row of the scoring table via its segment note; change both together).* Score **MM roles at high-growth / top-tier / more-technical AI-native companies as full fits on MECHANISM** (book / expansion / consumption ownership); do **NOT** down-rank for segment size vs. Enterprise/Strategic. This encodes Alex's deliberate **step-back-to-step-forward** strategy (land MM at a top-tier company, prove value, work back to Enterprise). Enterprise/Strategic stays ideal; MM at the right company is squarely in.
 
+### JD-distillation fan-out discipline (Eric P5 — YED-220, added 2026-10-31)
+
+Step 3's mechanism read across a scan's worth of postings is **distillation work**: the same reading
+prompt (book / expansion / quota signals, end-to-end framing, support named) applied JD by JD. Today
+it runs inline, one JD at a time. **If it is ever fanned out to parallel sub-agents** (large scans,
+backlog runs), the fan-out follows the approval-loop discipline — never on round one:
+
+1. **Sample 1 — inline.** Distill ONE JD and present the structured read for Alex's edits; fold
+   every correction back into the distillation prompt before the next JD.
+2. **Batch of 10 — inline.** Next ten with the tuned prompt; edits fold in and the next batch runs.
+   Zero edits → that round counts toward the lock.
+3. **Lock after 2 consecutive zero-edit rounds** — the prompt is frozen from then on; further
+   prompt changes are drift, not improvement.
+4. **Then fan out** the remaining JDs to parallel Task-tool sub-agents (Claude Code sub-agents —
+   never an external API key), each running the SAME locked prompt and handing back structured
+   reads only. **Gate verdicts stay with the scripts**: every sub-agent read still runs
+   `phrase_gate.py` and `comp_gate.py` unchanged (ADR-12 — the model never re-derives gate rules,
+   and a sub-agent never scores around them); Step 4's HITL presentation and STOP-for-approval
+   gates apply to sub-agent output exactly as to inline output.
+
+**The first 1 + 10 always run inline.** The lock is earned from Alex's edits; without them there is
+nothing to freeze.
+
+Worked fixture (fictional posting, a 42-JD backlog run):
+
+| Round | JDs | Inline or sub-agent | Alex's edits | Distillation prompt |
+|---|---|---|---|---|
+| 1 | 1 (fictional: "Senior Account Manager, East" at a fictional AI-native co.) | inline | 2 — record the expansion target, not "grows accounts"; quote the book component's own words | tuned |
+| 2 | next 10 | inline | 1 — flag end-to-end framing verbatim from the JD, never paraphrased | tuned |
+| 3 | next 10 | inline | 0 | zero-edit round 1 |
+| 4 | next 10 | inline | 0 | **LOCKED** (2 consecutive zero-edit rounds) |
+| 5 | remaining 11 | parallel sub-agents | structured reads only; phrase gate + comp gate per row | locked prompt |
+
+Sub-agent reads change nothing downstream: same `icp_score` table, same tiers, same HITL STOP.
+
+> Source: `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md` §3 row 5 (approval-loop
+> tuning: sample 1 → batch of 10 → edits → repeat; lock after 2 zero-edit rounds, then parallel
+> Task sub-agents) and §2 rule 6 (Claude Code sub-agents, never an external API key).
+
 ---
 
 ## Step 4 — Present scored roles + create/confirm Roles DB (HITL gate)
