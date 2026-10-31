@@ -109,10 +109,54 @@ What the script enforces (change the rule in the script, then this summary):
 
 Mirrors `me-model.md` §1.5 (keep in sync). **Score by the role's *mechanism* (JD language), not its title.**
 
-> **THE FIVE SHAPES — nothing else is in scope (ruled by Alex 2026-09-24).**
-> **(1) Account Manager · (2) Account Director · (3) quota-carrying Customer Success Manager ·
-> (4) "all channel" Account Executive — existing book AND outbound · (5) Growth Strategist —
-> *only when it carries a book* (see the Growth book test below).**
+### Step 3 preconditions — the full-description phrase gate (E-09 P2, added 2026-10-31 — YED-220)
+
+Before any mechanism scoring, a posting clears `.claude/scripts/phrase_gate.py` — the ONE executable copy of
+the gate rules, pinned by its `--selftest` and `.claude/scripts/test_phrase_gate.py` (the same ADR-12 pattern
+`comp_gate.py` uses for comp: never re-derive its registry, slugs or verdicts in prose — that is the drift
+this repo keeps re-learning). The gate enforces four things, and **any failure holds the role out of scoring
+entirely** — no `icp_score`, no tier, so nothing can reach A on a posting you cannot cite:
+
+1. **Match on the FULL posting description, never on title/summary.** Harvest evidence (harvest note §3
+   row 2 + the detail line above it, `docs/archive/notes/eric-coldoutboundskills-harvest-2026-09-24.md`):
+   title+summary matching found 1 of 8 companies vs 5 of 8 on the full description; "cold call" matched 996
+   postings where "cold calling" matched 2,065. A title-only phrase hit **raises the question; the
+   description answers it** (same shape as v2.2's title rule) — the gate surfaces title-only matches and
+   never counts them. No full description available (`--jd-dir` row missing) → not scored; scoring a
+   title/summary is the 1-of-8 failure this gate exists for.
+2. **Mechanism phrases match only via the script's enumerated-inflection registry** — every surface form is
+   listed (call/calls/calling, expansion/expand/expanding, PLG/product-led growth, …); matching never stems
+   or substring-matches, or about a third of matches are lost. New phrase = a new enumerated form in the
+   script, never an inference at run time.
+3. **Role-family gating.** A posting is scored only when classified into one of the five shapes (THE FIVE
+   SHAPES, below) by slug; no family, or a slug outside the shapes, is not scored. The script gates the
+   slug only — the shapes and their scoring are defined once here and never re-derived in the script.
+4. **Liveness is a scoring precondition, not a display nicety.** A required `posting_url` + `posted_date` +
+   a live check BEFORE scoring: no URL, no posted date, or a dead URL → NOT_SCOREABLE. Probe the posting
+   URL in-session (the Step 1a pull already holds it) and pass `--live`/`--dead`, or pass `--check-live`
+   and let the script probe; unverified is not live (fail-closed). **Greenhouse consequence:** its `posted`
+   is empty by construction (Step 1 caveat) — take the true posted date from the posting page during the
+   live probe, or the row is not scored.
+
+Run it per row (one JSON verdict; the `notes_line` is ready to write verbatim):
+
+```bash
+python3 .claude/scripts/phrase_gate.py --title "<title>" --text "<full JD>" --family <slug> \
+  --url "<posting_url>" --posted <YYYY-MM-DD> [--live | --dead | --check-live]
+```
+
+Gate-held roles present in Step 4's **Dropped** bucket with the gate reason — a defined verdict, not an
+undefined state, so no Held row and no Linear issue. **Comp verdicts still come from `comp_gate.py`
+(v2.3)** — the phrase gate touches matching and preconditions only; it never reads or evaluates comp, and
+nothing here touches the comp-gate rules.
+
+> **THE FIVE SHAPES — nothing else is in scope (ruled by Alex 2026-09-24). The slug next to each
+> shape is the `--family` value `phrase_gate.py` requires (Step 3 preconditions above); a slug
+> outside these five is out of scope by construction.**
+> **(1) Account Manager — slug `account-manager` · (2) Account Director — slug `account-director` ·
+> (3) quota-carrying Customer Success Manager — slug `quota-csm` · (4) "all channel" Account
+> Executive — existing book AND outbound — slug `all-channel-ae` · (5) Growth Strategist —
+> *only when it carries a book* — slug `growth-strategist` (see the Growth book test below).**
 >
 > **(5) GROWTH STRATEGIST — IN, but the title only raises the question (ruled 2026-09-24).** Alex:
 > *"growth strategist should be kept, but it is tough to keep up with all of the fun names that
@@ -308,6 +352,7 @@ nowhere (migration 0011 + `retrieve.py`).
 ---
 
 ## Failure modes
+- **A role you believe is in scope comes back NOT_SCOREABLE with `unverified_liveness`** — the gate is fail-closed: unverified is not live. Probe the posting URL in-session and pass `--live` (or `--dead`), or run `--check-live` where the network is available; never pass `--live` without a probe this run.
 - **An ATS board errors, times out or rate-limits** — `ats_pull.py` retries once with a longer timeout, then names it in the "M errored" gap line. Report it in Step 4 by name. Never treat a failed board as "no roles".
 - **`ats_pull.py` exits 3** (registry unreadable, or 0 rows parsed because the registry heading/table drifted) — stop and say which; don't fall back to hand-curling 38 boards.
 - **OTE floor unreadable** (`comp_gate` exit 3, or ats_pull's "no OTE floor" warning, e.g. running from a worktree where the gitignored `me-model.md` is absent) — pass `--me-model <path>` or `--floor`; never treat a missing floor as PASS.
@@ -324,4 +369,4 @@ nowhere (migration 0011 + `retrieve.py`).
 - `alex:lead-prioritization`, `alex:firmographic-analysis` — fit-scoring discipline.
 - Notion DBs — **Roles `collection://3a174257-e90b-48be-b4bb-097ba5dc4231`** (this skill's tracking Kanban); Companies `collection://d5910dc3-8327-4b49-9294-fc9499709a98`, People `collection://4a1af67f-9141-4ba5-aa9d-88b07dcd5f86` (for later relations).
 - Graph-producer (Step 5.5): `substrate.py ensure-roles` · spec `docs/archive/notes/yed-149-spec-2026-09-27.md` · `.claude/references/market-intel-spine.md`.
-- Tools — `.claude/scripts/ats_pull.py` (ATS boards) + `.claude/scripts/comp_gate.py` (comp gate), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
+- Tools — `.claude/scripts/ats_pull.py` (ATS boards) + `.claude/scripts/comp_gate.py` (comp gate) + `.claude/scripts/phrase_gate.py` (Step-3 phrase gate + liveness precondition), `mcp__claude_ai_Apollo_io__apollo_organizations_job_postings` (optional), `notion-search`/`notion-fetch`/`notion-create-database`/`notion-create-pages`/`notion-update-page`.
