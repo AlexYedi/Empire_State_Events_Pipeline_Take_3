@@ -15,9 +15,9 @@ Buckets (thresholds are R2 PROPOSALS — tuning targets, never enforcement):
   claim.approved           no TTL — counted only; approved claims are never auto-expired
 
 Binding null rule (Alex, 2026-11-01, YED-183 comment dd28915c): last_engaged_at is NULL for
-every person today, so the age clock falls back to created_at. The same chain
-(last_engaged_at -> created_at) is applied to claims for consistency; rejected claims prefer
-reviewed_at — the rejection moment — when it exists.
+every person today, so the age clock falls back to created_at. Claims have no last_engaged_at
+column at all (not in the ADR-9 claim allowlist): rejected claims prefer reviewed_at — the
+rejection moment — and everything else ages from created_at.
 
 PII: the report prints counts, row ids, names and claim_keys — tier-2 fields only; contact
 detail is never selected. Belt-and-suspenders: the finished report text is scanned with
@@ -116,8 +116,8 @@ def classify_persons(persons: list[dict], newest_link: dict[str, dt.datetime],
 
 
 def _claim_clock(c: dict) -> tuple[dt.datetime, str] | None:
-    """Rejected claims age from reviewed_at (the rejection moment) when it exists; everything
-    else uses the standard chain. Returns (ts, source) or None."""
+    """Claims have no last_engaged_at column: rejected claims age from reviewed_at (the
+    rejection moment) when it exists; everything else ages from created_at. (ts, source) or None."""
     if c.get("status") == "rejected":
         rev = parse_ts(c.get("reviewed_at"))
         if rev is not None:
@@ -243,7 +243,7 @@ def fetch_all(table: str, select: str, order: str, extra_filter: str = "") -> li
 def run_scan(as_of: dt.date, cfg: TTLConfig = TTLConfig()) -> tuple[list[dict], list[dict], dict, dict]:
     """Read the four tables and classify. Read-only end to end."""
     persons = fetch_all("person", "id,name,last_engaged_at,created_at", "created_at.asc")
-    claims = fetch_all("claim", "id,claim_key,status,reviewed_at,last_engaged_at,created_at", "created_at.asc")
+    claims = fetch_all("claim", "id,claim_key,status,reviewed_at,created_at", "created_at.asc")
     links = (fetch_all("event_entity", "entity_id,created_at", "created_at.asc", "entity_type=eq.person")
              + fetch_all("claim_entity", "entity_id,created_at", "created_at.asc", "entity_type=eq.person"))
     pb = classify_persons(persons, newest_link_by_person(links), as_of, cfg)
