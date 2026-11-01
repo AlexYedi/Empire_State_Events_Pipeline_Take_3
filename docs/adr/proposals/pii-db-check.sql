@@ -7,9 +7,22 @@
 --           Alex from repo migrations only after a twin rehearsal on the twin
 --           project. Nothing here runs until this file is (a) adopted and
 --           (b) promoted to supabase/migrations/ by a human.
+-- Repaired: 2026-11-01 per YED-279 (defects verified against the live
+--           The-Prod-Brain project during the PR #235 review):
+--             1. Part 2 refused every write to public.person because a
+--                legacy, empty `email` column still exists there — it now
+--                refuses only when a forbidden column is actually populated.
+--             2. Part 3 aborted because canonical_v2.person does not exist —
+--                the cv2 triggers are now guarded by a catalog check.
+--             3. The shapes now carry spine EMAIL_RE/PHONE_RE verbatim (see
+--                Part 1 note; the "Postgres has no lookaround" claim was
+--                false).
+--           Finding the nulling-PATCH writer that keeps the legacy `email`
+--           column alive and dropping the column remains the documented
+--           PREREQUISITE for promotion — deliberately NOT handled here.
 -- Builds on: ADR-9 ("Postgres CHECK/trigger on person as Phase-2 hardening"),
---            the regex shapes ratified-or-proposed in pii-regex-set.md, and
---            the column allowlist FORBIDDEN_COLUMNS in spine_client.py.
+--            the regex shapes ratified in pii-regex-set.md, and the column
+--            allowlist FORBIDDEN_COLUMNS in spine_client.py.
 -- Scope:    public.person and canonical_v2.person only. claim free-text
 --           scanning stays Python-side (proposal doc pii-regex-set.md covers
 --           why these same shapes, not a second dialect).
@@ -25,29 +38,45 @@
 -- ---------------------------------------------------------------------------
 -- Part 1 — trigger function: scan person free-text columns, refuse contact PII
 -- ---------------------------------------------------------------------------
--- Mirrors EMAIL_RE / PHONE_RE from spine_client.py. Postgres has no lookahead/
--- lookbehind, so the boundary guards are dropped; the "separators or +"
--- phone requirement is kept so bare 10-digit integers (timestamps, ids) still
--- never trip it. Known accepted trade-off carried over from pii-regex-set.md:
--- separator-less 10-digit numbers and non-US formatted internationals pass.
+-- Mirrors EMAIL_RE / PHONE_RE from spine_client.py. Postgres ARE (the regex
+-- dialect the `~` operator uses) supports lookahead/lookbehind and the other
+-- constructs these shapes need, so the shapes are carried verbatim. The
+-- earlier draft dropped the lookarounds on the false premise that Postgres
+-- had no lookaround, and doubled its backslashes (`\\.`) — inside a
+-- $$-quoted body under standard_conforming_strings the engine then saw a
+-- literal backslash, not a dot. The literals below are dollar-quoted
+-- ($re$…$re$) so they stay byte-identical to the Python source and no SQL
+-- escape layer can drift them (YED-279 defect 3).
+-- Phone carries A2's `(?:1[\s.-])?` leading-country-code prefix
+-- (feat/s04-a2-phone-prefix); if A2 lands with a different final shape,
+-- reconcile here before promotion. One dialect nuance, immaterial for ASCII
+-- contact PII: Python's \w/\d are Unicode-aware, ARE's follow the DB locale.
+-- Known accepted trade-off carried over from pii-regex-set.md: separator-less
+-- 10-digit numbers and non-US formatted internationals pass.
 
 create or replace function public.assert_no_contact_pii()
 returns trigger
 language plpgsql
 as $$
+declare
+  -- Verbatim spine_client.py EMAIL_RE.
+  email_re text := $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+  -- Verbatim spine_client.py PHONE_RE (first alternative includes A2's
+  -- leading-country-code prefix; second alternative is the E.164 compact form).
+  phone_re text := $re$(?<![\w.+-])(?:\+\d{1,3}[\s.-]?)?(?:1[\s.-])?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])$re$;
 begin
   -- Free-text columns on person (per the spine allowlist: professional-public
   -- identity only). name is scanned too — it is a string someone typed.
-  if coalesce(new.name, '')          ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
-  or coalesce(new.title, '')         ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
-  or coalesce(new.bio, '')           ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
-  or coalesce(new.role_context, '')  ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
-  or coalesce(new.metadata::text, '{}') ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
-  or coalesce(new.name, '')          ~ '(\+[0-9]{1,3}[[:space:].-]?)?(\([0-9]{3}\)|[0-9]{3})[[:space:].-][0-9]{3}[[:space:].-][0-9]{4}'
-  or coalesce(new.title, '')         ~ '(\+[0-9]{1,3}[[:space:].-]?)?(\([0-9]{3}\)|[0-9]{3})[[:space:].-][0-9]{3}[[:space:].-][0-9]{4}'
-  or coalesce(new.bio, '')           ~ '(\+[0-9]{1,3}[[:space:].-]?)?(\([0-9]{3}\)|[0-9]{3})[[:space:].-][0-9]{3}[[:space:].-][0-9]{4}'
-  or coalesce(new.role_context, '')  ~ '(\+[0-9]{1,3}[[:space:].-]?)?(\([0-9]{3}\)|[0-9]{3})[[:space:].-][0-9]{3}[[:space:].-][0-9]{4}'
-  or coalesce(new.metadata::text, '{}') ~ '(\+[0-9]{1,3}[[:space:].-]?)?(\([0-9]{3}\)|[0-9]{3})[[:space:].-][0-9]{3}[[:space:].-][0-9]{4}'
+  if coalesce(new.name, '')          ~ email_re
+  or coalesce(new.title, '')         ~ email_re
+  or coalesce(new.bio, '')           ~ email_re
+  or coalesce(new.role_context, '')  ~ email_re
+  or coalesce(new.metadata::text, '{}') ~ email_re
+  or coalesce(new.name, '')          ~ phone_re
+  or coalesce(new.title, '')         ~ phone_re
+  or coalesce(new.bio, '')           ~ phone_re
+  or coalesce(new.role_context, '')  ~ phone_re
+  or coalesce(new.metadata::text, '{}') ~ phone_re
   then
     raise exception 'ADR-9 tier-2 violation: contact PII (email/phone pattern) in person.%. Contact detail lives in HubSpot; see CLAUDE.md invariant 1.',
       tg_argv[0];
@@ -57,12 +86,19 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Part 2 — trigger function: DDL watch on forbidden columns
+-- Part 2 — trigger function: refuse writes that POPULATE forbidden columns
 -- ---------------------------------------------------------------------------
--- The DB-side twin of spine_client.py's FORBIDDEN_COLUMNS. Checked at write
--- time rather than DDL time because a CHECK cannot introspect column names;
--- if someone later ALTERs an email/phone column onto person, every subsequent
--- write fails loudly instead of the data flowing silently.
+-- The DB-side twin of spine_client.py's FORBIDDEN_COLUMNS. The first draft
+-- refused every write the moment a forbidden column merely existed; on the
+-- live project public.person still carries a legacy, empty `email` column
+-- (YED-279 defect 1), so that variant blocked all writes. It now inspects the
+-- row being written and raises only when a forbidden column carries a value —
+-- the actual ADR-9 harm is contact PII landing in the graph, not column
+-- existence. A future ALTER that re-adds email/phone onto person stays
+-- covered: any write that populates it fails loudly with an ADR-9 message.
+-- Dropping the legacy column (after finding the nulling-PATCH writer that
+-- keeps it populated-null) is the documented promotion prerequisite,
+-- tracked separately from this file.
 
 create or replace function public.assert_no_pii_columns()
 returns trigger
@@ -71,15 +107,16 @@ as $$
 declare
   bad text;
 begin
-  select string_agg(column_name, ', ')
+  select string_agg(key, ', ' order by key)
     into bad
-    from information_schema.columns
-    where table_schema = tg_table_schema
-      and table_name   = tg_table_name
-      and lower(column_name) in
-        ('email', 'e_mail', 'phone', 'phone_number', 'mobile', 'telephone');
+    from jsonb_each(to_jsonb(new))
+    where lower(key) in
+        ('email', 'e_mail', 'phone', 'phone_number', 'mobile', 'telephone')
+      and value is not null
+      and value <> 'null'::jsonb
+      and value::text <> '""';
   if bad is not null then
-    raise exception 'ADR-9 tier-2 violation: forbidden contact-PII column(s) % exist on %.%. Writes refuse until they are dropped.',
+    raise exception 'ADR-9 tier-2 violation: forbidden contact-PII column(s) % populated on %.%. Contact detail lives in HubSpot; see CLAUDE.md invariant 1.',
       bad, tg_table_schema, tg_table_name;
   end if;
   return new;
@@ -90,6 +127,10 @@ $$;
 -- Part 3 — attach to both person tables (public + the canonical_v2 copy,
 -- which is created via `like public.person` in migration 0006 and does not
 -- inherit triggers). The label argument names the table in refusals.
+-- The cv2 block is guarded: canonical_v2.person does not exist on every
+-- environment yet, and an unguarded reference aborted the whole migration
+-- (YED-279 defect 2). If cv2 is created after this runs, re-run the block —
+-- or wire these triggers into migration 0006 at promotion time.
 -- ---------------------------------------------------------------------------
 
 drop trigger if exists person_no_contact_pii on public.person;
@@ -102,15 +143,27 @@ create trigger person_no_pii_columns
   before insert or update on public.person
   for each row execute function public.assert_no_pii_columns();
 
-drop trigger if exists cv2_person_no_contact_pii on canonical_v2.person;
-create trigger cv2_person_no_contact_pii
-  before insert or update on canonical_v2.person
-  for each row execute function public.assert_no_contact_pii('canonical_v2.person');
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'canonical_v2'
+      and table_name   = 'person'
+  ) then
+    drop trigger if exists cv2_person_no_contact_pii on canonical_v2.person;
+    create trigger cv2_person_no_contact_pii
+      before insert or update on canonical_v2.person
+      for each row execute function public.assert_no_contact_pii('canonical_v2.person');
 
-drop trigger if exists cv2_person_no_pii_columns on canonical_v2.person;
-create trigger cv2_person_no_pii_columns
-  before insert or update on canonical_v2.person
-  for each row execute function public.assert_no_pii_columns();
+    drop trigger if exists cv2_person_no_pii_columns on canonical_v2.person;
+    create trigger cv2_person_no_pii_columns
+      before insert or update on canonical_v2.person
+      for each row execute function public.assert_no_pii_columns();
+  else
+    raise notice 'canonical_v2.person not found — skipping cv2 triggers (re-run this block after migration 0006).';
+  end if;
+end;
+$$;
 
 -- A plain CHECK constraint (e.g. `check (bio !~ …)`) was considered and
 -- rejected for the scan: it cannot cover the `metadata` jsonb, cannot be
@@ -138,7 +191,15 @@ create trigger cv2_person_no_pii_columns
 --      Suggested probe on the twin:
 --        select id from public.person
 --        where coalesce(bio,'') || coalesce(role_context,'')
---              ~ '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}';
+--              ~ $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+--      Already verified against the live The-Prod-Brain during the PR #235
+--      review of YED-279: 0 existing person rows match either the email or
+--      the phone pattern — re-confirm on the twin at rehearsal time.
 --   3. Confirm the nulling-update path still passes: a PATCH that sets
---      metadata/email fields to null contains no pattern and clears the scan.
+--      metadata/email fields to null contains no pattern and clears both the
+--      scan and the populated-column check.
+--   4. Promotion prerequisite (separate task): find the nulling-PATCH writer
+--      that keeps the legacy public.person `email` column alive, then drop
+--      the column. Part 2 tolerates its empty presence but the column has no
+--      business on the spine allowlist.
 -- ============================================================================
