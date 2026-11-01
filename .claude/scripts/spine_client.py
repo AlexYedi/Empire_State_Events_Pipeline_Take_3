@@ -85,10 +85,12 @@ ALLOW: dict[str, set[str]] = {
 FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "telephone"}
 
 # Patterns scanned over every string value. Phone requires separators or a leading +/( so that
-# 10-digit integers (unix timestamps, ids) never false-positive.
+# 10-digit integers (unix timestamps, ids) never false-positive. The optional leading-1 prefix
+# (S-04 A2, YED-183) catches leading-country-code US numbers while the guard lookbehind still
+# applies to the whole number, so `1-` after a word char or `.` cannot slip through.
 EMAIL_RE = re.compile(r"(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])")
 PHONE_RE = re.compile(
-    r"(?<![\w.+-])(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"   # 555-123-4567 / (555) 123 4567
+    r"(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"   # 555-123-4567 / 1-555-123-4567
     r"|(?<![\w.])\+\d{10,15}(?![\w])"                                                          # +15551234567 (E.164 compact)
 )
 # Bot / no-reply addresses are not personal data (git trailers surface them in generated artifacts).
@@ -417,6 +419,19 @@ def selftest() -> bool:
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"contact": {"cell": "+1 (555) 123-4567"}}}), True)
     add("event.metadata E.164 compact phone → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "+15551234567"}}), True)
+    # S-04 A2 (YED-183): leading-1 US numbers with dash/dot separators were a verified miss (G3).
+    add("event.metadata leading-1 dash phone → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "1-555-123-4567"}}), True)
+    add("event.metadata leading-1 dot phone → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "1.555.123.4567"}}), True)
+    add("event.metadata leading-1 phone in prose → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "call 1-800-555-0199"}}), True)
+    add("event.metadata leading-1 space phone → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "1 555 123 4567"}}), True)
+    add("event.metadata +1 dash phone → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "+1-555-123-4567"}}), True)
+    add("event.metadata parens-area phone → refuse",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "(555) 123-4567"}}), True)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     add("inbox row from denylisted sender_domain → refuse",

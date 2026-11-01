@@ -32,7 +32,7 @@ Every gap below was verified against the live module by importing `EMAIL_RE`/`PH
 |---|---|---|---|---|
 | G1 | UK/EU *formatted* international (`+dd ddd dddd dddd` grouping) | `+44 20 5555 1234` | **missed** | Out of scope by design — the spec's set is E.164 + US. Events are NYC; accept. |
 | G2 | 10-digit US number with **no** separators | `5551234567` | **missed** | Deliberate: the same shape as a unix timestamp. Tightening would trade a real PII leak for false-positive refusals on metadata IDs. Accept; document. |
-| G3 | US number with leading country code and dashes | `1-555-123-4567` | **missed** | Genuine near-miss: the `(?<![\w.+-])` lookbehind blocks a match that starts right after `1-`. Small, fixable (`(?:1[\\s.-])?` prefix) but it edits guarded code — needs human review if wanted. |
+| G3 | US number with leading country code and dashes | `1-555-123-4567` | **missed** → **fixed by A2 (2026-11-01)** | Genuine near-miss: the lookbehind blocks a match that starts right after `1-`. **A2 adopted** (Alex, Linear YED-183 comment `dd28915c`): the optional `(?:1[\s.-])?` prefix went into `PHONE_RE`'s first alternative, inside the lookbehind guard — dash, dot, space, and prose-embedded leading-1 numbers now caught; separator-less 10-digit still rejected (A3). |
 
 ## Test-string tables
 
