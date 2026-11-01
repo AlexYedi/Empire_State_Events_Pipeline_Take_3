@@ -1,5 +1,9 @@
 {
   "name": "Jordan Avery Ellis",
+  "contact": [
+    "New York, NY",
+    "jaellis-fixture.example"
+  ],
   "positioning": "Quota-carrying post-sales account executive who grew a book of business at two workflow-software companies; hunting wins are proof of account growth, not a side job.",
   "roles": [
     {
@@ -41,5 +45,11 @@
   "proof_links": [
     "https://github.com/jaellis-fixture/resume-proof-fixture",
     "https://empire-state-hub.example/builds"
+  ],
+  "education": [
+    "B.A. Economics, Empire State University (fictional)",
+    "Two seasons club lacrosse",
+    "Cert: Salesforce Administrator",
+    "Cert: HubSpot Sales Software"
   ]
 }

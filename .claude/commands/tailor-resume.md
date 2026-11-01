@@ -19,9 +19,10 @@ is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome pr
    (paste the JD verbatim).
 2. Source is `.claude/references/me-model.md`, read **by path only**. If it is absent
    (fresh worktree without the local file): stop and ask — nothing renders without it.
-3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `positioning`,
-   `roles[] {title, company, dates, bullets[] {text, source[, original]}}`,
-   `key_accounts[]`, `proof_links[]`) and write it to `.claude/output/resume-input.json`.
+3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `contact[]` (optional),
+   `positioning`, `roles[] {title, company, dates, bullets[] {text, source[, original]}}`,
+   `key_accounts[]`, `proof_links[]`, `education[]` (optional)) and write it to
+   `.claude/output/resume-input.json`.
    Every bullet carries a `source` note (trace-to-me-model). Use the **decided mapping**
    (SKILL.md — Alex's spec walk, 2026-10-31): Positioning → summary leading with
    quota-carrying post-sales; Experience sections → role entries in me-model order;
@@ -47,8 +48,10 @@ python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
 
 ## Step 3 — Verify in-session
 
-The run itself is gated: it exits non-zero unless the PDF is exactly one page and the
-`pdftotext` reading order holds (name → positioning → roles in order → Key accounts).
+The run itself is gated: it exits non-zero unless the PDF is exactly one page, the
+`pdftotext` reading order holds (name → positioning → roles in order → Key accounts →
+Selected builds → Education when present), and the section labels extract unbroken (the
+≤0.3pt letter-spacing ATS cap — "E D U C AT I O N" extraction fails the run).
 If `pdftotext` is missing the order check is skipped with a loud `WARN` — install
 poppler-utils rather than trust it.
 

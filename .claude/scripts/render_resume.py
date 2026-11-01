@@ -9,18 +9,20 @@ The pipeline is split so the renderer's private-input surface is zero:
     to `.claude/output/`. This script NEVER opens the me-model — parsing it is not here
     (section-to-field mapping is a PRD decision for PR B with Alex).
   - **This script** consumes only that JSON: schema-validates it (refuses unknown keys),
-    applies the locked content rules offline, builds the one-page ATS-safe template
-    (name → positioning → roles in order → Key accounts), and prints it via headless
-    Chrome `--print-to-pdf`, reusing render_carousel.py's chrome() path probe and run()
-    method (no new render path — E-07's proven mechanism).
+    applies the locked content rules offline, builds the one-page ATS-safe **minimal
+    template** (Alex's blind pick on PR #247, comment 6551704109: letter page, 0.4in/0.55in
+    margins, Helvetica Neue 9.4pt, no colour accents; header name → contact; sections
+    Positioning → Experience → Key accounts → Selected builds → Education), and prints it
+    via headless Chrome `--print-to-pdf`, reusing render_carousel.py's chrome() path probe
+    and run() method (no new render path — E-07's proven mechanism).
   - **PR B (YED-258)** — the content half now ships for real: the me-model → resume-input
     mapping is documented as the Blueprint default (Positioning → summary leading with
     quota-carrying post-sales; Experience → role entries with hunting-wins-as-account-growth
     framing; Key accounts → the logo list), posting-tailored mode **reweights** by reordering
     roles/bullets against a pasted JD (reorder-only — rule 5 forbids writing a word), proof
     links get an optional live check (`--verify-links`, rule 4 "verified live"), and the
-    rendered PDF is gated: exactly one page and `pdftotext` reading order intact, exit code
-    gates the run.
+    rendered PDF is gated: exactly one page, `pdftotext` reading order intact, and section
+    labels extracted unbroken (the ATS letter-spacing cap), exit code gates the run.
   - **Guard** — every generated resume writes ONLY to `.claude/output/` (gitignored); any
     other path is refused loudly.
 
@@ -81,7 +83,8 @@ def resolve_output_path(out: str) -> str:
 
 
 # ---- resume-input schema: validate, refuse unknown keys, never guess -----------------------
-RESUME_INPUT_KEYS = {"name", "positioning", "roles", "key_accounts", "proof_links"}
+RESUME_INPUT_KEYS = {"name", "positioning", "contact", "roles", "key_accounts",
+                     "proof_links", "education"}
 ROLE_KEYS = {"title", "company", "dates", "bullets"}
 BULLET_KEYS = {"text", "source", "original"}
 
@@ -102,6 +105,10 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                                      required whenever the skill reworded the bullet for a
                                      posting (spec-walk decision 2, 2026-10-31)
       key_accounts[], proof_links[]  non-empty arrays of non-empty strings
+      contact[], education[]         OPTIONAL arrays of non-empty strings (minimal-template
+                                     follow-up, PR #247 comment 6551704109): the header
+                                     contact line and the one-line Education section
+                                     (degree · activities · certs). Absent → section omitted.
     Unknown keys are refused at every level; nothing is coerced or dropped.
     """
     errors = []
@@ -151,12 +158,12 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     if "original" in bullet and not _nonempty_str(bullet["original"]):
                         errors.append(f"{bw}.original: non-empty string required when present "
                                       "(verbatim me-model wording of a reworded bullet)")
-    for key in ("key_accounts", "proof_links"):
+    for key in ("key_accounts", "proof_links", "contact", "education"):
         value = data.get(key)
-        if not isinstance(value, list) or not value:
-            errors.append(f"{where}.{key}: non-empty array required")
-        elif not all(_nonempty_str(x) for x in value):
-            errors.append(f"{where}.{key}: non-empty strings required")
+        if key in data and (not isinstance(value, list) or not value
+                            or not all(_nonempty_str(x) for x in value)):
+            errors.append(f"{where}.{key}: optional, but when present it must be a "
+                          "non-empty array of non-empty strings")
     return errors
 
 
@@ -175,42 +182,85 @@ def load_resume_input(path: str) -> dict:
     return data
 
 
-# ---- template: fixed structure, ATS-safe, one page. PR A shape; PR B owns reweighting ----
+# ---- template: minimal spec (Alex's blind pick, PR #247 comment 6551704109) -----------------
+# Letter page, 0.4in/0.55in margins, Helvetica Neue 9.4pt, line-height 1.27, text #16181d,
+# no colour accents. Section-label letter-spacing is an ATS cap: at 1.2pt pdftotext
+# extracts "E D U C AT I O N", which breaks ATS parsing — the PDF gate asserts the cap
+# on the rendered sample, since pdftotext output is the exact surface it protects.
+SECTION_LABEL_LETTER_SPACING_PT = 0.3
+PALETTE = ("#16181d", "#5a5f6b", "#c9ccd3", "#3c4049")  # every colour the template may use
+SECTION_LABELS = {"experience": "Experience", "key-accounts": "Key accounts",
+                  "selected-builds": "Selected builds", "education": "Education"}
+
+
 def build_resume_html(me: dict, mode: str = "general") -> str:
     roles_html = "\n".join(
-        f'    <h2 class="role-title">{r["title"]}</h2>\n'
-        f'    <p class="role-meta">{r["company"]} ({r["dates"]})</p>\n'
-        + "\n".join(f"    <li>{b['text']}</li>" for b in r["bullets"])
+        f'    <div class="role-head">\n'
+        f'      <h3 class="role-title">{r["title"]}</h3>\n'
+        f'      <span class="role-dates">{r["dates"]}</span>\n'
+        f'    </div>\n'
+        f'    <p class="role-company">{r["company"]}</p>\n'
+        f'    <ul class="bullets">\n'
+        + "\n".join(f"      <li>{b['text']}</li>" for b in r["bullets"]) + "\n    </ul>"
         for r in me["roles"])
-    links_html = "\n".join(f'    <li><a href="{u}">{u}</a></li>' for u in me["proof_links"])
+    links_html = "\n".join(f'      <li><a href="{u}">{u}</a></li>' for u in me["proof_links"])
+    contact_html = ""
+    if me.get("contact"):
+        contact_html = f'\n  <p class="contact">{" · ".join(me["contact"])}</p>'
+    education_html = ""
+    if me.get("education"):
+        education_html = (
+            '  <section id="education">\n'
+            '    <h2 class="section-label">Education</h2>\n'
+            f'    <p class="education-line">{" · ".join(me["education"])}</p>\n'
+            '  </section>')
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>{me['name']} — Resume ({mode})</title>
 <style>
-  /* ATS-safe: single column, standard fonts, text-selectable (Chrome --print-to-pdf). */
-  body {{ font-family: Helvetica, Arial, sans-serif; font-size: 11pt; margin: 0.6in; color: #111; }}
-  h1 {{ font-size: 17pt; margin: 0; }}
-  p.positioning {{ font-size: 11pt; margin: 4pt 0 10pt; }}
-  h2 {{ font-size: 12pt; margin: 10pt 0 2pt; }}
-  p.role-meta {{ margin: 0 0 2pt; color: #333; }}
-  ul {{ margin: 2pt 0 6pt; padding-left: 14pt; }}
-  p.key-accounts {{ margin-top: 8pt; }}
+  /* Minimal template — the winning blind-pick variant (PR 247, Alex's design decision).
+     ATS-safe: single column, standard fonts, text-selectable (Chrome --print-to-pdf).
+     No accents: the palette below is the full colour set this template may emit. */
+  @page {{ size: letter; margin: 0.4in 0.55in; }}
+  body {{ font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 9.4pt;
+          line-height: 1.27; color: #16181d; margin: 0; }}
+  header {{ border-bottom: 0.6pt solid #c9ccd3; padding-bottom: 6pt; }}
+  h1 {{ font-size: 20pt; font-weight: 600; letter-spacing: -0.2pt; margin: 0; }}
+  p.contact {{ font-size: 9pt; color: #5a5f6b; margin: 2pt 0 0; }}
+  p.positioning {{ font-size: 10.5pt; margin: 8pt 0 2pt; }}
+  h2.section-label {{ font-size: 8.5pt; font-weight: 600; text-transform: uppercase;
+                      color: #5a5f6b; letter-spacing: 0.3pt; margin: 10pt 0 3pt; }}
+  .role-head {{ display: flex; justify-content: space-between; align-items: baseline; }}
+  h3.role-title {{ font-size: 10.5pt; font-weight: 600; margin: 4pt 0 0; }}
+  span.role-dates {{ font-size: 9pt; color: #5a5f6b; font-variant-numeric: tabular-nums; }}
+  p.role-company {{ font-size: 9.5pt; color: #3c4049; margin: 0; }}
+  ul {{ margin: 1pt 0 3pt; padding-left: 12pt; }}
+  li {{ margin: 0 0 1.5pt; }}
+  p.logo-line, p.education-line {{ margin: 0; }}
 </style>
 </head>
 <body>
-  <h1 class="resume-name">{me['name']}</h1>
+  <header>
+    <h1 class="resume-name">{me['name']}</h1>{contact_html}
+  </header>
   <p class="positioning">{me['positioning']}</p>
   <section id="experience">
+    <h2 class="section-label">Experience</h2>
 {roles_html}
   </section>
-  <p class="key-accounts"><strong>Key accounts:</strong> {', '.join(me['key_accounts'])}</p>
-  <section id="proof-links">
+  <section class="key-accounts">
+    <h2 class="section-label">Key accounts</h2>
+    <p class="logo-line">{', '.join(me['key_accounts'])}</p>
+  </section>
+  <section id="selected-builds">
+    <h2 class="section-label">Selected builds</h2>
     <ul>
 {links_html}
     </ul>
   </section>
+{education_html}
 </body>
 </html>
 """
@@ -265,7 +315,7 @@ def check_content_rules(html: str, json_text: str = "") -> list:
                         fails.append(f"rule 2: client name {account!r} appears in the original "
                                      f"of roles[{i}].bullets[{j}] — outcomes are described unnamed")
     # Rule 3 — no vertical-territory labels in titles (PR-B review addition).
-    for title in re.findall(r'<h2 class="role-title">(.*?)</h2>', html, re.S):
+    for title in re.findall(r'<h3 class="role-title">(.*?)</h3>', html, re.S):
         hit = [v for v in VERTICAL_LABELS if v in title.lower()]
         if hit:
             fails.append(f"rule 3: title carries a vertical-territory label ({hit[0]!r}): {title!r}")
@@ -284,13 +334,52 @@ def check_content_rules(html: str, json_text: str = "") -> list:
     return fails
 
 
-def check_reading_order(html: str) -> list:
-    """Name → positioning → roles → Key accounts, in that DOM order (PR-A exit d)."""
+def check_reading_order(html: str, me: dict | None = None) -> list:
+    """Name → positioning → roles → Key accounts → Selected builds → Education, in DOM order
+    (PR-A exit d; extended to the minimal-template sections). Education is conditional on
+    the resume-input — pass `me` to have its absence flagged; without `me`, an education
+    section present in the HTML is still checked for position."""
     marks = [('class="resume-name"', "name"), ('class="positioning"', "positioning"),
-             ('id="experience"', "roles"), ('class="key-accounts"', "Key accounts")]
+             ('id="experience"', "roles"), ('class="key-accounts"', "Key accounts"),
+             ('id="selected-builds"', "Selected builds")]
+    if me is not None and me.get("education"):
+        marks.append(('id="education"', "Education"))
     positions = [html.find(m) for m, _ in marks]
     if any(p == -1 for p in positions) or positions != sorted(positions):
-        return ["reading order broken: expected name → positioning → roles → Key accounts"]
+        return ["reading order broken: expected name → positioning → roles → Key accounts "
+                "→ Selected builds (→ Education when present)"]
+    return []
+
+
+# ---- template-spec guards (minimal template, PR #247 comment 6551704109) ---------------------
+def list_structure_errors(html: str) -> list:
+    """Every <li> must sit inside a <ul> — the PR-A template emitted bare <li>, which
+    renders but is malformed HTML and confuses strict ATS parsers."""
+    without_uls = re.sub(r"<ul\b[^>]*>.*?</ul>", "", html, flags=re.S)
+    if "<li" in without_uls:
+        return ["list structure broken: a <li> appears outside any <ul>"]
+    return []
+
+
+def palette_errors(html: str) -> list:
+    """No colour accents: every hex colour in the output must be one of the template's
+    neutral palette values (the acid-green #8FE83A accent variant lost the blind pick)."""
+    used = {c.lower() for c in re.findall(r"#[0-9a-fA-F]{3,8}\b", html)}
+    stray = sorted(used - {c.lower() for c in PALETTE})
+    if stray:
+        return [f"colour accent detected — only the neutral palette {list(PALETTE)} is "
+                f"allowed, found {stray}"]
+    return []
+
+
+def letter_spacing_errors(html: str) -> list:
+    """Section-label letter-spacing must stay at or under the ATS cap (0.3pt). At 1.2pt
+    pdftotext extracts "E D U C AT I O N" and ATS parsing breaks — see
+    section_label_extraction_errors, the rendered-PDF twin of this check."""
+    over = [v for v in re.findall(r"letter-spacing:\s*(-?[\d.]+)pt", html)
+            if float(v) > SECTION_LABEL_LETTER_SPACING_PT]
+    if over:
+        return [f"letter-spacing over the {SECTION_LABEL_LETTER_SPACING_PT}pt ATS cap: {over}"]
     return []
 
 
@@ -425,7 +514,8 @@ def _squash(s: str) -> str:
 
 
 def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
-    """Pure check on extracted text: name → positioning → role titles in order → Key accounts.
+    """Pure check on extracted text: name → positioning → role titles in order → Key accounts
+    → Selected builds → (Education when present).
 
     Matches on squashed text: pdftotext breaks lines mid-word at hyphens
     ("workflow-software" extracts as "workflowsoftware"), so exact substring
@@ -433,7 +523,9 @@ def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
     """
     flat = _squash(pdf_text)
     marks = [me["name"], me["positioning"]] \
-        + [r["title"] for r in me["roles"]] + ["Key accounts"]
+        + [r["title"] for r in me["roles"]] + ["Key accounts", "Selected builds"]
+    if me.get("education"):
+        marks.append(" ".join(me["education"]))  # the one-line Education section content
     # Monotonic search: each marker must appear AFTER the previous marker's position.
     # Plain find() would match a later marker inside earlier prose — "Account Executive"
     # occurs inside the positioning line "quota-carrying post-sales account executive".
@@ -442,15 +534,31 @@ def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
         found = flat.find(_squash(m), cursor)
         if found == -1:
             return ["reading order broken in PDF text: expected name → positioning → "
-                    "roles in order → Key accounts (marker "
+                    "roles in order → Key accounts → Selected builds (→ Education when "
+                    "present) (marker "
                     f"{m[:40]!r} not found after position {cursor})"]
         cursor = found + len(_squash(m))
     return []
 
 
+def section_label_extraction_errors(pdf_text: str, labels: list) -> list:
+    """The ATS cap, asserted on the surface it protects: each section-label word must be
+    extracted by pdftotext as an unbroken token. Over-spaced labels extract as
+    "E D U C AT I O N" — real ATS parsers die exactly there."""
+    errors = []
+    for label in labels:
+        for word in label.split():
+            if len(word) >= 3 and not re.search(rf"\b{re.escape(word)}\b", pdf_text):
+                errors.append(f"section label {label!r} extracted with internal spaces "
+                              f"({word!r} not found unbroken) — letter-spacing over the "
+                              f"{SECTION_LABEL_LETTER_SPACING_PT}pt ATS cap?")
+    return errors
+
+
 def verify_pdf(pdf_path: str, me: dict) -> list:
-    """One-page + reading-order gate on the rendered PDF. pdftotext-missing is a loud
-    skip (same pattern as the Chrome probe), never a silent pass."""
+    """One-page + reading-order + label-extraction gate on the rendered PDF.
+    pdftotext-missing is a loud skip (same pattern as the Chrome probe), never a silent
+    pass."""
     errors = []
     with open(pdf_path, "rb") as fh:
         pages = pdf_page_count(fh.read())
@@ -463,6 +571,12 @@ def verify_pdf(pdf_path: str, me: dict) -> list:
             errors.append(f"pdftotext failed: {proc.stderr.strip()[:200]}")
         else:
             errors += pdf_reading_order_errors(proc.stdout, me)
+            labels = [SECTION_LABELS["experience"], SECTION_LABELS["key-accounts"],
+                      SECTION_LABELS["selected-builds"]]
+            if me.get("education"):
+                labels.append(SECTION_LABELS["education"])
+            errors += section_label_extraction_errors(proc.stdout,
+                                                      [l.upper() for l in labels])
     else:
         print("WARN pdftotext not found — PDF reading-order check skipped (install poppler-utils)")
     return errors
@@ -492,7 +606,22 @@ def selftest() -> int:
     case("fixture renders all sections",
          all([me["name"], me["positioning"], me["roles"], me["key_accounts"], me["proof_links"]]))
     case("fixture passes all locked content rules", check_content_rules(html, fixture_text) == [])
-    case("reading order name→positioning→roles→Key accounts", check_reading_order(html) == [])
+    case("reading order name→positioning→roles→Key accounts→Selected builds→Education",
+         check_reading_order(html, me) == [])
+    # Minimal-template spec (PR #247 comment 6551704109): well-formed lists, neutral
+    # palette only, section-label letter-spacing at or under the ATS cap.
+    case("every <li> sits inside a <ul>", list_structure_errors(html) == [])
+    bare_li = html.replace('<ul class="bullets">\n      <li>', "")
+    case("a bare <li> outside any <ul> fails", list_structure_errors(bare_li) != [])
+    case("template emits only the neutral palette (no colour accents)",
+         palette_errors(html) == [])
+    accent = html.replace("color: #5a5f6b", "color: #8FE83A")
+    case("a colour accent fails the palette check", palette_errors(accent) != [])
+    case("section-label letter-spacing is at or under the 0.3pt ATS cap",
+         letter_spacing_errors(html) == [] and "letter-spacing: 0.3pt" in html)
+    overspaced = html.replace("letter-spacing: 0.3pt", "letter-spacing: 1.2pt")
+    case("1.2pt letter-spacing (the known-bad value) fails the cap",
+         letter_spacing_errors(overspaced) != [])
 
     # Schema rejections — unknown keys, missing traceability, wrong shapes.
     case("schema refuses unknown top-level key",
@@ -508,6 +637,16 @@ def selftest() -> int:
     empty["positioning"] = ""
     case("schema refuses empty positioning", any("positioning" in e for e in schema_errors(empty)))
     case("schema refuses a non-object input", schema_errors(["not", "an", "object"]) != [])
+
+    # Minimal-template follow-up (PR #247 comment 6551704109): optional contact and
+    # education arrays — present and well-formed passes; wrong shapes refused.
+    case("schema accepts optional contact and education arrays",
+         schema_errors({**me, "contact": ["New York, NY"],
+                        "education": ["B.A., State University (fictional)"]}) == [])
+    case("schema refuses a non-list contact",
+         any("contact" in e for e in schema_errors({**me, "contact": "New York, NY"})))
+    case("schema refuses an empty education item",
+         any("education" in e for e in schema_errors({**me, "education": [""]})))
 
     # Rule 1: a positioning line that doesn't lead with quota-carrying post-sales fails.
     bad = build_resume_html({**me, "positioning": "Customer success leader with deep renewals focus."})
@@ -615,13 +754,21 @@ def selftest() -> int:
 
     # PR B — PDF gate: pure reading-order check over extracted pdftotext text.
     good_text = f'{me["name"]} {me["positioning"]} ' + " ".join(r["title"] for r in me["roles"]) \
-        + " Key accounts: everything after the roles"
+        + " KEY ACCOUNTS SELECTED BUILDS" + (" " + " ".join(me["education"])
+                                              if me.get("education") else "")
     case("PDF reading-order check passes on ordered text",
          pdf_reading_order_errors(good_text, me) == [])
     scrambled = f'Key accounts first. {me["name"]} {me["positioning"]} ' \
         + " ".join(r["title"] for r in me["roles"])
     case("PDF reading-order check catches scrambled roles",
          pdf_reading_order_errors(scrambled, me) != [])
+    # The ATS cap asserted on the surface it protects: over-spaced labels fail.
+    case("section-label extraction passes unbroken uppercase labels",
+         section_label_extraction_errors("EXPERIENCE KEY ACCOUNTS SELECTED BUILDS EDUCATION",
+                                         ["EXPERIENCE", "KEY ACCOUNTS", "SELECTED BUILDS",
+                                          "EDUCATION"]) == [])
+    case("section-label extraction catches the E D U C AT I O N failure",
+         section_label_extraction_errors("E D U C AT I O N", ["EDUCATION"]) != [])
 
     # PR B — rule 4 liveness: an unparseable URL fails loudly without network.
     case("link liveness fails loudly on a non-URL",
@@ -686,7 +833,8 @@ def main() -> int:
 
     with open(a.source, encoding="utf-8") as fh:
         json_text = fh.read()
-    fails = check_content_rules(html, json_text) + check_reading_order(html) \
+    fails = check_content_rules(html, json_text) + check_reading_order(html, me) \
+        + list_structure_errors(html) + palette_errors(html) + letter_spacing_errors(html) \
         + rewording_fidelity_errors(me)
     if a.mode == "posting-tailored":
         # Always-on `original` (review 2026-11-01): a reworded bullet cannot skip the
