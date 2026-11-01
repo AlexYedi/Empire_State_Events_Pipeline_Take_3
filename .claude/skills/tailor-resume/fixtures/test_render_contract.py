@@ -51,7 +51,19 @@ def main() -> int:
     check("fixture passes every locked content rule",
           rr.check_content_rules(html, fixture_text) == [],
           str(rr.check_content_rules(html, fixture_text)))
-    check("fixture keeps the reading order", rr.check_reading_order(html) == [])
+    check("fixture keeps the reading order", rr.check_reading_order(html, me) == [])
+
+    # Minimal-template spec (PR #247 comment 6551704109): well-formed lists, neutral
+    # palette only, section-label letter-spacing at or under the ATS cap.
+    check("every <li> sits inside a <ul>", rr.list_structure_errors(html) == [])
+    check("template emits only the neutral palette", rr.palette_errors(html) == [])
+    check("section-label letter-spacing under the 0.3pt ATS cap",
+          rr.letter_spacing_errors(html) == [] and "letter-spacing: 0.3pt" in html)
+    check("letter page and the spec margins are in the template",
+          "size: letter" in html and "margin: 0.4in 0.55in" in html)
+    check("body is Helvetica Neue 9.4pt at line-height 1.27",
+          '"Helvetica Neue"' in html and "font-size: 9.4pt" in html
+          and "line-height: 1.27" in html)
 
     # Rule 4 shape: no bare GitHub profile among the fixture proof links.
     check("fixture proof links are never the bare GitHub profile",
@@ -129,13 +141,21 @@ def main() -> int:
 
     # PDF gate: pure reading-order check over extracted text.
     good = f'{me["name"]} {me["positioning"]} ' + " ".join(r["title"] for r in me["roles"]) \
-        + " Key accounts: trailing section"
+        + " KEY ACCOUNTS SELECTED BUILDS" + (" " + " ".join(me["education"])
+                                              if me.get("education") else "")
     scrambled = 'Key accounts first. ' + f'{me["name"]} {me["positioning"]} ' \
         + " ".join(r["title"] for r in me["roles"])
     check("PDF reading-order check passes ordered text",
           rr.pdf_reading_order_errors(good, me) == [])
     check("PDF reading-order check catches scrambled roles",
           rr.pdf_reading_order_errors(scrambled, me) != [])
+    # The ATS cap asserted on the rendered surface: over-spaced labels fail.
+    check("section-label extraction passes unbroken uppercase labels",
+          rr.section_label_extraction_errors(
+              "EXPERIENCE KEY ACCOUNTS SELECTED BUILDS EDUCATION",
+              ["EXPERIENCE", "KEY ACCOUNTS", "SELECTED BUILDS", "EDUCATION"]) == [])
+    check("section-label extraction catches the E D U C AT I O N failure",
+          rr.section_label_extraction_errors("E D U C AT I O N", ["EDUCATION"]) != [])
 
     # Privacy grep gates over every file in this fixtures directory.
     for path in HERE.iterdir():

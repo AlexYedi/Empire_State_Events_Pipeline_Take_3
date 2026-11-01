@@ -7,7 +7,8 @@ Chrome `--print-to-pdf` → text-based PDF. The deterministic half lives in
 PR A shipped the pipeline; **PR B (this version) ships the content half** — the **decided**
 me-model mapping, **constrained posting-tailored rewording** (reorder pass + reword with a
 fidelity gate), the one-page/reading-order PDF gate, and the **one-in-one-out** retirement of
-the ad-hoc markdown → Google Doc resume flow.
+the ad-hoc markdown → Google Doc resume flow. The **minimal template** (Alex's blind pick
+on PR #247, comment 6551704109) is applied as spec'd below.
 
 ## The split contract (per Alex's 2026-10-31 review)
 
@@ -40,6 +41,7 @@ resume files are not produced.
 ```json
 {
   "name": "...",
+  "contact": ["..."],
   "positioning": "...",
   "roles": [
     { "title": "...", "company": "...", "dates": "...",
@@ -48,9 +50,16 @@ resume files are not produced.
                      "original": "verbatim me-model bullet (required when reworded)" } ] }
   ],
   "key_accounts": ["..."],
-  "proof_links": ["https://..."]
+  "proof_links": ["https://..."],
+  "education": ["..."]
 }
 ```
+
+- **`contact` and `education` are optional** (minimal-template follow-up, 2026-11-01):
+  arrays of non-empty strings. `contact` renders as the header line under the name
+  (joined " · "); `education` renders as the one-line Education section (degree ·
+  activities · certs). Absent → the section is omitted. No email or phone ever enters
+  committed fixtures — those stay in the gitignored output JSON only.
 
 - Every bullet carries a **`source` note** — the trace-to-me-model rule (locked rule 5).
   The renderer refuses any bullet without one.
@@ -63,6 +72,28 @@ resume files are not produced.
   makes that impossible; the render refuses any bullet without it.
 - Unknown keys are refused at every level; nothing is coerced or dropped.
 - Write the JSON to `.claude/output/resume-input.json` (gitignored — never committed).
+
+## The minimal template (decided — Alex's blind pick, 2026-11-01)
+
+Two variants (minimal vs. a single acid-green #8FE83A accent) were rendered blind on real
+content; **minimal won**. The template is locked to this spec:
+
+- Letter page, margins `0.4in 0.55in`; Helvetica Neue stack, 9.4pt, line-height 1.27,
+  text `#16181d`; **no colour accents** (the neutral palette `#16181d / #5a5f6b /
+  #c9ccd3 / #3c4049` is the full colour set — the renderer refuses any other hex).
+- Header: name 20pt/600, letter-spacing −0.2pt; contact line 9pt `#5a5f6b`; a 0.6pt
+  `#c9ccd3` rule under the header.
+- Positioning 10.5pt. Role title 10.5pt/600 with dates right-aligned 9pt tabular-nums;
+  company 9.5pt `#3c4049`.
+- Section labels: 8.5pt/600 uppercase `#5a5f6b`, **letter-spacing ≤ 0.3pt** — an ATS cap,
+  not a style choice: at 1.2pt, pdftotext extracts "E D U C AT I O N" and ATS parsing
+  breaks. The PDF gate asserts the cap on the rendered sample.
+- **Every `<li>` sits inside a `<ul>`** (the pre-spec template emitted bare `<li>`);
+  the render refuses malformed list structure.
+- Section order: header (name → contact) → Positioning → Experience → Key accounts →
+  Selected builds (the proof links) → Education (degree · lacrosse · certs on one line).
+- Fit: one page at **7 roles / 15 bullets** and the full education line — verified on the
+  rendered stress sample (pdftotext surface), not just asserted.
 
 ## The seven locked content rules (Blueprint region "tailor-resume")
 
@@ -110,8 +141,12 @@ After Chrome writes the PDF, the run is gated on:
 
 - **exactly one page** (a multi-page render fails the run — fix content, not margins);
 - **`pdftotext` reading order intact**: name → positioning → roles in order → Key
-  accounts. If `pdftotext` is missing, the check is skipped with a loud `WARN` — same
-  pattern as the Chrome probe, never a silent pass.
+  accounts → Selected builds (→ Education when present). If `pdftotext` is missing, the
+  check is skipped with a loud `WARN` — same pattern as the Chrome probe, never a silent
+  pass;
+- **section labels extract unbroken** (`EXPERIENCE`, `KEY ACCOUNTS`, `SELECTED BUILDS`,
+  `EDUCATION`) — the rendered-surface assertion of the ≤0.3pt letter-spacing ATS cap.
+  An over-spaced label ("E D U C AT I O N") fails the run.
 
 ## Proof-link liveness (`--verify-links`, rule 4)
 
@@ -157,8 +192,11 @@ refusal against it.
 
 ## Acceptance
 
-- Fixture renders to **one page** with `pdftotext` reading order intact:
-  name → positioning → roles in order → Key accounts.
+- Fixture renders to **one page** with `pdftotext` reading order intact: name → contact →
+  positioning → roles in order → Key accounts → Selected builds → Education.
+- Section labels extract unbroken (the ATS letter-spacing cap holds on the rendered PDF).
+- Fit: **7 roles / 15 bullets** still render on exactly one page (stress-rendered sample,
+  pdftotext-verified).
 - The writer refuses any path outside `.claude/output/` (selftest-covered).
 - The renderer never opens the me-model (schema + JSON contract only).
 - **Post-merge:** the first real run in a fresh Claude Code session is Alex's acceptance
