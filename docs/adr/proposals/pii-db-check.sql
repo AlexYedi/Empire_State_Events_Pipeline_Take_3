@@ -34,6 +34,13 @@
 --           column drop is proposed as
 --           supabase/migrations/0014_drop_legacy_person_email.sql (Alex-gated
 --           promotion after twin rehearsal).
+--           Twin-rehearsal instrument fix (2026-11-01, rehearse_s04_d1.py
+--           bring-up): Part 1's refusal template read "…in person.%…" while
+--           the argument is the qualified table (PL/pgSQL TG_ARGV is 0-based),
+--           so refusals rendered "in person.public.person." — the Part-3
+--           promise that the label names the table was broken. The template
+--           now takes just the label: "…in public.person." / "…in
+--           canonical_v2.person."
 -- Builds on: ADR-9 ("Postgres CHECK/trigger on person as Phase-2 hardening"),
 --            the regex shapes ratified in pii-regex-set.md, and the column
 --            allowlist FORBIDDEN_COLUMNS in spine_client.py.
@@ -94,8 +101,8 @@ begin
   or coalesce(new.role_context, '')  ~ phone_re
   or coalesce(new.metadata::text, '{}') ~ phone_re
   then
-    raise exception 'ADR-9 tier-2 violation: contact PII (email/phone pattern) in person.%. Contact detail lives in HubSpot; see CLAUDE.md invariant 1.',
-      tg_argv[0];
+    raise exception 'ADR-9 tier-2 violation: contact PII (email/phone pattern) in %. Contact detail lives in HubSpot; see CLAUDE.md invariant 1.',
+      tg_argv[0];  -- PL/pgSQL TG_ARGV is 0-based: the CREATE TRIGGER label arg.
   end if;
   return new;
 end;
