@@ -104,6 +104,29 @@ def main() -> int:
               for e in rr.check_content_rules(rr.build_resume_html(client_reworded),
                                               json.dumps(client_reworded))))
 
+    # Review 2026-11-01 hardening: spelled-out quantities are facts; the first word is
+    # exempt only when it is an allowlisted action verb; posting-tailored requires
+    # `original` on every bullet.
+    spell = json.loads(json.dumps(faithful))
+    spell["roles"][0]["bullets"][0]["text"] = \
+        "Drove $860K of new revenue in a three-rep territory."
+    check("rewording fidelity fails an invented spelled-out quantity",
+          any("rewording fidelity" in e for e in rr.rewording_fidelity_errors(spell)))
+    first_word = json.loads(json.dumps(faithful))
+    first_word["roles"][0]["bullets"][0]["text"] = \
+        "Heliosoft: closed $860K of new revenue in a two-rep territory."
+    check("rewording fidelity fails a non-allowlisted first word",
+          any("rewording fidelity" in e for e in rr.rewording_fidelity_errors(first_word)))
+    no_orig = json.loads(json.dumps(faithful))
+    del no_orig["roles"][0]["bullets"][0]["original"]
+    check("posting-tailored contract refuses a bullet without original",
+          any("always-on original" in e for e in rr.original_required_errors(no_orig)))
+
+    # First-word allowlist: SKILL.md documents what render_resume.py runs (drift guard —
+    # the renderer cannot read skill files at runtime, so the two must stay in sync).
+    for verb in sorted(rr.ACTION_FIRST_WORDS):
+        check(f"SKILL.md first-word allowlist covers {verb!r}", verb.capitalize() in skill)
+
     # PDF gate: pure reading-order check over extracted text.
     good = f'{me["name"]} {me["positioning"]} ' + " ".join(r["title"] for r in me["roles"]) \
         + " Key accounts: trailing section"

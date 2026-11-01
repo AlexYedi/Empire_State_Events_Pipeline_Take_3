@@ -330,26 +330,61 @@ def reweight_for_jd(me: dict, jd_text: str) -> dict:
 # ---- constrained-rewording fidelity gate (spec-walk decision 2, 2026-10-31) -----------------
 _FACT_RE = re.compile(r"\$?\d[\d,.]*[KMB%xX]?")
 _WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]*")
+_WORD_PIECE_RE = re.compile(r"[A-Za-z]+")
+
+# Spelled-out quantities are facts (review 2026-11-01): "three-rep" vs "two-rep" is the
+# same class of invention as "$920K" vs "$860K". Matched as hyphen-split word pieces.
+_NUMBER_WORDS = frozenset("""one two three four five six seven eight nine ten eleven
+    twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty
+    forty fifty sixty seventy eighty ninety hundred thousand million billion dozen half
+    double triple twice""".split())
+
+# A bullet's first word is capitalized by convention, not by being a proper noun — but
+# only action verbs get that pass (review 2026-11-01). Anything else capitalized in the
+# leading position ("Heliosoft: closed …") is a fact the original must carry. The
+# allowlist is documented in SKILL.md; the fixture test cross-checks the two stay in sync
+# (the renderer cannot depend on skill files at runtime).
+ACTION_FIRST_WORDS = frozenset(
+    "closed drove grew owned led built sold saved landed scaled enabled applied".split())
 
 
 def _fact_tokens(text: str) -> list:
-    """Facts the fidelity gate pins: numbers/$-figures/percentages + proper-noun
-    candidates (capitalized tokens that are not the bullet's first word — the first
-    word is capitalized by convention, not by being a proper noun; single-letter
-    tokens are unit suffixes like the K in $860K, except "I")."""
+    """Facts the fidelity gate pins: numbers/$-figures/percentages, spelled-out
+    quantities, and proper-noun candidates (capitalized tokens — the first word only
+    when it is not an allowlisted action verb; single-letter tokens are unit suffixes
+    like the K in $860K, except "I")."""
     tokens = _FACT_RE.findall(text)
-    tokens += [w for i, w in enumerate(_WORD_RE.findall(text))
-               if i > 0 and w[0].isupper() and (len(w) > 1 or w == "I")]
-    return tokens
+    words = _WORD_RE.findall(text)
+    tokens += [w for i, w in enumerate(words)
+               if w[0].isupper() and (len(w) > 1 or w == "I")
+               and not (i == 0 and w.lower() in ACTION_FIRST_WORDS)]
+    tokens += [w for w in _WORD_PIECE_RE.findall(text) if w.lower() in _NUMBER_WORDS]
+    return list(dict.fromkeys(tokens))
+
+
+def original_required_errors(me: dict) -> list:
+    """Always-on `original` in posting-tailored mode (review 2026-11-01): every bullet
+    carries `original` — its verbatim me-model wording, set equal to `text` when the
+    bullet is not reworded. Today a reworded bullet that omits `original` skips the
+    fidelity gate silently and the renderer cannot tell; the contract makes that
+    impossible instead of trusting the skill to self-mark."""
+    fails = []
+    for i, role in enumerate(me.get("roles", [])):
+        for j, bullet in enumerate(role.get("bullets", [])):
+            original = bullet.get("original", "")
+            if not (isinstance(original, str) and original.strip()):
+                fails.append(f"rule 5 (always-on original): roles[{i}].bullets[{j}] has "
+                             "no `original` — posting-tailored requires it on every "
+                             "bullet (set it equal to `text` when not reworded)")
+    return fails
 
 
 def rewording_fidelity_errors(me: dict) -> list:
     """Gate for spec-walk decision 2: a reworded bullet may use the posting's vocabulary
     but may add NO new facts. Every number/$-figure/percentage and proper noun in the
     reworded text must appear in the bullet's `original` (its verbatim me-model wording),
-    or the run fails naming the bullet. Bullets without `original` are not reworded and
-    pass untouched (marking a reworded bullet is the skill-side discipline; the renderer
-    cannot read the me-model by design)."""
+    or the run fails naming the bullet. Bullets without `original` pass here untouched —
+    posting-tailored mode refuses them upstream via original_required_errors()."""
     fails = []
     for i, role in enumerate(me.get("roles", [])):
         for j, bullet in enumerate(role.get("bullets", [])):
@@ -545,6 +580,25 @@ def selftest() -> int:
     case("schema refuses an empty original",
          any("original" in e for e in schema_errors(bad_original)))
 
+    # Review 2026-11-01 probes: spelled-out quantities are facts; the first word is
+    # exempt only when it is an allowlisted action verb.
+    reword_spell = json.loads(json.dumps(reword_ok))
+    reword_spell["roles"][0]["bullets"][0]["text"] = \
+        "Drove $860K of new revenue in a three-rep territory."
+    case("rewording fidelity fails an invented spelled-out quantity",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_spell)))
+    reword_first = json.loads(json.dumps(reword_ok))
+    reword_first["roles"][0]["bullets"][0]["text"] = \
+        "Heliosoft: closed $860K of new revenue in a two-rep territory."
+    case("rewording fidelity fails a non-allowlisted first word (Heliosoft probe)",
+         any("rewording fidelity" in r for r in rewording_fidelity_errors(reword_first)))
+    no_original = json.loads(json.dumps(reword_ok))
+    del no_original["roles"][0]["bullets"][0]["original"]
+    case("posting-tailored refuses a bullet without original",
+         any("always-on original" in r for r in original_required_errors(no_original)))
+    case("every-bullet contract flags a fixture with no originals",
+         original_required_errors(me) != [])
+
     # PR B — posting-tailored reweighting: reorder-only, deterministic, no-op on disjoint JDs.
     analytics_jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
     reweighted = reweight_for_jd(me, analytics_jd)
@@ -634,6 +688,10 @@ def main() -> int:
         json_text = fh.read()
     fails = check_content_rules(html, json_text) + check_reading_order(html) \
         + rewording_fidelity_errors(me)
+    if a.mode == "posting-tailored":
+        # Always-on `original` (review 2026-11-01): a reworded bullet cannot skip the
+        # fidelity gate by omitting its original — every bullet must carry one here.
+        fails += original_required_errors(me)
     if fails:
         print("Content rules failed — nothing rendered:")
         for f in fails:

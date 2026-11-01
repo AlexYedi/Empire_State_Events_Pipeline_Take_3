@@ -54,10 +54,13 @@ resume files are not produced.
 
 - Every bullet carries a **`source` note** — the trace-to-me-model rule (locked rule 5).
   The renderer refuses any bullet without one.
-- A bullet the skill **reworded for a posting** (posting-tailored mode) also carries
-  **`original`** — its verbatim me-model wording. The renderer pins the reworded text's
-  numbers, $-figures, percentages and proper nouns to that original and fails the run
-  naming any bullet that introduces a fact the me-model doesn't carry.
+- A bullet the skill **reworded for a posting** also carries **`original`** — its verbatim
+  me-model wording. The renderer pins the reworded text's facts to that original and fails
+  the run naming any bullet that introduces a fact the me-model doesn't carry.
+- **In posting-tailored mode, `original` is required on *every* bullet** — set it **equal
+  to `text`** when the bullet is not reworded. A reworded bullet that omitted `original`
+  would skip the fidelity gate silently and the renderer cannot tell, so the contract
+  makes that impossible; the render refuses any bullet without it.
 - Unknown keys are refused at every level; nothing is coerced or dropped.
 - Write the JSON to `.claude/output/resume-input.json` (gitignored — never committed).
 
@@ -87,9 +90,19 @@ resume files are not produced.
   2. **Constrained rewording (model-side, skill):** bullets may be **reworded into the
      posting's vocabulary**, adding **no new facts** — every reworded bullet keeps its
      `source` note and carries **`original`** (the verbatim me-model bullet). The
-     renderer fails the run naming any bullet whose numbers, $-figures, percentages or
-     proper nouns are absent from its `original`; a client name in **either** text
-     fails rule 2.
+     renderer fails the run naming any bullet whose **fact tokens** are absent from its
+     `original`; a client name in **either** text fails rule 2.
+
+**Fact tokens** (what the fidelity gate pins, review 2026-11-01): numbers, $-figures,
+percentages, **spelled-out quantities** (one…twenty, thirty…ninety, hundred, thousand,
+million, billion, dozen, half, double, triple, twice — hyphen-split, so "three-rep"
+counts), and proper-noun candidates. A capitalized token is a proper-noun candidate
+**including in the leading position** — the first word is exempt only when it is an
+allowlisted action verb: **Closed, Drove, Grew, Owned, Led, Built, Sold, Saved, Landed,
+Scaled, Enabled, Applied**. "Heliosoft: closed …" therefore fails when `original` has no
+Heliosoft. The runtime allowlist lives in `render_resume.py` (`ACTION_FIRST_WORDS` — the
+renderer cannot depend on skill files at runtime); this section is its documentation and
+the fixture test fails if the two drift.
 
 ## The PDF gate (PR B)
 
@@ -118,7 +131,7 @@ python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
   --out .claude/output/resume.pdf
 
 # posting-tailored mode — --jd is required; reorder pass + constrained rewording
-# (a reworded bullet carries `original`: its verbatim me-model wording)
+# (every bullet carries `original`: verbatim me-model wording, = text when not reworded)
 python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
   --mode posting-tailored --jd posting.txt --out .claude/output/resume.pdf
 
