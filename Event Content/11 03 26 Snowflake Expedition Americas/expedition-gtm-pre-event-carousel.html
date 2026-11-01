@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Between the AI and the money: Snowflake Expedition, GTM track</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259), inlined so the file is self-contained ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate ground #0F172A, white ink, ONE topic accent amber #D97706) ---- */
+/* Same frame system as expedition-tech-pre-event-carousel.html; only --mark changes. */
+:root{--ground:#0F172A; --panel:#1A2438; --rule:#2E3B55; --ink:#F8FAFC; --muted:#94A3B8; --mark:#D97706; --mark-ink:#F59E0B}
+h2{margin-top:0}
+.src-line{position:absolute;left:96px;right:240px;bottom:62px;font-family:var(--mono);font-size:20px;line-height:1.45;color:var(--muted)}
+.foot{justify-content:flex-end}
+.tz{position:absolute;left:96px;right:96px;bottom:150px;font-family:var(--mono);font-size:24px;line-height:1.4;letter-spacing:.02em;color:var(--ink)}
+
+/* slide 1 */
+.s1{justify-content:center}
+.s1 h1{font-size:128px;margin-top:0}
+.s1 h1 u{text-decoration:underline;text-decoration-color:var(--mark);text-decoration-thickness:12px;text-underline-offset:18px;text-decoration-skip-ink:none}
+.s1 .sub{font-family:var(--mono);font-size:26px;line-height:1.6;letter-spacing:.02em;margin-top:64px;max-width:none}
+.s1 .from{margin-top:72px;padding-left:24px;border-left:3px solid var(--muted);font-family:var(--body);font-style:italic;font-size:30px;line-height:1.35;color:var(--ink)}
+
+/* slide 2: split frame, one shared dot grid */
+.legend{display:flex;align-items:center;gap:34px;margin-top:56px;padding-bottom:22px;border-bottom:2px solid var(--rule);font-family:var(--mono);font-size:24px;letter-spacing:.06em;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:12px}
+.legend i{display:inline-block;width:26px;height:26px;border-radius:50%;border:3px solid #CBD5E1}
+.legend i.buy{background:#F8FAFC;border-color:#F8FAFC}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
+.panel{background:var(--panel);border:2px solid var(--rule);border-radius:14px;padding:28px 24px 30px}
+.panel .lab{font-family:var(--mono);font-size:26px;letter-spacing:.16em;font-weight:700;color:var(--ink)}
+.panel svg{display:block;margin-top:22px}
+.panel .cap{font-family:var(--body);font-size:25px;line-height:1.35;color:var(--ink);margin-top:20px}
+.panel .lift{font-family:var(--mono);font-size:25px;white-space:nowrap;font-weight:700;color:var(--mark-ink);margin-top:20px;display:flex;align-items:center;gap:14px}
+.panel .lift::before{content:"";flex:0 0 34px;height:24px;border:3px solid var(--mark);border-radius:12px}
+.note{margin-top:30px;font-family:var(--body);font-size:25px;line-height:1.4;color:var(--muted);max-width:888px}
+.illus{position:absolute;left:96px;bottom:150px;font-family:var(--mono);font-size:22px;letter-spacing:.04em;color:var(--ink);border:2px dashed var(--muted);border-radius:999px;padding:6px 18px}
+
+/* slide 3: two-lane flow */
+.flow{position:relative;width:888px;height:700px;margin-top:54px}
+.flow svg{position:absolute;inset:0}
+.lane{position:absolute;left:0;font-family:var(--mono);font-size:22px;letter-spacing:.16em;color:var(--muted)}
+.box{position:absolute;background:var(--panel);border:2px solid var(--rule);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;justify-content:center}
+.box .t{font-family:var(--body);font-weight:600;font-size:27px;line-height:1.2}
+.box .t.big{font-family:var(--display);font-size:40px;line-height:1.05}
+.box .d{font-family:var(--mono);font-size:21px;line-height:1.4;color:var(--muted);margin-top:10px}
+.box.end{border-color:#CBD5E1}
+.qtag{position:absolute;border:3px solid var(--mark);border-radius:14px;background:var(--ground);padding:14px 18px;font-family:var(--body);font-weight:600;font-size:25px;line-height:1.3;color:var(--mark-ink)}
+
+/* slide 4: matrix */
+.mx{display:grid;grid-template-columns:300px 230px 1fr;column-gap:26px;margin-top:52px}
+.mx .h{font-family:var(--mono);font-size:22px;letter-spacing:.16em;color:var(--muted);padding-bottom:16px;border-bottom:2px solid var(--rule)}
+.mx .h.gate{color:var(--mark-ink);font-weight:700;border-bottom-color:var(--mark)}
+.mx .c{padding:22px 0 20px;border-bottom:1px solid var(--rule)}
+.mx .n{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1}
+.mx .w{font-family:var(--body);font-size:24px;line-height:1.3;color:var(--muted);margin-top:6px}
+.mx .w b{font-family:var(--mono);font-weight:400;color:var(--ink);white-space:nowrap}
+.mx .ai{font-family:var(--body);font-size:25px;line-height:1.3}
+.mx .g{font-family:var(--body);font-style:italic;font-size:25px;line-height:1.3}
+
+/* slide 5: editorial close, no accent */
+.s5{justify-content:center}
+.s5 h1{font-size:120px;color:#F1F5F9;margin-top:0}
+.s5 blockquote{margin-top:88px;padding-left:34px;border-left:3px solid #F1F5F9}
+.s5 blockquote p{font-family:var(--display);font-style:italic;font-size:50px;line-height:1.2;color:#F1F5F9}
+.s5 blockquote cite{display:block;margin-top:24px;font-family:var(--mono);font-style:normal;font-size:24px;letter-spacing:.04em;color:var(--muted)}
+.s5 .watch{margin-top:72px;font-family:var(--body);font-size:28px;color:#F1F5F9}
+.s5 .watch span{font-family:var(--mono);font-size:26px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 · Hook
+Alt text: Title card stating that the first reader of a brand's message is now a machine, with the GTM day's date and stream time. -->
+<section class="slide s1">
+  <h1>The first reader is a <u>machine.</u></h1>
+  <div class="sub">Snowflake Expedition – Americas<br>Sales &amp; Marketing day · Wed Nov 4<br>1:00–6:30 PM ET · streaming</div>
+  <div class="from">From the Fleming × Persson fireside, 3:30 PM ET.</div>
+  <div class="src-line">Source: Snowflake Expedition agenda, 2026</div>
+  <div class="foot"><span class="page">1/5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 · Mechanism (credit vs lift)
+Alt text: Side-by-side illustration showing attribution crediting every exposed buyer versus a holdout test, where only the difference between exposed and held-out groups counts as lift. -->
+<section class="slide s2">
+  <h2>Credit is not lift.</h2>
+  <div class="legend"><span><i class="buy"></i>buyer</span><span><i></i>didn't buy</span></div>
+  <div class="split">
+    <div class="panel">
+      <div class="lab">ATTRIBUTION</div>
+      <svg viewBox="0 0 384 384" width="384" height="384" aria-hidden="true">
+        <text x="0" y="20" fill="#94A3B8" font-family="Menlo,monospace" font-size="21" letter-spacing="2">ALL 20 SAW ADS</text>
+        <g stroke="#CBD5E1" stroke-width="3" fill="none">
+          <!-- rows 1-2 -->
+          <circle cx="24" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="96" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="168" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="240" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="312" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/>
+          <circle cx="24" cy="136" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="96" cy="136" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="168" cy="136" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="240" cy="136" r="21"/><circle cx="312" cy="136" r="21"/>
+          <!-- rows 3-4 -->
+          <circle cx="24" cy="290" r="21"/><circle cx="96" cy="290" r="21"/><circle cx="168" cy="290" r="21"/><circle cx="240" cy="290" r="21"/><circle cx="312" cy="290" r="21"/>
+          <circle cx="24" cy="360" r="21"/><circle cx="96" cy="360" r="21"/><circle cx="168" cy="360" r="21"/><circle cx="240" cy="360" r="21"/><circle cx="312" cy="360" r="21"/>
+        </g>
+      </svg>
+      <div class="cap">Every buyer who saw the ad gets credited, including people who would have bought anyway.</div>
+    </div>
+    <div class="panel">
+      <div class="lab">HOLDOUT</div>
+      <svg viewBox="0 0 384 384" width="384" height="384" aria-hidden="true">
+        <text x="0" y="20" fill="#94A3B8" font-family="Menlo,monospace" font-size="21" letter-spacing="2">SAW ADS</text>
+        <g stroke="#CBD5E1" stroke-width="3" fill="none">
+          <circle cx="24" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="96" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="168" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="240" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="312" cy="66" r="21" fill="#F8FAFC" stroke="#F8FAFC"/>
+          <circle cx="24" cy="136" r="21"/><circle cx="96" cy="136" r="21"/><circle cx="168" cy="136" r="21"/><circle cx="240" cy="136" r="21"/><circle cx="312" cy="136" r="21"/>
+        </g>
+        <line x1="0" y1="190" x2="384" y2="190" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+        <text x="0" y="238" fill="#94A3B8" font-family="Menlo,monospace" font-size="21" letter-spacing="2">HELD OUT (NO ADS)</text>
+        <g stroke="#CBD5E1" stroke-width="3" fill="none">
+          <circle cx="24" cy="290" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="96" cy="290" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="168" cy="290" r="21" fill="#F8FAFC" stroke="#F8FAFC"/><circle cx="240" cy="290" r="21"/><circle cx="312" cy="290" r="21"/>
+          <circle cx="24" cy="360" r="21"/><circle cx="96" cy="360" r="21"/><circle cx="168" cy="360" r="21"/><circle cx="240" cy="360" r="21"/><circle cx="312" cy="360" r="21"/>
+        </g>
+        <!-- lift: the buyers above the held-out baseline -->
+        <rect x="206" y="34" width="140" height="64" rx="32" fill="none" stroke="#D97706" stroke-width="4"/>
+      </svg>
+      <div class="lift">lift = the difference</div>
+    </div>
+  </div>
+  <div class="note">Castino's own terms for Canva's tests: geo tests and conversion-lift tests. Canva Engineering reports 1,800+ experiments a year.</div>
+  <div class="illus">Illustration, not Canva data</div>
+  <div class="src-line">Source: Snowflake Expedition session abstract (Canva), 2026; Castino podcast ep. 200 transcript; Canva Engineering blog</div>
+  <div class="foot"><span class="page">2/5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 · Mechanism (the Meta build in both directions)
+Alt text: Two-direction diagram: first-party value data flows from Snowflake to Meta through the Conversions API, and campaign performance flows back through Ads MCP to a Cortex Agent, with two open governance questions marked. -->
+<section class="slide s3">
+  <h2>Signal out, diagnosis back in</h2>
+  <div class="flow">
+    <svg viewBox="0 0 888 700" width="888" height="700" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F8FAFC"/></marker>
+      </defs>
+      <g stroke="#F8FAFC" stroke-width="4" fill="none">
+        <!-- top lane, left to right -->
+        <line x1="302" y1="144" x2="358" y2="144" marker-end="url(#ah)"/>
+        <line x1="596" y1="144" x2="652" y2="144" marker-end="url(#ah)"/>
+        <!-- bottom lane, right to left -->
+        <line x1="664" y1="580" x2="628" y2="580" marker-end="url(#ah)"/>
+        <line x1="452" y1="580" x2="416" y2="580" marker-end="url(#ah)"/>
+        <line x1="240" y1="580" x2="204" y2="580" marker-end="url(#ah)"/>
+      </g>
+      <!-- tag pins -->
+      <g stroke="#D97706" stroke-width="3" fill="none">
+        <line x1="330" y1="150" x2="330" y2="306"/>
+        <line x1="646" y1="574" x2="646" y2="414"/>
+      </g>
+      <circle cx="330" cy="144" r="7" fill="#D97706"/>
+      <circle cx="646" cy="580" r="7" fill="#D97706"/>
+    </svg>
+    <div class="lane" style="top:0">SIGNAL OUT →</div>
+    <div class="box" style="left:0;top:44px;width:300px;height:200px">
+      <div class="t big">Snowflake</div>
+      <div class="d">customer value · product margin · lead quality</div>
+    </div>
+    <div class="box" style="left:364px;top:44px;width:230px;height:200px"><div class="t">Conversions API</div></div>
+    <div class="box end" style="left:658px;top:44px;width:230px;height:200px"><div class="t">Meta's optimizer</div></div>
+
+    <div class="qtag" style="left:0;top:306px;width:430px">How is ‘without exposing PII’ enforced?</div>
+    <div class="qtag" style="left:478px;top:344px;width:410px">Read-only or write access?</div>
+
+    <div class="lane" style="top:436px">← DIAGNOSIS BACK IN</div>
+    <div class="box end" style="left:0;top:480px;width:200px;height:200px"><div class="t">Marketer diagnoses a drop in minutes</div></div>
+    <div class="box" style="left:242px;top:480px;width:170px;height:200px"><div class="t">Cortex Agent</div></div>
+    <div class="box" style="left:454px;top:480px;width:170px;height:200px"><div class="t">Ads MCP</div></div>
+    <div class="box" style="left:666px;top:480px;width:222px;height:200px"><div class="t">Meta campaign performance</div></div>
+  </div>
+  <div class="tz" style="bottom:184px">Meta Ads MCP: open beta since Apr 29, 2026.</div>
+  <div class="src-line">Source: Snowflake Expedition session abstracts, 2026; Snowflake × Meta blueprint, Jul 21, 2026; PPC Land, Apr 29, 2026</div>
+  <div class="foot"><span class="page">3/5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 · Mechanism (where the human signs off)
+Alt text: Table of five Wednesday sessions showing what the AI does in each and the human checkpoint each session describes, with start times. -->
+<section class="slide s4">
+  <h2>Where the human signs off</h2>
+  <div class="mx">
+    <div class="h">SESSION</div><div class="h">THE AI</div><div class="h gate">GATE</div>
+
+    <div class="c"><div class="n">Lead scoring</div><div class="w">Matt Loskamp · <b>2:00</b></div></div>
+    <div class="c ai">AI ranks accounts</div>
+    <div class="c g">“reason codes so recommendations can be reviewed before activation”</div>
+
+    <div class="c"><div class="n">One source of truth</div><div class="w">Florian Delval, Julie Zhu · <b>3:00</b></div></div>
+    <div class="c ai">AI answers from shared definitions</div>
+    <div class="c g">“who owns that foundation and how to govern it”</div>
+
+    <div class="c"><div class="n">Meta signal</div><div class="w">Ryan Watson, Todd Pasternack · <b>4:30</b></div></div>
+    <div class="c ai">AI optimizes on what you send</div>
+    <div class="c g">“who sends it, and how to keep customer data safe”</div>
+
+    <div class="c"><div class="n">Raven</div><div class="w">Sait Izmit · <b>5:00</b></div></div>
+    <div class="c ai">AI assists sellers</div>
+    <div class="c g">“building trust through quality”</div>
+
+    <div class="c"><div class="n">Governed sales agent</div><div class="w">Matt Loskamp · <b>5:00</b></div></div>
+    <div class="c ai">AI drafts the next step</div>
+    <div class="c g">“a human-approved follow-up action”</div>
+  </div>
+  <div class="tz">All times ET, Wed Nov 4. Gates quoted from each session's own description.</div>
+  <div class="src-line">Source: Snowflake Expedition agenda and session abstracts, 2026</div>
+  <div class="foot"><span class="page">4/5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 · CTA
+Alt text: Closing card asking which sales or marketing action the reader would never hand to an agent, with the fireside's question about both buyer and seller using agents. -->
+<section class="slide s5">
+  <h1>Which action never goes to an agent?</h1>
+  <blockquote>
+    <p>“How does the customer relationship change when both sides arrive with agents?”</p>
+    <cite>— the Fleming × Persson fireside, 3:30 PM ET</cite>
+  </blockquote>
+  <div class="watch">Watch from anywhere: <span>events.snowflake.com/expedition</span></div>
+  <div class="src-line">Source: Snowflake Expedition fireside abstract, 2026</div>
+  <div class="foot"><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>
