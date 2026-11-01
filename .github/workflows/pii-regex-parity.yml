@@ -1,0 +1,29 @@
+# PII regex parity (YED-279 review follow-up). The pii-db-check.sql backstop
+# must carry spine_client.py's EMAIL_RE / PHONE_RE verbatim — "same shapes,
+# not a second dialect" (pii-regex-set.md). A drifted literal used to pass
+# unnoticed; now the comparison runs in CI. Stdlib Python, no third-party
+# action; a mismatch fails the check.
+name: pii-regex-parity
+on:
+  pull_request:
+    paths:
+      - '.claude/scripts/spine_client.py'
+      - '.claude/scripts/check_pii_regex_parity.py'
+      - 'docs/adr/proposals/pii-db-check.sql'
+      - '.github/workflows/pii-regex-parity.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude/scripts/spine_client.py'
+      - '.claude/scripts/check_pii_regex_parity.py'
+      - 'docs/adr/proposals/pii-db-check.sql'
+      - '.github/workflows/pii-regex-parity.yml'
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test (the check can fail)
+        run: python3 .claude/scripts/check_pii_regex_parity.py --selftest
+      - name: Compare spine regexes against the SQL proposal
+        run: python3 .claude/scripts/check_pii_regex_parity.py
