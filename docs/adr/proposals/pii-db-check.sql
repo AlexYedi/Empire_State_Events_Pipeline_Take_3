@@ -26,6 +26,14 @@
 --           Finding the nulling-PATCH writer that keeps the legacy `email`
 --           column alive and dropping the column remains the documented
 --           PREREQUISITE for promotion — deliberately NOT handled here.
+--           RESOLVED (2026-11-01, S-04 YED-183 D1): the writer was identified
+--           — the one-time YED-81 email-null scrub
+--           (`PATCH /person?email=not.is.null` -> {"email": null}, through the
+--           guard; no standing code path) — see
+--           docs/adr/proposals/person-email-nulling-writer-finding.md, and the
+--           column drop is proposed as
+--           supabase/migrations/0014_drop_legacy_person_email.sql (Alex-gated
+--           promotion after twin rehearsal).
 -- Builds on: ADR-9 ("Postgres CHECK/trigger on person as Phase-2 hardening"),
 --            the regex shapes ratified in pii-regex-set.md, and the column
 --            allowlist FORBIDDEN_COLUMNS in spine_client.py.
