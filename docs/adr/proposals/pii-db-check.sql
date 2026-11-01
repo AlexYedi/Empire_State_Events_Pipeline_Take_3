@@ -17,6 +17,12 @@
 --             3. The shapes now carry spine EMAIL_RE/PHONE_RE verbatim (see
 --                Part 1 note; the "Postgres has no lookaround" claim was
 --                false).
+--           Review follow-up (2026-11-01, PR #249 review): the phone shape is
+--           pasted verbatim from spine's PHONE_RE in its PR #250 final form —
+--           the A2 (?:1[\s.-])? leading-country-code prefix sits BEFORE the
+--           +country group — and a CI parity check
+--           (.claude/scripts/check_pii_regex_parity.py) extracts both
+--           literals and fails on drift.
 --           Finding the nulling-PATCH writer that keeps the legacy `email`
 --           column alive and dropping the column remains the documented
 --           PREREQUISITE for promotion — deliberately NOT handled here.
@@ -47,9 +53,10 @@
 -- literal backslash, not a dot. The literals below are dollar-quoted
 -- ($re$…$re$) so they stay byte-identical to the Python source and no SQL
 -- escape layer can drift them (YED-279 defect 3).
--- Phone carries A2's `(?:1[\s.-])?` leading-country-code prefix
--- (feat/s04-a2-phone-prefix); if A2 lands with a different final shape,
--- reconcile here before promotion. One dialect nuance, immaterial for ASCII
+-- Parity is enforced, not assumed: .claude/scripts/check_pii_regex_parity.py
+-- extracts both literals and fails CI on drift. The phone first alternative
+-- carries A2's (?:1[\s.-])? leading-country-code prefix in its PR #250 final
+-- form (before the +country group). One dialect nuance, immaterial for ASCII
 -- contact PII: Python's \w/\d are Unicode-aware, ARE's follow the DB locale.
 -- Known accepted trade-off carried over from pii-regex-set.md: separator-less
 -- 10-digit numbers and non-US formatted internationals pass.
@@ -61,9 +68,10 @@ as $$
 declare
   -- Verbatim spine_client.py EMAIL_RE.
   email_re text := $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
-  -- Verbatim spine_client.py PHONE_RE (first alternative includes A2's
-  -- leading-country-code prefix; second alternative is the E.164 compact form).
-  phone_re text := $re$(?<![\w.+-])(?:\+\d{1,3}[\s.-]?)?(?:1[\s.-])?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])$re$;
+  -- Verbatim spine_client.py PHONE_RE (PR #250 final form: A2's
+  -- leading-country-code prefix before the +country group; second
+  -- alternative is the E.164 compact form).
+  phone_re text := $re$(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])$re$;
 begin
   -- Free-text columns on person (per the spine allowlist: professional-public
   -- identity only). name is scanned too — it is a string someone typed.
