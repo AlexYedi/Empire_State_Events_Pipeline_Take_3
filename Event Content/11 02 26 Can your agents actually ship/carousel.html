@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One missing layer: who decides what the agent may touch?</title>
+<style>
+/* carousel-base.css — Alex's house carousel tokens and base rules (YED-259). Inlined so the file is self-contained. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- Post-specific overrides (brief palette: slate ground, blue = agents, green = name mark only) ---- */
+:root{ --ground:#0F172A; --panel:#16213A; --rule:#2B3A57; --ink:#F8FAFC; --muted:#94A3B8; --mark:#60A5FA; }
+h2{font-size:92px;margin-top:0}
+.src{max-width:760px}
+
+/* Slide 1 — two lanes */
+.lanes{margin-top:64px}
+.lanes svg{display:block;overflow:visible}
+.lanes text{fill:var(--ink)}
+.lane-k{font-family:var(--mono);font-size:26px;letter-spacing:.14em}
+.lane-who{font-family:var(--body);font-size:26px;fill:var(--muted)!important}
+.stage{font-family:var(--body);font-weight:600;font-size:26px;letter-spacing:.04em}
+.stage-q{font-family:var(--body);font-style:italic;font-size:26px}
+.end-t{font-family:var(--body);font-weight:600;font-size:26px}
+.ask{font-family:var(--display);font-weight:600;font-size:50px}
+.ask-cap{font-family:var(--mono);font-size:26px;fill:var(--muted)!important}
+
+/* Slide 2 — split frame */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:72px;flex:0 0 auto}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:44px 40px 40px;height:760px;display:grid;grid-template-rows:56px 150px 52px 64px 150px 1fr 70px}
+.p-k{font-family:var(--mono);font-size:26px;letter-spacing:.14em;color:var(--muted)}
+.fig{font-family:var(--display);font-weight:600;font-size:124px;line-height:1;color:var(--mark);align-self:end;white-space:nowrap}
+.fig-l{font-family:var(--body);font-size:30px;line-height:1.3;color:var(--ink);padding-top:14px}
+.p-cap{font-family:var(--body);font-size:26px;color:var(--muted);align-self:end;border-top:1px solid var(--rule);padding-top:18px}
+.p-desc{grid-row:3 / span 3;font-family:var(--body);font-size:30px;line-height:1.35;color:var(--ink);padding-top:14px}
+
+/* Slide 3 — spectrum */
+.legend{display:flex;gap:40px;margin-top:32px;font-family:var(--mono);font-size:24px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:14px}
+.sw{width:44px;height:26px;border-radius:4px;display:inline-block}
+.sw.solid{border:2px solid var(--ink)}
+.sw.dash{border:2px dashed var(--mark)}
+.chart{position:relative;height:780px;margin-top:20px}
+.axis{position:absolute;left:0;right:0;top:230px;height:3px;background:var(--muted)}
+.axis::before,.axis::after{content:"";position:absolute;top:-9px;border:10px solid transparent}
+.axis::before{left:-6px;border-right-color:var(--muted);border-left-width:0}
+.axis::after{right:-6px;border-left-color:var(--muted);border-right-width:0}
+.end{position:absolute;top:182px;font-family:var(--mono);font-size:24px;letter-spacing:.14em;color:var(--ink)}
+.tick{position:absolute;top:219px;width:24px;height:24px;border-radius:50%;background:var(--ink);margin-left:-12px}
+.lead{position:absolute;width:2px;background:var(--ink);opacity:.55;margin-left:-1px}
+.card{position:absolute;width:560px;border:2px solid var(--ink);border-radius:6px;padding:20px 24px;background:var(--ground)}
+.card b{display:block;font-family:var(--body);font-weight:600;font-size:28px;line-height:1.25;color:var(--ink)}
+.card p{font-family:var(--body);font-size:24px;line-height:1.35;color:var(--muted);margin-top:6px}
+.card.q{border:2px dashed var(--mark);display:flex;gap:22px;align-items:center;width:600px}
+.qm{font-family:var(--display);font-weight:600;font-size:96px;line-height:1;color:var(--mark)}
+
+/* Slide 4 — CTA */
+.cta h1{font-size:120px;margin-top:40px}
+.qs{margin-top:96px;display:flex;flex-direction:column;gap:56px}
+.qline{font-family:var(--display);font-weight:600;font-size:60px;line-height:1.1}
+.qline .n{font-family:var(--mono);font-size:26px;color:var(--muted);display:block;margin-bottom:14px;font-weight:400;letter-spacing:.14em}
+.chips{display:flex;gap:18px;margin-top:30px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:28px;letter-spacing:.12em;border:2px solid var(--mark);border-radius:999px;padding:14px 28px;color:var(--ink)}
+.after{font-family:var(--body);font-size:28px;color:var(--muted);margin-top:auto;margin-bottom:96px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt: Two parallel pipelines, one for data and one for code, each crossed by the same vertical band asking who decides what an agent may touch. -->
+<section class="slide">
+  <h2>Two halves. One missing layer.</h2>
+  <div class="lanes">
+    <svg width="888" height="760" viewBox="0 0 888 760" role="img" aria-label="Two parallel pipelines, one for data and one for code, each crossed by the same vertical band asking who decides what an agent may touch.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+      </defs>
+
+      <!-- the shared band (only blue on the slide) -->
+      <rect x="560" y="40" width="56" height="560" fill="#60A5FA" fill-opacity=".22" stroke="#60A5FA" stroke-width="2"/>
+      <line x1="588" y1="600" x2="588" y2="636" stroke="#60A5FA" stroke-width="3"/>
+
+      <!-- DATA lane -->
+      <text class="lane-k" x="0" y="28">DATA <tspan class="lane-who" dx="6">(Król)</tspan></text>
+      <line x1="20" y1="170" x2="648" y2="170" stroke="#94A3B8" stroke-width="3" marker-end="url(#ah)"/>
+      <circle cx="20" cy="170" r="11" fill="#F8FAFC"/>
+      <circle cx="176" cy="170" r="11" fill="#F8FAFC"/>
+      <circle cx="332" cy="170" r="11" fill="#F8FAFC"/>
+      <circle cx="488" cy="170" r="11" fill="#F8FAFC"/>
+      <text class="stage" x="0" y="132">FIND</text>
+      <text class="stage" x="176" y="228" text-anchor="middle">UNDERSTAND</text>
+      <text class="stage" x="332" y="132" text-anchor="middle">SECURE</text>
+      <text class="stage" x="500" y="228" text-anchor="end">TRUST</text>
+      <rect x="656" y="118" width="232" height="104" rx="6" fill="#0F172A" stroke="#F8FAFC" stroke-width="2"/>
+      <text class="end-t" x="772" y="162" text-anchor="middle">“agent queries</text>
+      <text class="end-t" x="772" y="196" text-anchor="middle">a table”</text>
+
+      <!-- CODE lane -->
+      <text class="lane-k" x="0" y="328">CODE <tspan class="lane-who" dx="6">(Visdom)</tspan></text>
+      <line x1="20" y1="470" x2="648" y2="470" stroke="#94A3B8" stroke-width="3" marker-end="url(#ah)"/>
+      <circle cx="20" cy="470" r="11" fill="#F8FAFC"/>
+      <circle cx="176" cy="470" r="11" fill="#F8FAFC"/>
+      <circle cx="332" cy="470" r="11" fill="#F8FAFC"/>
+      <circle cx="488" cy="470" r="11" fill="#F8FAFC"/>
+      <text class="stage" x="0" y="432">CONTEXT</text>
+      <text class="stage-q" x="150" y="528" text-anchor="middle">“agent writes a PR”</text>
+      <text class="stage" x="332" y="432" text-anchor="middle">VALIDATION</text>
+      <text class="stage" x="524" y="528" text-anchor="end">GOVERNANCE</text>
+      <rect x="656" y="418" width="232" height="104" rx="6" fill="#0F172A" stroke="#F8FAFC" stroke-width="2"/>
+      <text class="end-t" x="772" y="479" text-anchor="middle">MERGE</text>
+
+      <!-- the question the band asks -->
+      <text class="ask" x="588" y="692" text-anchor="middle">Who decides what the</text>
+      <text class="ask" x="588" y="748" text-anchor="middle">agent may touch?</text>
+    </svg>
+    <svg width="888" height="40" viewBox="0 0 888 40" aria-hidden="true">
+      <text class="ask-cap" x="588" y="30" text-anchor="middle">a score · a policy · a person</text>
+    </svg>
+  </div>
+  <div class="foot">
+    <div class="src">Sources: Król session page (luma.com/il0xoz9a), 2026; Visdom invite (context, validation, governance, orchestration), 2026</div>
+    <div class="page">1/4</div>
+  </div>
+</section>
+
+<!-- Slide 2 alt: Two panels compare code-side strain (98% more pull requests merged and 91% more review time on high-AI-adoption teams) with data-side strain (three in four data leaders saying governance lags AI adoption). -->
+<section class="slide">
+  <h2>More code in. Governance behind.</h2>
+  <div class="split">
+    <div class="panel">
+      <div class="p-k">CODE</div>
+      <div class="fig">+98%</div>
+      <div class="fig-l">PRs merged</div>
+      <div></div>
+      <div class="fig">+91%</div>
+      <div class="fig-l">review time</div>
+      <div class="p-cap">high-AI-adoption teams</div>
+    </div>
+    <div class="panel">
+      <div class="p-k">DATA</div>
+      <div class="fig">3 in 4</div>
+      <div class="p-desc">say governance hasn’t kept pace with AI adoption</div>
+      <div></div>
+      <div class="p-cap">(600 data leaders)</div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Sources: Faros AI, 2025, as cited by VirtusLab’s blog (2026-09-02); Informatica CDO Insights, 2026 (vendor survey)</div>
+    <div class="page">2/4</div>
+  </div>
+</section>
+
+<!-- Slide 3 alt: A spectrum from advises to blocks, showing CodeRabbit's blast-radius feature near the advisory end, GitHub's counted Copilot approvals toward the middle, a human merge decision at the blocking end, and Visdom's blast-radius score as an open question. -->
+<section class="slide">
+  <h2>Advice or gate? Vendors disagree.</h2>
+  <div class="legend">
+    <span><i class="sw solid"></i>solid = vendor-stated,</span>
+    <span><i class="sw dash"></i>dashed = unknown</span>
+  </div>
+  <div class="chart">
+    <!-- floating, unplaced: Visdom -->
+    <div class="card q" style="left:288px;top:6px">
+      <div class="qm">?</div>
+      <div><b>Visdom blast-radius score:</b><p>blocks or routes? Demo tonight</p></div>
+    </div>
+
+    <div class="axis"></div>
+    <div class="end" style="left:0">ADVISES</div>
+    <div class="end" style="right:0">BLOCKS</div>
+
+    <div class="tick" style="left:60px"></div>
+    <div class="tick" style="left:560px"></div>
+    <div class="tick" style="left:856px"></div>
+
+    <div class="lead" style="left:60px;top:243px;height:27px"></div>
+    <div class="lead" style="left:560px;top:243px;height:177px"></div>
+    <div class="lead" style="left:856px;top:243px;height:353px"></div>
+
+    <div class="card" style="left:0;top:270px;width:520px">
+      <b>CodeRabbit Security Blast Radius</b>
+      <p>investigation aid; docs don’t describe a merge block</p>
+    </div>
+    <div class="card" style="left:200px;top:420px;width:520px">
+      <b>GitHub Copilot approvals (Oct 28)</b>
+      <p>count toward required reviews · off by default · path-scoped · dismissed on new commits</p>
+    </div>
+    <div class="card" style="left:288px;top:596px;width:600px">
+      <b>Human decision</b>
+      <p>VirtusLab blog says Visdom’s core flow has no autonomous merge path; auto-merge is opt-in per repo and risk class</p>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Sources: CodeRabbit docs (Security Blast Radius), 2026; GitHub changelog, 2026-10-28; VirtusLab blog, 2026-09-02</div>
+    <div class="page">3/4</div>
+  </div>
+</section>
+
+<!-- Slide 4 alt: A closing card asking whether a review score should block or advise, and who should set the threshold, with CTO, platform, security and risk as options. -->
+<section class="slide cta">
+  <h1>Where does your gate sit?</h1>
+  <div class="qs">
+    <div class="qline"><span class="n">01</span>Does the score block, or advise?</div>
+    <div class="qline"><span class="n">02</span>Who sets the threshold?
+      <div class="chips"><span class="chip">CTO</span><span class="chip">PLATFORM</span><span class="chip">SECURITY</span><span class="chip">RISK</span></div>
+    </div>
+  </div>
+  <div class="after">Report back after tonight’s demo</div>
+  <div class="foot">
+    <div class="name">Alex Yedi</div>
+    <div class="page">4/4</div>
+  </div>
+</section>
+
+</body>
+</html>
