@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two ways AI "breaks" Navier-Stokes</title>
+<style>
+/* carousel-base.css — Alex's house carousel tokens and base rules (YED-259). Inlined so the file is self-contained. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- Post-specific overrides (brief palette: slate ground, blue #60A5FA = topic accent, green = name mark only) ---- */
+:root{ --ground:#0F172A; --panel:#16213A; --rule:#2B3A57; --ink:#F8FAFC; --muted:#94A3B8; --mark:#60A5FA; }
+h2{font-size:88px;margin-top:0}
+.s2 h2{font-size:80px}
+.src{max-width:760px}
+.k{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* Slide 1 + 5 — shared typography frame */
+.cover h1{font-size:112px;margin-top:0}
+.cover h1 .q{color:var(--ink)}
+.fork{position:relative;margin-top:84px;height:600px}
+.fork svg{position:absolute;inset:0;overflow:visible}
+.phrase{position:absolute;left:50%;top:0;transform:translateX(-50%);white-space:nowrap;font-family:var(--display);font-weight:600;font-style:italic;font-size:54px;border:2px solid var(--ink);border-radius:999px;padding:18px 44px;background:var(--ground)}
+.branch{position:absolute;top:300px;width:420px;border:2px solid var(--ink);border-radius:8px;padding:34px 34px 38px;background:var(--panel)}
+.branch.l{left:0}.branch.r{right:0}
+.branch b{display:block;white-space:nowrap;font-family:var(--display);font-weight:600;font-size:50px;line-height:1.05;color:var(--ink)}
+.branch p{font-family:var(--body);font-size:32px;line-height:1.3;color:var(--muted);margin-top:16px}
+.meta{position:absolute;left:96px;right:96px;bottom:140px;font-family:var(--body);font-size:26px;line-height:1.4;color:var(--ink);border-top:1px solid var(--rule);padding-top:24px}
+
+/* Slide 2 — two-row matrix */
+.rows{display:flex;flex-direction:column;gap:32px;margin-top:52px}
+.row{border:2px solid var(--rule);border-radius:8px;padding:34px 44px 34px;display:grid;grid-template-columns:230px 1fr;column-gap:36px;row-gap:22px;background:var(--panel)}
+.row.hit{border:3px solid var(--mark)}
+.row .k{grid-column:1 / -1}
+.letters{font-family:var(--display);font-weight:600;font-size:100px;line-height:.95;color:var(--ink);white-space:nowrap}
+.row.hit .letters{color:var(--mark)}
+.claim{font-family:var(--body);font-size:36px;line-height:1.3;color:var(--ink);align-self:center}
+.tag{grid-column:1 / -1;font-family:var(--body);font-size:28px;line-height:1.35;color:var(--muted);font-style:italic;border-top:1px solid var(--rule);padding-top:20px}
+.row.hit .tag{font-style:normal;color:var(--ink);border-top-color:var(--mark)}
+.row.hit .tag b{color:var(--mark);font-weight:600}
+.note{font-family:var(--body);font-size:26px;line-height:1.4;color:var(--muted);margin-top:32px;padding-left:24px;border-left:3px solid var(--rule)}
+
+/* Slide 3 — checker pipeline (top-to-bottom for the 4:5 frame) */
+.pipe{position:relative;margin-top:40px;display:flex;flex-direction:column}
+.box{border:2px solid var(--ink);border-radius:8px;padding:20px 34px;font-family:var(--display);font-weight:600;font-size:42px;line-height:1.1;background:var(--ground);position:relative;z-index:1}
+.box small{font-family:var(--mono);font-weight:400;font-size:22px;letter-spacing:.14em;color:var(--muted);display:block;margin-bottom:8px}
+.gate{position:relative;margin:0 0 0 88px;padding:22px 0}
+.gate::before{content:"";position:absolute;left:-52px;top:0;bottom:0;width:3px;background:var(--muted)}
+.gate::after{content:"";position:absolute;left:-63px;bottom:-2px;border:12px solid transparent;border-top:16px solid var(--muted);border-bottom-width:0}
+.gcard{border-radius:8px;padding:22px 30px 24px}
+.gate.g1 .gcard{border:3px dashed var(--ink)}
+.gate.g2 .gcard{border:3px solid var(--mark);background:rgba(96,165,250,.14)}
+.gcard .k{font-size:22px}
+.gate.g2 .gcard .k{color:var(--mark)}
+.glabel{font-family:var(--body);font-weight:600;font-size:32px;line-height:1.3;margin-top:8px}
+.gtag{font-family:var(--body);font-size:26px;line-height:1.35;color:var(--muted);margin-top:10px}
+.gtag::before{content:"UNVERIFIED · ";font-family:var(--mono);font-size:22px;letter-spacing:.12em;color:var(--ink)}
+.caption{font-family:var(--display);font-weight:600;font-size:48px;line-height:1.1;margin-top:34px}
+.caption em{font-style:normal;color:var(--mark)}
+
+/* Slide 4 — prover vs stand-in, one frame both columns */
+.s4 h2{font-size:78px}
+.tbl{margin-top:48px;display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
+.th{font-family:var(--mono);font-size:30px;letter-spacing:.14em;color:var(--mark);padding-bottom:16px;border-bottom:3px solid var(--mark)}
+.rl{grid-column:1 / -1;font-family:var(--mono);font-size:24px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:26px}
+.cell{font-family:var(--body);font-size:34px;line-height:1.25;color:var(--ink);padding:10px 0 24px;border-bottom:1px solid var(--rule)}
+.cell b{font-weight:700}
+.cell .qual{display:block;font-size:24px;line-height:1.3;color:var(--muted);margin-bottom:6px}
+
+/* Slide 5 — CTA, frame-matched to slide 1 */
+.cta h1{font-size:132px;margin-top:0}
+.cta h1 .q{color:var(--mark)}
+.cta .sub{font-family:var(--display);font-weight:600;font-size:56px;line-height:1.15;color:var(--ink);margin-top:72px;max-width:880px}
+.cta .ask{font-family:var(--body);font-size:34px;line-height:1.4;color:var(--muted);margin-top:56px}
+.cta .ask b{color:var(--ink);font-weight:600}
+.cta .name{font-size:30px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt: A title card splitting the phrase "AI broke Navier-Stokes" into two meanings: AI proving something about the equations, and AI standing in for simulations of them. -->
+<section class="slide cover">
+  <h1>Two ways AI <span class="q">“breaks”</span> Navier-Stokes</h1>
+  <div class="fork">
+    <svg width="888" height="600" viewBox="0 0 888 600" aria-hidden="true">
+      <path d="M444 96 V170 Q444 200 414 200 H240 Q210 200 210 230 V300" fill="none" stroke="#60A5FA" stroke-width="4"/>
+      <path d="M444 170 Q444 200 474 200 H648 Q678 200 678 230 V300" fill="none" stroke="#60A5FA" stroke-width="4"/>
+    </svg>
+    <div class="phrase">“AI broke Navier-Stokes”</div>
+    <div class="branch l"><b>AI as prover</b><p>finds a proof about the equations</p></div>
+    <div class="branch r"><b>AI as stand-in</b><p>replaces the expensive solve</p></div>
+  </div>
+  <div class="meta">AIMLC Meetup · Capital One Flatiron · Nov 3 · Platon Karpov, hosted by Vladimir Eremin</div>
+  <div class="foot">
+    <div class="src">Event: Luma invite, 2026</div>
+    <div class="page">1/5</div>
+  </div>
+</section>
+
+<!-- Slide 2 alt: A two-row table of Clay's four accepted Navier-Stokes outcomes, unforced A and B and forced C and D, with OpenAI's announced result marked in the forced row. -->
+<section class="slide s2">
+  <h2>Four accepted outcomes. Which one?</h2>
+  <div class="rows">
+    <div class="row">
+      <div class="k">No external force</div>
+      <div class="letters">A, B</div>
+      <div class="claim">prove smooth solutions exist for all time</div>
+      <div class="tag">the version many mathematicians call the deeper question</div>
+    </div>
+    <div class="row hit">
+      <div class="k">Smooth external force allowed</div>
+      <div class="letters">C, D</div>
+      <div class="claim">show a smooth flow can blow up</div>
+      <div class="tag"><b>OpenAI’s announced result maps here</b> (per DataCamp)</div>
+    </div>
+  </div>
+  <div class="note">Domain of OpenAI’s result (whole space vs periodic box): not stated in the coverage read.</div>
+  <div class="foot">
+    <div class="src">Source: Clay Millennium Prize statement (Fefferman); DataCamp, Sept 2026</div>
+    <div class="page">2/5</div>
+  </div>
+</section>
+
+<!-- Slide 3 alt: A pipeline from the Clay problem to a formal statement to a proof, with Lean checking the second step and an unverified human-judgment gate on the first. -->
+<section class="slide">
+  <h2>What the checker checks</h2>
+  <div class="pipe">
+    <div class="box">Clay problem, in English</div>
+    <div class="gate g1">
+      <div class="gcard">
+        <div class="k">Gate 1</div>
+        <div class="glabel">Human judgment: is the formalization faithful?</div>
+        <div class="gtag">No independent verification reported (as of Sept coverage)</div>
+      </div>
+    </div>
+    <div class="box">Formal statement</div>
+    <div class="gate g2">
+      <div class="gcard">
+        <div class="k">Gate 2</div>
+        <div class="glabel">Lean: does every step follow? (OpenAI says yes)</div>
+      </div>
+    </div>
+    <div class="box">Proof</div>
+  </div>
+  <div class="caption">Lean certifies <em>the logic</em>, not the question.</div>
+  <div class="foot">
+    <div class="src">Source: Science News (Eyink, Johns Hopkins), Sept 2026; The Neuron, Sept 2026</div>
+    <div class="page">3/5</div>
+  </div>
+</section>
+
+<!-- Slide 4 alt: A side-by-side table comparing AI as prover, which has a checker but a contested question, with AI as a simulation stand-in, which has a clear question but no checker. -->
+<section class="slide s4">
+  <h2>Prover vs stand-in: mirror-image problems</h2>
+  <div class="tbl">
+    <div class="th">PROVER</div>
+    <div class="th">STAND-IN</div>
+
+    <div class="rl">Has a checker?</div>
+    <div class="cell"><b>Yes:</b> Lean</div>
+    <div class="cell"><b>No:</b> conservation checks, error bars, benchmarks</div>
+
+    <div class="rl">Is the question clear?</div>
+    <div class="cell"><b>Contested:</b> forced vs unforced</div>
+    <div class="cell"><b>Yes:</b> match the solver</div>
+
+    <div class="rl">Open risk</div>
+    <div class="cell">formal statement ≠ intended problem</div>
+    <div class="cell"><span class="qual">neural operators, TurtLES — not Sapsan</span>loses small-scale energy, unstable on long 3D rollouts</div>
+
+    <div class="rl">Example</div>
+    <div class="cell">OpenAI, forced 3D NS (announced Sept 8)</div>
+    <div class="cell">Sapsan, supernova turbulence (Karpov et al., JOSS 2021)</div>
+  </div>
+  <div class="foot">
+    <div class="src">Sources: NeurIPS 2026 TurtLES poster; arXiv 2601.22541; JOSS 2021; DataCamp 2026</div>
+    <div class="page">4/5</div>
+  </div>
+</section>
+
+<!-- Slide 5 alt: A closing card asking how you know a learned model that replaces a solver is right rather than quietly wrong, with an invitation to send questions. -->
+<section class="slide cta">
+  <h1>Right, or <span class="q">quietly wrong?</span></h1>
+  <div class="sub">When a learned model replaces a solver, how do you know?</div>
+  <div class="ask">Asking <b>Platon Karpov</b> on Nov 3. <b>Send me yours.</b></div>
+  <div class="foot">
+    <div class="name">Alex Yedi</div>
+    <div class="page">5/5</div>
+  </div>
+</section>
+
+</body>
+</html>
