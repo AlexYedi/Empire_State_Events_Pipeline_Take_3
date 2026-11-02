@@ -1,0 +1,50 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com:5432 as postgres.ytfzzsxcxxbejnowmkmk (ref ytfzzsxcxxbejnowmkmk)
+
+[0] preflight
+  reachable: OK
+  person.notnull_nodes       name
+  person.cols_missing        
+  person.email_populated     0
+  cv2.person_exists          true
+  count_tables_missing       
+  legacy email column present and empty: OK (pre-drop leg)
+  regex parity (spine vs backstop, byte-for-byte): OK
+  currency (prod REST advisory vs twin):
+    company        prod=     361 twin=     237
+    person         prod=     506 twin=     299
+    topic          prod=     272 twin=     188
+    event          prod=     312 twin=     114
+    event_entity   prod=    1146 twin=     567
+
+[1] snapshot A (before)
+  A: cols=5478f93ea5d9… triggers=d41d8cd98f00… functions=d41d8cd98f00… email_col=true/true person=299 cv2.person=232
+
+[2] apply pii-db-check.sql (the backstop)
+  OK  pii-db-check.sql
+
+[3] behavioural verify (pre-drop leg)
+  verify(pre-drop) -> PASS :: psql:/home/user/work/Empire_State_Events_Pipeline_Take_3/supabase/staging/s04_d1_verify.sql:183: NOTICE:  S-04 D1 VERIFY: PASS (14 checks)
+
+[4] re-apply pii-db-check.sql (idempotency)
+  OK  pii-db-check.sql (re-apply)
+  verify(post-reapply) -> PASS :: psql:/home/user/work/Empire_State_Events_Pipeline_Take_3/supabase/staging/s04_d1_verify.sql:183: NOTICE:  S-04 D1 VERIFY: PASS (14 checks)
+
+[5] apply 0014_drop_legacy_person_email.sql
+  OK  0014_drop_legacy_person_email.sql
+  catalog post-condition (email gone on public.person): OK
+  verify(post-drop) -> PASS :: psql:/home/user/work/Empire_State_Events_Pipeline_Take_3/supabase/staging/s04_d1_verify.sql:183: NOTICE:  S-04 D1 VERIFY: PASS (13 checks)
+
+[6] rollback (staging/s04_d1_rollback.sql)
+  OK  s04_d1_rollback.sql
+
+[7] snapshot C (after rollback) — must EQUAL snapshot A
+  C: cols=5478f93ea5d9… triggers=d41d8cd98f00… functions=d41d8cd98f00… email_col=true/true person=299 cv2.person=232
+  snapshot C == snapshot A: rollback PROVEN
+
+[8] --leave-applied: re-apply both migrations and verify
+  OK  pii-db-check.sql
+  OK  0014_drop_legacy_person_email.sql
+  verify(leave-applied) -> PASS :: psql:/home/user/work/Empire_State_Events_Pipeline_Take_3/supabase/staging/s04_d1_verify.sql:183: NOTICE:  S-04 D1 VERIFY: PASS (13 checks)
+  twin left in the post-D1 state (backstop + column drop applied).
+
+S-04 D1 REHEARSAL: ALL GATES GREEN
