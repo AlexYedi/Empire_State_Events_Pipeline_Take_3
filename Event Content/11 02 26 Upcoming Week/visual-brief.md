@@ -1,89 +1,93 @@
-## Visual Brief — 5-slide carousel (Arc: Arc 4, One Question, Five Perspectives, condensed)
+## Visual Brief — 7-slide carousel: cover + 6 stats (Arc: stat pairs under Variant B's three questions)
 
-**Carousel PDF title:** The Upcoming Week, Nov 2–6, 2026: ten AI events (six in NYC, four streaming), one question
+**Carousel PDF title:** The Upcoming Week, Nov 2–6, 2026: 6 stats that sum up the week in AI events
 
-**Carousel thesis:** the week's ten events on one calendar, what each one checks, what evidence would settle its open question, and the three answers the week tests to "who checks the agent": a person, a machine, or a metric. The timing, the settle criteria, the provenance of the two PR numbers and the three-way synthesis are not in the post copy.
+**Carousel thesis:** Variant B asks three questions: can the agent ship, who governs it, and can you trust it at volume. Each slide gives one number (or one pair) that shows why the field is asking it. Each number carries its own comparison point, says who measured it, and names the event where the question comes up this week. The carousel takes no side: every slide ends on the open question, not a verdict.
 
-**Slide count:** 5. Ten events would need 12 per-event slides, so the perspectives are condensed into two grids that share one template (slide 2 for livestreams, slide 3 for in-person). This follows the 10/26 brief's pattern.
-**Aspect ratio:** 4:5 (1080x1350), LinkedIn carousel default.
+**Slide count:** 7: a cover, then 6 stat slides, 2 per question (Alex, 2026-11-02). Replaces the 5-slide Arc 4 map/grid version (37ec24d).
+**Aspect ratio:** 4:5 (1080x1350).
 **Tool routing summary:** all slides → Claude design (HTML/SVG) → headless Chrome PDF. No pictorial slides.
-**Palette (whole carousel):** dark slate #0F172A background, white #FFFFFF text, ONE accent blue #3B82F6 (meaning-bearing only: livestream bars, the "what gets checked" column, the number callouts). Acid green #8FE83A appears ONLY as the underline on the name mark (small, bottom-left, every slide). Muted labels use white at 70% opacity, not a second hue.
+**Palette (whole carousel):** dark slate #0F172A background, white #FFFFFF text, ONE accent blue #3B82F6, used only on the headline number(s) and the question tag. Acid green #8FE83A appears ONLY as the underline on the name mark (small, bottom-left, every slide). Muted labels use white at 70% opacity.
+**Shared slide template (every slide, one CSS class):** top-left question tag ("1 · CAN IT SHIP?" / "2 · WHO GOVERNS IT?" / "3 · CAN YOU TRUST IT AT VOLUME?") plus "n/7" top right · headline (≤8 words) · the big number visual · one "What it measures" line · one "This week:" line naming the event · source line at the bottom · name mark bottom-left. The number visual is the only part that changes shape.
 
-### Slide 1 of 5 — The week as a map (shows timing, format and the Tuesday/Wednesday pile-up the copy only lists)
-- **Visual mode:** Diagram / timeline.
-- **Headline:** Ten events, four you can stream
-- **Body / content:** A Monday-to-Friday timeline, 9 AM to 10 PM ET, with five day lanes. Legend on top: solid white bar = in person; accent-outlined bar with an accent "STREAM" tag = livestream (outline plus tag, so meaning never rests on colour alone). Bars:
-  - Mon: "VirtusLab · Can your agents ship?" (solid), starting 6:30 PM, with the end fading out because no end time is published.
-  - Tue: "AI DevCon NYC" 9:20 AM–5:30 PM (stream) · "Snowflake Expedition · technical" 1:00–6:00 PM (stream) · "AIMLC · Navier-Stokes" 5:30–7:15 PM, solid, with the talk block 6:15–7:15 marked.
-  - Wed: "Revolt Demo Day 1" 12:00–1:00 PM (stream) · "Expedition · GTM" 1:00–6:30 PM (stream) · "Agentics Spotlight" 6:00–10:00 PM (solid).
-  - Thu: "Revolt Demo Day 2" 12:00–1:00 PM (stream) · "Ghosts in the System" 6:00–8:30 PM (solid).
-  - Fri: "Level Up With Lovable" 11:00 AM–3:00 PM (solid) · "Voice Agent Hackathon" 3:00–9:00 PM (solid).
-  - Small footer tag on the Tue lane: "Election Day".
-- **Palette:** #0F172A bg + white text + accent #3B82F6 (stream outlines and tags only).
-- **Source attribution:** Source: event listings (Luma, Tessl, Snowflake, RevGenius), Nov 2026. Times ET.
-- **Alt text:** A Monday-to-Friday timeline of ten AI events, marking four livestreams and six in-person events, with three events each on Tuesday and Wednesday.
-- **Tool:** Claude design (HTML/SVG).
+### Slide 1 of 7 — Cover: 6 stats that sum up the week
+- **Visual mode:** Bold typography plus a table of contents. House style, not the stat template.
+- **Kicker:** Nov 2–6, 2026 · 10 events · 6 in NYC, 4 streaming
+- **Headline:** 6 stats that sum up the upcoming week in AI events
+- **Body / content:** the three questions stacked, each with an accent number tag and its slides: "1 · Can it ship?" (slides 2–3) · "2 · Who governs it?" (slides 4–5) · "3 · Can you trust it at volume?" (slides 6–7). Bottom: name mark + "Swipe →".
+- **Source attribution:** none (table of contents; no figures).
+- **Alt text:** Cover: six stats summing up the week of Nov 2–6, 2026 in AI events, grouped under three questions: can it ship, who governs it, can you trust it at volume.
 
-### Slide 2 of 5 — Watch from anywhere: what each stream checks and what would settle it
-- **Visual mode:** Framework / matrix, 4 rows × 3 columns (Event + how to join · What gets checked · What would settle it). The row template is identical to slide 3's.
-- **Headline:** Four streams, watch online
+### Slide 2 of 7 — 1 · CAN IT SHIP? The merge
+- **Visual mode:** Split-frame comparison, two mirrored callouts of equal weight.
+- **Headline:** One company's third vs the median's 0.5%
 - **Body / content:**
-  - AI DevCon NYC (Tessl) · YouTube, Tue · "the merge" · "A speaker naming the method and baseline behind a vendor number"
-  - Snowflake Expedition, technical · Tue · "agent controls" · "GA, preview or roadmap, said out loud, for each control shown"
-  - Snowflake Expedition, GTM · Wed · "the marketing number" · "A budget that moved because an experiment beat the dashboard"
-  - Revolt! Demo Days (RevGenius) · Wed + Thu · "the CRM write" · "A live demo showing who approved the write, on realistic data"
-- **Palette:** #0F172A bg + white text + accent #3B82F6 on the "What gets checked" column only.
-- **Source attribution:** Source: event agendas and research briefs, Nov 2026.
-- **Alt text:** A four-row table pairing each livestreamed event with what it checks and the observable evidence that would answer its open question.
-- **Tool:** Claude design (HTML/SVG).
+  - Left callout "≈ 1 in 3": "Zalando PRs auto-approved as low-risk." Small label: one company's policy, 250+ teams, first-party, methodology not disclosed.
+  - Right callout "0.5%": "Merges reviewed only by AI at the median company." Small label: Jellyfish's own dataset, 1,300+ companies.
+  - What it measures: two different things, one company's routing policy and a cross-company median. Neither is a controlled study.
+  - This week: AI DevCon NYC (livestream, Tue). Bartosz Ocytko (Zalando) on risk-tiered auto-approval.
+- **Source attribution:** Source: Zalando Engineering, 2026-08-14; Jellyfish via R&D World, 2026-10-27.
+- **Alt text:** Two equal callouts: about one in three Zalando PRs auto-approved as low-risk, beside 0.5% of merges reviewed only by AI at the median company in Jellyfish's dataset.
 
-### Slide 3 of 5 — In New York: same frame, six in-person events
-- **Visual mode:** Framework / matrix, 6 rows × 3 columns, the same template as slide 2 (one shared CSS row class).
-- **Headline:** Six rooms in New York
+### Slide 3 of 7 — 1 · CAN IT SHIP? The skill
+- **Visual mode:** Horizontal bar chart, 4 bars, 0–100% axis.
+- **Headline:** A skill the agent never opens
 - **Body / content:**
-  - VirtusLab · Mon · "the merge gate" · "A stated threshold, and who owns it"
-  - AIMLC · Tue · "the proof" · "One line on what's established, one on what isn't"
-  - Agentics Spotlight · Wed, NYU · "the skill" · "A named failure signature for a skipped skill"
-  - Ghosts in the System · Thu, Ro HQ · "the reply at volume" · "A stated miss rate on urgent cases"
-  - Level Up With Lovable · Fri AM · "the shipped app" · "One task the tool still leaves to the builder"
-  - Voice Agent Hackathon · Fri PM · "the turn" · "A latency number measured on a real phone line"
-- **Palette:** #0F172A bg + white text + accent #3B82F6 on the "What gets checked" column only.
-- **Source attribution:** Source: event listings and research briefs, Nov 2026.
-- **Alt text:** A six-row table pairing each in-person event with what it checks and the evidence that would answer its open question.
-- **Tool:** Claude design (HTML/SVG). Densest slide: render the settle column at 44–48px and abbreviate if it squints at 375px.
+  - Bars (pass rate, Vercel's coding-agent eval): No docs (baseline) 53% · Skill available 53% · Skill + explicit instruction 79% · Docs index in AGENTS.md 100%.
+  - Callout on the "Skill available" bar: "never invoked in 56% of eval cases".
+  - What it measures: one vendor-run eval of framework knowledge, not a general benchmark.
+  - This week: Agentics Spotlight (NYU, Wed). Jesse Vincent (Prime Radiant) on skills, harnesses and hooks.
+- **Source attribution:** Source: Vercel, "AGENTS.md outperforms skills in our agent evals," 2026-01-27 (vendor-run eval).
+- **Alt text:** Bar chart of Vercel's eval pass rates: 53% with no docs, 53% with a skill available but often not invoked, 79% when told to use it, 100% with a docs index in AGENTS.md.
 
-### Slide 4 of 5 — Two PR numbers, two different measurements (the provenance the post can't hold)
-- **Visual mode:** Split-frame comparison, mirrored panels.
-- **Headline:** Two numbers, two different measurements
+### Slide 4 of 7 — 2 · WHO GOVERNS IT? The definitions
+- **Visual mode:** Two-bar drop chart (tall bar to short bar).
+- **Headline:** Clean schemas 91%. Real enterprise work 21%.
 - **Body / content:**
-  - Left panel, number callout "≈ 1 in 3": "Zalando PRs auto-approved as low-risk." What it measures: the share of one company's PRs that a risk tier routes past human review, across 250+ teams. Method: first-party and observational; methodology not disclosed. Source line: Zalando Engineering, 2026-08-14.
-  - Right panel, number callout "0.5%": "AI-only-review merges at the median company." What it measures: merges reviewed only by AI, across 1,300+ companies. Method: Jellyfish's own dataset. Source line: Jellyfish via R&D World, 2026-10-27.
-  - Footer: "One company's policy, one cross-company median. Neither is a controlled study."
-- **Palette:** #0F172A bg + white text + accent #3B82F6 on both number callouts (same weight, so neither reads as the winner).
-- **Source attribution:** Source: Zalando Engineering blog (2026-08-14); Jellyfish data as reported by R&D World (2026-10-27).
-- **Alt text:** Two mirrored panels separating Zalando's roughly one-in-three auto-approved PRs from Jellyfish's 0.5% median rate of AI-only-review merges, noting how each was measured.
-- **Tool:** Claude design (HTML/SVG).
+  - Bars (best agent, share of tasks solved): Spider 1.0, clean academic databases, 91.2% · Spider 2.0, real enterprise text-to-SQL workflows, 21.3%.
+  - What it measures: the same kind of task on clean vs messy data. The gap is definitions, joins and dialects: what a governed business context is meant to fix.
+  - This week: Snowflake Expedition, technical day (livestream, Tue). "Build One Business Context" and "Secure and Govern Data & Agents".
+- **Source attribution:** Source: Spider 2.0, ICLR 2025 (arXiv 2411.07763).
+- **Alt text:** Two bars: the best agent solves 91.2% of tasks on clean academic databases (Spider 1.0) but 21.3% on real enterprise workflows (Spider 2.0).
 
-### Slide 5 of 5 — Synthesis: who does the checking, across all ten
-- **Visual mode:** Bold typography plus a three-column grid, in documentarian mode (off-white on dark slate, no accent). It mirrors slide 1's type scale.
-- **Headline:** A person, a machine, or a metric
-- **Body / content:** Three equal columns, each listing the events whose open question turns on that kind of check:
-  - "A person signs off": VirtusLab (merge gate) · Revolt Day 1 · Revolt Day 2 (CRM write approval)
-  - "A machine checks": AIMLC (reported Lean check) · Agentics Spotlight (skill pressure tests) · Level Up With Lovable (SEO review)
-  - "A metric decides": Snowflake Expedition (governed definitions, experiments vs attribution) · Voice Agent Hackathon (judged on response time and turn-taking)
-  - Footer line: "AI DevCon's nine talks and Ghosts in the System's panel span all three."
-- **Palette:** off-white #F8FAFC on #0F172A, no accent (editorial mode). The acid-green #8FE83A name-mark underline only.
-- **Source attribution:** none (synthesis; no figures or quotes).
-- **Alt text:** Three columns sorting the week's ten events by whether their open question turns on a human sign-off, a machine check or a metric, with two events spanning all three.
-- **Tool:** Claude design (HTML/SVG).
+### Slide 5 of 7 — 2 · WHO GOVERNS IT? The CRM write
+- **Visual mode:** Six-tile grid, one tile per demo company; 5 tiles in accent outline with an "MCP" tag, 1 plain.
+- **Headline:** Five of six demos open a door
+- **Body / content:**
+  - Tiles: ZoomInfo · Airspeed · Goldcast · Firmable · Syft AI (tagged "MCP connector advertised") · TitanX (no tag).
+  - What it measures: what each company's own site advertises, not verified usage. Only ZoomInfo's launch is press-verified this quarter.
+  - Open question line: "When an agent can write to the CRM, who approves the write?"
+  - This week: Revolt! Demo Days (RevGenius, livestream, Wed–Thu).
+- **Source attribution:** Source: company websites, checked Nov 2026; ZoomInfo GTM AI launch page.
+- **Alt text:** Six company tiles from Revolt Demo Days; five are marked as advertising an MCP connector, TitanX is not.
+
+### Slide 6 of 7 — 3 · CAN YOU TRUST IT AT VOLUME? The review queue
+- **Visual mode:** Two paired up-arrows of equal weight.
+- **Headline:** Twice the merges, nearly twice the review
+- **Body / content:**
+  - Callout 1 "+98%": "PRs merged" · Callout 2 "+91%": "PR review time". Label: developers on high-AI-adoption teams.
+  - What it measures: Faros AI's own telemetry, 10,000+ developers across 1,255 teams, as of mid-2025. Correlation, not a controlled study.
+  - This week: Ghosts in the System (Ro HQ, Thu). Three companies' published approaches to checking AI output at volume: expert audit, always-on QA, curated answer sets.
+- **Source attribution:** Source: Faros AI, "The AI Productivity Paradox," 2025-07-23 (vendor telemetry).
+- **Alt text:** Two equal arrows: 98% more pull requests merged and 91% longer PR review time on high-AI-adoption teams, per Faros AI telemetry.
+
+### Slide 7 of 7 — 3 · CAN YOU TRUST IT AT VOLUME? The turn
+- **Visual mode:** Trade-off scale (a balance: left pan "−100–200 ms latency", right pan "+50–70% LLM calls").
+- **Headline:** Faster replies, more model calls
+- **Body / content:**
+  - Left: "100–200 ms" trimmed from end-to-end latency · Right: "50–70%" more LLM calls. Label: Deepgram Flux "eager end-of-turn", which starts the LLM before the caller is surely done.
+  - What it measures: the vendor's own documented trade-off, not a field measurement.
+  - This week: NYC Voice Agent Hackathon (Fri). Judged partly on response time and turn-taking, tested on a real phone line.
+  - Closing line (smaller, under the source): "Six numbers, ten events, Nov 2–6. Not in NYC? Send me the question you'd ask."
+- **Source attribution:** Source: Deepgram developer docs, Flux voice-agent eager end-of-turn (vendor), 2026.
+- **Alt text:** A balance showing Deepgram's documented trade-off: eager end-of-turn trims 100–200 ms of latency at the cost of 50–70% more LLM calls.
 
 **Quality gate checks:**
-- Arc fit: pass. This is a weekly roundup, so Arc 4. It is condensed because ten events would mean 12 slides; the deviation is noted above.
-- Job differentiation: pass (timing map / livestream settle criteria / in-person settle criteria / one claim pair's provenance / cross-event synthesis). Slides 2 and 3 split by format, so they don't duplicate each other.
-- Frame parallelism: slides 2 and 3 share one row template; slide 4's panels are mirrored with equal-weight callouts; slides 1 and 5 share a type scale.
-- Thumb test per slide: pass. Headlines run 5–6 words. Slide 3 is the densest: render at 44–48px minimum on the settle column and abbreviate if it squints at 375px.
-- Source citations: pass on slides 1–4; slide 5 is synthesis with no figures.
-- Adds information, not repetition: pass. Clock times, the Election Day overlap, the "what gets checked" and "what would settle it" columns, the provenance and method of the two PR numbers, and the person/machine/metric sort are all absent from the copy.
-- Final slide earns the swipe: pass. It is synthesis, not housekeeping, and it takes no side (it sorts approaches without ranking them).
-- Colour rules: pass. One accent (#3B82F6) carries meaning only, paired with outline and tag patterns. Acid green #8FE83A appears only on the name-mark underline. Contrast ≥4.5:1 for all text.
-- Public-file check: pass. No private material (no hiring signals, applications or registration status) appears on any slide, since carousel PDFs are downloadable.
+- Arc fit: a cover, then the three-question structure of Variant B, 2 stat slides per question (Alex's spec). The cover summarizes the week and maps the questions to slides.
+- Job differentiation: six different numbers, each tied to a different event (DevCon, Agentics, Expedition, Revolt, Ghosts, Voice). No slide repeats the post copy's figures except the Zalando/Jellyfish pair, which slide 1 adds the method and sample size to.
+- Null-baseline rule: every number has a comparison point (Zalando vs Jellyfish; 53% baseline; Spider 1.0 vs 2.0; 5 of 6; merges vs review time; latency vs calls).
+- Takes no side: each slide states what the number measures and its limits, then the event. No verdicts.
+- Thumb test: headlines are 5–8 words; one big number visual per slide.
+- Source citations: all 6 slides. Sources checked 2026-11-02: Vercel, Faros and Deepgram against their own pages; Zalando/Jellyfish, Spider 2.0 and the Revolt MCP count carried from the source-checked briefs and carousels.
+- Final slide (7) earns the swipe: the sixth number plus a one-line invitation, not "follow for more".
+- Public-file check: no private material.
