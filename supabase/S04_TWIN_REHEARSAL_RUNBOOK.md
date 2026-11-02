@@ -20,9 +20,12 @@ Order of application: **backstop first** (its Part-2 tolerance of the empty lega
 - Env: `PHANTOM_TEST_DB_PASSWORD` (twin postgres password), `PSQL_BIN` (default `psql` on PATH). Optional: `SUPABASE_API_KEY` (prod service key) — preflight currency counts only, read-only REST.
 - Connection: direct `db.ytfzzsxcxxbejnowmkmk.supabase.co:5432` where IPv6 is available; otherwise the **session pooler** (IPv4):
   ```
-  TWIN_DB_HOST=aws-0.<region>.pooler.supabase.com TWIN_DB_USER=postgres.ytfzzsxcxxbejnowmkmk
+  TWIN_DB_HOST=aws-0-<region>.pooler.supabase.com TWIN_DB_USER=postgres.ytfzzsxcxxbejnowmkmk
   ```
-  (same `TWIN_DB_HOST` / `TWIN_DB_PORT` / `TWIN_DB_USER` overrides `rehearse_s1a.py` accepts).
+  (same `TWIN_DB_HOST` / `TWIN_DB_PORT` / `TWIN_DB_USER` overrides `rehearse_s1a.py` accepts;
+  hostname is **dashed**, not dotted — `aws-0.<region>…` is NXDOMAIN. The pooler tenant
+  must exist: a disabled pooler reports `FATAL: (ENOTFOUND) tenant/user <user> not found`
+  from every region).
 
 ## The gate sequence (what the script runs)
 

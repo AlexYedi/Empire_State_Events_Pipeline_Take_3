@@ -51,9 +51,13 @@ Env (from .env or the environment, never hardcoded):
                             connections are IPv6-only on newer setups and
                             GitHub runners can't use them at all — for IPv4
                             point at the session pooler, e.g.
-                              TWIN_DB_HOST=aws-0.<region>.pooler.supabase.com
+                              TWIN_DB_HOST=aws-0-<region>.pooler.supabase.com
                               TWIN_DB_USER=postgres.<TWIN_REF>
-                            (same overrides rehearse_s1a.py accepts).
+                            (same overrides rehearse_s1a.py accepts;
+                             hostname is DASHED, not dotted — and the
+                             pooler tenant must exist: a disabled pooler
+                             reports "FATAL: (ENOTFOUND) tenant/user
+                             <user> not found" from every region).
 
 Usage:
   python supabase/scripts/rehearse_s04_d1.py --preflight-only
