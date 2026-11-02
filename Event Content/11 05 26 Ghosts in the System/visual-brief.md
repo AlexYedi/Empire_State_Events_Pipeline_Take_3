@@ -52,7 +52,7 @@ Source of record: Notion Content Draft "Ghosts in the System - How AI Powers Sca
 
   - **Highlight:** the TRIAGE column is outlined in accent blue, the only highlighted element.
 - **Palette:** dark bg + white text + #3B82F6
-- **Source attribution:** "Quoted sentence on signals: event invite (luma.com/yxxzlmuc). Three-job breakdown and failure modes: my mapping. Draft-editing evidence: Dartmouth, 2026."
+- **Source attribution:** "Three-job breakdown and failure modes: my mapping."
 - **Alt text:** A three-step diagram, classify then triage then route or draft, showing that a triage miss is the one failure no one is alerted to.
 - **Tool:** Claude design (HTML/SVG)
 
