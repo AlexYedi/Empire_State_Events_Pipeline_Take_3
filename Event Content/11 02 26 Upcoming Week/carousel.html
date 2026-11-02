@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Upcoming Week, Nov 2–6, 2026: ten AI events (six in NYC, four streaming), one question</title>
+<style>
+/* carousel-base.css — Alex's house carousel tokens and base rules (YED-259). Inlined so the file is self-contained. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- Post-specific overrides (brief palette: #0F172A ground, white text, ONE accent #3B82F6;
+        muted = white at 70%, not a second hue; acid green = name-mark underline only) ---- */
+:root{ --ground:#0F172A; --panel:#16213A; --rule:#2B3A57; --ink:#FFFFFF; --muted:rgba(255,255,255,.7); --mark:#3B82F6; }
+h2{font-size:80px;margin-top:0}
+.src{max-width:780px}
+.k{font-family:var(--mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+svg text{font-family:var(--body)}
+
+/* Slide 1 — week map */
+.s1{padding-top:96px}
+.legend{display:flex;gap:36px;margin-top:30px;font-family:var(--body);font-size:28px;color:var(--ink);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:14px}
+.legend i{display:inline-block;width:44px;height:26px}
+.legend .sol{background:#FFFFFF}
+.legend .str{border:3px solid var(--mark)}
+.legend .tag{font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:.08em;background:var(--mark);color:#0F172A;padding:3px 8px;border-radius:3px}
+.legend .tlk{background:#FFFFFF;position:relative}
+.legend .tlk::after{content:"";position:absolute;left:18px;top:5px;width:22px;height:16px;background:#0F172A}
+.map{margin-top:26px}
+
+/* Slides 2 + 3 — ONE shared row template (.mx / .row) */
+.mx{margin-top:40px;display:grid;grid-template-columns:214px 168px 1fr;column-gap:26px}
+.mh{font-family:var(--mono);font-size:22px;letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--muted);padding-bottom:16px;border-bottom:2px solid var(--rule);align-self:end}
+.mh.chk{color:var(--mark);border-bottom:3px solid var(--mark)}
+.ev{padding:24px 0;border-bottom:1px solid var(--rule)}
+.ev b{display:block;font-family:var(--body);font-weight:600;font-size:28px;line-height:1.2;color:var(--ink)}
+.ev span{display:block;font-family:var(--body);font-size:24px;line-height:1.3;color:var(--muted);margin-top:6px}
+.ck{font-family:var(--body);font-weight:600;font-size:28px;line-height:1.2;color:var(--mark);padding:24px 0;border-bottom:1px solid var(--rule)}
+.st{font-family:var(--body);font-size:40px;line-height:1.14;color:var(--ink);padding:22px 0;border-bottom:1px solid var(--rule)}
+.mx > :nth-last-child(-n+3){border-bottom:none}
+.s3 .mx{margin-top:36px}
+.s3 .ev,.s3 .ck{padding:18px 0}
+.s3 .st{padding:16px 0}
+
+/* Slide 4 — mirrored panels */
+.pair{display:grid;grid-template-columns:1fr 1fr;column-gap:40px;margin-top:44px}
+.pn{border-top:6px solid var(--mark);padding-top:24px;display:flex;flex-direction:column}
+.fig{font-family:var(--display);font-weight:600;font-size:112px;line-height:1;letter-spacing:-.02em;color:var(--mark);height:112px;white-space:nowrap}
+.what{font-family:var(--body);font-weight:600;font-size:32px;line-height:1.25;margin-top:18px;min-height:84px}
+.pn .k{margin-top:26px;margin-bottom:8px}
+.pn p{font-family:var(--body);font-size:28px;line-height:1.3;color:var(--ink);margin-bottom:26px}
+.pn p.m{min-height:110px}
+.psrc{font-family:var(--mono);font-size:20px;color:var(--muted);margin-top:auto;padding-top:14px;border-top:1px solid var(--rule)}
+.verdict{margin-top:40px;font-family:var(--body);font-size:32px;line-height:1.3;padding-left:24px;border-left:3px solid var(--ink);max-width:860px}
+
+/* Slide 5 — synthesis, documentarian (off-white, no accent) */
+.s5{--ink:#F8FAFC;--muted:rgba(248,250,252,.7);padding-top:96px}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);column-gap:36px;margin-top:72px}
+.col{border-top:3px solid var(--ink);padding-top:22px}
+.col h3{font-family:var(--display);font-weight:600;font-size:48px;line-height:1.08;letter-spacing:-.01em;min-height:110px}
+.it{margin-top:34px;font-family:var(--body);font-weight:600;font-size:32px;line-height:1.2}
+.it span{display:block;font-weight:400;font-size:27px;line-height:1.3;color:var(--muted);margin-top:4px}
+.span3{margin-top:auto;margin-bottom:96px;font-family:var(--body);font-size:34px;line-height:1.3;color:var(--ink);border-top:1px solid var(--rule);padding-top:28px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt: A Monday-to-Friday timeline of ten AI events, marking four livestreams and six in-person events, with three events each on Tuesday and Wednesday. -->
+<section class="slide s1">
+  <h2>Ten events, four you can stream</h2>
+  <div class="legend">
+    <span><i class="sol"></i>in person</span>
+    <span><i class="str"></i><b class="tag">STREAM</b>livestream</span>
+    <span><i class="tlk"></i>talk block</span>
+  </div>
+  <div class="map">
+    <!-- x(h) = 112 + (h-9)*59.69 ; 9 AM = 112, 12 PM = 291.1, 3 PM = 470.2, 6 PM = 649.2, 9 PM = 828.3, 10 PM = 888 -->
+    <svg width="888" height="770" viewBox="0 0 888 770" aria-hidden="true">
+      <defs>
+        <linearGradient id="fade" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset=".45" stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- hour axis: x(h) = 112 + (h-9)*59.69 ; 9 AM=112, 12 PM=291.1, 3 PM=470.2, 6 PM=649.2, 9 PM=828.3, 10 PM=888 -->
+      <g fill="rgba(255,255,255,.7)" font-size="26">
+        <text x="112" y="28">9 AM</text>
+        <text x="291.1" y="28" text-anchor="middle">12 PM</text>
+        <text x="470.2" y="28" text-anchor="middle">3 PM</text>
+        <text x="649.2" y="28" text-anchor="middle">6 PM</text>
+        <text x="828.3" y="28" text-anchor="middle">9 PM</text>
+      </g>
+      <g stroke="#2B3A57" stroke-width="2" stroke-dasharray="4 8">
+        <line x1="112" y1="44" x2="112" y2="766"/><line x1="291.1" y1="44" x2="291.1" y2="766"/>
+        <line x1="470.2" y1="44" x2="470.2" y2="766"/><line x1="649.2" y1="44" x2="649.2" y2="766"/>
+        <line x1="828.3" y1="44" x2="828.3" y2="766"/><line x1="888" y1="44" x2="888" y2="766"/>
+      </g>
+      <!-- day separators -->
+      <g stroke="#2B3A57" stroke-width="2">
+        <line x1="0" y1="152" x2="888" y2="152"/><line x1="0" y1="352" x2="888" y2="352"/>
+        <line x1="0" y1="552" x2="888" y2="552"/><line x1="0" y1="660" x2="888" y2="660"/>
+      </g>
+      <!-- day labels -->
+      <g fill="#FFFFFF" font-family="Menlo, 'SF Mono', monospace" font-size="28" font-weight="700" letter-spacing="2">
+        <text x="0" y="126">MON</text><text x="0" y="234">TUE</text><text x="0" y="434">WED</text>
+        <text x="0" y="634">THU</text><text x="0" y="742">FRI</text>
+      </g>
+      <g fill="rgba(255,255,255,.7)" font-size="22">
+        <text x="0" y="300">Election</text><text x="0" y="326">Day</text>
+      </g>
+
+      <!-- MON: VirtusLab from 6:30 PM, no published end -> fade -->
+      <text x="888" y="84" text-anchor="end" font-size="26" fill="#FFFFFF">VirtusLab · Can your agents ship?</text>
+      <rect x="679.1" y="98" width="208.9" height="36" fill="url(#fade)"/>
+
+      <!-- TUE r1: AI DevCon 9:20 AM–5:30 PM (stream) + AIMLC 5:30–7:15 PM (in person, talk 6:15–7:15) -->
+      <text x="132" y="192" font-size="26" fill="#FFFFFF">AI DevCon NYC</text>
+      <rect x="133.5" y="207.5" width="482.4" height="33" fill="none" stroke="#3B82F6" stroke-width="3"/>
+      <text x="723.9" y="192" text-anchor="end" font-size="26" fill="#FFFFFF">AIMLC · Navier-Stokes</text>
+      <rect x="621.4" y="206" width="102.5" height="36" fill="#FFFFFF"/>
+      <rect x="664.1" y="213" width="54.8" height="22" fill="#0F172A"/>
+      <!-- TUE r2: Snowflake Expedition technical 1–6 PM (stream) -->
+      <text x="350.8" y="284" font-size="26" fill="#FFFFFF">Snowflake Expedition · technical</text>
+      <rect x="352.3" y="299.5" width="295.4" height="33" fill="none" stroke="#3B82F6" stroke-width="3"/>
+
+      <!-- WED r1: Revolt Day 1 12–1 PM (stream) + Agentics Spotlight 6–10 PM (in person) -->
+      <text x="291.1" y="392" font-size="26" fill="#FFFFFF">Revolt Demo Day 1</text>
+      <rect x="292.6" y="407.5" width="56.7" height="33" fill="none" stroke="#3B82F6" stroke-width="3"/>
+      <text x="888" y="392" text-anchor="end" font-size="26" fill="#FFFFFF">Agentics Spotlight</text>
+      <rect x="649.2" y="406" width="238.8" height="36" fill="#FFFFFF"/>
+      <!-- WED r2: Expedition GTM 1–6:30 PM (stream) -->
+      <text x="350.8" y="484" font-size="26" fill="#FFFFFF">Expedition · GTM</text>
+      <rect x="352.3" y="499.5" width="325.3" height="33" fill="none" stroke="#3B82F6" stroke-width="3"/>
+
+      <!-- THU: Revolt Day 2 12–1 PM (stream) + Ghosts in the System 6–8:30 PM (in person; label inline-left) -->
+      <text x="291.1" y="592" font-size="26" fill="#FFFFFF">Revolt Demo Day 2</text>
+      <rect x="292.6" y="607.5" width="56.7" height="33" fill="none" stroke="#3B82F6" stroke-width="3"/>
+      <text x="637" y="633" text-anchor="end" font-size="26" fill="#FFFFFF">Ghosts in the System</text>
+      <rect x="649.2" y="606" width="149.2" height="36" fill="#FFFFFF"/>
+
+      <!-- FRI: Lovable 11 AM–3 PM + Voice Agent Hackathon 3–9 PM (both in person) -->
+      <text x="231.4" y="700" font-size="26" fill="#FFFFFF">Level Up With Lovable</text>
+      <rect x="231.4" y="714" width="236.8" height="36" fill="#FFFFFF"/>
+      <text x="828.3" y="700" text-anchor="end" font-size="26" fill="#FFFFFF">Voice Agent Hackathon</text>
+      <rect x="472.2" y="714" width="356.1" height="36" fill="#FFFFFF"/>
+    </svg>
+  </div>
+  <div class="foot">
+    <div class="src">Source: event listings (Luma, Tessl, Snowflake, RevGenius), Nov 2026. Times ET.</div>
+    <div class="page">1/5</div>
+  </div>
+</section>
+
+<!-- Slide 2 alt: A four-row table pairing each livestreamed event with what it checks and the observable evidence that would answer its open question. -->
+<section class="slide s2">
+  <h2>Four streams, watch online</h2>
+  <div class="mx">
+    <div class="mh">Event + how to join</div>
+    <div class="mh chk">What gets checked</div>
+    <div class="mh">What would settle it</div>
+
+    <div class="ev"><b>AI DevCon NYC (Tessl)</b><span>YouTube, Tue</span></div>
+    <div class="ck">the merge</div>
+    <div class="st">A speaker naming the method and baseline behind a vendor number</div>
+
+    <div class="ev"><b>Snowflake Expedition, technical</b><span>Tue</span></div>
+    <div class="ck">agent controls</div>
+    <div class="st">GA, preview or roadmap, said out loud, for each control shown</div>
+
+    <div class="ev"><b>Snowflake Expedition, GTM</b><span>Wed</span></div>
+    <div class="ck">the marketing number</div>
+    <div class="st">A budget that moved because an experiment beat the dashboard</div>
+
+    <div class="ev"><b>Revolt! Demo Days (RevGenius)</b><span>Wed + Thu</span></div>
+    <div class="ck">the CRM write</div>
+    <div class="st">A live demo showing who approved the write, on realistic data</div>
+  </div>
+  <div class="foot">
+    <div class="src">Source: event agendas and research briefs, Nov 2026.</div>
+    <div class="page">2/5</div>
+  </div>
+</section>
+
+<!-- Slide 3 alt: A six-row table pairing each in-person event with what it checks and the evidence that would answer its open question. -->
+<section class="slide s3">
+  <h2>Six rooms in New York</h2>
+  <div class="mx">
+    <div class="mh">Event + how to join</div>
+    <div class="mh chk">What gets checked</div>
+    <div class="mh">What would settle it</div>
+
+    <div class="ev"><b>VirtusLab</b><span>Mon</span></div>
+    <div class="ck">the merge gate</div>
+    <div class="st">A stated threshold, and who owns it</div>
+
+    <div class="ev"><b>AIMLC</b><span>Tue</span></div>
+    <div class="ck">the proof</div>
+    <div class="st">One line on what’s established, one on what isn’t</div>
+
+    <div class="ev"><b>Agentics Spotlight</b><span>Wed, NYU</span></div>
+    <div class="ck">the skill</div>
+    <div class="st">A named failure signature for a skipped skill</div>
+
+    <div class="ev"><b>Ghosts in the System</b><span>Thu, Ro HQ</span></div>
+    <div class="ck">the reply at volume</div>
+    <div class="st">A stated miss rate on urgent cases</div>
+
+    <div class="ev"><b>Level Up With Lovable</b><span>Fri AM</span></div>
+    <div class="ck">the shipped app</div>
+    <div class="st">One task the tool still leaves to the builder</div>
+
+    <div class="ev"><b>Voice Agent Hackathon</b><span>Fri PM</span></div>
+    <div class="ck">the turn</div>
+    <div class="st">A latency number measured on a real phone line</div>
+  </div>
+  <div class="foot">
+    <div class="src">Source: event listings and research briefs, Nov 2026.</div>
+    <div class="page">3/5</div>
+  </div>
+</section>
+
+<!-- Slide 4 alt: Two mirrored panels separating Zalando's roughly one-in-three auto-approved PRs from Jellyfish's 0.5% median rate of AI-only-review merges, noting how each was measured. -->
+<section class="slide s4">
+  <h2>Two numbers, two different measurements</h2>
+  <div class="pair">
+    <div class="pn">
+      <div class="fig">≈ 1 in 3</div>
+      <div class="what">Zalando PRs auto-approved as low-risk.</div>
+      <div class="k">What it measures</div>
+      <p class="m">The share of one company’s PRs that a risk tier routes past human review, across 250+ teams.</p>
+      <div class="k">Method</div>
+      <p>First-party and observational; methodology not disclosed.</p>
+      <div class="psrc">Zalando Engineering, 2026-08-14</div>
+    </div>
+    <div class="pn">
+      <div class="fig">0.5%</div>
+      <div class="what">AI-only-review merges at the median company.</div>
+      <div class="k">What it measures</div>
+      <p class="m">Merges reviewed only by AI, across 1,300+ companies.</p>
+      <div class="k">Method</div>
+      <p>Jellyfish’s own dataset.</p>
+      <div class="psrc">Jellyfish via R&amp;D World, 2026-10-27</div>
+    </div>
+  </div>
+  <div class="verdict">One company’s policy, one cross-company median. Neither is a controlled study.</div>
+  <div class="foot">
+    <div class="src">Source: Zalando Engineering blog (2026-08-14); Jellyfish data as reported by R&amp;D World (2026-10-27).</div>
+    <div class="page">4/5</div>
+  </div>
+</section>
+
+<!-- Slide 5 alt: Three columns sorting the week's ten events by whether their open question turns on a human sign-off, a machine check or a metric, with two events spanning all three. -->
+<section class="slide s5">
+  <h2>A person, a machine, or a metric</h2>
+  <div class="tri">
+    <div class="col">
+      <h3>A person signs off</h3>
+      <div class="it">VirtusLab<span>(merge gate)</span></div>
+      <div class="it">Revolt Day 1</div>
+      <div class="it">Revolt Day 2<span>(CRM write approval)</span></div>
+    </div>
+    <div class="col">
+      <h3>A machine checks</h3>
+      <div class="it">AIMLC<span>(reported Lean check)</span></div>
+      <div class="it">Agentics Spotlight<span>(skill pressure tests)</span></div>
+      <div class="it">Level Up With Lovable<span>(SEO review)</span></div>
+    </div>
+    <div class="col">
+      <h3>A metric decides</h3>
+      <div class="it">Snowflake Expedition<span>(governed definitions, experiments vs attribution)</span></div>
+      <div class="it">Voice Agent Hackathon<span>(judged on response time and turn-taking)</span></div>
+    </div>
+  </div>
+  <div class="span3">AI DevCon’s nine talks and Ghosts in the System’s panel span all three.</div>
+  <div class="foot">
+    <div class="name">Alex Yedi</div>
+    <div class="page">5/5</div>
+  </div>
+</section>
+
+<script>
+/* Slide 1: place a STREAM tag right after each livestream label, measured at load so it never collides. Static after load. */
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.querySelector('.s1 svg');
+  const labels=['AI DevCon NYC','Snowflake Expedition · technical','Revolt Demo Day 1','Expedition · GTM','Revolt Demo Day 2'];
+  svg.querySelectorAll('text').forEach(t=>{
+    if(!labels.includes(t.textContent)) return;
+    const b=t.getBBox(), x=b.x+b.width+12, h=26, y=b.y+(b.height-h)/2+1, w=88;
+    const r=document.createElementNS(NS,'rect');
+    r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',w); r.setAttribute('height',h); r.setAttribute('rx',3); r.setAttribute('fill','#3B82F6');
+    const s=document.createElementNS(NS,'text');
+    s.setAttribute('x',x+w/2); s.setAttribute('y',y+19); s.setAttribute('text-anchor','middle');
+    s.setAttribute('font-family',"Menlo, 'SF Mono', monospace"); s.setAttribute('font-size','18'); s.setAttribute('font-weight','700'); s.setAttribute('letter-spacing','1.5'); s.setAttribute('fill','#0F172A');
+    s.textContent='STREAM';
+    svg.appendChild(r); svg.appendChild(s);
+  });
+})();
+</script>
+</body>
+</html>
