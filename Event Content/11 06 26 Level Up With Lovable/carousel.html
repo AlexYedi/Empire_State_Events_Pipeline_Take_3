@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>When the platform holds it, what's yours?</title>
+<style>
+/* carousel-base.css — Alex's house carousel tokens and base rules (YED-259). Inlined so the file is self-contained. */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- Post-specific overrides (brief palette: #0F172A ground, white text, ONE accent #3B82F6; acid green = name mark only) ---- */
+:root{ --ground:#0F172A; --panel:#16213A; --rule:#2B3A57; --ink:#FFFFFF; --muted:#94A3B8; --mark:#3B82F6; }
+h2{font-size:80px;margin-top:0}
+.src{max-width:780px}
+.k{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hi{color:var(--mark)}
+
+/* Slides 1 + 2 — shared layer-stack frame (only the owner column changes) */
+.stack{margin-top:52px;display:grid;grid-template-columns:330px 1fr;column-gap:40px}
+.sh{font-family:var(--mono);font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark);padding-bottom:16px;border-bottom:3px solid var(--mark);align-self:end}
+.layer,.own{height:136px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;justify-content:center}
+.layer{font-family:var(--body);font-weight:600;font-size:34px;line-height:1.2;color:var(--ink);padding-left:26px;position:relative}
+.layer::before{content:"";position:absolute;left:0;top:28px;bottom:28px;width:6px;border-radius:3px;background:var(--rule)}
+.own .who{font-family:var(--display);font-weight:600;font-size:46px;line-height:1.05;color:var(--ink);display:flex;align-items:baseline;gap:16px}
+.own .tag{font-family:var(--mono);font-size:22px;letter-spacing:.06em;color:var(--mark);border:2px solid var(--mark);border-radius:4px;padding:2px 8px;font-weight:400}
+.own .fact{font-family:var(--body);font-size:24px;line-height:1.28;color:var(--ink);margin-top:8px}
+.after .who{color:var(--mark)}
+.cap{font-family:var(--body);font-size:28px;line-height:1.4;color:var(--ink);margin-top:36px;padding-left:24px;border-left:3px solid var(--mark);max-width:860px}
+
+/* Slide 3 — bill flow */
+.flow{margin-top:96px;position:relative;height:640px}
+.box{position:absolute;top:0;width:186px;height:250px;border:2px solid var(--ink);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 14px;font-family:var(--body);font-weight:600;font-size:27px;line-height:1.25;color:var(--ink);background:var(--ground)}
+.box.end{border:3px solid var(--mark);background:var(--mark);color:#0F172A}
+.box.gone{top:420px;left:466px;width:422px;height:130px;border:2px dashed #94A3B8;color:#94A3B8;font-weight:500;background:transparent}
+.box.gone span{text-decoration:line-through;text-decoration-thickness:3px}
+.flow svg{position:absolute;left:0;top:0;overflow:visible}
+.strip{position:absolute;left:96px;right:96px;bottom:180px;display:grid;grid-template-columns:1fr 1fr;column-gap:40px;border-top:1px solid var(--rule);padding-top:26px}
+.strip div{font-family:var(--body);font-size:27px;line-height:1.38;color:var(--ink)}
+.strip div + div{border-left:3px solid var(--mark);padding-left:24px}
+.mono{font-family:var(--mono);font-size:25px;color:var(--mark)}
+
+/* Slide 4 — retirement timeline */
+.tl{margin-top:80px;position:relative;height:700px}
+.tl svg{position:absolute;left:0;top:0}
+.ml{position:absolute;font-family:var(--body);line-height:1.3}
+.ml .d{font-family:var(--mono);font-size:24px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ml .w{font-size:32px;font-weight:600;color:var(--ink);margin-top:6px}
+.ml .n{font-family:var(--display);font-weight:600;font-size:76px;line-height:1;color:var(--mark);margin-bottom:12px}
+
+/* Slide 5 — open scorecard */
+.mx{margin-top:72px;display:grid;grid-template-columns:1fr 300px;column-gap:48px}
+.mh{font-family:var(--mono);font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark);padding-bottom:16px;border-bottom:3px solid var(--mark)}
+.t{font-family:var(--body);font-weight:600;font-size:34px;line-height:1.25;color:var(--ink);padding:34px 0;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.t .tag{font-family:var(--mono);font-size:22px;letter-spacing:.06em;color:var(--mark);border:2px solid var(--mark);border-radius:4px;padding:2px 8px;font-weight:400}
+.blank{border-bottom:1px solid var(--rule);display:flex;align-items:center}
+.blank i{display:block;width:100%;height:56px;border-bottom:3px solid var(--ink);opacity:.9}
+.ask{font-family:var(--body);font-size:30px;line-height:1.4;color:var(--muted);position:absolute;left:96px;right:96px;bottom:170px;border-top:1px solid var(--rule);padding-top:26px}
+.end-slide .name{font-size:30px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt: A five-layer stack (hosting, AI keys, model choice, live data, getting found) in which the builder holds every layer when working with a coding agent. -->
+<section class="slide">
+  <h2>Coding agent: you own the plumbing</h2>
+  <div class="stack">
+    <div></div><div class="sh">Who holds it</div>
+    <div class="layer">Hosting, database, auth</div><div class="own"><div class="who">You</div></div>
+    <div class="layer">AI keys and billing</div><div class="own"><div class="who">You</div></div>
+    <div class="layer">Model choice</div><div class="own"><div class="who">You</div></div>
+    <div class="layer">Live data</div><div class="own"><div class="who">You</div></div>
+    <div class="layer">Getting found (SEO/GEO)</div><div class="own"><div class="who">You</div></div>
+  </div>
+  <div class="cap">Coding agent (Claude Code, Cursor): edits your repo. You run, review and deploy.</div>
+  <div class="foot">
+    <div class="src">Framework: coding agent vs product agent. Layers from the Level Up With Lovable agenda, luma.com/35iuoq3d, 2026.</div>
+    <div class="page">1/5</div>
+  </div>
+</section>
+
+<!-- Slide 2 alt: The same five-layer stack, now with the platform holding every layer; each layer is tagged to one of the event's four agenda blocks and to a documented Lovable feature. -->
+<section class="slide after">
+  <h2>Product agent: the platform holds it</h2>
+  <div class="stack">
+    <div></div><div class="sh">Who holds it</div>
+    <div class="layer">Hosting, database, auth</div><div class="own"><div class="who">Platform</div><div class="fact">Cloud DB and secrets</div></div>
+    <div class="layer">AI keys and billing</div><div class="own"><div class="who">Platform <span class="tag">A1</span></div><div class="fact">one key per project, billed as Run credits</div></div>
+    <div class="layer">Model choice</div><div class="own"><div class="who">Platform <span class="tag">A2</span></div><div class="fact">a default plus alternates per use case</div></div>
+    <div class="layer">Live data</div><div class="own"><div class="who">Platform <span class="tag">A3</span></div><div class="fact">managed Firecrawl, Perplexity and Parallel, no vendor account</div></div>
+    <div class="layer">Getting found (SEO/GEO)</div><div class="own"><div class="who">Platform <span class="tag">A4</span></div><div class="fact">server rendering for apps since <span style="white-space:nowrap">2026-05-13</span>, Markdown for verified AI crawlers</div></div>
+  </div>
+  <div class="foot">
+    <div class="src">Sources: docs.lovable.dev/features/ai, /features/seo, /changelog (2026); agenda IDs A1–A4 from luma.com/35iuoq3d.</div>
+    <div class="page">2/5</div>
+  </div>
+</section>
+
+<!-- Slide 3 alt: A flow diagram in which an app's AI call goes through Lovable's gateway and is billed as Run credits instead of to the builder's own model-provider account, with the free grant and the error codes noted. -->
+<section class="slide">
+  <h2>The AI bill moved inside the platform</h2>
+  <div class="flow">
+    <div class="box" style="left:0">Your app’s AI call</div>
+    <div class="box" style="left:234px">Lovable gateway (one project key)</div>
+    <div class="box" style="left:468px">Model</div>
+    <div class="box end" style="left:702px">Run credits on your Lovable workspace</div>
+    <div class="box gone"><span>Your OpenAI or Google account</span></div>
+    <svg width="888" height="640" viewBox="0 0 888 640" aria-hidden="true">
+      <g stroke="#FFFFFF" stroke-width="3" fill="#FFFFFF">
+        <line x1="192" y1="125" x2="220" y2="125"/><path d="M216 117 L230 125 L216 133 Z" stroke="none"/>
+        <line x1="426" y1="125" x2="454" y2="125"/><path d="M450 117 L464 125 L450 133 Z" stroke="none"/>
+        <line x1="660" y1="125" x2="688" y2="125"/><path d="M684 117 L698 125 L684 133 Z" stroke="none"/>
+      </g>
+      <g stroke="#94A3B8" stroke-width="3" fill="none" stroke-dasharray="10 8">
+        <path d="M561 256 V408"/>
+      </g>
+      <path d="M553 404 L561 418 L569 404 Z" fill="#94A3B8"/>
+    </svg>
+  </div>
+  <div class="strip">
+    <div>Free AI grant: 4 credits a month, ‘temporary’, no rollover</div>
+    <div><span class="mono">429</span> = rate-limited<br><span class="mono">402</span> = out of credits</div>
+  </div>
+  <div class="foot">
+    <div class="src">Source: Lovable docs, docs.lovable.dev/features/ai, 2026.</div>
+    <div class="page">3/5</div>
+  </div>
+</section>
+
+<!-- Slide 4 alt: A timeline showing two Gemini Flash models scheduled to stop 13 and 83 days after the November 6 session. -->
+<section class="slide">
+  <h2>Model choice has an expiry date</h2>
+  <div class="tl">
+    <!-- proportional scale: 888px = 83 days; Nov 19 sits at 13/83 = 139px -->
+    <svg width="888" height="700" viewBox="0 0 888 700" aria-hidden="true">
+      <line x1="10" y1="330" x2="878" y2="330" stroke="#FFFFFF" stroke-width="3"/>
+      <line x1="10" y1="330" x2="149" y2="330" stroke="#3B82F6" stroke-width="9"/>
+      <line x1="149" y1="330" x2="878" y2="330" stroke="#3B82F6" stroke-width="9" opacity=".35"/>
+      <line x1="10" y1="330" x2="10" y2="210" stroke="#FFFFFF" stroke-width="2"/>
+      <line x1="149" y1="330" x2="149" y2="430" stroke="#3B82F6" stroke-width="2"/>
+      <line x1="878" y1="330" x2="878" y2="210" stroke="#3B82F6" stroke-width="2"/>
+      <circle cx="10" cy="330" r="14" fill="#FFFFFF"/>
+      <circle cx="149" cy="330" r="14" fill="#3B82F6"/>
+      <circle cx="878" cy="330" r="14" fill="#3B82F6"/>
+    </svg>
+    <div class="ml" style="left:0;top:96px"><div class="d">Nov 6, 2026</div><div class="w">build session</div></div>
+    <div class="ml" style="left:139px;top:452px"><div class="n">+13 days</div><div class="d">Nov 19, 2026</div><div class="w">Gemini 3.6 Flash stops</div></div>
+    <div class="ml" style="right:0;top:0;text-align:right"><div class="n">+83 days</div><div class="d">Jan 28, 2027</div><div class="w">Gemini 3.7 Flash stops</div></div>
+  </div>
+  <div class="cap" style="margin-top:0">An app built on a retired model may have to be re-pointed. Who does it: you or the platform?</div>
+  <div class="foot">
+    <div class="src">Source: Lovable changelog, docs.lovable.dev/changelog, 2026. Day counts computed from the session date.</div>
+    <div class="page">4/5</div>
+  </div>
+</section>
+
+<!-- Slide 5 alt: A four-row scorecard of the build tests (credits, model swap, live data, crawler view) with blank results to fill in after the session. -->
+<section class="slide end-slide">
+  <h2>When the platform holds it, what’s yours?</h2>
+  <div class="mx">
+    <div class="mh">The test</div><div class="mh">Friday’s result</div>
+    <div class="t">Credits at 100 users <span class="tag">A1</span></div><div class="blank" aria-label="blank"><i></i></div>
+    <div class="t">Swap a model after launch <span class="tag">A2</span></div><div class="blank" aria-label="blank"><i></i></div>
+    <div class="t">Live data with no key <span class="tag">A3</span></div><div class="blank" aria-label="blank"><i></i></div>
+    <div class="t">What AI crawlers actually see <span class="tag">A4</span></div><div class="blank" aria-label="blank"><i></i></div>
+  </div>
+  <div class="ask">Results in the follow-up ·<br>Level Up With Lovable · Brooklyn · Fri Nov 6</div>
+  <div class="foot">
+    <div class="name">Alex Yedi</div>
+    <div class="page">5/5</div>
+  </div>
+</section>
+
+</body>
+</html>
