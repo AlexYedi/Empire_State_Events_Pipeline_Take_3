@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>When code is cheap, what do you trust? Nine talks, three layers</title>
+<style>
+  /* Built from content-patterns/carousel-base.css (house tokens) with the brief's palette values.
+     Green #8FE83A is reserved for the underline + name mark (brand decision 2026-09-30);
+     the meaning-bearing accent on the lit layer is the agents topic blue #60A5FA (the brief's own swap). */
+  @page { size: 1080px 1350px; margin: 0; }
+  :root {
+    --bg: #0B0F14; --ink: #F5F7FA; --dim: #8A94A6; --line: #2A323E; --ghost: #3A4350;
+    --mark: #60A5FA; --sig: #8FE83A;
+    --serif: "Iowan Old Style", "Palatino", Georgia, serif;
+    --sans: "Avenir Next", "Helvetica Neue", Helvetica, sans-serif;
+    --mono: Menlo, "SF Mono", Monaco, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1080px; height: 1350px; padding: 96px 84px 190px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; background: var(--bg); }
+  .slide:not(:last-child) { break-after: page; }
+  .slide > * { flex-shrink: 0; }
+  h1 { font: 700 84px/1.04 var(--serif); letter-spacing: -.01em; text-wrap: balance; }
+  h1 u { text-decoration: none; background: linear-gradient(var(--sig), var(--sig)) 0 94% / 100% 10px no-repeat; }
+  .src { position: absolute; left: 84px; right: 84px; bottom: 112px; font: 22px/1.4 var(--mono); color: var(--dim); }
+  .foot { position: absolute; left: 84px; right: 84px; bottom: 52px; display: flex; justify-content: space-between; align-items: flex-end;
+          font: 22px/1 var(--mono); color: var(--dim); }
+  .name { font: 600 26px/1 var(--sans); color: var(--ink); border-bottom: 4px solid var(--sig); padding-bottom: 6px; }
+
+  /* ---- The three-layer strip (shared by every slide; lit state = filled + boxed + labelled) ---- */
+  .strip { display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr; align-items: center; }
+  .seg { height: 64px; border: 3px solid var(--ghost); border-radius: 10px; display: flex; align-items: center; justify-content: center;
+         font: 600 24px/1 var(--mono); letter-spacing: .2em; color: var(--dim); }
+  .seg.lit { background: var(--mark); border-color: var(--mark); color: var(--bg); }
+  .chev { display: flex; justify-content: center; }
+  .chev svg { width: 18px; height: 28px; }
+
+  /* ---- Slide 1 + 5: typography bookends ---- */
+  .s1 h1 { font-size: 132px; line-height: 1.0; margin-top: 220px; }
+  .sub { margin-top: 64px; font: 36px/1.45 var(--sans); color: var(--dim); }
+  .sub b { color: var(--ink); font-weight: 600; }
+  .s1 .strip { margin-top: auto; }
+  .s1 .seg { height: 72px; font-size: 26px; }
+  .s1 .strip { margin-bottom: 40px; }
+
+  /* ---- Slides 2-4: one frame, content varies ---- */
+  .layer .strip { margin-bottom: 72px; }
+  .rows { margin-top: 56px; display: flex; flex-direction: column; }
+  .row { display: grid; grid-template-columns: 150px 1fr; column-gap: 28px; padding: 44px 0; border-top: 2px solid var(--line); }
+  .row:last-child { border-bottom: 2px solid var(--line); }
+  .row .t { font: 600 28px/1.3 var(--mono); color: var(--dim); padding-top: 4px; }
+  .row .who { font: 600 34px/1.2 var(--sans); color: var(--ink); }
+  .row .who span { font-weight: 400; color: var(--dim); }
+  .row .how { font: 50px/1.12 var(--serif); color: var(--ink); margin-top: 12px; }
+  .pill { display: inline-block; margin-top: 20px; border: 2px solid var(--mark); border-radius: 999px; padding: 8px 18px;
+          font: 600 22px/1 var(--mono); color: var(--mark); }
+  .et { margin-top: 18px; font: 22px/1 var(--mono); color: var(--dim); }
+  .dense .row { padding: 28px 0; }
+  .dense .row .who { font-size: 30px; }
+  .dense .row .how { font-size: 42px; }
+
+  /* ---- Slide 5: synthesis ---- */
+  .s5 h1 { font-size: 96px; }
+  .s5 .strip { margin-top: 72px; }
+  .names { display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr; margin-top: 22px; }
+  .names ul { list-style: none; display: flex; flex-direction: column; gap: 12px; padding-left: 6px; }
+  .names li { display: flex; align-items: center; gap: 12px; font: 600 28px/1.2 var(--sans); color: var(--ink); }
+  .names li:before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--mark); flex: none; }
+  .base { margin-top: 56px; border-top: 2px solid var(--line); padding-top: 34px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
+  .fig { font: 700 96px/1 var(--serif); color: var(--ink); }
+  .fig small { display: block; margin-top: 12px; font: 28px/1.25 var(--sans); color: var(--dim); }
+  .baseline-cap { grid-column: 1 / -1; margin-top: 22px; font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+  .ask { margin-top: 52px; font: 600 34px/1.3 var(--sans); color: var(--ink); }
+  .ask span { color: var(--dim); font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- 1 THE QUESTION
+ALT: A title card asking "When code is cheap, what do you trust?" above the event details and an unlit three-part strip labelled shape, fence and judge. -->
+<section class="slide s1">
+  <h1>When code is cheap, what do you <u>trust</u>?</h1>
+  <div class="sub"><b>AI DevCon NYC</b> · 9 main-stage talks<br>free livestream · Tue Nov 3</div>
+  <div class="strip">
+    <div class="seg">SHAPE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">FENCE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">JUDGE</div>
+  </div>
+  <div class="src">Source: AI DevCon NYC agenda (Tessl), 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span>1 / 5 →</span></div>
+</section>
+
+<!-- 2 SHAPE
+ALT: The first layer of a three-part strip is highlighted, above three talks that place trust before code is written: staged autonomy, graph context and harness design, with their start times. -->
+<section class="slide layer">
+  <div class="strip">
+    <div class="seg lit">SHAPE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">FENCE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">JUDGE</div>
+  </div>
+  <h1>Trust by shaping the agent</h1>
+  <div class="rows">
+    <div class="row"><div class="t">09:20</div><div><div class="who">Guy Podjarny <span>· Tessl</span></div><div class="how">autonomy earned in stages</div></div></div>
+    <div class="row"><div class="t">11:05</div><div><div class="who">Alan Braun <span>· Atlassian</span></div><div class="how">context as a graph</div></div></div>
+    <div class="row"><div class="t">12:25</div><div><div class="who">Nick Carmont Zaragoza <span>· Anthropic</span></div><div class="how">harness that sheds dead weight</div></div></div>
+  </div>
+  <div class="et">Times in ET</div>
+  <div class="src">Source: AI DevCon NYC speaker abstracts (tessl.io), 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span>2 / 5 →</span></div>
+</section>
+
+<!-- 3 FENCE
+ALT: The middle layer of the strip is highlighted, above two talks that place trust in isolating and bounding agents at runtime, one noting GitHub Agentic Workflows' October 28 general availability. -->
+<section class="slide layer">
+  <div class="strip">
+    <div class="seg">SHAPE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg lit">FENCE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">JUDGE</div>
+  </div>
+  <h1>Trust by fencing the runtime</h1>
+  <div class="rows">
+    <div class="row"><div class="t">13:55</div><div><div class="who">Landon Cox <span>· GitHub Next</span></div><div class="how">no secrets, every write staged</div><span class="pill">Agentic Workflows GA: Oct 28</span></div></div>
+    <div class="row"><div class="t">15:15</div><div><div class="who">Cornelia Davis <span>· Temporal</span></div><div class="how">bounds for code agents write</div></div></div>
+  </div>
+  <div class="et">Times in ET</div>
+  <div class="src">Sources: AI DevCon NYC speaker abstracts (tessl.io); GitHub changelog, Oct 28 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span>3 / 5 →</span></div>
+</section>
+
+<!-- 4 JUDGE
+ALT: The last layer of the strip is highlighted, above four talks that place trust in judging agent output: comprehension, regeneration with evals, risk-tiered auto-approval and full observability. -->
+<section class="slide layer dense">
+  <div class="strip">
+    <div class="seg">SHAPE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg">FENCE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#3A4350" stroke-width="3"/></svg></div>
+    <div class="seg lit">JUDGE</div>
+  </div>
+  <h1>Trust by judging the output</h1>
+  <div class="rows">
+    <div class="row"><div class="t">11:45</div><div><div class="who">Aidan Cunniffe <span>· OpenAI</span></div><div class="how">code built for comprehension</div></div></div>
+    <div class="row"><div class="t">14:35</div><div><div class="who">Chad Fowler <span>· BlueYard Capital</span></div><div class="how">regenerate; evals define correct</div></div></div>
+    <div class="row"><div class="t">16:15</div><div><div class="who">Bartosz Ocytko <span>· Zalando</span></div><div class="how">risk-tiered auto-approval</div></div></div>
+    <div class="row"><div class="t">17:00</div><div><div class="who">Steve Yegge <span>· Gas Town</span></div><div class="how">observable dark factories</div></div></div>
+  </div>
+  <div class="et">Times in ET</div>
+  <div class="src">Sources: AI DevCon NYC abstracts (tessl.io); Fowler, "Regenerative Software," 2025; Zalando Engineering, Aug 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span>4 / 5 →</span></div>
+</section>
+
+<!-- 5 SYNTHESIS
+ALT: The full three-layer strip with every speaker placed in a layer, a baseline note that agents touch 27.7% of PRs but factory PRs are 0.0% at the median company, and the closing question of which layer earns trust first. -->
+<section class="slide s5">
+  <h1>Which layer earns trust <u>first</u>?</h1>
+  <div class="strip">
+    <div class="seg">SHAPE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#8A94A6" stroke-width="3"/></svg></div>
+    <div class="seg">FENCE</div>
+    <div class="chev"><svg viewBox="0 0 18 28"><path d="M3 3 L15 14 L3 25" fill="none" stroke="#8A94A6" stroke-width="3"/></svg></div>
+    <div class="seg">JUDGE</div>
+  </div>
+  <div class="names">
+    <ul><li>Podjarny</li><li>Braun</li><li>Carmont</li></ul>
+    <div></div>
+    <ul><li>Cox</li><li>Davis</li></ul>
+    <div></div>
+    <ul><li>Cunniffe</li><li>Fowler</li><li>Ocytko</li><li>Yegge</li></ul>
+  </div>
+  <div class="base">
+    <div class="fig">27.7%<small>of PRs agent-involved</small></div>
+    <div class="fig">0.0%<small>factory PRs</small></div>
+    <div class="baseline-cap">— median company, today</div>
+  </div>
+  <div class="ask">Ask the speakers live: <span>AI Native Dev Discord</span></div>
+  <div class="src">Source: Jellyfish AI Engineering Trends via R&amp;D World, Oct 27 2026 (vendor dataset)</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>
