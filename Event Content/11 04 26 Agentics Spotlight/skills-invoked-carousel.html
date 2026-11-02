@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Installed isn't invoked: where agent skills get lost</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined; palette overridden per the visual brief:
+   ground #0F172A, ink #F8FAFC, one accent blue #3B82F6, grey #94A3B8, #8FE83A name-mark underline only. */
+:root{
+  --ground:#0F172A; --panel:#16213A; --rule:#2A3550; --ink:#F8FAFC; --muted:#94A3B8;
+  --accent:#8FE83A; --mark:#3B82F6;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:84px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:28px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:760px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+
+/* Slide 1: three counts */
+.counts{margin-top:110px;position:relative;padding-left:72px}
+.counts svg{position:absolute;left:8px;top:22px}
+.row{margin-bottom:84px}
+.row:last-child{margin-bottom:0}
+.row .w{font-family:var(--mono);font-size:34px;letter-spacing:.16em;font-weight:700}
+.row .l{font-family:var(--body);font-size:46px;line-height:1.2;margin-top:12px}
+.row.hot .w,.row.hot .l{color:var(--mark)}
+.kicker{margin-top:auto;margin-bottom:70px;font-family:var(--display);font-size:52px;line-height:1.15;font-style:italic;color:var(--ink)}
+
+/* Slide 2: bars */
+.legend{display:flex;gap:44px;margin-top:48px;font-family:var(--body);font-size:30px;color:var(--ink)}
+.legend span{display:flex;align-items:center;gap:14px}
+.legend i{display:inline-block;width:30px;height:30px;border-radius:4px}
+.bars{margin-top:44px}
+.bar{margin-bottom:34px}
+.bar .cat{font-family:var(--body);font-size:34px;margin-bottom:14px}
+.bar .track{display:flex;align-items:center;gap:22px}
+.bar .fill{height:76px;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:22px;font-family:var(--body);font-weight:700;font-size:42px;color:#0F172A}
+.bar .note{font-family:var(--body);font-size:30px;line-height:1.25;color:var(--mark);max-width:400px}
+
+/* Slide 3: lifecycle table */
+.flow{margin-top:56px;display:grid;grid-template-columns:230px 1fr 1fr;column-gap:36px}
+.flow .hd{font-family:var(--mono);font-size:24px;letter-spacing:.14em;color:var(--muted);padding-bottom:18px}
+.node{border:2px solid var(--rule);border-radius:10px;height:112px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.1em}
+.node.hot{border:4px solid var(--mark);color:var(--mark)}
+.cell{font-family:var(--body);font-size:34px;line-height:1.2;height:112px;display:flex;align-items:center}
+.cell.fix{color:var(--ink);font-weight:600}
+.cell.lost{color:var(--muted)}
+.arrow{height:44px;display:flex;justify-content:center}
+.gap{height:44px}
+.note3{margin-top:32px;font-family:var(--body);font-size:28px;line-height:1.3;color:var(--muted);max-width:860px}
+
+/* Slide 4: identity stack */
+.stackwrap{margin-top:56px;display:flex;align-items:stretch;gap:28px}
+.stack{flex:1;display:flex;flex-direction:column;gap:14px}
+.layer{border:2px solid var(--rule);border-radius:10px;padding:16px 28px;display:grid;grid-template-columns:250px 1fr;align-items:center;column-gap:20px;min-height:104px}
+.layer .k{font-family:var(--mono);font-weight:700;font-size:26px;letter-spacing:.1em}
+.layer .v{font-family:var(--body);font-size:32px;line-height:1.15}
+.layer .v small{display:block;font-size:26px;color:var(--muted);margin-top:4px}
+.layer.hot{border:4px solid var(--mark)}
+.layer.hot .k{color:var(--mark)}
+.brk{width:84px;display:flex;position:relative}
+.brk .q{position:absolute;left:44px;top:50%;transform:translateY(-50%);font-family:var(--display);font-weight:600;font-size:64px;line-height:1;color:var(--ink)}
+.close{margin-top:52px;font-family:var(--display);font-weight:600;font-size:62px;line-height:1.1;text-wrap:balance}
+.small{margin-top:20px;font-family:var(--body);font-size:30px;color:var(--muted)}
+.namebox{position:absolute;left:96px;bottom:150px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: Three stacked words, installed, invoked and followed, showing that a skill being present, chosen and obeyed are three separate things, with invoked highlighted. -->
+<section class="slide">
+  <div class="eyebrow">Agent skills</div>
+  <h2>Installed. Invoked. Followed.</h2>
+  <div class="counts">
+    <svg width="20" height="470" viewBox="0 0 20 470" aria-hidden="true">
+      <line x1="10" y1="0" x2="10" y2="455" stroke="#94A3B8" stroke-width="2"/>
+      <path d="M2 448 L10 466 L18 448" fill="none" stroke="#94A3B8" stroke-width="2"/>
+    </svg>
+    <div class="row"><div class="w">INSTALLED</div><div class="l">the skill exists in the library</div></div>
+    <div class="row hot"><div class="w">INVOKED</div><div class="l">the agent chose to load it</div></div>
+    <div class="row"><div class="w">FOLLOWED</div><div class="l">it held under pressure</div></div>
+  </div>
+  <div class="kicker">Most scoreboards only count the first.</div>
+  <div class="foot"><span></span><span class="page">1/4</span></div>
+</section>
+
+<!-- Slide 2 alt text: Bar chart of Vercel's coding-agent eval: 53% with no skill, 53% with the skill available, 79% when told to use it, and 100% with a docs index in AGENTS.md; the skill was never invoked in 56% of runs. -->
+<section class="slide">
+  <div class="eyebrow">Vercel coding-agent eval · pass rate</div>
+  <h2>Same skill, four ways to deliver it</h2>
+  <div class="legend">
+    <span><i style="background:#94A3B8"></i>No skill guidance</span>
+    <span><i style="background:#3B82F6"></i>Skill delivered</span>
+  </div>
+  <div class="bars">
+    <div class="bar"><div class="cat">No skill (baseline)</div>
+      <div class="track"><div class="fill" style="width:53%;background:#94A3B8">53%</div></div></div>
+    <div class="bar"><div class="cat">Skill available</div>
+      <div class="track"><div class="fill" style="width:53%;background:#3B82F6">53%</div><div class="note">never invoked in 56% of runs</div></div></div>
+    <div class="bar"><div class="cat">Told to use the skill</div>
+      <div class="track"><div class="fill" style="width:79%;background:#3B82F6">79%</div></div></div>
+    <div class="bar"><div class="cat">Docs index in AGENTS.md</div>
+      <div class="track"><div class="fill" style="width:100%;background:#3B82F6">100%</div></div></div>
+  </div>
+  <div class="foot"><span class="src">Source: Vercel, "AGENTS.md outperforms skills in our agent evals," Jan 2026 (vendor-run eval)</span><span class="page">2/4</span></div>
+</section>
+
+<!-- Slide 3 alt text: A four-stage flow of a skill inside a coding-agent harness, listed, chosen, kept and enforced, with how the skill gets lost at each stage and the documented fix beneath it. -->
+<section class="slide">
+  <div class="eyebrow">Inside the harness</div>
+  <h2>Four places a skill gets lost</h2>
+  <div class="flow">
+    <div class="hd">STAGE</div><div class="hd">LOST WHEN</div><div class="hd">FIX</div>
+
+    <div class="node">LISTED</div>
+    <div class="cell lost">description summarizes the workflow</div>
+    <div class="cell fix">“Use when…” triggers only</div>
+    <div class="arrow"><svg width="20" height="44" viewBox="0 0 20 44" aria-hidden="true"><line x1="10" y1="4" x2="10" y2="36" stroke="#94A3B8" stroke-width="2"/><path d="M3 30 L10 40 L17 30" fill="none" stroke="#94A3B8" stroke-width="2"/></svg></div><div class="gap"></div><div class="gap"></div>
+
+    <div class="node hot">CHOSEN</div>
+    <div class="cell lost">too many skills compete</div>
+    <div class="cell fix">2–3 focused skills per task</div>
+    <div class="arrow"><svg width="20" height="44" viewBox="0 0 20 44" aria-hidden="true"><line x1="10" y1="4" x2="10" y2="36" stroke="#94A3B8" stroke-width="2"/><path d="M3 30 L10 40 L17 30" fill="none" stroke="#94A3B8" stroke-width="2"/></svg></div><div class="gap"></div><div class="gap"></div>
+
+    <div class="node">KEPT</div>
+    <div class="cell lost">compaction trims long skills</div>
+    <div class="cell fix">short skills (Superpowers v7.0.1)</div>
+    <div class="arrow"><svg width="20" height="44" viewBox="0 0 20 44" aria-hidden="true"><line x1="10" y1="4" x2="10" y2="36" stroke="#94A3B8" stroke-width="2"/><path d="M3 30 L10 40 L17 30" fill="none" stroke="#94A3B8" stroke-width="2"/></svg></div><div class="gap"></div><div class="gap"></div>
+
+    <div class="node">ENFORCED</div>
+    <div class="cell lost">it’s only a request</div>
+    <div class="cell fix">a hook for the must-nots</div>
+  </div>
+  <div class="note3">Claude Code lists name + description only; the body loads when chosen.</div>
+  <div class="foot"><span class="src">Sources: Superpowers writing-skills SKILL.md and v7.0.1 release notes, 2026 · SkillsBench (arXiv 2602.12670), 2026 · Claude Code skills and hooks docs, 2026</span><span class="page">3/4</span></div>
+</section>
+
+<!-- Slide 4 alt text: Four stacked layers that shape a coding agent's behavior, always-on instruction files, persona output styles, on-demand skills and harness-run hooks, with a question asking which layer an agent's identity lives in. -->
+<section class="slide">
+  <div class="eyebrow">Four layers shape an agent</div>
+  <h2>Where does an agent’s identity live?</h2>
+  <div class="stackwrap">
+    <div class="stack">
+      <div class="layer"><div class="k">ALWAYS ON</div><div class="v">CLAUDE.md / AGENTS.md<small>every turn</small></div></div>
+      <div class="layer"><div class="k">PERSONA</div><div class="v">output styles<small>replace the default prompt</small></div></div>
+      <div class="layer hot"><div class="k">ON DEMAND</div><div class="v">skills<small>only when chosen</small></div></div>
+      <div class="layer"><div class="k">GUARANTEED</div><div class="v">hooks<small>run by the harness, not the model</small></div></div>
+    </div>
+    <div class="brk">
+      <svg width="84" height="100%" viewBox="0 0 84 460" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M6 4 H26 V456 H6" fill="none" stroke="#94A3B8" stroke-width="3" vector-effect="non-scaling-stroke"/>
+        <line x1="26" y1="230" x2="40" y2="230" stroke="#94A3B8" stroke-width="3" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <span class="q">?</span>
+    </div>
+  </div>
+  <div class="close">Behavior that adds up, or a persona that persists?</div>
+  <div class="small">The question for Agentics, Nov 4.</div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src">Sources: Claude Code docs (output styles, hooks), 2026 · Agentics Spotlight invite, 2026</span><span class="page">4/4</span></div>
+</section>
+
+</body>
+</html>
