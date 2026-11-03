@@ -5,8 +5,7 @@ Stdlib unittest; runnable without network and without the embedding model (the e
 mocked with synthetic fixtures). Covers the corrected fixed-taxonomy baseline method: the
 kNN vote and confidence formula, leave-one-out evaluation, the (k, threshold) sweep with
 Wilson 95% lower bounds, the do-nothing baselines (LOO form), the ship rule, the fixture
-loader, the twin-only connection guard, the dry-run/apply payload shapes and their
-fail-closed behaviour through the real ADR-9 guard.
+loader, and the twin-only connection guard.
 
 Usage: python3 supabase/scripts/test_topic_cluster_assign.py   (or `python3 -m unittest`)
 """
@@ -20,10 +19,8 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(HERE, "..", "..", ".claude", "scripts"))
 
 import topic_cluster_assign as tca  # noqa: E402
-import spine_client  # noqa: E402
 
 
 def topic(i, cluster_id=None, name=None, description=None):
@@ -306,55 +303,9 @@ class TestRunScoring(unittest.TestCase):
         self.assertEqual(review[0].topic.id, self.ambiguous.id)
         self.assertTrue(review[0].attended_linked)
 
-    def test_payload_keys_are_the_w1_columns(self):
-        assignments, _ = tca.run_scoring([self.confident], self.assigned, self.vecs, k=7,
-                                         attended_ids=set())
-        row = assignments[0].payload()
-        self.assertEqual(set(row), set(tca.WRITE_COLUMNS))
-        self.assertEqual(row["cluster_id"], "c1")
-        self.assertEqual(row["cluster_assigned_by"], "embedding_auto")
-        self.assertIsInstance(row["cluster_assignment_confidence"], float)
 
-
-class TestApplyShape(unittest.TestCase):
-    """The --apply path must match the decided nightly shape and fail closed until W1 merges."""
-
-    def make_assignment(self):
-        return tca.Assignment(
-            tca.Topic("00000000-0000-0000-0000-000000000001", "n", None, None, None, None),
-            tca.VoteResult("00000000-0000-0000-0000-000000000002", 0.9, 0.9, ()), False)
-
-    def test_payload_keys_are_the_w1_columns(self):
-        self.assertEqual(set(self.make_assignment().payload()), set(tca.WRITE_COLUMNS))
-
-    def test_patch_filter_pins_topic_and_null_cluster(self):
-        self.assertEqual(self.make_assignment().patch_filter(),
-                         "id=eq.00000000-0000-0000-0000-000000000001&cluster_id=is.null")
-
-    def test_dry_run_transport_never_touches_the_network(self):
-        """Branch-tolerant: with W1 merged the guarded dry-run returns the PATCH shape;
-        with W1 unmerged the guard refuses naming the cluster columns. Both correct."""
-        spine = spine_client
-        a = self.make_assignment()
-        try:
-            code, body = spine.write("topic", a.payload(), prefer="return=minimal",
-                                     patch_filter=a.patch_filter(), dry_run=True)
-        except spine_client.PIIViolation as e:
-            self.assertIn("cluster", str(e))  # fail-closed until PR #265 is in this checkout
-            return
-        self.assertEqual(code, 0)
-        self.assertTrue(body["dry_run"])
-        self.assertIn("topic?", body["path"])
-        self.assertIn("cluster_id=is.null", body["path"])
-
-    def test_guard_state_is_all_or_nothing_on_cluster_columns(self):
-        """Correct in both states: W1 merged (guard passes) or unmerged (guard refuses naming
-        the cluster columns). Any other outcome is a defect."""
-        row = self.make_assignment().payload()
-        try:
-            spine_client.guard("topic", row, op="update")
-        except spine_client.PIIViolation as e:
-            self.assertIn("cluster", str(e))  # fail-closed, naming the missing allowlist columns
+class TestTwinConnectionGuard(unittest.TestCase):
+    """The twin-only connection guard: read-only probes must never point at prod."""
 
     def test_connection_guard_refuses_prod_and_foreign_hosts(self):
         with self.assertRaises(SystemExit):

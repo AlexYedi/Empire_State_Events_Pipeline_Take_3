@@ -29,13 +29,11 @@ Modes
                the auto-assign list (attended-event-linked topics flagged first) and the
                review queue to supabase/evidence/. No writes. --source fixture (default,
                offline) or --source twin (read-only; excludes merge tombstones).
-  --apply      The DECIDED nightly write shape: PATCH the spine `topic` table over REST
-               through spine_client (invariant 1, W1 allowlist) — only rows whose cluster_id
-               is still null (the PATCH filter enforces cluster_id=is.null), only above the
-               confidence threshold, cluster_assigned_by='embedding_auto'. Fails closed
-               until the W1 allowlist (PR #265) is in the checkout.
   --check-twin Read-only schema + row-count probe of the twin (public.topic and
                canonical_v2.topic, tombstone counts, event links).
+
+  The nightly write path (--apply, reviewed on PR #266) is intentionally absent pending the
+  dynamic-taxonomy design review; its code shape is retrievable from git history.
 
 CAVEATS the report states explicitly (data corrections, 2026-11-03):
   - All 170 curated assignments are cluster_assigned_by='llm' (the original bootstrap), so
@@ -64,9 +62,8 @@ import os
 import random
 import subprocess
 import sys
-import uuid
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable, Protocol, Sequence
 
@@ -89,9 +86,7 @@ FIXTURE_PATH = os.path.join(REPO_ROOT, "supabase", "fixtures", "yed304_topic_clu
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"  # the pin from .claude/scripts/dockb_common.py
 EMBED_DIM = 384
 K = 7
-AUTO_THRESHOLD = 0.80  # the dry-run/apply bar; --validate sweeps and calibrates it
-ASSIGNED_BY = "embedding_auto"
-WRITE_COLUMNS = ("cluster_id", "cluster_assignment_confidence", "cluster_assigned_by")  # W1 allowlist
+AUTO_THRESHOLD = 0.80  # the dry-run bar; --validate sweeps and calibrates it
 SWEEP_KS = (1, 3, 5, 7)
 SWEEP_THRESHOLDS = tuple(round(0.50 + 0.05 * i, 2) for i in range(9))  # 0.50 … 0.90
 GATE_PRECISION = 0.90
@@ -450,20 +445,10 @@ def embed_topics(topics: list[Topic], embedder: Embedder) -> dict[str, list[floa
 
 @dataclass
 class Assignment:
-    """A confident auto-assignment (--dry-run list item / --apply payload)."""
+    """A confident auto-assignment (--dry-run list item)."""
     topic: Topic
     result: VoteResult
     attended_linked: bool
-
-    def payload(self) -> dict:
-        """The exact PATCH body --apply sends; the three cluster columns are the W1 allowlist."""
-        return {"cluster_id": self.result.winning_cluster_id,
-                "cluster_assignment_confidence": round(self.result.confidence, 4),
-                "cluster_assigned_by": ASSIGNED_BY}
-
-    def patch_filter(self) -> str:
-        """PostgREST filter: this topic, and ONLY while its cluster is still null."""
-        return f"id=eq.{self.topic.id}&cluster_id=is.null"
 
 
 @dataclass
@@ -796,49 +781,6 @@ def render_dry_run_md(payload: dict) -> str:
     return "\n".join(lines)
 
 
-# --- --apply: the decided nightly shape (REST through the guard) --------------------------------
-
-def apply_assignments(assignments: list[Assignment]) -> int:
-    """PATCH the spine topic table over REST through spine_client (the decided nightly shape).
-
-    Every body passes the ADR-9 guard before transport; the PostgREST filter pins each PATCH
-    to its topic AND to cluster_id-is-null, so a row that gained a cluster since the read is
-    never overwritten. Requires the W1 allowlist (PR #265) in the checkout — fails closed
-    until then. Never run casually: --dry-run is the manual default.
-    """
-    spine = _load_spine_client()
-    if not assignments:
-        print("nothing to apply")
-        return 0
-    for a in assignments:
-        try:
-            spine.guard("topic", a.payload(), op="update")
-        except spine.PIIViolation as e:
-            raise SystemExit(
-                f"--apply refused by the ADR-9 guard before any write: {e}\n"
-                "  The three cluster columns ship in W1 (PR #265). Merge W1 first, or hand "
-                "this list to Alex to apply through spine_client himself.")
-    for a in assignments:
-        uuid.UUID(a.topic.id)          # ids come from the fixture/DB; never interpolate unvalidated text
-        uuid.UUID(a.payload()["cluster_id"])
-        code, body = spine.write("topic", a.payload(), prefer="return=minimal",
-                                 patch_filter=a.patch_filter())
-        if code >= 400:
-            raise RuntimeError(f"PATCH failed for {a.topic.id}: {code} {str(body)[:300]}")
-        print(f"assigned {a.topic.id} → {a.payload()['cluster_id']} "
-              f"(confidence {a.payload()['cluster_assignment_confidence']:.4f}, {ASSIGNED_BY})")
-    print(f"apply complete: {len(assignments)} row(s) PATCHed through spine_client")
-    return 0
-
-
-def _load_spine_client():
-    """Import the production REST client for guard + write. The ONLY sanctioned write path
-    (invariant 1); this script never opens its own REST connection."""
-    sys.path.insert(0, os.path.join(REPO_ROOT, ".claude", "scripts"))
-    import spine_client
-    return spine_client
-
-
 # ----------------------------------------------------------------------------------------------
 # --check-twin: read-only schema + row-count probe
 # ----------------------------------------------------------------------------------------------
@@ -1028,23 +970,6 @@ def selftest() -> bool:
             f"host=aws-1-us-east-2.pooler.supabase.com user=postgres.{PROD_REF}"), SystemExit),
         None))
 
-    def _payload_shape() -> None:
-        a = Assignment(Topic(str(uuid.UUID(int=1)), "n", None, None, None, None),
-                       VoteResult(str(uuid.UUID(int=2)), 0.9, 0.9, ()), False)
-        row = a.payload()
-        assert_true(set(row) == set(WRITE_COLUMNS), f"payload keys {set(row)}")
-        assert_true(row["cluster_assigned_by"] == ASSIGNED_BY, "assigned_by value")
-        assert_true(a.patch_filter() == f"id=eq.{a.topic.id}&cluster_id=is.null",
-                    "PATCH filter must pin the topic and null-cluster")
-
-    check("apply payload: 3 W1 columns; PATCH filter pins topic + null cluster", _payload_shape)
-
-    check("apply dry-run transport: guarded PATCH body, no network", lambda: (
-        _selftest_apply_dryrun()))
-
-    check("guard fail-closed on this branch: W1 columns refused until PR #265 merges",
-          _selftest_guard_probe)
-
     failed = []
     for name, fn in checks:
         try:
@@ -1055,38 +980,6 @@ def selftest() -> bool:
             print(f"  ✗ {name}: {e}")
     print(f"selftest: {len(checks) - len(failed)}/{len(checks)} checks pass")
     return not failed
-
-
-def _selftest_apply_dryrun() -> None:
-    """Branch-tolerant, like the guard probe: with W1 merged the guarded dry-run returns
-    the PATCH without any network; with W1 unmerged the guard refuses naming the cluster
-    columns. Both states are correct, nothing in between."""
-    spine = _load_spine_client()
-    a = Assignment(Topic(str(uuid.UUID(int=1)), "n", None, None, None, None),
-                   VoteResult(str(uuid.UUID(int=2)), 0.9, 0.9, ()), False)
-    try:
-        code, body = spine.write("topic", a.payload(), prefer="return=minimal",
-                                 patch_filter=a.patch_filter(), dry_run=True)
-    except spine.PIIViolation as e:
-        assert "cluster" in str(e), f"fail-closed refusal must name the columns: {e}"
-        return
-    assert code == 0 and body["dry_run"], "dry-run write must not hit the network"
-    assert "topic?" in body["path"] and "cluster_id=is.null" in body["path"], body["path"]
-
-
-def _selftest_guard_probe() -> None:
-    """The apply payload must fail closed through the real guard while W1 is unmerged, and
-    pass once it merges. Branch-state tolerant: both states are correct, nothing in between."""
-    spine = _load_spine_client()
-    row = Assignment(Topic(str(uuid.UUID(int=1)), "n", None, None, None, None),
-                     VoteResult(str(uuid.UUID(int=2)), 0.9, 0.9, ()), False).payload()
-    try:
-        spine.guard("topic", row, op="update")
-        return  # W1 merged into this checkout — the guard admits the cluster columns
-    except spine.PIIViolation as e:
-        if "cluster" in str(e):
-            return  # fail-closed naming the missing allowlist columns — correct on main
-        raise
 
 
 # ----------------------------------------------------------------------------------------------
@@ -1104,19 +997,15 @@ def main(argv: list[str] | None = None) -> int:
     modes.add_argument("--dry-run", action="store_true",
                        help="score all unassigned topics; emit auto-assign list + review queue "
                             "to supabase/evidence/ (default mode; no writes)")
-    modes.add_argument("--apply", action="store_true",
-                       help="PATCH confident assignments to the spine topic table over REST "
-                            "through spine_client (the decided nightly shape; needs the W1 "
-                            "allowlist, PR #265)")
     modes.add_argument("--check-twin", action="store_true",
                        help="read-only twin probe: schema + row counts + tombstones")
     ap.add_argument("--source", choices=("fixture", "twin"), default="fixture",
                     help="data source for --dry-run (default: fixture, offline)")
     ap.add_argument("--fixture", default=FIXTURE_PATH, help="fixture path override")
-    ap.add_argument("--k", type=int, default=K, help=f"neighbours for dry-run/apply (spec: 7; "
+    ap.add_argument("--k", type=int, default=K, help=f"neighbours for dry-run (spec: 7; "
                                                      f"--validate sweeps {list(SWEEP_KS)})")
     ap.add_argument("--threshold", type=float, default=AUTO_THRESHOLD,
-                    help=f"auto-assign confidence bar for dry-run/apply (spec: {AUTO_THRESHOLD}; "
+                    help=f"auto-assign confidence bar for dry-run (spec: {AUTO_THRESHOLD}; "
                          "--validate sweeps 0.50–0.90 and calibrates)")
     ap.add_argument("--seed", type=int, default=SEED, help=f"baseline RNG seed (default {SEED})")
     ap.add_argument("--evidence-dir",
@@ -1132,23 +1021,6 @@ def main(argv: list[str] | None = None) -> int:
         return run_validate(args)
     if args.check_twin:
         return run_check_twin(require_twin_password(), args)
-    if args.apply:
-        if args.source == "twin":
-            password = require_twin_password()
-            topics, _meta = fetch_topics_twin(password, args.psql_bin)
-            attended_ids: set[str] = set()  # twin: apply takes the null-cluster rows as-is
-        else:
-            fx = load_fixture(args.fixture)
-            topics = fx.topics
-            attended_ids = set()
-        assigned = [t for t in topics if t.cluster_id is not None]
-        unassigned = [t for t in topics if t.cluster_id is None]
-        vecs = embed_topics(topics, BgeSmallEmbedder())
-        assignments, review = run_scoring(unassigned, assigned, vecs, args.k, attended_ids,
-                                          threshold=args.threshold)
-        print(f"--apply: {len(assignments)} confident, {len(review)} review-queue (threshold "
-              f"{args.threshold:.2f}); PATCHing spine topic rows whose cluster is still null")
-        return apply_assignments(assignments)
     return run_dry_run(args)
 
 
