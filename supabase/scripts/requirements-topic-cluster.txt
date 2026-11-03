@@ -1,0 +1,8 @@
+# YED-304 W2 — topic cluster assigner (supabase/scripts/topic_cluster_assign.py)
+# Local embeddings only — no metered API calls. Install with:
+#   python3 -m pip install -r supabase/scripts/requirements-topic-cluster.txt
+# The core repo scripts stay stdlib-only: nothing here is needed for any other
+# script, selftest or CI check. This exists only for the assigner's embedding runtime.
+fastembed==0.9.1   # ONNX embeddings: BAAI/bge-small-en-v1.5 (384-d), the model pinned in
+                   # .claude/scripts/dockb_common.py. Exact pin so the holdout validation is
+                   # reproducible; bump deliberately and re-run --validate if you change it.
