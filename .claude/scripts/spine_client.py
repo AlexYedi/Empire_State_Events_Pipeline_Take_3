@@ -52,7 +52,9 @@ ALLOW: dict[str, set[str]] = {
                 "linkedin_url"} | _MI_COMMON,
     # person: professional-public identity ONLY. No email. No phone. (ADR-9 decision 1, 2026-09-13)
     "person": {"id", "name", "title", "company_id", "linkedin_url", "bio", "role_context"} | _MI_COMMON,
-    "topic": {"id", "name", "description"} | _MI_COMMON,
+    "topic": {"id", "name", "description",
+              # YED-304 W1: cluster assignment columns (ADR-9: none is contact PII)
+              "cluster_id", "cluster_assignment_confidence", "cluster_assigned_by"} | _MI_COMMON,
     "event": {"id", "title", "kind", "event_date", "description", "url", "source", "confidence",
               "notion_page_id", "metadata", "created_at", "updated_at"},
     "event_entity": {"id", "event_id", "entity_type", "entity_id", "role", "created_at"},
@@ -434,6 +436,20 @@ def selftest() -> bool:
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "(555) 123-4567"}}), True)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
+    # YED-304 W1: cluster assignment columns on topic
+    add("topic cluster assignment row → pass",
+        lambda: guard("topic", {"name": "Autonomous agents at trade shows", "cluster_id": "c123",
+                                "cluster_assignment_confidence": 0.87, "cluster_assigned_by": "embedding_auto"}), False)
+    add("topic unassign (nulling cluster columns) → pass",
+        lambda: guard("topic", {"cluster_id": None, "cluster_assignment_confidence": None,
+                                "cluster_assigned_by": None}, op="update"), False)
+    # YED-304 W1: the new columns are allowed, but PII in them is still refused (allowlist ≠ bypass).
+    add("topic cluster_assigned_by email → refuse",
+        lambda: guard("topic", {"cluster_assigned_by": "a.b@example.com"}, op="update"), True)
+    add("topic cluster_id email → refuse",
+        lambda: guard("topic", {"cluster_id": "jane.doe@example.com"}, op="update"), True)
+    add("topic cluster_assignment_confidence phone → refuse",
+        lambda: guard("topic", {"cluster_assignment_confidence": "+1 (555) 123-4567"}, op="update"), True)
     add("inbox row from denylisted sender_domain → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "source": "inbox_miner:market",
                                 "metadata": {"sender_domain": "alerts.bank.example"}}) if not domain_denylisted("alerts.bank.example", deny) else (_ for _ in ()).throw(PIIViolation("tier 0")), True)
