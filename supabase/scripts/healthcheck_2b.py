@@ -15,6 +15,9 @@ Three layers, all read-only:
      score/flag consistency, bridge integrity).
   3. Read-path probe (optional): anon REST reaches signal_read (serves data) and the raw base
      table is BLOCKED — the k>=5 suppression can't be bypassed.
+  4. PII column audit (YED-297): any column named in spine_client.FORBIDDEN_COLUMNS, in any
+     non-platform schema, is a FLAG (non-fatal); it FAILS the run only when EXPOSED (it holds
+     values AND anon/authenticated can read it). `--pii-audit-only` runs just this layer.
 
 Purpose: prove the graph stays COHERENT night after night, so decommissioning the gtm spine +
 dropping pre2b is a decision backed by evidence, not vibes. Catches silent corruption / drift /
@@ -281,8 +284,87 @@ def read_path_probe() -> list[str]:
     return fails
 
 
+# ---------------------------------------------------------------- PII column audit (YED-297)
+# Platform-owned schemas that legitimately carry contact columns (auth.users.email/phone) or are
+# not ours to audit. Everything else in the database is in scope, which is how the 2026-11-02
+# audit found pre2b.person.email outside the Phase-2 backstop's reach.
+PII_AUDIT_EXCLUDED_SCHEMAS = (
+    "auth", "storage", "pg_catalog", "information_schema", "pg_toast", "realtime", "vault",
+    "extensions", "graphql", "graphql_public", "supabase_functions", "supabase_migrations",
+    "net", "pgsodium", "pgsodium_masks", "cron",
+)
+API_ROLES = ("anon", "authenticated")
+
+
+def _forbidden_columns() -> list[str]:
+    """Single source of truth: spine_client.FORBIDDEN_COLUMNS (imports without env or side effects)."""
+    import importlib.util
+    path = os.path.join(os.path.dirname(__file__), "..", "..", ".claude", "scripts", "spine_client.py")
+    spec = importlib.util.spec_from_file_location("spine_client", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return sorted(mod.FORBIDDEN_COLUMNS)
+
+
+def pii_column_audit() -> tuple[list[str], list[str]]:
+    """Decision YED-297 (Alex, 2026-11-03): a forbidden contact-PII column that merely EXISTS is a
+    FLAG; it is a FAIL only when EXPOSED, meaning it holds values AND anon/authenticated can read it
+    (schema USAGE + column SELECT, and for tables, RLS off or a SELECT/ALL policy covering the role).
+    Read-only: counts and catalog lookups, never the values themselves. Returns (flags, fails)."""
+    cols = ", ".join(f"'{c}'" for c in _forbidden_columns())
+    excluded = ", ".join(f"'{s}'" for s in PII_AUDIT_EXCLUDED_SCHEMAS)
+    roles = ", ".join(f"'{r}'" for r in API_ROLES)
+    sql = f"""
+with hits as (
+  select c.table_schema s, c.table_name t, c.column_name col,
+         format('%I.%I', c.table_schema, c.table_name)::regclass rel
+    from information_schema.columns c
+   where lower(c.column_name) in ({cols})
+     and c.table_schema not in ({excluded})
+     and c.table_schema not like 'pg\\_temp%' and c.table_schema not like 'pg\\_toast%'
+)
+select h.s, h.t, h.col,
+  (xpath('/row/n/text()', query_to_xml(format(
+     'select count(*) as n from %I.%I where %I is not null and %I::text <> %L',
+     h.s, h.t, h.col, h.col, ''), false, true, '')))[1]::text as populated,
+  coalesce((select string_agg(r, ',' order by r) from unnest(array[{roles}]) r
+     where has_schema_privilege(r, h.s, 'USAGE')
+       and has_column_privilege(r, h.rel, h.col, 'SELECT')
+       and (cl.relkind <> 'r' or not cl.relrowsecurity
+            or exists (select 1 from pg_policies p
+                        where p.schemaname = h.s and p.tablename = h.t
+                          and p.cmd in ('SELECT', 'ALL')
+                          and (r = any(p.roles) or 'public' = any(p.roles))))), '') as readable_by
+  from hits h join pg_class cl on cl.oid = h.rel
+ order by 1, 2, 3;"""
+    flags, fails = [], []
+    rows = q(sql)
+    if not rows:
+        print("  [PASS] no forbidden contact-PII columns outside platform schemas")
+        return flags, fails
+    for s, t, col, populated, readable_by in rows:
+        n = int(populated or 0)
+        where = f"{s}.{t}.{col}"
+        if n and readable_by:
+            print(f"  [FAIL] {where}: {n} populated row(s), readable by {readable_by} (EXPOSED)")
+            fails.append(where)
+        else:
+            why = (f"{n} populated row(s), not API-readable" if n
+                   else "empty" + (f", readable by {readable_by}" if readable_by else ", not API-readable"))
+            print(f"  [FLAG] {where}: {why}. Drop the column (CLAUDE.md invariant 1 / ADR-9)")
+            flags.append(where)
+    return flags, fails
+
+
 def main() -> int:
-    argparse.ArgumentParser(description="Post-swap MI 2b health check (read-only).").parse_args()
+    ap = argparse.ArgumentParser(description="Post-swap MI 2b health check (read-only).")
+    ap.add_argument("--pii-audit-only", action="store_true",
+                    help="run only the YED-297 PII column audit (exit 1 only on an EXPOSED column)")
+    args = ap.parse_args()
+    if args.pii_audit_only:
+        print("PII column audit (YED-297):")
+        _, pii_fails = pii_column_audit()
+        return 1 if pii_fails else 0
     rows = q(f"select max(as_of_date)::text from {TT};")
     as_of_str = rows[0][0] if rows and rows[0][0] else ""
     if not as_of_str:
@@ -307,16 +389,27 @@ def main() -> int:
     inv_fails = invariants(as_of_str)
     print("\nRead-path probe (non-fatal — checks the watch's own anon-key path, not graph health):")
     probe_fails = read_path_probe()
+    print("\nPII column audit (YED-297 — FLAG if a forbidden column exists, FAIL only if EXPOSED):")
+    pii_flags, pii_fails = pii_column_audit()
 
-    # FATAL = graph coherence only (independent recompute + invariants). The read-path probe is a
-    # secondary signal reported as a WARNING, so an anon-key/config hiccup can't masquerade as a
-    # graph-health failure (avoids false alarms during the watch).
-    ok = (t_mis == 0 and p_mis == 0 and not inv_fails)
+    # FATAL = graph coherence (independent recompute + invariants) + an EXPOSED contact-PII column.
+    # The read-path probe and PII flags are secondary signals reported as WARNINGS, so an
+    # anon-key/config hiccup or an empty legacy column can't masquerade as a failure.
+    graph_ok = (t_mis == 0 and p_mis == 0 and not inv_fails)
+    ok = graph_ok and not pii_fails
     if probe_fails:
         print("  ⚠️  read-path probe warnings (non-fatal): " + "; ".join(probe_fails))
-    print("\n" + (("✅ PASS — graph coherent, invariants hold."
-                   + (" (read-path probe had warnings — see above)" if probe_fails else " read path healthy."))
-                  if ok else "❌ FAIL — graph incoherence above. pre2b rollback remains available."))
+    if pii_flags:
+        print("  ⚠️  PII column flags (non-fatal): " + "; ".join(pii_flags))
+    if ok:
+        print("\n✅ PASS — graph coherent, invariants hold, no exposed contact PII."
+              + (" (warnings above)" if probe_fails or pii_flags else " read path healthy."))
+    else:
+        if not graph_ok:
+            print("\n❌ FAIL — graph incoherence above. pre2b rollback remains available.")
+        if pii_fails:
+            print("\n❌ FAIL — EXPOSED contact PII: " + "; ".join(pii_fails)
+                  + ". API-readable email/phone values break CLAUDE.md invariant 1. Revoke or drop now.")
     return 0 if ok else 1
 
 
