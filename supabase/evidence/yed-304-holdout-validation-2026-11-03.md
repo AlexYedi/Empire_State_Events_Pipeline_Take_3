@@ -72,7 +72,7 @@ Generated 2026-11-03T21:10:18Z by `supabase/scripts/topic_cluster_assign.py --va
 
 ## Verdict
 
-**PASS** — ship point: **k=3, threshold=0.85** · precision 0.900 (9/10) · Wilson 95% lower bound 0.596 > baseline floor 0.059 · coverage 0.059 (10/170 auto-assigned, 160 to review).
+**PASS** — ship point: **k=3, threshold=0.85** · precision 0.900 (9/10) · Wilson 95% lower bound 0.596 > baseline floor 0.059 · coverage 0.059 (10/170 auto-assigned, 160 to review). **PASS is coverage-degenerate (no coverage floor in the ship rule)** — the qualifying point wins on 10 samples of near-duplicate names; the honest ceiling is k=1's 0.482 at full coverage, and on the backlog this routes almost everything to review (3 auto / 99 in the dry-run), not a production assigner.
 
 The gate clears for the fixed taxonomy. This number is the bar any dynamic-taxonomy design must beat. The backfill dry-run remains a separate task and the nightly write stays behind the W1 allowlist + design review.
 
