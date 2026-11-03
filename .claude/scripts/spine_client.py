@@ -443,6 +443,13 @@ def selftest() -> bool:
     add("topic unassign (nulling cluster columns) → pass",
         lambda: guard("topic", {"cluster_id": None, "cluster_assignment_confidence": None,
                                 "cluster_assigned_by": None}, op="update"), False)
+    # YED-304 W1: the new columns are allowed, but PII in them is still refused (allowlist ≠ bypass).
+    add("topic cluster_assigned_by email → refuse",
+        lambda: guard("topic", {"cluster_assigned_by": "a.b@example.com"}, op="update"), True)
+    add("topic cluster_id email → refuse",
+        lambda: guard("topic", {"cluster_id": "jane.doe@example.com"}, op="update"), True)
+    add("topic cluster_assignment_confidence phone → refuse",
+        lambda: guard("topic", {"cluster_assignment_confidence": "+1 (555) 123-4567"}, op="update"), True)
     add("inbox row from denylisted sender_domain → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "source": "inbox_miner:market",
                                 "metadata": {"sender_domain": "alerts.bank.example"}}) if not domain_denylisted("alerts.bank.example", deny) else (_ for _ in ()).throw(PIIViolation("tier 0")), True)
