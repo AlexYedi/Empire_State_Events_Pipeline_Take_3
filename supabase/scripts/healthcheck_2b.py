@@ -315,13 +315,18 @@ def pii_column_audit() -> tuple[list[str], list[str]]:
     excluded = ", ".join(f"'{s}'" for s in PII_AUDIT_EXCLUDED_SCHEMAS)
     roles = ", ".join(f"'{r}'" for r in API_ROLES)
     sql = f"""
+-- pg_attribute, not information_schema.columns: the latter omits materialized views and hides
+-- objects the connecting role lacks privileges on; the catalog sees every relation.
 with hits as (
-  select c.table_schema s, c.table_name t, c.column_name col,
-         format('%I.%I', c.table_schema, c.table_name)::regclass rel
-    from information_schema.columns c
-   where lower(c.column_name) in ({cols})
-     and c.table_schema not in ({excluded})
-     and c.table_schema not like 'pg\\_temp%' and c.table_schema not like 'pg\\_toast%'
+  select n.nspname::text s, cl.relname::text t, a.attname::text col, cl.oid::regclass rel
+    from pg_attribute a
+    join pg_class cl on cl.oid = a.attrelid
+    join pg_namespace n on n.oid = cl.relnamespace
+   where cl.relkind in ('r', 'p', 'v', 'm', 'f')
+     and a.attnum > 0 and not a.attisdropped
+     and lower(a.attname) in ({cols})
+     and n.nspname not in ({excluded})
+     and n.nspname not like 'pg\\_temp%' and n.nspname not like 'pg\\_toast%'
 )
 select h.s, h.t, h.col,
   (xpath('/row/n/text()', query_to_xml(format(
@@ -330,7 +335,7 @@ select h.s, h.t, h.col,
   coalesce((select string_agg(r, ',' order by r) from unnest(array[{roles}]) r
      where has_schema_privilege(r, h.s, 'USAGE')
        and has_column_privilege(r, h.rel, h.col, 'SELECT')
-       and (cl.relkind <> 'r' or not cl.relrowsecurity
+       and (cl.relkind not in ('r', 'p') or not cl.relrowsecurity
             or exists (select 1 from pg_policies p
                         where p.schemaname = h.s and p.tablename = h.t
                           and p.cmd in ('SELECT', 'ALL')
