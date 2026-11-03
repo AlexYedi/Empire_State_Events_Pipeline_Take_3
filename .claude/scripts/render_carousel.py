@@ -16,6 +16,7 @@ Usage: render_carousel.py <in.html> [--out out.pdf] [--png preview.png] [--x]
 import argparse
 import json
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -42,6 +43,13 @@ window.addEventListener('load', () => {
 });
 </script>
 """
+
+
+def file_url(path: str) -> str:
+    """Percent-encoded file:// URL. Plain "file://" + path breaks on "?" or "#" in a folder
+    name (e.g. an event titled "Can your agents actually ship?"): Chrome reads them as a
+    query/fragment, the probe never runs and a letter-size PDF comes back (YED-301)."""
+    return pathlib.Path(path).resolve().as_uri()
 
 
 def chrome():
@@ -193,6 +201,12 @@ def selftest():
     ck("x export: the per-slide script targets slide 3, scales and letterboxes it",
        "slides[2]" in js and "scale(0.8)" in js and "left = '108px'" in js and "top = '0px'" in js)
 
+    # file URLs (YED-301): "?" and "#" in a folder name must be percent-encoded
+    u = file_url("/tmp/11 02 26 Can your agents actually ship?/a#b/carousel.html")
+    ck("file url: '?', '#' and spaces in the path are percent-encoded",
+       u.startswith("file:///") and "?" not in u and "#" not in u and " " not in u
+       and "ship%3F" in u and "a%23b" in u)
+
     fails = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'✓' if ok else '✗'} {n}")
@@ -226,7 +240,7 @@ def main():
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write(probed)
     try:
-        dom = run(bin_, ["--window-size=1080,1350", "--dump-dom", "file://" + tmp]).stdout
+        dom = run(bin_, ["--window-size=1080,1350", "--dump-dom", file_url(tmp)]).stdout
     finally:
         os.remove(tmp)
     probe = parse_probe(dom)
@@ -234,7 +248,7 @@ def main():
     report["overflow"] = probe["problems"]
 
     # 2. render the original file
-    r = run(bin_, ["--print-to-pdf=" + out, "file://" + src])
+    r = run(bin_, ["--print-to-pdf=" + out, file_url(src)])
     if not os.path.exists(out):
         report["error"] = "PDF not written: " + (r.stderr or "")[-300:]
         print(json.dumps(report, indent=1))
@@ -247,7 +261,7 @@ def main():
     # 4. optional stacked preview
     if a.png and probe["slides"]:
         h = probe["slides"] * 1350
-        run(bin_, ["--screenshot=" + os.path.abspath(a.png), f"--window-size=1080,{h}", "file://" + src])
+        run(bin_, ["--screenshot=" + os.path.abspath(a.png), f"--window-size=1080,{h}", file_url(src)])
         report["preview_png"] = os.path.abspath(a.png)
 
     # 5. X export (E-05): one 1:1 PNG per slide — X has no PDF carousels
@@ -264,7 +278,7 @@ def main():
                 fh.write(html_i)
             try:
                 run(bin_, [f"--screenshot={target}", "--hide-scrollbars",
-                           f"--window-size={geom['viewport'][0]},{geom['viewport'][1]}", "file://" + tmp_i])
+                           f"--window-size={geom['viewport'][0]},{geom['viewport'][1]}", file_url(tmp_i)])
             finally:
                 os.remove(tmp_i)
             if not os.path.exists(target):
