@@ -1,0 +1,24 @@
+{
+ "event": {
+  "notion_page_id": "3d5d3699-c2db-81bb-aff3-e4f2c696c37b",
+  "title": "GLM-5.3 Exec Briefing (webinar)",
+  "kind": "attended",
+  "event_date": "2026-09-08"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "Open-Weight LLMs",
+   "notion_page_id": "3b4d3699-c2db-8190-863e-c48314a7e092",
+   "role": "tagged_topic",
+   "must_exist": true
+  },
+  {
+   "type": "topic",
+   "name": "Inference Economics: GPU Memory, KV Cache & Cost per Token",
+   "notion_page_id": "3e8d3699-c2db-8165-88cb-ff14d2a9606f",
+   "role": "tagged_topic",
+   "must_exist": true
+  }
+ ]
+}

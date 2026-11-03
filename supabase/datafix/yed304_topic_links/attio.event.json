@@ -1,0 +1,17 @@
+{
+ "event": {
+  "notion_page_id": "3d5d3699-c2db-81bb-9daa-fee8d2aa01fc",
+  "title": "Attio: Formula Attributes (webinar)",
+  "kind": "attended",
+  "event_date": "2026-09-09"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "CRM as System of Action",
+   "notion_page_id": "357d3699-c2db-8191-aae8-e0dfce2e8c22",
+   "role": "tagged_topic",
+   "must_exist": true
+  }
+ ]
+}

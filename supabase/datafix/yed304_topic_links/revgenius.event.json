@@ -1,0 +1,31 @@
+{
+ "event": {
+  "notion_page_id": "3b5d3699-c2db-8187-86d4-fece31ff0465",
+  "title": "RevGenius IRL: From Hype to Revenue",
+  "kind": "attended",
+  "event_date": "2026-08-12"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "GTM Engineering",
+   "notion_page_id": "38dd3699-c2db-811e-8de7-e429e6486e0b",
+   "role": "tagged_topic",
+   "must_exist": true
+  },
+  {
+   "type": "topic",
+   "name": "Go-to-Market Strategy for AI (and AI for GTM)",
+   "notion_page_id": "388d3699-c2db-8137-9b3d-c5a44c414564",
+   "role": "tagged_topic",
+   "must_exist": true
+  },
+  {
+   "type": "topic",
+   "name": "AI-Native Go-To-Market",
+   "notion_page_id": "347d3699-c2db-8117-9484-e75dd2738fb3",
+   "role": "tagged_topic",
+   "must_exist": true
+  }
+ ]
+}

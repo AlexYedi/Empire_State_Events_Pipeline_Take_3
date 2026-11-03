@@ -1,0 +1,24 @@
+{
+ "event": {
+  "notion_page_id": "3d5d3699-c2db-812d-8457-ca1265f3f710",
+  "title": "Clay: RevOps from the Ground Up in the AI Era (webinar)",
+  "kind": "attended",
+  "event_date": "2026-09-09"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "RevOps in the AI Era",
+   "notion_page_id": "39ad3699-c2db-81d3-8534-e9fb9a5407e4",
+   "role": "tagged_topic",
+   "must_exist": true
+  },
+  {
+   "type": "topic",
+   "name": "GTM Engineering",
+   "notion_page_id": "38dd3699-c2db-811e-8de7-e429e6486e0b",
+   "role": "tagged_topic",
+   "must_exist": true
+  }
+ ]
+}
