@@ -72,7 +72,7 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 # --- twin-only safety ------------------------------------------------------------------------
 TWIN_REF = "ytfzzsxcxxbejnowmkmk"
 TWIN_HOST = f"db.{TWIN_REF}.supabase.co"
-PROD_REF = "oicikjyzmxqfomrrqkvf"  # never a psql target; REST writes to it only via spine_client
+PROD_REF = "oicikjyzmxqfomrrqkvf"  # never a target of any kind; this script is read-only
 # Direct host by default (validate_twin.py pattern). TWIN_CONN overrides it — e.g. the session
 # pooler user=postgres.<ref> for sandboxes without an IPv6 route to the direct host.
 TWIN_CONN = (os.environ.get("TWIN_CONN")
@@ -310,7 +310,7 @@ def load_fixture(path: str = FIXTURE_PATH) -> FixtureData:
 
 
 # ----------------------------------------------------------------------------------------------
-# Twin I/O — read-only (--source twin / --check-twin); writes go through spine_client REST
+# Twin I/O — read-only (--source twin / --check-twin); the script has no write path
 # ----------------------------------------------------------------------------------------------
 
 def _check_twin_conn(conn: str) -> str:
