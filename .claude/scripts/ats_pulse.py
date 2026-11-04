@@ -11,10 +11,14 @@ derived from the registry and uploads at most an anonymous totals summary.
 0016-landed contract (Claude Code direction after migration 0016 merged, main f9458b8/dd88cca):
   * signal_type is written to the REAL event.signal_type column (substrate.ensure_event passes
     it through) — not a metadata bag. dedup_key and week stay in metadata (still not columns).
-  * the lane_run ledger row is REAL: written through spine_client.write to the TWIN graph
-    (started_at/finished_at/status/items_seen/items_written/items_refused/credits_spent/error),
-    via --write-lane-run. Twin-only by construction: the write refuses to run without
-    MI_TWIN_URL and refuses if the URL is the prod ref.
+  * the lane_run ledger row is REAL: written through spine_client.write to PROD — the one
+    deliberate exception (Alex's decision, post-merge review of #271): lane_run is a PII-free
+    ledger, lane_registry and its FK live in prod, and the YED-304 freshness healthcheck reads
+    prod. spine_client is prod-only by design (its host is built from the hardcoded REF, so no
+    caller override can divert the request — the earlier MI_TWIN_URL override was dead config).
+    Every OTHER write in this lane stays twin-only/dry-run (event manifests stay validate-only
+    until the guarded REF override lands). items_written counts rows ACTUALLY written — 0 while
+    event writes are dry-run.
   * lane_registry activation is NOT a producer write (producers can't write it) — migration
     0018 flips lane_registry.active for hiring_pulse; Alex applies it after a twin rehearsal.
   * roles_open is the board's UNFILTERED posting count (from ats_pull --summary) — the old
@@ -48,6 +52,9 @@ from spine_client import EMAIL_ALLOWLIST_RE, EMAIL_RE, PHONE_RE, PIIViolation  #
 
 SOURCE = "ats_pulse"
 SIGNAL_TYPE = "hiring_pulse"
+# the lane's registry key (public.lane_registry.lane, seeded by 0016) — NOT the producer name
+# (SOURCE = 'ats_pulse' is the event source / producer tag; the FK wants the registry key).
+LANE = "hiring_pulse"
 MANIFEST_KEYS = ["week", "generated_at", "signal_type", "producer", "counts_only", "events"]
 META_KEYS = ["roles_open", "gtm_roles", "ai_gtm_roles", "delta_wow"]
 # Case-insensitive \bAI\b also matches a bare "ai" ("Root.ai") — treated as an AI signal on purpose.
@@ -197,13 +204,17 @@ def event_manifests(manifest: dict) -> list[dict]:
     return out
 
 
-def lane_run_manifest(manifest: dict) -> dict:
-    """The run's ledger entry in manifest form (kept local: it names boards in errored_boards)."""
+def lane_run_manifest(manifest: dict, events_written: int = 0) -> dict:
+    """The run's ledger entry in manifest form (kept local: it names boards in errored_boards).
+
+    `written` counts rows ACTUALLY written to the graph — not events built. Event writes are
+    dry-run (validate-only) until the guarded spine REF override lands, so the default is 0;
+    the live-write era passes the real count (a lower bound is never an overclaim)."""
     lane = manifest.pop("_lane", {"seen": 0, "refused": 0, "errored_boards": []})
-    return {"lane": SOURCE, "week": manifest["week"], "ran_at": manifest["generated_at"],
+    return {"lane": LANE, "week": manifest["week"], "ran_at": manifest["generated_at"],
             "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
             "seen": lane["seen"], "refused": lane["refused"],
-            "written": len(manifest["events"]), "errored_boards": lane["errored_boards"]}
+            "written": events_written, "errored_boards": lane["errored_boards"]}
 
 
 def lane_run_row(lane: dict, started_at: str) -> dict:
@@ -228,20 +239,16 @@ def lane_run_row(lane: dict, started_at: str) -> dict:
 
 
 def write_lane_run(lane: dict, started_at: str) -> dict:
-    """Write the REAL lane_run row through spine_client.write — to the TWIN, never prod.
+    """Write the REAL lane_run row through spine_client.write — to PROD, deliberately.
 
-    Twin-only by construction: MI_TWIN_URL must be set (the workflow passes the same secret
-    pair the prior-read uses); a missing key is spine_client's own loud failure. The key
-    reaches spine_client as SUPABASE_API_KEY (its one key source) — the workflow maps
-    MI_TWIN_SUPABASE_API_KEY to it for this step only."""
+    The ONE prod exception (Alex's decision, post-merge review of #271): lane_run is a PII-free
+    ledger (counts and board-status only — the guard still fronts every write), lane_registry
+    and its FK live in prod, and the YED-304 freshness healthcheck reads prod. spine_client is
+    prod-only by design: _send builds its host from the hardcoded REF, so no caller override
+    can divert the request (the earlier MI_TWIN_URL override was dead config — removed). The
+    twin-only rule still governs every other write in this lane. The key reaches spine_client
+    as SUPABASE_API_KEY (its one key source)."""
     import spine_client
-    url = os.environ.get("MI_TWIN_URL", "").rstrip("/")
-    if not url:
-        raise SystemExit("FATAL: MI_TWIN_URL is not set — refusing to write lane_run "
-                         "anywhere (twin-only; spine_client's default REF is prod)")
-    if spine_client.REF in url:
-        raise SystemExit("FATAL: MI_TWIN_URL is the PROD ref — refusing to write lane_run to prod")
-    spine_client.BASE = f"{url}/rest/v1"
     row = lane_run_row(lane, started_at)
     spine_client.write("lane_run", [row])
     return row
@@ -404,8 +411,8 @@ def selftest() -> int:
     check("aggregate: companyless rows never become events",
           all(e["company"] for e in m["events"]))
     lane = lane_run_manifest(_json_copy(m))
-    check("lane_run: seen/refused/written counters present",
-          lane["seen"] == 7 and "refused" in lane and lane["written"] == len(m["events"]))
+    check("lane_run: seen/refused counters present; written counts rows ACTUALLY written (0 in dry-run)",
+          lane["seen"] == 7 and "refused" in lane and lane["written"] == 0)
     check("lane_run: errored boards listed, never emitted as events",
           lane["errored_boards"] == ["Neverboard"]
           and not any(e["company"] == "Neverboard" for e in m["events"]))
@@ -448,7 +455,14 @@ def selftest() -> int:
               and "signal_type" not in x["event"]["metadata"]
               and x["event"]["metadata"]["dedup_key"] for x in evs))
 
-    # The REAL lane_run row (0016 contract): every mapping pinned, including the twin-only writer.
+    # The REAL lane_run row (0016 contract): every mapping pinned, including the prod-by-decision writer.
+    check("lane_run manifest: the FK key is 'hiring_pulse' (the registry key, not the producer name)",
+          lane["lane"] == "hiring_pulse" and lane["producer"] == "ats_pulse")
+    check("lane_run manifest: dry-run era — written counts rows ACTUALLY written (0), not events built",
+          lane["written"] == 0 and len(m["events"]) == 3)
+    live = lane_run_manifest(_json_copy(m), events_written=3)
+    check("lane_run manifest: the live-write era passes the real count (no under- or overclaim)",
+          live["written"] == 3)
     row = lane_run_row(lane, "2026-11-01T06:00:00Z")
     check("lane_run row: exact 0016 contract columns",
           set(row) == {"lane", "started_at", "finished_at", "status", "items_seen",
@@ -457,7 +471,7 @@ def selftest() -> int:
           row["started_at"] == "2026-11-01T06:00:00Z" and row["finished_at"] == lane["ran_at"]
           and row["status"] == "partial")
     check("lane_run row: counters + zero credits + errored-board error text",
-          (row["items_seen"], row["items_written"], row["items_refused"], row["credits_spent"]) == (7, 3, 0, 0)
+          (row["items_seen"], row["items_written"], row["items_refused"], row["credits_spent"]) == (7, 0, 0, 0)
           and row["error"] == "errored boards: Neverboard")
     clean_lane = {**lane, "errored_boards": []}
     r2 = lane_run_row(clean_lane, "2026-11-01T06:00:00Z")
@@ -466,14 +480,47 @@ def selftest() -> int:
     flood = {**lane, "errored_boards": [f"board_{i:03d}" for i in range(300)]}
     check("lane_run row: error text capped at the column's 1000 chars",
           len(lane_run_row(flood, "x")["error"]) == 1000)
+    # The writer is PROD by decision: stub the connection layer and assert the host the request
+    # ACTUALLY reaches. spine_client._send builds its host from the hardcoded REF — a decoy
+    # MI_TWIN_URL must have NO effect on any write path (the removed override stays removed).
+    class _FakeResp:
+        status = 201
+        def read(self):
+            return b"[]"
+    class _FakeConn:
+        def __init__(self, host, *a, **k):
+            captured.append(host)
+            # _send touches conn.sock.settimeout() right after connect()
+            self.sock = type("_FakeSock", (), {"settimeout": staticmethod(lambda t: None)})()
+        def connect(self): pass
+        def settimeout(self, t): pass
+        def request(self, *a, **k): pass
+        def getresponse(self): return _FakeResp()
+        def close(self): pass
+    import spine_client as _sc
+    captured = []
+    orig_conn, orig_key = _sc.http.client.HTTPSConnection, os.environ.get("SUPABASE_API_KEY")
+    os.environ["SUPABASE_API_KEY"] = "selftest-key"
+    os.environ["MI_TWIN_URL"] = "https://decoy-not-prod.supabase.co"   # a decoy override must not matter
+    _sc.http.client.HTTPSConnection = _FakeConn
     try:
-        os.environ.pop("MI_TWIN_URL", None)
         write_lane_run(lane, "x")
-        check("lane_run write: refuses without MI_TWIN_URL (twin-only, never prod)", False)
-    except SystemExit:
-        check("lane_run write: refuses without MI_TWIN_URL (twin-only, never prod)", True)
+        check("lane_run write: the request reaches the PROD host (REF-built; no caller override)",
+              captured == [f"{_sc.REF}.supabase.co"]
+              and f"{_sc.REF}.supabase.co" != "decoy-not-prod.supabase.co")
+        # a DIFFERENT write path (any producer calling spine_client.write directly) with the decoy
+        # still set must land on the same prod host — the env var is dead on every path.
+        _sc.write("lane_run", [lane_run_row(lane, "x")])
+        check("lane_run write: MI_TWIN_URL has no effect on ANY write path — all reach prod",
+              captured == [f"{_sc.REF}.supabase.co"] * 2)
     finally:
+        _sc.http.client.HTTPSConnection = orig_conn
+        if orig_key is None:
+            os.environ.pop("SUPABASE_API_KEY", None)
+        else:
+            os.environ["SUPABASE_API_KEY"] = orig_key
         os.environ.pop("MI_TWIN_URL", None)
+        _sc._KEY = None
 
     prior = _json_copy(m); prior.pop("_lane", None)
     prior["week"] = "2026-W43"              # last week — the same-week refusal is tested below
@@ -570,9 +617,12 @@ def main(argv=None) -> int:
     ap.add_argument("--lane-run-out", help="write the lane_run manifest (the run's ledger entry, kept local: names boards) here")
     ap.add_argument("--write-lane-run", metavar="MANIFEST",
                     help="read the lane_run manifest and write the REAL lane_run row through "
-                         "spine_client.write to the TWIN (MI_TWIN_URL + SUPABASE_API_KEY env; "
-                         "refuses without MI_TWIN_URL and refuses the prod ref)")
+                         "spine_client.write — to PROD, the one deliberate exception (PII-free "
+                         "ledger; registry + freshness live there). SUPABASE_API_KEY env.")
     ap.add_argument("--started-at", help="ISO run-start timestamp for --write-lane-run (default: the manifest's ran_at)")
+    ap.add_argument("--events-written", type=int, default=None,
+                    help="rows ACTUALLY written to the graph for --write-lane-run (default: the "
+                         "manifest's written count — 0 while event writes are dry-run)")
     ap.add_argument("--asof", help="override the bucket date (YYYY-MM-DD; default today, UTC)")
     ap.add_argument("--validate", metavar="MANIFEST",
                     help="validate an aggregate manifest (or --emit-events dir files) and exit")
@@ -584,8 +634,10 @@ def main(argv=None) -> int:
     if a.write_lane_run:
         with open(a.write_lane_run, encoding="utf-8") as fh:
             lane = json.load(fh)
+        if a.events_written is not None:
+            lane["written"] = a.events_written
         row = write_lane_run(lane, a.started_at or lane["ran_at"])
-        print(f"ats_pulse: lane_run row written to the twin "
+        print(f"ats_pulse: lane_run row written to PROD "
               f"({row['lane']} · {row['status']} · seen {row['items_seen']} · "
               f"written {row['items_written']} · refused {row['items_refused']})")
         return 0
