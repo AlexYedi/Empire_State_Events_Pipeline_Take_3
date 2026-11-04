@@ -1,0 +1,101 @@
+name: Market feeds fetch (lane 4 — stage feed_items on the twin)
+
+# Lane 4 of the market-lens design (docs/proposals/2026-11-04-market-lens-and-slices.md §2/§6;
+# code half S-02): a scheduled producer fetches public company feeds and stages RAW feed_items
+# on the MI TWIN. Prompt-injection mitigations are structural: this Action calls NO model —
+# staging is fetch + parse + a fixed keyword table (feeds.signal_type_guess); the Monday
+# session does the authoritative classification from the staged rows (invariant 5: no writer
+# touches untrusted text).
+#
+# Twin-only: writes go through spine_client (the one guarded write path, ADR-9), and feeds.py
+# itself refuses any SPINE_REF that is not the twin ref — prod is hard-failed before any HTTP.
+#
+# REQUIRED repo secrets / variables (Settings > Secrets and variables > Actions):
+#   FEED_SOURCES_REGISTRY     JSON array [{"company": "...", "feed_url": "..."}] — the watchlist
+#                             feeds. Materialized to a runner-temp file at runtime and deleted in
+#                             an always() cleanup step (the lane-1 pattern); never logged or committed.
+#   MI_TWIN_SUPABASE_API_KEY  the TWIN API key for feed_items writes. PROD credentials must NOT
+#                             be used in this workflow.
+#   MI_TWIN_REF               the twin project ref; feeds.py refuses prod and unknown refs.
+#   FEEDS_WRITE_ENABLED       repo VARIABLE (not secret). Unset/false = dry-run.
+#
+# DRY-RUN DEFAULT: until migration 0017 creates feed_items on the twin, the fetch step runs
+# --dry-run (stage + manifest artifact, no write). After the migration lands, set the repo
+# VARIABLE FEEDS_WRITE_ENABLED=true to enable writes.
+#
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # Mondays 05:00 UTC — ahead of the Monday session that classifies
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feeds-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Materialize the feed-sources registry (never logged or committed)
+        env:
+          REGISTRY: ${{ secrets.FEED_SOURCES_REGISTRY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$REGISTRY" ]; then
+            echo "FEED_SOURCES_REGISTRY is empty — add the repo secret (see workflow header)"; exit 1
+          fi
+          printf '%s' "$REGISTRY" > "$RUNNER_TEMP/feed_sources.json"
+          python3 -c "import json; json.load(open('$RUNNER_TEMP/feed_sources.json'))" \
+            || { echo "FEED_SOURCES_REGISTRY is not valid JSON"; exit 1; }
+      - name: Fetch feeds and stage feed_items (no model calls — fixed keyword classifier)
+        env:
+          SPINE_REF: ${{ secrets.MI_TWIN_REF }}
+          SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+          FEEDS_WRITE_ENABLED: ${{ vars.FEEDS_WRITE_ENABLED }}
+        run: |
+          set -euo pipefail
+          ARGS=(--sources "$RUNNER_TEMP/feed_sources.json" --out "$RUNNER_TEMP/feed_items.json")
+          if [ "$FEEDS_WRITE_ENABLED" = "true" ]; then
+            echo "FEEDS_WRITE_ENABLED=true — writing staged rows to the twin"
+          else
+            echo "FEEDS_WRITE_ENABLED unset/false — dry-run (default until migration 0017 lands)"
+            ARGS+=(--dry-run)
+          fi
+          python3 .claude/scripts/feeds.py fetch "${ARGS[@]}"
+      - name: Upload the staged manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-items-manifest
+          path: ${{ runner.temp }}/feed_items.json
+          if-no-files-found: error
+      - name: Remove the materialized registry
+        if: always()
+        run: rm -f "$RUNNER_TEMP/feed_sources.json"
+      # Lane lesson L1/L10 (market-lens proposal §0.5): a lane that fails quietly dies. One open
+      # issue, not one per run: repeat failures land as comments until the issue is closed.
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "Market feeds fetch FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "Market feeds fetch FAILED (since $TODAY)" \
+              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the item text), or a twin write error. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi

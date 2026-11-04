@@ -1,0 +1,14 @@
+[
+  {
+    "company": "Veris AI",
+    "feed_url": "https://veris.example/blog/feed.xml"
+  },
+  {
+    "company": "Northbeam Labs",
+    "feed_url": "https://northbeam.example/atom.xml"
+  },
+  {
+    "company": "Harbor Systems",
+    "feed_url": "https://youtube.example/feeds/videos.xml?channel_id=UCexample123"
+  }
+]
