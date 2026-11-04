@@ -24,9 +24,14 @@
 # paths-only entries exempt the WHOLE file — a real credential pasted into an exempted
 # fixture would pass the scanner. Do not switch to that form; if a non-digest secret ever
 # needs to live under supabase/fixtures/, the fix is to move it out, never to widen this.
-# The allowlist selftest is deliberately NOT allowlisted (Alex, #270 comment 6640006349:
-# an allowlisted security test is a blind spot) — its sentinel token is built at run time so
-# no literal in the repo matches any rule.
+#
+# The selftest file IS allowlisted below, narrowly (Alex's direction, #270 2026-11-04): the
+# PR-range scan includes commit cd0a50f, whose historical version held a literal sentinel
+# `sk_live_ + sha256("test")[:32]`; removing it needs a history rewrite, which is banned, and
+# .gitleaksignore fingerprints break on squash. The current selftest builds the sentinel at
+# run time, so no live-tree literal ever matches any rule — the entry below matches only
+# that one historical value (8-hex prefix pinned + 24 hex) inside that one file. A different
+# live-style key in the selftest file stays flagged, as does any token in fixtures/.
 [extend]
 useDefault = true
 
@@ -35,3 +40,9 @@ description = "feed fixture digests are sha256 of public *.example URLs (feeds.i
 condition = "AND"
 paths = ['''(^|/)supabase/fixtures/''']
 regexes = ['''(?i)^[0-9a-f]{64}$''']
+
+[[allowlists]]
+description = "the secret-scan selftest's historical cd0a50f sentinel (sk_live_ + sha256('test')[:32]): one file, one value shape; the config holds only the 8-hex prefix so no rule self-flags this file"
+condition = "AND"
+paths = ['''(^|/)\.claude/scripts/test_gitleaks_allowlist\.py$''']
+regexes = ['''sk_live_9f86d081[0-9a-f]{24}''']
