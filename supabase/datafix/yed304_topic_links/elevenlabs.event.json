@@ -1,0 +1,24 @@
+{
+ "event": {
+  "notion_page_id": "3d5d3699-c2db-8174-8318-cbde72693fa7",
+  "title": "ElevenLabs: Build Full Campaigns with AI (webinar)",
+  "kind": "attended",
+  "event_date": "2026-09-09"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "Generative Media (Voice / Video / Image)",
+   "notion_page_id": "3d5d3699-c2db-815b-892d-edc51a31e0ab",
+   "role": "tagged_topic",
+   "must_exist": true
+  },
+  {
+   "type": "topic",
+   "name": "AI Content Engineering / Editorial Pipelines",
+   "notion_page_id": "37bd3699-c2db-8172-8310-cc36e1fb3af7",
+   "role": "tagged_topic",
+   "must_exist": true
+  }
+ ]
+}
