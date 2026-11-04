@@ -1,0 +1,24 @@
+{
+ "checked_by": "Alex Yedibalian (F2 hand-check 2026-11-04, YED-320: 0 real phones in the LOOSE-not-LIVE rows); per-column counts scanned by the Obvious repo-track session",
+ "checked_at": "2026-11-04",
+ "method": "read-only twin scan 2026-11-04",
+ "notes": "Counts ONLY — this file never holds row content or PII (public repo). The 2026-11-04 F2 hand-check (YED-320, Alex) cleared 61 LOOSE-not-LIVE rows on prod as dates, year ranges, decimals, an ISBN, URL path IDs and Greenhouse job IDs. The per-column counts below come from the same-day read-only twin scan (pii_guard_watch shadow SQL, counts only, guarded read-only transaction) and total 54 rows — the twin lags prod, so the first weekly prod scan may REVIEW a small delta; the re-baseline after that review needs a fresh hand-check recorded here (checked_by / checked_at / method updated together). bare_digits_10_11 is only counted on prose columns (claim.claim_text, claim.quote, documents.title, person.bio); the watcher pins it to 0 elsewhere. Re-baseline rule: a hand-checked re-baseline updates the per-column counts and refreshed checked_by / checked_at / method in one commit; a baseline older than 90 days makes F2 REVIEW, so it cannot silently go stale.",
+ "columns": {
+  "claim.claim_text": {"loose_not_live": 15, "bare_digits_10_11": 0},
+  "claim.quote": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "claim.metadata": {"loose_not_live": 9, "bare_digits_10_11": 0},
+  "claim.locator": {"loose_not_live": 9, "bare_digits_10_11": 0},
+  "claim.proposed_entities": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "documents.title": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "documents.author": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "documents.external_ref": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "documents.metadata": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "doc_chunks.content": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "doc_claims.row": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "person.bio": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "person.row": {"loose_not_live": 8, "bare_digits_10_11": 0},
+  "company.row": {"loose_not_live": 4, "bare_digits_10_11": 0},
+  "event.row": {"loose_not_live": 0, "bare_digits_10_11": 0},
+  "topic.row": {"loose_not_live": 9, "bare_digits_10_11": 0}
+ }
+}

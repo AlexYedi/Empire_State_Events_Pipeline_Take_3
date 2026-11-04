@@ -15,7 +15,8 @@ Modes (stdlib only):
   --local-shapes       Local-only (refuses under CI): shape signatures of the hits, computed in SQL
                        (digit -> 9, letter -> a, <=40 chars), never raw text. For a human looking at F2.
   --evaluate           Reads the shadow JSON + the refusal telemetry (.claude/.state/pii-refusals.jsonl,
-                       written by spine_client) and computes triggers F1-F6. Prints a table + a JSON verdict.
+                       written by spine_client) + the acknowledged F2 baseline (.claude/references/
+                       pii-guard-baseline.json) and computes triggers F1-F6. Prints a table + a JSON verdict.
                        --no-telemetry (CI) marks the telemetry legs INSUFFICIENT (no telemetry in CI).
   --selftest           Offline fixtures for every trigger at FIRE / INSUFFICIENT / quiet, the Wilson bound,
                        the alternative splitter, the variant patterns, and the counts-only SQL guarantee.
@@ -23,6 +24,12 @@ Modes (stdlib only):
 Exit codes: 0 = no trigger fired (PASS or INSUFFICIENT) · 2 = at least one FIRE · 3 = REVIEW only ·
 1 = NOT EVALUATED (shadow missing or older than 8 days), error, or selftest failure.
 INSUFFICIENT means "below the minimum n: no information", never PASS.
+
+F2 (YED-326) reviews the DELTA over the acknowledged baseline, so a known-clean scan cannot reopen
+REVIEW every week: REVIEW only when a column's loose_not_live / bare_digits_10_11 count exceeds its
+acknowledged count, a corpus column is new or no longer scanned, or the baseline is missing,
+unparseable or older than 90 days — fail loud, never silently QUIET. Re-baselining means a fresh
+hand-check recorded in the file (checked_by / checked_at / method).
 
 Survivorship: once #277 is live, the guard (and the DB backstop) keep alt-3 text and non-allowlisted
 emails OUT of prod, so the shadow can measure their precision only pre-merge. Post-merge precision
@@ -56,6 +63,9 @@ import topic_intel_compute as tic  # noqa: E402  (the YED-312 read-only guard: r
 SHADOW_OUT = os.path.join(ROOT, ".claude", ".state", "pii-shadow.json")
 TELEMETRY = sc.TELEMETRY_PATH
 STALE_DAYS = 8                                 # a weekly scan plus a day of slack
+BASELINE_PATH = os.path.join(ROOT, ".claude", "references", "pii-guard-baseline.json")
+BASELINE_STALE_DAYS = 90                       # a baseline needs a fresh hand-check each quarter (YED-326)
+BASELINE_FIELDS = ("loose_not_live", "bare_digits_10_11")
 
 # --------------------------------------------------------------------------- patterns
 # PR #277's third alternative, verbatim (YED-309). Used only while LIVE has two alternatives.
@@ -310,8 +320,35 @@ def _shadow_problem(shadow_data: dict | None, now: dt.datetime) -> str | None:
     return None
 
 
+def load_baseline(path: str, now: dt.datetime) -> tuple[dict | None, str | None]:
+    """Read the acknowledged F2 baseline (YED-326). Returns (data, problem); a problem means
+    REVIEW, never QUIET — a baseline that is missing, malformed or stale must fail loud."""
+    if not os.path.exists(path):
+        return None, f"no baseline file ({os.path.relpath(path, ROOT)})"
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict) or not isinstance(data.get("columns"), dict) or not data["columns"]:
+            raise ValueError("columns must be a non-empty object")
+        if not isinstance(data.get("checked_by"), str) or not data["checked_by"].strip():
+            raise ValueError("checked_by must record who hand-checked the counts")
+        checked = dt.datetime.strptime(data["checked_at"], "%Y-%m-%d").replace(tzinfo=dt.timezone.utc)
+        for label, cnt in data["columns"].items():
+            if (not isinstance(cnt, dict) or set(cnt) != set(BASELINE_FIELDS)
+                    or not all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in cnt.values())):
+                raise ValueError(f"column {label!r} must hold non-negative {'/'.join(BASELINE_FIELDS)} counts")
+    except (OSError, ValueError, TypeError) as e:
+        return None, f"baseline file malformed: {e}"
+    age_days = (now.date() - checked.date()).days   # date arithmetic: checked_at carries no time component
+    if age_days > BASELINE_STALE_DAYS:
+        return data, (f"baseline is stale (checked {data['checked_at']}, {age_days} days ago, "
+                      f"older than {BASELINE_STALE_DAYS}) — re-baseline with a fresh hand-check recorded in the file")
+    return data, None
+
+
 def evaluate(shadow_data: dict | None, telemetry: list[dict] | None, now: dt.datetime,
-             no_tel_reason: str = "no telemetry file", post_merge: bool | None = None) -> dict:
+             no_tel_reason: str = "no telemetry file", post_merge: bool | None = None,
+             baseline: dict | None = None, baseline_problem: str | None = None) -> dict:
     if post_merge is None:
         post_merge = len(sc.split_alternatives(sc.PHONE_RE.pattern)) >= 3
     problem = _shadow_problem(shadow_data, now)
@@ -343,12 +380,39 @@ def evaluate(shadow_data: dict | None, telemetry: list[dict] | None, now: dt.dat
                  f" ({'post' if post_merge else 'pre'}-merge)", "legs": {"a_shadow": leg_a, "b_telemetry": leg_b}}
 
     # F2 — recall: LOOSE or a bare 10/11-digit number in prose finds what LIVE does not. REVIEW, never FIRE.
+    # YED-326: the acknowledged baseline (.claude/references/pii-guard-baseline.json) holds the
+    # hand-checked per-column counts, so the weekly scan reviews only the DELTA — a column above its
+    # acknowledged count, a corpus column that is new or no longer scanned, or a missing /
+    # unparseable / stale baseline (fail loud, never silently QUIET). Signals carry totals only:
+    # per-column detail (column names) stays in this run's local output, like F4's.
+    f2_cols: list[str] = []
     if not scanned:
         out["F2"] = _v(no_shadow, "no shadow scan")
+    elif baseline_problem or baseline is None:
+        out["F2"] = _v("REVIEW", f"baseline: {baseline_problem or 'no baseline provided'}",
+                       current_loose_not_live=T["loose_not_live"], current_bare_digits_10_11=T["bare_digits_10_11"])
     else:
-        gap, bare = T["loose_not_live"], T["bare_digits_10_11"]
-        out["F2"] = _v("REVIEW" if gap > 0 or bare > 0 else "PASS", f"LOOSE-not-LIVE rows {gap}; bare 10/11-digit rows {bare}",
-                       loose=T["loose"], live=T["live"], loose_not_live=gap, bare_digits_10_11=bare)
+        bcols, cols_now = baseline["columns"], shadow_data["columns"]
+        ack_l = sum(bcols[c]["loose_not_live"] for c in bcols)
+        ack_b = sum(bcols[c]["bare_digits_10_11"] for c in bcols)
+        over = sorted(c for c in cols_now if c in bcols
+                      and any(cols_now[c][f] > bcols[c][f] for f in BASELINE_FIELDS))
+        new = sorted(c for c in cols_now if c not in bcols)
+        gone = sorted(c for c in bcols if c not in cols_now)
+        if over or new or gone:
+            f2_cols = ([f"{c}: " + ", ".join(f"{f} {bcols[c][f]}->{cols_now[c][f]}" for f in BASELINE_FIELDS
+                                             if cols_now[c][f] > bcols[c][f]) for c in over]
+                       + [f"new column: {c}" for c in new]
+                       + [f"baseline column no longer scanned: {c}" for c in gone])
+            out["F2"] = _v("REVIEW", f"{len(over)} column(s) above the acknowledged baseline; "
+                           f"{len(new)} new; {len(gone)} no longer scanned",
+                           current_loose_not_live=T["loose_not_live"], acknowledged_loose_not_live=ack_l,
+                           current_bare_digits_10_11=T["bare_digits_10_11"], acknowledged_bare_digits_10_11=ack_b)
+        else:
+            out["F2"] = _v("PASS", f"LOOSE-not-LIVE rows {T['loose_not_live']} (acknowledged {ack_l}); "
+                           f"bare 10/11-digit rows {T['bare_digits_10_11']} (acknowledged {ack_b})",
+                           current_loose_not_live=T["loose_not_live"], acknowledged_loose_not_live=ack_l,
+                           current_bare_digits_10_11=T["bare_digits_10_11"], acknowledged_bare_digits_10_11=ack_b)
 
     # F3 — batch blast radius: refusals that aborted multi-row writes.
     if telemetry is None:
@@ -410,7 +474,8 @@ def evaluate(shadow_data: dict | None, telemetry: list[dict] | None, now: dt.dat
             "issue_title": f"PII guard watcher: {state} {' '.join(fired + review)}" if state in ("FIRE", "REVIEW") else "",
             "shadow_generated_at": (shadow_data or {}).get("generated_at"),
             "alt3_source": (shadow_data or {}).get("alt3_source"), "post_merge": post_merge,
-            "rows_scanned": T.get("n_rows", 0) if T else 0, "f4_columns": f4_cols, "triggers": out}
+            "rows_scanned": T.get("n_rows", 0) if T else 0, "f4_columns": f4_cols,
+            "f2_columns": f2_cols, "triggers": out}
 
 
 def render(verdict: dict) -> str:
@@ -428,8 +493,11 @@ def render(verdict: dict) -> str:
             for leg, lv in v["legs"].items():
                 lines.append(f"| {k}.{leg} | {lv['verdict']} | {lv['signal']} | {json.dumps(lv['counts'])} |")
         else:
-            sig = v["signal"] + ("; column detail in the run's local output / Linear"
-                                 if k == "F4" and v["verdict"] == "FIRE" else "")
+            sig = v["signal"]
+            detail_local = (k == "F4" and v["verdict"] == "FIRE" and verdict.get("f4_columns")) \
+                or (k == "F2" and verdict.get("f2_columns"))
+            if detail_local:
+                sig += "; column detail in the run's local output / Linear"
             lines.append(f"| {k} | {v['verdict']} | {sig} | {json.dumps(v['counts'])} |")
     lines += ["", "INSUFFICIENT = below the minimum n (no information), not a pass. "
               "Playbook: .claude/references/pii-guard-watch.md (YED-320)."]
@@ -563,8 +631,8 @@ def selftest() -> bool:
             recs.append(rec)
         return recs
 
-    def V(s, t, k, post=False):
-        return evaluate(s, t, now, post_merge=post)["triggers"][k]["verdict"]
+    def V(s, t, k, post=False, bl=None, bl_problem=None):
+        return evaluate(s, t, now, post_merge=post, baseline=bl, baseline_problem=bl_problem)["triggers"][k]["verdict"]
 
     quiet_tel = tel(ok=250)
     ck("F1 FIRE (pre-merge): 30/40 alt-3 shadow hits are numeric prose", V(shad(alt3=40, numeric_prose=30), quiet_tel, "F1") == "FIRE")
@@ -582,10 +650,66 @@ def selftest() -> bool:
        V(shad(alt3=40), tel(refusals=[("phone_alt3", 1, True)] * 29), "F1", post=True) == "INSUFFICIENT")
     ck("F1 leg a is labelled pre-merge shadow only",
        evaluate(shad(alt3=40), None, now)["triggers"]["F1"]["legs"]["a_shadow"]["signal"].startswith("pre-merge shadow only"))
-    ck("F2 REVIEW: 1 LOOSE-not-LIVE row", V(shad(loose=1, loose_not_live=1), None, "F2") == "REVIEW")
-    ck("F2 REVIEW: 1 bare 10/11-digit row", V(shad(bare_digits_10_11=1), None, "F2") == "REVIEW")
+    # F2 (YED-326): a DELTA check against the acknowledged baseline.
+    def bl_of(s: dict | None, at: str | None = None, extra: dict | None = None) -> dict:
+        cols = {c: {f: v[f] for f in BASELINE_FIELDS} for c, v in (s or shad())["columns"].items()}
+        if extra:
+            cols.update(extra)
+        return {"checked_by": "selftest hand-check", "checked_at": at or now.strftime("%Y-%m-%d"), "columns": cols}
+
+    ck("F2 PASS: counts at the acknowledged baseline", V(shad(), None, "F2", bl=bl_of(shad())) == "PASS")
+    ck("F2 PASS: counts below the acknowledged baseline (a fall is not a review)",
+       V(shad(loose=3, loose_not_live=0), None, "F2",
+         bl=bl_of(None, extra={"claim.claim_text": {"loose_not_live": 5, "bare_digits_10_11": 5}})) == "PASS")
+    ck("F2 REVIEW: loose_not_live above the acknowledged count",
+       V(shad(loose=2, loose_not_live=2), None, "F2", bl=bl_of(shad())) == "REVIEW")
+    ck("F2 REVIEW: bare_digits_10_11 above the acknowledged count",
+       V(shad(bare_digits_10_11=1), None, "F2", bl=bl_of(shad())) == "REVIEW")
+    two_col = shad()
+    two_col["columns"]["documents.title"] = dict(two_col["columns"]["claim.claim_text"])
+    ck("F2 REVIEW: a new column appears in the scan", V(two_col, None, "F2", bl=bl_of(shad())) == "REVIEW")
+    ck("F2 REVIEW: a baseline column is no longer scanned (the corpus shrank)",
+       V(shad(), None, "F2", bl=bl_of(None, extra={"legacy.column": {"loose_not_live": 0, "bare_digits_10_11": 0}})) == "REVIEW")
     ck("F2 INSUFFICIENT: no shadow", V(None, None, "F2") == "INSUFFICIENT")
-    ck("F2 quiet: 0 gap", V(shad(loose=3, live=0, loose_not_live=0), None, "F2") == "PASS")
+    ck("F2 REVIEW: a missing baseline file fails loud (never silently QUIET)",
+       V(shad(), None, "F2", bl_problem="no baseline file (.claude/references/pii-guard-baseline.json)") == "REVIEW")
+    ck("F2 REVIEW: no baseline provided fails loud", V(shad(), None, "F2") == "REVIEW")
+    ck("F2 REVIEW body stays counts-only (no column names, local output pointed to)",
+       "claim.claim_text" not in render(evaluate(shad(loose_not_live=2), None, now, baseline=bl_of(shad())))
+       and "column detail in the run's local output / Linear"
+       in render(evaluate(shad(loose_not_live=2), None, now, baseline=bl_of(shad()))))
+
+    # load_baseline: fresh/stale boundary and the malformed-file cases (fail loud).
+    with tempfile.TemporaryDirectory() as d:
+        def write_bl(name: str, obj) -> str:
+            p = os.path.join(d, name)
+            with open(p, "w") as f:
+                (f.write(obj) if isinstance(obj, str) else json.dump(obj, f))
+            return p
+
+        def lb(path: str) -> tuple[dict | None, str | None]:
+            return load_baseline(path, now)
+
+        good = {"checked_by": "Alex", "checked_at": now.strftime("%Y-%m-%d"),
+                "columns": {"claim.claim_text": {"loose_not_live": 1, "bare_digits_10_11": 0}}}
+        d90 = dict(good, checked_at=(now - dt.timedelta(days=90)).strftime("%Y-%m-%d"))
+        d91 = dict(good, checked_at=(now - dt.timedelta(days=91)).strftime("%Y-%m-%d"))
+        ck("load_baseline: a fresh file loads clean", lb(write_bl("good.json", good)) == (good, None))
+        ck("load_baseline: exactly 90 days old is not stale", lb(write_bl("d90.json", d90))[1] is None)
+        ck("load_baseline: 91 days is stale -> problem naming the re-baseline rule",
+           (lb(write_bl("d91.json", d91))[1] or "").startswith("baseline is stale"))
+        ck("load_baseline: missing file -> problem (fail loud)", lb(os.path.join(d, "nope.json"))[1] is not None)
+        ck("load_baseline: unparseable JSON -> problem", lb(write_bl("bad.json", "{not json"))[1] is not None)
+        ck("load_baseline: non-integer counts rejected",
+           lb(write_bl("s.json", dict(good, columns={"claim.claim_text": {"loose_not_live": "3", "bare_digits_10_11": 0}})))[1] is not None)
+        ck("load_baseline: a missing count field rejected",
+           lb(write_bl("m.json", dict(good, columns={"claim.claim_text": {"loose_not_live": 1}})))[1] is not None)
+        ck("load_baseline: negative counts rejected",
+           lb(write_bl("n.json", dict(good, columns={"claim.claim_text": {"loose_not_live": -1, "bare_digits_10_11": 0}})))[1] is not None)
+        ck("load_baseline: an unreadable checked_at rejected",
+           lb(write_bl("t.json", dict(good, checked_at="11/04/2026")))[1] is not None)
+        ck("load_baseline: an empty checked_by rejected (a re-baseline needs who)",
+           lb(write_bl("w.json", dict(good, checked_by="  ")))[1] is not None)
     ck("F3 FIRE: 3 multi-row refusals in 7d", V(None, tel(ok=1, refusals=[("email", 2)] * 3), "F3") == "FIRE")
     ck("F3 FIRE: one refusal in a 51-row batch", V(None, tel(refusals=[("phone_alt1", 51)]), "F3") == "FIRE")
     ck("F3 INSUFFICIENT: no telemetry", V(None, None, "F3").startswith("INSUFFICIENT"))
@@ -607,9 +731,9 @@ def selftest() -> bool:
     ck("F6 p95 not median: 180 at 1ms + 20 at 60ms fires", V(None, tel(ms=[1.0] * 180 + [60.0] * 20), "F6") == "FIRE")
 
     # Aggregation, exit codes, staleness, CI labelling, the public body.
-    fire = evaluate(shad(live=1, loose_not_live=1), None, now)
-    review = evaluate(shad(loose_not_live=1), None, now)
-    quiet = evaluate(shad(), None, now, no_tel_reason="no telemetry in CI")
+    fire = evaluate(shad(live=1, loose_not_live=1), None, now, baseline=bl_of(shad()))
+    review = evaluate(shad(loose_not_live=1), None, now, baseline=bl_of(shad()))
+    quiet = evaluate(shad(), None, now, no_tel_reason="no telemetry in CI", baseline=bl_of(shad()))
     ck("exit 2 on any FIRE; title names every fired/review trigger",
        fire["exit_code"] == 2 and fire["issue_title"] == "PII guard watcher: FIRE F4 F2")
     ck("exit 3 on REVIEW only", review["exit_code"] == 3 and review["issue_title"] == "PII guard watcher: REVIEW F2")
@@ -626,17 +750,23 @@ def selftest() -> bool:
     ck("CI: telemetry legs say 'INSUFFICIENT (no telemetry in CI)'",
        all(quiet["triggers"][k]["verdict"] == "INSUFFICIENT (no telemetry in CI)" for k in ("F3", "F5", "F6"))
        and quiet["triggers"]["F1"]["legs"]["b_telemetry"]["verdict"] == "INSUFFICIENT (no telemetry in CI)")
-    body = render(evaluate({**shad(live=1), "columns": {"doc_chunks.content": shad(live=1)["totals"]}}, None, now))
+    body = render(evaluate({**shad(live=1), "columns": {"doc_chunks.content": shad(live=1)["totals"]}}, None, now,
+                           baseline=bl_of(shad())))
     ck("the body carries no shape, raw value or column name; F4 FIRE points to local output",
        not re.search(r"\d{3}[\s.-]\d{3}|@|aaa|999|doc_chunks", body)
        and "column detail in the run's local output / Linear" in body)
 
-    # main(): --no-telemetry wins over a telemetry file that would fire.
+    # main(): --no-telemetry wins over a telemetry file that would fire. An explicit fixture baseline,
+    # so the suite never depends on the repo baseline's age.
     with tempfile.TemporaryDirectory() as d:
         real_now = dt.datetime.now(dt.timezone.utc)
-        sh_path, tel_path = os.path.join(d, "shadow.json"), os.path.join(d, "tel.jsonl")
+        sh_path, tel_path, bl_path = os.path.join(d, "shadow.json"), os.path.join(d, "tel.jsonl"), \
+            os.path.join(d, "baseline.json")
         with open(sh_path, "w") as f:
             json.dump({**shad(), "generated_at": real_now.strftime("%Y-%m-%dT%H:%M:%SZ")}, f)
+        with open(bl_path, "w") as f:
+            json.dump({"checked_by": "selftest", "checked_at": real_now.strftime("%Y-%m-%d"),
+                       "columns": {"claim.claim_text": {"loose_not_live": 0, "bare_digits_10_11": 0}}}, f)
         with open(tel_path, "w") as f:
             for _ in range(3):
                 f.write(json.dumps({"ts": real_now.strftime("%Y-%m-%dT%H:%M:%SZ"), "rule": "email", "batch_size": 2}) + "\n")
@@ -644,13 +774,23 @@ def selftest() -> bool:
         for flag in ([], ["--no-telemetry"]):
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                runs[bool(flag)] = main(["--evaluate", "--shadow-json", sh_path, "--telemetry", tel_path] + flag)
+                runs[bool(flag)] = main(["--evaluate", "--shadow-json", sh_path, "--telemetry", tel_path,
+                                         "--baseline", bl_path] + flag)
         missing_rc = None
         with contextlib.redirect_stdout(io.StringIO()):
-            missing_rc = main(["--evaluate", "--shadow-json", os.path.join(d, "nope.json"), "--no-telemetry"])
+            missing_rc = main(["--evaluate", "--shadow-json", os.path.join(d, "nope.json"), "--no-telemetry",
+                               "--baseline", bl_path])
+        stale_bl = os.path.join(d, "stale-baseline.json")
+        with open(stale_bl, "w") as f:
+            json.dump({"checked_by": "selftest", "checked_at": (real_now - dt.timedelta(days=91)).strftime("%Y-%m-%d"),
+                       "columns": {"claim.claim_text": {"loose_not_live": 0, "bare_digits_10_11": 0}}}, f)
+        stale_rc = None
+        with contextlib.redirect_stdout(io.StringIO()):
+            stale_rc = main(["--evaluate", "--shadow-json", sh_path, "--no-telemetry", "--baseline", stale_bl])
     ck("main(): the telemetry file fires F3 without --no-telemetry (exit 2) and is ignored with it (exit 0)",
        runs == {False: 2, True: 0})
     ck("main(): a missing shadow file exits 1", missing_rc == 1)
+    ck("main(): a stale baseline file is REVIEW (exit 3), never silently QUIET", stale_rc == 3)
 
     bad = [n for n, ok in results if not ok]
     for n, ok in results:
@@ -669,6 +809,8 @@ def main(argv: list[str]) -> int:
     mode.add_argument("--selftest", action="store_true")
     ap.add_argument("--out", default=SHADOW_OUT, help="--shadow: where the counts JSON goes")
     ap.add_argument("--shadow-json", default=SHADOW_OUT, help="--evaluate: the --shadow output")
+    ap.add_argument("--baseline", default=BASELINE_PATH,
+                    help="--evaluate: the acknowledged F2 baseline (.claude/references/pii-guard-baseline.json)")
     ap.add_argument("--telemetry", default=TELEMETRY, help="--evaluate: spine_client's refusal telemetry")
     ap.add_argument("--no-telemetry", action="store_true", help="--evaluate in CI: telemetry legs INSUFFICIENT")
     ap.add_argument("--json-out", help="--evaluate: also write the verdict JSON here")
@@ -699,12 +841,18 @@ def main(argv: list[str]) -> int:
         telemetry, bad = load_telemetry(a.telemetry)
         if bad:
             print(f"note: skipped {bad} unreadable telemetry line(s)", file=sys.stderr)
-    verdict = evaluate(shadow_data, telemetry, dt.datetime.now(dt.timezone.utc), no_tel_reason=reason)
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    baseline, baseline_problem = load_baseline(a.baseline, now_utc)
+    verdict = evaluate(shadow_data, telemetry, now_utc, no_tel_reason=reason,
+                       baseline=baseline, baseline_problem=baseline_problem)
     body = render(verdict)
     print(body)
-    print("\nverdict-json: " + json.dumps({k: v for k, v in verdict.items() if k != "f4_columns"}, sort_keys=True))
+    print("\nverdict-json: " + json.dumps({k: v for k, v in verdict.items() if k not in ("f4_columns", "f2_columns")},
+                                          sort_keys=True))
     if verdict["f4_columns"]:
         print("F4 columns (this run's output only, not the issue): " + ", ".join(verdict["f4_columns"]))
+    if verdict.get("f2_columns"):
+        print("F2 delta detail (this run's output only, not the issue): " + "; ".join(verdict["f2_columns"]))
     if a.json_out:
         with open(a.json_out, "w", encoding="utf-8") as f:
             json.dump(verdict, f, indent=1, sort_keys=True)
