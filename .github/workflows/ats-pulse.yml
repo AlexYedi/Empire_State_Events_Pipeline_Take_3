@@ -116,12 +116,19 @@ jobs:
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
         run: |
-          if ! python3 .claude/scripts/ats_pull.py --quiet --out /tmp/roles.tsv --summary /tmp/board_stats.json \
-               2>/tmp/ats-pull.err; then
-            echo "::error::ats_pull failed:"; cat /tmp/ats-pull.err   # --quiet: counts only, no names
-            exit 1
+          set +e
+          python3 .claude/scripts/ats_pull.py --quiet --out /tmp/roles.tsv --summary /tmp/board_stats.json \
+            2>/tmp/ats-pull.err
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            # never cat the err file: --quiet does not gate tracebacks or library warnings, and
+            # a board-fetch error can carry the board URL (the company slug). Detail stays in the
+            # file the always() cleanup deletes.
+            echo "::error::ats_pull failed (exit $RC); counts/details in a deleted file — see the run locally for a redacted post-mortem"
+            exit $RC
           fi
-          cat /tmp/ats-pull.err   # counts-only with --quiet (boards · scanned · zero/errored/unmatched)
+          grep '^ats_pull: counts-only' /tmp/ats-pull.err || true   # the only counts-only line that may reach the log
 
       - name: Aggregate to hiring_pulse counts + per-company ensure-event manifests + lane_run
         run: |
