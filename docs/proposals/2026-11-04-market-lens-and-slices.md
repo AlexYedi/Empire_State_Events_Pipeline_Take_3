@@ -12,6 +12,25 @@ This design does three things. It defines a **slice contract**, the dimensions e
 
 The bold part is scope: every lane, the full semantic layer, lead/lag analytics, cohorts. The guardrails are unchanged: one write path (`spine_client`), no PII, DDL by Alex after a twin rehearsal, null baselines on every number, nothing public without his go.
 
+## 0.5 Lessons from what already failed — read before building
+
+Every item below happened in this graph and is evidenced in git, Linear or prod. Each one maps to a rule this design enforces.
+
+| # | What failed | Evidence | The lesson → the rule here |
+|---|---|---|---|
+| L1 | **Inbox miner** (ADR-7): 1 run, 13 rows, retired 2026-09-28 (ADR-11) | ADR-11 usage table | A permanent manual gate plus a cron that never got enabled means the lane never runs. **Every lane ships scheduled, with a freshness alarm** (§2). |
+| L2 | **`trend_radar`** (HN / HF / newsletters): 24 market rows, 6 Aug to 8 Sept, then pruned | prod `event.source`; 9/28 prune sweep | Nothing read its output every week, so it was cut as friction. **No lane without a named weekly consumer**; the Monday brief is that consumer (§5). |
+| L3 | **`morning_refresh`**: 7 rows, one day | prod `event.source` | Manual triggering decays within days. **A run ledger (`lane_run`) plus kill rules**, so a dead lane is visible and gets retired on purpose, not by neglect. |
+| L4 | **Cluster assignment was a one-time bootstrap**; 94 topics went unassigned from 8 Aug and nothing noticed | YED-304 | One-off setup steps silently become permanent gaps. **Every derived dimension needs a recurring producer and a coverage alarm**, not a backfill. |
+| L5 | **The "second pass" that never ran**: the YED-171 backfill skipped id-only topics, so 3 events never got their topics | YED-304 W4 | A deferred follow-up with no owner and no alarm doesn't happen. **No "re-run later"; deferrals become Linear issues with an owner, or an alarm.** |
+| L6 | **The health check stayed green for weeks** while 37% of topics fell outside every trend | `topic_intelligence_health.canonicalization_backlog` tripping at 102, unread by `healthcheck_2b.py` | Correctness checks don't prove completeness. **Every lane and view carries a coverage metric beside its parity check** (§3, §7). |
+| L7 | **A compute function stranded by a schema move**: after the 2B swap the nightly recompute referenced dropped tables, and trends froze from 08-10 to 09-19 | migration 0012 header (YED-230) | A migration that moves tables can orphan their producers. **The 0016 rehearsal must run the full nightly chain on the twin, not only the DDL.** |
+| L8 | **Two parallel spines** (gtm-os `signal.*` and Empire) drifted and needed a consolidation project | YED-130, ADR-0 | **One graph, one producer path** (`substrate.py` → `spine_client`). Market lanes do not get their own store. |
+| L9 | **Contact PII leaked through a legacy column and a rollback copy**: `person.email`, then `pre2b.person.email` | S-04, YED-296 | Every new table is a new place PII can land. **New `mi` tables go through the YED-297 nightly column audit and the ADR-9 guard with negative selftests.** |
+| L10 | **The job-postings lane stalled on 2026-09-23** (183 `role_posted`, none since) and nothing alerted | prod `event` | Even a lane that works dies quietly without an alarm. **Lane 1 starts by fixing this, with a freshness FAIL at 14 days.** |
+| L11 | **A ship rule passed on 6% coverage**: the W2 kNN "PASS" came from 10 near-duplicate names | #266 evidence | A precision gate without a coverage floor lets a useless method pass. **Every gate here sets precision and coverage floors, plus a null baseline.** |
+| L12 | **22% of claims are linked to no entity**, so the corpus is invisible to any slice | S-01 | Data that can't be joined doesn't count. **Lane 0 (link the existing corpus to ≥95%) comes before any new ingestion.** |
+
 ## 1. Thesis and success definition
 
 **The insight Alex cannot get today is the comparison.** An attended count says where his rooms are; a market count says where the ecosystem is; the gap between them is the thing worth knowing before a panel, a post or an interview. Eight questions the layer answers, each tied to a pipeline stage:
