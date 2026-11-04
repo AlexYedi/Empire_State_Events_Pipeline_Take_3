@@ -1,54 +1,60 @@
 #!/usr/bin/env python3
-"""slice.py — YED-304 Phase A slice renderer: read-only explorer over public.mi_slice (PR #268 design, §4).
+"""slice.py — rendering-only slice explorer over public.mi_slice (YED-304, ADR-13).
 
-Renders canonical market-lens slices from the `mi` semantic layer. Rendering ONLY: every read is a
-GET to the `mi_slice(view, filters)` RPC (a security-definer reader; `mi` itself is not exposed to
-PostgREST). slice.py writes nothing anywhere, holds no credentials in git, and points at the twin
-by default — prod requires --allow-prod (the migration that creates mi_slice is 0016, not yet
-applied at the time this script landed).
+Reads ONLY through the one door: GET public.mi_slice(view, filters) over Supabase REST.
+No writes, no DDL, no direct table reads. What it adds on top of the RPC is contract
+validation (fail closed) and honest rendering (§3.3 of the market-lens design):
 
-  slice.py run <name> [--since YYYY-MM-DD] [--lens LENS] [--json]
-  slice.py adhoc --view mi.theme_week [--filters '{"lens":"attended"}'] [--sql-ref F] [run flags]
-  slice.py list
-  slice.py --selftest
+  lenses    attended · research · market render as adjacent columns, never summed; a
+            `--lens` filter excludes other lenses with a count, it never merges them.
+  general   (general)-topic counts are labelled (`N (M general)` / explicit rows), never
+            merged into named-topic counts (PR #267 rule).
+  floors    a cell the view graded `insufficient_data` (<3 facts in the window) prints
+            `insufficient_data` — the number is suppressed, not shown "for context".
+  lead/lag  lives in its own view (mi.theme_lead_lag). `market_lead_weeks` renders only
+            when `lead_lag_shown` is true (both lenses clear the 3-fact floor). When it
+            is false — the correct null state, e.g. a market lens with 0 facts in the
+            window — the lead prints `insufficient_data` while the underlying 8-week
+            counts stay visible: rendered, not hidden, not special-cased away.
+  segment   mi.company_cohort carries the CURRENT segment (open row): stage/industry/
+            headcount_band/hq_metro. NO target tier anywhere — the private target list
+            leaves the DB only as the aggregate watchlist counts in the market
+            denominators (0016, ADR-13 F1).
 
-The canonical slice registry lives in `.claude/references/slices.md` as fenced JSON descriptors
-(reviewable, versioned); `adhoc --sql-ref F` reads one descriptor-shaped JSON file for one-offs.
+Public.mi_slice contract (migration 0016 `mi_semantic_layer` — the live source of truth):
 
-Slice contract (PR #268 §3–§4) — what this renderer enforces on every payload, failing closed:
-  lens      every row carries lens ∈ attended · research · market · job. "all" or a missing lens is
-            a contract error: lenses are NEVER summed or blended (§3.3 rule 1) — they render as
-            adjacent columns, each with its own denominator.
-  theme     rows grouped by their dimension fields; counts on a theme's `(general)` topic are
-            labelled (`… (2 general)`, rows marked `[general]`), never folded into named-topic
-            counts (PR #267 rule).
-  time      slices bucket on `asserted_at` (when it was true); `observed_at` (when we learned it)
-            prints beside it wherever a row carries both (§3.1).
-  floor     a cell the view flags `insufficient_data` (<3 facts / 8 weeks, §3.3 rule 3) renders as
-            `insufficient_data`, and a lead/lag figure on a floored cell renders as
-            `no information (floor)` — the number is suppressed, not shown "for context".
-  segment   company rows carry stage/industry/headcount band as ordinary columns (Type 2 segment
-            as-of the fact; the view supplies the as-of values).
+  views    allowlist: mi.theme_week · mi.theme_lead_lag · mi.company_timeline ·
+           mi.company_cohort. Anything else raises server-side (mi.hiring_around_theme
+           is deferred to lane 1's PR).
+  filters  {weeks 1..104 (default 8) · lens attended|research|market · theme_id uuid ·
+           company_id uuid · limit 1..5000 (default 1000)}. Unknown keys raise — the
+           client pre-flights the same allowlist and fails closed before the call.
+  returns  {"view": "mi.theme_week",                       # echoes the request
+            "rows": [...],                                 # per-view columns (below)
+            "denominators": {"attended": {"events": 12}, "research": {"briefs": 3},
+                             "market": {"facts_by_source": {"gh": 40}, "watchlist_covered": 9,
+                                        "watchlist_size": 40}, "job": {"boards_scanned": 5}},
+            "window": {"from_week": "2026-W37", "to_week": "2026-W44", "anchored_on": "2026-11-04"}}
+  window   `weeks` ISO weeks ending in the week of current_date — anchored on today,
+           never on the latest row. It filters the week-grained views and scopes every
+           denominator. theme_lead_lag carries its own fixed 8-week window;
+           company_cohort is all-time.
 
-RPC payload contract (pinned by migration 0016: mi_slice(view, filters) is STABLE, GET-callable,
-server-allowlisted; full columns land in ADR-13's consumer-contract section on the 0016 PR):
-  {"view": "mi.theme_week",                       # qualified view name, echoes the request
-   "window": {"window_weeks": 8},                 # the slice's time window, echoed back
-   "rows": [ {"theme": "...", "iso_week": "2026-W40", "lens": "attended",
-              "facts": 12, "companies": 5, "sources": 3, "general_facts": 2,
-              "floor_flag": "ok", "asserted_at": "...", "observed_at": "..."} ],
-   "denominators": {"attended": "events in window: 12", "market": "facts from 6 sources; watchlist 12/40"}}
-  denominators must have an entry for EVERY lens present in rows (§3.3 rule 2) — a rate without
-  its denominator is a contract error, not a rendering nicety. floor_flag is mandatory on every
-  row (missing = fail closed; raw counts are not a pass). A lead/lag figure renders only when
-  the payload carries lead_lag_shown: true (mi.theme_lead_lag computes it — true only when BOTH
-  lenses clear the floor). A row-level theme_resolved marker (e.g. "seed") renders as a [seed]
-  label on the dimension, never as a dimension column.
+Row shapes (0016 view definitions):
+  mi.theme_week        theme_id, theme, iso_week, lens, facts, distinct_companies,
+                       distinct_sources, general_facts, floor_flag, theme_resolved
+  mi.theme_lead_lag    theme_id, theme, market_first_seen, attended_first_seen,
+                       market_lead_weeks, attended_count_8w, market_count_8w, lead_lag_shown
+  mi.company_timeline  company_id, company_name, lens, iso_week, facts, kinds, signal_types,
+                       distinct_sources, first_asserted_at, last_asserted_at
+  mi.company_cohort    company_id, company_name, first_seen_any, first_seen_quarter,
+                       first_seen_{attended,research,market}_quarter, stage, industry,
+                       headcount_band, hq_metro   (NO target_tier — ADR-13 F1)
 
 Target: TWIN by default (`ytfzzsxcxxbejnowmkmk`, per supabase/2B_REHEARSAL_RUNBOOK.md naming).
-Credentials: `SLICE_API_KEY` env or `--key-file F` (twin service key; the repo `.env` holds the
-PROD key and is deliberately NOT read — a prod key must never ride a twin-bound request).
-Exit codes: 0 = rendered, 2 = bad args, 3 = env/network/contract failure (nothing rendered).
+Credentials: `SLICE_API_KEY` env or `--key-file F` (twin service key). A prod target is
+refused without --allow-prod. The repo `.env` holds the PROD key and is deliberately NOT
+read — a prod key must never ride a twin-bound request.
 """
 from __future__ import annotations
 
@@ -68,15 +74,28 @@ PROD_REF = "oicikjyzmxqfomrrqkvf"          # The-Prod-Brain — refused without 
 LENSES = ("attended", "research", "market", "job")
 GENERAL_TOPIC = "(general)"                # the per-theme catch-all topic (PR #267)
 FLOOR_FLAG = "insufficient_data"           # <3 facts in the window (§3.3 rule 3, same floor as 0012)
-MEASURE_FIELDS = {"facts", "companies", "sources", "general_facts", "lead_weeks"}
 REST_PREFIX = "/rest/v1"                   # PostgREST path prefix (read-only GET rpc below)
+
+# The live 0016 contract, pinned client-side (the server raises on the same rules).
+ALLOWLISTED_VIEWS = ("mi.theme_week", "mi.theme_lead_lag", "mi.company_timeline", "mi.company_cohort")
+ALLOWED_FILTER_KEYS = ("weeks", "lens", "theme_id", "company_id", "limit")
+MI_LENS_VALUES = ("attended", "research", "market")   # mi_slice's lens filter takes no 'job'
+CANONICAL_DENOM_KEYS = ("attended", "research", "market", "job")  # 0016 always returns all four
+LENSLESS_VIEWS = ("mi.theme_lead_lag", "mi.company_cohort")       # rows carry no lens column
+FLOOR_VIEWS = ("mi.theme_week",)                       # views that grade rows with floor_flag
+WINDOW_KEYS = ("from_week", "to_week", "anchored_on")
+
+MEASURE_FIELDS = {"facts", "distinct_companies", "distinct_sources", "general_facts",
+                  "attended_count_8w", "market_count_8w"}
+ID_FIELDS = ("theme_id", "company_id")     # join keys, not facts — carried but not displayed
+MARKER_FIELDS = ("theme_resolved",)        # labels, not dimension columns
 
 
 # ---------------------------------------------------------------- pure: registry (slices.md)
 
 def load_registry(md_text: str) -> dict[str, dict]:
     """Fenced ```json blocks in slices.md → {name: descriptor}. A block holds one descriptor or a
-    list of them. Descriptors missing name/view/lenses are skipped loudly via the returned errors."""
+    list of them. Descriptors missing name/view are skipped loudly via the returned errors."""
     out: dict[str, dict] = {}
     for block in re.findall(r"```json\n(.*?)```", md_text, re.S):
         try:
@@ -91,10 +110,27 @@ def load_registry(md_text: str) -> dict[str, dict]:
 
 # ---------------------------------------------------------------- pure: request shaping
 
+def filters_error(filters: dict) -> str:
+    """Client-side pre-flight of mi_slice filters — the same allowlist 0016 enforces
+    server-side. Failing closed here means a bad filter never leaves the machine."""
+    if not isinstance(filters, dict):
+        return "filters must be a JSON object"
+    bad = sorted(k for k in filters if k not in ALLOWED_FILTER_KEYS)
+    if bad:
+        return f"unknown filter key(s) {bad}; allowed: {list(ALLOWED_FILTER_KEYS)} (0016)"
+    if "lens" in filters and filters["lens"] not in MI_LENS_VALUES:
+        return f"lens must be one of {list(MI_LENS_VALUES)} (got {filters['lens']!r})"
+    for k, hi in (("weeks", 104), ("limit", 5000)):
+        v = filters.get(k)
+        if k in filters and (not isinstance(v, int) or isinstance(v, bool) or not 1 <= v <= hi):
+            return f"{k} must be an int in 1..{hi} (got {v!r})"
+    return ""
+
+
 def rpc_request_parts(view: str, filters: dict) -> tuple[str, str]:
     """(path_with_query, body) for the mi_slice call. GET carries filters as a jsonb query param —
-    a GET cannot carry a write body, which is the point: the pinned 0016 contract declares
-    mi_slice STABLE and GET-callable, so no request body is ever built. body is always ""."""
+    a GET cannot carry a write body, which is the point: mi_slice is STABLE and GET-callable
+    (0016), so no request body is ever built. body is always \"\"."""
     import urllib.parse
     qs = urllib.parse.urlencode({"view": view, "filters": json.dumps(filters, separators=(",", ":"))})
     return f"{REST_PREFIX}/rpc/mi_slice?{qs}", ""
@@ -102,7 +138,7 @@ def rpc_request_parts(view: str, filters: dict) -> tuple[str, str]:
 
 def http_get(url: str, key: str, timeout: int = 30) -> tuple[int, str]:
     """One read-only HTTPS exchange. http.client (the same socket layer spine_client._send uses)
-    with a GET verb — no POST body is ever built unless the server demands it (see fetch_slice)."""
+    with a GET verb — no request body is ever built."""
     host = re.sub(r"^https?://", "", url).split("/")[0]
     path = "/" + url.split("/", 3)[3] if url.count("/") > 2 else "/"
     conn = http.client.HTTPSConnection(host, 443, timeout=timeout)
@@ -116,14 +152,20 @@ def http_get(url: str, key: str, timeout: int = 30) -> tuple[int, str]:
 
 
 def fetch_slice(ref: str, view: str, filters: dict, key: str) -> dict:
-    """mi_slice over REST → payload dict. GET only — the pinned 0016 contract makes mi_slice
-    GET-callable and STABLE, so any non-200 is an error, never a retry with a request body."""
+    """mi_slice over REST → payload dict. GET only; any non-200 is an error, never a retry
+    with a request body. Refuses a response whose view does not match the request — another
+    slice's rows must never render."""
+    if view not in ALLOWLISTED_VIEWS:
+        raise RuntimeError(f"mi_slice: view {view!r} is not in the allowlist {list(ALLOWLISTED_VIEWS)} (ADR-13)")
+    fe = filters_error(filters)
+    if fe:
+        raise RuntimeError(f"mi_slice: {fe}")
     path, _ = rpc_request_parts(view, filters)
     url = f"https://{ref}.supabase.co{path}"
     status, txt = http_get(url, key)
     if status != 200:
         raise RuntimeError(f"mi_slice {view}: HTTP {status}: {txt[:300]} "
-                           f"(the pinned 0016 contract makes mi_slice GET-callable — check the migration is applied)")
+                           f"(mi_slice is GET-callable per 0016 — check the migration is applied)")
     try:
         payload = json.loads(txt)
     except json.JSONDecodeError as e:
@@ -144,47 +186,51 @@ def validate_payload(payload) -> list[str]:
         return ["payload is not an object"]
     view = payload.get("view")
     if not isinstance(view, str) or not view.startswith("mi."):
-        errs.append(f"payload.view {view!r} is not a qualified view name ('mi.…') — the pinned 0016 contract echoes the requested view")
-    if "window" not in payload:
-        errs.append("payload.window missing — the pinned 0016 contract echoes the slice's time window")
+        errs.append(f"payload.view {view!r} is not a qualified view name ('mi.…') — the contract echoes the requested view")
+    elif view not in ALLOWLISTED_VIEWS:
+        errs.append(f"payload.view {view!r} is not in the mi_slice allowlist {list(ALLOWLISTED_VIEWS)} (ADR-13)")
+    window = payload.get("window")
+    if not isinstance(window, dict) or any(k not in window for k in WINDOW_KEYS):
+        errs.append("payload.window must carry from_week, to_week, anchored_on — the anchored window is the slice's time scope (0016)")
     rows = payload.get("rows")
     if not isinstance(rows, list):
         return ["payload.rows is not a list"]
     denoms = payload.get("denominators")
-    if not isinstance(denoms, dict) or not denoms:
-        return ["payload.denominators missing or empty — every rate names its denominator (§3.3 rule 2)"]
-    lenses_seen: set[str] = set()
+    if not isinstance(denoms, dict):
+        return ["payload.denominators missing — every rate names its denominator (§3.3 rule 2)"]
+    missing_den = [k for k in CANONICAL_DENOM_KEYS if k not in denoms]
+    if missing_den:
+        errs.append(f"denominators missing canonical lens key(s) {missing_den} — 0016 returns all four (§3.3 rule 2)")
+    lensed = view in FLOOR_VIEWS or view == "mi.company_timeline"
     for i, row in enumerate(rows):
         if not isinstance(row, dict):
             errs.append(f"row {i}: not an object")
             continue
-        lens = row.get("lens")
-        if lens is None:
-            errs.append(f"row {i}: missing lens — lenses are never implied or merged (§3.3 rule 1)")
-        elif lens not in LENSES:
-            errs.append(f"row {i}: lens {lens!r} not in {list(LENSES)} ('all' is forbidden — never blend)")
-        else:
-            lenses_seen.add(lens)
-        flag = row.get("floor_flag")
-        if flag is None:
-            errs.append(f"row {i}: missing floor_flag — fail closed; the view must grade every row (§3.3 rule 3)")
-        elif flag not in ("ok", FLOOR_FLAG):
-            errs.append(f"row {i}: unknown floor_flag {flag!r}")
-        if "lead_weeks" in row:
+        if lensed:
+            lens = row.get("lens")
+            if lens is None:
+                errs.append(f"row {i}: missing lens — lenses are never implied or merged (§3.3 rule 1)")
+            elif lens not in LENSES:
+                errs.append(f"row {i}: lens {lens!r} not in {list(LENSES)} ('all' is forbidden — never blend)")
+        if view in FLOOR_VIEWS:
+            flag = row.get("floor_flag")
+            if flag is None:
+                errs.append(f"row {i}: missing floor_flag — fail closed; the view must grade every row (§3.3 rule 3)")
+            elif flag not in ("ok", FLOOR_FLAG):
+                errs.append(f"row {i}: unknown floor_flag {flag!r}")
+        if "market_lead_weeks" in row or view == "mi.theme_lead_lag":
             gate = row.get("lead_lag_shown")
             if not isinstance(gate, bool):
-                errs.append(f"row {i}: lead_weeks without boolean lead_lag_shown — a lead renders only when mi.theme_lead_lag says both lenses clear the floor")
-            elif gate and flag == FLOOR_FLAG:
-                errs.append(f"row {i}: lead_lag_shown is true on a floored row — lead_lag_shown is true only when both lenses clear the floor")
-    missing_den = sorted(lenses_seen - set(denoms))
-    if missing_den:
-        errs.append(f"denominators missing for lens(es) {missing_den} present in rows (§3.3 rule 2)")
+                errs.append(f"row {i}: theme_lead_lag row without boolean lead_lag_shown — the lead renders only when both lenses clear the floor")
+            elif gate and row.get("market_lead_weeks") is None:
+                errs.append(f"row {i}: lead_lag_shown true but market_lead_weeks missing")
     return errs
 
 
 def descriptor_lens_error(payload: dict, descriptor: dict) -> str:
     """Named-slice guard: the payload's lens set must equal the descriptor's — a payload whose
-    lenses disagree with the registry is a different slice than the one asked for (fail closed)."""
+    lenses disagree with the registry is a different slice than the one asked for (fail closed).
+    Lens-less views (mi.theme_lead_lag, mi.company_cohort) match descriptors with no lenses."""
     got = sorted({r.get("lens") for r in payload.get("rows", []) if isinstance(r, dict)} - {None})
     want = sorted(descriptor.get("lenses") or [])
     if got != want:
@@ -195,31 +241,80 @@ def descriptor_lens_error(payload: dict, descriptor: dict) -> str:
 
 # ---------------------------------------------------------------- pure: rendering
 
-# Marker fields ride on rows but are labels, not dimension columns.
-MARKER_FIELDS = ("theme_resolved",)
-
-
 def _fmt_cell(row: dict) -> str:
     """One lens's cell: measures, general-topic counts labelled, floor applied. A floored cell
-    suppresses its numbers (including lead_weeks) — 'no information', never a naked ratio."""
+    suppresses its numbers — 'insufficient_data', never a naked ratio."""
     if row.get("floor_flag") == FLOOR_FLAG:
-        return "insufficient_data" if "lead_weeks" not in row else "no information (floor)"
-    if "lead_weeks" in row and row.get("lead_lag_shown") is not True:
-        return "no information (floor)"  # gate not shown: suppress the lead figure entirely
+        return FLOOR_FLAG
     parts = []
     facts = row.get("facts")
     if facts is not None:
         g = row.get("general_facts")
         parts.append(f"{facts} ({g} general)" if g else str(facts))
-    for k in ("companies", "sources", "lead_weeks"):
+    for k, label in (("distinct_companies", "co="), ("distinct_sources", "src=")):
         if row.get(k) is not None:
-            parts.append(f"{k[:2]}={row[k]}" if k != "lead_weeks" else f"lead {row[k]}w")
+            parts.append(f"{label}{row[k]}")
     return " ".join(parts) if parts else "—"
 
 
+def _fmt_den(lens: str, den) -> str:
+    """One lens's denominator, printed as named key=value pairs — a rate never prints alone."""
+    if not isinstance(den, dict):
+        return f"denominator {lens}: {den}"
+    return "denominator {}: {}".format(lens, "; ".join(
+        f"{k}={json.dumps(v, sort_keys=True) if isinstance(v, dict) else v}" for k, v in den.items()))
+
+
+def _window_line(payload: dict) -> str:
+    w = payload.get("window") or {}
+    return "window: {} → {} (anchored on {})".format(w.get("from_week"), w.get("to_week"), w.get("anchored_on"))
+
+
+def _render_lead_lag(payload: dict, title: str) -> str:
+    """mi.theme_lead_lag: one row per theme. The lead prints ONLY on lead_lag_shown=true;
+    when false the cell reads insufficient_data and the 8-week counts stay in their own
+    columns — the null state is rendered, not hidden (0016: the view still returns
+    market_lead_weeks, consumers must not render it)."""
+    rows = [r for r in payload["rows"] if isinstance(r, dict)]
+    head = f"{'theme':<40} | {'attended 8w':>12} | {'market 8w':>10} | {'market lead':>28}"
+    lines = [f"== {title} ==", head, "-" * len(head)]
+    for r in sorted(rows, key=lambda r: str(r.get("theme"))):
+        a, m = r.get("attended_count_8w"), r.get("market_count_8w")
+        if r.get("lead_lag_shown") is True and r.get("market_lead_weeks") is not None:
+            lead = f"market led by {r['market_lead_weeks']}w"
+        else:
+            lead = f"{FLOOR_FLAG} (a={a}, m={m})"  # the correct null state — visible, not hidden
+        lines.append(f"{str(r.get('theme')):<40} | {str(a):>12} | {str(m):>10} | {lead:>28}")
+    lines.append("-" * len(head))
+    lines.append(_window_line(payload))
+    lines.append("note: lead renders only when BOTH lenses clear the 3-fact floor (lead_lag_shown); "
+                 "otherwise insufficient_data with the counts beside it — never a naked ratio")
+    return "\n".join(lines) + "\n"
+
+
+def _render_cohort(payload: dict, title: str) -> str:
+    """mi.company_cohort: all-time rows, no lens, no floor — first-seen quarters plus the
+    CURRENT segment (open row). No target tier column exists (ADR-13 F1)."""
+    rows = [r for r in payload["rows"] if isinstance(r, dict)]
+    cols = [k for k in rows[0] if k not in ID_FIELDS] if rows else []
+    lines = [f"== {title} ==", " | ".join(cols), "-" * 80]
+    for r in sorted(rows, key=lambda r: str(r.get("first_seen_any")), reverse=True):
+        lines.append(" | ".join(str(r.get(c)) if r.get(c) is not None else "—" for c in cols))
+    lines.append("-" * 80)
+    lines.append(_window_line(payload))
+    lines.append("note: all-time cohort; segments are the CURRENT open segment row, not as-of the fact")
+    return "\n".join(lines) + "\n"
+
+
 def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
-    """Payload → text table: dimension columns, one column per lens (adjacent, never summed),
-    denominator line per lens, notes for (general) rows and --lens exclusions."""
+    """Payload → text table. Lensed views: dimension columns, one column per lens (adjacent,
+    never summed), denominator line per lens. Lens-less views dispatch to their own renderers."""
+    view = payload.get("view")
+    if view == "mi.theme_lead_lag":
+        return _render_lead_lag(payload, title)
+    if view == "mi.company_cohort":
+        return _render_cohort(payload, title)
+
     rows = [dict(r) for r in payload["rows"]]
     excluded = 0
     if lens_filter:
@@ -231,19 +326,23 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
     dim_keys: list[str] = []
     for r in rows:
         for k in r:
-            if k not in ("lens", "floor_flag", *MARKER_FIELDS) and k not in MEASURE_FIELDS and k not in dim_keys:
+            if k not in ("lens", "floor_flag", *MARKER_FIELDS, *ID_FIELDS) and k not in MEASURE_FIELDS and k not in dim_keys:
                 dim_keys.append(k)
     lenses = [l for l in LENSES if any(r["lens"] == l for r in rows)]
+
+    def _hashable(v):
+        return tuple(v) if isinstance(v, list) else v  # timeline kinds/signal_types are arrays
+
     groups: dict[tuple, dict[str, dict]] = {}
     for r in rows:
-        key = tuple((k, r.get(k)) for k in dim_keys)
+        key = tuple((k, _hashable(r.get(k))) for k in dim_keys)
         groups.setdefault(key, {})[r["lens"]] = r
 
     def group_label(key: tuple, group: dict | None = None) -> str:
         vals = dict(key)
         base = " ".join(str(v) for v in vals.values())
         rows_iter = group.values() if group else ()
-        if any(r.get("topic") == GENERAL_TOPIC for r in rows_iter):
+        if any(r.get("topic") == GENERAL_TOPIC or r.get("theme") == GENERAL_TOPIC for r in rows_iter):
             base += " [general]"
         if any(r.get("theme_resolved") == "seed" for r in rows_iter):
             base += " [seed]"  # theme_resolved marker — a label, never a dimension column
@@ -257,11 +356,12 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
         lines.append(f"{group_label(key, groups[key]):<{width}} | " + " | ".join(f"{c:>18}" for c in cells))
     lines.append("-" * len(head))
     lines.append(f"dimensions: {' | '.join(dim_keys)}")
+    lines.append(_window_line(payload))
     lines.append("-" * len(head))
     for lens in lenses:
         if payload["denominators"].get(lens):
-            lines.append(f"denominator {lens}: {payload['denominators'][lens]}")
-    if any(dict(k).get("topic") == GENERAL_TOPIC for k in groups):
+            lines.append(_fmt_den(lens, payload["denominators"][lens]))
+    if any(dict(k).get("topic") == GENERAL_TOPIC or dict(k).get("theme") == GENERAL_TOPIC for k in groups):
         lines.append(f"note: rows marked [general] count the theme's {GENERAL_TOPIC} topic — labelled, never merged into named topics")
     if lens_filter:
         lines.append(f"note: --lens {lens_filter}; {excluded} row(s) of other lenses excluded, not merged")
@@ -287,35 +387,45 @@ def selftest() -> int:
     good = {k: v for k, v in fixtures.items() if not k.startswith("_")}
     bad = {k: v for k, v in fixtures.items() if k.startswith("_")}
 
-    # registry: the six canonical §4 slices parse from slices.md
+    # registry: the canonical §4 slices parse from slices.md
     reg = load_registry(open(SLICES_MD, encoding="utf-8").read())
-    canonical = {"attended_vs_market_by_theme_8w", "funded_not_attended_90d", "target_companies_heating_qtd",
-                 "new_nyc_companies_by_quarter", "research_without_room_corroboration", "frontier_vs_room"}
-    check("slices.md: all six canonical slices parse with name+view", canonical <= set(reg))
-    check("slices.md: every descriptor names its expected lenses",
-          all(isinstance(d.get("lenses"), list) and d["lenses"] for d in reg.values()))
+    canonical = {"attended_vs_market_by_theme_8w", "funded_not_attended_13w", "companies_heating_8w",
+                 "new_nyc_companies_by_quarter", "research_without_room_corroboration",
+                 "frontier_vs_room", "theme_lead_lag_8w"}
+    check("slices.md: all canonical slices parse with name+view", canonical <= set(reg))
+    check("slices.md: every descriptor's view is in the 0016 allowlist",
+          all(d["view"] in ALLOWLISTED_VIEWS for d in reg.values()))
+    check("slices.md: every descriptor's filters pass the client pre-flight",
+          all(filters_error(d.get("filters", {})) == "" for d in reg.values()))
     check("slices.md: descriptors never ask for a blended 'all' lens",
-          all("all" not in d["lenses"] for d in reg.values()))
+          all("all" not in (d.get("lenses") or []) for d in reg.values()))
+    check("slices.md: lensed descriptors name lenses; lens-less ones name none",
+          all((d.get("lenses") or []) == [] for n_, d in reg.items() if n_ in ("theme_lead_lag_8w", "new_nyc_companies_by_quarter"))
+          and all(d.get("lenses") for n_, d in reg.items() if n_ not in ("theme_lead_lag_8w", "new_nyc_companies_by_quarter")))
+    check("slices.md: no target_tier anywhere — 0016 dropped it (ADR-13 F1)",
+          "target_tier" not in open(SLICES_MD, encoding="utf-8").read())
 
     # contract: every good fixture validates, every negative fixture fails for the right reason
     for name, payload in sorted(good.items()):
         check(f"contract: {name} validates", validate_payload(payload) == [])
     check("contract: missing denominators rejected",
           any("denominators" in e for e in validate_payload(bad["_invalid_missing_denominator"])))
+    check("contract: denominators missing a canonical lens key rejected",
+          any("canonical" in e for e in validate_payload(bad["_invalid_denominator_gap"])))
     check("contract: blended lens 'all' rejected",
           any("never blend" in e for e in validate_payload(bad["_invalid_blended_lens"])))
-    check("contract: missing lens on a row rejected",
+    check("contract: missing lens on a lensed row rejected",
           any("missing lens" in e for e in validate_payload(bad["_invalid_missing_lens"])))
-    check("contract: denominator missing for a present lens rejected",
-          any("§3.3 rule 2" in e for e in validate_payload(bad["_invalid_denominator_gap"])))
     check("contract: non-dict payload rejected", validate_payload([1, 2]) != [])
     check("contract: payload without window rejected",
           any("window" in e for e in validate_payload(bad["_invalid_missing_window"])))
     check("contract: unqualified view name rejected",
           any("qualified view" in e for e in validate_payload(bad["_invalid_unqualified_view"])))
+    check("contract: view outside the allowlist rejected",
+          any("allowlist" in e for e in validate_payload(bad["_invalid_unknown_view"])))
     check("contract: missing floor_flag rejected (fail closed)",
           any("missing floor_flag" in e for e in validate_payload(bad["_invalid_missing_floor_flag"])))
-    check("contract: lead_weeks without lead_lag_shown rejected",
+    check("contract: lead row without boolean lead_lag_shown rejected",
           any("lead_lag_shown" in e for e in validate_payload(bad["_invalid_lead_without_gate"])))
     check("descriptor: frontier_vs_room names market+attended (papers are market events; research = claims)",
           sorted(reg["frontier_vs_room"]["lenses"]) == ["attended", "market"])
@@ -336,23 +446,31 @@ def selftest() -> int:
     check("render: floored cell reads insufficient_data, numbers suppressed", "insufficient_data" in avm)
     check("render: (general) topic row is marked, not folded in", "[general]" in avm)
     check("render: theme_resolved seed marker printed, not a column", "[seed]" in avm)
+    check("render: anchored window printed", "window: 2026-W37 → 2026-W44 (anchored on 2026-11-04)" in avm)
+    check("render: id columns are join keys, not displayed", "theme_id" not in avm.split("dimensions")[0])
 
-    fv = render(good["frontier_vs_room"], "frontier_vs_room")
-    check("lead/lag: lead shown when both lenses clear the floor", "lead 6w" in fv)
-    check("lead/lag: floored lead suppressed as 'no information (floor)'", "no information (floor)" in fv)
-    check("lead/lag: suppressed lead number absent from output",
-          not any(ln.strip().endswith("lead 14w") for ln in fv.splitlines()))
+    # lead/lag: its own view; the false gate is the correct null state and is rendered, not hidden
+    ll = render(good["theme_lead_lag_8w"], "theme_lead_lag_8w")
+    check("lead/lag: lead shown when both lenses clear the floor", "market led by 6.0w" in ll)
+    check("lead/lag: false gate renders insufficient_data WITH the counts beside it (nothing hidden)",
+          "insufficient_data (a=4, m=0)" in ll)
+    check("lead/lag: gated lead number absent from output",
+          not any("market led by 14" in ln for ln in ll.splitlines()))
+    check("lead/lag: 8-week counts always visible", "market 8w" in ll)
 
-    tl = render(good["target_companies_heating_qtd"], "target_companies_heating_qtd")
-    check("time: asserted_at and observed_at both carried to the table",
-          "asserted_at" in tl and "observed_at" in tl)
-    check("segment: company segment columns render (stage as-of the fact)",
-          "seed" in tl and "series_a" in tl)
+    ht = render(good["companies_heating_8w"], "companies_heating_8w")
+    check("time: asserted and observed times both carried to the table",
+          "first_asserted_at" in ht and "last_asserted_at" in ht)
+
+    cc = render(good["new_nyc_companies_by_quarter"], "new_nyc_companies_by_quarter")
+    check("cohort: lens-less render — no lens column implied", "lens" not in cc.split("==")[1])
+    check("segment: current segment columns render (open row, not as-of)",
+          "seed" in cc and "series_a" in cc)
+    check("cohort: no target tier anywhere (ADR-13 F1)",
+          "target_tier" not in cc and "target_tier" not in json.dumps(good))
 
     rc = render(good["research_without_room_corroboration"], "research_without_room_corroboration")
     check("research lens: renders alone, no attended column implied", "market" not in rc.split("==")[1])
-    check("time: research slices bucket on asserted_at, observed_at printed beside",
-          "asserted_at" in rc and "observed_at" in rc)
 
     # --lens filter: excludes, never merges
     avm_att = render(good["attended_vs_market_by_theme_8w"], "attended_vs_market_by_theme_8w",
@@ -362,14 +480,20 @@ def selftest() -> int:
     check("--lens: remaining rows are only the requested lens",
           all(("| market" not in ln) for ln in avm_att.splitlines()[2:-1]))
 
+    # filters: the client pre-flights the same allowlist 0016 enforces server-side
+    check("filters: unknown key rejected client-side", "unknown filter" in filters_error({"kinds": ["funding"]}))
+    check("filters: bad lens value rejected client-side", filters_error({"lens": "all"}) != "")
+    check("filters: out-of-range weeks rejected client-side", filters_error({"weeks": 0}) != "")
+    check("filters: live filter keys accepted", filters_error({"weeks": 8, "lens": "market", "limit": 100}) == "")
+
     # request shaping: GET path, jsonb filters encoded, twin default, prod gate
     import urllib.parse
-    path, body = rpc_request_parts("mi.theme_week", {"lenses": ["attended", "market"], "window_weeks": 8})
+    path, body = rpc_request_parts("mi.theme_week", {"weeks": 8, "lens": "attended"})
     check("rpc: GET request path carries view + filters, empty body",
           path.startswith(f"{REST_PREFIX}/rpc/mi_slice?") and "view=mi.theme_week" in path
-          and json.loads(urllib.parse.parse_qs(path.split("?")[1])["filters"][0]) == {"lenses": ["attended", "market"], "window_weeks": 8}
+          and json.loads(urllib.parse.parse_qs(path.split("?")[1])["filters"][0]) == {"weeks": 8, "lens": "attended"}
           and body == "")
-    check("rpc: no request-body path exists — mi_slice is GET-callable (pinned 0016 contract)",
+    check("rpc: no request-body path exists — mi_slice is GET-callable (0016 contract)",
           not re.search(r'conn\.request\(\s*"POST"', open(__file__, encoding="utf-8").read()))
     check("rpc: prod ref refused without --allow-prod (enforced in main, pinned here)",
           PROD_REF != TWIN_REF and PROD_REF == "oicikjyzmxqfomrrqkvf")
@@ -389,15 +513,14 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", nargs="?", choices=["run", "adhoc", "list"], help="run a named slice / one-off / list registry")
     ap.add_argument("name", nargs="?", help="canonical slice name (see `slice.py list`)")
-    ap.add_argument("--view", help="adhoc: mi view to slice (e.g. mi.theme_week)")
+    ap.add_argument("--view", help="adhoc: mi view to slice (must be in the 0016 allowlist)")
     ap.add_argument("--filters", help="adhoc: filters JSON for mi_slice (default {})")
     ap.add_argument("--sql-ref", help="adhoc: path to a descriptor JSON file ({name, view, filters, lenses})")
-    ap.add_argument("--since", help="narrow the slice to facts asserted on/after YYYY-MM-DD")
-    ap.add_argument("--lens", choices=LENSES, help="render only this lens (others excluded, never merged)")
+    ap.add_argument("--lens", choices=LENSES, help="render only this lens (server-side filter + client exclusion, never merged)")
     ap.add_argument("--url", help=f"override target REST base (default: twin {TWIN_REF}.supabase.co)")
     ap.add_argument("--key-file", help="path to a service key file (default: SLICE_API_KEY env)")
     ap.add_argument("--allow-prod", action="store_true",
-                    help=f"permit targeting prod ({PROD_REF}) — only after migration 0016 is applied")
+                    help=f"permit targeting prod ({PROD_REF}) — read-only mi_slice GETs only")
     ap.add_argument("--json", action="store_true", help="print the validated payload instead of the table")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
@@ -411,9 +534,11 @@ def main(argv: list[str]) -> int:
             print(f"slice.py: cannot read {SLICES_MD}: {e}", file=sys.stderr)
             return 3
         for name_, d in sorted(reg.items()):
-            print(f"{name_}  [{','.join(d['lenses'])}]  {d['view']}\n    {d.get('question', '')}")
+            lenses = ",".join(d.get("lenses") or ["(lens-less)"])
+            print(f"{name_}  [{lenses}]  {d['view']}\n    {d.get('question', '')}")
         return 0
 
+    d = None
     if a.cmd == "adhoc":
         if not a.view and not a.sql_ref:
             print("slice.py adhoc: pass --view V (and optional --filters JSON) or --sql-ref F", file=sys.stderr)
@@ -424,7 +549,7 @@ def main(argv: list[str]) -> int:
             except (OSError, json.JSONDecodeError) as e:
                 print(f"slice.py: cannot read --sql-ref {a.sql_ref}: {e}", file=sys.stderr)
                 return 3
-            view, filters = d["view"], d.get("filters", {})
+            view, filters = d["view"], dict(d.get("filters", {}))
         else:
             view, filters = a.view, json.loads(a.filters) if a.filters else {}
     elif a.cmd == "run":
@@ -445,14 +570,18 @@ def main(argv: list[str]) -> int:
         ap.print_help()
         return 2
 
-    if a.since:
-        filters["since"] = a.since   # asserted_at floor — slices bucket on when it was true (§3.1)
+    if a.lens and view != "mi.theme_lead_lag" and view != "mi.company_cohort":
+        filters["lens"] = a.lens  # server-side single-lens filter; the renderer also excludes
+    fe = filters_error(filters)
+    if fe:
+        print(f"slice.py: {fe}", file=sys.stderr)
+        return 2
 
     ref = TWIN_REF
     if a.url:
         if PROD_REF in a.url and not a.allow_prod:
             print(f"slice.py: refusing prod target without --allow-prod "
-                  f"(mi_slice arrives with migration 0016; until then this stays on the twin)", file=sys.stderr)
+                  f"(mi_slice GETs are read-only; still, prod is opt-in)", file=sys.stderr)
             return 3
         m = re.search(r"https://([a-z0-9]{20})\.supabase\.co", a.url)
         if not m:
