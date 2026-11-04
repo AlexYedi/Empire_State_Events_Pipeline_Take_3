@@ -1,0 +1,111 @@
+# Lane 1 hiring pulse (YED-304) — weekly per-company hiring counts from ATS boards.
+# Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 · producer chain:
+#   ats_pull.py (boards → TSV) → ats_pulse.py (TSV → counts-only manifest) → substrate.py ensure-event.
+#
+# CREDENTIALS — read before editing:
+#   * TARGET_COMPANIES_REGISTRY (repo secret): the full private .claude/references/target-companies.md,
+#     materialised to its expected path at run time (Alex's 2026-11-04 decision). Never echoed, never
+#     logged, never committed, never uploaded as an artifact — removed by an always() cleanup step.
+#   * NO DATABASE CREDENTIALS in this workflow. The prod SUPABASE_API_KEY secret must NEVER appear
+#     here (twin-only rule). spine_client.REF is hardcoded to the prod project, so a live twin
+#     ensure-event needs a spine REF override first — a guarded-path change for human review. Until
+#     migration 0015/0016 lands, the write step is the OFFLINE fixture-backed manifest validation
+#     (ats_pulse.py --validate); the manifest is emitted as a counts-only artifact for audit.
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+name: YED-304 lane 1 hiring pulse (weekly)
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"   # Sundays 06:00 UTC — the Monday brief reads it the next morning
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ats-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Selftest both producers (offline)
+        run: |
+          python3 .claude/scripts/ats_pull.py --selftest
+          python3 .claude/scripts/ats_pulse.py --selftest
+
+      - name: Name this week's bucket (for the cache key)
+        id: week
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize the registry from the repo secret (never echoed or logged)
+        env:
+          TARGET_COMPANIES_REGISTRY: ${{ secrets.TARGET_COMPANIES_REGISTRY }}
+        run: |
+          if [ -z "$TARGET_COMPANIES_REGISTRY" ]; then
+            echo "::error::repo secret TARGET_COMPANIES_REGISTRY is not set — refusing to run the lane with an empty registry"
+            exit 1
+          fi
+          mkdir -p .claude/references
+          printf '%s\n' "$TARGET_COMPANIES_REGISTRY" > .claude/references/target-companies.md
+
+      - name: Restore last week's pulse (the delta_wow baseline)
+        uses: actions/cache@v4
+        with:
+          path: /tmp/ats-pulse
+          key: ats-pulse-${{ steps.week.outputs.week }}
+          restore-keys: |
+            ats-pulse-
+
+      - name: Pull ATS boards to TSV (counts input; zero tokens)
+        run: python3 .claude/scripts/ats_pull.py --out /tmp/roles.tsv
+
+      - name: Aggregate to hiring_pulse counts
+        run: |
+          PRIOR=""
+          [ -f /tmp/ats-pulse/pulse.json ] && PRIOR="--prior /tmp/ats-pulse/pulse.json"
+          mkdir -p /tmp/pulse-out
+          python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --out /tmp/pulse-out/pulse.json
+          mkdir -p /tmp/ats-pulse && cp /tmp/pulse-out/pulse.json /tmp/ats-pulse/pulse.json
+
+      - name: Validate the manifest offline (dry-run write step until migration 0016 + twin REF wiring)
+        run: python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
+
+      - name: Upload the counts-only manifest for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: hiring-pulse-${{ steps.week.outputs.week }}
+          path: /tmp/pulse-out/pulse.json
+
+      - name: Cleanup — remove the materialized registry and the TSV
+        if: always()
+        run: rm -f .claude/references/target-companies.md /tmp/roles.tsv /tmp/ats-pulse/pulse.json
+
+      # Same one-open-issue alerting as the S-01 nightly (L10: a lane that dies quietly is the
+      # historical killer; a persistent failure comments on the existing issue instead of opening
+      # a new one every week — closing the issue re-arms the alert).
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "YED-304 hiring pulse FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "YED-304 hiring pulse FAILED (since $TODAY)" \
+              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, or manifest validation. The failing step in the run says which. The lane freshness alarm (healthcheck, L10) treats this lane as stale at 14 days. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
