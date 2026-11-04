@@ -6,7 +6,9 @@ name: MI topic-intelligence nightly (compute + health-check)
 #      `set role pipeline_writer; select topic_intelligence.compute_topic_intelligence(today)`.
 #      Refuses to write on any mismatch. Needs migration 0012 applied.
 #   2. HEALTH-CHECK — supabase/scripts/healthcheck_2b.py (read-only): stored snapshot vs the
-#      independent recompute + the 8 structural invariants + the anon read-path probe.
+#      independent recompute + the 8 structural invariants + the anon read-path probe + the lane
+#      freshness layer (lane_run staleness >=7 FLAG / >=14 FAIL + coverage, lane_registry
+#      cross-check, role_posted stall) — the lane halves SKIP until migration 0016 is applied.
 # Before 2026-09-28 only step 2 ran and nothing recomputed, so the stored snapshot froze at the
 # 2026-08-10 cutover and step 2 failed every night on staleness (#80 … #140).
 #
@@ -43,6 +45,8 @@ jobs:
           python-version: "3.12"
       - name: Install psql (libpq client)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Offline selftest (freshness fixture + threshold edges, no DB)
+        run: python3 supabase/scripts/healthcheck_2b.py --selftest
       - name: Compute topic intelligence (parity-gated write via pipeline_writer)
         env:
           MI_DB_DSN: ${{ secrets.MI_DB_DSN }}

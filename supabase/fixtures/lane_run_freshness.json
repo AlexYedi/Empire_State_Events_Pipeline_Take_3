@@ -1,0 +1,42 @@
+{
+    "source": "Synthetic lane_run ledger rows for healthcheck_2b.py layer 4 (lane freshness) offline selftest — YED-304 Phase A, market-lens-and-slices §3/§7/§3.3 rule 4. No DB connection, no PII, .example domains only. Migration 0016 owns the real DDL (lane_run + lane_registry); expected_lane_run_columns pins the column shape this layer probes (lane, started_at required; the items/credits columns are the §3 coverage metric). Contract pinned in 0016: FLAG at >=7 days stale, FAIL at >=14; a lane registered in lane_registry with no ledger rows FAILs; coverage — latest 2 consecutive zero-write runs (items_written=0) is a FLAG, 3 is a FAIL.",
+    "as_of": "2026-11-04",
+    "expected_lane_run_columns": ["lane", "started_at", "items_seen", "items_written", "items_refused", "credits_spent"],
+    "registered_lanes": [
+        "0_corpus_mine",
+        "1_hiring_pulse",
+        "2_funding_radar",
+        "3_research_frontier"
+    ],
+    "never_ran_expected": [
+        "2_funding_radar"
+    ],
+    "rows": [
+        {
+            "lane": "0_corpus_mine",
+            "last_run": "2026-11-02",
+            "expected_status": "ok",
+            "recent_runs_items_written": [14, 11, 9],
+            "expected_coverage": "ok"
+        },
+        {
+            "lane": "1_hiring_pulse",
+            "last_run": "2026-10-25",
+            "expected_status": "flag",
+            "recent_runs_items_written": [0, 0, 5],
+            "expected_coverage": "flag"
+        },
+        {
+            "lane": "3_research_frontier",
+            "last_run": "2026-09-30",
+            "expected_status": "fail",
+            "recent_runs_items_written": [0, 0, 0],
+            "expected_coverage": "fail"
+        }
+    ],
+    "role_posted": {
+        "last_event_date": "2026-09-23",
+        "expected_status": "fail",
+        "note": "Mirrors the L10 prod inventory as read 2026-11-04: 183 role_posted events, none since 2026-09-23 — the stall the 14-day FAIL exists to alarm on (fixture dates only, no event rows)."
+    }
+}
