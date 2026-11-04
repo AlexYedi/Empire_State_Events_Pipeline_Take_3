@@ -7,9 +7,18 @@
 # VALUE-SCOPED via condition = "AND" (arrays are required — scalar strings decode to empty
 # lists and AND goes vacuous): a finding is exempt only when its path is under
 # supabase/fixtures/ AND its secret is exactly 64 hex chars — i.e. the sha256 digests of
-# public *.example URLs (feeds.item_key). Nothing else is exempted. Probed empirically with
-# gitleaks 8.30.1 (Alex's matrix on #272, comment 6639875575; kept regression-tested by
-# .claude/scripts/test_gitleaks_allowlist.py, which also runs in CI's secret-scan workflow).
+# public *.example URLs (feeds.item_key). The directory pattern covers every lane's fixtures
+# under supabase/fixtures/, including #272's feeds_items/feeds_sources examples when that PR
+# merges — no per-file pinning needed. Nothing else is exempted. Verified 2026-11-04 in
+# gitleaks 8.30.1 GIT mode (the mode CI's secret-scan.yml runs, per its line 29): legit
+# feeds-fixture digests pass, and a planted sk_live_ token INSIDE feeds_items.example.json
+# is still flagged. Kept regression-tested by .claude/scripts/test_gitleaks_allowlist.py,
+# which also runs in CI's secret-scan workflow.
+#
+# KNOWN LIMITATION (verified 2026-11-04, debug logs): in `gitleaks dir` mode (ad-hoc local
+# working-tree scans, NOT what CI uses) a global allowlist's `paths` skips matched files
+# BEFORE any content evaluation, in scalar or array form — inside such files nothing is
+# value-checked. Verify allowlist changes with `gitleaks git --log-opts=...`, never `dir`.
 #
 # RETRACTED (was 368cc0e): a paths-only allowlist pinned to exact files. Alex's probe showed
 # paths-only entries exempt the WHOLE file — a real credential pasted into an exempted
