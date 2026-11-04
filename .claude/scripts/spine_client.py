@@ -16,6 +16,10 @@ ADR-9 tier 2 (the spine) holds professional-public identity only. Concretely:
 
 Reads (GET) and `/rpc/` calls pass through unguarded — they write nothing.
 
+Refusal telemetry (YED-320): every refusal appends one JSON line to `.claude/.state/pii-refusals.jsonl`
+(gitignored) naming the rule, never the value, then raises exactly as before; every 50th clean row
+records its scan time. Best effort: a telemetry failure is swallowed and the refusal still raises.
+
 Usage from scripts:      from spine_client import req, write, q, PIIViolation
 CLI (see spine_write.py) python3 .claude/scripts/spine_write.py <table> --json '{...}'
 Self-test:               python3 .claude/scripts/spine_client.py --selftest   (27 cases)
@@ -100,6 +104,93 @@ EMAIL_ALLOWLIST_RE = re.compile(r"^(?:noreply|no-reply|donotreply)@|@users\.nore
 
 
 # ---------------------------------------------------------------------------
+# Refusal telemetry (YED-320, measuring the YED-319 decision). Best effort and never in the way: the
+# record is built and written inside try/except, then PIIViolation raises with the same message as
+# before. NEVER the value: regex rules record only a shape (digit -> 9, letter -> a, <=40 chars).
+# Single-threaded like req(): _BATCH and _OK_ROWS are plain module state.
+# ---------------------------------------------------------------------------
+TELEMETRY_PATH = _TELEMETRY_DEFAULT = os.path.join(ROOT, ".claude", ".state", "pii-refusals.jsonl")
+OK_SAMPLE_EVERY = 50             # every Nth clean row records {"rule":"ok_sample","scan_ms",…} (F6); no content
+_BATCH = 1                       # rows in the body being guarded; guard_body sets it, a direct guard() call is 1
+_OK_ROWS = 0
+_PHONE_ALTS: tuple[str, list] | None = None   # (pattern, compiled alternatives): labelling only, never matching
+
+
+def split_alternatives(pattern: str) -> list[str]:
+    """Split a regex source on its TOP-LEVEL `|` (paren depth 0, outside [...], unescaped). The parts
+    joined with `|` are the pattern exactly; the selftest pins that, so labels can never drift."""
+    parts, depth, in_class, start, i = [], 0, False, 0, 0
+    while i < len(pattern):
+        c = pattern[i]
+        if c == "\\":
+            i += 2
+            continue
+        if in_class:
+            in_class = c != "]"
+        elif c == "[":
+            in_class = True
+            i += 2 if pattern[i + 1:i + 3] == "^]" else 1 if pattern[i + 1:i + 2] == "]" else 0  # leading ] is literal
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif c == "|" and depth == 0:
+            parts.append(pattern[start:i])
+            start = i + 1
+        i += 1
+    parts.append(pattern[start:])
+    return parts
+
+
+def _phone_rule(s: str, start: int, pattern: str | None = None) -> str:
+    """Which PHONE_RE alternative matched at `start`: the first one that matches there (re's own order)."""
+    global _PHONE_ALTS
+    pattern = pattern or PHONE_RE.pattern
+    if _PHONE_ALTS is None or _PHONE_ALTS[0] != pattern:
+        _PHONE_ALTS = (pattern, [re.compile(p) for p in split_alternatives(pattern)])
+    for i, alt in enumerate(_PHONE_ALTS[1], 1):
+        if alt.match(s, start):
+            return f"phone_alt{i}"
+    return "phone_unlabelled"
+
+
+def _shape(s: str) -> str:
+    return "".join("9" if c.isdigit() else "a" if c.isalpha() else c for c in s)[:40]
+
+
+def _record(rec: dict) -> None:
+    # Any script's --selftest (substrate.py runs clean rows through guard) must never pollute the real
+    # measurement; spine's own selftest points TELEMETRY_PATH at a scratch file, so it still records there.
+    if "--selftest" in sys.argv and TELEMETRY_PATH == _TELEMETRY_DEFAULT:
+        return
+    try:
+        os.makedirs(os.path.dirname(TELEMETRY_PATH), exist_ok=True)
+        with open(TELEMETRY_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, sort_keys=True) + "\n")
+    except Exception:
+        pass                         # telemetry never blocks, weakens or replaces a refusal
+
+
+def _refuse(rule: str, table: str, path: str, msg: str, *, text: str | None = None, span=None, t0=None):
+    """Record one refusal (best effort), then raise PIIViolation(msg), the exact exception as before."""
+    try:
+        rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "table": table, "rule": rule,
+               # a dict KEY is not scanned, so shape any email/phone-looking key segment of the path too
+               "path": PHONE_RE.sub(lambda m: _shape(m.group(0)), EMAIL_RE.sub(lambda m: _shape(m.group(0)), path)),
+               "batch_size": _BATCH, "caller": os.path.basename(sys.argv[0]) if sys.argv and sys.argv[0] else ""}
+        if text is not None and span is not None:
+            if rule == "phone":
+                rec["rule"] = _phone_rule(text, span[0])
+            rec["shape"] = _shape(text[span[0]:span[1]])
+        if t0 is not None:
+            rec["scan_ms"] = round((time.perf_counter() - t0) * 1000, 3)
+        _record(rec)
+    except Exception:
+        pass
+    raise PIIViolation(msg)
+
+
+# ---------------------------------------------------------------------------
 # Tier-0 backstop: the inbox denylist (skip-list). Parsed from the human-readable markdown so the
 # boundary stays a single, auditable file. Exact domains, subdomain suffixes, and `*` globs.
 # ---------------------------------------------------------------------------
@@ -155,39 +246,48 @@ def _walk(value, path=""):
 
 
 def _scan_pii(row: dict, table: str) -> None:
+    global _OK_ROWS
+    t0 = time.perf_counter()
     for path, s in _walk(row):
         for m in EMAIL_RE.finditer(s):
             if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
-                raise PIIViolation(
-                    f"{table}.{path} contains an email address · ADR-9 tier 2: contact PII never enters "
-                    f"the spine · fix: drop it from the producer (contact detail belongs in HubSpot)")
-        if PHONE_RE.search(s):
-            raise PIIViolation(
-                f"{table}.{path} contains a phone number · ADR-9 tier 2: contact PII never enters the "
-                f"spine · fix: drop it from the producer (contact detail belongs in HubSpot)")
+                _refuse("email", table, path,
+                        f"{table}.{path} contains an email address · ADR-9 tier 2: contact PII never enters "
+                        f"the spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
+                        text=s, span=m.span(), t0=t0)
+        m = PHONE_RE.search(s)
+        if m:
+            _refuse("phone", table, path,
+                    f"{table}.{path} contains a phone number · ADR-9 tier 2: contact PII never enters the "
+                    f"spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
+                    text=s, span=m.span(), t0=t0)
+    _OK_ROWS += 1
+    if _OK_ROWS % OK_SAMPLE_EVERY == 0:
+        _record({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "rule": "ok_sample", "table": table,
+                 "scan_ms": round((time.perf_counter() - t0) * 1000, 3)})
 
 
 def guard(table: str, row: dict, *, op: str = "insert") -> dict:
     """Validate one row for `table`. Returns the row unchanged or raises PIIViolation."""
     table = table.strip("/").split("?")[0]
     if not isinstance(row, dict):
-        raise PIIViolation(f"{table}: body must be a JSON object per row · got {type(row).__name__}")
+        _refuse("body_type", table, "", f"{table}: body must be a JSON object per row · got {type(row).__name__}")
     if table not in ALLOW:
-        raise PIIViolation(
-            f"{table}: no ADR-9 allowlist for this table (fail-closed) · fix: add its columns to "
-            f"spine_client.ALLOW after checking the schema for PII")
+        _refuse("no_allowlist", table, "",
+                f"{table}: no ADR-9 allowlist for this table (fail-closed) · fix: add its columns to "
+                f"spine_client.ALLOW after checking the schema for PII")
     for col, val in row.items():
         c = col.lower()
         if val is None:
             continue                       # nulling any column is always permitted
         if c in FORBIDDEN_COLUMNS:
-            raise PIIViolation(
-                f"{table}.{col} is a contact-PII column · ADR-9 tier 2: email/phone never enter the "
-                f"spine · fix: remove the field; store contact detail in HubSpot")
+            _refuse("forbidden_column", table, str(col),
+                    f"{table}.{col} is a contact-PII column · ADR-9 tier 2: email/phone never enter the "
+                    f"spine · fix: remove the field; store contact detail in HubSpot")
         if c not in ALLOW[table]:
-            raise PIIViolation(
-                f"{table}.{col} is not an allowlisted column for {op} · ADR-9: only known professional "
-                f"fields may be set · fix: use an allowlisted column or extend ALLOW[{table!r}] deliberately")
+            _refuse("not_allowlisted", table, str(col),
+                    f"{table}.{col} is not an allowlisted column for {op} · ADR-9: only known professional "
+                    f"fields may be set · fix: use an allowlisted column or extend ALLOW[{table!r}] deliberately")
     _scan_pii(row, table)
     src = str(row.get("source") or "")
     if src.startswith("inbox_miner"):
@@ -195,9 +295,9 @@ def guard(table: str, row: dict, *, op: str = "insert") -> dict:
         for key in ("sender_domain", "from_domain", "domain"):
             host = meta.get(key) if isinstance(meta, dict) else None
             if host and domain_denylisted(str(host)):
-                raise PIIViolation(
-                    f"{table}.metadata.{key}={host!r} is on inbox-denylist.md · ADR-9 tier 0: never "
-                    f"enters · fix: the scan should have skipped this thread (YED-161)")
+                _refuse("inbox_denylist", table, f"metadata.{key}",
+                        f"{table}.metadata.{key}={host!r} is on inbox-denylist.md · ADR-9 tier 0: never "
+                        f"enters · fix: the scan should have skipped this thread (YED-161)")
     return row
 
 
@@ -206,9 +306,14 @@ def guard_body(path: str, body) -> None:
     table = path.strip("/").split("?")[0]
     if table.startswith("rpc/"):
         return
+    global _BATCH
     rows = body if isinstance(body, list) else [body]
-    for r in rows:
-        guard(table, r)
+    _BATCH = len(rows)
+    try:
+        for r in rows:
+            guard(table, r)
+    finally:
+        _BATCH = 1
 
 
 # ---------------------------------------------------------------------------
@@ -406,8 +511,22 @@ def check_writers() -> tuple[list[str], list[str]]:
 # ---------------------------------------------------------------------------
 # Self-test — the living acceptance layer (AC1). Positive AND negative cases.
 # ---------------------------------------------------------------------------
+# A local 3-alternative fixture: PR #277's PHONE_RE (YED-309), so labelling is proven against the shape
+# the guard is about to carry as well as the 2-alternative one on main. Selftest-only; matches nothing live.
+_FIXTURE_3ALT = (
+    r"(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"
+    r"|(?<![\w.])\+\d{10,15}(?![\w])"
+    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))"
+    r"\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)"
+)
+
+
 def selftest() -> bool:
     deny = ({"bank.example", "irs.gov"}, ["*.gov", "myhealth*"])
+    import tempfile
+    g = globals()
+    # Every refusal below would append to the real telemetry file: point it at a scratch file instead.
+    real_tel, g["TELEMETRY_PATH"] = g["TELEMETRY_PATH"], os.path.join(tempfile.mkdtemp(prefix="spine_selftest_"), "t.jsonl")
     cases: list[tuple[str, callable, bool]] = []  # (name, thunk, expect_violation)
 
     def add(name, fn, expect):
@@ -612,6 +731,140 @@ def selftest() -> bool:
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
+    # --- YED-320 refusal telemetry ------------------------------------------------------------------
+    def _fail(why):
+        raise PIIViolation(why)        # in a False-expect case, raising = the case fails
+
+    def _splitter_case():
+        live = split_alternatives(PHONE_RE.pattern)
+        fx = split_alternatives(_FIXTURE_3ALT)
+        if "|".join(live) != PHONE_RE.pattern or len(live) not in (2, 3):
+            _fail(f"live split drifted ({len(live)} parts)")
+        if "|".join(fx) != _FIXTURE_3ALT or len(fx) != 3:
+            _fail(f"fixture split drifted ({len(fx)} parts)")
+        if split_alternatives(r"a(b|c)|[|(]d|\|e|[]|]f") != ["a(b|c)", "[|(]d", r"\|e", "[]|]f"]:
+            _fail("splitter mishandles groups / classes / escapes")
+        for text, want in (("call 555-123-4567", "phone_alt1"), ("+15551234567", "phone_alt2"),
+                           ("+44 20 7946 0958", "phone_alt3")):
+            m = re.search(_FIXTURE_3ALT, text)
+            got = _phone_rule(text, m.start(), _FIXTURE_3ALT)
+            if got != want:
+                _fail(f"{text!r} labelled {got}, want {want}")
+        m = PHONE_RE.search("555-123-4567")
+        if _phone_rule("555-123-4567", m.start()) != "phone_alt1":
+            _fail("live pattern labelling broke")
+    add("telemetry: alternative splitter joins back to PHONE_RE exactly (live + 3-alt fixture); labels alt1/2/3",
+        _splitter_case, False)
+
+    def _read_tel():
+        try:
+            return [json.loads(x) for x in open(g["TELEMETRY_PATH"], encoding="utf-8")]
+        except FileNotFoundError:
+            return []
+
+    def _no_value_case():
+        g["PHONE_RE"], live_re = re.compile(_FIXTURE_3ALT), g["PHONE_RE"]   # #277 shape, so +44 is refused
+        open(g["TELEMETRY_PATH"], "w").close()
+        inputs = [("+44 20 7946 0958", "phone_alt3", "+99 99 9999 9999"),
+                  ("555-123-4567", "phone_alt1", "999-999-9999"),
+                  ("jane.doe@example.com", "email", "aaaa.aaa@aaaaaaa.aaa")]
+        try:
+            for value, _, _ in inputs:
+                try:
+                    guard_body("/person", [{"name": "ok"}, {"name": "n", "bio": f"reach me: {value}"}, {"name": "z"}])
+                    _fail(f"{value!r} not refused")
+                except PIIViolation as e:
+                    if value in str(e):
+                        _fail("refusal message changed shape")
+        finally:
+            g["PHONE_RE"] = live_re
+        recs = _read_tel()
+        if len(recs) != 3:
+            _fail(f"{len(recs)} records for 3 refusals")
+        letters = {w[i:i + 3] for w in ("jane", "doe", "example", "com") for i in range(len(w) - 2)}
+        for (value, rule, shape), r in zip(inputs, recs):
+            if set(r) != {"ts", "table", "path", "rule", "batch_size", "caller", "shape", "scan_ms"}:
+                _fail(f"unexpected fields {sorted(r)}")
+            if (r["rule"], r["shape"], r["table"], r["path"], r["batch_size"]) != (rule, shape, "person", "bio", 3):
+                _fail(f"record {r} != {(rule, shape, 'person', 'bio', 3)}")
+            # ts is the clock; rule is a fixed label pinned to the expected value just above
+            strings = [v for k, v in r.items() if isinstance(v, str) and k not in ("ts", "rule")]
+            if any(ch.isdigit() and ch != "9" for v in strings for ch in v):   # 9 = the shape's digit mask
+                _fail("an input digit reached a string field")
+            if any(t in json.dumps(r).lower() for t in letters):
+                _fail("a 3-letter run of the email reached the record")
+            if not isinstance(r["scan_ms"], (int, float)) or value.replace(" ", "") in json.dumps(r):
+                _fail("scan_ms missing or value leaked")
+    add("telemetry: refusals of +44 20 7946 0958 / 555-123-4567 / an email record rule + shape, never the value",
+        _no_value_case, False)
+
+    def _unwritable_case():
+        bad = {"name": "n", "bio": "555-123-4567"}
+        want = None
+        try:
+            guard("person", bad)
+        except PIIViolation as e:
+            want = str(e)
+        saved_path, saved_shape = g["TELEMETRY_PATH"], g["_shape"]
+        try:
+            g["TELEMETRY_PATH"] = os.path.join(os.devnull, "no", "pii.jsonl")       # cannot be created
+            for broken in (False, True):
+                if broken:
+                    g["_shape"] = lambda s: 1 / 0                                    # telemetry itself throws
+                try:
+                    guard("person", bad)
+                    _fail("refusal lost when telemetry failed")
+                except PIIViolation as e:
+                    if want is None or str(e) != want:
+                        _fail("refusal message changed when telemetry failed")
+        finally:
+            g["TELEMETRY_PATH"], g["_shape"] = saved_path, saved_shape
+    add("telemetry: an unwritable path or a telemetry exception leaves the refusal intact (same message)",
+        _unwritable_case, False)
+
+    def _ok_sample_case():
+        open(g["TELEMETRY_PATH"], "w").close()
+        g["_OK_ROWS"] = 0
+        for i in range(OK_SAMPLE_EVERY * 2 + 1):
+            guard("topic", {"name": f"Clean topic {i}", "description": "agents at trade shows"})
+        recs = _read_tel()
+        if len(recs) != 2 or any(set(r) != {"ts", "rule", "table", "scan_ms"} or r["rule"] != "ok_sample" for r in recs):
+            _fail(f"ok_sample records wrong: {recs}")
+    add("telemetry: every 50th clean row writes one content-free ok_sample", _ok_sample_case, False)
+
+    def _rule_labels_case():
+        open(g["TELEMETRY_PATH"], "w").close()
+        thunks = [lambda: guard("person", {"email": "x"}), lambda: guard("topic", {"owner_ssn": "1"}),
+                  lambda: guard("secrets", {"x": 1}), lambda: guard("person", "not a dict")]
+        for t in thunks:
+            try:
+                t()
+            except PIIViolation:
+                pass
+        got = [r["rule"] for r in _read_tel()]
+        if got != ["forbidden_column", "not_allowlisted", "no_allowlist", "body_type"]:
+            _fail(f"rule labels {got}")
+    add("telemetry: column / table / body-type refusals carry their rule label", _rule_labels_case, False)
+
+    def _selftest_isolation_case():
+        real = _TELEMETRY_DEFAULT
+        before = os.path.getsize(real) if os.path.exists(real) else None
+        saved_path, saved_argv = g["TELEMETRY_PATH"], sys.argv
+        g["TELEMETRY_PATH"], sys.argv = real, ["other_script.py", "--selftest"]
+        try:
+            try:
+                guard("person", {"name": "n", "bio": "555-123-4567"})
+            except PIIViolation:
+                pass
+            g["_OK_ROWS"] = OK_SAMPLE_EVERY - 1
+            guard("topic", {"name": "clean"})                     # would be the 50th clean row
+        finally:
+            g["TELEMETRY_PATH"], sys.argv = saved_path, saved_argv
+        after = os.path.getsize(real) if os.path.exists(real) else None
+        if before != after:
+            _fail("another script's --selftest wrote to the real telemetry file")
+    add("telemetry: another script's --selftest never writes the real telemetry file", _selftest_isolation_case, False)
+
     failures = 0
     for name, fn, expect in cases:
         try:
@@ -622,6 +875,7 @@ def selftest() -> bool:
         ok = got == expect
         failures += 0 if ok else 1
         print(f"  {'✓' if ok else '✗'} {name}")
+    g["TELEMETRY_PATH"] = real_tel
     n = len(cases)
     print(f"selftest: {n - failures}/{n} guard cases pass")
     return failures == 0

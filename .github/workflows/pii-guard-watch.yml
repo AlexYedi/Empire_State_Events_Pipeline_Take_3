@@ -1,0 +1,99 @@
+name: PII guard watcher (weekly shadow scan + pre-registered triggers)
+
+# YED-320 — measures the spine PII guard against pre-registered triggers F1–F6
+# (.claude/references/pii-guard-watch.md). Decision under measurement: YED-319 (ship the intl-phone
+# alternative, PR #277 / YED-309, and measure precision in practice). Revisit gate: YED-321.
+#   1. SHADOW   — .claude/scripts/pii_guard_watch.py --shadow: a READ-ONLY count scan of prod spine text,
+#                 run in Postgres inside the YED-312 guard (begin read only -> show -> DO assert -> query ->
+#                 rollback; ON_ERROR_STOP; fail closed). The SQL returns counts only.
+#   2. EVALUATE — --evaluate --no-telemetry: F2, F4, F5 and F1's numeric-prose leg from the shadow counts.
+#                 Refusal telemetry lives on Alex's machine (session writers), never in CI, so F1's
+#                 write-refusal leg, F3 and F6 read "INSUFFICIENT (no telemetry in CI)" here by design.
+# The logs print COUNTS AND VERDICTS ONLY (no shapes, no ids) and the run uploads NO artifacts. Nothing
+# here writes to Supabase, Notion or Linear: the only write is the GitHub issue below.
+#
+# REQUIRED repo secret: MI_DB_DSN, the session-pooler string the nightly health-check already uses
+# (see mi-2b-nightly-healthcheck.yml for how to obtain it).
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Mondays 09:00 UTC (~05:00 ET), an hour after the nightly health-check
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: pii-guard-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install psql (libpq client)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Shadow scan (read-only, counts only)
+        env:
+          MI_DB_DSN: ${{ secrets.MI_DB_DSN }}
+          PSQL_BIN: psql
+        run: python3 .claude/scripts/pii_guard_watch.py --shadow --out "$RUNNER_TEMP/pii-shadow.json"
+      - name: Evaluate triggers F1–F6
+        id: eval
+        run: |
+          set +e
+          python3 .claude/scripts/pii_guard_watch.py --evaluate --no-telemetry \
+            --shadow-json "$RUNNER_TEMP/pii-shadow.json" \
+            --json-out "$RUNNER_TEMP/pii-verdict.json" --body-out "$RUNNER_TEMP/pii-body.md"
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -eq 1 ] && exit 1   # 1 = the evaluator itself failed; 0 / 2 / 3 are verdicts
+          exit 0
+      # One open issue, not one per week (the nightly's pattern): if an open "PII guard watcher: …" issue
+      # exists, retitle it to this run's verdict and comment the counts; otherwise open one. Closing the
+      # issue re-arms the alert.
+      - name: Open or update the trigger issue (FIRE or REVIEW)
+        if: steps.eval.outputs.code == '2' || steps.eval.outputs.code == '3'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE=$(jq -r '.issue_title' "$RUNNER_TEMP/pii-verdict.json")
+          { cat "$RUNNER_TEMP/pii-body.md"; echo; echo "Run: $RUN_URL"; } > "$RUNNER_TEMP/pii-issue.md"
+          OPEN=$(gh issue list --state open --limit 100 --json number,title \
+            --jq '[.[] | select(.title | startswith("PII guard watcher: "))][0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue edit "$OPEN" --title "$TITLE" || echo "issue-edit failed; check the Actions run directly"
+            gh issue comment "$OPEN" --body-file "$RUNNER_TEMP/pii-issue.md" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create --title "$TITLE" --body-file "$RUNNER_TEMP/pii-issue.md" \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "PII guard watcher run FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "PII guard watcher run FAILED (since $TODAY)" \
+              --body "The weekly PII guard watcher could not produce a verdict: the read-only shadow scan failed (DB unreachable, or the YED-312 read-only guard tripped and the run aborted fail-closed) or the evaluator errored. The failing step in the run says which. No trigger was evaluated this week. Run: $RUN_URL. Playbook: .claude/references/pii-guard-watch.md. YED-320." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
+      # Last, so the failure-issue step above never fires for a verdict: a FIRE marks the run red as well.
+      - name: Mark the run red on FIRE
+        if: steps.eval.outputs.code == '2'
+        run: echo "A pre-registered trigger FIRED — see the issue and .claude/references/pii-guard-watch.md" && exit 1
