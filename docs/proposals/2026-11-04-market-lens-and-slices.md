@@ -206,6 +206,8 @@ Invariants restated for this build: writes only via `spine_client` (no MCP DML, 
 
 ## 9. Decisions for Alex (five, each with a recommendation)
 
+> **Decided (Alex, 2026-11-04): all five as recommended.** (1) ADR-13 + migration 0016 as one additive migration; (2) akta pilot with a cap read from `account_status()`, and no spend before Alex has seen the number; (3) the Monday Market Brief is the standing consumer; (4) no person edges from market lanes in Phase A; (5) market-born topics are quarantined until corroborated. Recorded in Linear as a `decision` issue.
+
 1. **ADR-13 + migration 0016 as one additive migration** (membership SCD2, segment history, lane ledger, `signal_type`, `mi` views). *Recommend yes.* It is the precondition PR #267 already named; splitting it buys nothing.
 2. **akta pilot: 40 watchlist companies, weekly, 30 days, with a credit cap read from `account_status()` before run 1.** *Recommend yes with the cap; no spend before the number is on the table.* Alternative: Apollo-only (free, firmographics but no news), which answers Q5 and not Q2–Q4.
 3. **The Monday Market Brief as the standing consumer**, alongside the "no Monday review" ruling for theme assignments. *Recommend yes:* a brief to read is not a queue to work, and it is the single mechanism that kept no earlier lane alive because none had it.
