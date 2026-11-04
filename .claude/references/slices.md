@@ -21,6 +21,15 @@ Row contract every payload must satisfy (slice.py validates, fails closed — de
    merged into named-topic counts (PR #267 rule).
 5. **Time.** Slices bucket on `asserted_at` (when it was true); `observed_at` (when we learned it)
    is carried and printed beside it. A 2024 funding round ingested today is not this week's news.
+6. **Floors and the lead gate.** Every row carries `floor_flag` (`ok` or `insufficient_data`) —
+   a row without one is a contract error (fail closed; raw counts are not a pass). Lead/lag
+   figures render only when the payload carries `lead_lag_shown: true` (`mi.theme_lead_lag`
+   computes it: true only when BOTH lenses clear the floor). A row-level `theme_resolved`
+   marker (e.g. `"seed"`) renders as a `[seed]` label on the dimension, never a column.
+7. **Pinned response shape.** The RPC returns `{view, rows, denominators, window}` — qualified
+   view names (`mi.theme_week`, …) with the requested view and time window echoed back.
+   `mi_slice(view, filters)` is STABLE and GET-callable; full columns land in ADR-13's
+   consumer-contract section on the 0016 PR.
 
 ```json
 [
@@ -56,10 +65,10 @@ Row contract every payload must satisfy (slice.py validates, fails closed — de
    "denominators_expected": ["research"]},
   {"name": "frontier_vs_room",
    "view": "mi.theme_week",
-   "lenses": ["research", "attended"],
-   "filters": {"lenses": ["research", "attended"], "window_weeks": 8, "signal_types": ["paper", "model_release"]},
-   "question": "Q7 — where does the research frontier (papers, model releases) sit relative to what speakers claim?",
-   "denominators_expected": ["research", "attended"]}
+   "lenses": ["market", "attended"],
+   "filters": {"lenses": ["market", "attended"], "window_weeks": 8, "signal_types": ["paper", "model_release"]},
+   "question": "Q7 — where does the research frontier (papers, model releases) sit relative to what speakers claim? Papers and model releases are market events (the market lens); `research` means claims from briefs.",
+   "denominators_expected": ["market", "attended"]}
 ]
 ```
 
@@ -82,7 +91,7 @@ executable here; they name the rows a slice's filters should select.
 ```bash
 python3 .claude/scripts/slice.py list                                  # the six canonical slices
 python3 .claude/scripts/slice.py run attended_vs_market_by_theme_8w --since 2026-09-08
-python3 .claude/scripts/slice.py run frontier_vs_room --lens research  # one lens, others excluded, never merged
+python3 .claude/scripts/slice.py run frontier_vs_room --lens market  # one lens, others excluded, never merged
 python3 .claude/scripts/slice.py adhoc --view mi.company_timeline --filters '{"target_tier":["A","B"]}'
 python3 .claude/scripts/slice.py --selftest                            # offline, fixtures only
 ```

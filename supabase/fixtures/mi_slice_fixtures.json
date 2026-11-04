@@ -9,105 +9,426 @@
   "attended_vs_market_by_theme_8w": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "agentic infrastructure", "iso_week": "2026-W44", "lens": "attended", "facts": 12, "companies": 5, "sources": 3, "general_facts": 2, "floor_flag": "ok"},
-      {"theme": "agentic infrastructure", "iso_week": "2026-W44", "lens": "market", "facts": 9, "companies": 7, "sources": 4, "floor_flag": "ok"},
-      {"theme": "AI GTM", "iso_week": "2026-W44", "lens": "attended", "facts": 1, "companies": 1, "sources": 1, "floor_flag": "insufficient_data"},
-      {"theme": "AI GTM", "iso_week": "2026-W44", "lens": "market", "facts": 5, "companies": 4, "sources": 2, "floor_flag": "ok"},
-      {"theme": "evals", "iso_week": "2026-W44", "lens": "attended", "facts": 6, "companies": 3, "sources": 2, "floor_flag": "ok"},
-      {"theme": "evals", "topic": "(general)", "iso_week": "2026-W44", "lens": "market", "facts": 4, "companies": 2, "sources": 1, "floor_flag": "ok"}
+      {
+        "theme": "agentic infrastructure",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 12,
+        "companies": 5,
+        "sources": 3,
+        "general_facts": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "agentic infrastructure",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 9,
+        "companies": 7,
+        "sources": 4,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "AI GTM",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 1,
+        "companies": 1,
+        "sources": 1,
+        "floor_flag": "insufficient_data"
+      },
+      {
+        "theme": "AI GTM",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 5,
+        "companies": 4,
+        "sources": 2,
+        "floor_flag": "ok",
+        "theme_resolved": "seed"
+      },
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6,
+        "companies": 3,
+        "sources": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "evals",
+        "topic": "(general)",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 4,
+        "companies": 2,
+        "sources": 1,
+        "floor_flag": "ok"
+      }
     ],
     "denominators": {
       "attended": "events in window: 4 (2026-10-05..2026-11-02)",
       "market": "facts from 5 sources; watchlist coverage 12/40"
+    },
+    "window": {
+      "window_weeks": 8
     }
   },
   "funded_not_attended_90d": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "agent infrastructure", "iso_week": "2026-W44", "lens": "market", "facts": 11, "companies": 8, "sources": 3, "floor_flag": "ok"},
-      {"theme": "agent infrastructure", "iso_week": "2026-W44", "lens": "attended", "facts": 0, "companies": 0, "sources": 0, "floor_flag": "insufficient_data"},
-      {"theme": "voice agents", "iso_week": "2026-W44", "lens": "market", "facts": 3, "companies": 3, "sources": 2, "floor_flag": "ok"},
-      {"theme": "voice agents", "iso_week": "2026-W44", "lens": "attended", "facts": 5, "companies": 3, "sources": 2, "floor_flag": "ok"}
+      {
+        "theme": "agent infrastructure",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 11,
+        "companies": 8,
+        "sources": 3,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "agent infrastructure",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 0,
+        "companies": 0,
+        "sources": 0,
+        "floor_flag": "insufficient_data"
+      },
+      {
+        "theme": "voice agents",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 3,
+        "companies": 3,
+        "sources": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "voice agents",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 5,
+        "companies": 3,
+        "sources": 2,
+        "floor_flag": "ok"
+      }
     ],
     "denominators": {
       "attended": "events in window: 3",
       "market": "funding facts from 3 sources in window"
+    },
+    "window": {
+      "window_days": 90
     }
   },
   "target_companies_heating_qtd": {
     "view": "mi.company_timeline",
     "rows": [
-      {"company": "Vector Metrics (example)", "iso_week": "2026-W43", "asserted_at": "2026-10-20", "observed_at": "2026-10-22", "stage": "seed", "lens": "market", "facts": 4, "companies": 1, "sources": 2, "floor_flag": "ok"},
-      {"company": "Vector Metrics (example)", "iso_week": "2026-W44", "asserted_at": "2026-10-27", "observed_at": "2026-10-28", "stage": "series_a", "lens": "market", "facts": 6, "companies": 1, "sources": 3, "floor_flag": "ok"},
-      {"company": "Northwind Labs (example)", "iso_week": "2026-W44", "asserted_at": "2026-10-29", "observed_at": "2026-10-29", "stage": "seed", "lens": "market", "facts": 3, "companies": 1, "sources": 1, "floor_flag": "ok"}
+      {
+        "company": "Vector Metrics (example)",
+        "iso_week": "2026-W43",
+        "asserted_at": "2026-10-20",
+        "observed_at": "2026-10-22",
+        "stage": "seed",
+        "lens": "market",
+        "facts": 4,
+        "companies": 1,
+        "sources": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "company": "Vector Metrics (example)",
+        "iso_week": "2026-W44",
+        "asserted_at": "2026-10-27",
+        "observed_at": "2026-10-28",
+        "stage": "series_a",
+        "lens": "market",
+        "facts": 6,
+        "companies": 1,
+        "sources": 3,
+        "floor_flag": "ok"
+      },
+      {
+        "company": "Northwind Labs (example)",
+        "iso_week": "2026-W44",
+        "asserted_at": "2026-10-29",
+        "observed_at": "2026-10-29",
+        "stage": "seed",
+        "lens": "market",
+        "facts": 3,
+        "companies": 1,
+        "sources": 1,
+        "floor_flag": "ok"
+      }
     ],
     "denominators": {
       "market": "facts from 4 sources in QTD; watchlist coverage 12/40"
+    },
+    "window": {
+      "period": "qtd"
     }
   },
   "new_nyc_companies_by_quarter": {
     "view": "mi.company_cohort",
     "rows": [
-      {"company": "Harborline (example)", "first_seen_quarter": "2026-Q3", "hq_metro": "nyc", "stage": "seed", "lens": "market", "facts": 5, "floor_flag": "ok"},
-      {"company": "Harborline (example)", "first_seen_quarter": "2026-Q3", "hq_metro": "nyc", "stage": "seed", "lens": "attended", "facts": 2, "floor_flag": "insufficient_data"},
-      {"company": "Gantry Systems (example)", "first_seen_quarter": "2026-Q4", "hq_metro": "nyc", "stage": "seed", "lens": "market", "facts": 3, "floor_flag": "ok"}
+      {
+        "company": "Harborline (example)",
+        "first_seen_quarter": "2026-Q3",
+        "hq_metro": "nyc",
+        "stage": "seed",
+        "lens": "market",
+        "facts": 5,
+        "floor_flag": "ok"
+      },
+      {
+        "company": "Harborline (example)",
+        "first_seen_quarter": "2026-Q3",
+        "hq_metro": "nyc",
+        "stage": "seed",
+        "lens": "attended",
+        "facts": 2,
+        "floor_flag": "insufficient_data"
+      },
+      {
+        "company": "Gantry Systems (example)",
+        "first_seen_quarter": "2026-Q4",
+        "hq_metro": "nyc",
+        "stage": "seed",
+        "lens": "market",
+        "facts": 3,
+        "floor_flag": "ok"
+      }
     ],
     "denominators": {
       "attended": "events in window: 6",
       "market": "facts from 5 sources; watchlist coverage 12/40"
+    },
+    "window": {
+      "cohort": "first_seen_quarter"
     }
   },
   "research_without_room_corroboration": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "evals", "iso_week": "2026-W42", "asserted_at": "2026-09-14", "observed_at": "2026-11-02", "lens": "research", "facts": 7, "general_facts": 3, "sources": 2, "floor_flag": "ok"},
-      {"theme": "evals", "topic": "(general)", "iso_week": "2026-W42", "asserted_at": "2026-09-14", "observed_at": "2026-11-02", "lens": "research", "facts": 3, "sources": 1, "floor_flag": "ok"}
+      {
+        "theme": "evals",
+        "iso_week": "2026-W42",
+        "asserted_at": "2026-09-14",
+        "observed_at": "2026-11-02",
+        "lens": "research",
+        "facts": 7,
+        "general_facts": 3,
+        "sources": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "evals",
+        "topic": "(general)",
+        "iso_week": "2026-W42",
+        "asserted_at": "2026-09-14",
+        "observed_at": "2026-11-02",
+        "lens": "research",
+        "facts": 3,
+        "sources": 1,
+        "floor_flag": "ok"
+      }
     ],
     "denominators": {
       "research": "briefs (documents) in window: 2"
+    },
+    "window": {
+      "window_days": 90
     }
   },
   "frontier_vs_room": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "agent protocols", "iso_week": "2026-W44", "lens": "attended", "lead_weeks": 6, "floor_flag": "ok"},
-      {"theme": "agent protocols", "iso_week": "2026-W44", "lens": "market", "facts": 9, "companies": 4, "sources": 3, "floor_flag": "ok"},
-      {"theme": "agent protocols", "iso_week": "2026-W44", "lens": "research", "facts": 5, "sources": 2, "floor_flag": "ok"},
-      {"theme": "context engineering", "iso_week": "2026-W44", "lens": "market", "facts": 4, "companies": 3, "sources": 2, "floor_flag": "ok"},
-      {"theme": "context engineering", "iso_week": "2026-W44", "lens": "attended", "lead_weeks": 14, "floor_flag": "insufficient_data"}
+      {
+        "theme": "agent protocols",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "lead_weeks": 6,
+        "floor_flag": "ok",
+        "lead_lag_shown": true
+      },
+      {
+        "theme": "agent protocols",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 9,
+        "companies": 4,
+        "sources": 3,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "context engineering",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 4,
+        "companies": 3,
+        "sources": 2,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "context engineering",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "lead_weeks": 14,
+        "floor_flag": "insufficient_data",
+        "lead_lag_shown": false
+      }
     ],
     "denominators": {
       "attended": "events in window: 7",
-      "market": "facts from 4 sources",
-      "research": "briefs (documents) in window: 2"
+      "market": "facts from 4 sources"
+    },
+    "window": {
+      "window_weeks": 8
     }
   },
   "_invalid_missing_denominator": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "evals", "iso_week": "2026-W44", "lens": "attended", "facts": 6, "floor_flag": "ok"}
-    ]
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6,
+        "floor_flag": "ok"
+      }
+    ],
+    "window": {
+      "window_weeks": 8
+    }
   },
   "_invalid_blended_lens": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "evals", "iso_week": "2026-W44", "lens": "all", "facts": 99, "floor_flag": "ok"}
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "all",
+        "facts": 99,
+        "floor_flag": "ok"
+      }
     ],
-    "denominators": {"attended": "events in window: 4"}
+    "denominators": {
+      "attended": "events in window: 4"
+    },
+    "window": {
+      "window_weeks": 8
+    }
   },
   "_invalid_missing_lens": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "evals", "iso_week": "2026-W44", "facts": 6, "floor_flag": "ok"}
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "facts": 6,
+        "floor_flag": "ok"
+      }
     ],
-    "denominators": {"attended": "events in window: 4"}
+    "denominators": {
+      "attended": "events in window: 4"
+    },
+    "window": {
+      "window_weeks": 8
+    }
   },
   "_invalid_denominator_gap": {
     "view": "mi.theme_week",
     "rows": [
-      {"theme": "evals", "iso_week": "2026-W44", "lens": "attended", "facts": 6, "floor_flag": "ok"},
-      {"theme": "evals", "iso_week": "2026-W44", "lens": "market", "facts": 9, "floor_flag": "ok"}
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6,
+        "floor_flag": "ok"
+      },
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "market",
+        "facts": 9,
+        "floor_flag": "ok"
+      }
     ],
-    "denominators": {"attended": "events in window: 4"}
+    "denominators": {
+      "attended": "events in window: 4"
+    },
+    "window": {
+      "window_weeks": 8
+    }
+  },
+  "_invalid_missing_window": {
+    "view": "mi.theme_week",
+    "rows": [
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6,
+        "floor_flag": "ok"
+      }
+    ],
+    "denominators": {
+      "attended": "events in window: 4"
+    }
+  },
+  "_invalid_unqualified_view": {
+    "view": "theme_week",
+    "window": {
+      "window_weeks": 8
+    },
+    "rows": [
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6,
+        "floor_flag": "ok"
+      }
+    ],
+    "denominators": {
+      "attended": "events in window: 4"
+    }
+  },
+  "_invalid_missing_floor_flag": {
+    "view": "mi.theme_week",
+    "window": {
+      "window_weeks": 8
+    },
+    "rows": [
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "facts": 6
+      }
+    ],
+    "denominators": {
+      "attended": "events in window: 4"
+    }
+  },
+  "_invalid_lead_without_gate": {
+    "view": "mi.theme_week",
+    "window": {
+      "window_weeks": 8
+    },
+    "rows": [
+      {
+        "theme": "evals",
+        "iso_week": "2026-W44",
+        "lens": "attended",
+        "lead_weeks": 6,
+        "floor_flag": "ok"
+      }
+    ],
+    "denominators": {
+      "attended": "events in window: 4"
+    }
   }
 }

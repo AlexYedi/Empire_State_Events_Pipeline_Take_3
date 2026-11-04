@@ -30,14 +30,20 @@ Slice contract (PR #268 §3–§4) — what this renderer enforces on every payl
   segment   company rows carry stage/industry/headcount band as ordinary columns (Type 2 segment
             as-of the fact; the view supplies the as-of values).
 
-RPC payload contract (pinned here for migration 0016 to implement):
-  {"view": "mi.theme_week",
+RPC payload contract (pinned by migration 0016: mi_slice(view, filters) is STABLE, GET-callable,
+server-allowlisted; full columns land in ADR-13's consumer-contract section on the 0016 PR):
+  {"view": "mi.theme_week",                       # qualified view name, echoes the request
+   "window": {"window_weeks": 8},                 # the slice's time window, echoed back
    "rows": [ {"theme": "...", "iso_week": "2026-W40", "lens": "attended",
               "facts": 12, "companies": 5, "sources": 3, "general_facts": 2,
               "floor_flag": "ok", "asserted_at": "...", "observed_at": "..."} ],
    "denominators": {"attended": "events in window: 12", "market": "facts from 6 sources; watchlist 12/40"}}
   denominators must have an entry for EVERY lens present in rows (§3.3 rule 2) — a rate without
-  its denominator is a contract error, not a rendering nicety.
+  its denominator is a contract error, not a rendering nicety. floor_flag is mandatory on every
+  row (missing = fail closed; raw counts are not a pass). A lead/lag figure renders only when
+  the payload carries lead_lag_shown: true (mi.theme_lead_lag computes it — true only when BOTH
+  lenses clear the floor). A row-level theme_resolved marker (e.g. "seed") renders as a [seed]
+  label on the dimension, never as a dimension column.
 
 Target: TWIN by default (`ytfzzsxcxxbejnowmkmk`, per supabase/2B_REHEARSAL_RUNBOOK.md naming).
 Credentials: `SLICE_API_KEY` env or `--key-file F` (twin service key; the repo `.env` holds the
@@ -87,8 +93,8 @@ def load_registry(md_text: str) -> dict[str, dict]:
 
 def rpc_request_parts(view: str, filters: dict) -> tuple[str, str]:
     """(path_with_query, body) for the mi_slice call. GET carries filters as a jsonb query param —
-    a GET cannot carry a write body, which is the point: this client is structurally read-only.
-    body is "" for GET; callers fall back to the same path with a POST body only on HTTP 405."""
+    a GET cannot carry a write body, which is the point: the pinned 0016 contract declares
+    mi_slice STABLE and GET-callable, so no request body is ever built. body is always ""."""
     import urllib.parse
     qs = urllib.parse.urlencode({"view": view, "filters": json.dumps(filters, separators=(",", ":"))})
     return f"{REST_PREFIX}/rpc/mi_slice?{qs}", ""
@@ -110,28 +116,22 @@ def http_get(url: str, key: str, timeout: int = 30) -> tuple[int, str]:
 
 
 def fetch_slice(ref: str, view: str, filters: dict, key: str) -> dict:
-    """mi_slice over REST → payload dict. GET first; a 405 (function not GET-enabled) retries once
-    with a POST body — still read-only intent, still no guard bypass (the body is {view, filters})."""
+    """mi_slice over REST → payload dict. GET only — the pinned 0016 contract makes mi_slice
+    GET-callable and STABLE, so any non-200 is an error, never a retry with a request body."""
     path, _ = rpc_request_parts(view, filters)
     url = f"https://{ref}.supabase.co{path}"
     status, txt = http_get(url, key)
-    if status == 405:
-        body = json.dumps({"view": view, "filters": filters})
-        conn = http.client.HTTPSConnection(f"{ref}.supabase.co", 443, timeout=30)
-        try:
-            conn.request("POST", f"{REST_PREFIX}/rpc/mi_slice", body=body,
-                         headers={"apikey": key, "Authorization": f"Bearer {key}",
-                                  "Content-Type": "application/json", "Accept": "application/json"})
-            resp = conn.getresponse()
-            status, txt = resp.status, resp.read().decode()
-        finally:
-            conn.close()
     if status != 200:
-        raise RuntimeError(f"mi_slice {view}: HTTP {status}: {txt[:300]}")
+        raise RuntimeError(f"mi_slice {view}: HTTP {status}: {txt[:300]} "
+                           f"(the pinned 0016 contract makes mi_slice GET-callable — check the migration is applied)")
     try:
-        return json.loads(txt)
+        payload = json.loads(txt)
     except json.JSONDecodeError as e:
         raise RuntimeError(f"mi_slice {view}: response is not JSON: {e}: {txt[:200]}")
+    if not isinstance(payload, dict) or payload.get("view") != view:
+        raise RuntimeError(f"mi_slice {view}: response view {payload.get('view') if isinstance(payload, dict) else payload!r} "
+                           f"does not match the requested view — refusing to render another slice's rows")
+    return payload
 
 
 # ---------------------------------------------------------------- pure: contract validation
@@ -142,6 +142,11 @@ def validate_payload(payload) -> list[str]:
     errs: list[str] = []
     if not isinstance(payload, dict):
         return ["payload is not an object"]
+    view = payload.get("view")
+    if not isinstance(view, str) or not view.startswith("mi."):
+        errs.append(f"payload.view {view!r} is not a qualified view name ('mi.…') — the pinned 0016 contract echoes the requested view")
+    if "window" not in payload:
+        errs.append("payload.window missing — the pinned 0016 contract echoes the slice's time window")
     rows = payload.get("rows")
     if not isinstance(rows, list):
         return ["payload.rows is not a list"]
@@ -161,21 +166,46 @@ def validate_payload(payload) -> list[str]:
         else:
             lenses_seen.add(lens)
         flag = row.get("floor_flag")
-        if flag is not None and flag not in ("ok", FLOOR_FLAG):
+        if flag is None:
+            errs.append(f"row {i}: missing floor_flag — fail closed; the view must grade every row (§3.3 rule 3)")
+        elif flag not in ("ok", FLOOR_FLAG):
             errs.append(f"row {i}: unknown floor_flag {flag!r}")
+        if "lead_weeks" in row:
+            gate = row.get("lead_lag_shown")
+            if not isinstance(gate, bool):
+                errs.append(f"row {i}: lead_weeks without boolean lead_lag_shown — a lead renders only when mi.theme_lead_lag says both lenses clear the floor")
+            elif gate and flag == FLOOR_FLAG:
+                errs.append(f"row {i}: lead_lag_shown is true on a floored row — lead_lag_shown is true only when both lenses clear the floor")
     missing_den = sorted(lenses_seen - set(denoms))
     if missing_den:
         errs.append(f"denominators missing for lens(es) {missing_den} present in rows (§3.3 rule 2)")
     return errs
 
 
+def descriptor_lens_error(payload: dict, descriptor: dict) -> str:
+    """Named-slice guard: the payload's lens set must equal the descriptor's — a payload whose
+    lenses disagree with the registry is a different slice than the one asked for (fail closed)."""
+    got = sorted({r.get("lens") for r in payload.get("rows", []) if isinstance(r, dict)} - {None})
+    want = sorted(descriptor.get("lenses") or [])
+    if got != want:
+        return (f"lens set {got} does not match descriptor {want} for {descriptor.get('name')!r} — "
+                f"the payload is not the slice the registry describes")
+    return ""
+
+
 # ---------------------------------------------------------------- pure: rendering
+
+# Marker fields ride on rows but are labels, not dimension columns.
+MARKER_FIELDS = ("theme_resolved",)
+
 
 def _fmt_cell(row: dict) -> str:
     """One lens's cell: measures, general-topic counts labelled, floor applied. A floored cell
     suppresses its numbers (including lead_weeks) — 'no information', never a naked ratio."""
     if row.get("floor_flag") == FLOOR_FLAG:
         return "insufficient_data" if "lead_weeks" not in row else "no information (floor)"
+    if "lead_weeks" in row and row.get("lead_lag_shown") is not True:
+        return "no information (floor)"  # gate not shown: suppress the lead figure entirely
     parts = []
     facts = row.get("facts")
     if facts is not None:
@@ -201,7 +231,7 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
     dim_keys: list[str] = []
     for r in rows:
         for k in r:
-            if k not in ("lens", "floor_flag") and k not in MEASURE_FIELDS and k not in dim_keys:
+            if k not in ("lens", "floor_flag", *MARKER_FIELDS) and k not in MEASURE_FIELDS and k not in dim_keys:
                 dim_keys.append(k)
     lenses = [l for l in LENSES if any(r["lens"] == l for r in rows)]
     groups: dict[tuple, dict[str, dict]] = {}
@@ -209,19 +239,22 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
         key = tuple((k, r.get(k)) for k in dim_keys)
         groups.setdefault(key, {})[r["lens"]] = r
 
-    def group_label(key: tuple) -> str:
+    def group_label(key: tuple, group: dict | None = None) -> str:
         vals = dict(key)
         base = " ".join(str(v) for v in vals.values())
-        if vals.get("topic") == GENERAL_TOPIC:
+        rows_iter = group.values() if group else ()
+        if any(r.get("topic") == GENERAL_TOPIC for r in rows_iter):
             base += " [general]"
+        if any(r.get("theme_resolved") == "seed" for r in rows_iter):
+            base += " [seed]"  # theme_resolved marker — a label, never a dimension column
         return base
 
-    width = max([len(group_label(k)) for k in groups] + [len("dimension")])
+    width = max([len(group_label(k, groups[k])) for k in groups] + [len("dimension")])
     head = f"{'dimension':<{width}} | " + " | ".join(f"{l:>18}" for l in lenses)
     lines = [f"== {title} ==", head, "-" * len(head)]
     for key in sorted(groups, key=lambda k: [(v is None, str(v)) for _, v in k]):
         cells = [_fmt_cell(groups[key][l]) if l in groups[key] else "—" for l in lenses]
-        lines.append(f"{group_label(key):<{width}} | " + " | ".join(f"{c:>18}" for c in cells))
+        lines.append(f"{group_label(key, groups[key]):<{width}} | " + " | ".join(f"{c:>18}" for c in cells))
     lines.append("-" * len(head))
     lines.append(f"dimensions: {' | '.join(dim_keys)}")
     lines.append("-" * len(head))
@@ -276,6 +309,22 @@ def selftest() -> int:
     check("contract: denominator missing for a present lens rejected",
           any("§3.3 rule 2" in e for e in validate_payload(bad["_invalid_denominator_gap"])))
     check("contract: non-dict payload rejected", validate_payload([1, 2]) != [])
+    check("contract: payload without window rejected",
+          any("window" in e for e in validate_payload(bad["_invalid_missing_window"])))
+    check("contract: unqualified view name rejected",
+          any("qualified view" in e for e in validate_payload(bad["_invalid_unqualified_view"])))
+    check("contract: missing floor_flag rejected (fail closed)",
+          any("missing floor_flag" in e for e in validate_payload(bad["_invalid_missing_floor_flag"])))
+    check("contract: lead_weeks without lead_lag_shown rejected",
+          any("lead_lag_shown" in e for e in validate_payload(bad["_invalid_lead_without_gate"])))
+    check("descriptor: frontier_vs_room names market+attended (papers are market events; research = claims)",
+          sorted(reg["frontier_vs_room"]["lenses"]) == ["attended", "market"])
+    check("descriptor: every canonical fixture's lens set matches its descriptor",
+          all(descriptor_lens_error(good[name], reg[name]) == "" for name in good if name in reg))
+    fp = json.loads(json.dumps(good["frontier_vs_room"]))
+    fp["rows"][0]["lens"] = "research"  # wrong lens: not the slice the registry describes
+    check("descriptor: payload lens set mismatch rejected (fail closed)",
+          descriptor_lens_error(fp, reg["frontier_vs_room"]) != "")
 
     # §4 slice-contract examples, rendered
     avm = render(good["attended_vs_market_by_theme_8w"], "attended_vs_market_by_theme_8w")
@@ -286,6 +335,7 @@ def selftest() -> int:
     check("render: general-topic count labelled with its own number", "(2 general)" in avm)
     check("render: floored cell reads insufficient_data, numbers suppressed", "insufficient_data" in avm)
     check("render: (general) topic row is marked, not folded in", "[general]" in avm)
+    check("render: theme_resolved seed marker printed, not a column", "[seed]" in avm)
 
     fv = render(good["frontier_vs_room"], "frontier_vs_room")
     check("lead/lag: lead shown when both lenses clear the floor", "lead 6w" in fv)
@@ -313,10 +363,14 @@ def selftest() -> int:
           all(("| market" not in ln) for ln in avm_att.splitlines()[2:-1]))
 
     # request shaping: GET path, jsonb filters encoded, twin default, prod gate
+    import urllib.parse
     path, body = rpc_request_parts("mi.theme_week", {"lenses": ["attended", "market"], "window_weeks": 8})
     check("rpc: GET request path carries view + filters, empty body",
-          path.startswith(REST_PREFIX + "/rpc/mi_slice?") and body == ""
-          and "view=mi.theme_week" in path and "window_weeks" in path)
+          path.startswith(f"{REST_PREFIX}/rpc/mi_slice?") and "view=mi.theme_week" in path
+          and json.loads(urllib.parse.parse_qs(path.split("?")[1])["filters"][0]) == {"lenses": ["attended", "market"], "window_weeks": 8}
+          and body == "")
+    check("rpc: no request-body path exists — mi_slice is GET-callable (pinned 0016 contract)",
+          not re.search(r'conn\.request\(\s*"POST"', open(__file__, encoding="utf-8").read()))
     check("rpc: prod ref refused without --allow-prod (enforced in main, pinned here)",
           PROD_REF != TWIN_REF and PROD_REF == "oicikjyzmxqfomrrqkvf")
 
@@ -425,6 +479,10 @@ def main(argv: list[str]) -> int:
         return 3
 
     errs = validate_payload(payload)
+    if not errs and a.cmd == "run" and d:
+        dl = descriptor_lens_error(payload, d)
+        if dl:
+            errs = [dl]
     if errs:
         print("slice.py: slice-contract violation — rendering nothing (fail closed):", file=sys.stderr)
         for e in errs:
