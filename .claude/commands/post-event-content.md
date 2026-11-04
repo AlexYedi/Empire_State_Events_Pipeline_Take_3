@@ -224,7 +224,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 After writing the brief, capture its URL and pass it to Step 4 (content-correspondent uses it as `=== Post-Event Brief ===` input alongside the conditioned quote bank).
 
-## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c)
+## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c · 3.8d)
 
 Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps and state their outcome (or why one was skipped) in the Step 6 summary.
 
@@ -258,17 +258,6 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
    ```
    Re-running is safe: a second run reports `created=0`.
 
-### Step 3.8d: assign a theme to every unassigned topic (`assign_clusters.py`)
-
-The session that mints a topic assigns its theme, because it holds the transcript, the brief and the roster (YED-304, `docs/proposals/2026-11-03-dynamic-topic-taxonomy.md` §2). A topic with no theme is invisible to every trend: that was the 8 Aug to 4 Nov gap. Run this after 3.8b.
-
-1. **List:** `python3 .claude/scripts/assign_clusters.py list --event <event notion_page_id>` prints the event's linked live topics that have no theme, plus the theme names.
-2. **Decide in-session**, for each topic: the best-fitting theme from that list, with a confidence of 0.5–1.0 (0.9 clear fit · 0.7 reasonable · 0.5 weak). Use `NONE` plus a one-line reason when nothing fits. Those reasons feed the weekly theme-proposal issue: three or more coherent "none fits" topics propose a new theme. Write the decisions to a JSON file in the scratchpad.
-3. **Dry-run, then write:** `assign_clusters.py apply --file <a.json>`, then `… --apply`. It writes only through `spine_client`, and only to topics that still have no theme, so it never overwrites an existing assignment.
-4. **Make it visible.** Paste the printed `topic → theme` lines into the Step 6 summary, and add the same table to the post-event brief page (a `## Theme assignments` section in the Step 5 Notion payload). Alex reviews assignments where he reads, not in a separate queue.
-
-After a theme birth or merge, refresh `.claude/references/topic-themes.json` (the SQL is in the file's `_comment`) before the next run.
-
 ### Step 3.8c — The brief's learnings → first-hand claims (`substrate.py stage-claims`)
 
 Save the Step 3.7 `post_event_brief` body to `.claude/.state/briefs/<event-slug>.md` (gitignored; the same text written to Notion), then:
@@ -284,6 +273,17 @@ Save the Step 3.7 `post_event_brief` body to `.claude/.state/briefs/<event-slug>
 - If there is genuinely no brief (e.g. a walk-in with no transcript), say so with the reason in the Step 6 summary — skipped, not silent.
 
 **Prerequisite:** migration `supabase/migrations/0009_substrate_s1a_additive.sql` applied to prod (rehearsed on the twin via `supabase/scripts/rehearse_s1a.py`). Until it is, 3.8c fails with a 404 on `claim` — do not skip around it; say so in the Step 6 summary.
+
+### Step 3.8d: assign a theme to every unassigned topic (`assign_clusters.py`)
+
+The session that mints a topic assigns its theme, because it holds the transcript, the brief and the roster (YED-304, `docs/proposals/2026-11-03-dynamic-topic-taxonomy.md` §2). A topic with no theme is invisible to every trend: that was the 8 Aug to 4 Nov gap. Run this after 3.8b; it doesn't depend on 3.8c. Before relying on the general-topic rule, check that 3.8b reported `skipped_not_in_vocab=0`. If it didn't, a `(general)` topic name didn't match: fix the name from `topic-themes.json` and re-run 3.8b.
+
+1. **List:** `python3 .claude/scripts/assign_clusters.py list --event <event notion_page_id>` prints the event's linked live topics that have no theme, plus the theme names.
+2. **Decide in-session**, for each topic: the best-fitting theme from that list, with a confidence of 0.5–1.0 (0.9 clear fit · 0.7 reasonable · 0.5 weak). Use `NONE` plus a one-line reason when nothing fits. Those reasons feed the weekly theme-proposal issue: three or more coherent "none fits" topics propose a new theme. Write the decisions to a JSON file in the scratchpad.
+3. **Dry-run, then write:** `assign_clusters.py apply --file <a.json>`, then `… --apply`. It writes only through `spine_client`, and only to topics that still have no theme, so it never overwrites an existing assignment.
+4. **Make it visible.** Paste the printed lines into the Step 6 summary. That's mandatory, and it's where Alex reviews assignments. Also add them to the canonical post-event brief page: when Step 3.7 creates that page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧`. Step 5's payload then carries one `update` op on that page (its id in `allowed_page_ids`), with `content_updates: [{"old_str": "⟦theme-assignments⟧\n⟦/theme-assignments⟧", "new_str": "⟦theme-assignments⟧\n## Theme assignments\n<the lines>\n⟦/theme-assignments⟧"}]`. If the brief was written inline without the marker, put the lines in the Step 6 summary only, and say so.
+
+After a theme birth or merge, refresh `.claude/references/topic-themes.json` (the SQL is in the file's `_comment`) before the next run.
 
 ## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
 
