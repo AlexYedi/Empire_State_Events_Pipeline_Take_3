@@ -1,38 +1,137 @@
 {
- "_comment": "Theme (topic_cluster) names -> ids. topic_intelligence is not API-exposed, so assign_clusters.py reads this file. Refresh after any theme birth/merge: SELECT json_object_agg(display_name, cluster_id) FROM topic_intelligence.topic_cluster WHERE curation_status='approved' (read-only MCP). Generated 2026-11-04 (YED-307), 33 themes.",
- "themes": {
-  "AI & Agent Security & Governance": "72f4d902-39be-42c9-b927-da21002d364e",
-  "AI Capital, Business Models & Media": "ff526096-7f72-40e8-bd5d-c7343905bc79",
-  "AI Compute Infrastructure": "777d6560-8cbb-46a7-87e0-33ec6c13174f",
-  "AI Cost & FinOps": "765e20e5-e802-4535-a88d-d951a853135e",
-  "AI Dev Tooling & IDEs": "ead5d66a-5abb-4364-8545-22bb15ec95b2",
-  "AI Engineering Practice": "9f4dce3c-3f31-48cf-a7fe-01eb2a033e43",
-  "AI Talent, Hiring & Leadership": "4de47137-ebc9-471d-b80d-2689a412fc4c",
-  "AI, Work & Society": "6febfa3b-e85a-4c24-8f41-94e52afafa32",
-  "AI-Native GTM & Revenue Agents": "3cd4dfdb-d309-4ec3-adeb-a546f14a8c8e",
-  "Agent Architecture & Memory": "d7e0caa7-cb59-4d6e-b194-b13fd5671f5b",
-  "Agent Reliability & Evaluation": "5ba0e6fc-bae9-4703-b9a6-b507aed3de2b",
-  "Agentic Commerce & Payments": "68244283-1e01-4c64-a5f7-13f38e69311b",
-  "Agentic Data Access": "5989b107-f81e-4127-9d31-7f1746bd5e66",
-  "Agentic Marketing": "d78e7ee0-fd12-409f-956e-cdee6974c650",
-  "Coding Agents": "89497368-6e31-4dc5-b163-f3339170f1e2",
-  "Context & Prompt Engineering": "52313e14-ff84-4fc5-9f04-a480f14078ee",
-  "Customer Success Transformation": "505505c4-6c45-4bfa-bd03-1ca3fa7b2d1b",
-  "Data Foundations for AI": "0c4b854c-5f15-47d6-ad17-fb8a7091f610",
-  "Distributed Compute (Ray/Python)": "88791c9b-dcb7-4bf6-8525-ba6b5047371f",
-  "Enterprise AI Control Planes": "69ee2a49-f1b3-4d02-8ef9-0a063876bcc6",
-  "Forward-Deployed & Enterprise Adoption": "9adb7c2c-dba9-4939-9fee-2cdf01f15319",
-  "Foundation Models & Releases": "f307bafb-d276-461a-9c0d-e3e4dbd890f5",
-  "GTM & Marketing Engineering": "a3560e85-4d88-4ef3-b591-f36605058b01",
-  "GTM Operating Model": "ebfcb3b1-14f2-4e27-af0e-0eede0dec8e0",
-  "Knowledge & Retrieval": "94bb6596-9770-4e05-99bb-12cfb1f203bb",
-  "MCP & Agent-Ready APIs": "c7314f32-f0fc-4d6e-8379-3262946d6e01",
-  "Microsoft AI Stack": "11e8e531-24be-4cbf-8ec2-1266f3970bc0",
-  "Outbound & the SDR Reshape": "967b9870-1d0a-4f09-b6ec-c003ac26fdc0",
-  "Quantum Computing & HPC": "e7b0ecc3-e659-4944-a5a0-3863e1df856c",
-  "Semantic Layer & Lineage": "0d89f8e5-7f2a-40e1-93cd-96941992507a",
-  "The Software Development Shift": "0453ad50-11aa-4549-af15-e85b67e3fe24",
-  "Vertical & Applied AI": "5ad952b7-6c19-402f-980c-5d61d465fecb",
-  "Voice AI Infrastructure": "f1f05e3e-5c17-40b2-a65a-85b60b377ae3"
- }
+ "_comment": "Theme (topic_cluster) names -> ids. topic_intelligence is not API-exposed, so assign_clusters.py reads this file. Refresh after any theme birth/merge: SELECT json_agg(json_build_object('name', display_name, 'id', cluster_id) order by display_name) FROM topic_intelligence.topic_cluster WHERE curation_status='approved' (read-only MCP). Generated 2026-11-04 (YED-307), 33 themes.",
+ "themes": [
+  {
+   "name": "AI & Agent Security & Governance",
+   "id": "72f4d902-39be-42c9-b927-da21002d364e"
+  },
+  {
+   "name": "AI Capital, Business Models & Media",
+   "id": "ff526096-7f72-40e8-bd5d-c7343905bc79"
+  },
+  {
+   "name": "AI Compute Infrastructure",
+   "id": "777d6560-8cbb-46a7-87e0-33ec6c13174f"
+  },
+  {
+   "name": "AI Cost & FinOps",
+   "id": "765e20e5-e802-4535-a88d-d951a853135e"
+  },
+  {
+   "name": "AI Dev Tooling & IDEs",
+   "id": "ead5d66a-5abb-4364-8545-22bb15ec95b2"
+  },
+  {
+   "name": "AI Engineering Practice",
+   "id": "9f4dce3c-3f31-48cf-a7fe-01eb2a033e43"
+  },
+  {
+   "name": "AI Talent, Hiring & Leadership",
+   "id": "4de47137-ebc9-471d-b80d-2689a412fc4c"
+  },
+  {
+   "name": "AI, Work & Society",
+   "id": "6febfa3b-e85a-4c24-8f41-94e52afafa32"
+  },
+  {
+   "name": "AI-Native GTM & Revenue Agents",
+   "id": "3cd4dfdb-d309-4ec3-adeb-a546f14a8c8e"
+  },
+  {
+   "name": "Agent Architecture & Memory",
+   "id": "d7e0caa7-cb59-4d6e-b194-b13fd5671f5b"
+  },
+  {
+   "name": "Agent Reliability & Evaluation",
+   "id": "5ba0e6fc-bae9-4703-b9a6-b507aed3de2b"
+  },
+  {
+   "name": "Agentic Commerce & Payments",
+   "id": "68244283-1e01-4c64-a5f7-13f38e69311b"
+  },
+  {
+   "name": "Agentic Data Access",
+   "id": "5989b107-f81e-4127-9d31-7f1746bd5e66"
+  },
+  {
+   "name": "Agentic Marketing",
+   "id": "d78e7ee0-fd12-409f-956e-cdee6974c650"
+  },
+  {
+   "name": "Coding Agents",
+   "id": "89497368-6e31-4dc5-b163-f3339170f1e2"
+  },
+  {
+   "name": "Context & Prompt Engineering",
+   "id": "52313e14-ff84-4fc5-9f04-a480f14078ee"
+  },
+  {
+   "name": "Customer Success Transformation",
+   "id": "505505c4-6c45-4bfa-bd03-1ca3fa7b2d1b"
+  },
+  {
+   "name": "Data Foundations for AI",
+   "id": "0c4b854c-5f15-47d6-ad17-fb8a7091f610"
+  },
+  {
+   "name": "Distributed Compute (Ray/Python)",
+   "id": "88791c9b-dcb7-4bf6-8525-ba6b5047371f"
+  },
+  {
+   "name": "Enterprise AI Control Planes",
+   "id": "69ee2a49-f1b3-4d02-8ef9-0a063876bcc6"
+  },
+  {
+   "name": "Forward-Deployed & Enterprise Adoption",
+   "id": "9adb7c2c-dba9-4939-9fee-2cdf01f15319"
+  },
+  {
+   "name": "Foundation Models & Releases",
+   "id": "f307bafb-d276-461a-9c0d-e3e4dbd890f5"
+  },
+  {
+   "name": "GTM & Marketing Engineering",
+   "id": "a3560e85-4d88-4ef3-b591-f36605058b01"
+  },
+  {
+   "name": "GTM Operating Model",
+   "id": "ebfcb3b1-14f2-4e27-af0e-0eede0dec8e0"
+  },
+  {
+   "name": "Knowledge & Retrieval",
+   "id": "94bb6596-9770-4e05-99bb-12cfb1f203bb"
+  },
+  {
+   "name": "MCP & Agent-Ready APIs",
+   "id": "c7314f32-f0fc-4d6e-8379-3262946d6e01"
+  },
+  {
+   "name": "Microsoft AI Stack",
+   "id": "11e8e531-24be-4cbf-8ec2-1266f3970bc0"
+  },
+  {
+   "name": "Outbound & the SDR Reshape",
+   "id": "967b9870-1d0a-4f09-b6ec-c003ac26fdc0"
+  },
+  {
+   "name": "Quantum Computing & HPC",
+   "id": "e7b0ecc3-e659-4944-a5a0-3863e1df856c"
+  },
+  {
+   "name": "Semantic Layer & Lineage",
+   "id": "0d89f8e5-7f2a-40e1-93cd-96941992507a"
+  },
+  {
+   "name": "The Software Development Shift",
+   "id": "0453ad50-11aa-4549-af15-e85b67e3fe24"
+  },
+  {
+   "name": "Vertical & Applied AI",
+   "id": "5ad952b7-6c19-402f-980c-5d61d465fecb"
+  },
+  {
+   "name": "Voice AI Infrastructure",
+   "id": "f1f05e3e-5c17-40b2-a65a-85b60b377ae3"
+  }
+ ]
 }

@@ -27,7 +27,9 @@ BY = "session"   # ADR-13 vocabulary: bootstrap · llm · embedding_auto · sess
 
 def load_themes(path: str = REF) -> dict[str, str]:
     with open(path, encoding="utf-8") as f:
-        return json.load(f)["themes"]
+        # a list of {name, id}, not a name->id map: a map keyed by names like "...APIs" / "...Access"
+        # with uuid values trips gitleaks' generic-api-key rule (CI scan, #276)
+        return {t["name"]: t["id"] for t in json.load(f)["themes"]}
 
 
 def validate(rows, themes: dict[str, str]) -> list[str]:
