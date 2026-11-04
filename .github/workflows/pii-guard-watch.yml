@@ -6,9 +6,10 @@ name: PII guard watcher (weekly shadow scan + pre-registered triggers)
 #   1. SHADOW   — .claude/scripts/pii_guard_watch.py --shadow: a READ-ONLY count scan of prod spine text,
 #                 run in Postgres inside the YED-312 guard (begin read only -> show -> DO assert -> query ->
 #                 rollback; ON_ERROR_STOP; fail closed). The SQL returns counts only.
-#   2. EVALUATE — --evaluate --no-telemetry: F2, F4, F5 and F1's numeric-prose leg from the shadow counts.
+#   2. EVALUATE — --evaluate --no-telemetry: F2, F4 and F1's pre-merge shadow leg from the shadow counts.
 #                 Refusal telemetry lives on Alex's machine (session writers), never in CI, so F1's
-#                 write-refusal leg, F3 and F6 read "INSUFFICIENT (no telemetry in CI)" here by design.
+#                 telemetry leg, F3, F5 and F6 read "INSUFFICIENT (no telemetry in CI)" here by design.
+#                 A missing or >8-day-old shadow is NOT EVALUATED (exit 1) and opens the failure issue.
 # The logs print COUNTS AND VERDICTS ONLY (no shapes, no ids) and the run uploads NO artifacts. Nothing
 # here writes to Supabase, Notion or Linear: the only write is the GitHub issue below.
 #
@@ -53,7 +54,7 @@ jobs:
             --json-out "$RUNNER_TEMP/pii-verdict.json" --body-out "$RUNNER_TEMP/pii-body.md"
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
-          [ "$code" -eq 1 ] && exit 1   # 1 = the evaluator itself failed; 0 / 2 / 3 are verdicts
+          [ "$code" -eq 1 ] && exit 1   # 1 = NOT EVALUATED or the evaluator failed; 0 / 2 / 3 are verdicts
           exit 0
       # One open issue, not one per week (the nightly's pattern): if an open "PII guard watcher: …" issue
       # exists, retitle it to this run's verdict and comment the counts; otherwise open one. Closing the
@@ -90,7 +91,7 @@ jobs:
           else
             gh issue create \
               --title "PII guard watcher run FAILED (since $TODAY)" \
-              --body "The weekly PII guard watcher could not produce a verdict: the read-only shadow scan failed (DB unreachable, or the YED-312 read-only guard tripped and the run aborted fail-closed) or the evaluator errored. The failing step in the run says which. No trigger was evaluated this week. Run: $RUN_URL. Playbook: .claude/references/pii-guard-watch.md. YED-320." \
+              --body "The weekly PII guard watcher could not produce a verdict: the read-only shadow scan failed (DB unreachable, or the YED-312 read-only guard tripped and the run aborted fail-closed), the evaluator reported NOT EVALUATED (shadow missing or stale), or it errored. The failing step in the run says which. No trigger was evaluated this week. Run: $RUN_URL. Playbook: .claude/references/pii-guard-watch.md. YED-320." \
               || echo "issue-create failed; check the Actions run directly"
           fi
       # Last, so the failure-issue step above never fires for a verdict: a FIRE marks the run red as well.
