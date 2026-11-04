@@ -13,7 +13,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
-- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c status explicitly in the Step 6 summary.
+- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`) · 3.8d: every unassigned topic on the event gets a theme, assigned in-session (`assign_clusters.py`). 3.8b/c/d are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c/d status explicitly in the Step 6 summary.
 - **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
 - **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
@@ -178,6 +178,8 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 - Step 3.6 enrichment results (required: "essential, not optional")
 - **Alex's recap (required, YED-259):** before dispatching, ask him for two minutes in his own words — who he spoke to, what he'd follow up on, what he missed, when he left — unless he already gave it this session. Save it to a local file. Without it the brief must not propose any follow-up (validated 2026-10-15).
 
+**Theme-assignment marker (YED-307):** when you create the brief's Content Draft page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧` on two lines. Step 3.8d's table goes there through a Step 5 `content_updates` op.
+
 **Who writes it:** dispatch the **`post-event-synthesizer`** agent (`model: opus` or `fable`; text-only) with local file paths for every input above (the parent fetches the pre-event brief from Notion and saves it to a file first). It returns a ≤300-word **review head**, then the brief in the schema below, then gaps. The parent writes it to Notion (via `notion-writer` once that step is wired, else inline): review head at the top, the full Quote Bank inside a toggle so the page stays reviewable. If Step 3.6 hasn't run yet, dispatch it once for pass 1 (Speaker Map + UNRESOLVED queue), run 3.6 on that queue, then pass 2 for the full brief.
 
 **Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
@@ -224,7 +226,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 After writing the brief, capture its URL and pass it to Step 4 (content-correspondent uses it as `=== Post-Event Brief ===` input alongside the conditioned quote bank).
 
-## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c)
+## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c · 3.8d)
 
 Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps and state their outcome (or why one was skipped) in the Step 6 summary.
 
@@ -249,6 +251,7 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
    - Event: `notion_page_id`, `title`, `kind: "attended"`, `event_date`, `location`, `google_calendar_event_id`.
    - Entities: one single-database SQL query per DB (People · Companies · Topics) — `notion-query-data-sources` in SQL mode, `WHERE url IN (…)`. **Gotcha:** the SQL `url` column is `https://app.notion.com/<id>` (no `/p/`), while relation values are `https://app.notion.com/p/<id>` — strip `/p/` before the `IN` list or the query silently returns 0 rows. Multi-database queries need a Business plan; three single-database queries do not.
    - Roles: People → `speaker` | `host` | `attendee` (from Role Context), Companies → `subject` (host / sponsor / mentioned), Topics → `tagged_topic`. These are the graph's existing role values.
+   - **General topics (YED-304 #267 rule):** when a concept from the event clearly belongs to a theme but doesn't warrant its own topic, don't mint a thin new topic. Tag that theme's standing general topic instead: add `{"type": "topic", "name": "<Theme> (general)", "role": "tagged_topic", "must_exist": true}`. Theme names are in `.claude/references/topic-themes.json`. General topics live in the graph only, with no Notion page.
    - People carry **professional fields only**: name · title · company · linkedin_url. Never email, phone, bio, or text from the transcript (ADR-9).
 2. **Dry-run, then write:**
    ```
@@ -272,6 +275,17 @@ Save the Step 3.7 `post_event_brief` body to `.claude/.state/briefs/<event-slug>
 - If there is genuinely no brief (e.g. a walk-in with no transcript), say so with the reason in the Step 6 summary — skipped, not silent.
 
 **Prerequisite:** migration `supabase/migrations/0009_substrate_s1a_additive.sql` applied to prod (rehearsed on the twin via `supabase/scripts/rehearse_s1a.py`). Until it is, 3.8c fails with a 404 on `claim` — do not skip around it; say so in the Step 6 summary.
+
+### Step 3.8d: assign a theme to every unassigned topic (`assign_clusters.py`)
+
+The session that mints a topic assigns its theme, because it holds the transcript, the brief and the roster (YED-304, `docs/proposals/2026-11-03-dynamic-topic-taxonomy.md` §2). A topic with no theme is invisible to every trend: that was the 8 Aug to 4 Nov gap. Run this after 3.8b; it doesn't depend on 3.8c. Before relying on the general-topic rule, check that 3.8b reported `skipped_not_in_vocab=0`. If it didn't, a `(general)` topic name didn't match: fix the name from `topic-themes.json` and re-run 3.8b.
+
+1. **List:** `python3 .claude/scripts/assign_clusters.py list --event <event notion_page_id>` prints the event's linked live topics that have no theme, plus the theme names.
+2. **Decide in-session**, for each topic: the best-fitting theme from that list, with a confidence of 0.5–1.0 (0.9 clear fit · 0.7 reasonable · 0.5 weak). Use `NONE` plus a one-line reason when nothing fits. Those reasons feed the weekly theme-proposal issue: three or more coherent "none fits" topics propose a new theme. Write the decisions to a JSON file in the scratchpad.
+3. **Dry-run, then write:** `assign_clusters.py apply --file <a.json>`, then `… --apply`. It writes only through `spine_client`, and only to topics that still have no theme, so it never overwrites an existing assignment.
+4. **Make it visible.** Paste the printed lines into the Step 6 summary. That's mandatory, and it's where Alex reviews assignments. Also add them to the canonical post-event brief page: when Step 3.7 creates that page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧`. Step 5's payload then carries one `update` op on that page (its id in `allowed_page_ids`), with `content_updates: [{"old_str": "⟦theme-assignments⟧\n⟦/theme-assignments⟧", "new_str": "⟦theme-assignments⟧\n## Theme assignments\n<the lines>\n⟦/theme-assignments⟧"}]`. If the brief was written inline without the marker, put the lines in the Step 6 summary only, and say so.
+
+After a theme birth or merge, refresh `.claude/references/topic-themes.json` (the SQL is in the file's `_comment`) before the next run.
 
 ## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
 
@@ -436,6 +450,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
 Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
+Theme assignment (3.8d): [N assigned · M none-fits / skipped: reason], followed by one line per topic: "topic → theme (confidence)" or "topic → none fits (reason)"
 Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
 Drafts created: N  (notion-writer: created C · skipped S · failed F · manifest <path>)
   - Tier 1 comment: [Notion URL]
