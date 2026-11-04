@@ -9,5 +9,6 @@ useDefault = true
 
 [[allowlists]]
 description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials"
-paths = '''(^|/)supabase/fixtures/'''
-regexes = '''(?i)^[0-9a-f]{64}$'''
+condition = "AND"
+paths = ['''(^|/)supabase/fixtures/''']
+regexes = ['''(?i)^[0-9a-f]{64}$''']
