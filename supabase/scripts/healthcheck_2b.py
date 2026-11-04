@@ -8,7 +8,7 @@ check of the nightly compute (topic_intel_compute.py imports its reference + com
 compute's parity gate and this check share one definition of "correct").
 
 Reads the LIVE schemas (public + topic_intelligence) — NOT canonical_v2 (empty post-swap).
-Three layers, all read-only:
+Five layers, all read-only:
   1. Independent recompute (pure Python, from public.event/event_entity/topic) must AGREE
      row-for-row with the stored topic_intelligence.topic_trend / topic_pair_metric.
   2. The 8 structural invariants (canonical order, no-orphan, conservation, kind isolation,
@@ -18,6 +18,13 @@ Three layers, all read-only:
   4. PII column audit (YED-297): any column named in spine_client.FORBIDDEN_COLUMNS, in any
      non-platform schema, is a FLAG (non-fatal); it FAILS the run only when EXPOSED (it holds
      values AND anon/authenticated can read it). `--pii-audit-only` runs just this layer.
+  5. Lane freshness (market-lens-and-slices §3/§7, YED-304 Phase A): the lane_run run ledger
+     (migration 0016) flags a lane silent >7 days and FAILs >14 days — FLAG at 7, FAIL at 14
+     means days_stale >7 is a FLAG, days_stale >14 is a FAIL; a ledger lane with no runs at
+     all FAILs outright. Until 0016 exists this half SKIPs (non-fatal). Beside it, the
+     role_posted stall check FAILs when public.event has no role_posted row in the last 14
+     days (the L10 lesson: 183 role_posted rows, none since 2026-09-23, nothing alerted) and
+     SKIPs when the table has no role_posted rows at all (empty twin).
 
 Purpose: prove the graph stays COHERENT night after night, so decommissioning the gtm spine +
 dropping pre2b is a decision backed by evidence, not vibes. Catches silent corruption / drift /
@@ -46,6 +53,14 @@ import urllib.request
 PSQL_BIN = os.environ.get("PSQL_BIN", "/opt/homebrew/opt/libpq/bin/psql")
 SPEAKER_ROLES = ("speaker", "host", "panelist")
 WINDOWS = [("month", 30), ("week", 7), ("all_time", None)]
+
+# Lane freshness (market-lens-and-slices §7): FLAG at 7 days stale, FAIL at 14. A lane with no
+# runs at all has been dead since it was registered — FAIL, never silent.
+FLAG_DAYS, FAIL_DAYS = 7, 14
+ROLE_POSTED = "role_posted"
+# Migration 0016 owns the lane_run DDL; the fixture pins the column shape this layer expects.
+LANE_RUN_COLUMNS = ("lane", "started_at", "items_seen", "items_written", "items_refused", "credits_spent")
+FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "fixtures", "lane_run_freshness.json")
 
 # LIVE schema targets (post-swap)
 EV, EE, TOPIC = "public.event", "public.event_entity", "public.topic"
@@ -245,6 +260,64 @@ def compare(ref, sql, grain, keys):
     return mism
 
 
+# ---------------------------------------------------------------- layer 4: lane freshness
+
+def classify_freshness(last_run, today):
+    """Pure classifier: last_run (date or None) -> 'ok' | 'flag' | 'fail' (§7: FLAG >7d, FAIL >14d)."""
+    if last_run is None:
+        return "fail"
+    days = (today - last_run).days
+    return "ok" if days <= FLAG_DAYS else "flag" if days <= FAIL_DAYS else "fail"
+
+
+def lane_run_last_runs() -> dict[str, dt.date] | None:
+    """Latest run per lane from public.lane_run, or None while migration 0016 hasn't created it."""
+    if not q("select to_regclass('public.lane_run') is not null;")[0][0] == "t":
+        return None
+    cols = {r[0] for r in q("""select column_name from information_schema.columns
+                               where table_schema='public' and table_name='lane_run';""")}
+    if not {"lane", "started_at"} <= cols:
+        return None
+    out = {}
+    for lane, d in q(f"select lane, max(started_at)::date::text from public.lane_run group by lane;"):
+        out[lane] = dt.date.fromisoformat(d) if d else None
+    return out
+
+
+def lane_freshness(today) -> list[str]:
+    """Layer 4a — lane_run ledger staleness. Returns FAIL labels; SKIPs (non-fatal) pre-0016."""
+    fails = []
+    last_runs = lane_run_last_runs()
+    if last_runs is None:
+        print("  [SKIP] lane_run ledger (migration 0016 not applied yet)")
+        return fails
+    if not last_runs:
+        print("  [SKIP] lane_run ledger exists but is empty (no lane has run yet)")
+        return fails
+    for lane in sorted(last_runs):
+        status = classify_freshness(last_runs[lane], today)
+        stale = "?" if last_runs[lane] is None else str((today - last_runs[lane]).days)
+        print(f"  [{'FAIL' if status == 'fail' else 'WARN' if status == 'flag' else 'PASS'}] "
+              f"lane {lane}: last run {last_runs[lane] or 'never'} ({stale}d stale)")
+        if status == "fail":
+            fails.append(f"lane {lane} silent >{FAIL_DAYS}d")
+    return fails
+
+
+def role_posted_freshness(today) -> list[str]:
+    """Layer 4b — the role_posted stall (L10): no role_posted event in FAIL_DAYS is a FAIL."""
+    total = int(q(f"select count(*) from {EV} where kind='{ROLE_POSTED}';")[0][0])
+    if total == 0:
+        print(f"  [SKIP] {ROLE_POSTED} stall check (no {ROLE_POSTED} events in the table at all)")
+        return []
+    last = q(f"select max(event_date)::date::text from {EV} where kind='{ROLE_POSTED}';")[0][0]
+    status = classify_freshness(dt.date.fromisoformat(last) if last else None, today)
+    stale = (today - dt.date.fromisoformat(last)).days if last else -1
+    print(f"  [{'FAIL' if status == 'fail' else 'PASS'}] {ROLE_POSTED} stall: "
+          f"{total} events, last {last} ({stale}d ago)")
+    return [f"{ROLE_POSTED} lane silent {stale}d (>{FAIL_DAYS}d)"] if status == "fail" else []
+
+
 def read_path_probe() -> list[str]:
     url = os.environ.get("MI_SUPABASE_URL")
     key = os.environ.get("MI_SUPABASE_ANON_KEY")
@@ -361,15 +434,60 @@ select h.s, h.t, h.col,
     return flags, fails
 
 
+# ---------------------------------------------------------------- selftest (offline, no DB)
+
+def _selftest() -> int:
+    """Offline: validate the lane_run fixture's shape + classification, and the FLAG/FAIL edges."""
+    ok = n = 0
+
+    def ck(name, cond):
+        nonlocal ok, n
+        n += 1
+        ok += bool(cond)
+        print(f"  [{'PASS' if cond else 'FAIL'}] {name}")
+
+    with open(FIXTURE) as fh:
+        fx = json.load(fh)
+    ck("fixture has as_of, expected_lane_run_columns, rows, role_posted",
+       all(k in fx for k in ("as_of", "expected_lane_run_columns", "rows", "role_posted")))
+    ck("fixture's expected lane_run columns match this script's probe shape",
+       tuple(fx.get("expected_lane_run_columns", ())) == LANE_RUN_COLUMNS)
+    as_of = dt.date.fromisoformat(fx["as_of"])
+    blob = json.dumps(fx)
+    ck("fixture carries no email/phone (ADR-9 negative check)",
+       "@" not in blob and not any(tok.isdigit() and len(tok) >= 7 for tok in
+                                   blob.replace("-", " ").replace(".", " ").split()))
+    for row in fx["rows"]:
+        got = classify_freshness(dt.date.fromisoformat(row["last_run"]), as_of)
+        ck(f"lane {row['lane']} (last {row['last_run']}) -> {row['expected_status']}",
+           got == row["expected_status"])
+    rp = fx["role_posted"]
+    got = classify_freshness(dt.date.fromisoformat(rp["last_event_date"]), as_of)
+    ck(f"role_posted (last {rp['last_event_date']}) -> {rp['expected_status']}", got == rp["expected_status"])
+
+    # Threshold edges pinned exactly: ok through day 7, flag days 8-14, fail from day 15 or never-run.
+    for delta, want in ((0, "ok"), (FLAG_DAYS, "ok"), (FLAG_DAYS + 1, "flag"),
+                        (FAIL_DAYS, "flag"), (FAIL_DAYS + 1, "fail")):
+        ck(f"day {delta:>2} stale -> {want}", classify_freshness(as_of - dt.timedelta(days=delta), as_of) == want)
+    ck("never ran -> fail", classify_freshness(None, as_of) == "fail")
+
+    print(f"healthcheck_2b --selftest: {ok}/{n} passed")
+    return 0 if ok == n else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Post-swap MI 2b health check (read-only).")
     ap.add_argument("--pii-audit-only", action="store_true",
                     help="run only the YED-297 PII column audit (exit 1 only on an EXPOSED column)")
+    ap.add_argument("--selftest", action="store_true",
+                    help="offline: validate the lane_run freshness fixture + threshold edges (no DB)")
     args = ap.parse_args()
     if args.pii_audit_only:
         print("PII column audit (YED-297):")
         _, pii_fails = pii_column_audit()
         return 1 if pii_fails else 0
+    if args.selftest:
+        return _selftest()
     rows = q(f"select max(as_of_date)::text from {TT};")
     as_of_str = rows[0][0] if rows and rows[0][0] else ""
     if not as_of_str:
