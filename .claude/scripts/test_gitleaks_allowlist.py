@@ -82,6 +82,9 @@ def build_scratch_repo(base: Path, with_token: bool) -> Path:
             json.dumps({"api_key": PLANTED_TOKEN}) + "\n"
         )
     run_git(repo, "init", "-q")
+    # CI runners have no git identity; the probe repo needs one to commit.
+    run_git(repo, "config", "user.name", "gitleaks-selftest")
+    run_git(repo, "config", "user.email", "selftest@example.invalid")
     run_git(repo, "add", "-A")
     run_git(repo, "commit", "-qm", "probe: allowlist selftest scratch repo")
     return repo
