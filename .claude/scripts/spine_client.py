@@ -56,7 +56,15 @@ ALLOW: dict[str, set[str]] = {
               # YED-304 W1: cluster assignment columns (ADR-9: none is contact PII)
               "cluster_id", "cluster_assignment_confidence", "cluster_assigned_by"} | _MI_COMMON,
     "event": {"id", "title", "kind", "event_date", "description", "url", "source", "confidence",
-              "notion_page_id", "metadata", "created_at", "updated_at"},
+              "notion_page_id", "metadata", "created_at", "updated_at",
+              "signal_type"},   # YED-307 / migration 0016: hiring_pulse · paper · model_release · news · partnership · layoff
+    # --- migration 0016 (ADR-13, PR #274): market-lens tables. topic_cluster_membership is deliberately ABSENT:
+    # its only writer is the topic_membership_sync trigger; a direct write would race it (one-open-row rule).
+    "company_segment_history": {"segment_id", "company_id", "stage", "industry", "headcount_band", "hq_metro",
+                                "target_tier", "valid_from", "valid_to", "source", "created_at"},
+    "lane_run": {"run_id", "lane", "started_at", "finished_at", "status", "items_seen", "items_written",
+                 "items_refused", "credits_spent", "error"},
+    "lane_registry": {"lane", "active"},   # producers flip `active` only; schedule/owner/kill_rule change by migration
     "event_entity": {"id", "event_id", "entity_type", "entity_id", "role", "created_at"},
     "documents": {"id", "title", "author", "source_type", "blob_key", "sha256", "word_count",
                   "embedding_model", "notion_page_id", "ingested_at",
@@ -373,7 +381,8 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
 # Detection patterns for check_writers() — module-level so --selftest can pin them (judge findings 2026-09-13).
 _SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
 _WRITE_TABLES = (r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims|claim|"
-                 r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage)")
+                 r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage|"
+                 r"company_segment_history|lane_run|lane_registry)")
 _PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
 _PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
 
@@ -450,6 +459,22 @@ def selftest() -> bool:
         lambda: guard("topic", {"cluster_id": "jane.doe@example.com"}, op="update"), True)
     add("topic cluster_assignment_confidence phone → refuse",
         lambda: guard("topic", {"cluster_assignment_confidence": "+1 (555) 123-4567"}, op="update"), True)
+    # YED-307 / 0016: the new tables open their columns, never the PII boundary (each new free-text column probed).
+    add("lane_run row → pass", lambda: guard("lane_run", {"lane": "1_hiring_pulse", "status": "success",
+                                                         "items_seen": 40, "items_written": 38}), False)
+    add("lane_run error carrying an email → refuse",
+        lambda: guard("lane_run", {"lane": "1_hiring_pulse", "error": "board owner jane.doe@example.com 500"}), True)
+    add("lane_run error carrying a phone → refuse",
+        lambda: guard("lane_run", {"lane": "1_hiring_pulse", "error": "call (555) 123-4567"}), True)
+    add("company_segment_history source carrying an email → refuse",
+        lambda: guard("company_segment_history", {"company_id": "c1", "stage": "seed", "source": "a.b@example.com"}), True)
+    add("company_segment_history PII column → refuse",
+        lambda: guard("company_segment_history", {"company_id": "c1", "email": "x"}), True)
+    add("event signal_type → pass", lambda: guard("event", {"title": "t", "kind": "market", "signal_type": "hiring_pulse"}), False)
+    add("lane_registry non-allowlisted column (schedule) → refuse",
+        lambda: guard("lane_registry", {"lane": "1_hiring_pulse", "schedule": "x"}, op="update"), True)
+    add("topic_cluster_membership direct write → refuse (trigger is the only writer)",
+        lambda: guard("topic_cluster_membership", {"topic_id": "t"}), True)
     add("inbox row from denylisted sender_domain → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "source": "inbox_miner:market",
                                 "metadata": {"sender_domain": "alerts.bank.example"}}) if not domain_denylisted("alerts.bank.example", deny) else (_ for _ in ()).throw(PIIViolation("tier 0")), True)
