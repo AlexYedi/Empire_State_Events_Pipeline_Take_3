@@ -90,10 +90,18 @@ FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "tele
 # 10-digit integers (unix timestamps, ids) never false-positive. The optional leading-1 prefix
 # (S-04 A2, YED-183) catches leading-country-code US numbers while the guard lookbehind still
 # applies to the whole number, so `1-` after a word char or `.` cannot slip through.
+# Third alternative (YED-309): international with separators — `+CC`, an optional `(0)` trunk, then
+# 2–5 digit groups split by space/dot/dash. The lookahead counts 7–15 digits across the whole
+# separated run (so `+3 4 5` and `+12.50` pass); the tail guard refuses a stop before another
+# `sep+digit`, so over-long dotted runs (`+1.2.3.4.5.6.7`) pass too. A leading `+` stays mandatory:
+# separator-less 10-digit numbers remain OUT (A3, YED-183). Carried byte-for-byte by the DB backstop
+# (pii-db-check.sql / migration 0017) — check_pii_regex_parity.py enforces it.
 EMAIL_RE = re.compile(r"(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])")
 PHONE_RE = re.compile(
     r"(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"   # 555-123-4567 / 1-555-123-4567
-    r"|(?<![\w.])\+\d{10,15}(?![\w])"                                                          # +15551234567 (E.164 compact)
+    r"|(?<![\w.])\+\d{10,15}(?![\w])"                                                          # +15551234567 — E.164 compact
+    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))"                    # +44 20 7946 0958 — intl, YED-309
+    r"\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)"      # ...incl. +44 (0)20 7946 0958
 )
 # Bot / no-reply addresses are not personal data (git trailers surface them in generated artifacts).
 EMAIL_ALLOWLIST_RE = re.compile(r"^(?:noreply|no-reply|donotreply)@|@users\.noreply\.github\.com$", re.I)
@@ -434,6 +442,22 @@ def selftest() -> bool:
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "+1-555-123-4567"}}), True)
     add("event.metadata parens-area phone → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"x": "(555) 123-4567"}}), True)
+    # YED-309: international-with-separators. These rows test PHONE_RE ALONE (no guard(), no column
+    # rules) so the regex layer is proven on its own. Reserved/fictional numbers only: UK Ofcom drama
+    # ranges (020 7946 0xxx, 07700 900xxx), AU ACMA fiction ranges (0491 570 xxx, 02 5550 xxxx),
+    # FR ARCEP fiction range (06 39 98 xx xx); the rest are all-zero subscriber numbers.
+    def _phone(s):
+        if PHONE_RE.search(s):
+            raise PIIViolation(f"PHONE_RE matched {s!r}")
+    for s in ("+44 20 7946 0958", "+33 1 23 45 67 89", "+49 30 12345678", "+91 98765 43210",
+              "+44 (0)20 7946 0958", "+44 7700 900982", "+61 491 570 156", "+61.2.5550.1234",
+              "+33 6 39 98 12 34", "+81 3-0000-0000", "+55 11 90000-0000", "+65 6000 0000",
+              "+31 20 000 0000", "+34 91 000 00 00", "+44 (0) 20 7946 0123", "call +44 20 7946 0958."):
+        add(f"PHONE_RE intl {s!r} → match", lambda s=s: _phone(s), True)
+    for s in ("2026-11-04", "1.2.3", "192.168.1.10", "1757700000", "550e8400-e29b-41d4-a716-446655440000",
+              "+12.50", "+3 4 5", "2024-2026", "YED-309", "+1.2.3.4.5.6.7", "v1.2.3+20261104",
+              "2026-11-04T10:00:00+05:30", "+44 20", "+1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6"):
+        add(f"PHONE_RE {s!r} → no match", lambda s=s: _phone(s), False)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     # YED-304 W1: cluster assignment columns on topic
