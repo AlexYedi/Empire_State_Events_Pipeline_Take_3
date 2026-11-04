@@ -1,0 +1,10 @@
+{
+  "item_key": "540c88698eb4b0cd213e1b7c697abbb8783fe3d03a625c869314a2e9f615502f",
+  "relevance": 0.8,
+  "event_candidate": true,
+  "kind": "market",
+  "signal_type": "news",
+  "companies": ["Delta Labs"],
+  "topics": ["NYC AI ecosystem"],
+  "reason": "Office expansion by a watchlist company."
+}

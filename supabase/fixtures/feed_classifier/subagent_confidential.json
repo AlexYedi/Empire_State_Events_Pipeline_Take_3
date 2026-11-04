@@ -1,0 +1,10 @@
+{
+  "item_key": "33e2c5a11ab25afdc7013299e215113f3d635895dd96e10a6613a05ddffc8306",
+  "relevance": 0.5,
+  "event_candidate": false,
+  "kind": null,
+  "signal_type": null,
+  "companies": ["Gamma Systems"],
+  "topics": [],
+  "reason": "Relevant to the watchlist but the remainder is digest-only, not an event."
+}

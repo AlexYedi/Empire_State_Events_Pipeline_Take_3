@@ -1,0 +1,13 @@
+# Secret-scan config (YED-304, PR #270). Extends the default gitleaks rule set with ONE
+# allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore
+# fingerprints embed the commit SHA and break on squash merge (verified in PR #272's
+# review scratch squash: secret-scan goes red on main). Value-scoped too: only a string
+# that is exactly 64 hex chars (a sha256 digest — feeds.item_key over public *.example
+# fixture URLs) inside those fixture paths is allowed; nothing else is exempted.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials"
+paths = '''(^|/)supabase/fixtures/'''
+regexes = '''(?i)^[0-9a-f]{64}$'''

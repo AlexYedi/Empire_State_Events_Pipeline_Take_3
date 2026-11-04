@@ -6,6 +6,5 @@
   "signal_type": "news",
   "companies": ["Beta Software"],
   "topics": ["Developer tooling"],
-  "redacted_body": "Beta Software shipped bulk import for its workspace API, with CSV mapping and audit logs. The changelog notes a 2x throughput improvement over the single-record path.",
   "reason": "Product changelog entry worth a market fact, not a launch — no named release event."
 }

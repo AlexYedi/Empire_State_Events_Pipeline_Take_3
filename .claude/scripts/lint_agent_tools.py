@@ -3,7 +3,9 @@
 text also holds a write tool (SEC-03, 10-15 routing audit; CLAUDE.md invariants 5-6).
 
 Rules, per agent .md (frontmatter between the first two `---` lines):
-  1. A non-empty `tools:` line. Missing, empty, or any `*` wildcard fails (not minimal).
+  1. A `tools:` line must be present. Missing or any `*` wildcard fails (not minimal).
+     An EMPTY list is the most minimal declaration — a prompt-only agent that can read
+     no files and hold no tools (review fix #270: the lane-4 feed-classifier).
   2. READERS (untrusted text in): WebSearch, WebFetch, any Gmail MCP tool, and any MCP tool whose name
      contains `search` or `fetch` on a server that is not INTERNAL_SERVERS.
      WRITERS (external effect out): Bash (it can curl/POST anywhere), any MCP tool whose name contains
@@ -99,8 +101,6 @@ def check(path: str) -> list[str]:
         tools = parse_tools(f.read())
     if tools is None:
         return ["no `tools:` line in frontmatter (rule 1: every agent declares a minimal tools list)"]
-    if not tools:
-        return ["`tools:` line is empty (rule 1)"]
     wild = [t for t in tools if "*" in t]
     if wild:
         return [f"wildcard in `tools:` ({', '.join(wild)}) is not minimal (rule 1)"]
@@ -126,7 +126,7 @@ def selftest() -> int:
     cases = [
         (fm("tools: Read"), True),
         (fm("description: no tools"), False),
-        (fm("tools:"), False),
+        (fm("tools:"), True),   # prompt-only agent, declares zero tools (review fix #270)
         (fm("tools: *"), False),
         (fm("tools: Read, mcp__notion__*"), False),
         (fm("tools: Read, Write, mcp__notion__notion-fetch, mcp__notion__notion-search, "
