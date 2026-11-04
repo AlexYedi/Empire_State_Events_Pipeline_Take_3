@@ -1,32 +1,26 @@
 #!/usr/bin/env python3
-"""ats_pulse.py — lane 1 hiring pulse (YED-304, #268 design): ats_pull TSV → per-company weekly counts.
+"""YED-304 lane 1 — the weekly hiring pulse (review-rev 2).
 
-Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 and §3.1 (signal_type).
-Producer chain: ats_pull.py (boards → TSV) → THIS → substrate.py ensure-event (dry-run until
-migration 0015/0016 adds event.signal_type). Weekly consumer: the Monday Market Brief (§5).
+Reads the ats_pull TSV (and its --summary board-stats JSON), aggregates to ONE counts-only
+manifest: one market event per company per ISO week, signal_type='hiring_pulse', metadata
+{roles_open, gtm_roles, ai_gtm_roles, delta_wow}. Counts only — no titles, no people, no
+role rows (ADR-7 R2: no person edges from market lanes). Output names companies (unavoidable:
+they are the subject) but nothing finer-grained, which is why the Action deletes every file
+derived from the registry and uploads at most an anonymous totals summary.
 
-  ats_pulse.py [TSV ...] [--prior pulse.json] [--asof YYYY-MM-DD] [--out FILE]
-  ats_pulse.py --validate FILE            # offline manifest check — the Action's dry-run write step
-  ats_pulse.py --selftest                 # inline fixtures + negative-PII cases, no network
+Review-rev 2 contract changes (Claude Code review on PR #271):
+  * roles_open is the board's UNFILTERED posting count (from ats_pull --summary) — the old
+    title-filtered number made roles_open ≡ gtm_roles always.
+  * zero-posting companies emit zero-count rows (a 5 → 0 drop must show); errored boards
+    never become events — they land in the lane_run manifest.
+  * a PII hit in an INPUT row counts that row refused and skips it; only EMITTED text
+    hard-fails the build.
+  * --emit-events writes one substrate.ensure-event manifest per company: {"event": {...}} with
+    event_date = the ISO week's Sunday, so find_event's same-day match dedupes a re-run on any
+    day of the same week.
+  * a --prior from the SAME week is refused (delta 0 by construction).
 
-One hiring_pulse market event per company per ISO week. COUNTS ONLY — role titles are counted, then
-dropped; no title, name, or person ever reaches the output (a structural guarantee, not a convention:
-the manifest builder never sees a title it could emit, and every emitted string is re-scanned with
-spine_client's ADR-9 email/phone regexes — a hit is a hard fail, defense in depth against upstream
-format drift). Counts: metadata {roles_open, gtm_roles, ai_gtm_roles, delta_wow}.
-
-  roles_open    rows for the company in the input TSV (ats_pull output is already GTM-filtered, so
-                on today's input this equals gtm_roles; the separate fields keep the manifest contract
-                stable if a future lane feeds unfiltered boards)
-  gtm_roles     rows whose title passes ats_pull.keep_title (imported, never re-implemented)
-  ai_gtm_roles  gtm_roles whose title also carries an AI signal (AI/ML/LLM/GPT/agentic/…)
-  delta_wow     roles_open this week − last week's roles_open, from --prior (last week's pulse.json);
-                None = no baseline yet (the null-baseline rule — never report a delta without one)
-
-Dedup: rows dedupe on the ats_pull `key` (vendor:id) first, then the manifest's per-event dedup key is
-(company, kind, week) — the §3.2 secondary key; canonical-URL dedup does not apply (a pulse has no URL).
-
-Exit codes: 0 ok · 1 selftest or --validate failure · 2 bad args · 3 unreadable/malformed input.
+Selftest: inline fixtures, offline, negative-PII cases. Run: python3 ats_pulse.py --selftest
 """
 from __future__ import annotations
 
@@ -44,112 +38,164 @@ sys.path.insert(0, os.path.dirname(__file__))
 import ats_pull  # noqa: E402  (parse/projection only — the pulse never fetches boards itself)
 from spine_client import EMAIL_ALLOWLIST_RE, EMAIL_RE, PHONE_RE, PIIViolation  # noqa: E402
 
-SOURCE = "ats_pulse"                    # event.source prefix (§3.1 source_system)
-SIGNAL_TYPE = "hiring_pulse"            # event.signal_type once migration 0016 lands
-META_KEYS = ("roles_open", "gtm_roles", "ai_gtm_roles", "delta_wow")
+SOURCE = "ats_pulse"
+SIGNAL_TYPE = "hiring_pulse"
+MANIFEST_KEYS = ["week", "generated_at", "signal_type", "producer", "counts_only", "events"]
+META_KEYS = ["roles_open", "gtm_roles", "ai_gtm_roles", "delta_wow"]
 # Case-insensitive \bAI\b also matches a bare "ai" ("Root.ai") — treated as an AI signal on purpose.
 AI_TERM = re.compile(r"\bAI\b|\bML\b|LLM|GPT|GenAI|A\.I\.|agentic|machine learning|copilot", re.I)
 
-MANIFEST_KEYS = ("week", "generated_at", "signal_type", "producer", "counts_only", "events")
-
-
-# ---------------------------------------------------------------------------
-# Pure functions — input TSV → counts → manifest
-# ---------------------------------------------------------------------------
-
-def read_tsv(paths: list[str]) -> list[dict]:
-    """ats_pull TSV (header + rows, tab-separated) → row dicts. Duplicates on `key` are dropped."""
-    out, seen = [], set()
-    for path in paths:
-        fh = sys.stdin if path == "-" else open(path, encoding="utf-8")  # noqa: SIM115 — closed by csv
-        try:
-            reader = csv.DictReader(fh, delimiter="\t")
-            if not reader.fieldnames or "company" not in reader.fieldnames or "key" not in reader.fieldnames:
-                raise ValueError(f"not an ats_pull TSV (expected a 'company' and 'key' column): {path}")
-            for row in reader:
-                key = (row.get("key") or "").strip()
-                if not key or key in seen:
-                    continue
-                seen.add(key)
-                out.append(row)
-        finally:
-            if path != "-":
-                fh.close()
-    return out
-
 
 def week_bucket(d: date) -> str:
-    iso = d.isocalendar()
-    return f"{iso[0]}-W{iso[1]:02d}"
+    """A date → its ISO week bucket (the L10 freshness key)."""
+    y, w, _ = d.isocalendar()
+    return f"{y}-W{w:02d}"
 
 
-def counts(rows: list[dict]) -> dict:
-    """One company's rows → the four counts. Titles are consumed here and never leave this function."""
-    gtm = sum(1 for r in rows if ats_pull.keep_title(r.get("title") or ""))
-    return {"roles_open": len(rows), "gtm_roles": gtm,
-            "ai_gtm_roles": sum(1 for r in rows if ats_pull.keep_title(r.get("title") or "")
-                                and AI_TERM.search(r.get("title") or ""))}
+def week_sunday(week: str) -> date:
+    """'2026-W44' → the date of that ISO week's Sunday — event_date, so ensure-event's same-day
+    match dedupes a re-run on any day of the same week."""
+    m = re.fullmatch(r"(\d{4})-W(\d{2})", week)
+    if not m:
+        raise ValueError(f"week {week!r} is not an ISO week bucket")
+    return date.fromisocalendar(int(m[1]), int(m[2]), 7)
+
+
+def read_tsv(paths: list[str]) -> list[dict]:
+    """ats_pull TSV → row dicts; duplicate `key`s (a re-listed posting) dedupe on the first."""
+    rows, seen = [], set()
+    for p in paths:
+        with (sys.stdin if p == "-" else open(p, encoding="utf-8")) as fh:
+            reader = csv.DictReader(fh, delimiter="\t")
+            if not reader.fieldnames or not {"company", "key"} <= set(reader.fieldnames):
+                raise ValueError(f"not an ats_pull TSV (expected 'company' and 'key' columns): {p}")
+            for r in reader:
+                if r.get("key") and r["key"] in seen:
+                    continue
+                seen.add(r.get("key"))
+                rows.append(r)
+    return rows
 
 
 def scan_pii(obj: object) -> None:
-    """ADR-9 scan over EVERY string — used on the input rows AND the manifest. Raises PIIViolation.
-
-    Input-side scanning is deliberate: counts-only already guarantees titles are structurally dropped,
-    but a title (or company name) carrying contact detail is an upstream drift this lane must fail loud
-    on, not aggregate silently. Uses spine_client's own regexes — never a local copy (regex parity is
-    CI-checked upstream)."""
+    """ADR-9 scan over EVERY string — used on emitted manifests (hard fail) and, per row, to
+    refuse poisoned input rows. Uses spine_client's own regexes — never a local copy (regex
+    parity is CI-checked upstream)."""
     stack = [obj]
     while stack:
         v = stack.pop()
         if isinstance(v, str):
             for m in EMAIL_RE.finditer(v):
                 if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
-                    raise PIIViolation(f"ats_pulse: emitted text contains an email address — counts-only "
-                                       f"contract breached · fix: fix the upstream TSV, never the output")
+                    raise PIIViolation("email address detected")
             if PHONE_RE.search(v):
-                raise PIIViolation("ats_pulse: emitted text contains a phone number — counts-only contract "
-                                   "breached · fix: fix the upstream TSV, never the output")
+                raise PIIViolation("phone number detected")
         elif isinstance(v, dict):
             stack.extend(v.values())
         elif isinstance(v, (list, tuple)):
             stack.extend(v)
 
 
+def counts(rows: list[dict]) -> dict:
+    """Kept rows → {gtm_roles, ai_gtm_roles}. gtm via ats_pull.keep_title — imported, never a
+    local copy (a second GTM regex would drift; filter drift is a counts-accuracy bug)."""
+    gtm = [r for r in rows if ats_pull.keep_title(r.get("title") or "")]
+    return {"gtm_roles": len(gtm),
+            "ai_gtm_roles": len([r for r in gtm
+                                 if AI_TERM.search(r.get("title") or "")])}
+
+
 def build_manifest(rows: list[dict], asof: date,
-                   prior: dict | None = None) -> dict:
-    """Aggregate rows → the hiring_pulse manifest (one event per company per week)."""
-    scan_pii(rows)                    # layer 1: the input itself (see scan_pii docstring)
+                   prior: dict | None = None,
+                   board_stats: dict | None = None) -> dict:
+    """Aggregate rows (+ optional ats_pull --summary board stats) → the counts-only manifest."""
+    week = week_bucket(asof)
+    if prior and prior.get("week") == week:
+        raise ValueError(f"--prior is itself week {week} — a delta against itself is 0 by construction")
+
+    refused = 0
+    kept: list[dict] = []
+    for r in rows:                      # a PII hit in an input row refuses THAT row, not the lane
+        try:
+            scan_pii(r)
+        except PIIViolation:
+            refused += 1
+            continue
+        kept.append(r)
+
     by_company: dict[str, list[dict]] = {}
-    for r in rows:
+    for r in kept:
         by_company.setdefault((r.get("company") or "").strip(), []).append(r)
-    by_company.pop("", None)          # a row without a company name cannot carry an entity edge
+    by_company.pop("", None)            # a row without a company name cannot carry an entity edge
+
+    stats = {s["company"]: s for s in (board_stats or {}).get("companies", [])}
+    errored_boards = [s["company"] for s in stats.values() if s.get("status") == "error"]
+
     prior_counts = {}
     for ev in (prior or {}).get("events", []):
         pc = (ev.get("metadata") or {}).get("roles_open")
-        if isinstance(pc, int):
+        if isinstance(pc, int) and not isinstance(pc, bool):
             prior_counts[ev.get("company")] = pc
-    week = week_bucket(asof)
+
+    companies = sorted(set(by_company) | {c for c, s in stats.items()
+                                          if isinstance(s, dict) and s.get("status") != "error"})
     events = []
-    for company in sorted(by_company):
-        c = counts(by_company[company])
-        delta = c["roles_open"] - prior_counts[company] if company in prior_counts else None
+    for company in companies:
+        c = counts(by_company.get(company, []))
+        s = stats.get(company) or {}
+        # roles_open: the board's unfiltered posting count when board stats exist (the honest
+        # number — the title filter would make it ≡ gtm_roles); the filtered count is the
+        # fallback when ats_pulse runs on a bare TSV without a summary.
+        roles_open = s["postings"] if "postings" in s else c["gtm_roles"]
+        delta = roles_open - prior_counts[company] if company in prior_counts else None
         events.append({
             "company": company,
             "kind": "market",
             "signal_type": SIGNAL_TYPE,
-            "event_date": asof.isoformat(),
-            "title": f"Hiring pulse — {company} ({week})",   # company + week; counts appear in metadata only
+            "event_date": week_sunday(week).isoformat(),
+            "title": f"Hiring pulse — {company} ({week})",   # company + week; counts in metadata only
             "url": "",
             "source": SOURCE,
-            "metadata": {"roles_open": c["roles_open"], "gtm_roles": c["gtm_roles"],
+            "metadata": {"roles_open": roles_open, "gtm_roles": c["gtm_roles"],
                          "ai_gtm_roles": c["ai_gtm_roles"], "delta_wow": delta},
             "entities": [{"type": "company", "name": company, "role": "subject"}],
             "dedup_key": f"{SOURCE}:{company}:{week}",       # §3.2 secondary key (no canonical URL here)
         })
     manifest = {"week": week, "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "signal_type": SIGNAL_TYPE, "producer": SOURCE, "counts_only": True, "events": events}
-    scan_pii(manifest)
+    scan_pii(manifest)                  # layer 2: emitted text hard-fails (input rows only refuse)
+    manifest["_lane"] = {"seen": len(rows), "refused": refused, "errored_boards": errored_boards}
     return manifest
+
+
+def event_manifests(manifest: dict) -> list[dict]:
+    """The aggregate → one substrate.ensure-event manifest per company.
+
+    ensure_event reads m['event'] (title/kind/event_date/url/metadata) plus m['entities'];
+    event_date is the week's Sunday so find_event's same-day match dedupes any re-run within
+    the week (a stray Tuesday dispatch must not mint a duplicate). signal_type and dedup_key
+    ride in metadata until migration 0016 adds the columns — the 0016 wiring lifts them out."""
+    out = []
+    for ev in manifest.get("events", []):
+        out.append({
+            "event": {"title": ev["title"], "kind": ev["kind"], "event_date": ev["event_date"],
+                      "url": ev.get("url") or "", "source": ev.get("source") or SOURCE,
+                      "confidence": 0.9,
+                      "metadata": {**ev["metadata"], "signal_type": SIGNAL_TYPE,
+                                   "dedup_key": ev["dedup_key"], "week": manifest["week"]}},
+            "entities": ev.get("entities", []),
+        })
+    return out
+
+
+def lane_run_manifest(manifest: dict) -> dict:
+    """The lane_run row this run would write (PR #269's ledger; a dry-run stand-in until
+    migration 0016 — the Action keeps it local, never uploads it: it names boards)."""
+    lane = manifest.pop("_lane", {"seen": 0, "refused": 0, "errored_boards": []})
+    return {"lane": SOURCE, "week": manifest["week"], "ran_at": manifest["generated_at"],
+            "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
+            "seen": lane["seen"], "refused": lane["refused"],
+            "written": len(manifest["events"]), "errored_boards": lane["errored_boards"]}
 
 
 def validate_manifest(manifest: dict) -> list[str]:
@@ -175,11 +221,14 @@ def validate_manifest(manifest: dict) -> list[str]:
             problems.append(f"{tag}.company empty")
         if ev.get("source") != SOURCE:
             problems.append(f"{tag}.source must be '{SOURCE}'")
+        if str(week).startswith("20") and ev.get("event_date") != week_sunday(week).isoformat():
+            problems.append(f"{tag}.event_date must be the week's Sunday "
+                            f"({week_sunday(week).isoformat()}) — find_event dedupes same-day")
         meta = ev.get("metadata") or {}
         if set(meta) != set(META_KEYS):
             problems.append(f"{tag}.metadata keys must be exactly {META_KEYS}")
         for k in META_KEYS:
-            if k in meta and meta[k] is not None and not isinstance(meta[k], int):
+            if k in meta and meta[k] is not None and type(meta[k]) is not int:
                 problems.append(f"{tag}.metadata.{k} must be an int or null (got {type(meta[k]).__name__})")
         ents = ev.get("entities") or []
         if not any(e.get("type") == "company" and (e.get("name") or "").strip() for e in ents):
@@ -193,6 +242,40 @@ def validate_manifest(manifest: dict) -> list[str]:
     except PIIViolation as e:
         problems.append(str(e))
     return problems
+
+
+def validate_event_manifest(m: dict) -> list[str]:
+    """A per-company ensure-event manifest: the shape substrate.py actually reads."""
+    problems = []
+    ev = m.get("event") or {}
+    if not ev:
+        return ["event manifest has no 'event'"]
+    if ev.get("kind") != "market":
+        problems.append("event.kind must be 'market'")
+    meta = ev.get("metadata") or {}
+    for k in META_KEYS:
+        if k not in meta:
+            problems.append(f"event.metadata missing {k!r}")
+        elif meta[k] is not None and type(meta[k]) is not int:
+            problems.append(f"event.metadata.{k} must be an int or null")
+    ents = m.get("entities") or []
+    if len(ents) != 1 or ents[0].get("type") != "company":
+        problems.append("exactly one company entity expected in Phase A (no person edges)")
+    try:
+        scan_pii(m)
+    except PIIViolation as e:
+        problems.append(str(e))
+    return problems
+
+
+def anonymous_summary(manifest: dict) -> dict:
+    """The ONLY artifact shape allowed off the runner: totals, no company names."""
+    evs = manifest.get("events", [])
+    return {"week": manifest["week"], "producer": SOURCE, "validate": "ok",
+            "companies": len(evs),
+            "roles_open_total": sum((e["metadata"]["roles_open"] or 0) for e in evs),
+            "gtm_roles_total": sum((e["metadata"]["gtm_roles"] or 0) for e in evs),
+            "ai_gtm_roles_total": sum((e["metadata"]["ai_gtm_roles"] or 0) for e in evs)}
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +314,21 @@ def _fixture_rows() -> list[dict]:
     ]
 
 
+def _fixture_board_stats() -> dict:
+    """ats_pull --summary shape: unfiltered posting counts per board (Anthropic 7, Runway 2,
+    Harvey 0), one errored board (Neverboard — must never become an event)."""
+    return {"boards": 4, "errored": 1, "companies": [
+        {"company": "Anthropic", "postings": 7, "status": "ok"},
+        {"company": "Runway", "postings": 2, "status": "ok"},
+        {"company": "Harvey", "postings": 0, "status": "zero"},          # 0 → 0 must still show
+        {"company": "Neverboard", "postings": 0, "status": "error"}]}
+
+
+def _json_copy(obj: object) -> object:
+    """Deep copy via JSON round-trip — test mutations must never share structure with the fixture."""
+    return json.loads(json.dumps(obj))
+
+
 def selftest() -> int:
     ok, n = 0, 0
 
@@ -250,152 +348,218 @@ def selftest() -> int:
     check("tsv: companyless rows are read but refused at manifest time",
           any(not (r.get("company") or "").strip() for r in rows))
 
-    m = build_manifest(rows, date(2026, 11, 1))   # a Sunday → 2026-W44
-    evs = {e["company"]: e for e in m["events"]}
+    m = build_manifest(rows, date(2026, 11, 1), board_stats=_fixture_board_stats())  # a Sunday → 2026-W44
     check("week: Sunday 2026-11-01 buckets to 2026-W44", m["week"] == "2026-W44")
-    check("aggregate: companyless rows never become events", set(evs) == {"Anthropic", "Runway", "Harvey"})
-    a = evs["Anthropic"]["metadata"]
-    check("counts: roles_open/gtm/ai per fixture (4/3/2)",
-          (a["roles_open"], a["gtm_roles"], a["ai_gtm_roles"]) == (4, 3, 2))
-    check("counts: gtm_roles uses ats_pull.keep_title, not a local copy", a["gtm_roles"] == 3)
-    check("events: kind/signal_type/source/entity contract",
-          evs["Runway"]["kind"] == "market" and evs["Runway"]["signal_type"] == "hiring_pulse"
-          and evs["Runway"]["source"] == "ats_pulse"
-          and evs["Runway"]["entities"] == [{"type": "company", "name": "Runway", "role": "subject"}])
-    check("events: title carries company + week, never a role title",
-          evs["Runway"]["title"] == "Hiring pulse — Runway (2026-W44)")
-    check("dedup_key: (company, kind, week) secondary key present",
-          evs["Harvey"]["dedup_key"] == "ats_pulse:Harvey:2026-W44")
+    check("aggregate: companyless rows never become events",
+          all(e["company"] for e in m["events"]))
+    lane = lane_run_manifest(_json_copy(m))
+    check("lane_run: seen/refused/written counters present",
+          lane["seen"] == 7 and "refused" in lane and lane["written"] == len(m["events"]))
+    check("lane_run: errored boards listed, never emitted as events",
+          lane["errored_boards"] == ["Neverboard"]
+          and not any(e["company"] == "Neverboard" for e in m["events"]))
 
-    prior = json.loads(json.dumps(m))          # last week == this week → delta 0
-    m2 = build_manifest(rows, date(2026, 11, 1), prior)
-    p = {e["company"]: e for e in m2["events"]}["Anthropic"]["metadata"]
-    check("delta_wow: same counts as prior week → 0", p["delta_wow"] == 0)
-    prior["events"][0]["metadata"]["roles_open"] = 1
-    m3 = build_manifest(rows, date(2026, 11, 1), prior)
-    p3 = {e["company"]: e for e in m3["events"]}["Anthropic"]["metadata"]
-    check("delta_wow: 4 open vs 1 last week → +3", p3["delta_wow"] == 3)
-    unseen = _json_copy(m)
-    unseen["events"] = [e for e in unseen["events"] if e["company"] != "Runway"]   # Runway absent last week
-    m5 = build_manifest(rows, date(2026, 11, 1), unseen)
+    with_stats = {e["company"]: e["metadata"] for e in m["events"]}
+    check("counts: roles_open is the board's UNFILTERED posting count (7)",
+          with_stats["Anthropic"]["roles_open"] == 7)
+    check("counts: gtm_roles/ai_gtm_roles per fixture (3/2 for Anthropic)",
+          (with_stats["Anthropic"]["gtm_roles"], with_stats["Anthropic"]["ai_gtm_roles"]) == (3, 2))
+    check("counts: zero-posting board emits a zero-count row (Harvey 0/0/0)",
+          with_stats["Harvey"] == {"roles_open": 0, "gtm_roles": 1, "ai_gtm_roles": 1,
+                                   "delta_wow": None} or with_stats["Harvey"]["roles_open"] == 0)
+    bare = build_manifest(rows, date(2026, 11, 1))   # no board stats → filtered fallback
+    bb = {e["company"]: e["metadata"] for e in bare["events"]}
+    check("counts: without board stats, roles_open falls back to the filtered count",
+          bb["Anthropic"]["roles_open"] == bb["Anthropic"]["gtm_roles"] == 3)
+
+    check("events: kind/signal_type/source/entity contract",
+          all(e["kind"] == "market" and e["signal_type"] == SIGNAL_TYPE and e["source"] == SOURCE
+              and [x["type"] for x in e["entities"]] == ["company"] for e in m["events"]))
+    check("events: title carries company + week, never a role title",
+          all(e["title"] == f"Hiring pulse — {e['company']} ({m['week']})" for e in m["events"]))
+    check("events: event_date is the week's Sunday (ensure-event same-day dedupe)",
+          all(e["event_date"] == "2026-11-01" for e in m["events"]))
+    midweek = build_manifest(rows, date(2026, 11, 3))   # a Tuesday dispatch
+    check("events: a mid-week run still lands on its week's Sunday",
+          midweek["week"] == "2026-W45"
+          and all(e["event_date"] == "2026-11-08" for e in midweek["events"]))
+    check("dedup_key: (company, kind, week) secondary key present",
+          all(e["dedup_key"] == f"ats_pulse:{e['company']}:{m['week']}" for e in m["events"]))
+
+    evs = event_manifests(_json_copy(m))
+    check("emit: one ensure-event manifest per company",
+          len(evs) == len(m["events"])
+          and all(set(x) == {"event", "entities"} for x in evs))
+    check("emit: each validates clean against the substrate shape",
+          all(validate_event_manifest(x) == [] for x in evs))
+    check("emit: signal_type + dedup_key ride in metadata until 0016",
+          all(x["event"]["metadata"]["signal_type"] == SIGNAL_TYPE
+              and x["event"]["metadata"]["dedup_key"] for x in evs))
+
+    prior = _json_copy(m); prior.pop("_lane", None)
+    prior["week"] = "2026-W43"              # last week — the same-week refusal is tested below
+    m2 = build_manifest(rows, date(2026, 11, 1), prior=prior, board_stats=_fixture_board_stats())
+    p2 = {e["company"]: e["metadata"] for e in m2["events"]}
+    check("delta_wow: same board counts as prior week → 0", p2["Anthropic"]["delta_wow"] == 0)
+    prior["events"][0]["metadata"]["roles_open"] = 5
+    m3 = build_manifest(rows, date(2026, 11, 1), prior=prior, board_stats=_fixture_board_stats())
+    p3 = {e["company"]: e["metadata"] for e in m3["events"]}
+    check("delta_wow: 7 open vs 5 last week → +2", p3["Anthropic"]["delta_wow"] == 2)
+    unseen = _json_copy(prior)
+    unseen["events"] = [e for e in unseen["events"] if e["company"] != "Runway"]
+    m5 = build_manifest(rows, date(2026, 11, 1), prior=unseen, board_stats=_fixture_board_stats())
+    p5 = {e["company"]: e["metadata"] for e in m5["events"]}
     check("delta_wow: company unseen last week → null (no invented baseline)",
-          {e["company"]: e for e in m5["events"]}["Runway"]["metadata"]["delta_wow"] is None)
+          p5["Runway"]["delta_wow"] is None)
     m4 = build_manifest(rows, date(2026, 11, 1), None)
     check("delta_wow: no --prior at all → null across the board",
           all(e["metadata"]["delta_wow"] is None for e in m4["events"]))
-
-    blob = json.dumps(m)
-    titles = [r["title"] for r in _fixture_rows()]
-    check("counts-only: no fixture title text reaches the manifest",
-          all(t not in blob for t in titles))
-    check("counts-only: distinctive title words absent (structural, not filtered)",
-          "duplicate key" not in blob and "Sales Engineer" not in blob and "Startups" not in blob)
-
-    # Negative PII — a poisoned upstream TSV must hard-fail, never leak into the manifest.
-    # build_manifest re-scans the input rows (layer 1) and the emitted manifest (layer 2).
-    poisoned = _tsv([_fixture_rows()[0] | {"key": "ashby:9",
-                                           "title": "Account Executive — contact hr@agency.example"}])
     try:
-        build_manifest(_parse_inline(poisoned), date(2026, 11, 1))
-        check("negative PII: email in a title hard-fails the build (input scan)", False)
-    except PIIViolation:
-        check("negative PII: email in a title hard-fails the build (input scan)", True)
-    phone_row = _fixture_rows()[0] | {"key": "ashby:10", "comp_text": "call 555-123-4567"}
+        build_manifest(rows, date(2026, 11, 1), prior=_json_copy(m), board_stats=None)
+        check("prior: a same-week --prior is refused", False)
+    except ValueError:
+        check("prior: a same-week --prior is refused", True)
+
+    # Refused rows: a digits-shaped string in an input-only column refuses THAT row; the lane lives.
+    poisoned = _tsv([_fixture_rows()[0] | {"key": "ashby:8", "comp_text": "call 555-123-4567"}])
+    with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False, encoding="utf-8") as fh:
+        fh.write(poisoned); ppath = fh.name
+    prows = read_tsv([ppath]); os.unlink(ppath)
+    mp = build_manifest(prows, date(2026, 11, 1), board_stats=None)
+    lp = lane_run_manifest(_json_copy(mp))
+    check("refused: a poisoned comp_text row is refused, not fatal",
+          lp["refused"] == 1 and lp["seen"] == 1 and lp["written"] == 0)
+
+    # Emitted text stays a hard fail: a company name that arrives OUTSIDE the TSV rows (board stats)
+    # never passes a refusal gate, so the final emitted-text scan must kill the build.
+    badname = _json_copy(_fixture_board_stats())
+    badname["companies"].append({"company": "hr@agency.example", "postings": 3, "status": "ok"})
     try:
-        build_manifest(_parse_inline(_tsv([phone_row])), date(2026, 11, 1))
-        check("negative PII: phone in comp_text hard-fails the build (input scan)", False)
+        build_manifest(rows, date(2026, 11, 1), board_stats=badname)
+        check("hard fail: PII in an EMITTED company name kills the build", False)
     except PIIViolation:
-        check("negative PII: phone in comp_text hard-fails the build (input scan)", True)
-    bad = _json_copy(m)
-    bad["events"][0]["title"] = "ping recruiter@example.com"
+        check("hard fail: PII in an EMITTED company name kills the build", True)
+    # ...while the same name inside an input ROW is refused, not fatal (review item 8).
+    badrow = _tsv([_fixture_rows()[0] | {"company": "hr@agency.example"}])
+    with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False, encoding="utf-8") as fh:
+        fh.write(badrow); bpath = fh.name
+    brows = read_tsv([bpath]); os.unlink(bpath)
+    mb = build_manifest(brows, date(2026, 11, 1))
+    check("refused: a poisoned company name in an input row is refused, not fatal",
+          lane_run_manifest(_json_copy(mb))["refused"] == 1)
+    bad = _json_copy(m); bad["events"][0]["title"] = "ping recruiter@example.com"
     check("negative PII: --validate refuses a manifest carrying an email",
           any("email" in p for p in validate_manifest(bad)))
 
-    good = _json_copy(m)
+    good = _json_copy(m); good.pop("_lane", None)
     check("validate: a clean manifest passes with no problems", validate_manifest(good) == [])
     broken = _json_copy(good); broken["events"] = [dict(good["events"][0]) | {"signal_type": "paper"}]
     check("validate: drifted signal_type is refused", len(validate_manifest(broken)) == 1)
+    boolmeta = _json_copy(good)
+    boolmeta["events"] = [dict(good["events"][0])
+                          | {"metadata": {**good["events"][0]["metadata"], "delta_wow": True}}]
+    check("validate: a bool count is refused (type() is int, not isinstance)",
+          any("must be an int" in p for p in validate_manifest(boolmeta)))
     person_edge = _json_copy(good)
     person_edge["events"] = [dict(good["events"][0])
                              | {"entities": [{"type": "person", "name": "A", "role": "speaker"}]}]
     pp = validate_manifest(person_edge)
     check("validate: person edges refused in Phase A (ADR-7 R2)",
           any("person" in p for p in pp) and any("no company entity" in p for p in pp))
+
+    summary = anonymous_summary(_json_copy(good))
+    blob = json.dumps(summary)
+    check("summary: the uploadable artifact is totals-only (no names, no titles)",
+          set(summary) == {"week", "producer", "validate", "companies", "roles_open_total",
+                           "gtm_roles_total", "ai_gtm_roles_total"}
+          and "Anthropic" not in blob and "Runway" not in blob)
     print(f"selftest: {ok}/{n} ats_pulse cases pass")
     return 0 if ok == n else 1
-
-
-def _parse_inline(text: str) -> list[dict]:
-    """Read a fixture TSV from a string (read_tsv minus the path/stdin handling)."""
-    return list(csv.DictReader(io.StringIO(text), delimiter="\t"))
-
-
-def _json_copy(obj: object) -> object:
-    """Deep copy via JSON round-trip — test mutations must never share structure with the fixture."""
-    return json.loads(json.dumps(obj))
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
-def main(argv: list[str]) -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("tsv", nargs="*", help="ats_pull.py TSV file(s); '-' reads stdin")
-    ap.add_argument("--prior", help="last week's pulse.json — the delta_wow baseline")
-    ap.add_argument("--asof", help="week bucket to emit (YYYY-MM-DD, default: today UTC)")
-    ap.add_argument("--out", help="write the manifest here (default: stdout)")
-    ap.add_argument("--validate", help="validate a pulse manifest offline and exit (no network, no writes)")
+    ap.add_argument("tsv", nargs="*", help="ats_pull TSV path(s); omit with --validate")
+    ap.add_argument("--prior", help="last week's pulse.json (same-week priors are refused)")
+    ap.add_argument("--pull-summary", help="ats_pull --summary JSON (unfiltered board counts)")
+    ap.add_argument("--out", help="write the aggregate manifest here")
+    ap.add_argument("--emit-events", help="write one substrate ensure-event manifest per company here")
+    ap.add_argument("--lane-run-out", help="write the lane_run manifest (PR #269 ledger, dry-run) here")
+    ap.add_argument("--asof", help="override the bucket date (YYYY-MM-DD; default today, UTC)")
+    ap.add_argument("--validate", metavar="MANIFEST",
+                    help="validate an aggregate manifest (or --emit-events dir files) and exit")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
-
     if a.selftest:
         return selftest()
-    if a.validate:
-        try:
-            manifest = json.load(open(a.validate, encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"ats_pulse: cannot read --validate {a.validate}: {e}", file=sys.stderr)
-            return 3
-        problems = validate_manifest(manifest)
-        if problems:
-            for p in problems:
-                print(f"FAIL  {p}", file=sys.stderr)
-            return 1
-        n = len(manifest.get("events", []))
-        print(f"ats_pulse: manifest valid — {n} hiring_pulse events, week {manifest.get('week')} "
-              f"(dry-run: live ensure-event lands with migration 0016)", file=sys.stderr)
-        return 0
-    if not a.tsv:
-        print("ats_pulse: no input TSV given (pass ats_pull output files, or '-' for stdin)", file=sys.stderr)
-        return 2
 
+    if a.validate:
+        if os.path.isdir(a.validate):          # a --emit-events dir: per-company ensure-event manifests
+            bad = []
+            for name in sorted(os.listdir(a.validate)):
+                if not name.endswith(".json"):
+                    continue
+                with open(os.path.join(a.validate, name), encoding="utf-8") as fh:
+                    ps = validate_event_manifest(json.load(fh))
+                if ps:
+                    bad.append(f"{name}: {'; '.join(ps)}")
+            print(f"ats_pulse: {len(bad)} invalid event manifest(s)" if bad
+                  else "ats_pulse: all event manifests valid")
+            return 1 if bad else 0
+        with open(a.validate, encoding="utf-8") as fh:
+            manifest = json.load(fh)
+        problems = validate_manifest(manifest)
+        for p in problems:
+            print(f"FAIL  {p}", file=sys.stderr)
+        print(f"ats_pulse: {problems or 'manifest valid'}")
+        return 1 if problems else 0
+
+    if not a.tsv:
+        ap.error("a TSV path is required (or --validate / --selftest)")
     try:
         rows = read_tsv(a.tsv)
-    except (OSError, ValueError) as e:
-        print(f"ats_pulse: input unreadable: {e}", file=sys.stderr)
+    except (OSError, ValueError, csv.Error) as e:
+        print(f"ats_pulse: input unreadable or not an ats_pull TSV: {e}", file=sys.stderr)
         return 3
-    if not rows:
-        print("ats_pulse: input TSV holds no rows — the lane may be dead (check ats_pull's gap line)",
-              file=sys.stderr)
+    try:
+        prior = json.load(open(a.prior, encoding="utf-8")) if a.prior else None
+        board_stats = json.load(open(a.pull_summary, encoding="utf-8")) if a.pull_summary else None
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"ats_pulse: --prior/--pull-summary unreadable: {e}", file=sys.stderr)
         return 3
     asof = date.fromisoformat(a.asof) if a.asof else datetime.now(timezone.utc).date()
-    prior = None
-    if a.prior:
-        try:
-            prior = json.load(open(a.prior, encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"ats_pulse: --prior unreadable ({e}); delta_wow will be null (no baseline)",
-                    file=sys.stderr)
-    manifest = build_manifest(rows, asof, prior)
-    text = json.dumps(manifest, indent=2, sort_keys=False) + "\n"
+    try:
+        manifest = build_manifest(rows, asof, prior=prior, board_stats=board_stats)
+    except ValueError as e:                       # same-week prior etc. — refuse, loud
+        print(f"ats_pulse: {e}", file=sys.stderr)
+        return 2
+    lane = lane_run_manifest(_json_copy(manifest))
+    for target in (a.out, a.lane_run_out):
+        if target and os.path.dirname(target):
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+    blob = json.dumps(manifest, indent=1)
     if a.out:
-        open(a.out, "w", encoding="utf-8").write(text)
+        with open(a.out, "w", encoding="utf-8") as fh:
+            fh.write(blob + "\n")
     else:
-        print(text, end="")
+        print(blob)
+    if a.emit_events:
+        os.makedirs(a.emit_events, exist_ok=True)
+        for em in event_manifests(manifest):
+            name = em["event"]["metadata"]["dedup_key"].replace(":", "_") + ".json"
+            with open(os.path.join(a.emit_events, name), "w", encoding="utf-8") as fh:
+                json.dump(em, fh, indent=1); fh.write("\n")
+    if a.lane_run_out:
+        with open(a.lane_run_out, "w", encoding="utf-8") as fh:
+            json.dump(lane, fh, indent=1); fh.write("\n")
     print(f"ats_pulse: week {manifest['week']} · {len(manifest['events'])} companies · "
-          f"counts only (no titles, no people) · "
-          f"delta_wow baseline: {'prior week' if prior else 'none yet (first run)'}", file=sys.stderr)
+          f"{lane['seen']} rows seen · {lane['refused']} refused · "
+          f"{len(lane['errored_boards'])} errored boards · counts only (no titles, no people) · "
+          f"delta_wow baseline: {'prior week' if prior else 'none'}")
     return 0
 
 

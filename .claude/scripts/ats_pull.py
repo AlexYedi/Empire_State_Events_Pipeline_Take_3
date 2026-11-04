@@ -194,8 +194,13 @@ def fetch(vendor: str, token: str) -> object:
 
 
 def run(entries: list[dict], floor: int | None, jd_dir: str | None,
-        any_location: bool = False) -> tuple[list[dict], list[str], list[str], int, list[str]]:
-    out, empty, errored, scanned, unmatched = [], [], [], 0, []
+        any_location: bool = False) -> tuple[list[dict], list[str], list[str], int, list[str], list[dict]]:
+    """Returns (rows, empty, errored, scanned, unmatched, board_stats).
+
+    board_stats carries per-board UNFILTERED posting counts and status — the pulse's roles_open is
+    this count (title-filtered counts would make roles_open ≡ gtm_roles, a review finding). Names in
+    board_stats go to the --summary file only, which the Action deletes; --quiet logs carry counts."""
+    out, empty, errored, scanned, unmatched, stats = [], [], [], 0, [], []
     for e in entries:
         if e["excluded"]:      # struck through in the registry (e.g. ~~Harvey~~): every role auto-rejects on company fit
             continue
@@ -203,10 +208,11 @@ def run(entries: list[dict], floor: int | None, jd_dir: str | None,
             raw = project(e["vendor"], fetch(e["vendor"], e["token"]))
         except Exception as err:  # noqa: BLE001
             errored.append(f"{e['company']} ({e['vendor']}/{e['token']}: {err})")
+            stats.append({"company": e["company"], "postings": 0, "status": "error"})
             continue
         scanned += len(raw)
-        if not raw:
-            empty.append(e["company"])
+        stats.append({"company": e["company"], "postings": len(raw),
+                      "status": "zero" if not raw else "ok"})
         for r in raw:
             if not (any_location or keep_location(r["location"])):
                 continue
@@ -224,7 +230,7 @@ def run(entries: list[dict], floor: int | None, jd_dir: str | None,
             if jd_dir:
                 with open(os.path.join(jd_dir, key.replace(":", "_") + ".txt"), "w", encoding="utf-8") as fh:
                     fh.write(f"{r['title']} @ {e['company']}\n{r['url']}\n\n{r['jd']}\n")
-    return out, empty, errored, scanned, sorted(set(unmatched))
+    return out, empty, errored, scanned, sorted(set(unmatched)), stats
 
 
 def _tsv(v) -> str:
@@ -301,6 +307,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--registry", default=REGISTRY); ap.add_argument("--only")
     ap.add_argument("--out"); ap.add_argument("--jd-dir"); ap.add_argument("--floor", type=int)
     ap.add_argument("--me-model", help="path to me-model.md for the OTE floor (gitignored; absent in worktrees)")
+    ap.add_argument("--quiet", action="store_true",
+                    help="counts-only stderr: never company names or titles (public-repo log hygiene)")
+    ap.add_argument("--summary", help="write per-board stats JSON here (company names — not for logs/artifacts)")
     ap.add_argument("--any-location", action="store_true"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -328,7 +337,7 @@ def main(argv: list[str]) -> int:
             print(f"ats_pull: no OTE floor ({e}); comp columns left blank", file=sys.stderr)
     if a.jd_dir:
         os.makedirs(a.jd_dir, exist_ok=True)
-    rows, empty, errored, scanned, unmatched = run(entries, floor, a.jd_dir, a.any_location)
+    rows, empty, errored, scanned, unmatched, stats = run(entries, floor, a.jd_dir, a.any_location)
     lines = ["\t".join(COLS)] + ["\t".join(_tsv(r[c]) for c in COLS) for r in rows]
     if a.out:
         try:
@@ -337,9 +346,20 @@ def main(argv: list[str]) -> int:
             print(f"ats_pull: cannot write --out {a.out}: {e}", file=sys.stderr); return 3
     else:
         print("\n".join(lines))
+    if a.summary:
+        try:
+            with open(a.summary, "w", encoding="utf-8") as fh:
+                json.dump({"boards": len(entries), "errored": len(errored), "companies": stats}, fh, indent=1)
+        except OSError as e:
+            print(f"ats_pull: cannot write --summary {a.summary}: {e}", file=sys.stderr); return 3
     print(f"ats_pull: {len(entries)} boards · {scanned} roles scanned · {len(rows)} passed the title filter",
           file=sys.stderr)
     excluded = [e["company"] for e in entries if e["excluded"]]
+    if a.quiet:   # counts only — company names and titles never reach the (public) Action log
+        print(f"ats_pull: counts-only — {len(empty)} zero-row · {len(errored)} errored · "
+              f"{len(excluded)} excluded · {len(unmatched)} unmatched · "
+              f"comp gate: {'ON' if floor else 'OFF — no floor, comp_verdict blank'}", file=sys.stderr)
+        return 0
     print(f"ats_pull: {len(empty)} companies returned 0 rows: {', '.join(empty) or '—'} · "
           f"{len(errored)} errored: {'; '.join(errored) or '—'} · {len(excluded)} excluded (struck through): "
           f"{', '.join(excluded) or '—'} · comp gate: {'ON' if floor else 'OFF — no floor, comp_verdict blank'}",
