@@ -4,21 +4,21 @@
 # embed the commit SHA and break on squash merge (verified in PR #272's review scratch squash:
 # secret-scan goes red on main).
 #
-# WHY NOT condition = "AND" (review 2026-11-04; empirically verified with gitleaks 8.30.1
-# debug logs): a global allowlist with `paths` makes gitleaks SKIP matched files before any
-# content is read (`DBG skipping file: global allowlist path=...`), so value-scoping
-# (regexes + condition = "AND") never applies at the global level. Two forms work:
-#   (a) paths-only — blanket-exempt exact files (CHOSEN): the exempt surface is exactly two
-#       synthetic fixture files whose only credential-shaped content is sha256 digests of
-#       public *.example URLs;
-#   (b) regexes-only — exempt findings whose secret is exactly 64 hex chars repo-wide, which
-#       would silently ignore a REAL 64-hex API key anywhere in the codebase (worse trade).
-# The paths below are pinned to the exact fixture files — every other file, including any new
-# file under supabase/fixtures/, is scanned in full. If a non-digest secret ever needs to live
-# in one of these two files, the fix is to move it out, never to widen this allowlist.
+# condition = "AND" requires BOTH the path to match AND the finding's secret to be exactly
+# 64 hex chars (a sha256 digest of a public *.example URL) before the allowlist applies:
+# any other secret-shaped value inside supabase/fixtures/ — e.g. a planted sk_live_ token —
+# is still flagged (verified 2026-11-04 in scratch probes and against this config, gitleaks
+# 8.30.1, `gitleaks git` mode — the mode CI's secret-scan.yml runs, per its line 29).
+#
+# KNOWN LIMITATION (verified 2026-11-04, debug logs): in `gitleaks dir` mode (ad-hoc local
+# working-tree scans, NOT what CI uses) a global allowlist's `paths` skips matched files
+# BEFORE any content evaluation, in scalar or array form — inside such files nothing is
+# value-checked. Verify allowlist changes with `gitleaks git --log-opts=...`, never `dir`.
 [extend]
 useDefault = true
 
 [[allowlists]]
 description = "synthetic fixtures: sha256 digests of public *.example URLs (feeds.item_key / cluster source keys), not credentials"
-paths = '''(^|/)supabase/fixtures/(feeds_items\.example|yed304_topic_clusters)\.json$'''
+condition = "AND"
+paths = ['''(^|/)supabase/fixtures/''']
+regexes = ['''(?i)^[0-9a-f]{64}$''']
