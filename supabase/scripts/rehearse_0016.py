@@ -118,10 +118,10 @@ select 'indexes', md5(coalesce(string_agg(schemaname||'.'||indexname||':'||index
 select 'triggers', md5(coalesce(string_agg(tgrelid::regclass::text||'.'||tgname, '|' order by tgrelid::regclass::text, tgname), ''))
   from pg_trigger where not tgisinternal
    and tgrelid in (select c.oid from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname in {SCHEMAS});
-select 'functions', md5(coalesce(string_agg(p.oid::regprocedure::text||':'||coalesce(p.proacl::text,'')||':'||p.prosecdef||':'||
+select 'functions', md5(coalesce(string_agg(p.oid::regprocedure::text||':'||coalesce(p.proacl::text,'')||':'||p.prosecdef::text||':'||
          coalesce(array_to_string(p.proconfig, ','),''), '|' order by p.oid::regprocedure::text), ''))
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname in {SCHEMAS};
-select 'relations', md5(coalesce(string_agg(n.nspname||'.'||c.relname||':'||c.relkind||':'||c.relrowsecurity||':'||
+select 'relations', md5(coalesce(string_agg(n.nspname||'.'||c.relname||':'||c.relkind::text||':'||c.relrowsecurity::text||':'||
          coalesce(c.relacl::text,''), '|' order by n.nspname, c.relname), ''))
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
  where n.nspname in {SCHEMAS} and c.relkind in ('r','v','m','p');
