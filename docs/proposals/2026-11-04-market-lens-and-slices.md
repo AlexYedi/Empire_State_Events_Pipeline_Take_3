@@ -111,7 +111,7 @@ A fact is an `event` row or a `claim` row, surfaced through one view, `mi.fact`:
 | `mi.fact` | one row per event or claim with all §3.1 dimensions | the base of everything |
 | `mi.fact_topic` | fact × topic × theme-as-of-asserted_at | theme slices |
 | `mi.theme_week` | theme × lens × ISO week: facts, distinct companies, distinct sources, floor flag | Q1, Q3, Q7; the hub heatmap |
-| `mi.theme_lead_lag` | theme: first-seen per lens, 8-week rolling counts per lens, lead weeks (market first-seen minus attended first-seen) | Q1 |
+| `mi.theme_lead_lag` | theme: first-seen per lens, 8-week rolling counts per lens, market_lead_weeks = attended first-seen − market first-seen (positive = market led) | Q1 |
 | `mi.company_timeline` | company × lens × week | Q4, Q5 |
 | `mi.company_cohort` | company: first-seen quarter per lens, segment as-of, target flag | Q5, Q6 |
 | `mi.hiring_around_theme` | theme → companies with market facts in 8 weeks ⋈ latest hiring pulse ⋈ attended presence (events, speakers) | Q2 |

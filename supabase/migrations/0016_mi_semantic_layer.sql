@@ -14,8 +14,8 @@
 --   * public.lane_registry                         one row per ingestion lane (seeded: lanes 0–5)
 --   * public.lane_run                              one row per lane run (the lane ledger)
 --   * public.event.signal_type                      nullable column + CHECK over six values + partial index
---   * schema mi                                     lens_of(), theme_as_of(), eight read-only views
---   * public.mi_slice(text, jsonb)                  STABLE SECURITY DEFINER reader over five views
+--   * schema mi                                     lens_of(), theme_as_of(), seven read-only views
+--   * public.mi_slice(text, jsonb)                  STABLE SECURITY DEFINER reader over four views
 -- No existing column, constraint, function, grant or row is changed. Two triggers are ADDED to
 -- public.topic (they write only to the new membership table). The only DML is seeding two tables
 -- this file creates (membership, lane registry).
@@ -56,8 +56,17 @@
 --   supabase/scripts/rehearse_0016.py on the twin (ytfzzsxcxxbejnowmkmk) before Alex pastes
 --   into prod (CLAUDE.md invariant 2). Verify and rollback blocks are at the bottom, between
 --   machine-readable markers the harness parses (keep the markers and one check per statement).
+--
+-- APPLY (Alex): paste OUTSIDE the 07:00–09:00 UTC nightly window (relevance recompute + MI
+--   health check). The transaction sets lock_timeout = 5s, so a busy table makes the paste fail
+--   fast instead of queueing writers behind an ACCESS EXCLUSIVE lock; just re-paste.
+-- VERIFY (Alex, after apply): run the VERIFY block with psql in a READ-ONLY session, per the
+--   platform-constraints row (the pooler drops PGOPTIONS: `set session characteristics as
+--   transaction read only`, then assert `show transaction_read_only` = on). NOT the dashboard
+--   SQL editor: it shows only the last statement's result, so every check but the last is invisible.
 -- =====================================================================
 begin;
+set local lock_timeout = '5s';
 
 -- ---------------------------------------------------------------------
 -- 1. Theme membership, SCD Type 2 (Kimball). One row per (topic, cluster, interval).
@@ -70,7 +79,7 @@ create table if not exists public.topic_cluster_membership (
   cluster_id     uuid not null references topic_intelligence.topic_cluster(cluster_id),
   valid_from     timestamptz not null,
   valid_to       timestamptz,
-  assigned_by    text not null check (assigned_by in ('llm', 'session', 'human', 'merge')),
+  assigned_by    text not null check (assigned_by in ('bootstrap', 'llm', 'embedding_auto', 'session', 'human', 'merge')),
   confidence     numeric(4,3) check (confidence is null or (confidence >= 0 and confidence <= 1)),
   change_kind    text not null default 'assign'
                    check (change_kind in ('seed', 'assign', 'reassign', 'merge', 'revert')),
@@ -111,8 +120,10 @@ where t.cluster_id is not null
 --     Timestamps use clock_timestamp(), not now(): now() is fixed per transaction, so an
 --     insert-then-reassign in ONE transaction would close a row with valid_to = valid_from and
 --     violate the interval check. valid_from is nudged 1µs past the closed row's start if equal.
---     assigned_by is carried from topic.cluster_assigned_by (null -> 'session'). A value outside
---     the CHECK vocabulary raises and aborts the topic write: loud vocabulary drift, by design.
+--     assigned_by is carried from topic.cluster_assigned_by (null -> 'session'). The ONE vocabulary
+--     (ADR-13) is bootstrap · llm · embedding_auto · session · human · merge, identical in the
+--     table CHECK and here. A value outside it raises with a named message and aborts the topic
+--     write: loud vocabulary drift, by design.
 create or replace function public.topic_membership_sync()
 returns trigger
 language plpgsql
@@ -126,7 +137,14 @@ declare
   v_open_from timestamptz;
   v_had_open  boolean;
   v_ts        timestamptz := clock_timestamp();
+  v_by        text := coalesce(new.cluster_assigned_by, 'session');
 begin
+  if not v_tomb and new.cluster_id is not null
+     and v_by not in ('bootstrap', 'llm', 'embedding_auto', 'session', 'human', 'merge') then
+    raise exception 'topic_membership_sync: cluster_assigned_by % is outside the ADR-13 vocabulary %',
+      quote_literal(v_by), '(bootstrap, llm, embedding_auto, session, human, merge)';
+  end if;
+
   select m.membership_id, m.cluster_id, m.valid_from
     into v_open_id, v_open_cl, v_open_from
     from public.topic_cluster_membership m
@@ -156,7 +174,7 @@ begin
   insert into public.topic_cluster_membership
     (topic_id, cluster_id, valid_from, valid_to, assigned_by, confidence, change_kind)
   values
-    (new.id, new.cluster_id, v_ts, null, coalesce(new.cluster_assigned_by, 'session'),
+    (new.id, new.cluster_id, v_ts, null, v_by,
      new.cluster_assignment_confidence, case when v_had_open then 'reassign' else 'assign' end);
   return null;
 end;
@@ -278,12 +296,22 @@ comment on table public.lane_run is
 
 -- ---------------------------------------------------------------------
 -- 4. event.signal_type — finer than kind, coarser than metadata (spec §3.1). Nullable;
---    no existing row is touched. Constraint is drop-then-add so a re-run is a no-op.
+--    no existing row is touched. Both ALTERs are behind catalog existence tests, so a re-run
+--    takes no ACCESS EXCLUSIVE lock on public.event and does not re-scan it for the CHECK.
 -- ---------------------------------------------------------------------
-alter table public.event add column if not exists signal_type text;
-alter table public.event drop constraint if exists event_signal_type_check;
-alter table public.event add constraint event_signal_type_check check (signal_type is null or signal_type in
-  ('hiring_pulse', 'paper', 'model_release', 'news', 'partnership', 'layoff'));
+do $do$
+begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'event' and column_name = 'signal_type') then
+    alter table public.event add column signal_type text;
+  end if;
+  if not exists (select 1 from pg_constraint
+                  where conrelid = 'public.event'::regclass and conname = 'event_signal_type_check') then
+    alter table public.event add constraint event_signal_type_check check (signal_type is null or signal_type in
+      ('hiring_pulse', 'paper', 'model_release', 'news', 'partnership', 'layoff'));
+  end if;
+end
+$do$;
 create index if not exists event_signal_type_idx on public.event (signal_type) where signal_type is not null;
 
 -- ---------------------------------------------------------------------
@@ -383,7 +411,7 @@ union all
 select 'claim'::text,
        c.id,
        c.event_id,
-       mi.lens_of(oe.kind, null, c.lane),
+       mi.lens_of(oe.kind, oe.source, c.lane),
        oe.kind,
        null::text,
        c.lane,
@@ -528,7 +556,8 @@ where fc.lens in ('attended', 'research', 'market') and fc.asserted_week is not 
 group by fc.company_id, c.name, fc.lens, fc.asserted_week;
 
 -- 6i. company cohort: first-seen quarter per lens (UTC), CURRENT segment (open row), target flag.
---     Merge tombstones excluded.
+--     Merge tombstones excluded. NO target_tier column (ADR-13 F1): the private target list
+--     leaves the DB only as the aggregate watchlist counts in mi_slice's market denominators.
 create or replace view mi.company_cohort with (security_invoker = on) as
 with firsts as (
   select fc.company_id,
@@ -546,72 +575,16 @@ select c.id as company_id, c.name as company_name,
        to_char(f.first_seen_attended at time zone 'UTC', 'YYYY-"Q"Q') as first_seen_attended_quarter,
        to_char(f.first_seen_research at time zone 'UTC', 'YYYY-"Q"Q') as first_seen_research_quarter,
        to_char(f.first_seen_market   at time zone 'UTC', 'YYYY-"Q"Q') as first_seen_market_quarter,
-       s.stage, s.industry, s.headcount_band, s.hq_metro,
-       coalesce(s.target_tier, c.metadata->>'target_tier') as target_tier
+       s.stage, s.industry, s.headcount_band, s.hq_metro
 from firsts f
 join public.company c on c.id = f.company_id
 left join public.company_segment_history s on s.company_id = c.id and s.valid_to is null
 where not coalesce(c.metadata ? 'merged_into', false);
 
--- 6j. hiring around a theme (Q2): companies with market-lens facts on the theme in the last
---     8 weeks ⋈ their latest hiring_pulse (counts only) ⋈ attended presence (counts only;
---     no person names or ids leave this view). Empty until lane 1 writes hiring_pulse events.
-create or replace view mi.hiring_around_theme with (security_invoker = on) as
-with theme_co as (
-  select ft.theme_id, fc.company_id,
-         count(distinct (ft.fact_type, ft.fact_id)) as market_facts_8w,
-         max(ft.asserted_at)                        as last_market_fact_at
-  from mi.fact_topic ft
-  join mi.fact_company fc on fc.fact_type = ft.fact_type and fc.fact_id = ft.fact_id
-  where ft.lens = 'market' and ft.theme_id is not null
-    and ft.asserted_at >= now() - interval '56 days'
-  group by ft.theme_id, fc.company_id
-),
-pulse as (
-  select distinct on (ee.entity_id)
-         ee.entity_id as company_id, e.event_date as pulse_date,
-         case when e.metadata->>'roles_open'   ~ '^\d+$'  then (e.metadata->>'roles_open')::int   end as roles_open,
-         case when e.metadata->>'gtm_roles'    ~ '^\d+$'  then (e.metadata->>'gtm_roles')::int    end as gtm_roles,
-         case when e.metadata->>'ai_gtm_roles' ~ '^\d+$'  then (e.metadata->>'ai_gtm_roles')::int end as ai_gtm_roles,
-         case when e.metadata->>'delta_wow'    ~ '^-?\d+$' then (e.metadata->>'delta_wow')::int   end as delta_wow
-  from public.event e
-  join public.event_entity ee on ee.event_id = e.id and ee.entity_type = 'company'
-  where e.signal_type = 'hiring_pulse'
-  order by ee.entity_id, e.event_date desc nulls last, e.created_at desc
-),
-presence as (
-  select x.company_id, count(distinct x.event_id) as attended_events,
-         count(distinct x.person_id) as attended_speakers
-  from (
-    select ee.entity_id as company_id, e.id as event_id, null::uuid as person_id
-      from public.event e
-      join public.event_entity ee on ee.event_id = e.id and ee.entity_type = 'company'
-     where e.kind = 'attended'
-    union all
-    select p.company_id, e.id, p.id
-      from public.event e
-      join public.event_entity sp on sp.event_id = e.id and sp.entity_type = 'person'
-                                  and sp.role in ('speaker', 'host', 'panelist')
-      join public.person p on p.id = sp.entity_id
-     where e.kind = 'attended' and p.company_id is not null
-  ) x
-  group by x.company_id
-)
-select tco.theme_id, tc.display_name as theme, tco.company_id, c.name as company_name,
-       tco.market_facts_8w, tco.last_market_fact_at,
-       pu.pulse_date, pu.roles_open, pu.gtm_roles, pu.ai_gtm_roles, pu.delta_wow,
-       coalesce(pr.attended_events, 0) as attended_events,
-       coalesce(pr.attended_speakers, 0) as attended_speakers
-from theme_co tco
-join topic_intelligence.topic_cluster tc on tc.cluster_id = tco.theme_id
-join public.company c on c.id = tco.company_id
-left join pulse pu on pu.company_id = tco.company_id
-left join presence pr on pr.company_id = tco.company_id;
-
 -- ---------------------------------------------------------------------
 -- 7. public.mi_slice(view, filters) — the one door. CONSUMER CONTRACT (ADR-13).
---    view    : one of mi.theme_week, mi.theme_lead_lag, mi.company_timeline, mi.company_cohort,
---              mi.hiring_around_theme. Anything else raises.
+--    view    : one of mi.theme_week, mi.theme_lead_lag, mi.company_timeline, mi.company_cohort.
+--              Anything else raises. (mi.hiring_around_theme is deferred to lane 1's PR.)
 --    filters : weeks (1..104, default 8) · lens (attended|research|market) · theme_id (uuid) ·
 --              company_id (uuid) · limit (1..5000, default 1000). Unknown keys raise.
 --    returns : {"view", "rows": [...], "denominators": {attended:{events}, research:{briefs},
@@ -619,8 +592,8 @@ left join presence pr on pr.company_id = tco.company_id;
 --               "window": {"from_week", "to_week", "anchored_on"}}
 --    The window is the `weeks` ISO weeks ending in the week of current_date (anchored on today,
 --    never on the latest row). It filters rows of the week-grained views (theme_week,
---    company_timeline) and scopes every denominator. theme_lead_lag and hiring_around_theme
---    carry their own fixed 8-week windows; company_cohort is all-time.
+--    company_timeline) and scopes every denominator. theme_lead_lag carries its own fixed
+--    8-week window on the same Monday-aligned asserted_week basis; company_cohort is all-time.
 --    Denominators are computed here, in SQL, never client-side. They bucket on asserted_week,
 --    the same basis as the rows.
 -- ---------------------------------------------------------------------
@@ -697,13 +670,6 @@ begin
            where (p_co is null or t.company_id = p_co)
            order by t.first_seen_any desc, t.company_name limit p_limit) x;
 
-  when 'mi.hiring_around_theme' then
-    select coalesce(jsonb_agg(to_jsonb(x) order by x.theme, x.market_facts_8w desc), '[]'::jsonb) into v_rows
-    from (select t.* from mi.hiring_around_theme t
-           where (p_theme is null or t.theme_id = p_theme)
-             and (p_co    is null or t.company_id = p_co)
-           order by t.theme, t.market_facts_8w desc limit p_limit) x;
-
   else
     raise exception 'mi_slice: view % is not in the allowlist (ADR-13)', quote_literal(v_view);
   end case;
@@ -753,7 +719,7 @@ revoke all on function public.mi_slice(text, jsonb) from public, anon, authentic
 grant execute on function public.mi_slice(text, jsonb) to service_role;
 
 comment on function public.mi_slice(text, jsonb) is
-  'ADR-13: the one reader over schema mi. Five allowlisted views; returns {view, rows, denominators, window}. service_role only.';
+  'ADR-13: the one reader over schema mi. Four allowlisted views; returns {view, rows, denominators, window}. service_role only.';
 
 commit;
 
@@ -794,7 +760,9 @@ commit;
 -- select 'mi_slice_no_public_exec', (select proacl is not null and not exists (select 1 from aclexplode(proacl) a where a.grantee = 0 and a.privilege_type = 'EXECUTE') from pg_proc where oid = 'public.mi_slice(text,jsonb)'::regprocedure);
 -- select 'mi_slice_exec_denied', not has_function_privilege('anon', 'public.mi_slice(text,jsonb)', 'execute') and not has_function_privilege('authenticated', 'public.mi_slice(text,jsonb)', 'execute');
 -- select 'mi_slice_exec_service_role_only', has_function_privilege('service_role', 'public.mi_slice(text,jsonb)', 'execute') and not has_function_privilege('pipeline_writer', 'public.mi_slice(text,jsonb)', 'execute');
--- select 'mi_slice_envelope', (select bool_and(jsonb_typeof(r->'rows') = 'array' and r->>'view' = n and r->'denominators' ?& array['attended', 'research', 'market', 'job'] and r->'denominators'->'market' ?& array['facts_by_source', 'watchlist_covered', 'watchlist_size'] and r->'window' ?& array['from_week', 'to_week', 'anchored_on'] and r->'window'->>'to_week' = to_char(current_date, 'IYYY-"W"IW')) from unnest(array['mi.theme_week', 'mi.theme_lead_lag', 'mi.company_timeline', 'mi.company_cohort', 'mi.hiring_around_theme']) n cross join lateral (select public.mi_slice(n, '{"limit": 3}'::jsonb) as r) s);
+-- select 'mi_slice_envelope', (select bool_and(jsonb_typeof(r->'rows') = 'array' and r->>'view' = n and r->'denominators' ?& array['attended', 'research', 'market', 'job'] and r->'denominators'->'market' ?& array['facts_by_source', 'watchlist_covered', 'watchlist_size'] and r->'window' ?& array['from_week', 'to_week', 'anchored_on'] and r->'window'->>'to_week' = to_char(current_date, 'IYYY-"W"IW')) from unnest(array['mi.theme_week', 'mi.theme_lead_lag', 'mi.company_timeline', 'mi.company_cohort']) n cross join lateral (select public.mi_slice(n, '{"limit": 3}'::jsonb) as r) s);
+-- select 'no_target_tier_in_mi_views', not exists (select 1 from information_schema.columns where table_schema = 'mi' and column_name ~* 'target_tier');
+-- select 'membership_assigned_by_vocab', (select pg_get_constraintdef(oid) ~ 'bootstrap' and pg_get_constraintdef(oid) ~ 'embedding_auto' and pg_get_constraintdef(oid) ~ 'session' and pg_get_constraintdef(oid) ~ 'merge' from pg_constraint where conrelid = 'public.topic_cluster_membership'::regclass and contype = 'c' and pg_get_constraintdef(oid) ~ 'assigned_by');
 -- select 'topic_sync_triggers_present', (select count(*) = 2 from pg_trigger where tgrelid = 'public.topic'::regclass and not tgisinternal and tgname in ('topic_membership_sync_ins', 'topic_membership_sync_upd') and tgenabled <> 'D');
 -- select 'topic_sync_definer_pinned', (select prosecdef and array_to_string(proconfig, ',') ~ '^search_path=' from pg_proc where oid = 'public.topic_membership_sync()'::regprocedure);
 -- select 'topic_sync_no_api_exec', not has_function_privilege('anon', 'public.topic_membership_sync()', 'execute') and not has_function_privilege('authenticated', 'public.topic_membership_sync()', 'execute');
@@ -852,7 +820,6 @@ commit;
 -- drop trigger if exists topic_membership_sync_ins on public.topic;
 -- drop function if exists public.topic_membership_sync();
 -- drop function if exists public.mi_slice(text, jsonb);
--- drop view if exists mi.hiring_around_theme;
 -- drop view if exists mi.company_cohort;
 -- drop view if exists mi.company_timeline;
 -- drop view if exists mi.theme_lead_lag;

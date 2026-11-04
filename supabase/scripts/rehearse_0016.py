@@ -17,7 +17,8 @@ Gates (all must pass, in order):
                    baseline nightly compute DRY-RUN (read-only) so a red chain later is attributable
   1  snapshot A    schema fingerprint (public, topic_intelligence, mi) + row counts BEFORE
   2  apply 0016
-  3  re-apply      a second paste must be a clean no-op (fingerprint + counts unchanged)
+  3  re-apply      a second paste must be a clean no-op (fingerprint + counts unchanged,
+                   including row counts of the four tables 0016 creates)
   4  verify        every check in VERIFY + VERIFY_TWIN returns t (info_* rows printed only)
   5  negative      planted faults, each one alone; verify MUST fail on the named check;
      control       re-applying 0016 must restore a passing verify:
@@ -90,6 +91,14 @@ SCHEMAS = "('public','topic_intelligence','mi')"
 COUNT_TABLES = ["public.company", "public.person", "public.topic", "public.event",
                 "public.event_entity", "public.claim", "public.claim_entity", "public.documents",
                 "topic_intelligence.topic_cluster"]
+# The four tables 0016 creates: counted after apply so the re-apply no-op is checked on the rows
+# themselves (seed not duplicated, registry not re-inserted), not only on the schema fingerprint.
+NEW_TABLES = ["public.topic_cluster_membership", "public.company_segment_history",
+              "public.lane_registry", "public.lane_run"]
+NEW_COUNTS_SQL = "\n".join(f"select 'count.{t}', count(*)::text from {t};" for t in NEW_TABLES)
+# ADR-13's one assigned_by vocabulary (must match the CHECK in 0016 and the sync trigger).
+ASSIGNED_BY_VOCAB = ("bootstrap", "llm", "embedding_auto", "session", "human", "merge")
+
 CHAIN_TABLES = ["topic_intelligence.topic_trend", "topic_intelligence.topic_pair_metric",
                 "topic_intelligence.ingestion_run"]
 
@@ -145,6 +154,8 @@ select 'clean.no_signal_type', (count(*) = 0)::text from information_schema.colu
  where table_schema='public' and table_name='event' and column_name='signal_type';
 select 'info.assigned_live_topics', count(*)::text from public.topic
  where cluster_id is not null and not coalesce(metadata ? 'merged_into', false);
+select 'info.assigned_by_values', coalesce(string_agg(distinct coalesce(cluster_assigned_by, '<null>'), ','), '')
+  from public.topic where cluster_id is not null;
 """
 REQUIRED = ["has.topic.cluster_id", "has.topic_cluster", "has.claim", "has.compute_0012",
             "has.pipeline_writer", "has.postgres_set_pw", "has.service_role"]
@@ -332,6 +343,12 @@ def main() -> int:
     dirty = [k for k in CLEAN if pf.get(k) != "true"]
     if dirty:
         sys.exit(f"PREFLIGHT FAIL — twin already has 0016 objects {dirty}; re-run with --reset-first")
+    seen = [v for v in pf.get("info.assigned_by_values", "").split(",") if v]
+    outside = [v for v in seen if v != "<null>" and v not in ASSIGNED_BY_VOCAB]
+    if outside:
+        sys.exit(f"PREFLIGHT FAIL — topic.cluster_assigned_by values outside the ADR-13 vocabulary "
+                 f"{ASSIGNED_BY_VOCAB}: {outside}. The seed (and every later topic write, via the sync "
+                 "trigger) would raise. Widen the vocabulary in 0016 + ADR-13, or fix the rows, first.")
     if pf.get("info.assigned_live_topics", "0") == "0":
         sys.exit("PREFLIGHT FAIL — twin has no assigned topics; the seed and theme_as_of checks would be "
                  "vacuous. Refresh with supabase/scripts/load_twin.py first.")
@@ -351,10 +368,13 @@ def main() -> int:
         sys.exit("GATE FAIL at step 2")
 
     print("\n[3] re-apply 0016 (must be a clean no-op)")
-    snap_b1 = kv(SNAPSHOT_SQL)
+    snap_b1 = {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS_SQL)}
+    print("  new-table counts after first apply: " +
+          ", ".join(f"{k.split('.', 1)[1]}={v}" for k, v in snap_b1.items() if k.startswith("count.public.") and
+                    k.split(".", 1)[1] in NEW_TABLES))
     if not apply("0016 second paste"):
         sys.exit("GATE FAIL at step 3 — 0016 is not re-runnable")
-    d = diff(snap_b1, kv(SNAPSHOT_SQL))
+    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS_SQL)})
     if d:
         sys.exit(f"GATE FAIL at step 3 — second paste changed state: {d}")
     print("  OK  state identical after second paste")
