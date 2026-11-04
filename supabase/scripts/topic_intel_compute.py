@@ -108,17 +108,20 @@ def preview(as_of: dt.date):
 
 
 # ------------------------------------------------------------------ read-only guard (YED-312)
-# Why not PGOPTIONS / SET SESSION: the Supabase pooler (Supavisor, transaction mode) ignores startup
-# PGOPTIONS, and hands each *transaction* to whichever backend is free, so a SESSION-level setting
-# neither reliably applies nor stays put (and could leak onto a backend another client reuses).
+# Why not PGOPTIONS / SET SESSION: the Supabase pooler (Supavisor, session or transaction mode) does
+# not reliably pass startup PGOPTIONS through, and a pooled backend outlives our client, so a
+# SESSION-level setting may not apply and could leak onto a backend another client reuses.
 # How the script connects decides the fix: hc.q() spawns one psql process (= one connection) per
 # query, so there is no shared session to guard once. Instead every dry-run query runs as
-#   BEGIN READ ONLY -> SHOW transaction_read_only -> server-side assert -> the SELECT -> COMMIT
-# inside ONE explicit transaction on ONE connection. A transaction pins its backend even under the
-# transaction pooler, so the setting we SHOW is the setting the SELECT runs under. Two layers, each
-# fail-closed on its own: the DO block raises before the SELECT if the txn is not read-only
-# (ON_ERROR_STOP makes psql stop there), and read_only_verdict() re-checks the SHOW value in Python
-# and aborts the run on anything but 'on'.
+#   BEGIN READ ONLY -> SHOW transaction_read_only -> server-side assert -> the SELECT -> ROLLBACK
+# inside ONE explicit transaction on ONE connection. A transaction stays on one backend under either
+# pooler mode, so the setting we SHOW is the setting the SELECT runs under. What each layer does:
+#   1. BEGIN READ ONLY + the DO assert PREVENT writes: the server rejects any write in a read-only
+#      txn, and the assert raises before the SELECT if the txn is somehow not read-only
+#      (ON_ERROR_STOP makes psql stop there).
+#   2. ROLLBACK UNDOES anything that slipped through, whatever SHOW said; a preview commits nothing.
+#   3. read_only_verdict() in Python BLOCKS results that are not proven read-only: anything but 'on'
+#      as the first output line aborts the run (fail closed) and the rows are discarded.
 RO_ASSERT = ("do $$ begin if current_setting('transaction_read_only') <> 'on' then "
              "raise exception 'YED-312 read-only guard: transaction_read_only=%', "
              "current_setting('transaction_read_only'); end if; end $$;")
@@ -136,7 +139,7 @@ def ro_argv(psql_bin: str, dsn: str, sql: str) -> list[str]:
             "-c", "show transaction_read_only;",
             "-c", RO_ASSERT,
             "-c", sql,
-            "-c", "commit;"]
+            "-c", "rollback;"]  # a preview has nothing to keep; rollback undoes anything that slipped through
 
 
 def split_guarded(stdout: str) -> tuple[str | None, list[list[str]]]:
@@ -239,10 +242,44 @@ def selftest() -> int:
 
     argv = ro_argv("psql", "dsn", "select 1;")
     cmds = [argv[i + 1] for i, a in enumerate(argv) if a == "-c"]
-    check("argv: begin read only -> show -> assert -> query -> commit",
-          cmds == ["begin read only;", "show transaction_read_only;", RO_ASSERT, "select 1;", "commit;"])
+    check("argv: begin read only -> show -> assert -> query -> rollback",
+          cmds == ["begin read only;", "show transaction_read_only;", RO_ASSERT, "select 1;", "rollback;"])
+    check("argv: final command is rollback;", cmds[-1] == "rollback;")
     check("argv: ON_ERROR_STOP set (assert halts before the query)", "ON_ERROR_STOP=1" in argv)
     check("argv: no session-level setting (pooler-safe)", not any("session" in c.lower() for c in cmds))
+    check("RO_ASSERT: raises when transaction_read_only <> 'on'",
+          "current_setting('transaction_read_only') <> 'on'" in RO_ASSERT and "raise exception" in RO_ASSERT)
+
+    # ro_q wiring: fake psql via subprocess.run. hc.q and subprocess.check_output are booby-trapped
+    # so a ro_q that bypasses the guard goes red instead of reaching a real psql/DB.
+    def bypass(*_a, **_k):
+        raise AssertionError("ro_q bypassed the guard")
+
+    real_run, real_co, real_dsn, real_hq = subprocess.run, subprocess.check_output, hc._dsn, hc.q
+    hc._dsn, hc.q, subprocess.check_output = (lambda: "dsn"), bypass, bypass
+
+    def ro_q_with(returncode, stdout):
+        subprocess.run = lambda argv, **_k: subprocess.CompletedProcess(argv, returncode, stdout, "boom")
+        try:
+            return "rows", ro_q("select 1;")
+        except SystemExit as e:
+            return "exit", e.code
+        except AssertionError as e:
+            return "bypass", str(e)
+
+    try:
+        # SHOW said 'on' and partial rows printed, then psql failed: only the returncode check catches it.
+        kind, val = ro_q_with(3, "on\nabc\t1\n")
+        check("ro_q: psql returncode 3 (even after SHOW 'on') -> exits non-zero",
+              kind == "exit" and val not in (0, None))
+        for first in ("off", "BEGIN", ""):
+            kind, val = ro_q_with(0, f"{first}\nabc\t1\n")
+            check(f"ro_q: first line {first!r} -> exits non-zero", kind == "exit" and val not in (0, None))
+        kind, val = ro_q_with(0, "on\nabc\t1\nxyz\t2\n")
+        check("ro_q: 'on' + rows -> returns only the rows",
+              kind == "rows" and val == [["abc", "1"], ["xyz", "2"]])
+    finally:
+        subprocess.run, subprocess.check_output, hc._dsn, hc.q = real_run, real_co, real_dsn, real_hq
 
     # Swap the real body for a probe that reports which q it sees; no query is issued.
     global _dry_run
