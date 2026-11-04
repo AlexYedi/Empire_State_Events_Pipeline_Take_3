@@ -7,8 +7,9 @@ supabase/migrations/0012_topic_intelligence_live_compute.sql (the 0008 math, rep
 post-swap schemas). This script is the thin driver around it.
 
   --dry-run (default)  READ-ONLY. Executes the migration file's own trend/pair SELECTs (parsed out
-                       of 0012, with the loop variables bound to literals) inside a read-only
-                       session, then diffs the result against
+                       of 0012, with the loop variables bound to literals), each query in its own
+                       BEGIN READ ONLY transaction whose read-only state is asserted before the
+                       query runs (fail closed; see "read-only guard"), then diffs the result against
                          (a) healthcheck_2b.py's independent Python reference  <- the acceptance gate
                          (b) the stored topic_intelligence snapshot            <- informational
                        Works BEFORE 0012 is applied (it never calls the function). No writes.
@@ -26,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import os
 import re
 import subprocess
 import sys
@@ -107,8 +107,70 @@ def preview(as_of: dt.date):
     return trend, pairs, problems
 
 
+# ------------------------------------------------------------------ read-only guard (YED-312)
+# Why not PGOPTIONS / SET SESSION: the Supabase pooler (Supavisor, transaction mode) ignores startup
+# PGOPTIONS, and hands each *transaction* to whichever backend is free, so a SESSION-level setting
+# neither reliably applies nor stays put (and could leak onto a backend another client reuses).
+# How the script connects decides the fix: hc.q() spawns one psql process (= one connection) per
+# query, so there is no shared session to guard once. Instead every dry-run query runs as
+#   BEGIN READ ONLY -> SHOW transaction_read_only -> server-side assert -> the SELECT -> COMMIT
+# inside ONE explicit transaction on ONE connection. A transaction pins its backend even under the
+# transaction pooler, so the setting we SHOW is the setting the SELECT runs under. Two layers, each
+# fail-closed on its own: the DO block raises before the SELECT if the txn is not read-only
+# (ON_ERROR_STOP makes psql stop there), and read_only_verdict() re-checks the SHOW value in Python
+# and aborts the run on anything but 'on'.
+RO_ASSERT = ("do $$ begin if current_setting('transaction_read_only') <> 'on' then "
+             "raise exception 'YED-312 read-only guard: transaction_read_only=%', "
+             "current_setting('transaction_read_only'); end if; end $$;")
+
+
+def read_only_verdict(show_value) -> bool:
+    """Pure guard: proceed only if SHOW transaction_read_only returned exactly 'on'."""
+    return isinstance(show_value, str) and show_value.strip() == "on"
+
+
+def ro_argv(psql_bin: str, dsn: str, sql: str) -> list[str]:
+    """psql argv for one guarded query. Explicit BEGIN keeps every -c in the same transaction."""
+    return [psql_bin, dsn, "-X", "-q", "-tA", "-F", "\t", "-v", "ON_ERROR_STOP=1",
+            "-c", "begin read only;",
+            "-c", "show transaction_read_only;",
+            "-c", RO_ASSERT,
+            "-c", sql,
+            "-c", "commit;"]
+
+
+def split_guarded(stdout: str) -> tuple[str | None, list[list[str]]]:
+    """First output line is the SHOW value; the rest are the query's rows (hc.q's shape)."""
+    lines = [line for line in stdout.splitlines() if line]
+    if not lines:
+        return None, []
+    return lines[0], [line.split("\t") for line in lines[1:]]
+
+
+def ro_q(sql: str) -> list[list[str]]:
+    """Drop-in for hc.q during the dry run: same rows, but only from a verified read-only txn."""
+    out = subprocess.run(ro_argv(hc.PSQL_BIN, hc._dsn(), sql), capture_output=True, text=True)
+    if out.returncode != 0:
+        sys.exit(f"ERROR: dry-run query failed or the read-only guard tripped — aborting, nothing run "
+                 f"outside a read-only transaction.\n{out.stderr.strip()}")
+    show, rows = split_guarded(out.stdout)
+    if not read_only_verdict(show):
+        sys.exit(f"ERROR: read-only guard: SHOW transaction_read_only returned {show!r}, not 'on'. "
+                 "Aborting the dry run (fail closed); its results are discarded.")
+    return rows
+
+
 def dry_run(as_of: dt.date) -> bool:
-    os.environ["PGOPTIONS"] = (os.environ.get("PGOPTIONS", "") + " -c default_transaction_read_only=on").strip()
+    # Every hc.q call below (preview, load_graph, read_sql_output) is routed through ro_q for the
+    # duration of the dry run only; restored in `finally` so --apply's write never inherits it.
+    real_q, hc.q = hc.q, ro_q
+    try:
+        return _dry_run(as_of)
+    finally:
+        hc.q = real_q
+
+
+def _dry_run(as_of: dt.date) -> bool:
     print(f"topic-intel compute DRY RUN (read-only) — as_of {as_of}  [source: {MIGRATION.name}]\n")
 
     port_t, port_p, problems = preview(as_of)
@@ -144,7 +206,6 @@ def apply(as_of: dt.date, runtime: str) -> int:
     if not dry_run(as_of):
         print("REFUSING to write: dry-run gate is not clean.")
         return 1
-    os.environ["PGOPTIONS"] = os.environ["PGOPTIONS"].replace("-c default_transaction_read_only=on", "").strip()
     print(f"\nWriting via pipeline_writer: compute_topic_intelligence('{as_of}', '{runtime}') …")
     out = subprocess.run(
         [hc.PSQL_BIN, hc._dsn(), "-v", "ON_ERROR_STOP=1", "-tA",
@@ -158,8 +219,48 @@ def apply(as_of: dt.date, runtime: str) -> int:
     return 0
 
 
+def selftest() -> int:
+    """Offline check of the read-only guard (stdlib only, never touches a DB)."""
+    fails = []
+
+    def check(name, cond):
+        print(f"  [{'ok' if cond else 'FAIL'}] {name}")
+        if not cond:
+            fails.append(name)
+
+    for val, want in (("on", True), ("on\n", True), ("off", False), ("", False), (None, False),
+                      ("ON", False), ("true", False), ("garbage", False), ("on off", False)):
+        check(f"verdict({val!r}) -> {'proceed' if want else 'abort'}", read_only_verdict(val) is want)
+
+    show, rows = split_guarded("on\nabc\t1\n\nxyz\t2\n")
+    check("split: SHOW line separated from rows", show == "on" and rows == [["abc", "1"], ["xyz", "2"]])
+    check("split: empty output -> no SHOW value (abort)", split_guarded("") == (None, []))
+    check("split: SHOW-only output -> zero rows", split_guarded("on\n") == ("on", []))
+
+    argv = ro_argv("psql", "dsn", "select 1;")
+    cmds = [argv[i + 1] for i, a in enumerate(argv) if a == "-c"]
+    check("argv: begin read only -> show -> assert -> query -> commit",
+          cmds == ["begin read only;", "show transaction_read_only;", RO_ASSERT, "select 1;", "commit;"])
+    check("argv: ON_ERROR_STOP set (assert halts before the query)", "ON_ERROR_STOP=1" in argv)
+    check("argv: no session-level setting (pooler-safe)", not any("session" in c.lower() for c in cmds))
+
+    # Swap the real body for a probe that reports which q it sees; no query is issued.
+    global _dry_run
+    real_body, real_q = _dry_run, hc.q
+    _dry_run = lambda as_of: hc.q is ro_q  # noqa: E731
+    try:
+        check("dry_run routes every hc.q call through ro_q", dry_run(dt.date(2026, 1, 1)) is True)
+        check("dry_run restores hc.q afterwards (--apply does not inherit the guard)", hc.q is real_q)
+    finally:
+        _dry_run, hc.q = real_body, real_q
+
+    print(f"\nselftest: {'PASS' if not fails else f'FAIL ({len(fails)})'}")
+    return 1 if fails else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--selftest", action="store_true", help="offline check of the read-only guard; no DB")
     ap.add_argument("--apply", action="store_true", help="write (after a clean dry-run gate)")
     ap.add_argument("--dry-run", action="store_true", help="read-only preview + parity diff (default)")
     ap.add_argument("--as-of", type=dt.date.fromisoformat, default=None,
@@ -167,6 +268,8 @@ def main() -> int:
     ap.add_argument("--runtime", default="github_actions",
                     choices=["github_actions", "manual"], help="ingestion_run.runtime label for --apply")
     a = ap.parse_args()
+    if a.selftest:
+        return selftest()
     as_of = a.as_of or dt.datetime.now(dt.timezone.utc).date()
     if a.apply and not a.dry_run:
         return apply(as_of, a.runtime)
