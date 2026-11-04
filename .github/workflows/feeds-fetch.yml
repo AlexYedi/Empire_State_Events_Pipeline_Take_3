@@ -7,8 +7,13 @@ name: Market feeds fetch (lane 4 — stage feed_items on the twin)
 # session does the authoritative classification from the staged rows (invariant 5: no writer
 # touches untrusted text).
 #
-# Twin-only: writes go through spine_client (the one guarded write path, ADR-9), and feeds.py
-# itself refuses any SPINE_REF that is not the twin ref — prod is hard-failed before any HTTP.
+# REGISTRY PRIVACY RULE (review 2026-11-04, every Action in this repo): nothing derived from a
+# private registry — company names, feed URLs — goes into logs or artifacts. The producer
+# prints counts and sha256 tags only, and this workflow uploads NO manifest.
+#
+# Twin-only: writes go through spine_client (the one guarded write path, ADR-9) after feeds.py
+# refuses any SPINE_REF that is not the twin ref, and verifies feed_items actually exists
+# (migration 0017) before writing. Prod credentials are never used here.
 #
 # REQUIRED repo secrets / variables (Settings > Secrets and variables > Actions):
 #   FEED_SOURCES_REGISTRY     JSON array [{"company": "...", "feed_url": "..."}] — the watchlist
@@ -18,10 +23,12 @@ name: Market feeds fetch (lane 4 — stage feed_items on the twin)
 #                             be used in this workflow.
 #   MI_TWIN_REF               the twin project ref; feeds.py refuses prod and unknown refs.
 #   FEEDS_WRITE_ENABLED       repo VARIABLE (not secret). Unset/false = dry-run.
+#   FEEDS_FAIL_ON_FEED_ERRORS repo VARIABLE, default true: any feed error fails the run so the
+#                             failure alarm fires (per-run; the in-a-row alarm lands with the
+#                             lane_run ledger, #269).
 #
-# DRY-RUN DEFAULT: until migration 0017 creates feed_items on the twin, the fetch step runs
-# --dry-run (stage + manifest artifact, no write). After the migration lands, set the repo
-# VARIABLE FEEDS_WRITE_ENABLED=true to enable writes.
+# DRY-RUN DEFAULT: until migration 0017 creates feed_items on the twin AND FEEDS_WRITE_ENABLED
+# is set, the fetch step runs --dry-run (stage only, nothing written, no manifest uploaded).
 #
 # NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
 
@@ -32,6 +39,7 @@ on:
 
 permissions:
   contents: read
+  issues: write            # the failure alarm opens/issues a comment; contents:read alone 403s it
 
 concurrency:
   group: feeds-fetch
@@ -41,8 +49,11 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      # SHA-pinned actions + persist-credentials: false (review 2026-11-04).
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.13"
       - name: Materialize the feed-sources registry (never logged or committed)
@@ -61,22 +72,23 @@ jobs:
           SPINE_REF: ${{ secrets.MI_TWIN_REF }}
           SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
           FEEDS_WRITE_ENABLED: ${{ vars.FEEDS_WRITE_ENABLED }}
+          FEEDS_FAIL_ON_FEED_ERRORS: ${{ vars.FEEDS_FAIL_ON_FEED_ERRORS }}
         run: |
           set -euo pipefail
           ARGS=(--sources "$RUNNER_TEMP/feed_sources.json" --out "$RUNNER_TEMP/feed_items.json")
           if [ "$FEEDS_WRITE_ENABLED" = "true" ]; then
-            echo "FEEDS_WRITE_ENABLED=true — writing staged rows to the twin"
+            echo "FEEDS_WRITE_ENABLED=true — attempting the twin write (table existence is checked first)"
           else
             echo "FEEDS_WRITE_ENABLED unset/false — dry-run (default until migration 0017 lands)"
             ARGS+=(--dry-run)
           fi
+          if [ "${FEEDS_FAIL_ON_FEED_ERRORS:-true}" = "true" ]; then
+            ARGS+=(--fail-on-feed-errors)
+          fi
           python3 .claude/scripts/feeds.py fetch "${ARGS[@]}"
-      - name: Upload the staged manifest
-        uses: actions/upload-artifact@v4
-        with:
-          name: feed-items-manifest
-          path: ${{ runner.temp }}/feed_items.json
-          if-no-files-found: error
+      # NO manifest upload: the manifest lists every company and feed URL from the private
+      # registry, and artifacts on a public repo are public. The staging rows reach the twin
+      # through spine_client; humans debug from the run's stderr counts and hashes.
       - name: Remove the materialized registry
         if: always()
         run: rm -f "$RUNNER_TEMP/feed_sources.json"
@@ -96,6 +108,6 @@ jobs:
           else
             gh issue create \
               --title "Market feeds fetch FAILED (since $TODAY)" \
-              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the item text), or a twin write error. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the staged row text), a missing migration 0017 (write held), or a twin write error. The failing step in the run says which; stderr carries counts and sha256 tags only. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
               || echo "issue-create failed; check the Actions run directly"
           fi

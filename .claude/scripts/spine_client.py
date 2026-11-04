@@ -573,7 +573,7 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
 _SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
 _WRITE_TABLES = (r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims|claim|"
                  r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage|"
-                 r"company_segment_history|lane_run|lane_registry)")
+                 r"feed_items|company_segment_history|lane_run|lane_registry)")
 _PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
 _PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
 
@@ -762,6 +762,15 @@ def selftest() -> bool:
                                      "summary": "Questions to press@veris.example", "kind": "rss"}), True)
     add("feed_items.metadata carrying a phone → refuse",
         lambda: guard("feed_items", {"source_key": "ab" * 32, "metadata": {"alt": "+1 (555) 123-4567"}}), True)
+    add("feed_items.title carrying an email → refuse",
+        lambda: guard("feed_items", {"source_key": "ab" * 32,
+                                     "title": "Ping jane.doe@veris.example about Atlas"}), True)
+    add("feed_items.url carrying an email → refuse",
+        lambda: guard("feed_items", {"source_key": "ab" * 32,
+                                     "url": "https://veris.example/contact?mail=press@veris.example"}), True)
+    add("feed_items.company carrying a phone → refuse",
+        lambda: guard("feed_items", {"source_key": "ab" * 32,
+                                     "company": "Veris AI +1 212 555 0142"}), True)
     add("documents our-artifact row (no blob) → pass",
         lambda: guard("documents", {"title": "Brief", "source_type": "research_brief", "sha256": "h",
                                     "external_ref": "notion:3ded3699", "version": 1, "is_current": True}), False)

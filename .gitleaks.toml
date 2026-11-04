@@ -1,0 +1,8 @@
+# Path-scoped allowlist (review 2026-11-04, YED-304): the fixture source_key values are sha256
+# digests of the example URLs (deterministic dedupe keys), not credentials. Scoped by PATH +
+# exact 64-hex shape — deliberately NOT .gitleaksignore fingerprints, which pin the commit SHA
+# and go red after a squash merge changes it.
+[allowlist]
+    description = "fixture sha256 source_key digests (feeds_items.example.json)"
+    paths = ['''supabase/fixtures/feeds_items\.example\.json''']
+    regexes = ['''^[0-9a-f]{64}$''']

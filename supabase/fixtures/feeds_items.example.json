@@ -3,6 +3,8 @@
   "sources": 3,
   "feed_errors": [],
   "items_fetched": 4,
+  "rows_quarantined": 0,
+  "quarantined_source_keys": [],
   "items_staged": 4,
   "items": [
     {
@@ -14,7 +16,7 @@
       "published": "2026-11-02T14:00:00Z",
       "summary": "Atlas 2.0 is now available in general availability.",
       "kind": "rss",
-      "signal_type_guess": "launch",
+      "signal_type_guess": null,
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
         "canonical_url": "https://veris.example/blog/atlas-2"
@@ -44,7 +46,7 @@
       "published": "2026-11-03T10:00:00Z",
       "summary": "We raised a Series B to scale agentic retrieval. Questions: [redacted]",
       "kind": "atom",
-      "signal_type_guess": "funding",
+      "signal_type_guess": "news",
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
         "canonical_url": "https://northbeam.example/news/series-b"
@@ -58,8 +60,8 @@
       "title": "Harbor Systems launches Harbor Agents",
       "published": "2026-11-01T12:00:00Z",
       "summary": "Walkthrough of the new agent runtime.",
-      "kind": "youtube",
-      "signal_type_guess": "launch",
+      "kind": "atom",
+      "signal_type_guess": null,
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
         "canonical_url": "https://youtube.example/watch?v=abc123"
