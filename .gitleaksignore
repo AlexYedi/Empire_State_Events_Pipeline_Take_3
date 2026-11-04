@@ -1,3 +1,9 @@
 # Reviewed 2026-10-15 (YED-259): documentation placeholders (sk_live_... / <your-key>), not secrets.
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:27
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:30
+# Reviewed 2026-11-04 (YED-304): fixture source_keys are sha256 digests of canonical URLs
+# (deterministic dedupe keys), not credentials.
+d9c0023b88974c033b193c2c92cec4031bd210f6:supabase/fixtures/feeds_items.example.json:generic-api-key:9
+d9c0023b88974c033b193c2c92cec4031bd210f6:supabase/fixtures/feeds_items.example.json:generic-api-key:24
+d9c0023b88974c033b193c2c92cec4031bd210f6:supabase/fixtures/feeds_items.example.json:generic-api-key:39
+d9c0023b88974c033b193c2c92cec4031bd210f6:supabase/fixtures/feeds_items.example.json:generic-api-key:54
