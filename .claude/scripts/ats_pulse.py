@@ -8,11 +8,19 @@ role rows (ADR-7 R2: no person edges from market lanes). Output names companies 
 they are the subject) but nothing finer-grained, which is why the Action deletes every file
 derived from the registry and uploads at most an anonymous totals summary.
 
-Review-rev 2 contract changes (Claude Code review on PR #271):
+0016-landed contract (Claude Code direction after migration 0016 merged, main f9458b8/dd88cca):
+  * signal_type is written to the REAL event.signal_type column (substrate.ensure_event passes
+    it through) — not a metadata bag. dedup_key and week stay in metadata (still not columns).
+  * the lane_run ledger row is REAL: written through spine_client.write to the TWIN graph
+    (started_at/finished_at/status/items_seen/items_written/items_refused/credits_spent/error),
+    via --write-lane-run. Twin-only by construction: the write refuses to run without
+    MI_TWIN_URL and refuses if the URL is the prod ref.
+  * lane_registry activation is NOT a producer write (producers can't write it) — migration
+    0018 flips lane_registry.active for hiring_pulse; Alex applies it after a twin rehearsal.
   * roles_open is the board's UNFILTERED posting count (from ats_pull --summary) — the old
     title-filtered number made roles_open ≡ gtm_roles always.
   * zero-posting companies emit zero-count rows (a 5 → 0 drop must show); errored boards
-    never become events — they land in the lane_run manifest.
+    never become events — they land in the lane_run manifest and its error text.
   * a PII hit in an INPUT row counts that row refused and skips it; only EMITTED text
     hard-fails the build.
   * --emit-events writes one substrate.ensure-event manifest per company: {"event": {...}} with
@@ -173,29 +181,70 @@ def event_manifests(manifest: dict) -> list[dict]:
 
     ensure_event reads m['event'] (title/kind/event_date/url/metadata) plus m['entities'];
     event_date is the week's Sunday so find_event's same-day match dedupes any re-run within
-    the week (a stray Tuesday dispatch must not mint a duplicate). signal_type and dedup_key
-    ride in metadata until migration 0016 adds the columns — the 0016 wiring lifts them out."""
+    the week (a stray Tuesday dispatch must not mint a duplicate). signal_type is the REAL
+    event column since 0016 — substrate passes it through; dedup_key and week are still not
+    columns, so they ride in event metadata."""
     out = []
     for ev in manifest.get("events", []):
         out.append({
             "event": {"title": ev["title"], "kind": ev["kind"], "event_date": ev["event_date"],
                       "url": ev.get("url") or "", "source": ev.get("source") or SOURCE,
-                      "confidence": 0.9,
-                      "metadata": {**ev["metadata"], "signal_type": SIGNAL_TYPE,
-                                   "dedup_key": ev["dedup_key"], "week": manifest["week"]}},
+                      "confidence": 0.9, "signal_type": SIGNAL_TYPE,
+                      "metadata": {**ev["metadata"], "dedup_key": ev["dedup_key"],
+                                   "week": manifest["week"]}},
             "entities": ev.get("entities", []),
         })
     return out
 
 
 def lane_run_manifest(manifest: dict) -> dict:
-    """The lane_run row this run would write (PR #269's ledger; a dry-run stand-in until
-    migration 0016 — the Action keeps it local, never uploads it: it names boards)."""
+    """The run's ledger entry in manifest form (kept local: it names boards in errored_boards)."""
     lane = manifest.pop("_lane", {"seen": 0, "refused": 0, "errored_boards": []})
     return {"lane": SOURCE, "week": manifest["week"], "ran_at": manifest["generated_at"],
             "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
             "seen": lane["seen"], "refused": lane["refused"],
             "written": len(manifest["events"]), "errored_boards": lane["errored_boards"]}
+
+
+def lane_run_row(lane: dict, started_at: str) -> dict:
+    """The lane_run manifest → the REAL public.lane_run row (0016 contract columns), the shape
+    spine_client.write('lane_run', …) posts. Pure so the selftest can pin every mapping."""
+    errored = list(lane.get("errored_boards") or [])
+    err_text = ("errored boards: " + ", ".join(errored)) if errored else None
+    return {
+        "lane": lane["lane"],
+        "started_at": started_at,
+        "finished_at": lane["ran_at"],
+        # lane_run.status CHECK is ('running','success','partial','failed','skipped') — errored
+        # boards are a 'partial' run, not a failure (the run itself succeeded).
+        "status": "success" if not errored else "partial",
+        "items_seen": lane["seen"],
+        "items_written": lane["written"],
+        "items_refused": lane["refused"],
+        "credits_spent": 0,               # ATS boards are free; this lane spends no credits
+        # column CHECK caps error at 1000 chars; a longer list still records the first names.
+        "error": err_text[:1000] if err_text else None,
+    }
+
+
+def write_lane_run(lane: dict, started_at: str) -> dict:
+    """Write the REAL lane_run row through spine_client.write — to the TWIN, never prod.
+
+    Twin-only by construction: MI_TWIN_URL must be set (the workflow passes the same secret
+    pair the prior-read uses); a missing key is spine_client's own loud failure. The key
+    reaches spine_client as SUPABASE_API_KEY (its one key source) — the workflow maps
+    MI_TWIN_SUPABASE_API_KEY to it for this step only."""
+    import spine_client
+    url = os.environ.get("MI_TWIN_URL", "").rstrip("/")
+    if not url:
+        raise SystemExit("FATAL: MI_TWIN_URL is not set — refusing to write lane_run "
+                         "anywhere (twin-only; spine_client's default REF is prod)")
+    if spine_client.REF in url:
+        raise SystemExit("FATAL: MI_TWIN_URL is the PROD ref — refusing to write lane_run to prod")
+    spine_client.BASE = f"{url}/rest/v1"
+    row = lane_run_row(lane, started_at)
+    spine_client.write("lane_run", [row])
+    return row
 
 
 def validate_manifest(manifest: dict) -> list[str]:
@@ -252,6 +301,8 @@ def validate_event_manifest(m: dict) -> list[str]:
         return ["event manifest has no 'event'"]
     if ev.get("kind") != "market":
         problems.append("event.kind must be 'market'")
+    if ev.get("signal_type") != SIGNAL_TYPE:
+        problems.append("event.signal_type must be the real column value 'hiring_pulse' (0016)")
     meta = ev.get("metadata") or {}
     for k in META_KEYS:
         if k not in meta:
@@ -392,9 +443,37 @@ def selftest() -> int:
           and all(set(x) == {"event", "entities"} for x in evs))
     check("emit: each validates clean against the substrate shape",
           all(validate_event_manifest(x) == [] for x in evs))
-    check("emit: signal_type + dedup_key ride in metadata until 0016",
-          all(x["event"]["metadata"]["signal_type"] == SIGNAL_TYPE
+    check("emit: signal_type is the REAL event column (0016); dedup_key stays in metadata",
+          all(x["event"]["signal_type"] == SIGNAL_TYPE
+              and "signal_type" not in x["event"]["metadata"]
               and x["event"]["metadata"]["dedup_key"] for x in evs))
+
+    # The REAL lane_run row (0016 contract): every mapping pinned, including the twin-only writer.
+    row = lane_run_row(lane, "2026-11-01T06:00:00Z")
+    check("lane_run row: exact 0016 contract columns",
+          set(row) == {"lane", "started_at", "finished_at", "status", "items_seen",
+                       "items_written", "items_refused", "credits_spent", "error"})
+    check("lane_run row: started/finished/status mapping (errored boards → 'partial')",
+          row["started_at"] == "2026-11-01T06:00:00Z" and row["finished_at"] == lane["ran_at"]
+          and row["status"] == "partial")
+    check("lane_run row: counters + zero credits + errored-board error text",
+          (row["items_seen"], row["items_written"], row["items_refused"], row["credits_spent"]) == (7, 3, 0, 0)
+          and row["error"] == "errored boards: Neverboard")
+    clean_lane = {**lane, "errored_boards": []}
+    r2 = lane_run_row(clean_lane, "2026-11-01T06:00:00Z")
+    check("lane_run row: a clean run → 'success' with a null error",
+          r2["status"] == "success" and r2["error"] is None)
+    flood = {**lane, "errored_boards": [f"board_{i:03d}" for i in range(300)]}
+    check("lane_run row: error text capped at the column's 1000 chars",
+          len(lane_run_row(flood, "x")["error"]) == 1000)
+    try:
+        os.environ.pop("MI_TWIN_URL", None)
+        write_lane_run(lane, "x")
+        check("lane_run write: refuses without MI_TWIN_URL (twin-only, never prod)", False)
+    except SystemExit:
+        check("lane_run write: refuses without MI_TWIN_URL (twin-only, never prod)", True)
+    finally:
+        os.environ.pop("MI_TWIN_URL", None)
 
     prior = _json_copy(m); prior.pop("_lane", None)
     prior["week"] = "2026-W43"              # last week — the same-week refusal is tested below
@@ -488,7 +567,12 @@ def main(argv=None) -> int:
     ap.add_argument("--pull-summary", help="ats_pull --summary JSON (unfiltered board counts)")
     ap.add_argument("--out", help="write the aggregate manifest here")
     ap.add_argument("--emit-events", help="write one substrate ensure-event manifest per company here")
-    ap.add_argument("--lane-run-out", help="write the lane_run manifest (PR #269 ledger, dry-run) here")
+    ap.add_argument("--lane-run-out", help="write the lane_run manifest (the run's ledger entry, kept local: names boards) here")
+    ap.add_argument("--write-lane-run", metavar="MANIFEST",
+                    help="read the lane_run manifest and write the REAL lane_run row through "
+                         "spine_client.write to the TWIN (MI_TWIN_URL + SUPABASE_API_KEY env; "
+                         "refuses without MI_TWIN_URL and refuses the prod ref)")
+    ap.add_argument("--started-at", help="ISO run-start timestamp for --write-lane-run (default: the manifest's ran_at)")
     ap.add_argument("--asof", help="override the bucket date (YYYY-MM-DD; default today, UTC)")
     ap.add_argument("--validate", metavar="MANIFEST",
                     help="validate an aggregate manifest (or --emit-events dir files) and exit")
@@ -496,6 +580,15 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+
+    if a.write_lane_run:
+        with open(a.write_lane_run, encoding="utf-8") as fh:
+            lane = json.load(fh)
+        row = write_lane_run(lane, a.started_at or lane["ran_at"])
+        print(f"ats_pulse: lane_run row written to the twin "
+              f"({row['lane']} · {row['status']} · seen {row['items_seen']} · "
+              f"written {row['items_written']} · refused {row['items_refused']})")
+        return 0
 
     if a.validate:
         if os.path.isdir(a.validate):          # a --emit-events dir: per-company ensure-event manifests

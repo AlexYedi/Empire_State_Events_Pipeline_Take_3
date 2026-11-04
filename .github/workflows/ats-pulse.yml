@@ -1,7 +1,8 @@
 # Lane 1 hiring pulse (YED-304) — weekly per-company hiring counts from ATS boards.
 # Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 · producer chain:
 #   ats_pull.py (boards → TSV + board stats) → ats_pulse.py (counts-only manifest, per-company
-#   ensure-event manifests, lane_run manifest) → substrate.py ensure-event (dry-run until 0016).
+#   ensure-event manifests, lane_run manifest) → substrate.py ensure-event (event writes stay
+#   dry-run: a live write needs the guarded twin REF override, human review).
 #
 # SECRET HYGIENE — read before editing (Claude Code review, PR #271):
 #   * TARGET_COMPANIES_REGISTRY (repo secret): the private target list, materialised to
@@ -12,16 +13,24 @@
 #       - NO manifest, lane_run, event or board-stats file is uploaded — they name companies.
 #         The only artifact is the anonymous totals summary (week, company COUNT, totals).
 #       - every derived file is deleted by the always() cleanup step before the job ends.
-#   * NO DATABASE CREDENTIALS in this workflow. The prod SUPABASE_API_KEY secret must NEVER appear
-#     here (twin-only rule). The optional prior-week read uses ONLY the twin secrets below and is
-#     read-only. Live ensure-event needs migration 0016 plus a guarded twin spine REF override —
-#     both human-reviewed; until then the write step is offline validation (dry-run).
+#   * NO PROD DATABASE CREDENTIALS in this workflow. The prod SUPABASE_API_KEY secret must NEVER
+#     appear here (twin-only rule). The optional prior-week read and the lane_run ledger write use
+#     ONLY the twin secrets below. Live ensure-event needs a guarded twin spine REF override in
+#     spine_client (spine_client.REF is hardcoded to prod; the override is a guarded-path change,
+#     human review) — until then the event write step is offline validation (dry-run).
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
 #     would compare against itself). ats_pulse refuses a same-week --prior regardless.
+#   * lane_run is REAL: the run ledger row is written through spine_client.write to the TWIN
+#     (migration 0016's public.lane_run; the twin pair MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY,
+#     mapped to SUPABASE_API_KEY for that one step — spine_client's only key source).
+#   * lane_registry activation is NOT a producer write (producers can't write the registry):
+#     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
+#     after a twin rehearsal.
 #   * HOLD: the lane skips itself (warning, no failure issue) until migration 0016 has landed and
-#     the twin has been rebuilt (re-review of 2031fef). Secret names match #272: MI_TWIN_URL /
-#     MI_TWIN_SUPABASE_API_KEY — pending Alex's approval to create.
+#     the twin has been rebuilt. 0016 merged on main (f9458b8 + dd88cca), so the guard no longer
+#     triggers — it un-holds itself by the presence of supabase/migrations/0016_*.sql, no flag.
+#     Secret names match #272: MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY — pending Alex's approval.
 # NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
 
 name: YED-304 lane 1 hiring pulse (weekly)
@@ -134,7 +143,9 @@ jobs:
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
         if: steps.hold.outputs.held != 'true'
+        id: pull
         run: |
+          echo "run_start=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           set +e
           python3 .claude/scripts/ats_pull.py --quiet --out /tmp/roles.tsv --summary /tmp/board_stats.json \
             2>/tmp/ats-pull.err
@@ -158,13 +169,28 @@ jobs:
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
             --lane-run-out /tmp/pulse-out/lane_run.json
 
-      # Dry-run write step until migration 0016 + the guarded twin spine REF override (both
-      # human-reviewed). Validates the aggregate AND every per-company ensure-event manifest.
-      - name: Validate the manifests offline (dry-run write step)
+      # The event manifests STAY a validate-only step (a live ensure-event needs the guarded twin
+      # REF override in spine_client — human review). The lane_run LEDGER, though, is now written
+      # for real: 0016's public.lane_run, through spine_client.write, to the TWIN only.
+      - name: Validate the manifests offline (event writes stay dry-run)
         if: steps.hold.outputs.held != 'true'
         run: |
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
+
+      - name: Write the real lane_run ledger row to the twin (skipped without twin secrets)
+        if: steps.hold.outputs.held != 'true'
+        env:
+          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
+          # mapped to spine_client's only key source for this step; the TWIN key — never prod
+          SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+        run: |
+          if [ -z "$MI_TWIN_URL" ] || [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::warning::twin secrets not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
+            exit 0
+          fi
+          python3 .claude/scripts/ats_pulse.py --write-lane-run /tmp/pulse-out/lane_run.json \
+            --started-at "${{ steps.pull.outputs.run_start }}"
 
       - name: Build the anonymous totals summary (the only uploadable output)
         if: steps.hold.outputs.held != 'true'
