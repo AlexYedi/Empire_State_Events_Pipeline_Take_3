@@ -46,39 +46,62 @@ allowlist and fails closed before the call): `weeks` (1..104, default 8) · `len
    "view": "mi.theme_week",
    "lenses": ["attended", "market"],
    "filters": {"weeks": 8},
-   "question": "Q1 — is my room ahead of or behind the market on each theme? Read with theme_lead_lag_8w for the gated lead figure."},
+   "question": "Q1 — is my room ahead of or behind the market on each theme? (lead/lag in weeks)"},
   {"name": "theme_lead_lag_8w",
    "view": "mi.theme_lead_lag",
    "lenses": [],
    "filters": {},
    "question": "Q1b — per theme, did the market lead the room? market_lead_weeks renders only on lead_lag_shown; otherwise insufficient_data with both 8-week counts beside it."},
-  {"name": "funded_not_attended_13w",
-   "view": "mi.theme_week",
-   "lenses": ["attended", "market"],
-   "filters": {"weeks": 13},
-   "question": "Q3 — which themes does the market fund that my rooms ignore? Read the adjacent columns: market funding facts next to the attended tag count. kinds/signal_types are row columns, not mi_slice filters."},
   {"name": "companies_heating_8w",
    "view": "mi.company_timeline",
-   "lenses": ["attended", "market"],
+   "lenses": ["market"],
    "filters": {"weeks": 8},
-   "question": "Q5 — which companies are accumulating attended or market facts week over week (funding, hiring, launches)? Scope one with company_id at runtime."},
+   "question": "Q5a — which companies are accumulating market facts week over week (funding, hiring, launches)? Scope one with company_id at runtime."},
+  {"name": "funded_not_attended_90d",
+   "view": "mi.theme_week",
+   "lenses": ["attended", "market"],
+   "filters": {},
+   "blocked_filters": {"kinds": ["funding"], "window_days": 90},
+   "status": "blocked_on_rpc",
+   "question": "Q3 — which themes does the market fund that my rooms ignore? Read the adjacent columns: market funding facts next to the attended tag count."},
+  {"name": "target_companies_heating_qtd",
+   "view": "mi.company_timeline",
+   "lenses": ["market"],
+   "filters": {},
+   "blocked_filters": {"target_tier": ["A", "B"], "period": "qtd"},
+   "status": "blocked_on_rpc",
+   "question": "Q5 — which of my target companies are heating up (funding, hiring, launches) this quarter? Tier flags live in the DB and never render on a public hub page. NOTE: a target_tier filter needs an ADR-13 privacy review, not just a migration."},
   {"name": "new_nyc_companies_by_quarter",
    "view": "mi.company_cohort",
-   "lenses": [],
+   "lenses": ["market", "attended"],
    "filters": {},
-   "question": "Q6 — which companies first appeared in which quarter and lens, with their current segment? All-time; hq_metro is a row column, not an mi_slice filter."},
+   "blocked_filters": {"cohort": "first_seen_quarter", "hq_metro": "nyc"},
+   "status": "blocked_on_rpc",
+   "question": "Q6 — which NYC companies first appeared this quarter, in which lens?"},
   {"name": "research_without_room_corroboration",
    "view": "mi.theme_week",
    "lenses": ["research"],
-   "filters": {"lens": "research", "weeks": 8},
-   "question": "Q8 — what did the research briefs establish that no event has said out loud? Corroborate against the attended columns of attended_vs_market_by_theme_8w."},
+   "filters": {},
+   "blocked_filters": {"attended_corroboration": "none", "window_days": 90},
+   "status": "blocked_on_rpc",
+   "question": "Q8 — what did the research briefs establish that no event has said out loud?"},
   {"name": "frontier_vs_room",
    "view": "mi.theme_week",
    "lenses": ["market", "attended"],
-   "filters": {"weeks": 8},
-   "question": "Q7 — where does the market frontier (papers, model releases, funding) sit relative to what speakers claim? Papers and model releases are market events; signal_types are row columns read off the timeline, not mi_slice filters."}
+   "filters": {},
+   "blocked_filters": {"signal_types": ["paper", "model_release"], "window_weeks": 8},
+   "status": "blocked_on_rpc",
+   "question": "Q7 — where does the research frontier (papers, model releases) sit relative to what speakers claim? Papers and model releases are market events (the market lens); `research` means claims from briefs."}
 ]
 ```
+
+Descriptors marked `blocked_on_rpc` keep their original question and the exact filters they need
+(`blocked_filters`) — the current `mi_slice(view, filters)` signature cannot express them
+(`kinds`, `signal_types`, `target_tier`, `period`, `attended_corroboration`, `hq_metro`), so
+`list` shows them and `run` refuses with "needs an RPC extension" instead of silently rewording
+what the slice answers. A `target_tier` filter additionally needs an ADR-13 privacy review before
+any migration. Live-verified 2026-11-04: 0 market facts in the last 8 weeks — the market column
+legitimately renders "no information (0 facts in window)".
 
 ## Cohort predicates
 

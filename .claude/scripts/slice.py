@@ -227,14 +227,26 @@ def validate_payload(payload) -> list[str]:
     return errs
 
 
+LENS_LESS_VIEWS = {"mi.theme_lead_lag", "mi.company_cohort"}
+
+
 def descriptor_lens_error(payload: dict, descriptor: dict) -> str:
-    """Named-slice guard: the payload's lens set must equal the descriptor's — a payload whose
-    lenses disagree with the registry is a different slice than the one asked for (fail closed).
-    Lens-less views (mi.theme_lead_lag, mi.company_cohort) match descriptors with no lenses."""
-    got = sorted({r.get("lens") for r in payload.get("rows", []) if isinstance(r, dict)} - {None})
-    want = sorted(descriptor.get("lenses") or [])
-    if got != want:
-        return (f"lens set {got} does not match descriptor {want} for {descriptor.get('name')!r} — "
+    """Named-slice guard, view-aware. A lensed view called without a lens filter legitimately
+    returns EVERY lens that has rows (live: {attended, research}) — the renderer filters
+    client-side to the slice's lens set and excludes the rest, so extra lenses are NOT an
+    error here. What stays fail-closed: invalid lens values on a lensed view, and any lens on
+    a lens-less view (mi.theme_lead_lag, mi.company_cohort)."""
+    view = payload.get("view")
+    rows = [r for r in payload.get("rows", []) if isinstance(r, dict)]
+    got = sorted({r.get("lens") for r in rows} - {None})
+    if view in LENS_LESS_VIEWS:
+        if got:
+            return (f"lens-less view {view!r} returned lensed rows {got} — the payload is not "
+                    f"the slice the registry describes")
+        return ""
+    bad = sorted(set(got) - set(LENSES))
+    if bad:
+        return (f"rows carry invalid lens values {bad} (lensed views render {sorted(LENSES)}) — "
                 f"the payload is not the slice the registry describes")
     return ""
 
@@ -306,9 +318,13 @@ def _render_cohort(payload: dict, title: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
+def render(payload: dict, title: str, lens_filter: str | None = None,
+           lens_columns: list[str] | None = None, limit: int | None = None) -> str:
     """Payload → text table. Lensed views: dimension columns, one column per lens (adjacent,
-    never summed), denominator line per lens. Lens-less views dispatch to their own renderers."""
+    never summed), denominator line per lens. Columns come from the SLICE's lenses, not the
+    lenses present — an empty lens still renders, as 'no information (0 facts in window)' with
+    its denominator: that null state is the baseline, hiding it is the failure. Lens-less views
+    dispatch to their own renderers."""
     view = payload.get("view")
     if view == "mi.theme_lead_lag":
         return _render_lead_lag(payload, title)
@@ -316,19 +332,24 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
         return _render_cohort(payload, title)
 
     rows = [dict(r) for r in payload["rows"]]
+    total = len(rows)
     excluded = 0
+    if lens_columns:  # named slice: rows of lenses the slice didn't ask for are excluded, not merged
+        kept = [r for r in rows if r.get("lens") in lens_columns]
+        excluded += len(rows) - len(kept)
+        rows = kept
     if lens_filter:
         kept = [r for r in rows if r["lens"] == lens_filter]
-        excluded = len(rows) - len(kept)
+        excluded += len(rows) - len(kept)
         rows = kept
-    if not rows:
+    lenses = lens_columns or [l for l in LENSES if any(r["lens"] == l for r in rows)]
+    if not rows and not lenses:
         return f"== {title} ==\n(no rows)\n"
     dim_keys: list[str] = []
     for r in rows:
         for k in r:
             if k not in ("lens", "floor_flag", *MARKER_FIELDS, *ID_FIELDS) and k not in MEASURE_FIELDS and k not in dim_keys:
                 dim_keys.append(k)
-    lenses = [l for l in LENSES if any(r["lens"] == l for r in rows)]
 
     def _hashable(v):
         return tuple(v) if isinstance(v, list) else v  # timeline kinds/signal_types are arrays
@@ -352,19 +373,23 @@ def render(payload: dict, title: str, lens_filter: str | None = None) -> str:
     head = f"{'dimension':<{width}} | " + " | ".join(f"{l:>18}" for l in lenses)
     lines = [f"== {title} ==", head, "-" * len(head)]
     for key in sorted(groups, key=lambda k: [(v is None, str(v)) for _, v in k]):
-        cells = [_fmt_cell(groups[key][l]) if l in groups[key] else "—" for l in lenses]
+        cells = [_fmt_cell(groups[key][l]) if l in groups[key]
+                 else "no information (0 facts in window)" for l in lenses]
         lines.append(f"{group_label(key, groups[key]):<{width}} | " + " | ".join(f"{c:>18}" for c in cells))
     lines.append("-" * len(head))
     lines.append(f"dimensions: {' | '.join(dim_keys)}")
     lines.append(_window_line(payload))
     lines.append("-" * len(head))
-    for lens in lenses:
+    for lens in lenses:  # every requested lens prints its denominator — even a 0-row lens
         if payload["denominators"].get(lens):
             lines.append(_fmt_den(lens, payload["denominators"][lens]))
     if any(dict(k).get("topic") == GENERAL_TOPIC or dict(k).get("theme") == GENERAL_TOPIC for k in groups):
         lines.append(f"note: rows marked [general] count the theme's {GENERAL_TOPIC} topic — labelled, never merged into named topics")
-    if lens_filter:
-        lines.append(f"note: --lens {lens_filter}; {excluded} row(s) of other lenses excluded, not merged")
+    if excluded:
+        basis = f"--lens {lens_filter}" if lens_filter else "the slice's lens set"
+        lines.append(f"note: {excluded} row(s) outside {basis} excluded, not merged")
+    if limit is not None and total == limit and total:
+        lines.append(f"note: response returned exactly {limit} row(s) (the limit filter) — it may be truncated; raise the limit to confirm")
     lines.append("note: lenses are adjacent counts, never summed or blended — one number per lens, no combined column (§3.3 rule 1)")
     return "\n".join(lines) + "\n"
 
@@ -389,8 +414,8 @@ def selftest() -> int:
 
     # registry: the canonical §4 slices parse from slices.md
     reg = load_registry(open(SLICES_MD, encoding="utf-8").read())
-    canonical = {"attended_vs_market_by_theme_8w", "funded_not_attended_13w", "companies_heating_8w",
-                 "new_nyc_companies_by_quarter", "research_without_room_corroboration",
+    canonical = {"attended_vs_market_by_theme_8w", "funded_not_attended_90d", "target_companies_heating_qtd",
+                 "companies_heating_8w", "new_nyc_companies_by_quarter", "research_without_room_corroboration",
                  "frontier_vs_room", "theme_lead_lag_8w"}
     check("slices.md: all canonical slices parse with name+view", canonical <= set(reg))
     check("slices.md: every descriptor's view is in the 0016 allowlist",
@@ -399,11 +424,15 @@ def selftest() -> int:
           all(filters_error(d.get("filters", {})) == "" for d in reg.values()))
     check("slices.md: descriptors never ask for a blended 'all' lens",
           all("all" not in (d.get("lenses") or []) for d in reg.values()))
-    check("slices.md: lensed descriptors name lenses; lens-less ones name none",
-          all((d.get("lenses") or []) == [] for n_, d in reg.items() if n_ in ("theme_lead_lag_8w", "new_nyc_companies_by_quarter"))
-          and all(d.get("lenses") for n_, d in reg.items() if n_ not in ("theme_lead_lag_8w", "new_nyc_companies_by_quarter")))
-    check("slices.md: no target_tier anywhere — 0016 dropped it (ADR-13 F1)",
-          "target_tier" not in open(SLICES_MD, encoding="utf-8").read())
+    check("slices.md: lensed descriptors name lenses; the lens-less one names none",
+          all((d.get("lenses") or []) == [] for n_, d in reg.items() if n_ == "theme_lead_lag_8w")
+          and all(d.get("lenses") for n_, d in reg.items() if n_ != "theme_lead_lag_8w"))
+    check("slices.md: exactly three runnable descriptors; the rest blocked_on_rpc (original questions kept)",
+          {n_ for n_, d in reg.items() if d.get("status") != "blocked_on_rpc"}
+          == {"attended_vs_market_by_theme_8w", "companies_heating_8w", "theme_lead_lag_8w"})
+    check("slices.md: runnable descriptors carry no target_tier (ADR-13 F1) — blocked ones name it only in blocked_filters",
+          all("target_tier" not in json.dumps(d.get("filters", {})) for d in reg.values())
+          and "target_tier" not in json.dumps(good))
 
     # contract: every good fixture validates, every negative fixture fails for the right reason
     for name, payload in sorted(good.items()):
@@ -429,34 +458,55 @@ def selftest() -> int:
           any("lead_lag_shown" in e for e in validate_payload(bad["_invalid_lead_without_gate"])))
     check("descriptor: frontier_vs_room names market+attended (papers are market events; research = claims)",
           sorted(reg["frontier_vs_room"]["lenses"]) == ["attended", "market"])
-    check("descriptor: every canonical fixture's lens set matches its descriptor",
+    check("descriptor: every canonical fixture's lens set is a subset of its descriptor's",
           all(descriptor_lens_error(good[name], reg[name]) == "" for name in good if name in reg))
+    check("descriptor: live lens distribution accepted — extra research rows are a subset, not a mismatch",
+          descriptor_lens_error(good["attended_vs_market_by_theme_8w"],
+                                reg["attended_vs_market_by_theme_8w"]) == "")
     fp = json.loads(json.dumps(good["frontier_vs_room"]))
-    fp["rows"][0]["lens"] = "research"  # wrong lens: not the slice the registry describes
-    check("descriptor: payload lens set mismatch rejected (fail closed)",
+    fp["rows"][0]["lens"] = "all"  # invalid lens value: not a slice the registry can describe
+    check("descriptor: invalid lens value rejected (fail closed)",
           descriptor_lens_error(fp, reg["frontier_vs_room"]) != "")
+    fl = json.loads(json.dumps(good["theme_lead_lag_8w"]))
+    fl["rows"][0]["lens"] = "market"  # a lens on a lens-less view: not the slice the registry describes
+    check("descriptor: lensed rows on a lens-less view rejected (fail closed)",
+          descriptor_lens_error(fl, reg["theme_lead_lag_8w"]) != "")
+    check("run: blocked_on_rpc slice refuses before any fetch (needs an RPC extension)",
+          main(["run", "funded_not_attended_90d"]) == 2)
 
-    # §4 slice-contract examples, rendered
-    avm = render(good["attended_vs_market_by_theme_8w"], "attended_vs_market_by_theme_8w")
+    # §4 slice-contract examples, rendered — columns from the SLICE's lenses, so the empty
+    # market lens still renders its column and denominator (live: 0 market facts in 8 weeks)
+    avm = render(good["attended_vs_market_by_theme_8w"], "attended_vs_market_by_theme_8w",
+                 lens_columns=reg["attended_vs_market_by_theme_8w"]["lenses"])
     check("render: lenses are adjacent columns", "attended" in avm and "market" in avm)
-    check("render: no total column — lenses never summed", "total" not in avm.lower())
-    check("render: denominators printed per lens",
+    check("render: empty lens renders its column as the null state, not hidden",
+          "no information (0 facts in window)" in avm)
+    check("render: denominators printed for every requested lens — including the empty one",
           "denominator attended:" in avm and "denominator market:" in avm)
+    check("render: rows of lenses the slice didn't ask for are excluded with a count, not merged",
+          "2 row(s) outside the slice's lens set excluded" in avm)
     check("render: general-topic count labelled with its own number", "(2 general)" in avm)
     check("render: floored cell reads insufficient_data, numbers suppressed", "insufficient_data" in avm)
     check("render: (general) topic row is marked, not folded in", "[general]" in avm)
     check("render: theme_resolved seed marker printed, not a column", "[seed]" in avm)
-    check("render: anchored window printed", "window: 2026-W37 → 2026-W44 (anchored on 2026-11-04)" in avm)
+    check("render: anchored window printed (live-verified W38–W45)",
+          "window: 2026-W38 → 2026-W45 (anchored on 2026-11-04)" in avm)
     check("render: id columns are join keys, not displayed", "theme_id" not in avm.split("dimensions")[0])
+    check("render: response hitting the limit filter is flagged as possibly truncated",
+          "may be truncated" in render(good["attended_vs_market_by_theme_8w"],
+                                       "attended_vs_market_by_theme_8w",
+                                       lens_columns=["attended", "market"], limit=7))
 
-    # lead/lag: its own view; the false gate is the correct null state and is rendered, not hidden
+    # lead/lag: its own view; the false gate is the correct null state (live: false everywhere —
+    # 0 market facts) and is rendered, not hidden
     ll = render(good["theme_lead_lag_8w"], "theme_lead_lag_8w")
-    check("lead/lag: lead shown when both lenses clear the floor", "market led by 6.0w" in ll)
     check("lead/lag: false gate renders insufficient_data WITH the counts beside it (nothing hidden)",
-          "insufficient_data (a=4, m=0)" in ll)
-    check("lead/lag: gated lead number absent from output",
-          not any("market led by 14" in ln for ln in ll.splitlines()))
+          "insufficient_data (a=9, m=0)" in ll and "insufficient_data (a=4, m=0)" in ll)
+    check("lead/lag: gated lead number absent everywhere when the gate is false",
+          not any("market led by" in ln for ln in ll.splitlines()))
     check("lead/lag: 8-week counts always visible", "market 8w" in ll)
+    check("lead/lag: lead shown when both lenses clear the floor (gate-true fixture)",
+          "market led by 6.0w" in render(fixtures["_lead_lag_gate_true"], "lead gate true"))
 
     ht = render(good["companies_heating_8w"], "companies_heating_8w")
     check("time: asserted and observed times both carried to the table",
@@ -472,11 +522,11 @@ def selftest() -> int:
     rc = render(good["research_without_room_corroboration"], "research_without_room_corroboration")
     check("research lens: renders alone, no attended column implied", "market" not in rc.split("==")[1])
 
-    # --lens filter: excludes, never merges
+    # --lens filter: excludes, never merges (on top of the slice's own lens set)
     avm_att = render(good["attended_vs_market_by_theme_8w"], "attended_vs_market_by_theme_8w",
-                     lens_filter="attended")
+                     lens_filter="attended", lens_columns=["attended", "market"])
     check("--lens: other-lens rows excluded with a count, not merged",
-          "3 row(s) of other lenses excluded" in avm_att)
+          "2 row(s) outside --lens attended excluded" in avm_att)
     check("--lens: remaining rows are only the requested lens",
           all(("| market" not in ln) for ln in avm_att.splitlines()[2:-1]))
 
@@ -535,7 +585,8 @@ def main(argv: list[str]) -> int:
             return 3
         for name_, d in sorted(reg.items()):
             lenses = ",".join(d.get("lenses") or ["(lens-less)"])
-            print(f"{name_}  [{lenses}]  {d['view']}\n    {d.get('question', '')}")
+            status = "blocked_on_rpc — needs an RPC extension" if d.get("status") == "blocked_on_rpc" else "runnable"
+            print(f"{name_}  [{lenses}]  {d['view']}  <{status}>\n    {d.get('question', '')}")
         return 0
 
     d = None
@@ -564,6 +615,12 @@ def main(argv: list[str]) -> int:
         d = reg.get(a.name)
         if not d:
             print(f"slice.py: unknown slice {a.name!r} — see `slice.py list`", file=sys.stderr)
+            return 2
+        if d.get("status") == "blocked_on_rpc":
+            print(f"slice.py: refusing {a.name!r} — it is blocked_on_rpc: its filters need an RPC "
+                  f"extension the mi_slice signature does not express yet "
+                  f"(see .claude/references/slices.md; a target_tier filter also needs an ADR-13 "
+                  f"privacy review). It stays listed so the intent is versioned.", file=sys.stderr)
             return 2
         view, filters = d["view"], dict(d.get("filters", {}))
     else:
@@ -621,7 +678,9 @@ def main(argv: list[str]) -> int:
     if a.json:
         print(json.dumps(payload, indent=2))
         return 0
-    sys.stdout.write(render(payload, a.name or view, lens_filter=a.lens))
+    sys.stdout.write(render(payload, a.name or view, lens_filter=a.lens,
+                            lens_columns=(d.get("lenses") or None) if d else None,
+                            limit=filters.get("limit")))
     return 0
 
 
