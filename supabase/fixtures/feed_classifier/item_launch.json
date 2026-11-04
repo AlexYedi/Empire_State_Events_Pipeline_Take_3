@@ -1,0 +1,8 @@
+{
+  "title": "Atlas 2.0 ships with a native tool-calling runtime",
+  "url": "https://acme.example/blog/atlas-2-launch",
+  "published": "2026-11-02T14:00:00Z",
+  "summary": "Acme Robotics today announced the general availability of Atlas 2.0, its agent runtime, with a native tool-calling layer and SOC 2 coverage. The launch post names enterprise GA on November 17.",
+  "feed": "https://acme.example/feed.xml",
+  "kind": "rss"
+}

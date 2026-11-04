@@ -1,0 +1,11 @@
+{
+  "item_key": "ecc11b987db4b57616fa1684718266608815b1e4b0ce95f7dd93a6a6a530156c",
+  "relevance": 0.9,
+  "event_candidate": true,
+  "kind": "launch",
+  "signal_type": null,
+  "companies": ["Acme Robotics"],
+  "topics": ["Agentic infrastructure"],
+  "redacted_body": "Acme Robotics today announced the general availability of Atlas 2.0, its agent runtime, with a native tool-calling layer and SOC 2 coverage. The launch post names enterprise GA on November 17.",
+  "reason": "GA announcement of an agent runtime by a watchlist company — a launch event with existing topic edges."
+}
