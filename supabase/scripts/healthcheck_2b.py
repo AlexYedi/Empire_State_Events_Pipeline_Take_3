@@ -19,12 +19,16 @@ Five layers, all read-only:
      non-platform schema, is a FLAG (non-fatal); it FAILS the run only when EXPOSED (it holds
      values AND anon/authenticated can read it). `--pii-audit-only` runs just this layer.
   5. Lane freshness (market-lens-and-slices §3/§7, YED-304 Phase A): the lane_run run ledger
-     (migration 0016) flags a lane silent >7 days and FAILs >14 days — FLAG at 7, FAIL at 14
-     means days_stale >7 is a FLAG, days_stale >14 is a FAIL; a ledger lane with no runs at
-     all FAILs outright. Until 0016 exists this half SKIPs (non-fatal). Beside it, the
-     role_posted stall check FAILs when public.event has no role_posted row in the last 14
-     days (the L10 lesson: 183 role_posted rows, none since 2026-09-23, nothing alerted) and
-     SKIPs when the table has no role_posted rows at all (empty twin).
+     (migration 0016) flags a lane silent at >=7 days and FAILs at >=14 days (days_stale >= 7 is
+     a FLAG, >= 14 is a FAIL — matching the contract pinned in 0016); a lane registered in
+     lane_registry with no ledger rows FAILs outright; and §3.3 rule 4's coverage check flags a
+     lane whose latest 2 runs wrote nothing (items_written=0), failing at 3. Until 0016 exists
+     these halves SKIP (non-fatal). Beside them, the role_posted stall check FAILs when
+     public.event has no role_posted row in the last 14 days (the L10 lesson: 183 role_posted
+     rows, none since 2026-09-23, nothing alerted) and SKIPs when the table has no role_posted
+     rows at all (empty twin). NOTE: role_posted is already ~42 days stale, so wiring this in
+     makes the nightly FAIL on day one — fatal vs warning is Alex's pending call (2026-11-04
+     review, finding 6); it ships fatal per the design until he says otherwise.
 
 Purpose: prove the graph stays COHERENT night after night, so decommissioning the gtm spine +
 dropping pre2b is a decision backed by evidence, not vibes. Catches silent corruption / drift /
