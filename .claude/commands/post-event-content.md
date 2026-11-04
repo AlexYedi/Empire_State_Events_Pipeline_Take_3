@@ -13,7 +13,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
-- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`). 3.8b/c are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c status explicitly in the Step 6 summary.
+- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`) · 3.8d: every unassigned topic on the event gets a theme, assigned in-session (`assign_clusters.py`). 3.8b/c/d are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c/d status explicitly in the Step 6 summary.
 - **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
 - **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
@@ -249,6 +249,7 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
    - Event: `notion_page_id`, `title`, `kind: "attended"`, `event_date`, `location`, `google_calendar_event_id`.
    - Entities: one single-database SQL query per DB (People · Companies · Topics) — `notion-query-data-sources` in SQL mode, `WHERE url IN (…)`. **Gotcha:** the SQL `url` column is `https://app.notion.com/<id>` (no `/p/`), while relation values are `https://app.notion.com/p/<id>` — strip `/p/` before the `IN` list or the query silently returns 0 rows. Multi-database queries need a Business plan; three single-database queries do not.
    - Roles: People → `speaker` | `host` | `attendee` (from Role Context), Companies → `subject` (host / sponsor / mentioned), Topics → `tagged_topic`. These are the graph's existing role values.
+   - **General topics (YED-304 #267 rule):** when a concept from the event clearly belongs to a theme but doesn't warrant its own topic, don't mint a thin new topic. Tag that theme's standing general topic instead: add `{"type": "topic", "name": "<Theme> (general)", "role": "tagged_topic", "must_exist": true}`. Theme names are in `.claude/references/topic-themes.json`. General topics live in the graph only, with no Notion page.
    - People carry **professional fields only**: name · title · company · linkedin_url. Never email, phone, bio, or text from the transcript (ADR-9).
 2. **Dry-run, then write:**
    ```
@@ -256,6 +257,17 @@ After 3.8a, the Notion Event row's People / Companies / Topics relations are the
    .venv/bin/python .claude/scripts/substrate.py ensure-event --manifest <m.json>
    ```
    Re-running is safe: a second run reports `created=0`.
+
+### Step 3.8d: assign a theme to every unassigned topic (`assign_clusters.py`)
+
+The session that mints a topic assigns its theme, because it holds the transcript, the brief and the roster (YED-304, `docs/proposals/2026-11-03-dynamic-topic-taxonomy.md` §2). A topic with no theme is invisible to every trend: that was the 8 Aug to 4 Nov gap. Run this after 3.8b.
+
+1. **List:** `python3 .claude/scripts/assign_clusters.py list --event <event notion_page_id>` prints the event's linked live topics that have no theme, plus the theme names.
+2. **Decide in-session**, for each topic: the best-fitting theme from that list, with a confidence of 0.5–1.0 (0.9 clear fit · 0.7 reasonable · 0.5 weak). Use `NONE` plus a one-line reason when nothing fits. Those reasons feed the weekly theme-proposal issue: three or more coherent "none fits" topics propose a new theme. Write the decisions to a JSON file in the scratchpad.
+3. **Dry-run, then write:** `assign_clusters.py apply --file <a.json>`, then `… --apply`. It writes only through `spine_client`, and only to topics that still have no theme, so it never overwrites an existing assignment.
+4. **Make it visible.** Paste the printed `topic → theme` lines into the Step 6 summary, and add the same table to the post-event brief page (a `## Theme assignments` section in the Step 5 Notion payload). Alex reviews assignments where he reads, not in a separate queue.
+
+After a theme birth or merge, refresh `.claude/references/topic-themes.json` (the SQL is in the file's `_comment`) before the next run.
 
 ### Step 3.8c — The brief's learnings → first-hand claims (`substrate.py stage-claims`)
 
@@ -436,6 +448,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
 Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
+Theme assignment (3.8d): [N assigned · M none-fits / skipped: reason], followed by one line per topic: "topic → theme (confidence)" or "topic → none fits (reason)"
 Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
 Drafts created: N  (notion-writer: created C · skipped S · failed F · manifest <path>)
   - Tier 1 comment: [Notion URL]
