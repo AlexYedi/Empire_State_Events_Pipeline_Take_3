@@ -1,27 +1,26 @@
-# Secret-scan config (YED-304; shared across PRs #270/#272 — one config, whichever PR merges
-# first lands it; the other rebases onto it). Extends the default gitleaks rule set with ONE
+# Secret-scan config (YED-304; single shared config for #270/#272 — whichever PR merges first
+# lands it; the other rebases onto it). Extends the default gitleaks rule set with ONE
 # allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore fingerprints
 # embed the commit SHA and break on squash merge (verified in PR #272's review scratch squash:
 # secret-scan goes red on main).
 #
-# WHY NOT condition = "AND" (re-review 2026-11-04, PR #272 debug logs; verified in 8.30.1):
-# a global allowlist with `paths` makes gitleaks SKIP matched files before any content is
-# read (`DBG skipping file: global allowlist path=...`), so value-scoping (regexes +
-# condition = "AND") never applies at the global level. Two forms work:
-#   (a) paths-only — blanket-exempt exact files (CHOSEN): the exempt surface is exactly the
-#       four synthetic subagent fixture files whose only credential-shaped content is sha256
-#       digests of public *.example URLs (feeds.item_key);
-#   (b) regexes-only — exempt findings whose secret is exactly 64 hex chars repo-wide, which
-#       would silently ignore a REAL 64-hex API key anywhere in the codebase (worse trade).
-# The paths below are pinned to the exact fixture files — every other file, including any new
-# file under supabase/fixtures/, is scanned in full. If a non-digest secret ever needs to live
-# in one of these files, the fix is to move it out, never to widen this allowlist.
-# `classified_*` is the pre-review fixture generation — it exists only in this branch's
-# history (renamed to `subagent_*` in 43c628a) and carries the SAME four digests; the pin
-# covers it so the range scan stays green. After squash it matches nothing and is inert.
+# VALUE-SCOPED via condition = "AND" (arrays are required — scalar strings decode to empty
+# lists and AND goes vacuous): a finding is exempt only when its path is under
+# supabase/fixtures/ AND its secret is exactly 64 hex chars — i.e. the sha256 digests of
+# public *.example URLs (feeds.item_key). Nothing else is exempted. Probed empirically with
+# gitleaks 8.30.1 (Alex's matrix on #272, comment 6639875575; planted-key selftest:
+# .claude/scripts/test_gitleaks_allowlist.py) — with this form the digests pass and a planted
+# sk_live_ key in a fixtures path is still flagged.
+#
+# RETRACTED (was 368cc0e): a paths-only allowlist pinned to exact files. Alex's probe showed
+# paths-only entries exempt the WHOLE file — a real credential pasted into an exempted
+# fixture would pass the scanner. Do not switch to that form; if a non-digest secret ever
+# needs to live under supabase/fixtures/, the fix is to move it out, never to widen this.
 [extend]
 useDefault = true
 
 [[allowlists]]
-description = "synthetic subagent fixtures: sha256 digests of public *.example URLs (feeds.item_key), not credentials"
-paths = '''(^|/)supabase/fixtures/feed_classifier/(classified|subagent)_(confidential|launch|market|pii_email)\.json$'''
+description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials"
+condition = "AND"
+paths = ['''(^|/)supabase/fixtures/''']
+regexes = ['''(?i)^[0-9a-f]{64}$''']
