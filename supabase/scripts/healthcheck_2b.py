@@ -26,9 +26,10 @@ Five layers, all read-only:
      these halves SKIP (non-fatal). Beside them, the role_posted stall check FAILs when
      public.event has no role_posted row in the last 14 days (the L10 lesson: 183 role_posted
      rows, none since 2026-09-23, nothing alerted) and SKIPs when the table has no role_posted
-     rows at all (empty twin). NOTE: role_posted is already ~42 days stale, so wiring this in
-     makes the nightly FAIL on day one — fatal vs warning is Alex's pending call (2026-11-04
-     review, finding 6); it ships fatal per the design until he says otherwise.
+     rows at all (empty twin). NOTE: the role_posted half is a WARNING, not fatal — Alex's
+     2026-11-04 ruling (YED-322, Linear tracker): flip it back to fatal once lane 1 (PR #271)
+     has run on schedule twice AND role_posted freshness is under 7 days. The lane_run ledger,
+     registry and coverage halves of this layer stay fatal.
 
 Purpose: prove the graph stays COHERENT night after night, so decommissioning the gtm spine +
 dropping pre2b is a decision backed by evidence, not vibes. Catches silent corruption / drift /
@@ -366,8 +367,19 @@ def lane_freshness(today) -> list[str]:
     return fails
 
 
+def role_posted_warns(status: str) -> list[str]:
+    """Pure helper — the YED-322 warn verdict. Alex's 2026-11-04 ruling: a stale role_posted lane
+    WARNs (non-fatal) until lane 1 (PR #271) has run on schedule twice AND role_posted freshness
+    is under 7 days; then flip it back to fatal. The lane_run ledger/registry/coverage halves of
+    layer 5 stay fatal regardless."""
+    return [f"{ROLE_POSTED} lane silent (>= {FAIL_DAYS}d) — warning until YED-322 flips it fatal"] \
+        if status == "fail" else []
+
+
 def role_posted_freshness(today) -> list[str]:
-    """Layer 4b — the role_posted stall (L10): no role_posted event in FAIL_DAYS is a FAIL."""
+    """Layer 4b — the role_posted stall (L10). Non-fatal by Alex's 2026-11-04 ruling (YED-322):
+    a stall >= FAIL_DAYS prints a WARNING instead of failing the run; flip back to fatal once
+    lane 1 (PR #271) has run on schedule twice AND role_posted freshness is under 7 days."""
     total = int(q(f"select count(*) from {EV} where kind='{ROLE_POSTED}';")[0][0])
     if total == 0:
         print(f"  [SKIP] {ROLE_POSTED} stall check (no {ROLE_POSTED} events in the table at all)")
@@ -375,9 +387,9 @@ def role_posted_freshness(today) -> list[str]:
     last = q(f"select max(event_date)::date::text from {EV} where kind='{ROLE_POSTED}';")[0][0]
     status = classify_freshness(dt.date.fromisoformat(last) if last else None, today)
     stale = (today - dt.date.fromisoformat(last)).days if last else -1
-    print(f"  [{'FAIL' if status == 'fail' else 'PASS'}] {ROLE_POSTED} stall: "
+    print(f"  [{'WARN' if status == 'fail' else 'PASS'}] {ROLE_POSTED} stall: "
           f"{total} events, last {last} ({stale}d ago)")
-    return [f"{ROLE_POSTED} lane silent {stale}d (>{FAIL_DAYS}d)"] if status == "fail" else []
+    return role_posted_warns(status)
 
 
 def read_path_probe() -> list[str]:
@@ -532,6 +544,11 @@ def _selftest() -> int:
     rp = fx["role_posted"]
     got = classify_freshness(dt.date.fromisoformat(rp["last_event_date"]), as_of)
     ck(f"role_posted (last {rp['last_event_date']}) -> {rp['expected_status']}", got == rp["expected_status"])
+    # YED-322 warn path: a fail-grade role_posted stall emits a warning and nothing else — it
+    # must never reach the fatal gate (fresh_fails), while ok/flag stay silent.
+    ck("fail-grade role_posted stall -> warning emitted (non-fatal, YED-322)",
+       role_posted_warns("fail") != [])
+    ck("ok/flag role_posted -> no warning", role_posted_warns("ok") == [] and role_posted_warns("flag") == [])
 
     # Threshold edges pinned exactly (0016 contract): ok through day 6, flag days 7-13, fail from day 14 or never-run.
     for delta, want in ((0, "ok"), (FLAG_DAYS - 1, "ok"), (FLAG_DAYS, "flag"),
@@ -586,25 +603,29 @@ def main() -> int:
     print("\nPII column audit (YED-297 — FLAG if a forbidden column exists, FAIL only if EXPOSED):")
     pii_flags, pii_fails = pii_column_audit()
 
-    print("\nLane freshness (lane_run ledger + role_posted stall — FLAG >=7d, FAIL >=14d; §3/§7):")
-    fresh_fails = lane_freshness(as_of) + role_posted_freshness(as_of)
+    print("\nLane freshness (lane_run ledger fatal; role_posted stall warns until YED-322 — §3/§7):")
+    fresh_fails = lane_freshness(as_of)
+    rp_warns = role_posted_freshness(as_of)
 
     # FATAL = graph coherence (independent recompute + invariants) + an EXPOSED contact-PII column
-    # + lane freshness: a dead lane is exactly the L1–L3/L10 failure this alarm exists to catch
-    # (role_posted fatality pending Alex's call — docstring note). The read-path probe and PII
-    # flags are secondary signals reported as WARNINGS, so an anon-key/config hiccup or an empty
-    # legacy column can't masquerade as a failure.
+    # + lane_run freshness (ledger/registry/coverage). The role_posted stall is a WARNING by Alex's
+    # 2026-11-04 ruling (YED-322): flip it back to fatal once lane 1 (PR #271) has run on schedule
+    # twice AND role_posted freshness is under 7 days. The read-path probe and PII flags are also
+    # secondary signals reported as WARNINGS, so an anon-key/config hiccup or an empty legacy
+    # column can't masquerade as a failure.
     graph_ok = (t_mis == 0 and p_mis == 0 and not inv_fails)
     ok = graph_ok and not pii_fails and not fresh_fails
     if probe_fails:
         print("  ⚠️  read-path probe warnings (non-fatal): " + "; ".join(probe_fails))
     if pii_flags:
         print("  ⚠️  PII column flags (non-fatal): " + "; ".join(pii_flags))
+    if rp_warns:
+        print("  ⚠️  role_posted stall (non-fatal until YED-322 flips it): " + "; ".join(rp_warns))
     if fresh_fails:
         print("  🚨 lane freshness FAIL: " + "; ".join(fresh_fails))
     if ok:
-        print("\n✅ PASS — graph coherent, invariants hold, no exposed contact PII, lanes fresh."
-              + (" (warnings above)" if probe_fails or pii_flags else " read path healthy."))
+        print("\n✅ PASS — graph coherent, invariants hold, no exposed contact PII, lane_run ledger fresh."
+              + (" (warnings above)" if probe_fails or pii_flags or rp_warns else " read path healthy."))
     else:
         if not graph_ok:
             print("\n❌ FAIL — graph incoherence above. pre2b rollback remains available.")
