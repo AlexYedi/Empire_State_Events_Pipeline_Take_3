@@ -85,17 +85,7 @@ V1 has no LLM summaries. The template "why" — counts, speakers, first-seen dat
 
 ## 7. The market lens — a committed workstream, not a deferral
 
-**Decision (Alex, 2026-11-04): market + attended, both.** Attended remains the default first view — "my rooms" — and the market view is part of this execution, built as its own workstream with its own labelled rows, never blended into attended counts. A market trend and an attended trend mean different things and stay labelled differently: an attended trend is evidence of where Alex's rooms are moving; a market trend is evidence of where the wider ecosystem is moving. The two are never summed.
-
-⚠️ **This section requires Claude Code's re-review input before the market workstream is planned in detail.** Claude holds context on previous market-lens attempts and why they fell short — history this doc does not have and does not guess at. **Integration point for re-review:** the planning subsection below is a skeleton to be filled or rewritten against that context; the delivery, management and evaluation proposals are there to react to, not decisions.
-
-**Planning — what defines the market view.** Inputs: non-attended events already in the graph (market / funding / launch / exec_move kinds — 31 market, 9 launch, 3 funding, 1 exec_move all-time per the addendum below), plus external sources (job listings, funding announcements, press) whose exact scope is set with Claude's re-review. Entity scope: companies, people and topics in the graph; an explicit re-review decision on which external entity names resolve into the spine versus stay at the surface. Success definition: a market view that answers *what is the ecosystem doing around theme X* with the same evidence-link discipline as the attended board.
-
-**Delivery — acquisition and ingestion without breaking invariants.** One sanctioned producer for acquisition; source and cadence decisions land in re-review. All ingestion rides `spine_client` (ADR-9): every write through the guarded producer, no second write path. **The PII boundary is absolute:** external listings and press are ingested as market events and claims, never as contact data. **One-writer-per-event is preserved:** market events are new rows with their own provenance, never edits to attended events. Event kinds already exist (migration 0011), so widening is data, not DDL — unless re-review says otherwise.
-
-**Management — ownership, cadence, cost.** Owner: Alex, with the agent proposing. Review cadence follows the weekly batched Linear `decision` issue — no standing meeting. Cost control: acquisition and enrichment run in-session or as cheap scheduled reads; no new paid API spend without Alex's explicit approval (the §5 rule applies here too).
-
-**Evaluation over time.** Coverage gates: what fraction of market activity around Alex's themes is captured — floor set at re-review. Quality gates: provenance tier and evidence-link rate for market rows, held to the S-01 discipline (claims as evidence links only, open question 5). Meaning: market trends read as background rate — "the market is heating around X" — while attended trends read as personal signal; the board keeps them in separate labelled sections. Decision review points: after the first 30 days of market data, and whenever a market finding would change a taxonomy proposal — a market-only trend never auto-mints a theme; it files into the same weekly batched issue.
+§7 is superseded by docs/proposals/2026-11-04-market-lens-and-slices.md (PR #268). Attended remains the default view; the market workstream, slice contract and lanes are specified there.
 
 ## 8. Architecture
 
