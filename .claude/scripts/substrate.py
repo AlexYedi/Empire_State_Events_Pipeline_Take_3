@@ -1007,6 +1007,7 @@ class Graph:
                 "title": ev["title"], "kind": ev["kind"], "event_date": ev.get("event_date"),
                 "description": ev.get("description"), "url": ev.get("url"),
                 "source": ev.get("source") or SOURCE, "confidence": ev.get("confidence"),
+                "signal_type": ev.get("signal_type"),   # 0016: real column now; absent -> filtered out below
                 "notion_page_id": (pid_variants(ev.get("notion_page_id")) or [None])[-1],
                 "metadata": {**{k2: ev[k2] for k2 in ("location", "google_calendar_event_id") if ev.get(k2)},
                              **(ev.get("metadata") or {})},
