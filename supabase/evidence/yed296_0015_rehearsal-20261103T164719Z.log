@@ -1,0 +1,25 @@
+TARGET twin ytfzzsxcxxbejnowmkmk (fixture schema yed296_rehearse; pre2b does not exist on the twin)
+== [1] fixture: 232 rows, 1 populated fake email, updated_at trigger (mirrors prod pre2b.person shape for this column)
+CREATE SCHEMA
+CREATE TABLE
+CREATE FUNCTION
+CREATE TRIGGER
+INSERT 0 231
+INSERT 0 1
+before rows/populated: 232/1
+== [2.1] apply 0015 (schema-substituted) run 1
+DO
+  run 1 OK
+== [2.2] apply 0015 (schema-substituted) run 2
+NOTICE:  yed296_rehearse.person.email not present: nothing to scrub.
+DO
+  run 2 OK
+== [3] vacuum full (separate statement)
+VACUUM
+  OK
+== [4] post-conditions
+  email col present: false
+  rows after: 232
+== [5] cleanup
+DROP SCHEMA
+  fixture schema gone: true
