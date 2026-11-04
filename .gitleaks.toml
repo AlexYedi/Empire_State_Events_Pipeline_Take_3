@@ -1,8 +1,24 @@
-# Path-scoped allowlist (review 2026-11-04, YED-304): the fixture source_key values are sha256
-# digests of the example URLs (deterministic dedupe keys), not credentials. Scoped by PATH +
-# exact 64-hex shape — deliberately NOT .gitleaksignore fingerprints, which pin the commit SHA
-# and go red after a squash merge changes it.
-[allowlist]
-    description = "fixture sha256 source_key digests (feeds_items.example.json)"
-    paths = ['''supabase/fixtures/feeds_items\.example\.json''']
-    regexes = ['''^[0-9a-f]{64}$''']
+# Secret-scan config (YED-304; shared across PRs #270/#272 — one config, whichever PR merges
+# first lands it; the other rebases onto it). Extends the default gitleaks rule set with ONE
+# allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore fingerprints
+# embed the commit SHA and break on squash merge (verified in PR #272's review scratch squash:
+# secret-scan goes red on main).
+#
+# WHY NOT condition = "AND" (review 2026-11-04; empirically verified with gitleaks 8.30.1
+# debug logs): a global allowlist with `paths` makes gitleaks SKIP matched files before any
+# content is read (`DBG skipping file: global allowlist path=...`), so value-scoping
+# (regexes + condition = "AND") never applies at the global level. Two forms work:
+#   (a) paths-only — blanket-exempt exact files (CHOSEN): the exempt surface is exactly two
+#       synthetic fixture files whose only credential-shaped content is sha256 digests of
+#       public *.example URLs;
+#   (b) regexes-only — exempt findings whose secret is exactly 64 hex chars repo-wide, which
+#       would silently ignore a REAL 64-hex API key anywhere in the codebase (worse trade).
+# The paths below are pinned to the exact fixture files — every other file, including any new
+# file under supabase/fixtures/, is scanned in full. If a non-digest secret ever needs to live
+# in one of these two files, the fix is to move it out, never to widen this allowlist.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "synthetic fixtures: sha256 digests of public *.example URLs (feeds.item_key / cluster source keys), not credentials"
+paths = '''(^|/)supabase/fixtures/(feeds_items\.example|yed304_topic_clusters)\.json$'''

@@ -19,9 +19,13 @@ name: Market feeds fetch (lane 4 — stage feed_items on the twin)
 #   FEED_SOURCES_REGISTRY     JSON array [{"company": "...", "feed_url": "..."}] — the watchlist
 #                             feeds. Materialized to a runner-temp file at runtime and deleted in
 #                             an always() cleanup step (the lane-1 pattern); never logged or committed.
+#   MI_TWIN_URL               the twin project URL (https://<ref>.supabase.co); the ref passed to
+#                             spine is DERIVED from it in the fetch step (ref-or-die still refuses
+#                             prod and unknown refs). One name across the market-lane PRs (#271's
+#                             TWIN_SUPABASE_* is renamed in its own PR) — Alex approves every secret
+#                             before it is created.
 #   MI_TWIN_SUPABASE_API_KEY  the TWIN API key for feed_items writes. PROD credentials must NOT
 #                             be used in this workflow.
-#   MI_TWIN_REF               the twin project ref; feeds.py refuses prod and unknown refs.
 #   FEEDS_WRITE_ENABLED       repo VARIABLE (not secret). Unset/false = dry-run.
 #   FEEDS_FAIL_ON_FEED_ERRORS repo VARIABLE, default true: any feed error fails the run so the
 #                             failure alarm fires (per-run; the in-a-row alarm lands with the
@@ -69,12 +73,21 @@ jobs:
             || { echo "FEED_SOURCES_REGISTRY is not valid JSON"; exit 1; }
       - name: Fetch feeds and stage feed_items (no model calls — fixed keyword classifier)
         env:
-          SPINE_REF: ${{ secrets.MI_TWIN_REF }}
+          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
           SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
           FEEDS_WRITE_ENABLED: ${{ vars.FEEDS_WRITE_ENABLED }}
           FEEDS_FAIL_ON_FEED_ERRORS: ${{ vars.FEEDS_FAIL_ON_FEED_ERRORS }}
         run: |
           set -euo pipefail
+          # Derive the twin project ref from the URL (host subdomain) — review 2026-11-04:
+          # MI_TWIN_URL is the single secret name across the market-lane PRs. A malformed URL
+          # fails loudly here rather than as a confusing twin_ref_or_die refusal later.
+          SPINE_REF="$(python3 -c "import os; from urllib.parse import urlparse; print(urlparse(os.environ['MI_TWIN_URL']).netloc.split(':')[0].split('.')[0])")"
+          case "$SPINE_REF" in
+            "" ) echo "MI_TWIN_URL is empty — add the repo secret (see workflow header)"; exit 1 ;;
+            *[!a-z0-9]* | "" ) echo "MI_TWIN_URL is not a supabase project URL (https://<ref>.supabase.co)"; exit 1 ;;
+          esac
+          export SPINE_REF
           ARGS=(--sources "$RUNNER_TEMP/feed_sources.json" --out "$RUNNER_TEMP/feed_items.json")
           if [ "$FEEDS_WRITE_ENABLED" = "true" ]; then
             echo "FEEDS_WRITE_ENABLED=true — attempting the twin write (table existence is checked first)"
