@@ -41,6 +41,7 @@
 | Product Pass Pro credit sits on the GTM_OS org, non-transferable | org-scoped credit | do NOT reparent Empire projects; free tier covers the doc-KB; blobs on R2 | 2026-09-10 |
 | `recompute_relevance.py` writes by default | script design | pass `--dry-run` to preview | 2026-09-13 |
 | Producer liveness is inferred from `max(event_date)` | no `producer_run` table | YED-114 panel fix | 2026-07 |
+| The session pooler (`aws-1-*.pooler.supabase.com`) drops `PGOPTIONS`, so `-c default_transaction_read_only=on` silently does nothing (observed: `default_transaction_read_only = off`) | pooler startup handling | prod read sessions run `set session characteristics as transaction read only` (plus `set default_transaction_read_only = on`) as the first commands **in the session**, then assert `show transaction_read_only` = `on` before any query (ADR-13) | 2026-11-04 |
 
 ## Vendors
 | Constraint | Cause | Workaround | Since |
