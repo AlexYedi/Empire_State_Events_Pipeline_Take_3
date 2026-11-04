@@ -1,21 +1,23 @@
 # Secret-scan config (YED-304; single shared config for #270/#272 — whichever PR merges first
 # lands it; the other rebases onto it). Extends the default gitleaks rule set with ONE
-# allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore fingerprints
-# embed the commit SHA and break on squash merge (verified in PR #272's review scratch squash:
+# value-scoped allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore
+# fingerprints embed the commit SHA and break on squash merge (verified in PR #272's review:
 # secret-scan goes red on main).
 #
 # VALUE-SCOPED via condition = "AND" (arrays are required — scalar strings decode to empty
 # lists and AND goes vacuous): a finding is exempt only when its path is under
 # supabase/fixtures/ AND its secret is exactly 64 hex chars — i.e. the sha256 digests of
 # public *.example URLs (feeds.item_key). Nothing else is exempted. Probed empirically with
-# gitleaks 8.30.1 (Alex's matrix on #272, comment 6639875575; planted-key selftest:
-# .claude/scripts/test_gitleaks_allowlist.py) — with this form the digests pass and a planted
-# sk_live_ key in a fixtures path is still flagged.
+# gitleaks 8.30.1 (Alex's matrix on #272, comment 6639875575; kept regression-tested by
+# .claude/scripts/test_gitleaks_allowlist.py, which also runs in CI's secret-scan workflow).
 #
 # RETRACTED (was 368cc0e): a paths-only allowlist pinned to exact files. Alex's probe showed
 # paths-only entries exempt the WHOLE file — a real credential pasted into an exempted
 # fixture would pass the scanner. Do not switch to that form; if a non-digest secret ever
 # needs to live under supabase/fixtures/, the fix is to move it out, never to widen this.
+# The allowlist selftest is deliberately NOT allowlisted (Alex, #270 comment 6640006349:
+# an allowlisted security test is a blind spot) — its sentinel token is built at run time so
+# no literal in the repo matches any rule.
 [extend]
 useDefault = true
 

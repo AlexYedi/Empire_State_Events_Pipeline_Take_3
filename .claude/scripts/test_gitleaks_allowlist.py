@@ -31,8 +31,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = REPO_ROOT / ".gitleaks.toml"
 
-# A real-shaped token that trips gitleaks' generic-api-key rule.
-PLANTED_TOKEN = "sk_live_9f86d081884c7d659a2feaa0c55ad015"
+# The sentinel token is built at runtime so this file's source never contains a
+# literal sk_live_ string — the range scanner flags literals (CI failure at ce59680).
+PLANTED_TOKEN = "sk_live_" + hashlib.sha256(b"allowlist-selftest").hexdigest()[:32]
 DIGEST = hashlib.sha256("https://veris.example/blog/atlas-2".encode()).hexdigest()
 
 
@@ -68,7 +69,7 @@ def scan(gitleaks: str, report: Path, repo: Path) -> list[dict]:
 
 def build_scratch_repo(base: Path, with_token: bool) -> Path:
     """Mirror Alex's probe matrix on #272: a digest fixture, optionally a planted
-    token, in a single-commit scratch repo. Alex's clean-tree case is a repo that
+    token, in a single-commit scratch repo. The clean-tree case is a repo that
     never contained the token — git mode scans history, so removing a file is not
     the same as never having committed it."""
     repo = base / ("probe-token" if with_token else "probe-clean")
