@@ -15,11 +15,11 @@ Plan of record: the Notion roadmap (https://app.notion.com/p/3e9d3699c2db8163919
   using `SUPABASE_API_KEY` (an `sb_secret_…` key) from `Take_3/.env` — read it at runtime, never print it.
   The secret key bypasses RLS, so reads/writes work. **Verified live 2026-06-28:** full REST smoke test
   passed (insert company + event + hyperedge → read-back → cascade-delete cleanup; all tables back to 0).
-- **Supabase MCP REMOVED (2026-06-28).** Alex disconnected the `mcp__claude_ai_Supabase__*` connector
-  (it was on a *different* account — org `Same Old Expressions`, projects `GTM_OS_HUB` +
-  `Signal_Pipeline_Analytical_Spine`; a schema briefly mis-applied to `abkvgihlbwfloentugtd` was rolled
-  back, verified empty). **REST is now the SOLE Supabase path** for Empire State — there is no MCP to
-  fall back to. If a Supabase MCP ever reappears, do NOT use it here; REST-to-`oicikjyzmxqfomrrqkvf` only.
+- **Supabase MCP is READ-ONLY (CLAUDE.md invariant 2; supersedes the 2026-06-28 "MCP removed" note).**
+  The connector may be used for `SELECT`, `list_*` and `get_advisors` only; its write tools are denied
+  in `.claude/settings.json`. Writes go through REST + `.claude/scripts/spine_client.py` (the ADR-9
+  guard); DDL goes through the dashboard SQL Editor from a repo migration, after a twin rehearsal.
+  In-session reads of the `mi` semantic layer (ADR-13) use this SELECT path or `public.mi_slice`.
 - **DDL (table creation) is one-time, by Alex in the dashboard.** PostgREST can't run DDL. Apply
   `.claude/references/market-intel-schema.sql` once via the `empire state ai` SQL Editor (or, if Alex
   provides a connection string, via `psql`). All *ongoing* entity/Event writes are REST `INSERT`/upsert.
