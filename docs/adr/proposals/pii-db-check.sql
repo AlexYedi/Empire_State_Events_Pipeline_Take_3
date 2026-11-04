@@ -77,9 +77,17 @@
 -- 10-digit numbers pass (A3).
 -- YED-309 (2026-11-04): a third phone alternative now catches international
 -- numbers written with separators (+44 20 7946 0958, +44 (0)20 7946 0958,
--- +33 1 23 45 67 89), closing pii-regex-set.md gap G1. It uses only
--- constructs the live shape already relies on (lookbehind, lookahead,
--- bounded repeats). Prod still runs the pre-YED-309 shape until
+-- +33 1 99 00 12 34), closing pii-regex-set.md gap G1. It introduces
+-- constructs the live shape does NOT use: a positive lookahead, and
+-- lookaround nested inside it (a negative lookahead within the positive
+-- one). What was verified, not assumed: (a) a Python-re vs Tcl-regexp
+-- (Spencer ARE, the engine Postgres vendors) fuzz with lookbehinds
+-- rewritten: 0 divergences on 115,907 strings (PR #277 review); (b) a
+-- read-only probe on prod (Postgres 17, en_US.UTF-8): the full 3-alternative
+-- pattern compiles under `~` and matched Python on 15 probes, NBSP
+-- separators included. 0017's probe 0 re-runs (b) before apply, because
+-- plpgsql holds the pattern as text and CREATE OR REPLACE never compiles
+-- it. Prod still runs the pre-YED-309 shape until
 -- supabase/migrations/0017_pii_backstop_intl_phone.sql is rehearsed and
 -- applied; that migration carries this Part-1 function verbatim.
 

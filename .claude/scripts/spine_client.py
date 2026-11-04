@@ -445,11 +445,12 @@ def selftest() -> bool:
     # YED-309: international-with-separators. These rows test PHONE_RE ALONE (no guard(), no column
     # rules) so the regex layer is proven on its own. Reserved/fictional numbers only: UK Ofcom drama
     # ranges (020 7946 0xxx, 07700 900xxx), AU ACMA fiction ranges (0491 570 xxx, 02 5550 xxxx),
-    # FR ARCEP fiction range (06 39 98 xx xx); the rest are all-zero subscriber numbers.
+    # FR ARCEP fiction ranges (01 99 00 xx xx, 06 39 98 xx xx); every other number (DE, IN, JP, BR,
+    # SG, NL, ES) uses an all-zero subscriber number.
     def _phone(s):
         if PHONE_RE.search(s):
             raise PIIViolation(f"PHONE_RE matched {s!r}")
-    for s in ("+44 20 7946 0958", "+33 1 23 45 67 89", "+49 30 12345678", "+91 98765 43210",
+    for s in ("+44 20 7946 0958", "+33 1 99 00 12 34", "+49 30 00000000", "+91 00000 00000",
               "+44 (0)20 7946 0958", "+44 7700 900982", "+61 491 570 156", "+61.2.5550.1234",
               "+33 6 39 98 12 34", "+81 3-0000-0000", "+55 11 90000-0000", "+65 6000 0000",
               "+31 20 000 0000", "+34 91 000 00 00", "+44 (0) 20 7946 0123", "call +44 20 7946 0958."):
@@ -458,6 +459,16 @@ def selftest() -> bool:
               "+12.50", "+3 4 5", "2024-2026", "YED-309", "+1.2.3.4.5.6.7", "v1.2.3+20261104",
               "2026-11-04T10:00:00+05:30", "+44 20", "+1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6"):
         add(f"PHONE_RE {s!r} → no match", lambda s=s: _phone(s), False)
+    # Regression data: the phone rows of docs/adr/proposals/pii-regex-set.md (T17–T30 caught;
+    # phone-relevant N-rows clean). T30 is gap G1 — "missed (accepted)" there, caught since YED-309.
+    for s in ("+15551234567", "+1 555 123 4567", "+1-555-123-4567", "+1 (555) 123-4567", "(555) 123 4567",
+              "(555) 123-4567", "555-123-4567", "555.123.4567", "555 123 4567", "tel:+15551234567",
+              "+1555123456789", "+15551234567.", "+1 (555) 123-4567 (cell)", "+44 20 5555 1234"):
+        add(f"PHONE_RE regression {s!r} → match", lambda s=s: _phone(s), True)
+    for s in ("1757700000", "ts 1757700000 logged", "https://example.com/pr-1234567", "ticket #1234567 filed",
+              "due 2023-10-15 ok", "call 5551234 ext 2", "order 555123456789012345 ok", "at 40.7128, -74.0060",
+              "5551234567"):
+        add(f"PHONE_RE regression {s!r} → no match", lambda s=s: _phone(s), False)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     # YED-304 W1: cluster assignment columns on topic
