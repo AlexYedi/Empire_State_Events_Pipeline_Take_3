@@ -54,8 +54,10 @@ PSQL_BIN = os.environ.get("PSQL_BIN", "/opt/homebrew/opt/libpq/bin/psql")
 SPEAKER_ROLES = ("speaker", "host", "panelist")
 WINDOWS = [("month", 30), ("week", 7), ("all_time", None)]
 
-# Lane freshness (market-lens-and-slices §7): FLAG at 7 days stale, FAIL at 14. A lane with no
-# runs at all has been dead since it was registered — FAIL, never silent.
+# Lane freshness (market-lens-and-slices §7): FLAG at >=7 days stale, FAIL at >=14 — the contract
+# pinned in migration 0016. A lane with no runs at all has been dead since it was registered —
+# FAIL, never silent. Beside freshness, §3.3 rule 4's coverage metric: a lane whose latest runs
+# all wrote nothing (items_written=0) flags at 2 consecutive zero-write runs, fails at 3.
 FLAG_DAYS, FAIL_DAYS = 7, 14
 ROLE_POSTED = "role_posted"
 # Migration 0016 owns the lane_run DDL; the fixture pins the column shape this layer expects.
@@ -263,11 +265,52 @@ def compare(ref, sql, grain, keys):
 # ---------------------------------------------------------------- layer 4: lane freshness
 
 def classify_freshness(last_run, today):
-    """Pure classifier: last_run (date or None) -> 'ok' | 'flag' | 'fail' (§7: FLAG >7d, FAIL >14d)."""
+    """Pure classifier: last_run (date or None) -> 'ok' | 'flag' | 'fail' (§7: >=7d FLAG, >=14d FAIL)."""
     if last_run is None:
         return "fail"
     days = (today - last_run).days
-    return "ok" if days <= FLAG_DAYS else "flag" if days <= FAIL_DAYS else "fail"
+    return "ok" if days < FLAG_DAYS else "flag" if days < FAIL_DAYS else "fail"
+
+
+def classify_coverage(items_written):
+    """Pure §3.3 rule 4: count NEWEST-first consecutive zero-write runs — 2 -> 'flag', 3+ -> 'fail'."""
+    zeros = 0
+    for written in (items_written or []):
+        if written == 0:
+            zeros += 1
+        else:
+            break
+    return "ok" if zeros < 2 else "flag" if zeros == 2 else "fail"
+
+
+def never_ran(registered, last_runs):
+    """Pure: registered lanes with no ledger rows (the 'never ran -> FAIL' signal). None registry -> []."""
+    return sorted(set(registered or []) - set(last_runs or {}))
+
+
+def registered_lanes() -> list[str] | None:
+    """Lane ids from public.lane_registry (migration 0016), or None while it doesn't exist."""
+    if not q("select to_regclass('public.lane_registry') is not null;")[0][0] == "t":
+        return None
+    cols = {r[0] for r in q("""select column_name from information_schema.columns
+                               where table_schema='public' and table_name='lane_registry';""")}
+    if "lane" not in cols:
+        return None
+    return [r[0] for r in q("select lane from public.lane_registry;")]
+
+
+def _pg_int_array(s):
+    """psql -A renders int[] as '{5,3,0}' — parse to a list of ints (empty array -> [])."""
+    return [int(w) for w in (s or "{}").strip().strip("{}").split(",") if w != ""]
+
+
+def lane_zero_write_runs() -> dict[str, list[int]]:
+    """Newest-first items_written for each lane's last 3 lane_run rows (empty pre-0016)."""
+    if not q("select to_regclass('public.lane_run') is not null;")[0][0] == "t":
+        return {}
+    return {lane: _pg_int_array(ws) for lane, ws in q("""select lane, array_agg(items_written order by rn desc) from (
+        select lane, items_written, row_number() over (partition by lane order by started_at desc) rn
+        from public.lane_run) t where rn <= 3 group by lane;""")}
 
 
 def lane_run_last_runs() -> dict[str, dt.date] | None:
@@ -285,22 +328,37 @@ def lane_run_last_runs() -> dict[str, dt.date] | None:
 
 
 def lane_freshness(today) -> list[str]:
-    """Layer 4a — lane_run ledger staleness. Returns FAIL labels; SKIPs (non-fatal) pre-0016."""
+    """Layer 4a — lane_run staleness + §3.3 rule 4 coverage + registry cross-check. Fatal FAILs returned."""
     fails = []
     last_runs = lane_run_last_runs()
     if last_runs is None:
         print("  [SKIP] lane_run ledger (migration 0016 not applied yet)")
         return fails
+    registry = registered_lanes()
+    if registry is None:
+        print("  [SKIP] lane_registry cross-check (table not in 0016 yet) — never-ran lanes stay invisible")
+    for lane in never_ran(registry, last_runs):
+        print(f"  [FAIL] lane {lane}: registered in lane_registry but has no lane_run rows")
+        fails.append(f"lane {lane} registered but never ran")
     if not last_runs:
-        print("  [SKIP] lane_run ledger exists but is empty (no lane has run yet)")
+        if registry is None:
+            print("  [SKIP] lane_run ledger exists but is empty (no lane has run yet)")
         return fails
+    zero_runs = lane_zero_write_runs()
     for lane in sorted(last_runs):
         status = classify_freshness(last_runs[lane], today)
+        cov = classify_coverage(zero_runs.get(lane, []))
+        cov_note = (f"; coverage {cov}: last {len(zero_runs.get(lane, []))} run(s), "
+                    f"items_written={zero_runs.get(lane, [])}" if zero_runs.get(lane) is not None else "")
         stale = "?" if last_runs[lane] is None else str((today - last_runs[lane]).days)
         print(f"  [{'FAIL' if status == 'fail' else 'WARN' if status == 'flag' else 'PASS'}] "
-              f"lane {lane}: last run {last_runs[lane] or 'never'} ({stale}d stale)")
+              f"lane {lane}: last run {last_runs[lane] or 'never'} ({stale}d stale{cov_note})")
         if status == "fail":
-            fails.append(f"lane {lane} silent >{FAIL_DAYS}d")
+            fails.append(f"lane {lane} silent >={FAIL_DAYS}d")
+        if cov == "fail":
+            fails.append(f"lane {lane} items_written=0 for 3 consecutive runs")
+        elif cov == "flag":
+            print(f"  [WARN] lane {lane}: items_written=0 for 2 consecutive runs (flag, non-fatal)")
     return fails
 
 
@@ -448,8 +506,9 @@ def _selftest() -> int:
 
     with open(FIXTURE) as fh:
         fx = json.load(fh)
-    ck("fixture has as_of, expected_lane_run_columns, rows, role_posted",
-       all(k in fx for k in ("as_of", "expected_lane_run_columns", "rows", "role_posted")))
+    ck("fixture has as_of, expected_lane_run_columns, registered_lanes, never_ran_expected, rows, role_posted",
+       all(k in fx for k in ("as_of", "expected_lane_run_columns", "registered_lanes",
+                             "never_ran_expected", "rows", "role_posted")))
     ck("fixture's expected lane_run columns match this script's probe shape",
        tuple(fx.get("expected_lane_run_columns", ())) == LANE_RUN_COLUMNS)
     as_of = dt.date.fromisoformat(fx["as_of"])
@@ -461,15 +520,23 @@ def _selftest() -> int:
         got = classify_freshness(dt.date.fromisoformat(row["last_run"]), as_of)
         ck(f"lane {row['lane']} (last {row['last_run']}) -> {row['expected_status']}",
            got == row["expected_status"])
+        cov = classify_coverage(row.get("recent_runs_items_written", []))
+        ck(f"lane {row['lane']} coverage {row.get('recent_runs_items_written')} -> {row['expected_coverage']}",
+           cov == row["expected_coverage"])
+    ck("never_ran(registry, ledger) matches fixture expectation",
+       never_ran(fx["registered_lanes"], {r["lane"] for r in fx["rows"]}) == sorted(fx["never_ran_expected"]))
     rp = fx["role_posted"]
     got = classify_freshness(dt.date.fromisoformat(rp["last_event_date"]), as_of)
     ck(f"role_posted (last {rp['last_event_date']}) -> {rp['expected_status']}", got == rp["expected_status"])
 
-    # Threshold edges pinned exactly: ok through day 7, flag days 8-14, fail from day 15 or never-run.
-    for delta, want in ((0, "ok"), (FLAG_DAYS, "ok"), (FLAG_DAYS + 1, "flag"),
-                        (FAIL_DAYS, "flag"), (FAIL_DAYS + 1, "fail")):
+    # Threshold edges pinned exactly (0016 contract): ok through day 6, flag days 7-13, fail from day 14 or never-run.
+    for delta, want in ((0, "ok"), (FLAG_DAYS - 1, "ok"), (FLAG_DAYS, "flag"),
+                        (FAIL_DAYS - 1, "flag"), (FAIL_DAYS, "fail")):
         ck(f"day {delta:>2} stale -> {want}", classify_freshness(as_of - dt.timedelta(days=delta), as_of) == want)
     ck("never ran -> fail", classify_freshness(None, as_of) == "fail")
+    # Coverage edges: consecutive NEWEST-first zero-write runs — 1 ok, 2 flag, 3 fail, none ok.
+    for hist, want in (((5, 5, 5), "ok"), ((0, 5, 5), "ok"), ((0, 0, 5), "flag"), ((0, 0, 0), "fail"), ((), "ok")):
+        ck(f"coverage {list(hist)} -> {want}", classify_coverage(list(hist)) == want)
 
     print(f"healthcheck_2b --selftest: {ok}/{n} passed")
     return 0 if ok == n else 1
@@ -515,17 +582,24 @@ def main() -> int:
     print("\nPII column audit (YED-297 — FLAG if a forbidden column exists, FAIL only if EXPOSED):")
     pii_flags, pii_fails = pii_column_audit()
 
-    # FATAL = graph coherence (independent recompute + invariants) + an EXPOSED contact-PII column.
-    # The read-path probe and PII flags are secondary signals reported as WARNINGS, so an
-    # anon-key/config hiccup or an empty legacy column can't masquerade as a failure.
+    print("\nLane freshness (lane_run ledger + role_posted stall — FLAG >=7d, FAIL >=14d; §3/§7):")
+    fresh_fails = lane_freshness(as_of) + role_posted_freshness(as_of)
+
+    # FATAL = graph coherence (independent recompute + invariants) + an EXPOSED contact-PII column
+    # + lane freshness: a dead lane is exactly the L1–L3/L10 failure this alarm exists to catch
+    # (role_posted fatality pending Alex's call — docstring note). The read-path probe and PII
+    # flags are secondary signals reported as WARNINGS, so an anon-key/config hiccup or an empty
+    # legacy column can't masquerade as a failure.
     graph_ok = (t_mis == 0 and p_mis == 0 and not inv_fails)
-    ok = graph_ok and not pii_fails
+    ok = graph_ok and not pii_fails and not fresh_fails
     if probe_fails:
         print("  ⚠️  read-path probe warnings (non-fatal): " + "; ".join(probe_fails))
     if pii_flags:
         print("  ⚠️  PII column flags (non-fatal): " + "; ".join(pii_flags))
+    if fresh_fails:
+        print("  🚨 lane freshness FAIL: " + "; ".join(fresh_fails))
     if ok:
-        print("\n✅ PASS — graph coherent, invariants hold, no exposed contact PII."
+        print("\n✅ PASS — graph coherent, invariants hold, no exposed contact PII, lanes fresh."
               + (" (warnings above)" if probe_fails or pii_flags else " read path healthy."))
     else:
         if not graph_ok:
@@ -533,6 +607,9 @@ def main() -> int:
         if pii_fails:
             print("\n❌ FAIL — EXPOSED contact PII: " + "; ".join(pii_fails)
                   + ". API-readable email/phone values break CLAUDE.md invariant 1. Revoke or drop now.")
+        if fresh_fails:
+            print("\n❌ FAIL — lane staleness: " + "; ".join(fresh_fails)
+                  + ". A dead lane is an L1–L3/L10 failure; see the lane freshness section above.")
     return 0 if ok else 1
 
 
