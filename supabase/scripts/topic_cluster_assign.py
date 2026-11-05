@@ -68,6 +68,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable, Protocol, Sequence
 
+from topic_intel_compute import RO_ASSERT, read_only_verdict  # YED-312 read-only guard, shared
+
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # --- twin-only safety ------------------------------------------------------------------------
@@ -335,16 +337,51 @@ def _check_twin_conn(conn: str) -> str:
 
 
 def psql(sql: str, password: str, *, psql_bin: str = "psql", conn: str = TWIN_CONN) -> str:
+    """One YED-312-guarded read: the query runs inside BEGIN READ ONLY on a single connection,
+    the server-side assert raises if the txn is not read-only, and any output whose
+    transaction_read_only verdict is not exactly 'on' is discarded (fail closed)."""
     _check_twin_conn(conn)
     env = dict(os.environ, PGPASSWORD=password, PGCLIENTENCODING="UTF8")
-    p = subprocess.run([psql_bin, conn, "--csv", "-v", "ON_ERROR_STOP=1", "-c", sql],
-                       text=True, capture_output=True, env=env)
+    p = subprocess.run(guarded_psql_argv(psql_bin, conn, sql), text=True, capture_output=True, env=env)
     if p.returncode != 0:
         raise RuntimeError(f"psql failed (rc={p.returncode}): {p.stderr.strip()[:500]}")
-    return p.stdout
+    # With -q, the only stdout before the query's CSV is SHOW's own CSV: its header line,
+    # then the verdict value. Anything else means we are not looking at what we think.
+    lines = p.stdout.splitlines()
+    if len(lines) < 2 or lines[0] != "transaction_read_only":
+        raise RuntimeError(f"read-only guard: unexpected SHOW output {lines[:1]!r} — discarding")
+    if not read_only_verdict(lines[1]):
+        raise RuntimeError(f"read-only guard failed (transaction_read_only={lines[1]!r}) — "
+                           "discarding output; nothing is trusted outside a proven read-only txn")
+    return "\n".join(lines[2:]) + "\n" if len(lines) > 2 else ""
 
 
-TOMBSTONE_FILTER = "not (metadata ? 'merged_into')"  # merge tombstones are not backlog
+def guarded_psql_argv(psql_bin: str, conn: str, sql: str) -> list[str]:
+    """topic_intel_compute.ro_argv's YED-312 guard (BEGIN READ ONLY -> SHOW -> server-side
+    assert -> query -> ROLLBACK, one explicit transaction on one pooled connection) with
+    --csv so the SELECT keeps its header for DictReader."""
+    return [psql_bin, conn, "--csv", "-q", "-v", "ON_ERROR_STOP=1",
+            "-c", "begin read only;",
+            "-c", "show transaction_read_only;",
+            "-c", RO_ASSERT,
+            "-c", sql,
+            "-c", "rollback;"]
+
+
+TOMBSTONE_FILTER = "not coalesce(metadata ? 'merged_into', false)"  # merge tombstones are not backlog
+
+
+def merged_into_marker(meta_text: str | None) -> bool:
+    """True iff the parsed metadata carries a live merged_into tombstone (a non-null target).
+    A reverted merge (merge --revert pops the key) and {"merged_into": null} are not tombstones,
+    so a substring test would wrongly hide live topics from the unassigned pool."""
+    if not meta_text:
+        return False
+    try:
+        meta = json.loads(meta_text)
+    except json.JSONDecodeError:
+        return False  # malformed metadata is not a tombstone: keep the row, the pool decides
+    return isinstance(meta, dict) and meta.get("merged_into") is not None
 
 
 def twin_topic_columns(password: str, psql_bin: str, schema: str) -> set[str]:
@@ -375,12 +412,14 @@ def fetch_topics_twin(password: str, psql_bin: str = "psql") -> tuple[list[Topic
     topics, n_tomb = [], 0
     for row in csv.DictReader(io.StringIO(out)):
         conf = row.get("cluster_assignment_confidence")
-        meta = row.get("metadata")
-        # psql --csv renders NULL as the empty string (DictReader never yields None here),
-        # so the tombstone test must be falsy, not `is None` — the None form silently kept
-        # every merge tombstone in the unassigned pool (caught in the 2026-11-05 dry-run).
+        # psql --csv renders NULL as the empty string (DictReader never yields None here), so the
+        # tombstone test must be falsy, not `is None` — the None form silently kept every merge
+        # tombstone in the unassigned pool (caught in the 2026-11-05 dry-run). The tombstone test
+        # itself parses the JSON rather than substring-matching: `substrate.py merge --revert`
+        # pops `merged_into` (leaving a `merge_history` snapshot), and `{"merged_into": null}`
+        # both occur on live reverted topics — a substring match would drop them from the pool.
         cluster_id = row["cluster_id"] or None
-        if cluster_id is None and meta and "merged_into" in meta:
+        if cluster_id is None and merged_into_marker(row.get("metadata")):
             n_tomb += 1
             continue
         topics.append(Topic(
@@ -818,10 +857,14 @@ def run_check_twin(password: str, args: argparse.Namespace) -> int:
                        password, psql_bin=args.psql_bin)
             n = int(next(iter(csv.DictReader(io.StringIO(out))))["n"])
             print(f"  {schema}.topic: {n} rows; columns: {', '.join(wanted)}")
+            if required and "cluster_id" not in cols:
+                print(f"    FAIL: {schema}.topic lacks cluster_id — the fetch path refuses to run; "
+                      "the W1-columned table is not where the probe says")
+                ok = False
             if "cluster_id" in cols:
                 out = psql(f"select count(*)::int as assigned from {schema}.topic "
                            f"where cluster_id is not null"
-                           + (" and not (metadata ? 'merged_into')" if "metadata" in cols else ""),
+                           + (f" and {TOMBSTONE_FILTER}" if "metadata" in cols else ""),
                            password, psql_bin=args.psql_bin)
                 assigned = int(next(iter(csv.DictReader(io.StringIO(out))))["assigned"])
                 print(f"    assigned rows: {assigned}")
@@ -832,8 +875,12 @@ def run_check_twin(password: str, args: argparse.Namespace) -> int:
                 tomb = int(next(iter(csv.DictReader(io.StringIO(out))))["tomb"])
                 print(f"    merge tombstones (null cluster + merged_into): {tomb}")
         except RuntimeError as e:
-            print(f"  {schema}.topic probe FAILED: {e}")
-            ok = False
+            if required:
+                print(f"  {schema}.topic probe FAILED: {e}")
+                ok = False
+            else:
+                # A legacy schema that cannot be probed is expected post-swap, not a failure.
+                print(f"  {schema}.topic unavailable (legacy, informational): {e}")
     try:
         links = fetch_event_links(password, args.psql_bin)
         print(f"  event links: {links}")

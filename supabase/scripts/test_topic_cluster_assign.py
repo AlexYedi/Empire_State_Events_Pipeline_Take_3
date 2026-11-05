@@ -9,18 +9,21 @@ loader, and the twin-only connection guard.
 
 Usage: python3 supabase/scripts/test_topic_cluster_assign.py   (or `python3 -m unittest`)
 """
+import argparse
 import json
 import math
 import os
 import random
 import sys
 import tempfile
+import types
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import topic_cluster_assign as tca  # noqa: E402
+import topic_intel_compute as tic  # noqa: E402  (the shared YED-312 read-only guard)
 
 
 def topic(i, cluster_id=None, name=None, description=None):
@@ -400,6 +403,8 @@ class TestTombstoneFilter(unittest.TestCase):
         self.assertIn("?", tca.TOMBSTONE_FILTER)
         self.assertIn("merged_into", tca.TOMBSTONE_FILTER)
         self.assertIn("not", tca.TOMBSTONE_FILTER)
+        # NULL metadata must not drop a row: the 0016 coalesce idiom.
+        self.assertIn("coalesce", tca.TOMBSTONE_FILTER)
 
 
 TWIN_CSV_COLS = {"id", "name", "cluster_id", "cluster_assigned_by",
@@ -407,10 +412,17 @@ TWIN_CSV_COLS = {"id", "name", "cluster_id", "cluster_assigned_by",
 
 
 def fake_twin_psql(csv_text):
-    """Replace tca.psql / tca.twin_topic_columns with a canned twin response."""
+    """Replace tca.psql / tca.twin_topic_columns with a canned twin response. The fake records
+    every SQL string it is asked to run — the fetch-repoint regression asserts on them."""
     orig = (tca.psql, tca.twin_topic_columns)
+
+    def fake(sql, *a, **k):
+        fake.calls.append(sql)
+        return csv_text
+
+    fake.calls = []
     tca.twin_topic_columns = lambda *a, **k: set(TWIN_CSV_COLS)
-    tca.psql = lambda *a, **k: csv_text
+    tca.psql = fake
     return orig
 
 
@@ -425,8 +437,6 @@ class TestFetchTopicsTwin(unittest.TestCase):
         '"c0000000-0000-0000-0000-000000000001","llm",0.900,"{}"\n'
         '"22222222-2222-2222-2222-222222222222","live unassigned",,,,\n'
         '"33333333-3333-3333-3333-333333333333","merged away",,,,'
-        '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
-
         '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
         '"44444444-4444-4444-4444-444444444444","merged but clustered",'
         '"c0000000-0000-0000-0000-000000000001","session",0.950,'
@@ -444,8 +454,18 @@ class TestFetchTopicsTwin(unittest.TestCase):
 
     def test_tombstone_is_excluded(self):
         topics, meta = self.load()
+        # exactly three parse: assigned, live unassigned, merged-but-clustered
+        self.assertEqual(len(topics), 3)
         self.assertEqual(meta["tombstones_excluded"], 1)
         self.assertNotIn("33333333-3333-3333-3333-333333333333", {t.id for t in topics})
+
+    def test_fetch_queries_public_topic(self):
+        # The repoint regression: the fetch must read public.topic (canonical_v2 is gone
+        # post-swap) — a re-repoint to the legacy schema must fail here.
+        self.load()
+        self.assertEqual(len(tca.psql.calls), 1)
+        self.assertIn(f"from {tca.TWIN_TOPIC_SCHEMA}.topic", tca.psql.calls[0])
+        self.assertNotIn("canonical_v2", " ".join(tca.psql.calls))
 
     def test_null_cluster_parses_to_none_and_stays_in_pool(self):
         topics, _ = self.load()
@@ -465,6 +485,168 @@ class TestFetchTopicsTwin(unittest.TestCase):
         topics, _ = self.load()
         live = next(t for t in topics if t.id == "22222222-2222-2222-2222-222222222222")
         self.assertIsNone(live.cluster_assignment_confidence)
+
+
+class TestMergedIntoParsing(unittest.TestCase):
+    """The tombstone test parses metadata JSON; substring and is-null forms drop live rows.
+    Regression for review finding Major-2 on PR #306."""
+
+    @staticmethod
+    def run_with(metadata_json: str | None):
+        # psql --csv renders NULL as the empty string — mirror that here.
+        meta_col = "" if metadata_json is None else f'"{metadata_json.replace(chr(34), chr(34) * 2)}"'
+        csv_text = (
+            "id,name,cluster_id,cluster_assigned_by,cluster_assignment_confidence,metadata\n"
+            f'"55555555-5555-5555-5555-555555555555","probe topic",,,,{meta_col}\n'
+        )
+        orig = fake_twin_psql(csv_text)
+        try:
+            return tca.fetch_topics_twin("not-a-real-password")
+        finally:
+            tca.psql, tca.twin_topic_columns = orig
+
+    def test_reverted_merge_is_kept(self):
+        # substrate.py merge --revert pops merged_into but appends merge_history: the topic
+        # is live and unassigned, and a substring match on "merged_into" hid it.
+        topics, meta = self.run_with('{"merge_history": [{"merged_into": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}]}')
+        self.assertEqual(meta["tombstones_excluded"], 0)
+        self.assertEqual(len(topics), 1)
+
+    def test_null_merged_into_is_kept(self):
+        topics, meta = self.run_with('{"merged_into": null}')
+        self.assertEqual(meta["tombstones_excluded"], 0)
+        self.assertEqual(len(topics), 1)
+
+    def test_null_metadata_is_kept(self):
+        topics, meta = self.run_with(None)
+        self.assertEqual(meta["tombstones_excluded"], 0)
+        self.assertEqual(len(topics), 1)
+
+    def test_malformed_metadata_is_kept(self):
+        # Not a tombstone we can prove: keep the row rather than silently shrinking the pool.
+        topics, meta = self.run_with("not json at all")
+        self.assertEqual(meta["tombstones_excluded"], 0)
+        self.assertEqual(len(topics), 1)
+
+    def test_live_tombstone_is_excluded(self):
+        csv_text = (
+            "id,name,cluster_id,cluster_assigned_by,cluster_assignment_confidence,metadata\n"
+            '"22222222-2222-2222-2222-222222222222","live unassigned",,,,\n'
+            '"55555555-5555-5555-5555-555555555555","tombstone",,,,'
+            '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
+        )
+        orig = fake_twin_psql(csv_text)
+        try:
+            topics, meta = tca.fetch_topics_twin("not-a-real-password")
+        finally:
+            tca.psql, tca.twin_topic_columns = orig
+        self.assertEqual(meta["tombstones_excluded"], 1)
+        self.assertEqual(len(topics), 1)
+
+
+class TestReadOnlyGuard(unittest.TestCase):
+    """psql() runs every twin query inside the shared YED-312 read-only transaction and
+    discards output without an 'on' verdict. Regression for review finding Major-1."""
+
+    def test_argv_reuses_the_shared_guard(self):
+        argv = tca.guarded_psql_argv("psql", "conn", "select 1")
+        self.assertEqual(argv[:2], ["psql", "conn"])
+        self.assertEqual(argv[-2:], ["-c", "rollback;"])
+        self.assertIn(tic.RO_ASSERT, argv)
+        commands = [argv[i + 1] for i, a in enumerate(argv) if a == "-c"]
+        self.assertEqual(commands[0], "begin read only;")
+        self.assertEqual(commands[1], "show transaction_read_only;")
+        self.assertEqual(commands[2], tic.RO_ASSERT)
+        self.assertEqual(commands[3], "select 1")
+        self.assertEqual(commands[-1], "rollback;")
+
+    def test_guard_matches_topic_intel_compute_ro_argv_shape(self):
+        argv = tca.guarded_psql_argv("psql", "conn", "select 1")
+        ro = tic.ro_argv("psql", "conn", "select 1")
+        self.assertEqual([argv[i + 1] for i, a in enumerate(argv) if a == "-c"],
+                         [ro[i + 1] for i, a in enumerate(ro) if a == "-c"])
+
+    @staticmethod
+    def fake_run(stdout, rc=0):
+        result = types.SimpleNamespace(returncode=rc, stdout=stdout, stderr="")
+
+        def run(argv, **k):
+            result.argv = argv
+            return result
+
+        return run
+
+    def test_output_without_an_on_verdict_is_discarded(self):
+        orig = tca.subprocess.run
+        tca.subprocess.run = self.fake_run("transaction_read_only\noff\nid,name\nx,y\n")
+        try:
+            with self.assertRaises(RuntimeError):
+                tca.psql("select 1", "pw")
+        finally:
+            tca.subprocess.run = orig
+
+    def test_unexpected_show_shape_fails_closed(self):
+        orig = tca.subprocess.run
+        tca.subprocess.run = self.fake_run("BEGIN\non\nid,name\n")
+        try:
+            with self.assertRaises(RuntimeError):
+                tca.psql("select 1", "pw")
+        finally:
+            tca.subprocess.run = orig
+
+    def test_guarded_output_strips_the_verdict_lines(self):
+        orig = tca.subprocess.run
+        tca.subprocess.run = self.fake_run("transaction_read_only\non\nid,name\nx,y\n")
+        try:
+            self.assertEqual(tca.psql("select 1", "pw"), "id,name\nx,y\n")
+        finally:
+            tca.subprocess.run = orig
+
+
+class TestCheckTwin(unittest.TestCase):
+    """--check-twin exit codes: a required schema without cluster_id fails; a legacy probe
+    that cannot run is informational only. Regression for review finding Minor-4."""
+
+    @staticmethod
+    def run_check(cols_by_schema, legacy_raises=False):
+        def cols(password, psql_bin, schema):
+            if legacy_raises and schema != tca.TWIN_TOPIC_SCHEMA:
+                raise RuntimeError("no such table")
+            return cols_by_schema.get(schema, set())
+
+        def fake_psql(sql, *a, **k):
+            if " as n" in sql:
+                return "n\n5\n"
+            if " as assigned" in sql:
+                return "assigned\n3\n"
+            if " as tomb" in sql:
+                return "tomb\n1\n"
+            return "links\n7\n"
+
+        orig = (tca.twin_topic_columns, tca.psql, tca.fetch_event_links)
+        tca.twin_topic_columns = cols
+        tca.psql = fake_psql
+        tca.fetch_event_links = lambda *a, **k: {"topic_event_links": 7, "attended_topic_ids": set()}
+        try:
+            return tca.run_check_twin("not-a-real-password", argparse.Namespace(psql_bin="psql"))
+        finally:
+            tca.twin_topic_columns, tca.psql, tca.fetch_event_links = orig
+
+    def test_required_schema_without_cluster_id_fails(self):
+        rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: {"id", "name", "metadata"}})
+        self.assertEqual(rc, 1)
+
+    def test_legacy_probe_failure_is_informational(self):
+        full = {"id", "name", "cluster_id", "cluster_assigned_by", "cluster_assignment_confidence",
+                "metadata", "description", "created_at"}
+        rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: full, "canonical_v2": set()}, legacy_raises=True)
+        self.assertEqual(rc, 0)
+
+    def test_healthy_twin_passes(self):
+        full = {"id", "name", "cluster_id", "cluster_assigned_by", "cluster_assignment_confidence",
+                "metadata", "description", "created_at"}
+        rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: full, "canonical_v2": set()})
+        self.assertEqual(rc, 0)
 
 
 if __name__ == "__main__":

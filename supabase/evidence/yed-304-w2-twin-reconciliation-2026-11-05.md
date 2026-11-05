@@ -18,8 +18,8 @@ auto-assign; one row for Alex.
 |---|---|---|---|
 | Ship point reproduced offline | k=3, thr=0.85 → auto 3 / review 99 | same run today, unchanged fixture → auto 3 / review 99 | ✅ exact reproduction |
 | Curated pool integrity | 170 LLM bootstrap assignments | 156 live `cluster_assigned_by='llm'`, cluster agreement **156/156**, 0 moved | ✅ zero drift |
-| Missing 14 of 170 | 8 tombstones identified in fixture work | 14 rows merged away since (tombstoned, cluster retained) | ✅ accounted for |
-| Backlog | 102 unassigned (94 real after tombstones) | 89 assigned since (all `session`), 12 merged away, 1 live | ✅ fully traced |
+| The other 14 of 170 | 8 tombstones identified in fixture work | tombstoned with cluster retained — already present at the 2026-11-04 twin snapshot (migration 0016's header showed the same 272/170 with the 14 clustered tombstones in place), not new since the fixture | ✅ accounted for |
+| Backlog | 102 unassigned (94 real after tombstones) | 89 assigned since (all `session`), 12 tombstoned, 1 live | ✅ fully traced |
 | Attended-linked backlog | 33 flagged (changing snapshot, W4) | **0** | ✅ improved — every attended-linked topic now carries a theme |
 | Cluster count | 30 | 33 (`topic_intelligence.topic_cluster`) | ℹ️ 3 themes added since the fixture |
 
@@ -41,12 +41,30 @@ Auto-assign bar is 0.85; this row sits at 0.531 with a split vote — a genuine
 
 1. **Twin read path repointed `canonical_v2.topic` → `public.topic`.** The post-swap twin
    (verified live 2026-11-05) holds the cluster columns in `public.topic`; `canonical_v2`
-   is gone. `--check-twin` now treats legacy schemas as informational, not a failure.
+   is gone. `--check-twin` now treats legacy schemas as informational, not a failure, and
+   fails (exit 1) if the required schema lacks `cluster_id`.
 2. **Merge-tombstone exclusion fixed.** psql `--csv` renders NULL as `""`, so the old
    `row["cluster_id"] is None` test never fired: the first run of the day silently kept
    12 tombstones in the unassigned pool (it reported auto 3 / review 10). The corrected
    falsiness test excludes them (auto 0 / review 1). Regression-tested
    (`TestFetchTopicsTwin`, 4 cases; suite 48/48).
+3. **Review hardening (PR #306 review, 2026-11-05):** every twin query now runs inside the
+   shared YED-312 read-only transaction (`BEGIN READ ONLY → SHOW → server-side assert →
+   query → ROLLBACK`, verdict-gated fail-closed); the tombstone test parses the metadata
+   JSON instead of substring-matching (reverted merges and `{"merged_into": null}` no
+   longer vanish); the SQL-side filter uses the 0016 `coalesce` idiom; the `public.topic`
+   repoint and `--check-twin` exit codes are regression-tested. Suite 62/62; live guarded
+   probe reproduced the same numbers (305 rows · 278 assigned · 12 tombstones).
+
+## Follow-up flagged in review
+
+- The 14 clustered tombstones still vote in the kNN pool while ADR-13 excludes them from
+  membership. No effect on today's result (best confidence 0.531 < 0.85), but align the
+  pool definition before any future auto-assign pass.
+- `_check_twin_conn` substring-matches the conninfo (a crafted string could misdirect the
+  twin password); parse the conninfo in a later hardening pass.
+- `canonicalization_backlog` (migration 0013) lacks a tombstone exclusion and overcounts;
+  tracked separately, needs a migration.
 
 ## Caveats (carried from the baseline)
 
