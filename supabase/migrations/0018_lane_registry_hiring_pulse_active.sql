@@ -13,9 +13,12 @@
 --
 -- APPLY ORDER (per the twin-rehearsal rule, CLAUDE.md invariant 2):
 --   1. Rehearse on the TWIN first (schema + this file + the VERIFY block below all green).
---   2. Then Alex applies it to prod from the dashboard.
---   3. Only after prod has the flag does the first scheduled Action run post a lane_run row to
---      prod that the freshness layer (#269) will watch for (freshness_fail_days = 14).
+--      Done 2026-11-05T00:18Z: supabase/evidence/yed307_0018_rehearsal-20261105T0018Z.log.
+--   2. WAIT for the first hiring_pulse lane_run row on prod (the Sunday Action writes it whether or
+--      not the lane is active; the FK needs only the seeded row). An ACTIVE lane with no ledger
+--      rows FAILs the nightly healthcheck (#284), so applying first would fail every nightly
+--      until the first run.
+--   3. Then Alex applies it to prod (the staged script refuses while no hiring_pulse row exists).
 -- =============================================================================
 
 begin;

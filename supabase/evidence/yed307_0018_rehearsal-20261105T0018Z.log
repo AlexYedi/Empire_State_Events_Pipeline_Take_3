@@ -1,0 +1,23 @@
+== twin ytfzzsxcxxbejnowmkmk · 0018 rehearsal · 2026-11-05T00:18:30Z · main 1d31223
+-- pre: active lanes
+0
+-- apply #1
+exit=0
+-- VERIFY
+SET
+hiring_pulse_active|t
+exactly_one_lane_active|t
+other_lanes_unchanged|t
+registry_rowcount_unchanged|t
+hiring_pulse_contract_intact|t
+registry_rls_still_on|t
+registry_no_api_grants|t
+lane_run_ledger_ready|t
+-- apply #2 (re-run safety)
+exit=0
+-- negative: missing seed must raise
+expected exactly 1 lane_registry row to change, got 0
+-- ROLLBACK block
+exit=0
+-- post-rollback: active lanes (must be 0, mirrors prod)
+0
