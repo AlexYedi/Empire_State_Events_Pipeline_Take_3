@@ -599,6 +599,49 @@ def selftest() -> int:
           set(summary) == {"week", "producer", "validate", "companies", "roles_open_total",
                            "gtm_roles_total", "ai_gtm_roles_total"}
           and "Anthropic" not in blob and "Runway" not in blob)
+
+    # --- First-run / no-prior-file path (run 41943575924 dress rehearsal) ------------------
+    # The workflow's guard must test FILE REALITY, and the CLI must keep refusing an
+    # explicitly-passed --prior that doesn't exist (exit 3). These cases pin both halves.
+    with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False, encoding="utf-8") as fh:
+        fh.write(_tsv(_fixture_rows())); fpath = fh.name
+    try:
+        outdir = tempfile.mkdtemp()
+        rc = main([fpath, "--prior", "/tmp/definitely-missing-prior.json",
+                   "--out", f"{outdir}/pulse.json"])
+        check("prior: a MISSING --prior file is refused with exit 3 (never silently ignored)",
+              rc == 3)
+        rc2 = main([fpath, "--pull-summary", "/tmp/definitely-missing-board-stats.json",
+                    "--out", f"{outdir}/pulse.json"])
+        check("pull-summary: a MISSING --pull-summary file is refused with exit 3", rc2 == 3)
+        rc3 = main([fpath, "--out", f"{outdir}/pulse.json", "--emit-events", f"{outdir}/events",
+                    "--lane-run-out", f"{outdir}/lane_run.json"])
+        check("first run: no --prior and no --pull-summary → exit 0, delta_wow null (the no-file path works end to end)",
+              rc3 == 0)
+        with open(f"{outdir}/pulse.json", encoding="utf-8") as fh:
+            check("first run: the emitted manifest carries delta_wow null on every event",
+                  all(e["metadata"]["delta_wow"] is None
+                      for e in json.load(open(f"{outdir}/pulse.json", encoding="utf-8"))["events"]))
+    finally:
+        os.unlink(fpath)
+
+    # --- Workflow lint: the Action's guard stays file-reality-based ------------------------
+    # Guards against re-introducing a string-compare on the prior step's OUTPUT (which lied:
+    # the twin-read step exits 0 without writing the file when the read fails) — the crash
+    # behind run 41943575924. Checked textually so the selftest needs no yaml dependency;
+    # skipped when the workflow file isn't in the repo (e.g. running from a bare checkout).
+    wf = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                      ".github", "workflows", "ats-pulse.yml")
+    if os.path.exists(wf):
+        wftext = open(wf, encoding="utf-8").read()
+        check("workflow lint: the aggregate guard tests [ -s /tmp/prior.json ] (file reality), "
+              "never the prior step's output string",
+              "if [ -s /tmp/prior.json ]; then PRIOR=\"--prior /tmp/prior.json\"; fi" in wftext
+              and 'steps.prior.outputs.prior }}' not in wftext
+              and '!= "none"' not in wftext)
+        check("workflow lint: the prior step sets its output ONLY when it actually wrote the file",
+              'if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json"' in wftext)
+
     print(f"selftest: {ok}/{n} ats_pulse cases pass")
     return 0 if ok == n else 1
 
