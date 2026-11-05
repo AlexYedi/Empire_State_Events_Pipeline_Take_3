@@ -187,7 +187,8 @@ ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest
 Alex (list it in the Step 6 summary as an incomplete).
 
 **4.2c Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`,
-plus `· parenthetical_strip <n> · global_exact <n> · global_ambiguous <n>` when a YED-264 linking fallback fired (paste it as printed).
+plus any YED-264 linking counters that fired (`· roster_tie <n> · parenthetical_strip <n> · global_exact <n> · global_ambiguous <n> · global_error <n>`)
+and one `· global: <heading> → <type>:<name>` per out-of-roster link. Paste it as printed: **Alex reviews every `global:` entry.**
 If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 
 ## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)
