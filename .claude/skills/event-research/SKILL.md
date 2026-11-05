@@ -201,9 +201,11 @@ URLs here breaks citations three stages downstream.
   unreachable. **Exit 5 = RETRIEVAL FAILURE** (the graph holds claims for these entities but the
   pack kept none): surface it loudly to Alex — do not silently proceed as if there were no prior
   knowledge. (Usage attribution, YED-262: at 1.7a time no consuming document id exists, so the
-  audit line reads `usage=not logged (no --usage-document …)` — expected. Once Step 4.2 has staged
-  the `research_brief` document row, a re-attribution run may pass
-  `--log-usage event --usage-document <documents.id>` to log the claim reads.)
+  audit line reads `usage=not logged (no --usage-document …)` — expected. `--out` also writes
+  `<scratch>/context-pack.md.usage.json` (the kept claim ids, ids only). **Mandatory:** Step 4.2b's
+  `substrate.py stage-research` passes `--usage-from <scratch>/context-pack.md.usage.json`. That
+  logs one `claim_usage` row per kept claim against the `research_brief` document, and prints
+  `usage: logged N` or a loud `usage: NOT LOGGED (<reason>)` that never blocks the brief.)
 
 **Cost guard — an enforced selection procedure, not a soft cap (v1.1, YED-132).** The cap is
 a step with a deterministic ranking + a required audit artifact, so it can't be silently

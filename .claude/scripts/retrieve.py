@@ -40,6 +40,8 @@ against the unique (claim_id, document_id) pair, so a re-run of the same pack is
 but LOUD: the result lands on the audit line (`usage=logged N | not logged (<reason>) | failed (code)`);
 a write failure prints to stderr and never fails the pack itself. Without --usage-document the audit
 says why nothing was logged — the caller attributes usage once the consuming document id is known.
+Every --out run also writes `<out>.usage.json` (kept claim ids + lens + timestamp; ids only, never claim
+text), which `substrate.py stage-research --usage-from` logs once the research_brief document exists.
 """
 from __future__ import annotations
 import argparse, datetime as dt, json, math, os, re, sys
@@ -442,6 +444,12 @@ def usage_plan(kept_ids: list[str], document_id: str | None, existing: set[str],
     return rows, None
 
 
+def usage_sidecar(kept_ids: list[str], lens: str, now: str) -> dict:
+    """Pure. The `<out>.usage.json` body: kept claim ids (deduped, order kept), lens, timestamp — IDS ONLY,
+    never claim text, so the sidecar carries nothing beyond what claim_usage itself stores (YED-262)."""
+    return {"claim_ids": list(dict.fromkeys(str(c) for c in kept_ids)), "lens": lens, "generated_at": now}
+
+
 def log_usage(kept_ids: list[str], document_id: str, consumer: str) -> str:
     """Write claim_usage via spine_client (ADR-9; on the allowlist). Best-effort but LOUD: the
     outcome lands on the audit line either way, a failure prints to stderr, and the pack itself
@@ -525,6 +533,9 @@ def selftest() -> bool:
          usage_plan(["c1", "c2"], "d1", {"c1"}, "event") == ([{"claim_id": "c2", "document_id": "d1",
                                                                   "consumer": "event"}], None)
          and usage_plan(["c1"], "d1", {"c1"}, "event") == ([], "already logged for this document")),
+        ("usage sidecar: ids + lens + timestamp ONLY — no claim text, deduped in order",
+         usage_sidecar(["c2", "c1", "c2"], "event", "2026-11-05T00:00:00Z")
+         == {"claim_ids": ["c2", "c1"], "lens": "event", "generated_at": "2026-11-05T00:00:00Z"}),
     ]
     for name, good in checks:
         print(f"  {'✓' if good else '✗'} {name}")
@@ -559,6 +570,14 @@ def main(argv: list[str]) -> int:
         with open(a.out, "w", encoding="utf-8") as f:
             f.write(pack)
         print(f"pack -> {a.out}")
+        side = a.out + ".usage.json"          # YED-262: always, so Step 4.2 can log usage once the doc id exists
+        try:
+            now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            with open(side, "w", encoding="utf-8") as f:
+                json.dump(usage_sidecar(audit["kept_claim_ids"], a.lens, now), f)
+            print(f"usage sidecar -> {side} ({len(audit['kept_claim_ids'])} claim ids)")
+        except OSError as e:
+            print(f"  ⚠️ usage sidecar NOT written ({e}) — Step 4.2 will report usage NOT LOGGED", file=sys.stderr)
     else:
         print(pack)
     print(audit["audit_line"], file=sys.stderr)

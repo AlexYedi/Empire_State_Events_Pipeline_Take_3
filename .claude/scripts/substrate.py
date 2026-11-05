@@ -16,7 +16,9 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
   stage-claims    --brief b.md --manifest m.json [--brief-ref notion:<id>] [--approve]
                   parse a post_event_brief's learnings sections into `claim` rows (first_hand),
                   embed them (local bge-small, same space as doc_chunks), link speakers
-  stage-research  --manifest m.json --evidence ev.md --brief-ref notion:<research brief id>
+  stage-research  --manifest m.json --evidence ev.md --brief-ref notion:<research brief id> --usage-from pack.md.usage.json
+                  (YED-262) --usage-from: retrieve.py's sidecar -> one claim_usage row per kept claim against the
+                  research_brief document; loud `usage: NOT LOGGED (<reason>)` on any failure, never a non-zero exit.
                   (YED-205) the pre-event write: roster entities + the research_brief document + one claim per
                   Evidence Ledger row (web-verified w/ URL -> web_verified; email-signal w/ public URL -> email_signal;
                   everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
@@ -1272,7 +1274,45 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     return 0
 
 
-def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) -> int:
+USAGE_CONSUMER = "event"     # what /event-deep-research passes retrieve.py today (`--log-usage event`)
+
+
+def log_research_usage(g: Graph, sidecar: str, doc_id: str | None) -> str:
+    """YED-262. retrieve.py's `<out>.usage.json` (claim ids only) -> one claim_usage row per kept claim against the
+    research_brief document, via spine_client.write (ADR-9; claim_usage is allowlisted). Read-before-write on the
+    unique (claim_id, document_id) pair (retrieve.usage_plan), so a re-run is a no-op. Best effort but LOUD: every
+    path returns one `usage: …` audit line, and nothing here raises — usage must never block the brief."""
+    import spine_client
+    from retrieve import usage_plan                 # lazy: retrieve imports this module
+    try:
+        if not doc_id or str(doc_id).startswith("dry:"):
+            return ("usage: NOT LOGGED (dry-run)" if g.dry else
+                    "usage: NOT LOGGED (no research_brief document — pass --brief-ref)")
+        try:
+            with open(sidecar, encoding="utf-8") as f:
+                side = json.load(f)
+        except FileNotFoundError:
+            return f"usage: NOT LOGGED (sidecar not found: {sidecar} — did Step 1.7a run retrieve.py --out?)"
+        except (OSError, ValueError) as e:
+            return f"usage: NOT LOGGED (sidecar unreadable: {type(e).__name__})"
+        ids = side.get("claim_ids") if isinstance(side, dict) else None
+        if not isinstance(ids, list) or not all(isinstance(i, str) and UUID_RE.match(i) for i in ids):
+            return "usage: NOT LOGGED (sidecar corrupt: claim_ids must be a list of claim uuids)"
+        have = {r["claim_id"] for r in g.get(f"/claim_usage?document_id=eq.{q(doc_id)}&select=claim_id&limit=5000")}
+        rows, skip = usage_plan(ids, doc_id, have, USAGE_CONSUMER)
+        if skip:
+            return f"usage: logged 0 ({skip})"
+        for i in range(0, len(rows), 80):
+            code, _ = spine_client.write("claim_usage", rows[i:i + 80], prefer="return=minimal")
+            if code not in (200, 201):
+                return f"usage: NOT LOGGED (claim_usage write -> {code} after {i} rows; re-run to retry)"
+        g.stats.bump("claim_usage", "created", len(rows))
+        return f"usage: logged {len(rows)} (consumer {USAGE_CONSUMER})"
+    except (Exception, SystemExit) as e:            # Graph.get raises SystemExit on a non-200
+        return f"usage: NOT LOGGED ({type(e).__name__}: {str(e)[:160]})"
+
+
+def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, usage_from: str | None = None) -> int:
     """YED-205 — the pre-event write. Spec: docs/archive/notes/yed-205-spec-2026-09-27.md.
     Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
     claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
@@ -1352,6 +1392,8 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
           + "".join(f" · {k.removeprefix('about_')} {v}" for k, v in sorted(g.stats.c.get("claim_entity", {}).items())
                     if k.startswith("about_") and k != "about_unresolved_heading"))
+    # YED-262: after the claims, so a usage problem can never cost the brief its claims; never changes rc
+    print(log_research_usage(g, usage_from, doc_id) if usage_from else "usage: NOT LOGGED (no --usage-from passed)")
     return 0
 
 
@@ -1663,7 +1705,8 @@ class _FakeGraph(Graph):
         super().__init__(dry_run=False, stats=Stats())
         self.quiet = True
         self.t: dict[str, list[dict]] = {k: [] for k in ("company", "person", "topic", "event", "event_entity",
-                                                          "claim_entity", "document_entity", "documents", "claim")}
+                                                          "claim_entity", "document_entity", "documents", "claim",
+                                                          "claim_usage")}
         self.n = 0
 
     def uuid(self) -> str:
@@ -2109,6 +2152,68 @@ def _linking_selftest(ok) -> None:
        len(arist) == 3 and fg.stats.c["claim_entity"].get("company_global_exact") == 1)
 
 
+def _usage_selftest(ok) -> None:
+    """YED-262 stage-research --usage-from, offline: spine_client.write is monkeypatched onto _FakeGraph's
+    claim_usage table, so the read-before-write reads back exactly what the 'write' landed."""
+    import contextlib, io, tempfile
+    import spine_client
+    real_write, calls = spine_client.write, []
+    pid = "5bed3699c2db816a828ec6410801d5de"
+    m = {"event": {"notion_page_id": pid, "title": "Usage fixture", "event_date": "2026-11-05"},
+         "entities": [{"type": "company", "name": "Soxton.AI"}]}
+    cids = [f"00000000-0000-4000-9000-00000000000{i}" for i in (1, 2, 3)]
+    tmp = tempfile.mkdtemp(prefix="yed262_")
+
+    def side(name: str, body: str) -> str:
+        p = os.path.join(tmp, name)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(body)
+        return p
+
+    def run(fg, usage_from, write_code=201):
+        def fake_write(table, rows, prefer=None, **kw):
+            calls.append((table, len(rows)))
+            if write_code in (200, 201):
+                for r in rows:
+                    guard(table, r)
+                    fg.t[table].append({**r, "id": fg.uuid()})
+            return write_code, None
+        spine_client.write = fake_write
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                rc = stage_research(fg, RESEARCH_SAMPLE, m, brief_ref="notion:usagebrief", usage_from=usage_from)
+        finally:
+            spine_client.write = real_write
+        return rc, next((l for l in out.getvalue().splitlines() if l.startswith("usage:")), "")
+
+    good = side("pack.md.usage.json", json.dumps({"claim_ids": cids, "lens": "event", "generated_at": "2026-11-05T00:00:00Z"}))
+    fg = _FakeGraph()
+    rc, line = run(fg, good)
+    doc = fg.t["documents"][0]["id"] if fg.t["documents"] else None
+    ok("usage: --usage-from writes N claim_usage rows for N sidecar ids (consumer event, the brief's document)",
+       rc == 0 and len(fg.t["claim_usage"]) == 3 and {u["claim_id"] for u in fg.t["claim_usage"]} == set(cids)
+       and all(u["document_id"] == doc and u["consumer"] == "event" for u in fg.t["claim_usage"])
+       and line == "usage: logged 3 (consumer event)")
+    n_calls = len(calls)
+    rc, line = run(fg, good)
+    ok("usage: a re-run writes 0 new rows (read-before-write on (claim_id, document_id))",
+       rc == 0 and len(fg.t["claim_usage"]) == 3 and len(calls) == n_calls and line.startswith("usage: logged 0"))
+    bad = [("missing", os.path.join(tmp, "absent.usage.json"), "sidecar not found"),
+           ("not JSON", side("corrupt.usage.json", "{not json"), "sidecar unreadable"),
+           ("text not ids", side("text.usage.json", json.dumps({"claim_ids": ["Soxton raised $4M"]})), "sidecar corrupt")]
+    for what, path, why in bad:
+        fg = _FakeGraph()
+        rc, line = run(fg, path)
+        ok(f"usage: {what} sidecar -> loud 'usage: NOT LOGGED ({why} …)', rc 0, no rows",
+           rc == 0 and line.startswith(f"usage: NOT LOGGED ({why}") and fg.t["claim_usage"] == [] and len(fg.t["claim"]) == 7)
+    fg = _FakeGraph()
+    rc, line = run(fg, good, write_code=500)
+    ok("usage: a failed claim_usage write -> loud NOT LOGGED (… 500 …), rc 0, claims still staged",
+       rc == 0 and line.startswith("usage: NOT LOGGED (claim_usage write -> 500") and len(fg.t["claim"]) == 7)
+    __import__("shutil").rmtree(tmp, ignore_errors=True)
+
+
 def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
     """A dry-run view over the same in-memory tables (reads real, writes suppressed)."""
     d = _FakeGraph()
@@ -2251,6 +2356,7 @@ def selftest() -> bool:
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
     _linking_selftest(ok)
+    _usage_selftest(ok)
     _roles_selftest(ok)
 
     fail = 0
@@ -2270,6 +2376,8 @@ def main(argv: list[str]) -> int:
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
                                      "stage-research", "ensure-roles"])
     ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
+    ap.add_argument("--usage-from", metavar="PACK.usage.json",
+                    help="(stage-research, YED-262) retrieve.py's usage sidecar; logs claim_usage for the research brief")
     ap.add_argument("--table", choices=["company", "person", "topic"], help="(merge) entity table")
     ap.add_argument("--from", dest="merge_from", metavar="ID|NAME", help="(merge) the row to tombstone")
     ap.add_argument("--into", dest="merge_into", metavar="ID|NAME", help="(merge) the row that survives")
@@ -2361,7 +2469,8 @@ def main(argv: list[str]) -> int:
     elif a.verb == "stage-research":
         if not a.evidence:
             ap.error("stage-research needs --evidence")
-        rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref)
+        rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref,
+                            usage_from=a.usage_from)
     elif a.verb == "ensure-event":
         g.ensure_event(m)
     elif a.verb == "ensure-document":
