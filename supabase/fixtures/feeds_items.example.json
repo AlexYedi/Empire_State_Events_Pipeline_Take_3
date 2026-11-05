@@ -4,6 +4,7 @@
   "feed_errors": [],
   "items_fetched": 4,
   "rows_quarantined": 0,
+  "staging_failed": 0,
   "quarantined_source_keys": [],
   "items_staged": 4,
   "items": [

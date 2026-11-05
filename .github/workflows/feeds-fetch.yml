@@ -9,29 +9,35 @@ name: Market feeds fetch (lane 4 — stage feed_items on the twin)
 #
 # REGISTRY PRIVACY RULE (review 2026-11-04, every Action in this repo): nothing derived from a
 # private registry — company names, feed URLs — goes into logs or artifacts. The producer
-# prints counts and sha256 tags only, and this workflow uploads NO manifest.
+# prints counts and source INDICES only (review 2026-11-05: even a short URL hash lets anyone
+# test a guessed URL for watchlist membership), and this workflow uploads NO manifest.
 #
 # Twin-only: writes go through spine_client (the one guarded write path, ADR-9) after feeds.py
 # refuses any SPINE_REF that is not the twin ref, and verifies feed_items actually exists
-# (migration 0017) before writing. Prod credentials are never used here.
+# (migration 0020) before writing. Prod credentials are never used here.
 #
 # REQUIRED repo secrets / variables (Settings > Secrets and variables > Actions):
 #   FEED_SOURCES_REGISTRY     JSON array [{"company": "...", "feed_url": "..."}] — the watchlist
 #                             feeds. Materialized to a runner-temp file at runtime and deleted in
-#                             an always() cleanup step (the lane-1 pattern); never logged or committed.
+#                             an always() cleanup step (the lane-1 pattern); never logged or
+#                             committed. ABSENT (not yet configured): the run SKIPS with a
+#                             notice instead of going red every Monday (review 2026-11-05).
 #   MI_TWIN_URL               the twin project URL (https://<ref>.supabase.co); the ref passed to
 #                             spine is DERIVED from it in the fetch step (ref-or-die still refuses
-#                             prod and unknown refs). One name across the market-lane PRs (#271's
-#                             TWIN_SUPABASE_* is renamed in its own PR) — Alex approves every secret
-#                             before it is created.
+#                             prod and unknown refs). Required only for WRITES; in dry-run it is
+#                             optional — but when set it is still shape-checked and a PROD URL is
+#                             refused even in dry-run (review 2026-11-05, item 9). One name
+#                             across the market-lane PRs — Alex approves every secret before
+#                             it is created.
 #   MI_TWIN_SUPABASE_API_KEY  the TWIN API key for feed_items writes. PROD credentials must NOT
-#                             be used in this workflow.
+#                             be used in this workflow; the key is passed to the fetch step ONLY
+#                             when FEEDS_WRITE_ENABLED=true (never in dry-run).
 #   FEEDS_WRITE_ENABLED       repo VARIABLE (not secret). Unset/false = dry-run.
 #   FEEDS_FAIL_ON_FEED_ERRORS repo VARIABLE, default true: any feed error fails the run so the
-#                             failure alarm fires (per-run; the in-a-row alarm lands with the
-#                             lane_run ledger, #269).
+#                             failure alarm fires (per-run; this lane writes no lane_run ledger
+#                             row yet, so there is no in-a-row alarm).
 #
-# DRY-RUN DEFAULT: until migration 0017 creates feed_items on the twin AND FEEDS_WRITE_ENABLED
+# DRY-RUN DEFAULT: until migration 0020 creates feed_items on the twin AND FEEDS_WRITE_ENABLED
 # is set, the fetch step runs --dry-run (stage only, nothing written, no manifest uploaded).
 #
 # NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
@@ -52,6 +58,7 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 20    # review 2026-11-05, item 7: the lane must never outlive its budget
     steps:
       # SHA-pinned actions + persist-credentials: false (review 2026-11-04).
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -61,38 +68,60 @@ jobs:
         with:
           python-version: "3.13"
       - name: Materialize the feed-sources registry (never logged or committed)
+        id: registry
         env:
           REGISTRY: ${{ secrets.FEED_SOURCES_REGISTRY }}
         run: |
           set -euo pipefail
           if [ -z "$REGISTRY" ]; then
-            echo "FEED_SOURCES_REGISTRY is empty — add the repo secret (see workflow header)"; exit 1
+            # review 2026-11-05, item 9: the secret does not exist yet — SKIP with a notice
+            # (green run) instead of a red run every Monday until it is configured.
+            echo "FEED_SOURCES_REGISTRY is empty — run skipped; add the repo secret (see workflow header)"
+            echo "has_registry=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "has_registry=true" >> "$GITHUB_OUTPUT"
           printf '%s' "$REGISTRY" > "$RUNNER_TEMP/feed_sources.json"
           python3 -c "import json; json.load(open('$RUNNER_TEMP/feed_sources.json'))" \
             || { echo "FEED_SOURCES_REGISTRY is not valid JSON"; exit 1; }
       - name: Fetch feeds and stage feed_items (no model calls — fixed keyword classifier)
+        if: steps.registry.outputs.has_registry == 'true'
         env:
           MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
-          SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+          # review 2026-11-05, item 9: the API key reaches the fetch step ONLY on the write
+          # path — dry-runs get an empty key even if the secret exists.
+          SUPABASE_API_KEY: ${{ vars.FEEDS_WRITE_ENABLED == 'true' && secrets.MI_TWIN_SUPABASE_API_KEY || '' }}
           FEEDS_WRITE_ENABLED: ${{ vars.FEEDS_WRITE_ENABLED }}
           FEEDS_FAIL_ON_FEED_ERRORS: ${{ vars.FEEDS_FAIL_ON_FEED_ERRORS }}
         run: |
           set -euo pipefail
+          WRITE_MODE=false
+          [ "$FEEDS_WRITE_ENABLED" = "true" ] && WRITE_MODE=true
           # Derive the twin project ref from the URL (host subdomain) — review 2026-11-04:
           # MI_TWIN_URL is the single secret name across the market-lane PRs. A malformed URL
           # fails loudly here rather than as a confusing twin_ref_or_die refusal later.
-          SPINE_REF="$(python3 -c "import os; from urllib.parse import urlparse; print(urlparse(os.environ['MI_TWIN_URL']).netloc.split(':')[0].split('.')[0])")"
-          case "$SPINE_REF" in
-            "" ) echo "MI_TWIN_URL is empty — add the repo secret (see workflow header)"; exit 1 ;;
-            *[!a-z0-9]* | "" ) echo "MI_TWIN_URL is not a supabase project URL (https://<ref>.supabase.co)"; exit 1 ;;
-          esac
-          export SPINE_REF
+          # review 2026-11-05, item 9: in dry-run MI_TWIN_URL is OPTIONAL — but when set it
+          # is still derived, shape-checked, and refused if it points at PROD.
+          if [ "$WRITE_MODE" = "true" ] || [ -n "${MI_TWIN_URL:-}" ]; then
+            if [ -z "${MI_TWIN_URL:-}" ]; then
+              echo "FEEDS_WRITE_ENABLED=true requires MI_TWIN_URL (twin writes are ref-derived from it)"; exit 1
+            fi
+            SPINE_REF="$(python3 -c "import os; from urllib.parse import urlparse; print(urlparse(os.environ['MI_TWIN_URL']).netloc.split(':')[0].split('.')[0])")"
+            case "$SPINE_REF" in
+              "" | *[!a-z0-9]* ) echo "MI_TWIN_URL is not a supabase project URL (https://<ref>.supabase.co)"; exit 1 ;;
+            esac
+            # feeds.py refuses prod refs on the WRITE path; in dry-run nothing would check —
+            # so a PROD project URL is refused here, in either mode.
+            if [ "$SPINE_REF" = "oicikjyzmxqfomrrqkvf" ]; then
+              echo "MI_TWIN_URL points at the PROD project — refusing (feeds-fetch is twin-only)"; exit 1
+            fi
+            export SPINE_REF
+          fi
           ARGS=(--sources "$RUNNER_TEMP/feed_sources.json" --out "$RUNNER_TEMP/feed_items.json")
-          if [ "$FEEDS_WRITE_ENABLED" = "true" ]; then
+          if [ "$WRITE_MODE" = "true" ]; then
             echo "FEEDS_WRITE_ENABLED=true — attempting the twin write (table existence is checked first)"
           else
-            echo "FEEDS_WRITE_ENABLED unset/false — dry-run (default until migration 0017 lands)"
+            echo "FEEDS_WRITE_ENABLED unset/false — dry-run (default until migration 0020 lands)"
             ARGS+=(--dry-run)
           fi
           if [ "${FEEDS_FAIL_ON_FEED_ERRORS:-true}" = "true" ]; then
@@ -101,14 +130,19 @@ jobs:
           python3 .claude/scripts/feeds.py fetch "${ARGS[@]}"
       # NO manifest upload: the manifest lists every company and feed URL from the private
       # registry, and artifacts on a public repo are public. The staging rows reach the twin
-      # through spine_client; humans debug from the run's stderr counts and hashes.
-      - name: Remove the materialized registry
+      # through spine_client; humans debug from the run's stderr counts and source indices.
+      - name: Remove the materialized registry and staged manifest
         if: always()
-        run: rm -f "$RUNNER_TEMP/feed_sources.json"
+        run: |
+          # review 2026-11-05, item 9: the staged manifest is runner-temp state too — cleaned
+          # up alongside the registry (the lane-1 pattern).
+          rm -f "$RUNNER_TEMP/feed_sources.json" "$RUNNER_TEMP/feed_items.json"
       # Lane lesson L1/L10 (market-lens proposal §0.5): a lane that fails quietly dies. One open
       # issue, not one per run: repeat failures land as comments until the issue is closed.
+      # review 2026-11-05, item 7: CANCELLED runs (timeout-minutes) alarm too — a timed-out
+      # lane is a failing lane.
       - name: Open or update the failure issue
-        if: failure()
+        if: failure() || cancelled()
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -121,6 +155,6 @@ jobs:
           else
             gh issue create \
               --title "Market feeds fetch FAILED (since $TODAY)" \
-              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the staged row text), a missing migration 0017 (write held), or a twin write error. The failing step in the run says which; stderr carries counts and sha256 tags only. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the staged row text), a missing migration 0020 (write held), or a twin write error. The failing step in the run says which; stderr carries counts and source indices only. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
               || echo "issue-create failed; check the Actions run directly"
           fi

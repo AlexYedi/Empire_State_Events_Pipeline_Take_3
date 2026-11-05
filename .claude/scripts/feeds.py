@@ -13,7 +13,7 @@ selftest. `feeds.py fetch` is the lane-4 scheduled producer (market-lens proposa
 keyword table — no model calls in the Action, so untrusted feed text cannot steer
 it) -> staged feed_items rows. Writes go through spine_client to the MI TWIN only
 (prod ref refused; --dry-run stages a JSON manifest and writes nothing). The
-feed_items DDL is migration 0017, Alex's. Public feeds and official endpoints
+feed_items DDL is migration 0020 (PR #305), Alex's. Public feeds and official endpoints
 only — never LinkedIn or X scraping.
 
 An item is a plain dict: {title, url, published (ISO-8601 UTC or None), summary,
@@ -21,9 +21,12 @@ feed (source feed URL), kind ("rss"|"atom"|"youtube"), company (from the sources
 registry, added by fetch_all)}.
 """
 import hashlib
+import ipaddress
 import json
 import re
+import socket
 import sys
+import threading
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -163,7 +166,7 @@ def parse(feed_xml: str) -> list[dict]:
     if root.tag == f"{ATOM}feed":
         source_format = "youtube" if root.find(f".//{YT}videoId") is not None else "atom"
         return [_atom_entry(e, source_format) for e in root.findall(f"{ATOM}entry")]
-    raise ValueError(f"feeds: unrecognized feed root <{root.tag}> — not RSS 2.0 or Atom")
+    raise ValueError("feeds: unrecognized feed root — not RSS 2.0 or Atom")
 
 
 def assign_feeds(items: list[dict], feed_url: str) -> list[dict]:
@@ -247,16 +250,70 @@ def render_digest(items: list[dict], companies: dict[str, list[str]]) -> str:
 
 # ---------------------------------------------------------------- fetching
 
-def fetch(url: str, timeout: int = 8) -> str:
+def _assert_public_https(url: str) -> None:
+    """SSRF guard (review 2026-11-05, item 6): https only, and every resolved address must be
+    PUBLIC — this runs on shared runners and on Alex's Mac. Messages are generic on purpose:
+    no part of the URL is echoed back (registry privacy)."""
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme != "https" or not parts.hostname:
+        raise ValueError("feeds: refusing fetch — an https URL with a hostname is required")
+    for info in socket.getaddrinfo(parts.hostname, 443):
+        ip = ipaddress.ip_address(info[4][0])
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
+            raise ValueError("feeds: refusing fetch — the feed host resolved to a "
+                             "non-public address")
+
+
+class _SSRFGuard(urllib.request.HTTPRedirectHandler):
+    """Re-validates EVERY redirect hop (review 2026-11-05, item 6): a https feed must not
+    bounce the fetcher to loopback, a private range, or a downgrade."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _assert_public_https(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _with_deadline(deadline_s: float, fn) -> object:
+    """Run fn() on a worker thread with a WALL CLOCK cap (review 2026-11-05, item 7): a
+    drip-feeding host satisfies every per-read timeout yet never finishes. Raises
+    TimeoutError when the cap is hit; otherwise fn's result is returned (or raised)."""
+    outcome: dict = {}
+
+    def _run() -> None:
+        try:
+            outcome["ok"] = fn()
+        except BaseException as e:       # re-raised on the caller thread, never swallowed
+            outcome["err"] = e
+
+    worker = threading.Thread(target=_run, daemon=True)
+    worker.start()
+    worker.join(deadline_s)
+    if worker.is_alive():
+        raise TimeoutError("feeds: fetch exceeded its wall-clock deadline")
+    if "err" in outcome:
+        raise outcome["err"]
+    return outcome["ok"]
+
+
+def _fetch_once(url: str, timeout: int) -> str:
+    request = urllib.request.Request(url, headers={"User-Agent": "empire-feed-layer/0.1"})
+    opener = urllib.request.build_opener(_SSRFGuard)
+    with opener.open(request, timeout=timeout) as response:  # noqa: S310
+        if response.status != 200:
+            # no url in the message: registry-derived strings never enter exceptions
+            raise RuntimeError(f"feeds: fetch failed: HTTP {response.status}")
+        return response.read(2 * 1024 * 1024).decode("utf-8", errors="replace")
+
+
+def fetch(url: str, timeout: int = 8, deadline_s: int = 90) -> str:
     """The ONLY network step, for the live run — never called from the selftest.
 
-    Reads at most 2 MiB; non-2xx or timeout raises (never swallowed).
+    https-only with an SSRF guard on every redirect hop; reads at most 2 MiB; non-2xx or
+    timeout raises (never swallowed); deadline_s caps the whole fetch on the wall clock.
     """
-    request = urllib.request.Request(url, headers={"User-Agent": "empire-feed-layer/0.1"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
-        if response.status != 200:
-            raise RuntimeError(f"feeds: fetch {url}: HTTP {response.status}")
-        return response.read(2 * 1024 * 1024).decode("utf-8", errors="replace")
+    _assert_public_https(url)
+    return _with_deadline(deadline_s, lambda: _fetch_once(url, timeout))
 
 
 # ---------------------------------------------------------------- live run (feeds.py fetch)
@@ -287,9 +344,18 @@ SIGNAL_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("model_release", ("releases new model", "new model", "model release", "open weights",
                        "open-source model", "open-sourced model")),
 ]
+# No bare "release"/"releases": "press release" (and "released a report") is generic media
+# language, not a product launch (review 2026-11-05, item 11). More specific phrases cover
+# real launches ("releases new model" stays in SIGNAL_RULES).
 LAUNCH_PHRASES: tuple[str, ...] = ("launch", "launches", "launching", "announcing",
                                    "introducing", "now available", "general availability",
-                                   "out of beta", "release", "releases", "shipping", "ships")
+                                   "out of beta", "shipping", "ships")
+
+
+def _kw(word: str, text: str) -> bool:
+    """Word-boundary keyword match (review 2026-11-05, item 11): substring matching made
+    'press release' read as a launch ('release' is a substring of it)."""
+    return re.search(rf"(?<!\w){re.escape(word)}(?!\w)", text) is not None
 
 
 def classify(item: dict) -> tuple[str, str | None]:
@@ -299,9 +365,9 @@ def classify(item: dict) -> tuple[str, str | None]:
     model, so scraped text cannot steer it."""
     text = f"{item.get('title', '')} {item.get('summary', '')}".lower()
     for signal, words in SIGNAL_RULES:
-        if any(w in text for w in words):
+        if any(_kw(w, text) for w in words):
             return "market", signal
-    if any(w in text for w in LAUNCH_PHRASES):
+    if any(_kw(w, text) for w in LAUNCH_PHRASES):
         return "launch", None          # adopted matrix: kind=launch ⇒ signal_type=null
     return "market", "news"
 
@@ -339,19 +405,12 @@ def redact(item: dict) -> dict:
 
 
 def _source_tag(index: int, feed_url: str) -> str:
-    """Public-safe source identity: index + short sha256 of the feed URL. RULE (review
-    2026-11-04, every Action in this repo): nothing derived from the private registry —
-    company names, feed URLs — may reach logs or artifacts."""
-    return f"source[{index}] sha:{hashlib.sha256(feed_url.encode()).hexdigest()[:12]}"
+    """Public-safe source identity: an INDEX ONLY. RULE (review 2026-11-04, every Action in
+    this repo): nothing derived from the private registry — company names, feed URLs — may
+    reach logs or artifacts. The short sha256 tag was dropped (review 2026-11-05, item 8):
+    even a 12-hex digest lets anyone test a guessed URL for watchlist membership."""
+    return f"source[{index}]"
 
-
-def _scrub(message: str, *secrets: str) -> str:
-    """Strip registry-derived strings out of an error message (URLs and hostnames can leak
-    through exception text)."""
-    for s in secrets:
-        if s:
-            message = message.replace(s, "[source]")
-    return message
 
 
 def fetch_all(sources: list[dict], fetcher=fetch, timeout: int = 8):
@@ -376,7 +435,10 @@ def fetch_all(sources: list[dict], fetcher=fetch, timeout: int = 8):
                 parsed_item["company"] = company
             items.extend(parsed)
         except Exception as e:  # per-feed isolation: report and continue
-            errors.append(f"{tag}: {type(e).__name__}: {_scrub(str(e), company, feed_url)}")
+            # review 2026-11-05, item 2: ALLOWLISTED logging — exception TEXT can carry
+            # registry strings (TLS mismatches, redirect refusals, XML namespaces echo the
+            # fetched content). Only the exception TYPE is ever logged.
+            errors.append(f"{tag}: {type(e).__name__}")
     return items, errors
 
 
@@ -385,6 +447,10 @@ def to_row(item: dict, fetched_at: str) -> dict:
     red = redact(item)
     url = red.get("url", "")
     summary = red.get("summary", "")
+    if url and not url.lower().startswith(("http://", "https://")):
+        # review 2026-11-05, item 11: javascript:/relative item URLs are staged-never —
+        # they raise and the item is quarantined by stage_rows' per-item guard.
+        raise ValueError("feeds: item URL is not http(s) — quarantined")
     kind, guess = classify(red)        # adopted #270 matrix: kind ∈ {launch, market}
     return {
         "source_key": item_key(red),
@@ -402,19 +468,28 @@ def to_row(item: dict, fetched_at: str) -> dict:
     }
 
 
-def stage_rows(items: list[dict], fetched_at: str) -> list[dict]:
+def stage_rows(items: list[dict], fetched_at: str) -> tuple[list[dict], int]:
     """Staged feed_items rows: redact, guess a signal type, key by canonical URL.
 
     source_key (sha256 of the canonical URL) is the dedup key — upserts on it keep
-    weekly reruns idempotent. In-run duplicates collapse here, first occurrence wins."""
-    rows, seen = [], set()
+    weekly reruns idempotent. In-run duplicates collapse here, first occurrence wins.
+    Returns (rows, staging_failed): a HOSTILE item (review 2026-11-05, item 5 — e.g. a
+    malformed URL that raises outside the per-feed network try) is skipped and counted,
+    never fatal to the batch; the count joins the quarantine total in the manifest."""
+    rows: list[dict] = []
+    seen: set[str] = set()
+    failed = 0
     for item in items:
-        row = to_row(item, fetched_at)
+        try:
+            row = to_row(item, fetched_at)
+        except Exception:
+            failed += 1
+            continue
         if row["source_key"] in seen:
             continue
         seen.add(row["source_key"])
         rows.append(row)
-    return rows
+    return rows, failed
 
 
 def quarantine_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
@@ -445,7 +520,7 @@ def twin_ref_or_die(env_ref: str | None) -> str:
 
 
 def _table_exists(sc) -> bool:
-    """Does feed_items exist on the target (migration 0017)? The write path is HELD until it
+    """Does feed_items exist on the target (migration 0020)? The write path is HELD until it
     does — a producer must never write a table into existence or error noisily forever."""
     code, _txt = sc.req("GET", "/feed_items?select=source_key&limit=1")
     if code == 200:
@@ -463,13 +538,17 @@ def _remote_source_keys(sc, page_size: int = 1000) -> set[str] | None:
     offset = 0
     try:
         while True:
-            code, txt = sc.req(
-                "GET", f"/feed_items?select=source_key&limit={page_size}&offset={offset}")
+            # review 2026-11-05, item 4: sc.req returns the PARSED JSON — json.loads on it
+            # raised TypeError and every run silently fell back to in-run dedupe. order=
+            # keeps the pagination stable.
+            code, page = sc.req(
+                "GET", f"/feed_items?select=source_key&limit={page_size}&offset={offset}"
+                       f"&order=source_key")
             if code != 200:
                 print(f"feeds: remote dedupe read failed (HTTP {code}) — in-run dedupe only",
                       file=sys.stderr)
                 return None
-            page = json.loads(txt or "[]")
+            page = page or []
             keys.update(row["source_key"] for row in page)
             if len(page) < page_size:
                 return keys
@@ -480,8 +559,10 @@ def _remote_source_keys(sc, page_size: int = 1000) -> set[str] | None:
         return None
 
 
-def _cmd_fetch(argv: list[str]) -> int:
-    """feeds.py fetch — the Action entrypoint. Network runs HERE ONLY, never in --selftest."""
+def _cmd_fetch(argv: list[str], fetcher=None) -> int:
+    """feeds.py fetch — the Action entrypoint. Network runs HERE ONLY, never in --selftest.
+    `fetcher` is injectable so the selftest can drive THIS function with a stub (review
+    2026-11-05, item 3) instead of only the pure stages."""
     import argparse
     import os
     ap = argparse.ArgumentParser(
@@ -491,7 +572,7 @@ def _cmd_fetch(argv: list[str]) -> int:
                     help='JSON file of sources: [{"company": str, "feed_url": str}]')
     ap.add_argument("--out", default="feed_items.json", help="staged-manifest output path")
     ap.add_argument("--dry-run", action="store_true",
-                    help="stage + manifest only, never write (default posture until migration 0017 lands)")
+                    help="stage + manifest only, never write (default posture until migration 0020 lands)")
     ap.add_argument("--fail-on-feed-errors", action="store_true",
                     help="exit 2 when any feed errored — the Action sets this from "
                          "FEEDS_FAIL_ON_FEED_ERRORS so the failure alarm fires")
@@ -501,24 +582,27 @@ def _cmd_fetch(argv: list[str]) -> int:
     with open(a.sources, encoding="utf-8") as f:
         sources = json.load(f)
     fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    items, errors = fetch_all(sources, timeout=a.timeout)
+    items, errors = fetch_all(sources, fetcher=fetcher or fetch, timeout=a.timeout)
     for err in errors:
         print(f"feeds: feed failed: {err}", file=sys.stderr)
-    rows = stage_rows(items, fetched_at)
+    rows, staging_failed = stage_rows(items, fetched_at)
 
     # Per-row guard quarantine (review 2026-11-04): one bad row is dropped and counted — it
-    # never fails the whole batch, and nothing but the row's sha256 key reaches the logs.
+    # never fails the whole batch. review 2026-11-05 item 2: keys (sha256, non-reversible)
+    # go in the manifest; stderr carries counts only.
     rows, quarantined = quarantine_rows(rows)
-    if quarantined:
-        print(f"feeds: {len(quarantined)} row(s) quarantined by the spine guard "
-              f"(keys logged, text never)", file=sys.stderr)
+    if quarantined or staging_failed:
+        print(f"feeds: {len(quarantined)} row(s) quarantined by the spine guard, "
+              f"{staging_failed} item(s) failed staging (sha256 keys in the manifest, "
+              f"text never)", file=sys.stderr)
 
     manifest = {
         "fetched_at": fetched_at,
         "sources": len(sources),
         "feed_errors": errors,
         "items_fetched": len(items),
-        "rows_quarantined": len(quarantined),
+        "rows_quarantined": len(quarantined) + staging_failed,
+        "staging_failed": staging_failed,
         "quarantined_source_keys": quarantined,
         "items_staged": len(rows),
         "items": rows,
@@ -534,22 +618,41 @@ def _cmd_fetch(argv: list[str]) -> int:
         sys.exit("feeds: nothing fetched — refusing an empty write")
 
     ref = twin_ref_or_die(os.environ.get("SPINE_REF"))
-    sc.REF = ref                        # _send() reads the module global at call time
-    if not _table_exists(sc):
-        sys.exit("feeds: feed_items does not exist on the target yet (migration 0017) — "
+    # review 2026-11-05, item 1: sc was never bound in _cmd_fetch — every real write died
+    # with a NameError while dry-runs stayed green (regression from bd8b863).
+    sc = _spine()
+    sc.REF = ref                        # _send() rebuilds the host from REF at call time
+    try:
+        exists = _table_exists(sc)
+    except Exception as e:              # allowlisted logging: type only, never text
+        raise RuntimeError(f"feeds: feed_items existence check failed: "
+                           f"{type(e).__name__}") from e
+    if not exists:
+        sys.exit("feeds: feed_items does not exist on the target yet (migration 0020) — "
                  "write held; apply the migration or run with --dry-run")
     existing = _remote_source_keys(sc)
     fresh = rows if existing is None else [r for r in rows if r["source_key"] not in existing]
     if existing:
         print(f"feeds: {len(rows) - len(fresh)} row(s) already on the twin — skipped")
-    status, resp = sc.write("feed_items?on_conflict=source_key", fresh,
-                            prefer="resolution=ignore-duplicates,return=minimal")
+    try:
+        status, resp = sc.write("feed_items?on_conflict=source_key", fresh,
+                                prefer="resolution=ignore-duplicates,return=minimal")
+    except Exception as e:
+        # review 2026-11-05, item 2: allowlisted logging — connection/TLS exception text
+        # can carry hostnames; log the TYPE only.
+        raise RuntimeError(f"feeds: spine write failed: {type(e).__name__}") from e
     if not (isinstance(status, int) and status < 400):
-        raise RuntimeError(f"feeds: spine write failed: HTTP {status}: {str(resp)[:300]}")
+        # review 2026-11-05, item 2: a PostgREST error BODY can echo the failed row
+        # (constraint errors embed values). Only the status and the short error `code`
+        # are ever logged — never the response body.
+        code = resp.get("code") if isinstance(resp, dict) else None
+        raise RuntimeError(f"feeds: spine write failed: HTTP {status}"
+                           + (f" (PostgREST code {code})" if code else ""))
     print(f"feeds: wrote {len(fresh)} row(s) to feed_items on twin {ref} (HTTP {status})")
     if a.fail_on_feed_errors and errors:
-        print(f"feeds: {len(errors)} feed error(s) — failing the run (per-run alarm; the "
-              f"in-a-row alarm lands with the lane_run ledger)", file=sys.stderr)
+        print(f"feeds: {len(errors)} feed error(s) — failing the run (per-run alarm; this "
+              f"lane writes no lane_run ledger row yet, so there is no in-a-row alarm)",
+              file=sys.stderr)
         return 2
     return 0
 
@@ -558,11 +661,24 @@ def _cmd_fetch(argv: list[str]) -> int:
 
 def selftest() -> int:
     """Offline: inline XML/HTML fixtures only. fetch() must never run here."""
-    ok = 0
+    import time
+
+    def _raises(fn) -> bool:
+        try:
+            fn()
+            return False
+        except Exception:
+            return True
+
+    def _sleep_two() -> None:
+        time.sleep(2)                    # stands in for a drip-feeding host (no network)
+
+    ok = ran = 0
 
     def check(label: str, good: bool) -> None:
-        nonlocal ok
-        ok += good
+        nonlocal ok, ran
+        ran += 1
+        ok += bool(good)
         print(f"  {'✓' if good else '✗'} {label}")
 
     # --- discover
@@ -726,13 +842,15 @@ def selftest() -> int:
     check("fetch_all: good feed parsed, company stamped",
           len(got) == 1 and got[0]["company"] == "Acme" and got[0]["feed"] == "https://ex.com/feed")
     check("fetch_all: dead feed and missing url reported, run continues",
-          len(got_errors) == 2 and all("sha:" in e for e in got_errors))
+          len(got_errors) == 2 and all(e.startswith("source[") for e in got_errors)
+          and all("sha:" not in e and "://" not in e for e in got_errors))
     check("fetch_all: NO registry-derived strings in errors (logs are public)",
           not any("Acme" in e or "Dead Co" in e or "NoUrl" in e
                   or "dead.example" in e or "ex.com" in e for e in got_errors))
 
-    rows = stage_rows(got + [dict(got[0])], "2026-11-04T00:00:00Z")
-    check("stage_rows: in-run duplicates collapse to one row", len(rows) == 1)
+    rows, staging_failed = stage_rows(got + [dict(got[0])], "2026-11-04T00:00:00Z")
+    check("stage_rows: in-run duplicates collapse to one row",
+          len(rows) == 1 and staging_failed == 0)
     r = rows[0]
     check("stage_rows: row shape matches ALLOW['feed_items'] columns",
           set(r) == {"source_key", "company", "feed_url", "url", "title", "published",
@@ -744,6 +862,104 @@ def selftest() -> int:
           r["signal_type_guess"] is None and r["fetched_at"] == "2026-11-04T00:00:00Z")
     check("stage_rows: kind uses the adopted #270 matrix vocabulary",
           r["kind"] == "launch" and r["metadata"]["source_format"] == "rss")
+
+    check("classify: 'press release' is NOT a launch (word-boundary rules, no bare 'release')",
+          classify({"title": "Company press release", "summary": ""}) == ("market", "news"))
+    check("stage_rows: a hostile item (malformed URL) is quarantined, never fatal",
+          stage_rows([{"title": "x", "url": "http://[bad/x", "company": "c",
+                       "feed": "https://ex.com/feed", "source_format": "rss"}],
+                     "2026-11-04T00:00:00Z") == ([], 1))
+    check("stage_rows: javascript:/relative item URLs are quarantined, not staged",
+          stage_rows([{"title": "x", "url": "javascript:alert(1)", "company": "c", "feed": "f",
+                       "source_format": "rss"},
+                      {"title": "y", "url": "/blog/p2", "company": "c", "feed": "f",
+                       "source_format": "rss"}], "t") == ([], 2))
+
+    # --- fetch hardening (review 2026-11-05, items 6/7) — offline: no fetch() call
+    check("fetch guard: non-https scheme refused before any DNS",
+          _raises(lambda: _assert_public_https("http://ex.com/feed")))
+    check("fetch guard: loopback/link-local/private literals refused (no DNS needed)",
+          all(_raises(lambda u=u: _assert_public_https(f"https://{u}/x"))
+              for u in ("127.0.0.1", "[::1]", "169.254.1.1", "10.0.0.5", "192.168.1.5",
+                        "172.16.0.9")))
+    check("fetch deadline: a drip-feeding fetch is killed by the wall clock",
+          _raises(lambda: _with_deadline(0.15, _sleep_two)))
+    check("fetch deadline: a fast fn result passes through", _with_deadline(5, lambda: 7) == 7)
+
+    # --- _cmd_fetch (review 2026-11-05, item 3): the WRITE path is exercised with a stubbed
+    # socket layer (spine_client._send) — no network, real req/write/guard logic.
+    import os as _os
+    import tempfile
+    import spine_client as _sc
+    orig_send, orig_key, orig_ref, orig_cached = (
+        _sc._send, _os.environ.get("SUPABASE_API_KEY"), _sc.REF, _sc._KEY)
+    _os.environ["SUPABASE_API_KEY"] = "selftest-key"
+    _sc._KEY = None                      # force load_key to re-read the (fake) env
+
+    pii_rss = ("<rss version=\"2.0\"><channel><item><title>Hello</title>"
+               "<link>https://ex.com/p1?x=1</link><description>ping ryan@example.com"
+               "</description></item></channel></rss>")
+    calls: list[tuple] = []
+
+    def stub_send(method, path, data, headers, timeout, reuse):
+        calls.append((method, path.split("?")[0], data, headers.get("apikey")))
+        return (200, "[]") if method == "GET" else (201, "[]")
+
+    def run_fetch(out_dir: str, stub, dry_run: bool = False) -> int:
+        calls.clear()
+        _sc._send = stub
+        src_path = _os.path.join(out_dir, "sources.json")
+        out_path = _os.path.join(out_dir, "out.json")
+        with open(src_path, "w") as f:
+            json.dump([{"company": "Acme", "feed_url": "https://ex.com/feed"}], f)
+        args = ["--sources", src_path, "--out", out_path, "--fail-on-feed-errors"]
+        if dry_run:
+            args.append("--dry-run")
+        return _cmd_fetch(args, fetcher=lambda u, timeout=8: pii_rss)
+
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            _os.environ["SPINE_REF"] = TWIN_REF
+            rc = run_fetch(td, stub_send, dry_run=True)      # dry-run: never sends
+            check("cmd_fetch: dry-run sends nothing (guarded write path skipped)",
+                  rc == 0 and calls == [])
+
+            rc = run_fetch(td, stub_send)                    # real write path
+            sent = json.loads(calls[-1][2].decode()) if calls and calls[-1][2] else []
+            check("cmd_fetch: write reaches the TWIN via twin_ref_or_die + REF retarget",
+                  rc == 0 and _sc.REF == TWIN_REF and calls[-1][0] == "POST"
+                  and all(c[3] == "selftest-key" for c in calls))
+            check("cmd_fetch: written rows carry no PII (email scrubbed pre-flight)",
+                  len(sent) == 1 and "@" not in json.dumps(sent)
+                  and "ryan@example.com" not in json.dumps(sent)
+                  and "[redacted]" in sent[0]["summary"])
+
+            def send_404(method, path, data, headers, timeout, reuse):
+                return (404, "{}") if method == "GET" else (201, "[]")
+
+            held = refused = False
+            try:
+                run_fetch(td, send_404)
+            except SystemExit:
+                held = all(c[0] == "GET" for c in calls)     # exited before any write
+            check("cmd_fetch: missing table (404) HOLDS the write", held)
+
+            def send_403(method, path, data, headers, timeout, reuse):
+                return (403, '{"code": "42501", "message": "row echo: Acme https://x"}') \
+                    if method == "POST" else (200, "[]")
+
+            try:
+                run_fetch(td, send_403)
+            except RuntimeError as e:
+                refused = ("HTTP 403" in str(e) and "Acme" not in str(e)
+                           and "row echo" not in str(e))
+            check("cmd_fetch: failed write raises with ALLOWLISTED details only", refused)
+    finally:
+        _sc._send, _sc.REF, _sc._KEY = orig_send, orig_ref, orig_cached
+        if orig_key is None:
+            del _os.environ["SUPABASE_API_KEY"]
+        else:
+            _os.environ["SUPABASE_API_KEY"] = orig_key
 
     bad_row = dict(r)
     bad_row["title"] = "Ping press@acme.example"
@@ -765,8 +981,8 @@ def selftest() -> int:
     check("twin guard: unknown ref refused", _exit_code("oicikjyzmxqfomrrqkzz") == 1)
     check("twin guard: twin ref passes", _exit_code(TWIN_REF) == 0)
 
-    print(f"selftest: {ok}/48 passed")
-    return 0 if ok == 48 else 1
+    print(f"selftest: {ok}/{ran} passed")
+    return 0 if ok == ran else 1
 
 
 def main(argv: list[str]) -> int:

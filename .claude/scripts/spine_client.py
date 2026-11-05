@@ -97,7 +97,7 @@ ALLOW: dict[str, set[str]] = {
     "artifact_outcome": {"document_id", "goal", "target", "outcome", "outcome_value", "outcome_date",
                          "source", "updated_at"},
     "claim_usage": {"id", "claim_id", "document_id", "consumer", "used_at"},
-    # --- lane 4 feeds (migration 0017, market-lens proposal §2) — raw public-feed staging ------
+    # --- lane 4 feeds (migration 0020, market-lens proposal §2) — raw public-feed staging ------
     # No person rows, no entity edges; source_key is the canonical-URL sha256 (feeds.item_key).
     # GUARD DIFF: adding a table = one ALLOW row; reviewed by Alex per ADR-9 before merge.
     "feed_items": {"source_key", "company", "feed_url", "url", "title", "published", "summary",
@@ -748,18 +748,19 @@ def selftest() -> bool:
                                 "quote": "ping me at ryan@example.com"}), True)
     add("claim_relation clean row → pass",
         lambda: guard("claim_relation", {"from_claim_id": "a", "to_claim_id": "b", "relation": "contradicts"}), False)
-    # --- lane 4 feeds (migration 0017, market-lens proposal §2) — raw public-feed staging
+    # --- lane 4 feeds (migration 0020, market-lens proposal §2) — raw public-feed staging
     add("feed_items clean staged row → pass",
         lambda: guard("feed_items", {"source_key": "ab" * 32, "company": "Veris AI",
                                      "feed_url": "https://veris.example/feed",
                                      "url": "https://veris.example/blog/p1",
                                      "title": "Introducing Atlas 2.0", "published": "2026-11-01T00:00:00Z",
-                                     "summary": "GA release notes.", "kind": "rss",
-                                     "signal_type_guess": "launch", "fetched_at": "2026-11-04T00:00:00Z",
+                                     "summary": "GA release notes.", "kind": "launch",
+                                     "signal_type_guess": None, "fetched_at": "2026-11-04T00:00:00Z",
                                      "metadata": {"canonical_url": "https://veris.example/blog/p1"}}), False)
     add("feed_items.summary carrying a press email → refuse",
         lambda: guard("feed_items", {"source_key": "ab" * 32, "company": "Veris AI",
-                                     "summary": "Questions to press@veris.example", "kind": "rss"}), True)
+                                     "summary": "Questions to press@veris.example", "kind": "market",
+                                     "signal_type_guess": "news"}), True)
     add("feed_items.metadata carrying a phone → refuse",
         lambda: guard("feed_items", {"source_key": "ab" * 32, "metadata": {"alt": "+1 (555) 123-4567"}}), True)
     add("feed_items.title carrying an email → refuse",
