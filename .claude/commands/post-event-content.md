@@ -7,7 +7,7 @@ argument-hint: "[event name as it appears in Notion / Google Calendar / Supercut
 
 > Granola: off, see `.claude/references/platform-constraints.md`.
 
-Takes the transcript of Alex's own recording of an attended event (pulled from **Supercut** by default, 2026-09-28; audio file or manual paste as fallbacks), resolves the event to its Notion row, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes `content-correspondent` with the conditioned quote bank.
+Takes the transcript of Alex's own recording of an attended event (pulled from **Supercut** by default, 2026-09-28; audio file or manual paste as fallbacks), resolves the event to its Notion row, **conditions the transcript against the event roster (Step 3.5 — `transcript-conditioning`)**, then invokes content-correspondent (the skill in-thread, or the `alex:content-correspondent` agent; Step 4) with the conditioned quote bank.
 
 **Input:** event name (one argument). The transcript comes from Supercut (Step 2A), an audio file (2B), or a paste (2C).
 
@@ -311,7 +311,9 @@ direction, folded around Step 3.6); this is the post-brief Sharpen touch.
 
 ## Step 4 — Invoke content-correspondent with structured input
 
-Pass content-correspondent skill the following structured input (NOT a raw transcript paste):
+**How to invoke it:** either run the `content-correspondent` **skill** in this thread (Skill tool), or dispatch the **`alex:content-correspondent`** agent (Agent tool) with the structured input written to a file. There is no agent named plain `content-correspondent`: the agent ships in the `alex` plugin, and plugin agents always carry the plugin prefix, so the bare name fails with "Agent type not found". The skill and the agent share the name; only the agent needs the prefix.
+
+Pass content-correspondent the following structured input (NOT a raw transcript paste):
 
 ```
 Event: [Notion Event Name]

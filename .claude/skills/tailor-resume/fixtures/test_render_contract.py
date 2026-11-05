@@ -3,7 +3,7 @@
 
 Asserts that the tailor-resume synthetic fixture still satisfies the whole render contract
 the way CI runs it: schema validation, the seven locked content rules, reading order, the
-posting-tailored reorder pass, the constrained-rewording fidelity gate, the PDF
+posting-tailored bullet re-rank pass, the constrained-rewording fidelity gate, the PDF
 reading-order gate, and the decided me-model mapping + one-in-one-out retirement recorded
 in SKILL.md. Also runs the privacy grep gates: the gitignored private-input filenames and
 any PII must never appear inside fixture files.
@@ -84,8 +84,10 @@ def main() -> int:
     # Reweighting: reorder-only, deterministic, no-op on a disjoint JD.
     jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
     reweighted = rr.reweight_for_jd(me, jd)
-    check("reweight promotes the JD-relevant role first",
-          reweighted["roles"][0]["company"] == me["roles"][1]["company"])
+    check("reweight keeps roles in me-model order (YED-330)",
+          [r["company"] for r in reweighted["roles"]] == [r["company"] for r in me["roles"]])
+    check("reweight re-ranks bullets inside the JD-relevant role",
+          reweighted["roles"][1]["bullets"][0]["text"] == me["roles"][1]["bullets"][1]["text"])
     texts_before = sorted(b["text"] for r in me["roles"] for b in r["bullets"])
     texts_after = sorted(b["text"] for r in reweighted["roles"] for b in r["bullets"])
     check("reweight never rewrites a word", texts_before == texts_after)
@@ -156,6 +158,34 @@ def main() -> int:
               ["EXPERIENCE", "KEY ACCOUNTS", "SELECTED BUILDS", "EDUCATION"]) == [])
     check("section-label extraction catches the E D U C AT I O N failure",
           rr.section_label_extraction_errors("E D U C AT I O N", ["EDUCATION"]) != [])
+
+    # YED-280: per-role key accounts + build description line, on their own fixtures (the
+    # legacy fixture above stays untouched — it is the backward-compatibility input).
+    for fx_name in ("resume-input-fixture-per-role.json", "resume-input-fixture-max.json"):
+        fx_text = (HERE / fx_name).read_text(encoding="utf-8")
+        fx = json.loads(fx_text)
+        fx_html = rr.build_resume_html(fx)
+        check(f"{fx_name} validates", rr.validate_resume_input(fx) == [],
+              str(rr.validate_resume_input(fx)))
+        check(f"{fx_name} passes every locked content rule",
+              rr.check_content_rules(fx_html, fx_text) == [],
+              str(rr.check_content_rules(fx_html, fx_text)))
+        check(f"{fx_name} keeps the reading order (accounts under their own role)",
+              rr.check_reading_order(fx_html, fx) == [])
+        check(f"{fx_name} uses per-role accounts, so the top-level line is suppressed",
+              rr.uses_per_role_accounts(fx) and 'class="key-accounts"' not in fx_html)
+        check(f"{fx_name} proof links are never the bare GitHub profile",
+              all(not re.fullmatch(r"https?://github\.com/[^/\s]+/?", u)
+                  for u in rr.proof_links(fx)))
+    golden_body = (HERE / "resume-legacy.golden.html").read_text(encoding="utf-8") \
+        .split("<body>", 1)[1]
+    check("legacy fixture body renders byte-identical to the pre-YED-280 golden",
+          html.split("<body>", 1)[1] == golden_body)
+    # SKILL.md documents what render_resume.py enforces (drift guard, as for the allowlist).
+    check("SKILL.md states the build-description cap the renderer enforces",
+          f"{rr.BUILD_DESCRIPTION_MAX} characters" in skill)
+    check("SKILL.md states the top-level line is suppressed in per-role mode",
+          "suppressed" in skill and "roles[].key_accounts" in skill)
 
     # Privacy grep gates over every file in this fixtures directory.
     for path in HERE.iterdir():

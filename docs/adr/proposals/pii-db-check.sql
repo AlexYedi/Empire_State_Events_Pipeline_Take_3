@@ -74,7 +74,22 @@
 -- form (before the +country group). One dialect nuance, immaterial for ASCII
 -- contact PII: Python's \w/\d are Unicode-aware, ARE's follow the DB locale.
 -- Known accepted trade-off carried over from pii-regex-set.md: separator-less
--- 10-digit numbers and non-US formatted internationals pass.
+-- 10-digit numbers pass (A3).
+-- YED-309 (2026-11-04): a third phone alternative now catches international
+-- numbers written with separators (+44 20 7946 0958, +44 (0)20 7946 0958,
+-- +33 1 99 00 12 34), closing pii-regex-set.md gap G1. It introduces
+-- constructs the live shape does NOT use: a positive lookahead, and
+-- lookaround nested inside it (a negative lookahead within the positive
+-- one). What was verified, not assumed: (a) a Python-re vs Tcl-regexp
+-- (Spencer ARE, the engine Postgres vendors) fuzz with lookbehinds
+-- rewritten: 0 divergences on 115,907 strings (PR #277 review); (b) a
+-- read-only probe on prod (Postgres 17, en_US.UTF-8): the full 3-alternative
+-- pattern compiles under `~` and matched Python on 15 probes, NBSP
+-- separators included. 0017's probe 0 re-runs (b) before apply, because
+-- plpgsql holds the pattern as text and CREATE OR REPLACE never compiles
+-- it. Prod still runs the pre-YED-309 shape until
+-- supabase/migrations/0017_pii_backstop_intl_phone.sql is rehearsed and
+-- applied; that migration carries this Part-1 function verbatim.
 
 create or replace function public.assert_no_contact_pii()
 returns trigger
@@ -85,8 +100,9 @@ declare
   email_re text := $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
   -- Verbatim spine_client.py PHONE_RE (PR #250 final form: A2's
   -- leading-country-code prefix before the +country group; second
-  -- alternative is the E.164 compact form).
-  phone_re text := $re$(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])$re$;
+  -- alternative is the E.164 compact form; third is YED-309's
+  -- international-with-separators form).
+  phone_re text := $re$(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)$re$;
 begin
   -- Free-text columns on person (per the spine allowlist: professional-public
   -- identity only). name is scanned too — it is a string someone typed.

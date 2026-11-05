@@ -1,0 +1,4585 @@
+{
+ "run": "lane0-retag-disputes",
+ "at": "2026-11-05T03:04:25+00:00",
+ "added": [
+  {
+   "claim_id": "0153d8ac-bb4e-4fc8-b7f7-0fbc5bd7e180",
+   "topic_id": "47832ca6-5f18-4818-afe5-0a52c314b20c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "020d1095-05a4-408c-aa6d-bf928a3aff0d",
+   "topic_id": "e72ec876-5ad6-462a-82e4-5dcd1b2abba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "02544353-132a-4721-8196-ee0608f546cf",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "02a426fa-c0e1-4b21-8ff2-ba364523ef37",
+   "topic_id": "661a5123-5960-49ac-b24d-ef1931ed9ba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "02e294c6-ee1b-4d86-ba89-7c309da9243a",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0416b197-2f70-4b0a-acd7-7dd589178f43",
+   "topic_id": "c5b326db-0946-42b5-8b76-8989a4c85c65",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "04928798-8fd6-4388-8111-907e91e51c41",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "04c7cf8a-5a2f-465f-bd90-35ad3d5e3eee",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "04da423e-6ccb-4f61-8f98-c55d4d7c60ab",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "05de9cc2-4243-436e-b082-fe65a8b51ee3",
+   "topic_id": "078ad9ee-ef97-4d1d-a27e-e390f776377e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "05f389ae-2465-48b0-acd4-105f90f38c8e",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "07386456-0b71-48e5-b713-08b5230b4380",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "07c916dd-6cc9-4377-abb3-89e215424acb",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0978031e-6376-42d6-9247-348e21465456",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0af6e308-0f22-46fe-be6d-4ac2c860e203",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0b2a2b72-b22d-45e9-9612-6aeca3e8d7f0",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0b3eccf2-8f31-4857-ac75-6a48c49fb3c8",
+   "topic_id": "c6b89488-c2b9-4c76-8b29-88c9a4f0c284",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0c037087-86d6-4a53-8f83-ae133deb35a4",
+   "topic_id": "988ceef1-bd03-48b5-a97f-1ec2850cc39a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0c037087-86d6-4a53-8f83-ae133deb35a4",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0c9df5b1-9056-43b5-9820-51ef084b9c9d",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "0fae4acb-854e-4e2a-bc8e-a262617a672e",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "106371f9-0a2f-46ed-8713-a4da754267c7",
+   "topic_id": "686ff53c-6219-4b8c-a4b5-e3440d6c3ca7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "106371f9-0a2f-46ed-8713-a4da754267c7",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1090826f-12f4-4e30-8d3a-c5ea28d6e939",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "10e519c3-5739-48d4-8023-7cee4fe7e8b2",
+   "topic_id": "988ceef1-bd03-48b5-a97f-1ec2850cc39a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "11f8bb7c-e8f8-4491-89f5-b642d48cac70",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "121cc281-1a53-49ba-a687-0151e344c3b6",
+   "topic_id": "7227671e-6ef3-4693-99d2-da5efcb26e61",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1322a0e2-6a11-4dcc-a32c-b9d7aefe0ffa",
+   "topic_id": "46c0da35-1fc7-4592-ad8c-f8f73d10f536",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "14639976-e9b8-4c13-930b-0f49aab8a77a",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "15bd4bc5-1675-4dac-a754-3230787ded60",
+   "topic_id": "507b55fd-335a-4a61-8683-3498e221aecd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "16381826-e502-453a-8e33-169ce8a2aabb",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "165ec8d8-b8f9-486b-b083-a3e95c1c7e0c",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "173bdef5-84e7-4be6-b130-892faeda51c1",
+   "topic_id": "f82d7378-523d-407e-88f7-4ef7587dc788",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1847c09f-d160-44bd-a094-8e8f8c96d4af",
+   "topic_id": "ab9488d9-11e3-4cd9-8e7c-3270a2501e26",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "196111e7-a6f5-4b98-b051-4378f592d865",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1aae8495-4497-4c82-bc61-4279887c1a65",
+   "topic_id": "13a314e1-5d23-42dc-9cc3-1b2a09d5a27d",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1bad7cfb-34d4-43e4-88db-fc51145195dd",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1cbaef7d-b694-4172-b4ff-6682cc006c4a",
+   "topic_id": "597cbd85-4ba4-4c5e-af24-a9125117e0f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1cd252df-c63a-4451-9363-260f6721202b",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1e37e38f-f723-43eb-b599-3e1cae4c8441",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1e37e38f-f723-43eb-b599-3e1cae4c8441",
+   "topic_id": "2b499fc4-dfc8-4865-8948-2227678f742c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "1f64e9a8-1e08-4417-a65f-aa2d6baaa223",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "20fd0980-0d5c-40e7-a840-cd73c0eb3e70",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "211b11bc-ccbb-414a-a4d8-00a2ccb21ec1",
+   "topic_id": "e521b688-ec43-4a16-9d72-4ffa72339cf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2275cb19-1a3e-49a7-b108-ac9f7ddaa5bc",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2319f9f2-8b60-4b56-a353-70775f8a60c5",
+   "topic_id": "b75ec557-b6c7-4ef1-a5c1-7f0030d083f6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "23f6fee8-69e7-4aa9-b129-225d4968fbdd",
+   "topic_id": "5a7cfd94-505d-4fa1-aced-a327d6605aa7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "24749930-f1a4-48a5-ab2e-af895a9629df",
+   "topic_id": "1ded2e08-d874-464f-be98-140a609a1f28",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "255a9532-0456-4a62-9ecf-cdaaea71cb34",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "25a42cf1-a1b4-44d4-be87-290e92a55a6f",
+   "topic_id": "c6b89488-c2b9-4c76-8b29-88c9a4f0c284",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "26c14bdb-7ae5-4faf-b44a-b133db7cc763",
+   "topic_id": "9e1d1ac7-2f96-4a32-bd59-3178aec82c44",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "270b687c-c425-4545-8ac4-8d2031a02225",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "27758b9f-55dc-4d1e-87c1-f3137f3a8b65",
+   "topic_id": "9ecbcc48-3ccc-4257-bda5-f262daecffeb",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "278e44b7-a4da-40fb-8402-929b71d79724",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "28293cdb-4fbd-4441-977c-2d66d3303add",
+   "topic_id": "29bfc4d0-6c43-4227-8623-7d1b15ed5a6a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "283241f0-d6d2-4adc-a3ee-12ab77300c56",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2930bd7a-1c47-45c0-8165-6de096c31cc4",
+   "topic_id": "13a314e1-5d23-42dc-9cc3-1b2a09d5a27d",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2a65c894-eca9-4717-9702-4f7ff003ab50",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2a8a8e85-8a68-4e8e-ba32-fba04301d2b8",
+   "topic_id": "4660aa42-41dc-44e1-9f26-3303d208b1f7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2b10f7b5-eaa7-4be5-a827-a0f115443a23",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2b9cbe47-9ac3-42b9-9670-c8deb3c5bf21",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2dc35642-3a41-441b-8c1d-58e8c66d77d7",
+   "topic_id": "9bb79be2-0419-4331-a2be-760e92198cf2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2e1825e2-4ee7-4a0d-9937-4df3a859d2e0",
+   "topic_id": "67b4c251-b23d-4557-a86b-e2acd8a56536",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "2e1825e2-4ee7-4a0d-9937-4df3a859d2e0",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3132c46e-85c3-4b5a-a618-a6604b73c135",
+   "topic_id": "2ac03461-c089-4906-aded-84634267ac58",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3132c46e-85c3-4b5a-a618-a6604b73c135",
+   "topic_id": "65eb0134-41fc-4676-9103-70402d3d9f08",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "31b64067-c369-403e-96cd-b2fca666f384",
+   "topic_id": "e72ec876-5ad6-462a-82e4-5dcd1b2abba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "31b64067-c369-403e-96cd-b2fca666f384",
+   "topic_id": "f4b1913f-0600-422d-9e61-f6730c206b11",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "31cef5b0-3e13-4cbd-96cd-735e10c56919",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "31cef5b0-3e13-4cbd-96cd-735e10c56919",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "351e6ec8-9427-4ec3-8a33-a1e56dbd924c",
+   "topic_id": "29bfc4d0-6c43-4227-8623-7d1b15ed5a6a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3c79f24a-293b-482d-902c-77e497773291",
+   "topic_id": "078ad9ee-ef97-4d1d-a27e-e390f776377e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3c7b106d-7bfe-43bf-9391-a85ad36b257c",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3d9e8124-88e3-4992-a82a-4c903e645466",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3e91b2b1-7213-4890-b01d-85e221c9c2ac",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3e989e11-6669-4bea-8eea-1f37a0ec2a5e",
+   "topic_id": "cab6d8f4-3e33-45e4-a107-d798cf57f4f6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "3f1d4010-6e00-4a50-8438-13084913dc92",
+   "topic_id": "608c15dd-8576-451e-9d11-7af253e2b0cd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4016c00c-5df1-4ad6-a901-133caf7d12b9",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "407c2c99-2907-472e-9ec6-844b701d3b64",
+   "topic_id": "008a6adb-c7e4-48cb-8672-5945a6849455",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4081a087-c509-4ddc-add0-8d3c4e431e7e",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "409106ad-9545-4fe1-8716-209bac5c5d0d",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "40f4ec82-d917-4830-9932-9a0af9687b3a",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "412e3e1b-d558-4c48-ae64-e1c7f57dae8a",
+   "topic_id": "9f43a35e-1833-4351-8cfd-462d89fe9fb3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "419393fc-81ac-4e8c-aad9-1863d4bc8634",
+   "topic_id": "a595e41f-1abd-4987-b39b-f07e7b81d52f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4358ac52-82eb-433d-89bb-ffc7fcb5a096",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4488d3d9-b925-4718-a595-1343ba252f89",
+   "topic_id": "a6ba6df9-6871-4da5-8a08-d13368e0464c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "450d3efa-1bc6-4196-ad4b-5974bac390b2",
+   "topic_id": "9bb79be2-0419-4331-a2be-760e92198cf2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "450d3efa-1bc6-4196-ad4b-5974bac390b2",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "477d72e7-6d5c-40a3-b4fb-55de9607664b",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "47f490b6-da9e-4833-b0e0-b5a119ad1796",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "49b54709-9e57-471c-adf2-762f976ba6aa",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4c51eae0-6120-49e9-8bff-6488fae30a96",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4c57e3f5-812d-40fc-8333-964d8bd30948",
+   "topic_id": "7302d56e-7c03-4f66-92c2-a4ebfead5a90",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4dac4f1b-afc9-4953-997c-31eaf7966c6f",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "4f993731-a7a1-423b-ac6c-7f3687d15550",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "50127e79-f652-46eb-9308-3eca80e956d1",
+   "topic_id": "80bd5822-42b0-4eff-b412-71111acbf171",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5091df31-06ed-4120-8997-e1fe02e1edbc",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "50a7c26c-af1e-4aef-925f-44d5038bf94e",
+   "topic_id": "01013b7f-3234-4e1b-8a14-5e4517b3fb73",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "51056365-69ae-4e55-8529-672fc9d43cc0",
+   "topic_id": "17582002-8701-4a0d-8ceb-2116aa0c43a0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "54b8565e-573e-40f0-b7c8-5e88a79faaac",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "55aee224-e802-45df-94c9-2f6bc365ceef",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5606df00-0981-4718-b7a8-be3554af5559",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5622223f-d5e6-4d5b-8fe7-02d376e1dc07",
+   "topic_id": "01013b7f-3234-4e1b-8a14-5e4517b3fb73",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5622223f-d5e6-4d5b-8fe7-02d376e1dc07",
+   "topic_id": "c3c30170-37b7-4fed-9115-88ef8c058a49",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5669b793-ad59-4a27-8db0-16bc902549e9",
+   "topic_id": "f44e50cf-5c08-4d5b-a629-c33c46cc8fb8",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "56edbd86-d43d-45f0-918f-0f13ed7d5536",
+   "topic_id": "69f895f8-af74-4a61-a72a-fc002b0d3092",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "57ff6338-4e81-4a48-8f6d-1e78b801a0cc",
+   "topic_id": "2cbe11e4-ad23-41c9-b0fa-8e76da6c3939",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "58f2cf66-9997-4823-8805-06a59579c6ec",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "58f2cf66-9997-4823-8805-06a59579c6ec",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "59ff1aa2-d68d-41cb-b2de-717b90313a26",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5a2bb5ce-f3d3-4bde-8185-400e2a6196f7",
+   "topic_id": "551e4efa-1592-44b4-a673-2ac5db90913e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5a4b9f0f-b5f7-48cf-8af0-97f02167968e",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5aa106bd-64cf-4c71-9a11-946f58821641",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5b4d5013-b740-4884-acfb-dce799e904e9",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5e4aa513-efdd-4853-86ad-5a236e6b1779",
+   "topic_id": "988ceef1-bd03-48b5-a97f-1ec2850cc39a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5f372140-4876-439c-87dc-fe9247d75d02",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5f60d9f4-ebee-4515-afb0-730b43497d1c",
+   "topic_id": "d9840ab7-520e-40d0-8b7c-c55cdde8448f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "5f753338-18ea-44cf-9732-ea7b5b7da8b5",
+   "topic_id": "176be8b8-1ebe-4ac6-b4d4-1049e3d07759",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "60c63367-5e96-4a25-908d-09b8418fe2e0",
+   "topic_id": "4a6770fd-84a3-4503-bdae-d727cbeb558d",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "60c990a6-33d2-400b-af67-fcc63af11f19",
+   "topic_id": "17582002-8701-4a0d-8ceb-2116aa0c43a0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "60cab1b0-c85c-4241-8cbe-c9a33a94b1e6",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "61cd2a15-6e58-4467-9ebc-c70c4fd7791e",
+   "topic_id": "ce5d094e-f2a9-4b64-b6c1-8a66fdef6c51",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6379ee77-20fe-4797-b8eb-e76ae4871310",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "63e94579-e5a4-421b-a453-d750d130548c",
+   "topic_id": "0fee017d-cc08-4ef7-9066-c23216a88ee0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "65392160-f3bd-4cca-bfba-43535b0ace49",
+   "topic_id": "0103f8a6-d2a3-494d-be39-e5c4a14451a6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "67f74a64-3815-4efc-aa16-e3ce003770d1",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "685d5c69-987c-434e-9c7b-28246282476e",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6b34cbde-2e4e-48cc-9c75-0a564dad4473",
+   "topic_id": "4b8c3f4e-a423-4a03-bdbe-9fe1e95f5fc6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6ca4fc2c-cacd-4783-bb47-669d39eb05b3",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6d75ea1f-3dad-4987-bfae-02cdcdf7e259",
+   "topic_id": "a48c0269-c840-44a3-8fe0-cab5b1974bdc",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6e2e797e-ca84-4315-92b9-875ebc4c6fd4",
+   "topic_id": "0fee017d-cc08-4ef7-9066-c23216a88ee0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6fd07007-cc68-4f75-a11f-7b07c5ca230b",
+   "topic_id": "16dbca0b-a447-4833-8940-f6fcc8f5415f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "6ffb6f56-9a99-4f31-b151-101e29ccbe66",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "70effcc2-8c73-4571-b196-7056da48509f",
+   "topic_id": "29bfc4d0-6c43-4227-8623-7d1b15ed5a6a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "71690f43-8897-4f29-8416-cd2d58ddcc36",
+   "topic_id": "13a314e1-5d23-42dc-9cc3-1b2a09d5a27d",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7276e59b-5d23-4b8c-a52f-7371892267b6",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "72ac93d8-1c94-4297-be29-8a00df445f9f",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "73093886-9136-4f12-b782-5c17e15d35a4",
+   "topic_id": "8d44a07a-f2dc-4712-8381-a412f0fc39dd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "758171ba-4358-4194-8411-829bb8eec94e",
+   "topic_id": "c6b89488-c2b9-4c76-8b29-88c9a4f0c284",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "767f1aab-6da1-40a2-83cb-1489ca7cb836",
+   "topic_id": "f54cf207-ad2d-464c-8b67-e0619580e583",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "76cecd39-ccd5-4eea-a2a0-ed1dd0a69ef5",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7707e338-cef5-41d6-9ecd-1f59cfc011f8",
+   "topic_id": "2b499fc4-dfc8-4865-8948-2227678f742c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "784a9ab4-3f3c-4b53-be4b-d929d7489ab9",
+   "topic_id": "33c904e7-ac9d-4d4b-8cfe-e4f3885e807f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "788ad08b-f548-406d-8aa2-4799eb5747ac",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "78b3d34c-41d8-4e3c-9f51-0b6450344044",
+   "topic_id": "1c9738a3-47b4-4344-bd56-58a6f3238dff",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "79fd301e-7fbd-4ca7-abe2-6327a646b676",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7ac95aff-0a45-4364-9bfe-d060971d1102",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7b422c64-e14d-44cd-ac65-262944d022f8",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7c2d254f-27a5-4b9c-b1d5-8245f4264024",
+   "topic_id": "67b4c251-b23d-4557-a86b-e2acd8a56536",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7e418537-69b3-4b4d-ad6b-9a9c435199ef",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7edd40cc-8c20-4f91-a964-5968b51fafed",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "7fbc8e4a-ea4f-4794-a67a-a78cf5188bff",
+   "topic_id": "661a5123-5960-49ac-b24d-ef1931ed9ba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8186b27f-7da4-4359-a0db-f259f94988a8",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8254d67c-7ed4-4d94-a0c4-b7de29452d50",
+   "topic_id": "d9840ab7-520e-40d0-8b7c-c55cdde8448f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "85c17175-051d-4e18-ac20-e11ac1fb8718",
+   "topic_id": "fdbf42cb-1f4a-4079-a5e1-ad1c928c5b06",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "87260c0d-f3a9-4cf5-803b-b2a8ee394612",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8996d9b7-70b4-4327-ad2b-caf7795565e5",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8996d9b7-70b4-4327-ad2b-caf7795565e5",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8a23ff6d-693c-4907-9497-0c5ed9feda98",
+   "topic_id": "290d1bee-cf30-46aa-88d6-93ee47d62171",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8a65f3f6-a893-40e3-a3d7-6c27aec5060b",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8bd65294-8e44-417c-bcb2-8c0dfae399f6",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8bdf7851-e73c-4907-91df-9b3040181e04",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8d350722-2180-4b00-a6f5-c904b9f570c2",
+   "topic_id": "c6b89488-c2b9-4c76-8b29-88c9a4f0c284",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8d83364a-8483-4835-a001-6f2732fb0d52",
+   "topic_id": "2aab87fb-b918-48c6-b6af-f1d13b978819",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8e12da9d-0faa-4d5b-af07-f53fa49efe40",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8f553a2d-1006-4f3c-9963-b584569a4fe4",
+   "topic_id": "4ba04c33-b633-4e7f-a46c-9c91e9e6fb44",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "8f75bf68-7559-45bd-9241-24d3645753a3",
+   "topic_id": "4660aa42-41dc-44e1-9f26-3303d208b1f7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "900a40f6-047f-47d2-a993-abf1338b1462",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "90cdc254-5945-42f7-8848-84fbfcc2d56a",
+   "topic_id": "cdefb733-510f-477c-9917-ef1f44d569de",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "92662fb5-daa2-495d-95a2-2814b591883e",
+   "topic_id": "9ecbcc48-3ccc-4257-bda5-f262daecffeb",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9269acad-40e4-4c7d-b994-3805d238f838",
+   "topic_id": "ce5d094e-f2a9-4b64-b6c1-8a66fdef6c51",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "92978782-9595-4aff-ae09-6b89619a843a",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "92add5fb-a0b7-4c7e-b897-014e92f2d875",
+   "topic_id": "03d0de18-640e-40c1-ace3-4f3bb010283b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "92d658ec-31a6-456e-95dc-394f94e5ae91",
+   "topic_id": "5f35afca-79b1-4dbc-9d80-3de8d049a003",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "92e1db2d-f4f2-45b6-b726-36108e568576",
+   "topic_id": "4660aa42-41dc-44e1-9f26-3303d208b1f7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "948e21f3-5774-455c-92c0-0978235a22b1",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "95af5849-daba-441b-9731-97ab66c6662d",
+   "topic_id": "1ded2e08-d874-464f-be98-140a609a1f28",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "95e8a0d2-fbc3-4a71-a832-59ce5c1e3771",
+   "topic_id": "372e12bd-a0b1-48c2-8b73-24fa6b896628",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9644755c-1ca4-4e90-8ec8-03734bea4a90",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "968294ab-ba22-4bcc-b8fe-3c261595c476",
+   "topic_id": "ab9488d9-11e3-4cd9-8e7c-3270a2501e26",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9785d950-724b-4499-86ac-89f91cc70905",
+   "topic_id": "4ba04c33-b633-4e7f-a46c-9c91e9e6fb44",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "97f1d2b3-f258-4a61-8b5b-c120ac5cbfcf",
+   "topic_id": "9c600e8d-8f28-4e40-93a5-13e3c4735e82",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "98238a7a-cccd-4374-b7b0-dd447c1c092e",
+   "topic_id": "c3cbf965-68eb-44a7-8eb9-f7ac0710d409",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9abc726f-b559-4bc4-9b4b-f9f0403269e8",
+   "topic_id": "adeb7e88-9c58-43c1-9257-56a593dd8a5e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9b61ec7e-c84c-432d-9819-186d8cae6a33",
+   "topic_id": "9f8e7192-4cc9-4f72-9c80-605e11d028a9",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9cb24711-581b-42e0-8ddb-fc9243d394aa",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "9eea00a9-0ae5-4a92-b778-221c69ed4bcb",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "a3e1c486-fd01-43a1-b329-63f632ebcc16",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "a3f4d73a-75cf-417d-8c3a-741409cbdf3b",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "a6e47424-3de0-4e4d-9694-c673f2408ac7",
+   "topic_id": "4b8c3f4e-a423-4a03-bdbe-9fe1e95f5fc6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "a7fbc828-7e3c-4405-92a4-b81f7597ce95",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "a93a10fb-07be-49e3-8d0f-c8599c5d81b1",
+   "topic_id": "f44e50cf-5c08-4d5b-a629-c33c46cc8fb8",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "aa78319f-bd5c-4de6-8f6f-caf116de10b6",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ab03cb41-52a9-4065-a67e-fdf520a58bce",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "abb05d06-6612-49fd-b23c-9be6bf2d2051",
+   "topic_id": "54c9a693-4c9f-42f8-935a-f3447d3759c0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "abf76aad-ba33-4a29-8d59-0ddf6801d04d",
+   "topic_id": "7302d56e-7c03-4f66-92c2-a4ebfead5a90",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ac497503-38d6-4251-8a39-589fb160da9b",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ada67be6-2ab7-4243-9c2d-88d55338a7af",
+   "topic_id": "551e4efa-1592-44b4-a673-2ac5db90913e",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ae28222d-0642-479c-adfe-12f78a271ab3",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b2dcb021-76d5-4a71-bf2d-4d77562727fb",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b2f88ecc-c20f-4938-b8a8-271cd7732787",
+   "topic_id": "290d1bee-cf30-46aa-88d6-93ee47d62171",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b398c058-763e-446f-b763-d7679163860f",
+   "topic_id": "e72ec876-5ad6-462a-82e4-5dcd1b2abba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b71bf96b-a16c-4716-b686-cfc3d155fb44",
+   "topic_id": "6b636845-a760-4f1d-9056-453d42468c6a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b8f52b5c-398d-4a1a-99c4-b9559b80422f",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "b93e23f2-3d06-4a9b-9775-a547b43a0b4f",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "bae33a70-dc11-4ec2-a10b-3d95879c113c",
+   "topic_id": "ce508d73-2b11-49a1-a32c-761430747105",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "bb6a218e-9a8f-4a09-848f-e6b6d2ab4cf6",
+   "topic_id": "4660aa42-41dc-44e1-9f26-3303d208b1f7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "be16ea92-fb3b-4825-9697-3d8c26ce80df",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "bf31e947-49af-4f10-b22e-ea55d03ebd22",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c114bc26-b608-43b3-99f7-af680803b28b",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c13ca9bf-dad5-4198-a4da-bc17fb7052dc",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c1b0b0f0-adca-4934-8c71-2ee44075f911",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c25455e2-c8a2-4cf6-b32a-00d7b5ffe8eb",
+   "topic_id": "54c9a693-4c9f-42f8-935a-f3447d3759c0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c2629cd7-944a-41d4-a6f9-9d89c5840566",
+   "topic_id": "29bfc4d0-6c43-4227-8623-7d1b15ed5a6a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c288f272-cba7-4029-9ca1-b7f0ef61d093",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c2fc172b-c01b-4287-84f7-bfbb7fad52b4",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c40800da-5669-4a38-8ea6-89c48bfc1f09",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c40af748-551f-4dcb-8d5c-d23b04e8f8a1",
+   "topic_id": "1369d498-258a-4200-92bb-bd6788f6dc7b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c4132eb5-a575-4d9f-9fcd-5c2ab5f36031",
+   "topic_id": "19e71795-9a2e-4d67-8fd1-96b6b289da33",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c47163f3-4381-4703-b572-aec1b957b699",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c6be8784-23f3-4630-a7e9-1250cfa443fb",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c71a8e8f-b8a5-4d9a-8a89-1b533dd2508a",
+   "topic_id": "9ecbcc48-3ccc-4257-bda5-f262daecffeb",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c80b9fc7-b10a-4209-a022-a45e8f18337e",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c81e5694-259a-424b-9843-1e7fcaace8ea",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c94ef5ef-9d9e-48bf-831a-8630d340cd33",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "c95753dd-8747-449f-977e-41375184bee1",
+   "topic_id": "f82d7378-523d-407e-88f7-4ef7587dc788",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ca2c0f55-857b-47af-857f-348156b90819",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ccdbe95c-8cdd-422e-9f22-2981cd20ad98",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "cd2e3161-c9e2-4eac-a3a1-1f0def8f4994",
+   "topic_id": "c5b326db-0946-42b5-8b76-8989a4c85c65",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ce3aaec8-f5c2-4b57-84a9-e1c3095755e6",
+   "topic_id": "139942cf-215a-4196-976d-dcadaaa7313f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d046d873-0b6f-4895-9094-edd352652cb0",
+   "topic_id": "dbfdade6-c6a3-469d-a20d-b161ec9d11d2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d228f155-ff6d-44ea-b1e6-069a00f27b1b",
+   "topic_id": "9f43a35e-1833-4351-8cfd-462d89fe9fb3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d44cef41-7e7c-47cc-975e-9cf25b6c9f0b",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d475bd00-35f3-43e2-9ced-22c491c89a1b",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d4c86635-cb3c-4f4a-9f9d-8e0acadb2d97",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d7704e51-7faf-4e77-9bbd-353da2d1a9fc",
+   "topic_id": "469a9cd9-79de-41f9-9147-e5583f843b8f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d815b691-6851-4405-a6ff-d512617c86bb",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d8b66ef1-470c-47fe-b7d3-2869eaa6e6ca",
+   "topic_id": "469a9cd9-79de-41f9-9147-e5583f843b8f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "d9515d8e-6671-444e-b4a8-f69351119f80",
+   "topic_id": "139942cf-215a-4196-976d-dcadaaa7313f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "dadc950a-e5d8-45c0-98c8-3740c5d5b269",
+   "topic_id": "1eb62a26-7191-4f79-9f6c-26167dbdf453",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "dc3ec652-f86b-415d-a85a-d9548308c6dc",
+   "topic_id": "585471de-23c4-4c48-b602-90962ebe08f4",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "de11bd23-b1e7-410f-85ab-328ddfe4e5a2",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "df32c17e-237e-4626-a746-5290840142ca",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "dfcc6a34-eb8c-4643-bb99-ce79a1bb437b",
+   "topic_id": "0fee017d-cc08-4ef7-9066-c23216a88ee0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e1bb12e9-02b4-47d7-9978-f19c1b355a2d",
+   "topic_id": "03d0de18-640e-40c1-ace3-4f3bb010283b",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e1dad892-8ece-4205-bb09-c26895cc0a05",
+   "topic_id": "469a9cd9-79de-41f9-9147-e5583f843b8f",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e376aeda-9464-42f7-b3bc-7b8a67461030",
+   "topic_id": "9f43a35e-1833-4351-8cfd-462d89fe9fb3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e437654a-e3bd-44e5-be2a-2adbee2a9a7b",
+   "topic_id": "2ac03461-c089-4906-aded-84634267ac58",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e5d6d468-4a72-4e89-a997-2b1a863c1586",
+   "topic_id": "c6b89488-c2b9-4c76-8b29-88c9a4f0c284",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e6478164-4945-40f0-891f-8e42705d584a",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e8bc3d25-9495-454a-960b-2e0cc9908bc3",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "e9fbf862-c09a-4f69-a78b-b338521a6309",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "eab16b3e-a55a-4fee-80c9-2ac7e997a875",
+   "topic_id": "cab6d8f4-3e33-45e4-a107-d798cf57f4f6",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ee20a3a0-aec3-4944-89f8-a7b0413b4039",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "eeca48c0-e475-4f84-bfc6-c28de93a7193",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ef1ac01e-8b13-4f8b-acb3-6f561277f7e5",
+   "topic_id": "54c9a693-4c9f-42f8-935a-f3447d3759c0",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f080900b-0a90-445c-9d4b-75a376fbcdc5",
+   "topic_id": "fc7934e2-82f9-4be8-8e63-e9a2fbec7cee",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f0b593fc-e40b-4f58-b95a-a1c107e2b075",
+   "topic_id": "c286acfd-6b26-4070-a6b3-9940528fa554",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f0ce9ceb-06ee-42b4-8a2c-4804bde1016d",
+   "topic_id": "9f43a35e-1833-4351-8cfd-462d89fe9fb3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f1111c3c-2764-48e2-8cb0-02ecbd95982c",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f1bdd4ef-c389-4958-ad00-b9f65a673d95",
+   "topic_id": "9bb79be2-0419-4331-a2be-760e92198cf2",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f7778488-31ba-4945-a222-1917facf8175",
+   "topic_id": "661a5123-5960-49ac-b24d-ef1931ed9ba7",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f7778488-31ba-4945-a222-1917facf8175",
+   "topic_id": "a6910a01-1e63-4b27-9968-306e7ce580b3",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f938d6a8-962f-4312-88ca-9d3350b3b37f",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "f938d6a8-962f-4312-88ca-9d3350b3b37f",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "fa690ac6-7755-46b6-8856-ee078354e09c",
+   "topic_id": "7302d56e-7c03-4f66-92c2-a4ebfead5a90",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "fb544053-dfab-46e4-bb5d-648be5bb2d2b",
+   "topic_id": "c5b326db-0946-42b5-8b76-8989a4c85c65",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "fbc01136-eb57-4721-8cca-b6b3892b3305",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "fbf784b3-856b-4016-b962-81210f49823e",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "fef455c3-a4ee-48e2-873d-6af7d0c28004",
+   "topic_id": "a48c0269-c840-44a3-8fe0-cab5b1974bdc",
+   "tier": "retag fable-adjudicated"
+  },
+  {
+   "claim_id": "ffe58496-0dc8-4db8-b27d-1ab1fbabd27b",
+   "topic_id": "4b8c3f4e-a423-4a03-bdbe-9fe1e95f5fc6",
+   "tier": "retag fable-adjudicated"
+  }
+ ],
+ "deleted": [
+  {
+   "claim_id": "002e7f9d-2262-497a-aa4c-df5694834cda",
+   "topic_id": "a405e23d-a6b4-447a-86c5-e7833d55de95",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "003d8d9b-032c-4ce0-9c43-76ac5677cdac",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "005de120-3960-4f04-b79e-9d2c5fe3f382",
+   "topic_id": "fba85f7f-16fc-4d96-b1c0-87e203e9d91e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "00d20436-4d08-4ba8-a000-61115f41e23d",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "00d4eee0-5ef1-40be-858e-76cbae2f1e8a",
+   "topic_id": "69b285af-fdf9-4337-a038-290761d40f8c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0153d8ac-bb4e-4fc8-b7f7-0fbc5bd7e180",
+   "topic_id": "a405e23d-a6b4-447a-86c5-e7833d55de95",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "01789737-51e6-423b-b336-c3186b5734ca",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "01a66466-412c-45be-805b-60ca99262f73",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "01bb2ad9-261b-4366-bf16-4bcfa909d4b7",
+   "topic_id": "01013b7f-3234-4e1b-8a14-5e4517b3fb73",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "01c10288-86fa-4c6c-af22-4fcd22b889f9",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "01c179a0-44d8-47b0-a1b0-0ec992f2fa6f",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "020d1095-05a4-408c-aa6d-bf928a3aff0d",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "02200049-5e2e-4ec9-8180-08cf42f63eaa",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0265d152-1723-4481-979c-5ef09a5504ca",
+   "topic_id": "67b4c251-b23d-4557-a86b-e2acd8a56536",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "026805bd-f049-4806-af71-964d271d8ff3",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "02a426fa-c0e1-4b21-8ff2-ba364523ef37",
+   "topic_id": "d9840ab7-520e-40d0-8b7c-c55cdde8448f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "02dd1182-776e-4afd-8cb9-d9dcae08dce8",
+   "topic_id": "a462b35f-95aa-482d-a677-ffa85d35383a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "02e294c6-ee1b-4d86-ba89-7c309da9243a",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "03023710-c360-4844-8d46-5992bb9c779a",
+   "topic_id": "d76526ec-4b85-4303-a8b3-895ce40328bb",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0416b197-2f70-4b0a-acd7-7dd589178f43",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0467fe76-751c-4c85-8921-24798d806ecf",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "04928798-8fd6-4388-8111-907e91e51c41",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "04c7cf8a-5a2f-465f-bd90-35ad3d5e3eee",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "04da423e-6ccb-4f61-8f98-c55d4d7c60ab",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "05795ca5-8b81-4598-aac3-e113ba850fbd",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "05b44772-5e04-4633-946d-997716441f44",
+   "topic_id": "356d1119-f66e-4684-ac53-c49e5c06a5cf",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "05b72fff-e730-41eb-a1d4-e0156b81a3f6",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "05f389ae-2465-48b0-acd4-105f90f38c8e",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "07386456-0b71-48e5-b713-08b5230b4380",
+   "topic_id": "c736763d-9264-461e-a6ed-826fc90e04ea",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "081189c5-4b12-4fe8-bb3a-40e74d0d7bb3",
+   "topic_id": "7877135f-49af-444e-bd96-5aeed83390c9",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "091d6519-85e9-4d55-b296-74004fde32df",
+   "topic_id": "c3cbf965-68eb-44a7-8eb9-f7ac0710d409",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0978031e-6376-42d6-9247-348e21465456",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0ae3b728-d79f-4a50-8285-b8173891daab",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0af6e308-0f22-46fe-be6d-4ac2c860e203",
+   "topic_id": "a462b35f-95aa-482d-a677-ffa85d35383a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0afc7fbb-dbe4-48f3-8d31-6b6bad851e3a",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0b2a2b72-b22d-45e9-9612-6aeca3e8d7f0",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0b39df98-364f-4f63-8e2d-fb31851da7af",
+   "topic_id": "c3c43044-f095-4f39-ae97-d1c97f6b8e0a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0b3eccf2-8f31-4857-ac75-6a48c49fb3c8",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0c037087-86d6-4a53-8f83-ae133deb35a4",
+   "topic_id": "9f41d43a-44e3-439e-99f7-fe3e17a38f7f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0c9df5b1-9056-43b5-9820-51ef084b9c9d",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0ce61f6e-d388-4a52-a8c5-0ccfac622d20",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0f111bb0-5889-46c3-8e91-eb0a63fa3784",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "0fd4e945-ae48-4a74-bf07-dcc1379305aa",
+   "topic_id": "1eb62a26-7191-4f79-9f6c-26167dbdf453",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "10099d6d-c60e-4ab8-af5c-349464ceeb28",
+   "topic_id": "e521b688-ec43-4a16-9d72-4ffa72339cf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "106371f9-0a2f-46ed-8713-a4da754267c7",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "10e519c3-5739-48d4-8023-7cee4fe7e8b2",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "118d2679-383d-4aeb-abde-3fa10d3d6a1f",
+   "topic_id": "6b636845-a760-4f1d-9056-453d42468c6a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "118d3c44-9856-4ffb-87df-a6959e75eb8e",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "11f8bb7c-e8f8-4491-89f5-b642d48cac70",
+   "topic_id": "1c3575e4-7b43-440f-969c-dece3ebb428a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "122e84fd-899b-41e1-ad18-a35020b10dd6",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "12aa13a6-38c8-4c4c-8128-51bc0b53a30e",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1322a0e2-6a11-4dcc-a32c-b9d7aefe0ffa",
+   "topic_id": "02ba8820-42e7-4156-8f98-422642811623",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "13b5240a-7410-4932-9bb1-174eb5535eee",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "13e29d03-62c4-41fb-a69f-dcc9ac5ced13",
+   "topic_id": "9ecbcc48-3ccc-4257-bda5-f262daecffeb",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "13e5a486-4bfe-4495-b204-9bcb2dcc2448",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "14dead89-fda3-4a69-8136-e7c511d1ce11",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "159c616e-fff1-4eca-9706-0f05a4f037ba",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "15bd4bc5-1675-4dac-a754-3230787ded60",
+   "topic_id": "1c3575e4-7b43-440f-969c-dece3ebb428a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "15f46d8c-183b-4900-b000-a7b8432c01b7",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "16381826-e502-453a-8e33-169ce8a2aabb",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "170603ca-a562-468b-b659-c885154160f1",
+   "topic_id": "1eb62a26-7191-4f79-9f6c-26167dbdf453",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "173bdef5-84e7-4be6-b130-892faeda51c1",
+   "topic_id": "067cab22-7a19-4b7e-8531-83216fcea497",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "17cca3af-51dc-4fdd-bac1-ab2322b0c535",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "17d1055b-e4e5-4c34-b813-ec0d1bd64e39",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "18da2f35-4653-437d-8fd9-cda837e158c1",
+   "topic_id": "6e5895fc-120f-404e-b9da-c39f5f7eaee2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "193dda9f-cb85-47e8-9cdf-4e1be10191ef",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1b269eb9-3544-4ad0-8083-6173a9ec3258",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1b94f856-f8c0-4698-8440-87b7103363a3",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1bad7cfb-34d4-43e4-88db-fc51145195dd",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1bada3be-6c11-4fc8-aac9-ee120fa1af44",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1bcc7b9a-00bc-4dc5-8259-a2c8bbc305e6",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1be2aaa4-a3b0-4d58-ad8c-9f0805f06d56",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1c17d124-c675-4132-9723-5fd164820ad6",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1c29227c-7f24-4271-a7ed-4ed17fdbaf6d",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1c92a4df-86d6-4c00-b3fb-734aba796c60",
+   "topic_id": "528d41de-161d-4ee3-9b04-c69b68b0652e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1cbaef7d-b694-4172-b4ff-6682cc006c4a",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1d579fe2-d0c1-4a34-a391-75722af90b73",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1e37e38f-f723-43eb-b599-3e1cae4c8441",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1ec8005b-1547-4de8-bfeb-b4b493b6cf77",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1eeafad9-dc6a-45d4-8dfa-9219fae96400",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "1f64e9a8-1e08-4417-a65f-aa2d6baaa223",
+   "topic_id": "a595e41f-1abd-4987-b39b-f07e7b81d52f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "20beb464-088d-4d59-a3f5-0c0bf9e6099f",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "20fd0980-0d5c-40e7-a840-cd73c0eb3e70",
+   "topic_id": "e8e822aa-98c0-43db-b3cf-8537942f4ed8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "211b11bc-ccbb-414a-a4d8-00a2ccb21ec1",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "22b13525-2def-47ba-b803-300c82fae3a0",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2399c775-d94a-4c13-80dc-dd409e928422",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "245c3b03-e491-4b0b-aacf-3b425daaf35d",
+   "topic_id": "46c0da35-1fc7-4592-ad8c-f8f73d10f536",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "24749930-f1a4-48a5-ab2e-af895a9629df",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "24a3287d-6885-42da-86c9-e88b8e67cc14",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "24ca36a8-c283-4a86-ae88-99465384d9ce",
+   "topic_id": "f82d7378-523d-407e-88f7-4ef7587dc788",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "255a9532-0456-4a62-9ecf-cdaaea71cb34",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "25a42cf1-a1b4-44d4-be87-290e92a55a6f",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "27032e35-fa06-4ed7-bc81-3034d4e7a0b5",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "270b687c-c425-4545-8ac4-8d2031a02225",
+   "topic_id": "139942cf-215a-4196-976d-dcadaaa7313f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "27758b9f-55dc-4d1e-87c1-f3137f3a8b65",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "278e44b7-a4da-40fb-8402-929b71d79724",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "28293cdb-4fbd-4441-977c-2d66d3303add",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "283241f0-d6d2-4adc-a3ee-12ab77300c56",
+   "topic_id": "5f35afca-79b1-4dbc-9d80-3de8d049a003",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2854a595-0832-40c1-9201-ef7d0c829511",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2930bd7a-1c47-45c0-8165-6de096c31cc4",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "29e65aa6-45cc-4588-804d-fbfacad6121b",
+   "topic_id": "1c9738a3-47b4-4344-bd56-58a6f3238dff",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2a65c894-eca9-4717-9702-4f7ff003ab50",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2a6d3157-9497-4768-a86a-bfa57e958202",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2a8a8e85-8a68-4e8e-ba32-fba04301d2b8",
+   "topic_id": "0103f8a6-d2a3-494d-be39-e5c4a14451a6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2b10f7b5-eaa7-4be5-a827-a0f115443a23",
+   "topic_id": "624ed016-92e8-4010-8dd9-f08e0ebadc9d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2b9793e8-df1a-41c5-bf38-fd9cbd905667",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2b9cbe47-9ac3-42b9-9670-c8deb3c5bf21",
+   "topic_id": "7a999ca6-5d20-4564-bded-a9de8fc726de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2c7d7807-aeb4-4a99-865f-06ec0c10f7d9",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2d695c65-0936-4a62-9c9d-42106053a8ca",
+   "topic_id": "d76526ec-4b85-4303-a8b3-895ce40328bb",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2dc35642-3a41-441b-8c1d-58e8c66d77d7",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2e1825e2-4ee7-4a0d-9937-4df3a859d2e0",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2e4aee88-31f9-4a80-88e7-b4890a6e7628",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2e623780-6001-41ba-8d18-767e91dd7460",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "2ef0cea7-c1ab-4db2-ae9d-f729f3b400b3",
+   "topic_id": "658c2802-f4f8-4fd0-bfb8-ec68c65ca8f8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "300c93e8-252c-4ccd-8447-7c8296e9b6a0",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "307afc30-f806-4b9c-b252-6d2466290e12",
+   "topic_id": "551e4efa-1592-44b4-a673-2ac5db90913e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3132c46e-85c3-4b5a-a618-a6604b73c135",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "316cbb38-0b80-4ce4-a9ad-ca264a9d9619",
+   "topic_id": "03da5cf8-856f-4b14-a74c-90dcb782cb3a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "31b64067-c369-403e-96cd-b2fca666f384",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "31cef5b0-3e13-4cbd-96cd-735e10c56919",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "33bf8138-3cf0-4c14-a72b-0a7413c2fde3",
+   "topic_id": "31925b86-441d-4797-9513-56f9d41bcec5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "341f4fee-9e6d-4399-92a1-70f236f796c6",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "35504658-7c5a-4253-9576-a9cf0abe0a74",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "35908a1d-ca33-4656-9718-39c938574786",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "35d3b0d2-bb1f-4a19-86fc-dbe8a0f4229e",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "362da398-51dc-4136-8113-f18c1bc86f57",
+   "topic_id": "988ceef1-bd03-48b5-a97f-1ec2850cc39a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3905f424-d8e2-4bff-8238-8edeb8537e9b",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3a06a763-3cba-42bb-a03d-e2cd024d7709",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3a10c087-0742-4c5f-b8ba-eb9de9831d81",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3a517070-578a-4c57-8e90-86fb9fef1385",
+   "topic_id": "067cab22-7a19-4b7e-8531-83216fcea497",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3a8c21d8-27c3-4126-8224-c240cc4ba5dc",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3ab69ac8-53b0-4429-987b-fafb0d94443a",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3b775960-9c79-4948-b3e6-95955506a05e",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3c79f24a-293b-482d-902c-77e497773291",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3c7b106d-7bfe-43bf-9391-a85ad36b257c",
+   "topic_id": "03d0de18-640e-40c1-ace3-4f3bb010283b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3d5db669-4570-476c-8c75-a58adebcaa61",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3e91b2b1-7213-4890-b01d-85e221c9c2ac",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3e989e11-6669-4bea-8eea-1f37a0ec2a5e",
+   "topic_id": "52fd9ce8-b9e6-4612-b20d-7826a485901e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3f1d4010-6e00-4a50-8438-13084913dc92",
+   "topic_id": "e72ec876-5ad6-462a-82e4-5dcd1b2abba7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3f90cb02-d75a-45fe-9f1a-d5643684e19d",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "3ff4f552-6875-4e98-88fd-edb971e2ad6e",
+   "topic_id": "47832ca6-5f18-4818-afe5-0a52c314b20c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4016c00c-5df1-4ad6-a901-133caf7d12b9",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "40256139-2e06-4e3f-aea5-7c4b50625d65",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "407c2c99-2907-472e-9ec6-844b701d3b64",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "409106ad-9545-4fe1-8716-209bac5c5d0d",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "40f4ec82-d917-4830-9932-9a0af9687b3a",
+   "topic_id": "1369d498-258a-4200-92bb-bd6788f6dc7b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "412e3e1b-d558-4c48-ae64-e1c7f57dae8a",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4132abb9-c642-459c-b541-6a6fba3ea762",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "41487254-93c9-4f40-b821-1d8a873213c8",
+   "topic_id": "3fcb451b-93c6-4d7c-8e4e-8ef030ad97fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "42448aa5-acd8-483d-ae71-3ade6722d49a",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "432d8afe-5749-4c7d-8165-381623946860",
+   "topic_id": "cea43a8c-980f-46ac-a7ce-c1328b2081ed",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4358ac52-82eb-433d-89bb-ffc7fcb5a096",
+   "topic_id": "72dc554f-8ca6-4c1e-b446-810c95037f8a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "435bec7a-eeb4-4090-81f9-03e482ac3a70",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "44e0f26d-26f3-4727-bee2-a56b75dc04da",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "450d3efa-1bc6-4196-ad4b-5974bac390b2",
+   "topic_id": "067cab22-7a19-4b7e-8531-83216fcea497",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4582fe58-fac5-454c-8ee1-cad2fd4b1ba0",
+   "topic_id": "c286acfd-6b26-4070-a6b3-9940528fa554",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "460732f1-99d8-4219-895c-303aebd39b00",
+   "topic_id": "e8e822aa-98c0-43db-b3cf-8537942f4ed8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4670e212-e5ba-4bc9-a787-b65a0d9e9a4f",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4676a546-77e3-4b24-be09-89ec0394e680",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "47f490b6-da9e-4833-b0e0-b5a119ad1796",
+   "topic_id": "02ba8820-42e7-4156-8f98-422642811623",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "484658d5-4fd0-4466-af57-d9b2eba7fbfe",
+   "topic_id": "585471de-23c4-4c48-b602-90962ebe08f4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "494ab786-db98-4997-b459-d13cf275abd6",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "496479f8-0312-45a5-aad9-bf88c494c5f6",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "49af1641-3b52-44d0-b6ab-aa2ca3c20380",
+   "topic_id": "7227671e-6ef3-4693-99d2-da5efcb26e61",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "49b54709-9e57-471c-adf2-762f976ba6aa",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4a310b02-f1c6-42c5-b16a-94a4ed1e35e9",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4a663d9c-f8d3-4cd8-933c-2ffa78b83e75",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4a6ee904-8b70-4910-afb9-1c1392184339",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4affb905-84fb-416e-98fc-5f53138c053e",
+   "topic_id": "cc780c6b-7a42-454b-ac3f-51b010844775",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4b3dd584-7a6c-4888-a8fb-fb142ea558f4",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4c57e3f5-812d-40fc-8333-964d8bd30948",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4ec697b9-ebdc-4ae4-95ef-08449504320c",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4f993731-a7a1-423b-ac6c-7f3687d15550",
+   "topic_id": "7227671e-6ef3-4693-99d2-da5efcb26e61",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "4fdb4ead-4cb1-4865-a0fa-bca11768f1b1",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "50127e79-f652-46eb-9308-3eca80e956d1",
+   "topic_id": "03da5cf8-856f-4b14-a74c-90dcb782cb3a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "502b1167-3e87-47ca-b524-d6ebc5b7d287",
+   "topic_id": "8d44a07a-f2dc-4712-8381-a412f0fc39dd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "508b545f-90a6-4b24-a5b5-255f37764653",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5091df31-06ed-4120-8997-e1fe02e1edbc",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "515ba244-dc9f-412c-8a39-cb5bbea6323b",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "516eee46-d9af-47cc-9e1e-86000392a05e",
+   "topic_id": "cb710b3d-cc13-4739-ba36-cce43c86c73c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "538e761b-6aee-4fd2-96fa-069d10d613bd",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "53d95562-5eed-471e-b7a8-6375c9843487",
+   "topic_id": "e8e822aa-98c0-43db-b3cf-8537942f4ed8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "54148524-47b1-46e7-9bb7-193af563a961",
+   "topic_id": "585471de-23c4-4c48-b602-90962ebe08f4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5485317a-63ca-44dd-a24d-5908f94abe58",
+   "topic_id": "cab6d8f4-3e33-45e4-a107-d798cf57f4f6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "54b8565e-573e-40f0-b7c8-5e88a79faaac",
+   "topic_id": "372e12bd-a0b1-48c2-8b73-24fa6b896628",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "54d70777-4f17-46fb-8c56-bd45f21097c6",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "55aee224-e802-45df-94c9-2f6bc365ceef",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "55d8794a-058f-4976-9f06-f3af250d13cb",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5606df00-0981-4718-b7a8-be3554af5559",
+   "topic_id": "a462b35f-95aa-482d-a677-ffa85d35383a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5622223f-d5e6-4d5b-8fe7-02d376e1dc07",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5669b793-ad59-4a27-8db0-16bc902549e9",
+   "topic_id": "72dc554f-8ca6-4c1e-b446-810c95037f8a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "56a5fe61-c8a2-4086-b2d4-9ad247944f09",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "56b32de9-baf3-4c6a-a956-a6d58b65f969",
+   "topic_id": "008a6adb-c7e4-48cb-8672-5945a6849455",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "56d0ae6a-86ca-4bea-bb4d-493bdc62da4a",
+   "topic_id": "7a999ca6-5d20-4564-bded-a9de8fc726de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5719c010-8017-428c-8ba4-77be4030e51a",
+   "topic_id": "e521b688-ec43-4a16-9d72-4ffa72339cf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "57be44bd-fc24-4ea0-b128-2aea992113b7",
+   "topic_id": "4d1c712d-ed46-46b4-a661-952c799a1343",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "57ff6338-4e81-4a48-8f6d-1e78b801a0cc",
+   "topic_id": "4ac0efd0-2859-4565-88bf-4f616379e322",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "587fc08c-bf76-4034-9e92-f7912164886c",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "58f2cf66-9997-4823-8805-06a59579c6ec",
+   "topic_id": "528d41de-161d-4ee3-9b04-c69b68b0652e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "590de060-b5fd-41c6-8188-9d8aa50ff52f",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5917ce7d-3b20-4cf3-9aac-89c05b3951ff",
+   "topic_id": "f971283e-cb5f-4dd8-b891-c118f52d27c6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "59ff1aa2-d68d-41cb-b2de-717b90313a26",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5a2bb5ce-f3d3-4bde-8185-400e2a6196f7",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5aa106bd-64cf-4c71-9a11-946f58821641",
+   "topic_id": "608c15dd-8576-451e-9d11-7af253e2b0cd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5ac5cfc1-4d0a-4a07-ba1d-7ca44dde5910",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5b4d5013-b740-4884-acfb-dce799e904e9",
+   "topic_id": "22f0a531-9870-4aa2-925e-8fad3d07450f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5b54cc08-c524-4ee1-a4c9-915ea8ec7fa8",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5cb298cb-70d9-4c6d-9ce7-568968d6fd16",
+   "topic_id": "13a314e1-5d23-42dc-9cc3-1b2a09d5a27d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5d108898-5caf-438a-8409-715f203e0107",
+   "topic_id": "b2cd2629-4b75-4def-89aa-428ac4d79394",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5ddf6cf1-35ee-4d7a-a4d9-ba917852f566",
+   "topic_id": "dade5f66-a05c-4db2-a3fe-a730c31622d8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5de832c0-b5cf-45a7-8eb4-a058686481bd",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5defa357-e151-456f-9be8-389273d8b4c1",
+   "topic_id": "139942cf-215a-4196-976d-dcadaaa7313f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5f372140-4876-439c-87dc-fe9247d75d02",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5f60d9f4-ebee-4515-afb0-730b43497d1c",
+   "topic_id": "46c0da35-1fc7-4592-ad8c-f8f73d10f536",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "5f753338-18ea-44cf-9732-ea7b5b7da8b5",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "600dc684-08e6-4491-b3b4-123207823cd5",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "60b5881c-7efc-4ee3-8e82-a3322d3909c1",
+   "topic_id": "0e042fa3-fc9b-4a6a-9a6c-261d62ac62a1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "60c63367-5e96-4a25-908d-09b8418fe2e0",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "60c990a6-33d2-400b-af67-fcc63af11f19",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "60cab1b0-c85c-4241-8cbe-c9a33a94b1e6",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6108c793-1664-4f2b-b617-1b6185e0e76a",
+   "topic_id": "1c9738a3-47b4-4344-bd56-58a6f3238dff",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "61cd2a15-6e58-4467-9ebc-c70c4fd7791e",
+   "topic_id": "69b285af-fdf9-4337-a038-290761d40f8c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6214c2d0-a81f-465a-819e-a86eacf7e879",
+   "topic_id": "551e4efa-1592-44b4-a673-2ac5db90913e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "62303f84-d02f-4e55-8e14-47b3ca3afb58",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "62716c5b-4410-42c0-a014-d721c58af1f3",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6379ee77-20fe-4797-b8eb-e76ae4871310",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "638a8a79-7e15-4da8-a48f-610613fbce50",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "63e94579-e5a4-421b-a453-d750d130548c",
+   "topic_id": "7a999ca6-5d20-4564-bded-a9de8fc726de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "640004aa-02b8-4b8f-ac59-c1459a46d7c3",
+   "topic_id": "05860990-6883-4c58-bfec-ef1560c0f26a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "64ad76a2-a59b-44f2-8bb5-24aca8b78e71",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "65359b14-9d85-4092-8eda-45142d24024a",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "65392160-f3bd-4cca-bfba-43535b0ace49",
+   "topic_id": "1e080d65-a6f9-492a-bf77-ed7b37f41ed3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "656c24fc-d19e-4c2f-8706-84ac7b11efb9",
+   "topic_id": "7227671e-6ef3-4693-99d2-da5efcb26e61",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "65c75737-8916-4055-9e4e-2b1c7155f753",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "66624b04-b0d4-41b1-ab24-8ab435f56854",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "669f0d36-dd9a-4e4f-a5d8-805494175df7",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "66ebac27-c43d-4edd-8458-2817be2904cf",
+   "topic_id": "1c29ee91-44cf-44c2-833b-587382306324",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "67229b85-84b0-4695-b2be-af7b08f41191",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "680d4db7-285b-4055-ae5c-d49696206a87",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "681b3b29-9cf9-4a68-a65c-2816758cbb18",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "685d5c69-987c-434e-9c7b-28246282476e",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "69d8b2a0-a20f-4bbd-8c52-a9da5136bd26",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6a1a2d90-2ad3-4be9-99d5-b14c9bb1350a",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6a7c0ce9-037d-4f77-a9b9-6c9a65eb868a",
+   "topic_id": "4a6770fd-84a3-4503-bdae-d727cbeb558d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6b733cd7-93cc-44d6-bdea-c286cfee1f24",
+   "topic_id": "585471de-23c4-4c48-b602-90962ebe08f4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6c6b6a83-75c2-4d40-a20c-688895a3dee5",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6c7dc2d7-a75a-4ea4-9568-e975ec7d6dfe",
+   "topic_id": "7ae17494-e5e2-41bb-ac4f-468fc413da08",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6ca4fc2c-cacd-4783-bb47-669d39eb05b3",
+   "topic_id": "1f49233b-2c5d-4ac9-a2cf-76a2bc9c45be",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6cd2df0e-28a4-4f82-8597-29a77ede3570",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6d75ea1f-3dad-4987-bfae-02cdcdf7e259",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6dac5d9b-cfd6-4b0f-9549-fc1c25394b5b",
+   "topic_id": "4a6770fd-84a3-4503-bdae-d727cbeb558d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6fd07007-cc68-4f75-a11f-7b07c5ca230b",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6fdf73be-d0d8-4d02-b3a0-4df354203a30",
+   "topic_id": "fba85f7f-16fc-4d96-b1c0-87e203e9d91e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "6ffb6f56-9a99-4f31-b151-101e29ccbe66",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "70b0e9ad-1c28-44a8-82ee-9703ecb18faf",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "710f88c6-182d-4558-8c38-b5f651ca3f4a",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "71bdd66a-05ee-4657-a8c1-1a38d0a450c9",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "71c144b1-df9a-4c37-9025-97f3fb7b968c",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7276e59b-5d23-4b8c-a52f-7371892267b6",
+   "topic_id": "33c904e7-ac9d-4d4b-8cfe-e4f3885e807f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "72ac93d8-1c94-4297-be29-8a00df445f9f",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "72d809ae-fb7f-4ada-9e40-84f45fc76074",
+   "topic_id": "4b8c3f4e-a423-4a03-bdbe-9fe1e95f5fc6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "73093886-9136-4f12-b782-5c17e15d35a4",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "73255ada-5c39-45e5-ad2e-252717cead68",
+   "topic_id": "7ae17494-e5e2-41bb-ac4f-468fc413da08",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "75426dd2-4191-4add-a05d-8abc6ade2c11",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "758171ba-4358-4194-8411-829bb8eec94e",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "767ca1da-3f84-44a6-8941-f24d2d5be307",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "767f1aab-6da1-40a2-83cb-1489ca7cb836",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "76877884-1d48-4d4d-ab6a-4b844b4fe05b",
+   "topic_id": "f971283e-cb5f-4dd8-b891-c118f52d27c6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "76cecd39-ccd5-4eea-a2a0-ed1dd0a69ef5",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "76e9b638-fb49-4f82-b665-725dc192eac0",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "76f31ea6-01b5-42f6-8039-c2fb3af31970",
+   "topic_id": "03d0de18-640e-40c1-ace3-4f3bb010283b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7707e338-cef5-41d6-9ecd-1f59cfc011f8",
+   "topic_id": "f7a72437-006f-4942-9045-2436cfd4e3c6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7770b837-b744-4318-bc67-6c778577b9ad",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "788ad08b-f548-406d-8aa2-4799eb5747ac",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "78a69a64-8cc7-4efd-b700-c015398306fd",
+   "topic_id": "67b4c251-b23d-4557-a86b-e2acd8a56536",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "78b3d34c-41d8-4e3c-9f51-0b6450344044",
+   "topic_id": "33c904e7-ac9d-4d4b-8cfe-e4f3885e807f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "78d854a1-8675-4848-a493-55c0fa355358",
+   "topic_id": "19e71795-9a2e-4d67-8fd1-96b6b289da33",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "79fd301e-7fbd-4ca7-abe2-6327a646b676",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7ac95aff-0a45-4364-9bfe-d060971d1102",
+   "topic_id": "2b499fc4-dfc8-4865-8948-2227678f742c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7b422c64-e14d-44cd-ac65-262944d022f8",
+   "topic_id": "dff36372-87ee-4a90-a717-86a8527294d7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7c57f647-fd97-4a7a-9869-9e76e4b87312",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7ce7b1f5-c5e3-4b94-a34c-11a15678e2da",
+   "topic_id": "528d41de-161d-4ee3-9b04-c69b68b0652e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7d798fb6-254f-4de4-a7b3-47b7cec6f7f4",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7d8a7dd7-adf9-4246-8360-51f55d5ffa4f",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7dbb5297-55ec-444b-9ba6-1070810cbdfa",
+   "topic_id": "03d0de18-640e-40c1-ace3-4f3bb010283b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7e418537-69b3-4b4d-ad6b-9a9c435199ef",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7ebc740a-ed2b-4b47-a502-e0fd0accb3e7",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7edd40cc-8c20-4f91-a964-5968b51fafed",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "7efa6125-36a9-47f4-8f22-0c000d112088",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "811a428b-825a-46dd-a0de-32b34bf4c153",
+   "topic_id": "22f0a531-9870-4aa2-925e-8fad3d07450f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8186b27f-7da4-4359-a0db-f259f94988a8",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "821100ce-489c-46ec-8f99-7e847dff7172",
+   "topic_id": "c01acf37-f719-4bb3-ba8d-5c4af9c1f182",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8254d67c-7ed4-4d94-a0c4-b7de29452d50",
+   "topic_id": "372e12bd-a0b1-48c2-8b73-24fa6b896628",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "82d1fc32-b621-498b-a714-90254db3a79c",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "84ab2150-da54-4b11-966d-9cb963e4cf5a",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "84afaa93-7255-4833-9fbe-7bcaf4db3e6d",
+   "topic_id": "72dc554f-8ca6-4c1e-b446-810c95037f8a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "87260c0d-f3a9-4cf5-803b-b2a8ee394612",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "892c3436-d1eb-4796-8e22-4b0685254574",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8996d9b7-70b4-4327-ad2b-caf7795565e5",
+   "topic_id": "7ae17494-e5e2-41bb-ac4f-468fc413da08",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8a23ff6d-693c-4907-9497-0c5ed9feda98",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8aed1a79-5055-4dac-8b0a-08042663e0fc",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8bd65294-8e44-417c-bcb2-8c0dfae399f6",
+   "topic_id": "ab9488d9-11e3-4cd9-8e7c-3270a2501e26",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8bdf7851-e73c-4907-91df-9b3040181e04",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8d1f58a2-a12c-4ee6-88c0-e92d2fe5f0c1",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8d21ed8d-93c3-4c7b-bc53-6246c13806f7",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8d350722-2180-4b00-a6f5-c904b9f570c2",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8d83364a-8483-4835-a001-6f2732fb0d52",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8df074ac-c6af-4a39-bb7a-395bad0546e4",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8e12da9d-0faa-4d5b-af07-f53fa49efe40",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8e9fa1e3-ccbf-4ec1-b96a-1ab8b91fb4ca",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8f553a2d-1006-4f3c-9963-b584569a4fe4",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "8f75bf68-7559-45bd-9241-24d3645753a3",
+   "topic_id": "1e080d65-a6f9-492a-bf77-ed7b37f41ed3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "900a40f6-047f-47d2-a993-abf1338b1462",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "906c1db4-1c9b-47e3-83c6-4d3500624167",
+   "topic_id": "0fee017d-cc08-4ef7-9066-c23216a88ee0",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "90941831-2d9f-41d0-87b6-b3ed21d97ba0",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "90cdc254-5945-42f7-8848-84fbfcc2d56a",
+   "topic_id": "79180e1f-6d49-4d2c-8688-a6831115699c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9127624b-a5fa-49c5-9592-d423f456c477",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "92662fb5-daa2-495d-95a2-2814b591883e",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9269acad-40e4-4c7d-b994-3805d238f838",
+   "topic_id": "75b5d098-9458-48d7-a97d-a1deebaa1828",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "92978782-9595-4aff-ae09-6b89619a843a",
+   "topic_id": "52fd9ce8-b9e6-4612-b20d-7826a485901e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "92add5fb-a0b7-4c7e-b897-014e92f2d875",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "92d658ec-31a6-456e-95dc-394f94e5ae91",
+   "topic_id": "6ca40124-e1b3-45ec-baca-e71ac5b8705f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "92e1db2d-f4f2-45b6-b726-36108e568576",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "93265ed0-d88f-483c-912c-797a5df85ea8",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "936cf32d-604b-41b8-9099-bf985cc725f2",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "93a2c348-52f0-46d5-bbd2-323d1c652a43",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "948e21f3-5774-455c-92c0-0978235a22b1",
+   "topic_id": "a595e41f-1abd-4987-b39b-f07e7b81d52f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "950210b5-3932-4a28-bda4-40661968cd97",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "95e8a0d2-fbc3-4a71-a832-59ce5c1e3771",
+   "topic_id": "33c904e7-ac9d-4d4b-8cfe-e4f3885e807f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9621acbc-39fc-4489-9fe0-ff3fb8f86d74",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "968294ab-ba22-4bcc-b8fe-3c261595c476",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9785d950-724b-4499-86ac-89f91cc70905",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "97f1d2b3-f258-4a61-8b5b-c120ac5cbfcf",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "98ac6838-cc0a-4cbe-bb5f-90eff13093f6",
+   "topic_id": "f922546d-7a3c-48fd-90f1-4dff82e40f63",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9abc726f-b559-4bc4-9b4b-f9f0403269e8",
+   "topic_id": "46c0da35-1fc7-4592-ad8c-f8f73d10f536",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9b61ec7e-c84c-432d-9819-186d8cae6a33",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9b77bae9-5a21-4c0d-9622-0507cb30815b",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9be1123d-03d3-4b0a-8c70-a228e11dc1e1",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9bea42fb-e7b2-4c8d-ab7a-6f00448a1484",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9bee0247-3b20-4e46-9a64-5f9c2483a7bf",
+   "topic_id": "03da5cf8-856f-4b14-a74c-90dcb782cb3a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9c185180-9722-4293-b7e2-c835a5789ac3",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9dd491e8-b5f1-40e7-be85-c22dea3ae88d",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9e1bd5c0-b5db-4400-a895-a5df92190a0c",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9e8a0184-f77f-464c-adf0-02da16e98695",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9eea00a9-0ae5-4a92-b778-221c69ed4bcb",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "9f8700b0-88f5-4fc6-9865-ff752a419dfe",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a00070cc-3874-453b-b394-b68d287bca9c",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a0fc0ec6-df55-44c3-9627-a94ddbb61367",
+   "topic_id": "857b61fe-7c11-481a-89da-5e5441a7ac8c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a169402e-e4a1-4a5c-b455-b3a2ddd62f86",
+   "topic_id": "cdefb733-510f-477c-9917-ef1f44d569de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a281ec25-e71b-4100-a03f-d88244d6ac75",
+   "topic_id": "cea43a8c-980f-46ac-a7ce-c1328b2081ed",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a2edea76-bf21-4ddb-836a-3f01fd3d653e",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a337ff8f-765e-4a4f-a221-89015d9ccb8b",
+   "topic_id": "4ac0efd0-2859-4565-88bf-4f616379e322",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a3e1c486-fd01-43a1-b329-63f632ebcc16",
+   "topic_id": "03da5cf8-856f-4b14-a74c-90dcb782cb3a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a3e86a52-c03f-48ba-a5c3-c389645f7288",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a3f4d73a-75cf-417d-8c3a-741409cbdf3b",
+   "topic_id": "cdefb733-510f-477c-9917-ef1f44d569de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a48d7366-fa78-4cb2-9822-911bce41e3a8",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a4b11579-acfb-4dc2-a18b-ebc2de4da318",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a4b82efb-3ccd-40dc-9dd9-29f8656133cd",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a61a7b18-1c39-4328-96e5-b12532083b3e",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a6e47424-3de0-4e4d-9694-c673f2408ac7",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a7fbc828-7e3c-4405-92a4-b81f7597ce95",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a8f3d3a8-4e53-429c-9b55-8cfdd4c3eef4",
+   "topic_id": "551e4efa-1592-44b4-a673-2ac5db90913e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a9472503-0463-4131-8660-a5fce1fe0e1b",
+   "topic_id": "ed7bba47-cf97-4a17-b2bf-f00d44986b9e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "a9fdff9b-6038-4011-9ede-243820e58515",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "aa78319f-bd5c-4de6-8f6f-caf116de10b6",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ab03cb41-52a9-4065-a67e-fdf520a58bce",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ab35866a-e407-4127-b827-45f8f1cc4593",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ab524407-90f1-470c-877c-8aec97e4c6fc",
+   "topic_id": "356d1119-f66e-4684-ac53-c49e5c06a5cf",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "abb05d06-6612-49fd-b23c-9be6bf2d2051",
+   "topic_id": "cc780c6b-7a42-454b-ac3f-51b010844775",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "abb0eb7d-ae39-4692-af58-8eeac4bfc57e",
+   "topic_id": "608c15dd-8576-451e-9d11-7af253e2b0cd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "abf76aad-ba33-4a29-8d59-0ddf6801d04d",
+   "topic_id": "c10d96a8-b4f5-47ce-8b94-9d27283c82d8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "abf7f926-9fa3-4a66-8974-bad9cb678742",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ac497503-38d6-4251-8a39-589fb160da9b",
+   "topic_id": "405277b2-4b22-4d50-8bc5-30cf9f5d8240",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ad1c8cce-723d-4701-bd67-e569e69b3675",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ada2e850-713a-45ac-8962-473590b1234a",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ada67be6-2ab7-4243-9c2d-88d55338a7af",
+   "topic_id": "af0d7fe7-beed-40d7-aac3-bcbb48c66f94",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "adfead6d-7eb7-455e-a9b2-d74e9b1c421c",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b0b7cf35-c127-4007-8dd4-26307d1b65ed",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b0ea3cee-279b-4cf7-9a73-ee3fdd2f597c",
+   "topic_id": "fca9a500-7d8d-4e33-a80a-ddc697799d03",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b21ecfa8-9d66-49d0-b0a1-1ab0f63d2091",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b2c33124-b033-4b7d-88c0-732d6f02d680",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b2d5a42d-db49-4fdb-bc31-a6ef7feb113e",
+   "topic_id": "1c29ee91-44cf-44c2-833b-587382306324",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b2dcb021-76d5-4a71-bf2d-4d77562727fb",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b39cf7d9-115d-4394-83f7-10f71fc0f288",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b3d23fcc-84fa-416d-806a-547cb31c6af3",
+   "topic_id": "d76526ec-4b85-4303-a8b3-895ce40328bb",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b40d7718-7eb5-4c4a-ac3b-72846e7017fb",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b577d7e4-9a5d-41e9-8306-147ef9376443",
+   "topic_id": "c5b326db-0946-42b5-8b76-8989a4c85c65",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b5aa552c-c9c6-4e22-bc76-a39aac0c8d88",
+   "topic_id": "02ba8820-42e7-4156-8f98-422642811623",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b71bf96b-a16c-4716-b686-cfc3d155fb44",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b7fa2f72-f9c5-4454-a739-888cfe382e6e",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b84bbec3-e7fb-4738-92a9-5300cfe906c7",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b87f0758-e412-4991-849c-962911f54baf",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "b93e23f2-3d06-4a9b-9775-a547b43a0b4f",
+   "topic_id": "b406bc14-a67c-4447-b6f7-dd0ad007a9d8",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bac1e62e-3470-45ee-82c9-4feea2b99028",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bae33a70-dc11-4ec2-a10b-3d95879c113c",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bc29dd8d-3ad0-44a4-ad1f-29f9f9f188f6",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bc60cbe2-744c-4512-b311-56764a4c1fad",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bcbe8536-5e3a-4f74-bc4c-e658150983ed",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bd4c74b3-0f58-4c0b-ab29-4d07c2ea3e46",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "be16ea92-fb3b-4825-9697-3d8c26ce80df",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bf145e74-7962-44fe-ac0b-f2463bfdb027",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "bf973c90-2748-4277-8938-7aad9a273af6",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c03ca731-610c-4bf3-ab11-ddaa820e5dee",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c0db6c69-2637-422f-a5af-9395700372be",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c114bc26-b608-43b3-99f7-af680803b28b",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c12cbb59-3047-47d4-b56f-31d1a530f0fe",
+   "topic_id": "c53761c9-6983-4b5c-960f-06c6253971ac",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c13ca9bf-dad5-4198-a4da-bc17fb7052dc",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c1b0b0f0-adca-4934-8c71-2ee44075f911",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c25455e2-c8a2-4cf6-b32a-00d7b5ffe8eb",
+   "topic_id": "07676ceb-7092-4755-b317-2df560704306",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c2629cd7-944a-41d4-a6f9-9d89c5840566",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c288f272-cba7-4029-9ca1-b7f0ef61d093",
+   "topic_id": "cb710b3d-cc13-4739-ba36-cce43c86c73c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c2a14189-4ffd-4de4-8e62-9ae28859d801",
+   "topic_id": "8d44a07a-f2dc-4712-8381-a412f0fc39dd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c40800da-5669-4a38-8ea6-89c48bfc1f09",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c40af748-551f-4dcb-8d5c-d23b04e8f8a1",
+   "topic_id": "75b5d098-9458-48d7-a97d-a1deebaa1828",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c4132eb5-a575-4d9f-9fcd-5c2ab5f36031",
+   "topic_id": "6e5895fc-120f-404e-b9da-c39f5f7eaee2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c47163f3-4381-4703-b572-aec1b957b699",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c4851304-28ce-4da9-9bba-a52205c77252",
+   "topic_id": "c3c43044-f095-4f39-ae97-d1c97f6b8e0a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c4d26cbc-e3b0-4d92-a03e-9720fbd56e8d",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c4fbd69c-c0fd-4c6a-baf0-72395a2b609c",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c52688bc-b522-4508-a89a-78626f1c2fa0",
+   "topic_id": "d3138c60-f928-490f-9e71-e3a2e74a6427",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c630bb7a-ab64-4ac4-bd90-c4e7af81708d",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c6908f6b-39e9-4e48-8ed5-6983636c8a64",
+   "topic_id": "c5b326db-0946-42b5-8b76-8989a4c85c65",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c6a9a499-6279-42dc-aefb-83de867a47ee",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c71a8e8f-b8a5-4d9a-8a89-1b533dd2508a",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c8908bdf-225a-4a35-908f-4e4470c27cb4",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c8ea085d-a4a4-426c-b07c-c6f016d2b63e",
+   "topic_id": "5a7cfd94-505d-4fa1-aced-a327d6605aa7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c8f31d7b-3d41-411b-8572-4d8514dfaa37",
+   "topic_id": "bd9e089a-24f6-4a54-b3df-92a792c62efc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c8fee408-bb13-4b0b-8dd8-a9ce928b0331",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c99670c5-07ae-4c6d-9c76-3acf6f7cbf44",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "c9f0ecb6-4d79-4614-9864-f30ffa5ae8fe",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ca2c0f55-857b-47af-857f-348156b90819",
+   "topic_id": "0e042fa3-fc9b-4a6a-9a6c-261d62ac62a1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "cc39831f-0aa4-4dc1-adfa-523f4fecc2fb",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ccdbe95c-8cdd-422e-9f22-2981cd20ad98",
+   "topic_id": "b815e282-2c94-4e60-9717-9baf3d0e1bdc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "cd2e3161-c9e2-4eac-a3a1-1f0def8f4994",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "cd3905fc-c9f9-448f-ba09-90785fdb96db",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ce24bcb8-d33b-4bb7-9bfb-15d967ac256e",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ce3aaec8-f5c2-4b57-84a9-e1c3095755e6",
+   "topic_id": "72dc554f-8ca6-4c1e-b446-810c95037f8a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ced422c2-c8c3-4511-9527-040bbd5089ac",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d046d873-0b6f-4895-9094-edd352652cb0",
+   "topic_id": "608c15dd-8576-451e-9d11-7af253e2b0cd",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d0779c9d-15c0-4263-9b28-74ac1dd368fa",
+   "topic_id": "19e71795-9a2e-4d67-8fd1-96b6b289da33",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d11a9b74-db40-4926-9784-abe7d0271837",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d1d282b8-5262-4440-a58b-a962cda4cfe1",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d2df4c6a-8140-4e4d-9d64-00802716db4d",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d44cef41-7e7c-47cc-975e-9cf25b6c9f0b",
+   "topic_id": "b75ec557-b6c7-4ef1-a5c1-7f0030d083f6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d4632dba-636b-4fad-ab30-55251aaf49c1",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d475bd00-35f3-43e2-9ced-22c491c89a1b",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d4c228cf-9fba-4322-8146-66d40c9d5b4a",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d58535fc-2e37-44a5-add2-a7a95dbbf719",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d6237b40-298c-457c-8d2d-0d9462d1e420",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d66136d4-390e-4510-88ee-358f624f30b6",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d7704e51-7faf-4e77-9bbd-353da2d1a9fc",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d815b691-6851-4405-a6ff-d512617c86bb",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d87a6d0d-1ad7-4c17-b59f-0d8480843220",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d8b4a7f6-f77a-4651-b149-3edc71cd6648",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d8c3c32e-f4c4-47fc-b0f6-7097fbb4a005",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d95c6cf1-8f7e-460e-a477-a54d0859c797",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d9b3e2b3-2736-4cae-8a42-02fa931c7ad7",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "d9c928bd-1412-4f0f-b1c9-97c6f2594b87",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "da28e28c-eac6-401a-8f6b-75ea18350368",
+   "topic_id": "e72ec876-5ad6-462a-82e4-5dcd1b2abba7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "da2fbf84-eee9-435f-bcae-a5fffb8ee397",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "da97a3ab-6224-4909-abd2-ff1adbce038e",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "dadc950a-e5d8-45c0-98c8-3740c5d5b269",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "db34b0ea-15a0-4a54-9d8d-8a6784bbd379",
+   "topic_id": "27b1a890-ae70-4d5f-8b3b-cf5b88483308",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "db5b0ce4-48db-4112-973c-c1807ed70f98",
+   "topic_id": "f82d7378-523d-407e-88f7-4ef7587dc788",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "dc3ec652-f86b-415d-a85a-d9548308c6dc",
+   "topic_id": "869e665d-faa0-4467-bb34-51b4c6e87cd4",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "de11bd23-b1e7-410f-85ab-328ddfe4e5a2",
+   "topic_id": "adeb7e88-9c58-43c1-9257-56a593dd8a5e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "df32c17e-237e-4626-a746-5290840142ca",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "dfcc6a34-eb8c-4643-bb99-ce79a1bb437b",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e0a536d3-419c-4e9d-95e9-d6f951d19d88",
+   "topic_id": "efb43244-4bcb-4309-89b0-6288d1411e2f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e196b3e0-c7f8-48c9-a576-a5cf5c862f9a",
+   "topic_id": "cc780c6b-7a42-454b-ac3f-51b010844775",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e1bb12e9-02b4-47d7-9978-f19c1b355a2d",
+   "topic_id": "03da5cf8-856f-4b14-a74c-90dcb782cb3a",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e20a419e-33f3-4cfb-9408-8096ff490983",
+   "topic_id": "6e5895fc-120f-404e-b9da-c39f5f7eaee2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e221c635-1c3c-4c3b-98ee-d335aea5ffc7",
+   "topic_id": "f971283e-cb5f-4dd8-b891-c118f52d27c6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e35fddb8-5f80-4bdf-9fc6-3fe0ce60b38b",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e376aeda-9464-42f7-b3bc-7b8a67461030",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e4d08641-bf21-4eb8-ada7-7aac11a793e3",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e4df778a-e669-46c1-8075-c8c1c581cf7e",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e50dd3b9-1a66-4303-a274-ba8de1fbca65",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e5d6d468-4a72-4e89-a997-2b1a863c1586",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e5f2a9c2-ac90-44a2-99f1-bc8bab534a23",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e6478164-4945-40f0-891f-8e42705d584a",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e6826883-fe62-49e3-a3ff-4288c68fb909",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e6a8fc01-7317-4419-9d4a-e7d5cb55fa5c",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e6fea498-377f-4b4c-b801-d4a5ce2a722c",
+   "topic_id": "98e380a0-d558-4123-9761-f0efec1b1601",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e72b81e3-0d31-4323-8eba-b46657179c41",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e7ecb800-e9d1-4ca8-937b-0e47bad9f94e",
+   "topic_id": "7227671e-6ef3-4693-99d2-da5efcb26e61",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e8bc3d25-9495-454a-960b-2e0cc9908bc3",
+   "topic_id": "b815e282-2c94-4e60-9717-9baf3d0e1bdc",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e8f2486d-4ee8-4ffb-a4a2-0dc0dd16842f",
+   "topic_id": "77d79b9f-a3ce-47d2-96cc-6884c95d9777",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e8f8377e-8acd-45ef-80fc-79e64a82c4d0",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e9c376ec-8ea5-412f-8b19-bbc81fa026a5",
+   "topic_id": "47832ca6-5f18-4818-afe5-0a52c314b20c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "e9fbf862-c09a-4f69-a78b-b338521a6309",
+   "topic_id": "f82d7378-523d-407e-88f7-4ef7587dc788",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ea13f810-790f-4f7b-897b-ebe0cd3e8c91",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "eab16b3e-a55a-4fee-80c9-2ac7e997a875",
+   "topic_id": "7a999ca6-5d20-4564-bded-a9de8fc726de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "eb1966e5-e7a1-4e0c-b4f5-c5201bdc1385",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ebfb4cd8-0748-40f2-bfbc-3da003ed6c60",
+   "topic_id": "dbfdade6-c6a3-469d-a20d-b161ec9d11d2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ec752588-ea8c-49c0-b3ee-a49ced682a99",
+   "topic_id": "ce5d094e-f2a9-4b64-b6c1-8a66fdef6c51",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "edabdc68-90ac-4500-8d7b-ee4d9892823c",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "eeca48c0-e475-4f84-bfc6-c28de93a7193",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "eecb638a-ee01-4b0d-becd-e5b5b6f3d656",
+   "topic_id": "e521b688-ec43-4a16-9d72-4ffa72339cf3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ef6331f2-f7ce-4a81-8f59-49807452be7c",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f09549ed-1091-4824-b2ff-eb6cc821959e",
+   "topic_id": "f9940554-f899-4774-b05e-bdb0262cbb84",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f0b593fc-e40b-4f58-b95a-a1c107e2b075",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f0ce9ceb-06ee-42b4-8a2c-4804bde1016d",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f1111c3c-2764-48e2-8cb0-02ecbd95982c",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f1bdd4ef-c389-4958-ad00-b9f65a673d95",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f329796e-b8b1-4f64-8c73-a1a55e4fb22b",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f3ee89d6-c8ae-4c79-90ee-506c9b4e7be7",
+   "topic_id": "3fcb451b-93c6-4d7c-8e4e-8ef030ad97fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f4dc769f-4cb5-4279-b9f5-f626c2a2371b",
+   "topic_id": "067cab22-7a19-4b7e-8531-83216fcea497",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f513fdb7-9ee8-450b-9beb-5b3472b8b7f3",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f52eb5ae-d37c-41fd-b54b-1243e3ca0933",
+   "topic_id": "e59add1a-3b9d-4114-be5e-cc7e0a552351",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f572bb15-b438-42bd-a8a5-5829887da2d8",
+   "topic_id": "1e080d65-a6f9-492a-bf77-ed7b37f41ed3",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f5c9cfcd-95a6-4655-9cbc-4688f887c883",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f5db0627-c6c3-4690-9a0f-ae1bbe3f5ae1",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f5eb0d72-e59e-4276-a5f4-09808ef663e9",
+   "topic_id": "a405e23d-a6b4-447a-86c5-e7833d55de95",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f703c873-c979-4f5e-b8be-abd690be71d9",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f70fbb2c-6612-42f8-b75b-95d7e3da4195",
+   "topic_id": "4660aa42-41dc-44e1-9f26-3303d208b1f7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f741f5f9-cbeb-4d8d-9527-14a95992529b",
+   "topic_id": "d3da5aec-efad-442f-88ae-3793809f217e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f7778488-31ba-4945-a222-1917facf8175",
+   "topic_id": "008a6adb-c7e4-48cb-8672-5945a6849455",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f7c45378-97e8-4233-9010-a97bb4f20dfd",
+   "topic_id": "c3509eed-0fe4-47bc-b584-16b1162c62a5",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f8438710-08d3-42e9-85c9-f6ad6741432f",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f8797c46-1fbf-49e8-b1fc-5d7f621bf272",
+   "topic_id": "34a8a9a0-e571-4b2e-9d3c-71d2498b2c15",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "f938d6a8-962f-4312-88ca-9d3350b3b37f",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fa690ac6-7755-46b6-8856-ee078354e09c",
+   "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fb2f669f-f39f-4712-8cde-f3f74ffbd969",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fb544053-dfab-46e4-bb5d-648be5bb2d2b",
+   "topic_id": "33c904e7-ac9d-4d4b-8cfe-e4f3885e807f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fb789621-c6eb-423a-a569-16ab22adba30",
+   "topic_id": "cdefb733-510f-477c-9917-ef1f44d569de",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fbb536c1-3813-441c-9235-1211fea8be9f",
+   "topic_id": "9ecbcc48-3ccc-4257-bda5-f262daecffeb",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fbc01136-eb57-4721-8cca-b6b3892b3305",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fbdb1300-7ab3-4096-812d-cc25301c52db",
+   "topic_id": "e78ce342-ff1d-4f6c-9452-8460529cbf54",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fbf784b3-856b-4016-b962-81210f49823e",
+   "topic_id": "686ff53c-6219-4b8c-a4b5-e3440d6c3ca7",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fc87b83a-d488-4fd7-b873-6ff1c6d4c1d6",
+   "topic_id": "6b43522b-9d6e-4038-ae56-0953444ef96c",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fcb8c1d9-cacf-42ca-bc51-c7736f3f0576",
+   "topic_id": "8c288dea-a884-4df5-9452-fdb6441eaa6f",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fd90e22f-fb78-4427-8026-6b10f3d080fd",
+   "topic_id": "1eb62a26-7191-4f79-9f6c-26167dbdf453",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "fef455c3-a4ee-48e2-873d-6af7d0c28004",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ff92a34d-9dec-4fd3-8be7-50e3e03e99d8",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ffe58496-0dc8-4db8-b27d-1ab1fbabd27b",
+   "topic_id": "fba85f7f-16fc-4d96-b1c0-87e203e9d91e",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  },
+  {
+   "claim_id": "ffea1919-4f72-4007-8cf7-cb6e0385d4e2",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "role": "about",
+   "why": "fable ruled against legacy link"
+  }
+ ]
+}

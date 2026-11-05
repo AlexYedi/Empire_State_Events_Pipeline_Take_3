@@ -1,0 +1,255 @@
+# Lane 1 hiring pulse (YED-304) — weekly per-company hiring counts from ATS boards.
+# Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 · producer chain:
+#   ats_pull.py (boards → TSV + board stats) → ats_pulse.py (counts-only manifest, per-company
+#   ensure-event manifests, lane_run manifest) → substrate.py ensure-event (event writes stay
+#   dry-run: a live write needs the guarded twin REF override, human review).
+#
+# SECRET HYGIENE — read before editing (Claude Code review, PR #271):
+#   * TARGET_COMPANIES_REGISTRY (repo secret): the private target list, materialised to
+#     .claude/references/target-companies.md at run time. On a public repo, LOGS and ARTIFACTS are
+#     public, so everything derived from the registry is as secret as the registry:
+#       - ats_pull runs with --quiet: counts-only stderr; any stderr still goes to a file the
+#         cleanup deletes (secret masking redacts the secret value, never substrings in output).
+#       - NO manifest, lane_run, event or board-stats file is uploaded — they name companies.
+#         The only artifact is the anonymous totals summary (week, company COUNT, totals).
+#       - every derived file is deleted by the always() cleanup step before the job ends.
+#   * PROD EXCEPTION — lane_run ONLY (Alex's decision, post-merge review of #271): the lane_run
+#     ledger row is written through spine_client.write to PROD, using the existing
+#     SUPABASE_API_KEY secret for that ONE step. lane_run is a PII-free ledger (counts and
+#     board-status only — the spine guard still fronts every write), lane_registry and its FK
+#     live in prod, and the YED-304 freshness healthcheck reads prod (a twin row would be
+#     invisible to it). This narrowly supersedes the earlier 'prod key forbidden in market-lane
+#     workflows' rule for this step: every OTHER write in the lane stays twin-only/dry-run (the
+#     optional prior-week READ uses the twin secrets below; live ensure-event still needs the
+#     guarded twin spine REF override — human review — so event writes stay offline validation).
+#   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
+#     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
+#     would compare against itself). ats_pulse refuses a same-week --prior regardless.
+#   * lane_run is REAL: the run ledger row is written through spine_client.write to PROD (see
+#     the prod exception above). items_written counts rows ACTUALLY written — 0 while event
+#     writes are dry-run; no caller override (MI_TWIN_URL) exists — spine_client's host is
+#     built from its hardcoded REF, full stop.
+#   * lane_registry activation is NOT a producer write (producers can't write the registry):
+#     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
+#     after a twin rehearsal.
+#   * HOLD: the lane skips itself (warning, no failure issue) until migration 0016 has landed and
+#     the twin has been rebuilt. 0016 merged on main (f9458b8 + dd88cca), so the guard no longer
+#     triggers — it un-holds itself by the presence of supabase/migrations/0016_*.sql, no flag.
+#     Secret names match #272: MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY — pending Alex's approval.
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+name: YED-304 lane 1 hiring pulse (weekly)
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"   # Sundays 06:00 UTC — the Monday brief reads it the next morning
+  workflow_dispatch: {}
+
+concurrency:
+  group: ats-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read        # checkout only; issues:write is scoped to this job's alert step
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      # HOLD GUARD: the lane stays parked until migration 0016 (signal_type / dedup columns) has
+      # landed and the twin has been rebuilt (re-review of 2031fef). When a 0016* migration file
+      # appears in the repo the lane unblocks automatically — no flag to remember to flip.
+      - name: Hold the run until migration 0016 has landed
+        run: |
+          if ! ls supabase/migrations/0016_*.sql >/dev/null 2>&1; then
+            echo "::warning::held — migration 0016 has not landed and the twin has not been rebuilt; the lane runs once it does (nothing was pulled, nothing written)"
+            echo "held=true" >> "$GITHUB_OUTPUT"
+          fi
+        id: hold
+
+      - name: Selftest both producers (offline)
+        if: steps.hold.outputs.held != 'true'
+        run: |
+          python3 .claude/scripts/ats_pull.py --selftest
+          python3 .claude/scripts/ats_pulse.py --selftest
+
+      - name: Name this week's bucket and last week's (the delta_wow baseline keys)
+        id: week
+        if: steps.hold.outputs.held != 'true'
+        run: |
+          echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+          echo "prev_sunday=$(date -u -d 'last sunday' +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize the registry from the repo secret (never echoed or logged)
+        if: steps.hold.outputs.held != 'true'
+        env:
+          TARGET_COMPANIES_REGISTRY: ${{ secrets.TARGET_COMPANIES_REGISTRY }}
+        run: |
+          if [ -z "$TARGET_COMPANIES_REGISTRY" ]; then
+            echo "::error::repo secret TARGET_COMPANIES_REGISTRY is not set — refusing to run the lane with an empty registry"
+            exit 1
+          fi
+          mkdir -p .claude/references
+          printf '%s\n' "$TARGET_COMPANIES_REGISTRY" > .claude/references/target-companies.md
+
+      # Read-only, twin-only, optional: without the twin secrets the lane runs with delta_wow null
+      # (the null-baseline rule — never invent a baseline). Reads last Sunday's hiring_pulse events
+      # by title; counts land in /tmp/prior.json (names included → deleted by cleanup, never logged).
+      - name: Read last week's pulse from the twin graph (optional, read-only)
+        id: prior
+        if: steps.hold.outputs.held != 'true'
+        env:
+          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
+          MI_TWIN_SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+          PREV_SUNDAY: ${{ steps.week.outputs.prev_sunday }}
+        run: |
+          if [ -z "$MI_TWIN_URL" ] || [ -z "$MI_TWIN_SUPABASE_API_KEY" ]; then
+            echo "Twin graph secrets not configured — running without a delta_wow baseline"
+            echo "prior=none" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'EOF'
+          import json, os, re, sys, urllib.parse, urllib.request
+          base = os.environ["MI_TWIN_URL"].rstrip("/")
+          day = os.environ["PREV_SUNDAY"]
+          params = urllib.parse.urlencode({
+              "select": "title,metadata", "kind": "eq.market",
+              "title": "like.*Hiring pulse*",
+              "event_date": f"gte.{day}T00:00:00Z&event_date=lte.{day}T23:59:59Z"})
+          req = urllib.request.Request(f"{base}/rest/v1/event?{params}", headers={
+              "apikey": os.environ["MI_TWIN_SUPABASE_API_KEY"],
+              "Authorization": f"Bearer {os.environ['MI_TWIN_SUPABASE_API_KEY']}",
+              "Accept": "application/json"})
+          try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  rows = json.load(r)
+          except Exception as e:
+              print(f"::warning::prior-week read failed ({type(e).__name__}); running without a baseline")
+              sys.exit(0)
+          events = []
+          for row in rows:
+              m = re.match(r"Hiring pulse — (.+) \((\d{4}-W\d{2})\)$", row.get("title") or "")
+              pc = (row.get("metadata") or {}).get("roles_open")
+              if m and isinstance(pc, int) and not isinstance(pc, bool):
+                  events.append({"company": m[1], "metadata": {"roles_open": pc}})
+          # one open file, never printed: names are fine in /tmp, never in the log
+          with open("/tmp/prior.json", "w") as fh:
+              json.dump({"week": None, "events": events}, fh)
+          print(f"prior-week baseline: {len(events)} companies (graph read OK)")
+          EOF
+          # the output is honest only when the heredoc actually wrote the file: the python
+          # exits 0 on a failed twin read too (warning path — no file, no failure)
+          if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
+        if: steps.hold.outputs.held != 'true'
+        id: pull
+        run: |
+          echo "run_start=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          set +e
+          python3 .claude/scripts/ats_pull.py --quiet --out /tmp/roles.tsv --summary /tmp/board_stats.json \
+            2>/tmp/ats-pull.err
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            # never cat the err file: --quiet does not gate tracebacks or library warnings, and
+            # a board-fetch error can carry the board URL (the company slug). Detail stays in the
+            # file the always() cleanup deletes.
+            echo "::error::ats_pull failed (exit $RC); counts/details in a deleted file — see the run locally for a redacted post-mortem"
+            exit $RC
+          fi
+          grep '^ats_pull: counts-only' /tmp/ats-pull.err || true   # the only counts-only line that may reach the log
+
+      - name: Aggregate to hiring_pulse counts + per-company ensure-event manifests + lane_run
+        if: steps.hold.outputs.held != 'true'
+        run: |
+          # The guard tests FILE REALITY, not the prior step's output string. The twin-read
+          # step can exit 0 without writing /tmp/prior.json (secrets absent, or the read
+          # failed — its warning path), and the old string-compare guard passed --prior
+          # anyway: run 41943575924 crashed here with exit 3 ("--prior/--pull-summary
+          # unreadable"). if-form (not `[ -s f ] && PRIOR=…`) so a missing file doesn't
+          # trip bash -e.
+          PRIOR=""
+          if [ -s /tmp/prior.json ]; then PRIOR="--prior /tmp/prior.json"; fi
+          python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --pull-summary /tmp/board_stats.json \
+            --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
+            --lane-run-out /tmp/pulse-out/lane_run.json
+
+      # The event manifests STAY a validate-only step (a live ensure-event needs the guarded twin
+      # REF override in spine_client — human review). The lane_run LEDGER, though, is now written
+      # for real: 0016's public.lane_run, through spine_client.write, to the TWIN only.
+      - name: Validate the manifests offline (event writes stay dry-run)
+        if: steps.hold.outputs.held != 'true'
+        run: |
+          python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
+          python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
+
+      - name: Write the real lane_run ledger row to PROD (the one deliberate exception; skipped without the key)
+        if: steps.hold.outputs.held != 'true'
+        env:
+          # the ONE prod exception (see the header): a PII-free ledger row through the spine
+          # guard; every other write in this lane stays twin-only/dry-run
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+        run: |
+          if [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::warning::SUPABASE_API_KEY not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
+            exit 0
+          fi
+          python3 .claude/scripts/ats_pulse.py --write-lane-run /tmp/pulse-out/lane_run.json \
+            --started-at "${{ steps.pull.outputs.run_start }}"
+
+      - name: Build the anonymous totals summary (the only uploadable output)
+        if: steps.hold.outputs.held != 'true'
+        run: |
+          python3 - <<'EOF'
+          import json, os, sys
+          sys.path.insert(0, ".claude/scripts")
+          import ats_pulse
+          manifest = json.load(open("/tmp/pulse-out/pulse.json"))
+          with open("/tmp/pulse-out/summary.json", "w") as fh:
+              json.dump(ats_pulse.anonymous_summary(manifest), fh, indent=1); fh.write("\n")
+          print("anonymous summary written (totals only — no company names)")
+          EOF
+
+      - name: Upload the anonymous summary for audit
+        if: steps.hold.outputs.held != 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hiring-pulse-summary-${{ steps.week.outputs.week }}
+          path: /tmp/pulse-out/summary.json
+
+      - name: Cleanup — delete every file derived from the registry
+        if: always()
+        run: |
+          rm -rf .claude/references/target-companies.md /tmp/roles.tsv /tmp/board_stats.json \
+                 /tmp/ats-pull.err /tmp/prior.json /tmp/pulse-out
+          ls .claude/references/target-companies.md 2>/dev/null && exit 1 || echo "registry file removed"
+
+      # One-open-issue alerting (same pattern as the S-01 nightly): a persistent failure comments on
+      # the existing issue instead of opening a new one every week — closing the issue re-arms it.
+      # This catches a lane that RUNS and fails. It cannot catch a cron that never fires at all;
+      # that staleness layer is PR #269's lane_run freshness check, wired once producers ledger.
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "YED-304 hiring pulse FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "YED-304 hiring pulse FAILED (since $TODAY)" \
+              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, or manifest validation. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi

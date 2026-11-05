@@ -41,6 +41,7 @@
 | Product Pass Pro credit sits on the GTM_OS org, non-transferable | org-scoped credit | do NOT reparent Empire projects; free tier covers the doc-KB; blobs on R2 | 2026-09-10 |
 | `recompute_relevance.py` writes by default | script design | pass `--dry-run` to preview | 2026-09-13 |
 | Producer liveness is inferred from `max(event_date)` | no `producer_run` table | YED-114 panel fix | 2026-07 |
+| The session pooler (`aws-1-*.pooler.supabase.com`) drops `PGOPTIONS`, so `-c default_transaction_read_only=on` silently does nothing (observed: `default_transaction_read_only = off`) | pooler startup handling | prod read sessions run `set session characteristics as transaction read only` (plus `set default_transaction_read_only = on`) as the first commands **in the session**, then assert `show transaction_read_only` = `on` before any query (ADR-13) | 2026-11-04 |
 
 ## Vendors
 | Constraint | Cause | Workaround | Since |
@@ -119,4 +120,5 @@ A removal only sticks if it reaches every file that *uses* the removed thing. `.
 |---|---|---|---|
 | `.git/hooks/pre-commit` is local-only (blocks build-surface on `main`) | hooks aren't versioned | re-install on other clones; branch-first is the real rule (CLAUDE.md §5 Git) | 2026-07-18 |
 | Both repos are PUBLIC by design: build in public (ruled by Alex 2026-09-19; supersedes the 2026-09-04 "never public" row) | transparency, engagement, and a portfolio hiring managers can read | follow `build-in-public.md`: secrets stay in `.env`; personal refs stay gitignored; third-party confidences get redacted before commit. **Open:** GitHub still serves pre-purge commits via `refs/pull/*` (#56–#76), which only GitHub Support can remove (YED-204) | 2026-09-19 |
+| `protect-main` on all 4 repos requires the **`claude-review`** commit status (added 2026-11-04, Alex) besides CI | approvals kept racing Claude's live-verified review (#271, #282 merged with defects green CI missed) | Claude posts `gh api repos/<owner>/<repo>/statuses/<head_sha> -f context=claude-review -f state=success\|failure -f description=… -f target_url=<verdict comment>` with each verdict; a new push = new SHA = no status, so the PR is blocked again until re-review. Admin bypass (RepositoryRole 5) still works for Alex's own PRs. Honor system: any writer *can* post the status, but only Claude does | 2026-11-04 |
 | Canceling a Linear issue auto-CLOSES (not merges) an open PR whose body says "Closes YED-n" | Linear↔GitHub integration | merge the PR first, then change the issue; or write "Refs YED-n". After any Linear state change, check `gh pr view <n> --json state` | 2026-09-27 |

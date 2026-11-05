@@ -17,7 +17,7 @@
    - It MUST reuse the existing scoring and `isolate_job_lens` paths.
    - It MUST add `--selftest` cases on inline fixtures, with no network.
    - It MUST NOT add DDL or a writer.
-2. **YED-264 · Entity-link resolver.** A new script, `.claude/scripts/resolve_claim_entities.py`.
+2. **YED-264 · Entity-link resolver.** A new script, `.claude/scripts/resolve_claim_entities.py`. **Removed 2026-11-05 per YED-314 (decision A′):** `claim.proposed_entities` turned out empty on every prod claim, so the script linked nothing. Linking stays at write time in `substrate.py` (roster match, then two deterministic fallbacks); re-linking existing claims belongs to lane 0. The bullets below are the original spec, kept as history.
    - It reads `claim.proposed_entities` and matches against `company` / `person` / `topic` using the dedup rules in `.claude/references/market-intel-spine.md` (lower(name) for company and topic; name plus company for person).
    - `--dry-run` MUST be the default and MUST print matched / ambiguous / unmatched counts plus the ambiguous list.
    - The write mode MUST call `spine_client.write()` only.

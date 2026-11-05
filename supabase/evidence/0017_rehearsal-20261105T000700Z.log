@@ -1,0 +1,40 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com:5432 as postgres.ytfzzsxcxxbejnowmkmk (ref ytfzzsxcxxbejnowmkmk)  at 2026-11-05T00:07:01Z
+
+[0] preflight
+  S-04 backstop functions=2 triggers=2 live body already has alt 3=false
+  regex parity (spine vs proposal): OK :: check_pii_regex_parity: shapes match spine_client.py (EMAIL exact; PHONE exact)
+
+[1] snapshot A (before)
+  A: contact=91bf0ff14462… columns=586f7c61b8b8… triggers=0509b502ce05… person=506 cv2=false
+
+[2] probe 0: full client PHONE_RE in Postgres
+  15/15 ok -> PASS
+
+[3] probe 1: existing rows the new alternative would refuse
+  public.person=0 canonical_v2.person=n/a (expect 0)
+
+[4] apply 0017
+  OK  0017_pii_backstop_intl_phone.sql
+
+[5] behavioural verify
+  0017_verify.sql -> PASS :: 0017 VERIFY: PASS (25 checks)
+  s04_d1_verify.sql (no regression) -> PASS :: S-04 D1 VERIFY: PASS (11 checks)
+
+[6] re-apply 0017 (idempotency)
+  OK  0017 (re-apply)
+  0017_verify.sql (post re-apply) -> PASS :: 0017 VERIFY: PASS (25 checks)
+
+[7] rollback: Part 1 of pii-db-check.sql at 622a221
+  OK  pii-db-check.sql@622a221 Part 1
+
+[8] snapshot C (after rollback): must EQUAL snapshot A
+  C: contact=91bf0ff14462… columns=586f7c61b8b8… triggers=0509b502ce05… person=506 cv2=false
+  snapshot C == snapshot A: rollback PROVEN
+  behaviour after rollback (intl accepted, US refused; txn rolled back) -> PASS
+
+[9] leave applied: re-apply 0017 + verify (twin ends in prod's post-promotion state)
+  OK  0017 (leave applied)
+  0017_verify.sql (leave applied) -> PASS :: 0017 VERIFY: PASS (25 checks)
+  twin left with 0017 applied.
+
+0017 REHEARSAL: ALL GATES GREEN

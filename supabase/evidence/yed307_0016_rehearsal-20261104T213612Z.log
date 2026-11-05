@@ -1,0 +1,89 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk
+
+[0] preflight
+  has.topic.cluster_id         true
+  has.topic_cluster            true
+  has.claim                    true
+  has.compute_0012             true
+  has.pipeline_writer          true
+  has.postgres_set_pw          true
+  has.service_role             true
+  clean.no_mi                  true
+  clean.no_membership          true
+  clean.no_sync_trigger        true
+  clean.no_signal_type         true
+  info.assigned_live_topics    278
+  info.assigned_by_values      llm,session
+  baseline nightly compute (dry-run, read-only):
+  OK  topic_intel_compute.py --dry-run (before 0016) (rc=0)
+      
+      (b) ported SQL vs STORED snapshot (as_of 2026-11-04) — informational, what a write changes:
+        trend: stored=48 new=48  +0 added  -0 gone  ~0 changed
+        pair: stored=181 new=181  +0 added  -0 gone  ~0 changed
+      
+      ✅ PARITY — the ported compute reproduces the health-check reference exactly.
+
+[1] snapshot A (before)
+  tables: public.artifact_outcome,public.claim,public.claim_entity,public.claim_relation,public.claim_usage,public.company,public.doc_chunks,public.doc_claims,public.document_entity,public.documents,public.event,public.event_entity,public.person,public.topic,topic_intelligence.entity_crosswalk,topic_intelligence.ingestion_run,topic_intelligence.merge_map,topic_intelligence.topic_cluster,topic_intelligence.topic_crosswalk,topic_intelligence.topic_pair_metric,topic_intelligence.topic_trend,topic_intelligence.topics
+
+[2] apply 0016
+  OK  0016_mi_semantic_layer.sql
+
+[3] re-apply 0016 (must be a clean no-op)
+  new-table counts after first apply: public.topic_cluster_membership=278, public.company_segment_history=0, public.lane_registry=6, public.lane_run=0
+  OK  0016 second paste
+  OK  state identical after second paste
+
+[4] verify
+  info  info_tombstones_with_cluster_id = 14
+  verify -> PASS (47/47)
+
+[5] negative controls — plant a fault, verify must catch it, re-apply must restore
+  [5a] plant: drop index public.topic_cluster_membership_one_open_uq;
+  info  info_tombstones_with_cluster_id = 14
+  verify -> FAIL (46/47) :: failed ['membership_one_open_index']
+  OK  fault caught by membership_one_open_index
+  OK  0016 restore after 5a
+  info  info_tombstones_with_cluster_id = 14
+  verify -> PASS (47/47)
+  [5b] plant: grant execute on function public.mi_slice(text, jsonb) to anon;
+  info  info_tombstones_with_cluster_id = 14
+  verify -> FAIL (46/47) :: failed ['mi_slice_exec_denied']
+  OK  fault caught by mi_slice_exec_denied
+  OK  0016 restore after 5b
+  info  info_tombstones_with_cluster_id = 14
+  verify -> PASS (47/47)
+  [5c] plant: drop trigger topic_membership_sync_upd on public.topic;
+  info  info_tombstones_with_cluster_id = 14
+  verify -> FAIL (40/47) :: failed ['topic_sync_triggers_present', 'trig_reassign_parity', 'trig_unchanged_is_noop', 'trig_null_closes', 'trig_reopen_assign', 'trig_tombstone_closes', 'trig_global_parity']
+  OK  fault caught by trig_reassign_parity
+  OK  0016 restore after 5c
+  info  info_tombstones_with_cluster_id = 14
+  verify -> PASS (47/47)
+
+[6] full nightly chain on the twin (lesson L7)
+  OK  topic_intel_compute.py --apply (rc=0)
+        pair: stored=181 new=181  +0 added  -0 gone  ~0 changed
+      
+      ✅ PARITY — the ported compute reproduces the health-check reference exactly.
+      
+      Writing via pipeline_writer: compute_topic_intelligence('2026-11-04', 'manual') …
+        ingestion_run 58878169-e12b-4b30-b6be-e21f48f63b99 — success
+  OK  healthcheck_2b.py (rc=0)
+        [PASS] is_low_confidence == (event_count<3 or week)
+      
+      Read-path probe (non-fatal — checks the watch's own anon-key path, not graph health):
+        [SKIP] read-path probe (MI_SUPABASE_URL / MI_SUPABASE_ANON_KEY not set)
+      
+      ✅ PASS — graph coherent, invariants hold. read path healthy.
+  chain writes (data, informational): {'count.topic_intelligence.ingestion_run': ('44', '45')}
+  info  info_tombstones_with_cluster_id = 14
+  verify -> PASS (47/47)
+
+[7] rollback
+  OK  ROLLBACK block
+
+[8] snapshot C must equal snapshot A
+  OK  schema fingerprint + all counts identical — ROLLBACK PROVEN
+
+0016 REHEARSAL: GREEN — safe for Alex to paste 0016 into prod (The-Prod-Brain), then run the VERIFY block there.

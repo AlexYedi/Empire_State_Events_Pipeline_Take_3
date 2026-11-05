@@ -20,8 +20,9 @@ Five layers, all read-only:
      values AND anon/authenticated can read it). `--pii-audit-only` runs just this layer.
   5. Lane freshness (market-lens-and-slices §3/§7, YED-304 Phase A): the lane_run run ledger
      (migration 0016) flags a lane silent at >=7 days and FAILs at >=14 days (days_stale >= 7 is
-     a FLAG, >= 14 is a FAIL — matching the contract pinned in 0016); a lane registered in
-     lane_registry with no ledger rows FAILs outright; and §3.3 rule 4's coverage check flags a
+     a FLAG, >= 14 is a FAIL — matching the contract pinned in 0016); an ACTIVE lane in
+     lane_registry with no ledger rows FAILs outright (inactive lanes are not alarmed — 0016's
+     contract; a producer's migration flips active = true); and §3.3 rule 4's coverage check flags a
      lane whose latest 2 runs wrote nothing (items_written=0), failing at 3. Until 0016 exists
      these halves SKIP (non-fatal). Beside them, the role_posted stall check FAILs when
      public.event has no role_posted row in the last 14 days (the L10 lesson: 183 role_posted
@@ -294,14 +295,18 @@ def never_ran(registered, last_runs):
 
 
 def registered_lanes() -> list[str] | None:
-    """Lane ids from public.lane_registry (migration 0016), or None while it doesn't exist."""
+    """ACTIVE lane ids from public.lane_registry (migration 0016), or None while it doesn't exist.
+    0016's contract: inactive lanes are not alarmed — a lane joins the never-ran check only once
+    its producer's migration sets active = true."""
     if not q("select to_regclass('public.lane_registry') is not null;")[0][0] == "t":
         return None
     cols = {r[0] for r in q("""select column_name from information_schema.columns
                                where table_schema='public' and table_name='lane_registry';""")}
     if "lane" not in cols:
         return None
-    return [r[0] for r in q("select lane from public.lane_registry;")]
+    if "active" not in cols:
+        return [r[0] for r in q("select lane from public.lane_registry;")]
+    return [r[0] for r in q("select lane from public.lane_registry where active;")]
 
 
 def _pg_int_array(s):
@@ -539,6 +544,9 @@ def _selftest() -> int:
         cov = classify_coverage(row.get("recent_runs_items_written", []))
         ck(f"lane {row['lane']} coverage {row.get('recent_runs_items_written')} -> {row['expected_coverage']}",
            cov == row["expected_coverage"])
+    import inspect as _inspect
+    ck("registered_lanes alarms only ACTIVE lanes (0016: inactive lanes are not alarmed)",
+       "from public.lane_registry where active" in _inspect.getsource(registered_lanes))
     ck("never_ran(registry, ledger) matches fixture expectation",
        never_ran(fx["registered_lanes"], {r["lane"] for r in fx["rows"]}) == sorted(fx["never_ran_expected"]))
     rp = fx["role_posted"]

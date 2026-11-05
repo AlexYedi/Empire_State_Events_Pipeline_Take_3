@@ -63,3 +63,33 @@ The evidence log contains twin hostnames and gate results only — the connectio
 1. Attach the evidence log + `S-04 D1 VERIFY: PASS` lines to the YED-183 Linear issue as the rehearsal record.
 2. Promotion is a **separate, Alex-gated step** (CLAUDE.md invariant 2): Alex pastes `pii-db-check.sql` then `0014` into the prod dashboard SQL editor, in that order, re-running the backstop's Part-3 block afterwards only if `canonical_v2.person` is created later on prod.
 3. Prod rollback (if ever needed) is the same `s04_d1_rollback.sql` shape — the column comes back empty; the YED-81 gitignored export remains the only record of pre-scrub values.
+
+
+## Addendum: migration 0017 twin rehearsal (YED-309 / YED-319, 2026-11-05)
+
+Migration `0017_pii_backstop_intl_phone.sql` (PR #277) is **live on prod**:
+Alex applied it via the dashboard at ~22:08 UTC on 2026-11-04, and the live
+function body was verified byte-identical to the migration file (md5
+`6b7dd66c…`; YED-309). It has its own executable harness:
+`supabase/scripts/rehearse_0017.py`.
+It follows the same gate shape as `rehearse_s04_d1.py` (preflight → snapshot A →
+probes → apply → verify → idempotent re-apply → rollback → snapshot C == A →
+leave applied) and refuses a prod target outright.
+
+Corrections/notes discovered while running it (2026-11-05 run, evidence
+`supabase/evidence/0017_rehearsal-20261105T000700Z.log`, ALL GATES GREEN):
+
+- The session-pooler region index is **not always `aws-0`**: the twin answers on
+  `aws-1-us-east-2.pooler.supabase.com`. Try both `aws-0-` and `aws-1-` for the
+  region before concluding the pooler tenant is missing.
+- `psql` must be on PATH (`PSQL_BIN` override) and `PHANTOM_TEST_DB_PASSWORD`
+  must be **exported** — unlike a `.env` file read by the script; psql itself
+  will hang on a password prompt if the var is unset.
+- `rehearse_0017.py` has **no `--reset-first`** (its D1 counterpart does). A
+  rehearsal that ends `--leave-applied` leaves the twin carrying 0017, and gate 0
+  then refuses to run. To re-run: apply the rollback leg by hand first —
+  Part 1 of `pii-db-check.sql` at `622a221` (the pre-0017 function body) — and
+  confirm gate 0's preflight reports `has_alt3=false` before the full run.
+- The twin's row counts and cv2 presence drift between rehearsals (twin refreshes
+  for other work, e.g. 0016); the harness reads shape from the live catalog, so
+  this is expected and not a failure.
