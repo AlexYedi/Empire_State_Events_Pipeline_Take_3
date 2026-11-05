@@ -1,0 +1,162 @@
+{
+ "run": "lane0-company-create",
+ "at": "2026-11-05T15:21:21+00:00",
+ "created": [
+  {
+   "id": "44c5df92-d259-4aa6-8eb3-1f090244d441",
+   "name": "Salesforce"
+  },
+  {
+   "id": "8d03bdbe-5f3d-4e4a-aaa9-6aee6c313e45",
+   "name": "Dynatrace"
+  },
+  {
+   "id": "f7167864-ca1e-4dd3-baa7-a709c617f9a9",
+   "name": "DoubleO.ai"
+  },
+  {
+   "id": "e92e69e4-08c9-4915-90d7-13b02f9daa76",
+   "name": "Gong"
+  },
+  {
+   "id": "bb1caca7-bf56-4c7e-a885-843450c9c722",
+   "name": "Navan"
+  },
+  {
+   "id": "30d8ebf8-4860-4fed-95f8-cacb94d8c5b0",
+   "name": "Dagster Labs"
+  },
+  {
+   "id": "79df6d77-090a-4d07-a61f-102d7151d97d",
+   "name": "Cloudflare"
+  },
+  {
+   "id": "4cd5a4fa-fba2-46bd-b190-573f5c4bb1d8",
+   "name": "Mem0"
+  },
+  {
+   "id": "dfdfb477-dfb5-497c-83fb-8aa000387f18",
+   "name": "Clari"
+  },
+  {
+   "id": "4c0883f5-e04d-4ceb-b9c4-25f9db16aba0",
+   "name": "DeepSeek"
+  },
+  {
+   "id": "5eec3488-78d1-4d33-b7cc-6ea4f30ff9df",
+   "name": "Galileo"
+  },
+  {
+   "id": "cc1e8f24-54e5-48d4-9d5c-1b66ad534061",
+   "name": "LiteLLM"
+  },
+  {
+   "id": "9f367df2-63cb-4bfa-b1a1-0292f745ee57",
+   "name": "Okta"
+  },
+  {
+   "id": "99dc1d6f-2d3f-4a6e-a546-8f3f63728c79",
+   "name": "Salesloft"
+  },
+  {
+   "id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "name": "TrustRadius"
+  },
+  {
+   "id": "0cceaadf-eeab-4214-a703-4d9a1e3b564c",
+   "name": "Replit"
+  },
+  {
+   "id": "3efa8991-de22-4be6-bb80-1b2e3924d6f0",
+   "name": "Git AI"
+  },
+  {
+   "id": "7e5c878e-a3c6-49c9-8be6-dd31debca7b8",
+   "name": "Vectara"
+  },
+  {
+   "id": "653a4fea-1b14-41a8-b5eb-4619176ed128",
+   "name": "Voyage AI"
+  },
+  {
+   "id": "a5797806-8297-4fbc-879e-10a69a18a5f6",
+   "name": "Legora"
+  },
+  {
+   "id": "ce994574-f1e7-4047-8927-5e97fa283fc2",
+   "name": "Veeva"
+  },
+  {
+   "id": "ceea981c-1d9f-44ec-bcbc-1c6ca72e1c91",
+   "name": "Carta"
+  },
+  {
+   "id": "3939eaa0-c555-4f4d-9225-438cd6337bfe",
+   "name": "Snyk"
+  },
+  {
+   "id": "328da5f6-8579-4fb5-b8ee-a7e5d8a79f50",
+   "name": "Atlan"
+  },
+  {
+   "id": "582cca5b-38aa-4076-9128-5b78b95cc26f",
+   "name": "Astronomer"
+  },
+  {
+   "id": "7a28114e-79b6-4364-8666-9ebba63d010c",
+   "name": "EY"
+  },
+  {
+   "id": "fb9b1eb5-2870-416e-a74e-891535c5d2a3",
+   "name": "Fireworks AI"
+  },
+  {
+   "id": "a6acdb4d-a198-4f60-9aea-45a698095801",
+   "name": "Cisco"
+  },
+  {
+   "id": "0ed510fb-f4a8-47c8-924b-cc3760dfffe3",
+   "name": "Splunk"
+  },
+  {
+   "id": "76ca8a40-1f35-4ceb-9e13-3ecc0f1a0e6a",
+   "name": "Adaptive ML"
+  },
+  {
+   "id": "9c85625e-afc8-4277-9bfa-a66cdbf25ccc",
+   "name": "NEOGOV"
+  },
+  {
+   "id": "59807bb2-0fb2-494b-a4a2-a8530c9085f2",
+   "name": "Pocus"
+  },
+  {
+   "id": "9b9eb655-ff40-4287-8d56-8bb151315627",
+   "name": "Product Hunt"
+  },
+  {
+   "id": "64dadee4-92e8-4bde-9402-2eccf4456dda",
+   "name": "Rilo"
+  },
+  {
+   "id": "f3b78496-517a-4d8a-a388-4f3845f2f08b",
+   "name": "Mentlio"
+  },
+  {
+   "id": "1ed1dc8a-a897-4835-ab93-4e233c21374f",
+   "name": "Outreach"
+  },
+  {
+   "id": "8151e876-cd6f-4093-b57d-4e7abb3fd51b",
+   "name": "SpaceX"
+  },
+  {
+   "id": "04781439-93f1-47c5-b80e-8a51233d6bc1",
+   "name": "Tableau"
+  },
+  {
+   "id": "387e4142-6aa0-40e7-8607-b7d7a2177ece",
+   "name": "Jellyfish"
+  }
+ ]
+}

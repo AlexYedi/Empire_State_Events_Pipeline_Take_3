@@ -23,3 +23,16 @@ Claims with no topical subject (bios, logistics, job posts, bare numbers, or fun
 - **Company links** (research claims with no company or person link), restricted to existing company rows, never creating one:
   - 893 written at conf ≥ 0.7 (`manifest_company.json`).
   - 204 low-confidence links went to Fable: 159 linked, 45 rejected, plus 3 Minerva claims moved to the correct `Minerva (minerva.io)` record (`manifest_company_fable.json`).
+
+## Phase 3 (2026-11-05): missing companies created, claims relinked
+
+- **Gap:** claims named 376 companies with no `company` row. Created the **39 operating companies with ≥3 claim mentions** (`manifest_company_create.json`; inputs `phase3_new_companies.json`).
+  - Search-before-create: prod `lower(name)` match (no duplicates) plus akta `company_search` (free) for the website. Rilo, Mentlio and Git AI aren't covered by akta and have no website.
+  - `source='lane0_company_gap'`, `company_type='operating'`.
+  - Skipped on purpose: analyst firms (Gartner, Forrester), investors (a16z, Sequoia), foundations and OSS projects (Apache, Linux Foundation, Pipecat), associations and events (PMA, METR, AIMLC, Revolt).
+- **Relink:** 189 claims named a new company, in the tagger's `unlisted` output or by a word-boundary text match, giving 207 claim→company decisions.
+  - 163 written `about` at conf ≥ 0.7 (`manifest_company_new.json`).
+  - 25 below 0.7 went to Fable: 9 `about`, and 12 `asserted_by` where the company is the survey or data publisher rather than the subject (TrustRadius ×5, Jellyfish ×3, EY, Vectara, Carta, Snyk). The rest were rejected (`manifest_company_new_fable.json`).
+- **Result, research lens:** claims with a company link went 2,181 → **2,293**. Claims with a company or person link went 3,008 / 3,543 = **84.9%**, up from 81.7% after phase 2. The pre-lane-0 baseline was 54.6%.
+- **Rollback:** delete the `claim_entity` rows in the two link manifests, then the `company` rows in `manifest_company_create.json`. Delete the links first, because of the FK direction.
+- Scripts `lane0_create_companies.py` and `lane0_relink_new.py` read their inputs from the directory they run in (the session scratchpad). They are committed as the record of the method.
