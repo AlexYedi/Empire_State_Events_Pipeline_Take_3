@@ -143,6 +143,7 @@ jobs:
           with open("/tmp/prior.json", "w") as fh:
               json.dump({"week": None, "events": events}, fh)
           print(f"prior-week baseline: {len(events)} companies (graph read OK)")
+          EOF
           # the output is honest only when the heredoc actually wrote the file: the python
           # exits 0 on a failed twin read too (warning path — no file, no failure)
           if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi

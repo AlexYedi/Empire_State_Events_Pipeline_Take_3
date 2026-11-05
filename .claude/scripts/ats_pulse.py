@@ -42,8 +42,10 @@ import io
 import json
 import os
 import re
+import subprocess
 import sys
 import tempfile
+import textwrap
 from datetime import date, datetime, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -387,6 +389,86 @@ def _json_copy(obj: object) -> object:
     return json.loads(json.dumps(obj))
 
 
+# --- Workflow shell lint -------------------------------------------------------------------
+# Both production incidents (runs 41943575924 and 41945700887) were hand-edits to the YAML's
+# shell that no check caught before merge. These lints run in the selftest on every
+# 'run: |' block in ats-pulse.yml. bash -n ALONE is not enough: bash treats a heredoc closed
+# by end-of-file as a WARNING (exit 0) — exactly the hole run 41945700887 fell through.
+
+_HEREDOC_OPEN = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def shell_script_problems(script: str) -> list[str]:
+    """Lint one shell script: heredoc open/close pairing + bash -n (stderr included)."""
+    problems: list[str] = []
+    stack: list[str] = []
+    for line in script.splitlines():
+        stripped = line.strip()
+        if stack and stripped == stack[-1]:
+            stack.pop()
+            continue
+        m = _HEREDOC_OPEN.search(line)
+        if m:
+            stack.append(m.group(2))
+    for delim in stack:
+        problems.append(f"heredoc <<'{delim}' never terminated (delimited by end-of-file)")
+    try:
+        r = subprocess.run(["bash", "-n"], input=script, capture_output=True,
+                           text=True, timeout=15)
+    except OSError as e:  # bash missing — never swallow it, surface as a lint problem
+        return problems + [f"bash -n could not run: {e}"]
+    if r.returncode != 0:
+        detail = r.stderr.strip().splitlines()[-1] if r.stderr.strip() else f"exit {r.returncode}"
+        problems.append(f"bash -n syntax error: {detail}")
+    if "here-document" in r.stderr:
+        problems.append("bash -n heredoc warning: " + r.stderr.strip().splitlines()[-1])
+    return problems
+
+
+def workflow_run_blocks(path: str) -> list[tuple[str, str]]:
+    """Extract (step name, script) for every 'run: |' block — textually, no yaml dependency."""
+    blocks: list[tuple[str, str]] = []
+    lines = open(path, encoding="utf-8").read().splitlines()
+    run_re = re.compile(r"^(\s*)(?:- )?run: (\||>)")
+    name_re = re.compile(r"^\s*(?:- )?name:\s*(.*)$")
+    current_name = ""
+    i = 0
+    while i < len(lines):
+        m = run_re.match(lines[i])
+        if not m:
+            nm = name_re.match(lines[i])
+            if nm:
+                current_name = nm.group(1).strip().strip("'\"")
+            i += 1
+            continue
+        indent = len(m.group(1))
+        body: list[str] = []
+        j = i + 1
+        while j < len(lines):
+            line = lines[j]
+            if not line.strip():
+                body.append("")
+                j += 1
+                continue
+            if len(line) - len(line.lstrip(" ")) > indent:
+                body.append(line)
+                j += 1
+            else:
+                break
+        blocks.append((current_name, textwrap.dedent("\n".join(body))))
+        i = j
+    return blocks
+
+
+def lint_workflow_shell(path: str) -> list[str]:
+    """Every shell problem in a workflow file, labeled by step name."""
+    problems: list[str] = []
+    for name, script in workflow_run_blocks(path):
+        for p in shell_script_problems(script):
+            problems.append(f"{name}: {p}")
+    return problems
+
+
 def selftest() -> int:
     ok, n = 0, 0
 
@@ -641,6 +723,24 @@ def selftest() -> int:
               and '!= "none"' not in wftext)
         check("workflow lint: the prior step sets its output ONLY when it actually wrote the file",
               'if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json"' in wftext)
+
+        # --- Workflow lint: bash -n + heredoc pairing on EVERY run block -------------------
+        # bash -n alone is insufficient: an EOF-terminated heredoc is only a WARNING (exit 0),
+        # which is how run 41945700887's unterminated heredoc reached main. Both checks run.
+        check("workflow shell lint: a healthy script with a closed heredoc passes",
+              shell_script_problems("python3 - <<'EOF'\nprint('hi')\nEOF\necho done") == [])
+        broken = ("python3 - <<'EOF'\nprint('hi')\n"
+                  "if [ -s /tmp/prior.json ]; then echo ok; fi")  # no EOF — the 41945700887 shape
+        check("workflow shell lint: an UNTERMINATED heredoc is flagged (would have caught run 41945700887)",
+              any("never terminated" in p or "here-document" in p
+                  for p in shell_script_problems(broken)))
+        check("workflow shell lint: a heredoc closed by the WRONG delimiter is flagged",
+              any("here-document" in p or "never terminated" in p
+                  for p in shell_script_problems("cat <<'EOF'\nhi\neof")))
+        wf_problems = lint_workflow_shell(wf)
+        check("workflow shell lint: every run: block in ats-pulse.yml passes bash -n + heredoc pairing"
+              + (f" — PROBLEMS: {wf_problems}" if wf_problems else ""),
+              not wf_problems)
 
     print(f"selftest: {ok}/{n} ats_pulse cases pass")
     return 0 if ok == n else 1
