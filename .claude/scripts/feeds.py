@@ -174,7 +174,14 @@ def parse(feed_xml: str, base_url: str = "") -> list[dict]:
     if base_url:
         for it in items:
             if it["url"]:
-                it["url"] = urllib.parse.urljoin(base_url, it["url"])
+                try:
+                    it["url"] = urllib.parse.urljoin(base_url, it["url"])
+                except ValueError:
+                    # round-4 item 4: one hostile link (e.g. `http://[bad/x`) must not lose
+                    # every item in the feed. The raw href is kept; if it is genuinely
+                    # hostile, to_row/canonical_url raises on THAT item and stage_rows
+                    # quarantines it by key — counted, never silent, never batch-fatal.
+                    pass
     return items
 
 
@@ -260,8 +267,16 @@ def render_digest(items: list[dict], companies: dict[str, list[str]]) -> str:
 # ---------------------------------------------------------------- fetching
 
 def _resolved_addresses(hostname: str) -> list:
-    """Every address the hostname currently resolves to (SSRF input)."""
-    return [ipaddress.ip_address(i[4][0]) for i in socket.getaddrinfo(hostname, 443)]
+    """Every address the hostname currently resolves to (SSRF input). v4-mapped IPv6
+    forms (::ffff:a.b.c.d) are unwrapped to their IPv4 address — on 3.13 the mapped
+    form reports is_global True, so a CGNAT/private address behind the mapping would
+    pass the check below (round-4 nit)."""
+    out = []
+    for i in socket.getaddrinfo(hostname, 443):
+        ip = ipaddress.ip_address(i[4][0])
+        mapped = getattr(ip, "ipv4_mapped", None)
+        out.append(mapped if mapped is not None else ip)
+    return out
 
 
 NAT64_NET = ipaddress.ip_network("64:ff9b::/96")
@@ -383,12 +398,16 @@ SIGNAL_RULES: list[tuple[str, tuple[str, ...]]] = [
                        "open weights", "open-source model", "open-sourced model")),
 ]
 # Bare "release"/"released" stay OUT ("press release", "released a report" = generic media
-# language, round-1 item 11) — but "releases"/"releasing" ARE launch verbs, matched by a
-# regex that refuses a preceding "press " (round-2 item 8: inflections must not fall to news).
+# language, round-1 item 11). "releases" is the only release inflection matched — via a regex
+# that refuses a preceding "press " (round-2 item 8). "releasing" is deliberately NOT a launch
+# verb (round-4 item 3): `release(?:s|ing)` can never match it ("releas" + "ing"), and the
+# retrospective sense ("What we learned releasing for enterprise GTM teams") is a market
+# signal, not a launch — a miss is the conservative outcome and the Monday classifier is
+# authoritative anyway.
 LAUNCH_PHRASES: tuple[str, ...] = ("launch", "launches", "launched", "launching", "announcing",
                                    "introducing", "now available",
                                    "general availability", "out of beta", "GA of", "shipping", "ships")
-_LAUNCH_RELEASE_RE = re.compile(r"(?<!press )\brelease(?:s|ing)\b", re.IGNORECASE)
+_LAUNCH_RELEASE_RE = re.compile(r"(?<!press )\breleases\b", re.IGNORECASE)
 
 
 def _kw(word: str, text: str) -> bool:
@@ -474,6 +493,9 @@ def fetch_all(sources: list[dict], fetcher=fetch, timeout: int = 8):
             parsed = parse(fetcher(feed_url, timeout=timeout), base_url=feed_url)
             for parsed_item in assign_feeds(parsed, feed_url):
                 parsed_item["company"] = company
+                # round-4 item 5: the index tag rides on the item so _cmd_fetch can report
+                # per-source staging failures without ever exposing the registry string.
+                parsed_item["source_tag"] = tag
             items.extend(parsed)
         except Exception as e:  # per-feed isolation: report and continue
             # review 2026-11-05, item 2: ALLOWLISTED logging — exception TEXT can carry
@@ -624,10 +646,44 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
                          "FEEDS_FAIL_ON_FEED_ERRORS so the failure alarm fires")
     ap.add_argument("--timeout", type=int, default=8)
     a = ap.parse_args(argv)
-    if a.out is None:                    # round-3 item 10: a fresh temp file per run
+    out_is_default = a.out is None
+    if out_is_default:                   # round-3 item 10: a fresh temp file per run
         fd, a.out = tempfile.mkstemp(prefix="feed_items_", suffix=".json")
         os.close(fd)
+    try:
+        return _fetch_run(a, fetcher)
+    finally:
+        # round-4 nit: the default path held the full registry — it never lingers on disk
+        # after the run, whatever the exit path (return, sys.exit, or a raised error).
+        # An explicit --out is the user's file: kept.
+        if out_is_default:
+            if os.path.exists(a.out):
+                os.remove(a.out)
+            print("feeds: the default manifest path was removed after the run — "
+                  "pass --out to keep it", file=sys.stderr)
 
+
+def _zero_row_source_errors(items: list[dict], staged_rows: list[dict]) -> list[str]:
+    """Feed errors for every source whose items ALL failed staging or quarantine
+    (round-4 item 5): a good feed beside a dead-stage feed must not mask it with a
+    quiet rc=0. Tags are the source[N] indices fetch_all stamped on the items —
+    registry-derived URLs stay in-process, never in errors or logs. Call AFTER
+    quarantine_rows so an all-quarantined source counts too."""
+    staged_feeds = {r.get("feed_url") for r in staged_rows}
+    tallies: dict[str, tuple[str, int]] = {}
+    for it in items:
+        tag = it.get("source_tag") or "source[?]"
+        if tag not in tallies:
+            tallies[tag] = (it.get("feed") or "", 0)
+        tallies[tag] = (tallies[tag][0], tallies[tag][1] + 1)
+    return [f"{tag}: {n} item(s) parsed, 0 stageable rows after staging/quarantine"
+            for tag, (feed, n) in tallies.items() if feed not in staged_feeds]
+
+
+def _fetch_run(a, fetcher=None) -> int:
+    """The fetch CLI body (argparse done in _cmd_fetch) — split out so the default
+    --out tempfile can be removed in a finally whatever the exit path (round-4 nit)."""
+    import os
     with open(a.sources, encoding="utf-8") as f:
         sources = json.load(f)
     if not sources:
@@ -639,16 +695,16 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
     for err in errors:
         print(f"feeds: feed failed: {err}", file=sys.stderr)
     rows, staging_failed = stage_rows(items, fetched_at)
-    if items and not rows and not errors:
-        # round-3 item 7: sources parsed items but NOTHING staged (e.g. links that could
-        # not be resolved pre-2026-11-05) is a FEED ERROR, not a quiet rc=0 — the Action
-        # must alarm instead of reporting a healthy-but-empty run.
-        errors.append(f"stage: {len(items)} item(s) parsed, 0 stageable rows")
 
     # Per-row guard quarantine (review 2026-11-04): one bad row is dropped and counted — it
     # never fails the whole batch. review 2026-11-05 item 2: keys (sha256, non-reversible)
     # go in the manifest; stderr carries counts only.
     rows, quarantined = quarantine_rows(rows)
+    # round-4 item 5 (round-3 item 7, per-source): AFTER quarantine — a source whose items
+    # all failed staging or were all quarantined is a FEED ERROR, not a quiet rc=0.
+    for zero_err in _zero_row_source_errors(items, rows):
+        errors.append(zero_err)
+        print(f"feeds: feed failed: {zero_err}", file=sys.stderr)
     if quarantined or staging_failed:
         print(f"feeds: {len(quarantined)} row(s) quarantined by the spine guard (sha256 keys "
               f"in the manifest's quarantined_source_keys), {staging_failed} item(s) failed "
@@ -826,6 +882,19 @@ def selftest() -> int:
         bad_parse = True
     check("parse: malformed XML raises ValueError (never swallowed)", bad_parse)
 
+    # round-4 item 4: one hostile link must not lose every item in the feed — urljoin
+    # errors are isolated to their item (the raw href is kept; staging quarantines it).
+    hostile_mixed = ('<rss version="2.0"><channel>'
+                     '<item><title>A</title><link>https://ex.com/a</link></item>'
+                     '<item><title>B</title><link>http://[bad/x</link></item>'
+                     '</channel></rss>')
+    mixed_items = parse(hostile_mixed, base_url="https://ex.com/feed.xml")
+    mrows, mfailed = stage_rows(mixed_items, "2026-11-05T00:00:00Z")
+    check("parse: a hostile link is isolated to its item — the feed survives (round-4 item 4)",
+          len(mixed_items) == 2 and mixed_items[0]["url"] == "https://ex.com/a")
+    check("stage: the hostile-link item is quarantined by count, the clean one stages",
+          mfailed == 1 and len(mrows) == 1 and mrows[0]["url"] == "https://ex.com/a")
+
     # --- canonical_url / dedupe
     check("canonical: tracking params, fragment, trailing slash, host case",
           canonical_url("HTTPS://Ex.com/P/?utm_source=x&b=2&a=1#top")
@@ -942,6 +1011,12 @@ def selftest() -> int:
     check("classify: inflections hold — 'launched'/'Acme releases Atlas' are launches",
           classify({"title": "Acme launched Atlas", "summary": ""}) == ("launch", None)
           and classify({"title": "Acme releases Atlas", "summary": ""}) == ("launch", None))
+    # round-4 item 3: "releasing" is NOT a launch verb — the retrospective sense ("What we
+    # learned releasing ...") is a market signal; a miss is the conservative outcome.
+    check("classify: 'releasing' stays market/news (round-4 item 3)",
+          classify({"title": "Q3 field notes",
+                    "summary": "What we learned releasing for enterprise GTM teams"})
+          == ("market", "news"))
     check("classify: 'press releases' stays news; plural market signals match",
           classify({"title": "Company press releases", "summary": ""}) == ("market", "news")
           and classify({"title": "Acme announces partnerships", "summary": ""})
@@ -1078,13 +1153,29 @@ def selftest() -> int:
         # round-3 item 4: multicast and the NAT64 prefix are refused (is_global alone let
         # these through).
         for bad, label in (("224.0.0.1", "multicast v4"), ("ff02::1", "multicast v6"),
-                           ("64:ff9b::7f00:1", "NAT64 translation")):
+                           ("64:ff9b::7f00:1", "NAT64 translation"),
+                           ("::ffff:100.64.0.1", "v4-mapped CGNAT")):
             socket.getaddrinfo = _stub_gai(bad)
             check(f"fetch guard: {label} addresses refused",
                   _raises(lambda: _validate_feed_url("https://ex.com/x"), ValueError))
+
+        # round-4 item 1 (R1d): a resolver answer MIXING public and private addresses must
+        # refuse — every resolved address is checked, not just the first.
+        def _mixed_gai(h, *a, **k):
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 0)),
+                    (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.5", 0))]
+        socket.getaddrinfo = _mixed_gai
+        check("fetch guard: a mixed public+private resolution refuses (R1d)",
+              _raises(lambda: _validate_feed_url("https://ex.com/x"), ValueError))
     finally:
         globals()["_build_opener"], globals()["_fetch_once"] = _real_opener, _real_once
         socket.getaddrinfo = _real_gai
+
+    # round-4 item 1 (Z3): the handler check above is unit-level — the OPENER stack is the
+    # only redirect control at runtime, so the REAL _build_opener must carry it. The selftest
+    # swaps _build_opener inside the block above; this asserts the restored real one.
+    check("redirect: the REAL _build_opener stack carries _NoRedirect (Z3)",
+          any(isinstance(h, _NoRedirect) for h in _build_opener().handlers))
 
     # Privacy layers (M7b/M10): redaction lands BEFORE staging — no email or phone can
     # reach a row, the manifest, or the spine guard, whatever the item text says.
@@ -1095,6 +1186,20 @@ def selftest() -> int:
     check("privacy: a PII-bearing item stages with NO email or phone anywhere (M7b/M10)",
           pii_failed == 0 and len(pii_rows) == 1
           and "@" not in json.dumps(pii_rows[0]) and "555" not in json.dumps(pii_rows[0]))
+
+    # round-4 item 1 (M7b): the test above only exercises redact() (layer 1) — the email
+    # and phone it asserts on are removed BEFORE _redact_body ever runs, so deleting
+    # _redact_body from to_row left it green. A CONFIDENTIAL-marked line is dropped only
+    # by layer 2: this check fails if redaction no longer lands before staging.
+    conf_item = {"title": "Weekly notes", "url": "https://ex.com/p2",
+                 "summary": "public note\nconfidential: internal roadmap details\nmore public",
+                 "company": "Acme", "feed": "https://ex.com/feed", "source_format": "rss"}
+    conf_rows, conf_failed = stage_rows([conf_item], "2026-11-05T00:00:00Z")
+    check("privacy: a CONFIDENTIAL summary line is dropped BEFORE staging (M7b)",
+          conf_failed == 0 and len(conf_rows) == 1
+          and "confidential" not in conf_rows[0]["summary"].lower()
+          and "internal roadmap" not in conf_rows[0]["summary"]
+          and "public note" in conf_rows[0]["summary"])
 
     # Logging rule (Z11/Z15): a feed failure logs only source[N] + exception TYPE — the
     # fetcher's exception text (a URL, an email) must never reach the log.
@@ -1131,13 +1236,14 @@ def selftest() -> int:
         calls.append((method, path.split("?")[0], data, headers.get("apikey")))
         return (200, "[]") if method == "GET" else (201, "[]")
 
-    def run_fetch(out_dir: str, stub, dry_run: bool = False, fetcher=None) -> int:
+    def run_fetch(out_dir: str, stub, dry_run: bool = False, fetcher=None,
+                  sources=None) -> int:
         calls.clear()
         _sc._send = stub
         src_path = _os.path.join(out_dir, "sources.json")
         out_path = _os.path.join(out_dir, "out.json")
         with open(src_path, "w") as f:
-            json.dump([{"company": "Acme", "feed_url": "https://ex.com/feed"}], f)
+            json.dump(sources or [{"company": "Acme", "feed_url": "https://ex.com/feed"}], f)
         args = ["--sources", src_path, "--out", out_path, "--fail-on-feed-errors"]
         if dry_run:
             args.append("--dry-run")
@@ -1195,6 +1301,69 @@ def selftest() -> int:
             check("cmd_fetch: a failed write prints no URL, email, or row text (Z11/Z15)",
                   write_failed and "ex.com" not in combined and "@" not in combined)
 
+            # round-4 item 1 (Z11/Z15, except path): the 403 stub above RETURNS a status —
+            # it never enters the `except Exception` at the write call, where the
+            # type-only rule is a SEPARATE raise site. An exception RAISED from _send with
+            # hostile text must surface as the exception TYPE only.
+            def send_raises(method, path, data, headers, timeout, reuse):
+                if method == "POST":
+                    raise RuntimeError("boom POST https://ex.com/feed_items mail ryan@example.com")
+                return (200, "[]")
+
+            raised_type_only = None
+            try:
+                run_fetch(td, send_raises)
+            except RuntimeError as e:
+                raised_type_only = str(e)
+            check("cmd_fetch: a RAISED write failure logs the exception TYPE only "
+                  "(Z11/Z15 except path)",
+                  raised_type_only == "feeds: spine write failed: RuntimeError"
+                  and "https://" not in (raised_type_only or "")
+                  and "@" not in (raised_type_only or ""))
+
+            # round-4 item 1 (M3c): a 403 on the EXISTENCE check must raise with its own
+            # status — a 403 and a 500 may not read the same (round-3 item 9).
+            def send_get_403(method, path, data, headers, timeout, reuse):
+                return (403, "{}") if method == "GET" else (201, "[]")
+
+            got_403 = None
+            try:
+                run_fetch(td, send_get_403)
+            except RuntimeError as e:
+                got_403 = "HTTP 403" in str(e)
+            check("cmd_fetch: a 403 on the existence check raises with its STATUS (M3c)",
+                  bool(got_403) and all(c[0] == "GET" for c in calls))
+
+            # round-4 item 1 (M4b): a 4xx write with an UNPARSEABLE body must raise on the
+            # status alone — the raw body (row echo, URL) may never reach the message.
+            def send_400_raw(method, path, data, headers, timeout, reuse):
+                if method == "POST":
+                    return (400, "not json at all — row echo Acme https://ex.com/feed_items")
+                return (200, "[]")
+
+            got_400 = None
+            try:
+                run_fetch(td, send_400_raw)
+            except RuntimeError as e:
+                got_400 = str(e)
+            check("cmd_fetch: a 4xx write with an unparseable body raises STATUS only (M4b)",
+                  got_400 == "feeds: spine write failed: HTTP 400"
+                  and "Acme" not in got_400 and "ex.com" not in got_400)
+
+            # round-4 item 1 (M10): a guard REFUSAL must quarantine the row BEFORE any
+            # POST — removing the quarantine_rows call from _cmd_fetch has to fail this.
+            real_guard = _sc.guard
+            _sc.guard = lambda table, row: (_ for _ in ()).throw(_sc.PIIViolation())
+            guard_blocked_post = False
+            try:
+                run_fetch(td, stub_send)
+            except SystemExit:
+                guard_blocked_post = calls == [] or all(c[0] == "GET" for c in calls)
+            finally:
+                _sc.guard = real_guard
+            check("cmd_fetch: a guard refusal quarantines pre-POST — no write leaves "
+                  "(M10)", guard_blocked_post)
+
             # round-3 item 7: items parsed but 0 stageable rows is a FEED ERROR (rc 2 with
             # --fail-on-feed-errors), never a quiet rc=0.
             nolink = '<rss version="2.0"><channel><item><title>No link</title></item>' \
@@ -1202,6 +1371,20 @@ def selftest() -> int:
             rc = run_fetch(td, stub_send, dry_run=True, fetcher=lambda u, timeout=8: nolink)
             check("cmd_fetch: items with 0 stageable rows is a FEED ERROR, not rc=0 "
                   "(round-3 item 7)", rc == 2)
+
+            # round-4 item 5: the same, PER SOURCE — a good feed beside a dead-stage feed
+            # must not mask it. run_fetch passes --fail-on-feed-errors, so rc=2.
+            good_rss = ('<rss version="2.0"><channel><item><title>Good</title>'
+                        '<link>https://ex.com/g</link></item></channel></rss>')
+
+            def two_feeds(u, timeout=8):
+                return good_rss if u.endswith("feed") else nolink
+
+            rc = run_fetch(td, stub_send, dry_run=True, fetcher=two_feeds, sources=[
+                {"company": "A", "feed_url": "https://ex.com/feed"},
+                {"company": "B", "feed_url": "https://ex.com/other"}])
+            check("cmd_fetch: a 0-row SOURCE is a feed error beside a good one (round-4 "
+                  "item 5)", rc == 2)
 
             # round-3 item 10: 0 fresh rows (all already on the twin) skips the POST.
             p1_key = hashlib.sha256(b"https://ex.com/p1?x=1").hexdigest()
@@ -1256,6 +1439,36 @@ def selftest() -> int:
     clean_rows, quarantined_keys = quarantine_rows([r, bad_row])
     check("quarantine_rows: guard-failing row dropped by key, clean row kept",
           len(clean_rows) == 1 and quarantined_keys == [bad_row["source_key"]])
+
+    # --- _remote_source_keys (round-4 item 1: D2 degrade, D5 pagination)
+    class _FakeDedupeSpine:
+        """sc.req stub: serves JSON pages keyed by the offset in the path, or raises."""
+
+        def __init__(self, rows_by_offset=None, error=None):
+            self.rows_by_offset, self.error = rows_by_offset or {}, error
+            self.paths: list[str] = []
+
+        def req(self, method, path):
+            self.paths.append(path)
+            if self.error is not None:
+                raise self.error
+            m = re.search(r"offset=(\d+)", path)
+            return 200, self.rows_by_offset.get(int(m.group(1)), [])
+
+    keys_a, keys_b = "a" * 64, "b" * 64
+    full_page = [{"source_key": keys_a}, {"source_key": keys_b}]
+    dedupe_spine = _FakeDedupeSpine({0: full_page, 2: [{"source_key": keys_a}]})
+    check("remote dedupe: a FULL page continues to the next offset (D5)",
+          _remote_source_keys(dedupe_spine, page_size=2)
+          == {keys_a, keys_b} and len(dedupe_spine.paths) == 2)
+
+    degrade_spine = _FakeDedupeSpine(error=RuntimeError("boom at https://ex.com mail x@y.example"))
+    err_buf3 = _io.StringIO()
+    with _cl.redirect_stderr(err_buf3):
+        degraded = _remote_source_keys(degrade_spine)
+    check("remote dedupe: a failed read degrades to None, loudly, no text (D2)",
+          degraded is None and "in-run dedupe only" in err_buf3.getvalue()
+          and "@" not in err_buf3.getvalue() and "https://" not in err_buf3.getvalue())
     check("quarantine_rows: quarantine never leaks row text (keys are sha256 only)",
           all(len(k) == 64 for k in quarantined_keys))
 
@@ -1272,8 +1485,9 @@ def selftest() -> int:
     check("twin guard: twin ref passes", _exit_code(TWIN_REF) == 0)
 
     # round-3 item 6: the fixture stores RAW items — source_keys are computed here at
-    # runtime, so no stored digests need a gitleaks allowlist (this PR no longer ships
-    # .gitleaks.toml; #270's fate is Alex's call).
+    # runtime, so no stored digests need a gitleaks allowlist. The shared .gitleaks.toml
+    # (round-4 item 2: #270's file verbatim, the cross-PR rule) covers only the historical
+    # digests in the already-committed range and the selftest sentinel.
     fixture_path = _os.path.join(
         _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))),
         "supabase", "fixtures", "feeds_items.example.json")
