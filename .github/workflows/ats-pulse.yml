@@ -103,9 +103,11 @@ jobs:
 
       # Read-only, twin-only. WITHOUT the twin secrets the lane runs with delta_wow null (the
       # null-baseline rule — never invent a baseline): the missing-secrets case is the ONLY
-      # soft path. A real API failure exits nonzero and FAILS the run — it is never passed
-      # off as a null baseline. Reads last Sunday's hiring_pulse events by title; counts land
-      # in /tmp/prior.json (names included → deleted by cleanup, never logged).
+      # soft path. A real API failure is captured as prior_failed — the week still runs (an
+      # optional read must not kill the board pull, the lane_run ledger row or the summary)
+      # and the LATE GATE step below fails the run: loud, but never at the cost of the week.
+      # Reads last Sunday's hiring_pulse events by title; counts land in /tmp/prior.json
+      # (names included → deleted by cleanup, never logged).
       - name: Read last week's pulse from the twin graph (optional secrets; real failures are loud)
         id: prior
         if: steps.hold.outputs.held != 'true'
@@ -122,9 +124,18 @@ jobs:
           # The read lives in ats_pulse.py (selftested offline against fake connections): the
           # old inline heredoc sent ONE '%'-encoded '&'-joined event_date filter — the twin
           # answered 400 to every request and the bare except swallowed it into a silent null
-          # baseline. A real API failure now exits 5 and fails the run.
+          # baseline. A real API failure exits 5; captured here, gated below.
+          set +e
           python3 .claude/scripts/ats_pulse.py --fetch-prior-week /tmp/prior.json \
             --prior-day "$PREV_SUNDAY"
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            echo "::error::prior-week twin read failed (exit $RC) — the lane continues on a null delta_wow baseline; a late gate step fails this run"
+            echo "prior_failed=true" >> "$GITHUB_OUTPUT"
+            rm -f /tmp/prior.json
+            exit 0
+          fi
           # the output is honest only when the file exists (written only on a real, successful read)
           if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi
 
@@ -152,10 +163,10 @@ jobs:
         run: |
           # The guard tests FILE REALITY, not the prior step's output string. The twin-read
           # step can exit 0 without writing /tmp/prior.json (secrets absent, or the read
-          # failed — its warning path), and the old string-compare guard passed --prior
-          # anyway: run 41943575924 crashed here with exit 3 ("--prior/--pull-summary
-          # unreadable"). if-form (not `[ -s f ] && PRIOR=…`) so a missing file doesn't
-          # trip bash -e.
+          # failed — captured above as prior_failed and gated below), and the old
+          # string-compare guard passed --prior anyway: run 41943575924 crashed here with
+          # exit 3 ("--prior/--pull-summary unreadable"). if-form (not `[ -s f ] &&
+          # PRIOR=…`) so a missing file doesn't trip bash -e.
           PRIOR=""
           if [ -s /tmp/prior.json ]; then PRIOR="--prior /tmp/prior.json"; fi
           python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --pull-summary /tmp/board_stats.json \
@@ -205,6 +216,16 @@ jobs:
           name: hiring-pulse-summary-${{ steps.week.outputs.week }}
           path: /tmp/pulse-out/summary.json
 
+      # A failed prior-week read must not kill the WEEK's pulse — but a real API failure is
+      # also never a passing run. This gate fires AFTER the ledger row and the summary have
+      # landed, so the run ends failed while the week's outputs survive (the failure issue
+      # below then alerts as usual).
+      - name: Fail the run if the prior-week twin read failed
+        if: steps.hold.outputs.held != 'true' && steps.prior.outputs.prior_failed == 'true'
+        run: |
+          echo "::error::the prior-week twin read failed earlier (a real API error, not the optional-secrets case) — the lane completed on a null delta_wow baseline and this run is marked failed"
+          exit 1
+
       - name: Cleanup — delete every file derived from the registry
         if: always()
         run: |
@@ -230,6 +251,6 @@ jobs:
           else
             gh issue create \
               --title "YED-304 hiring pulse FAILED (since $TODAY)" \
-              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, or manifest validation. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, manifest validation, or the prior-week twin read (a broken read still lets the lane finish so the lane_run row and summary land, then the late gate fails the run). The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
               || echo "issue-create failed; check the Actions run directly"
           fi
