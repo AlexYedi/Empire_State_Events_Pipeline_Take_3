@@ -279,23 +279,23 @@ def _resolved_addresses(hostname: str) -> list:
     return out
 
 
-NAT64_NET = ipaddress.ip_network("64:ff9b::/96")
-
-
 def _validate_feed_url(url: str) -> None:
-    """SSRF guard (round-3: smaller, not bigger). https only; the host is resolved and
-    checked ONCE, up front: every address must be global, non-multicast, and not in the
-    NAT64 translation range — `is_global` alone let 224.0.0.1, ff02::1 and 64:ff9b::7f00:1
-    through (round-3 item 4). Deliberately NO DNS pinning: the round-2 pin patched global
-    socket state from a worker thread the wall-clock deadline can abandon, so an orphaned
-    worker un-pinned other feeds mid-fetch (round-3 item 1 — removed, not patched). A
-    redirect is a feed error (round-3 item 2), so there are no hops to re-check. Messages
-    are generic on purpose: no part of the URL is echoed back (registry privacy)."""
+    """SSRF guard (round-3: smaller, not bigger; round-5 item 2: Alex's check). https
+    only; the host is resolved and checked ONCE, up front: every address must be
+    global, non-multicast, and not reserved — `is_global` alone let 224.0.0.1 and
+    ff02::1 through (round-3 item 4), and the round-4 mapped-unwrap still passed
+    ::127.0.0.1 and ::ffff:0:7f00:1 (is_global is True on those forms on 3.13), while
+    the NAT64 prefix is subsumed by is_reserved. Deliberately NO DNS pinning: the
+    round-2 pin patched global socket state from a worker thread the wall-clock
+    deadline can abandon, so an orphaned worker un-pinned other feeds mid-fetch
+    (round-3 item 1 — removed, not patched). A redirect is a feed error (round-3
+    item 2), so there are no hops to re-check. Messages are generic on purpose: no
+    part of the URL is echoed back (registry privacy)."""
     parts = urllib.parse.urlsplit(url)
     if parts.scheme != "https" or not parts.hostname:
         raise ValueError("feeds: refusing fetch — an https URL with a hostname is required")
     for ip in _resolved_addresses(parts.hostname):
-        if not ip.is_global or ip.is_multicast or ip in NAT64_NET:
+        if not ip.is_global or ip.is_multicast or ip.is_reserved:
             raise ValueError("feeds: refusing fetch — the feed host resolved to a "
                              "non-public address")
 
@@ -407,7 +407,11 @@ SIGNAL_RULES: list[tuple[str, tuple[str, ...]]] = [
 LAUNCH_PHRASES: tuple[str, ...] = ("launch", "launches", "launched", "launching", "announcing",
                                    "introducing", "now available",
                                    "general availability", "out of beta", "GA of", "shipping", "ships")
-_LAUNCH_RELEASE_RE = re.compile(r"(?<!press )\breleases\b", re.IGNORECASE)
+_LAUNCH_RELEASE_RE = re.compile(r"\breleases\b", re.IGNORECASE)
+# round-5 optional: the old single-lookbehind guard (?<!press ) missed "press  releases"
+# (two spaces) and "press-releases" — any whitespace run or hyphen between press and
+# release(s) is the same generic-media phrase, so the guard is a separate search.
+_PRESS_RELEASES_RE = re.compile(r"press[\s-]*releases?\b", re.IGNORECASE)
 
 
 def _kw(word: str, text: str) -> bool:
@@ -425,7 +429,8 @@ def classify(item: dict) -> tuple[str, str | None]:
     for signal, words in SIGNAL_RULES:
         if any(_kw(w, text) for w in words):
             return "market", signal
-    if any(_kw(w, text) for w in LAUNCH_PHRASES) or _LAUNCH_RELEASE_RE.search(text):
+    if any(_kw(w, text) for w in LAUNCH_PHRASES) or (
+            _LAUNCH_RELEASE_RE.search(text) and not _PRESS_RELEASES_RE.search(text)):
         return "launch", None          # adopted matrix: kind=launch ⇒ signal_type=null
     return "market", "news"
 
@@ -663,21 +668,30 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
                   "pass --out to keep it", file=sys.stderr)
 
 
-def _zero_row_source_errors(items: list[dict], staged_rows: list[dict]) -> list[str]:
+def _zero_row_source_errors(items: list[dict], staged_rows: list[dict],
+                            quarantined_keys: list[str] | None = None) -> list[str]:
     """Feed errors for every source whose items ALL failed staging or quarantine
-    (round-4 item 5): a good feed beside a dead-stage feed must not mask it with a
-    quiet rc=0. Tags are the source[N] indices fetch_all stamped on the items —
-    registry-derived URLs stay in-process, never in errors or logs. Call AFTER
-    quarantine_rows so an all-quarantined source counts too."""
-    staged_feeds = {r.get("feed_url") for r in staged_rows}
-    tallies: dict[str, tuple[str, int]] = {}
+    (round-4 item 5; round-5 item 1: keyed, never URL-compared). A source is zero-row
+    only when NONE of its items' source keys survives in the final rows OR the
+    quarantine list — so cross-source dedupe (the surviving row carrying another tag)
+    and a feed URL whose redaction differs from the registry raw can never raise a
+    false alarm on healthy feeds. Keys are computed exactly as to_row computes them
+    (redact -> canonical sha256). Tags are the source[N] indices fetch_all stamped on
+    the items — registry-derived URLs stay in-process, never in errors or logs. Call
+    AFTER quarantine_rows so an all-quarantined source counts too."""
+    known = {r["source_key"] for r in staged_rows} | set(quarantined_keys or ())
+    keys_by_tag: dict[str, set[str]] = {}
+    counts: dict[str, int] = {}
     for it in items:
         tag = it.get("source_tag") or "source[?]"
-        if tag not in tallies:
-            tallies[tag] = (it.get("feed") or "", 0)
-        tallies[tag] = (tallies[tag][0], tallies[tag][1] + 1)
+        counts[tag] = counts.get(tag, 0) + 1
+        try:  # exactly to_row's key computation — an un-keyable item cannot stage
+            key = item_key(redact(it))
+        except Exception:
+            continue
+        keys_by_tag.setdefault(tag, set()).add(key)
     return [f"{tag}: {n} item(s) parsed, 0 stageable rows after staging/quarantine"
-            for tag, (feed, n) in tallies.items() if feed not in staged_feeds]
+            for tag, n in counts.items() if not (keys_by_tag.get(tag, set()) & known)]
 
 
 def _fetch_run(a, fetcher=None) -> int:
@@ -702,7 +716,7 @@ def _fetch_run(a, fetcher=None) -> int:
     rows, quarantined = quarantine_rows(rows)
     # round-4 item 5 (round-3 item 7, per-source): AFTER quarantine — a source whose items
     # all failed staging or were all quarantined is a FEED ERROR, not a quiet rc=0.
-    for zero_err in _zero_row_source_errors(items, rows):
+    for zero_err in _zero_row_source_errors(items, rows, quarantined):
         errors.append(zero_err)
         print(f"feeds: feed failed: {zero_err}", file=sys.stderr)
     if quarantined or staging_failed:
@@ -991,6 +1005,17 @@ def selftest() -> int:
           not any("Acme" in e or "Dead Co" in e or "NoUrl" in e
                   or "dead.example" in e or "ex.com" in e for e in got_errors))
 
+    # round-5 item 3 (D2, fresh mutant ID): a relative-link feed pushed through
+    # fetch_all — not just parse() — resolves against the feed URL with no errors.
+    rel_feed = ('<rss version="2.0"><channel><item><title>Rel</title>'
+                '<link>/rel/post</link></item></channel></rss>')
+    got_rel, rel_errors = fetch_all(
+        [{"company": "Acme", "feed_url": "https://ex.com/feed"}],
+        fetcher=lambda u, timeout=8: rel_feed)
+    check("fetch_all: a relative-link feed resolves and stages cleanly (D2)",
+          len(got_rel) == 1 and got_rel[0]["url"] == "https://ex.com/rel/post"
+          and rel_errors == [])
+
     rows, staging_failed = stage_rows(got + [dict(got[0])], "2026-11-04T00:00:00Z")
     check("stage_rows: in-run duplicates collapse to one row",
           len(rows) == 1 and staging_failed == 0)
@@ -1019,6 +1044,11 @@ def selftest() -> int:
           == ("market", "news"))
     check("classify: 'press releases' stays news; plural market signals match",
           classify({"title": "Company press releases", "summary": ""}) == ("market", "news")
+          # round-5 optional: the guard is spacing/hyphen-tolerant — "press  releases" and
+          # "press-releases" are the same generic-media phrase, never a launch.
+          and classify({"title": "Company press  releases", "summary": ""}) == ("market", "news")
+          and classify({"title": "Company press-releases", "summary": ""}) == ("market", "news")
+          and classify({"title": "Company press release", "summary": ""}) == ("market", "news")
           and classify({"title": "Acme announces partnerships", "summary": ""})
           == ("market", "partnership")
           and classify({"title": "Two papers on retrieval", "summary": ""})
@@ -1114,6 +1144,18 @@ def selftest() -> int:
         check("fetch_once: non-2xx message carries the STATUS only, never the URL",
               caught == "feeds: fetch failed: HTTP 503")
 
+        # round-5 item 3 (M4b, fetch layer): a 503 arriving as a RESPONSE OBJECT (not a
+        # raised error) takes the same status-only path — _fetch_once must check .status.
+        srv = _FakeOpener(_FakeResponse(status=503))
+        globals()["_build_opener"] = lambda: srv
+        caught503 = None
+        try:
+            _fetch_once("https://ex.com/feed", 8)
+        except RuntimeError as e:
+            caught503 = str(e)
+        check("fetch_once: a 503 RESPONSE raises with its status, url never echoed (M4b)",
+              caught503 == "feeds: fetch failed: HTTP 503")
+
         req = urllib.request.Request("https://ex.com/feed")
         check("redirect: the real handler refuses a 302 hop (a redirect is a feed error)",
               _raises(lambda: _NoRedirect().redirect_request(
@@ -1154,7 +1196,9 @@ def selftest() -> int:
         # these through).
         for bad, label in (("224.0.0.1", "multicast v4"), ("ff02::1", "multicast v6"),
                            ("64:ff9b::7f00:1", "NAT64 translation"),
-                           ("::ffff:100.64.0.1", "v4-mapped CGNAT")):
+                           ("::ffff:100.64.0.1", "v4-mapped CGNAT"),
+                           ("::127.0.0.1", "v6-embedded v4 loopback (round-5 item 2)"),
+                           ("::ffff:0:7f00:1", "v4-translated loopback (round-5 item 2)")):
             socket.getaddrinfo = _stub_gai(bad)
             check(f"fetch guard: {label} addresses refused",
                   _raises(lambda: _validate_feed_url("https://ex.com/x"), ValueError))
@@ -1315,9 +1359,11 @@ def selftest() -> int:
                 run_fetch(td, send_raises)
             except RuntimeError as e:
                 raised_type_only = str(e)
+                cause_hidden = e.__cause__ is None   # round-5 item 3 (Z11): from None
             check("cmd_fetch: a RAISED write failure logs the exception TYPE only "
                   "(Z11/Z15 except path)",
                   raised_type_only == "feeds: spine write failed: RuntimeError"
+                  and cause_hidden
                   and "https://" not in (raised_type_only or "")
                   and "@" not in (raised_type_only or ""))
 
@@ -1385,6 +1431,56 @@ def selftest() -> int:
                 {"company": "B", "feed_url": "https://ex.com/other"}])
             check("cmd_fetch: a 0-row SOURCE is a feed error beside a good one (round-4 "
                   "item 5)", rc == 2)
+
+            # round-5 item 3 (D8): the zero-row check consumes POST-quarantine state and
+            # is KEYED (round-5 item 1: quarantined keys count as staged) — a source whose
+            # rows the spine guard refuses is accounted for by the quarantine ledger, so
+            # no false zero-row alarm; the run still refuses the empty write loudly.
+            # Killing the "quarantined keys not passed" mutant: removing the third argument
+            # from the call site fires the false alarm and fails this check.
+            real_guard = _sc.guard
+            _sc.guard = lambda table, row: (_ for _ in ()).throw(_sc.PIIViolation())
+            d8_err = _io.StringIO()
+            d8_exit = None
+            try:
+                with _cl.redirect_stderr(d8_err):
+                    run_fetch(td, stub_send)
+            except SystemExit as e:
+                d8_exit = str(e)
+            finally:
+                _sc.guard = real_guard
+            check("cmd_fetch: an all-quarantined source is ledger-accounted, not a "
+                  "zero-row alarm, and the write is still refused (D8)",
+                  d8_exit == "feeds: nothing fetched — refusing an empty write"
+                  and "quarantined by the spine guard" in d8_err.getvalue()
+                  and "0 stageable rows" not in d8_err.getvalue()
+                  and "Acme" not in d8_err.getvalue() and "ex.com" not in d8_err.getvalue())
+
+            # round-5 item 3 (D5/D11): the implicit --out must be a mkstemp path — never
+            # a cwd path — and it must be REMOVED on a clean run.
+            import tempfile
+            real_mkstemp = tempfile.mkstemp
+            holder: dict = {}
+
+            def _spy_mkstemp(*mk_args, **mk_kwargs):
+                fd, path = real_mkstemp(*mk_args, **mk_kwargs)
+                holder["path"] = path
+                return fd, path
+
+            tempfile.mkstemp = _spy_mkstemp
+            try:
+                _sc._send = stub_send
+                _cmd_fetch(["--sources", _os.path.join(td, "sources.json"),
+                            "--fail-on-feed-errors", "--dry-run"],
+                           fetcher=lambda u, timeout=8: pii_rss)
+            finally:
+                tempfile.mkstemp = real_mkstemp
+            d5_path = holder.get("path", "")
+            check("default --out: the implicit manifest is a tempfile, never a cwd path (D5)",
+                  d5_path.startswith(tempfile.gettempdir())
+                  and not d5_path.startswith(_os.getcwd()))
+            check("default --out: the implicit manifest is removed on a clean run (D11)",
+                  bool(d5_path) and not _os.path.exists(d5_path))
 
             # round-3 item 10: 0 fresh rows (all already on the twin) skips the POST.
             p1_key = hashlib.sha256(b"https://ex.com/p1?x=1").hexdigest()
@@ -1471,6 +1567,24 @@ def selftest() -> int:
           and "@" not in err_buf3.getvalue() and "https://" not in err_buf3.getvalue())
     check("quarantine_rows: quarantine never leaks row text (keys are sha256 only)",
           all(len(k) == 64 for k in quarantined_keys))
+
+    # round-5 item 1: the zero-row check is keyed — no false alarms on healthy runs for a
+    # redaction-differing feed URL, a cross-source duplicate, or a quarantined key; a
+    # source whose items never stage (no key at all) stays a feed error.
+    phone_feed = "https://ex.com/f?m=+1-212-555-0142"
+    alarm_items = [
+        {"url": "https://ex.com/a", "source_tag": "source[1]", "feed": phone_feed},
+        {"url": "https://ex.com/a", "source_tag": "source[2]", "feed": "https://ex.com/f"},
+    ]
+    qk = item_key(redact({"url": "https://ex.com/q"}))
+    alarm_rows = [{"source_key": item_key(redact(alarm_items[0])),
+                   "feed_url": redact({"feed": phone_feed})["feed"]}]
+    check("zero-row: keyed accounting — no false alarm for a redaction-differing feed "
+          "URL, a cross-source dup, or a quarantined key (round-5 item 1)",
+          _zero_row_source_errors(alarm_items, alarm_rows, [qk]) == [])
+    check("zero-row: a source whose items never stage (no key) is a feed error",
+          _zero_row_source_errors([{"title": "x", "source_tag": "source[9]"}], [], [])
+          == ["source[9]: 1 item(s) parsed, 0 stageable rows after staging/quarantine"])
 
     def _exit_code(ref: str | None) -> int:
         try:
