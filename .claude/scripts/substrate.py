@@ -468,29 +468,50 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
     return uniq, skipped
 
 
-def roster_match(heading: str, roster: list[tuple[str, str, str]]) -> tuple[str, str] | None:
+class _RosterTie:
+    """A roster matcher found MORE THAN ONE entity: distinct from 'no hit' (None) because a tie blocks every
+    fallback — the roster already said 'two', so nothing may pick one, globally or otherwise (YED-264 review).
+    Falsy, so any caller still reading `if not hit` treats it as unlinked, the safe default."""
+    def __bool__(self) -> bool:
+        return False
+
+    def __repr__(self) -> str:
+        return "ROSTER_TIE"
+
+
+ROSTER_TIE = _RosterTie()
+
+
+def roster_match(heading: str, roster: list[tuple[str, str, str]]) -> "tuple[str, str] | _RosterTie | None":
     """Ledger heading -> (type, id) among THIS event's roster only (type, name, id). Tiers, first unique hit wins:
-    exact normalized name; the name without a trailing '(Qualifier)'; then (pre-mortem 2026-09-27) name-token
-    containment for COMPANIES AND TOPICS ONLY ('Soxton' ~ 'Soxton.AI', the same rule stage_claims uses for founder
-    showcases). People are exact-only — no fuzzy person matching, ever (ADR-4 D3). Returns None when absent OR
-    ambiguous at the first tier that has hits — never guessed; the caller counts it and stages the claim unlinked.
-    Linking here only attaches a claim to an entity already on this event's roster; it never creates or merges one."""
+    exact normalized name; the name without ONE trailing '(…)', nested parens included (strip_paren, YED-264 — so
+    'Logan Brown (CEO (2024), Soxton.AI)' is the person, before containment can call it the company); then
+    (pre-mortem 2026-09-27) name-token containment for COMPANIES AND TOPICS ONLY ('Soxton' ~ 'Soxton.AI', the same
+    rule stage_claims uses for founder showcases). People are exact-only — no fuzzy person matching, ever (ADR-4 D3).
+    Returns None when absent and ROSTER_TIE when the first tier with hits has more than one — never guessed; the
+    caller counts it and stages the claim unlinked. Linking here only attaches a claim to an entity already on this
+    event's roster; it never creates or merges one."""
     tiers = (lambda t, n: norm_text(n) == norm_text(heading),
-             lambda t, n: norm_text(split_qualifier(n)[0]) == norm_text(split_qualifier(heading)[0]),
+             lambda t, n: norm_text(strip_paren(n)) == norm_text(strip_paren(heading)),
              lambda t, n: t != "person" and same_company(split_qualifier(heading)[0], split_qualifier(n)[0]))
     for test in tiers:
         hits = {(t, i) for t, n, i in roster if test(t, n)}
         if len(hits) == 1:
             return next(iter(hits))
         if len(hits) > 1:
-            return None
+            return ROSTER_TIE
     return None
 
 
 # YED-264 (YED-314 decision A′, 2026-11-05): two deterministic fallbacks, tried ONLY after a linker's existing
-# roster-scoped match fails. 21% of prod claims arrived with no claim_entity link; these close the cheap,
-# certain part of that gap at write time. Re-linking claims already in the graph is lane 0's job, not this file's.
+# roster-scoped match found NOTHING (a roster tie blocks both). 21% of prod claims arrived with no claim_entity link;
+# these close the cheap, certain part of that gap at write time. Re-linking claims already in the graph is lane 0's
+# job, not this file's.
 GLOBAL_LINK_TYPES = ("company", "topic")    # lower(name) is unique on both. Never person: people share names.
+# Scanner/section headings that name a bucket, not an entity: rule (b) never resolves them globally (a topic that
+# happens to be called 'Signals' is not what a 'Signals' ledger is about). Compared after norm_text.
+CATCH_ALL_HEADINGS = {"signals", "signal log", "signal scan", "competitive signals", "overview", "context",
+                      "light tier", "summary", "notes"}
 
 
 def strip_paren(name: str) -> str:
@@ -507,13 +528,27 @@ def strip_paren(name: str) -> str:
     return s
 
 
+def _generic_heading(name: str) -> bool:
+    """A catch-all bucket heading, or a single token under 4 chars ('AI', 'Box'): too weak for a global match."""
+    n = norm_text(name)
+    return n in CATCH_ALL_HEADINGS or (len(name_tokens(n)) <= 1 and len(n) < 4)
+
+
 def link_fallback(g: "Graph", name: str, roster: list[tuple[str, str, str]], *, global_types: tuple[str, ...],
-                  stat: str) -> tuple[str, str] | None:
-    """(a) parenthetical strip: `name` and the roster names compared with a trailing '(…)' removed (fires only when
-    one side actually carried one), roster first; a roster tie stops here — the roster already said 'two'.
-    (b) global exact: lower(name) equality against EVERY live company/topic (the full name, then the stripped one).
-    Persons are filtered out of (b) whatever the caller passes. >1 survivor = ambiguous: counted, never linked.
-    Counters land on claim_entity as <stat>_parenthetical_strip / _global_exact / _global_ambiguous."""
+                  stat: str, roster_hit=None) -> "tuple[str, str] | _RosterTie | None":
+    """Runs ONLY when the caller's roster matcher found nothing: pass its result as `roster_hit`, and a ROSTER_TIE
+    short-circuits both rules (counted <stat>_roster_tie) — the roster said 'two', so nothing may pick one.
+    (a) parenthetical strip: `name` and the roster names compared with a trailing '(…)' removed. The guard 'one side
+    actually carried a parenthetical' is load-bearing for the speaker path: same_person needs >=2 tokens, so without
+    it a bare single-token exact name ('Cher') would link here and be mislabelled a parenthetical match (pinned).
+    (b) global exact: lower(name) equality against EVERY live company/topic (the full name, then the stripped one),
+    never for persons (filtered here whatever the caller passes) and never for a catch-all heading. >1 survivor =
+    ambiguous: counted, never linked. A tombstone that will not resolve (Graph.follow's SystemExit) is counted
+    <stat>_global_error and left unlinked — one bad row never aborts the run. Each global link is recorded on
+    g.global_links (stat, name, type, entity name) so the audit line can show the one out-of-roster write."""
+    if roster_hit is ROSTER_TIE:
+        g.stats.bump("claim_entity", f"{stat}_roster_tie")
+        return ROSTER_TIE
     bare = strip_paren(name)
     hits = {(t, i) for t, n, i in roster
             if (bare != (name or "").strip() or strip_paren(n) != n.strip()) and norm_text(strip_paren(n)) == norm_text(bare)}
@@ -521,13 +556,22 @@ def link_fallback(g: "Graph", name: str, roster: list[tuple[str, str, str]], *, 
         g.stats.bump("claim_entity", f"{stat}_parenthetical_strip")
         return next(iter(hits))
     if hits:
-        return None
+        g.stats.bump("claim_entity", f"{stat}_roster_tie")
+        return ROSTER_TIE
     types = [t for t in global_types if t in GLOBAL_LINK_TYPES]
     for cand in dict.fromkeys(x for x in ((name or "").strip(), bare) if x):
-        found = {(t, r["id"]) for t in types for r in g.live_by_name(t, cand)}
+        if not types or _generic_heading(cand):
+            continue
+        try:
+            found = {(t, r["id"]): r["name"] for t in types for r in g.live_by_name(t, cand)}
+        except SystemExit:                           # dangling merged_into / over-deep tombstone chain
+            g.stats.bump("claim_entity", f"{stat}_global_error")
+            return None
         if len(found) == 1:
+            (t, i), ename = next(iter(found.items()))
             g.stats.bump("claim_entity", f"{stat}_global_exact")
-            return next(iter(found))
+            g.__dict__.setdefault("global_links", []).append((stat, name, t, ename))
+            return t, i
         if found:
             g.stats.bump("claim_entity", f"{stat}_global_ambiguous")
             return None
@@ -1178,8 +1222,9 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         roster = g.get(f"/person?id=in.({','.join(roster_ids)})&select=id,name") if roster_ids else []
         for name in speakers:
             prows = [p["id"] for p in roster if same_person(name, p["name"])]
-            if len(prows) != 1:   # YED-264 rule (a) only — a person is never linked by a global name match
-                fb = link_fallback(g, name, [("person", p["name"], p["id"]) for p in roster], global_types=(), stat="speaker")
+            if len(prows) != 1:   # YED-264 rule (a) only — a person is never linked by a global name match; a tie blocks it
+                fb = link_fallback(g, name, [("person", p["name"], p["id"]) for p in roster], global_types=(),
+                                   stat="speaker", roster_hit=ROSTER_TIE if prows else None)
                 prows = [fb[1]] if fb else []
             if len(prows) != 1:
                 g.stats.bump("claim_entity", "speaker_unresolved")
@@ -1199,8 +1244,8 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         for name in about:
             match = [c["id"] for c in roster if same_company(name, c["name"])]
             if len(match) != 1:   # YED-264 fallbacks: (a) parenthetical strip on this roster, then (b) global exact
-                fb = link_fallback(g, name, [("company", c["name"], c["id"]) for c in roster],
-                                   global_types=("company",), stat="company")
+                fb = link_fallback(g, name, [("company", c["name"], c["id"]) for c in roster],   # a tie blocks both
+                                   global_types=("company",), stat="company", roster_hit=ROSTER_TIE if match else None)
                 match = [fb[1]] if fb else []
             if len(match) != 1:
                 g.stats.bump("claim_entity", "company_unresolved")
@@ -1370,8 +1415,8 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     for it in items:
         h = it["entity"]
         if h not in resolved:     # once per heading, so the fallback counters count headings, like unresolved does
-            resolved[h] = roster_match(h, roster) or link_fallback(g, h, roster, global_types=GLOBAL_LINK_TYPES,
-                                                                   stat="about")
+            rm = roster_match(h, roster)
+            resolved[h] = rm or link_fallback(g, h, roster, global_types=GLOBAL_LINK_TYPES, stat="about", roster_hit=rm)
         hit = resolved[h]
         if not hit:
             unresolved.add(it["entity"])
@@ -1391,7 +1436,9 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
           + "".join(f" · {k.removeprefix('about_')} {v}" for k, v in sorted(g.stats.c.get("claim_entity", {}).items())
-                    if k.startswith("about_") and k != "about_unresolved_heading"))
+                    if k.startswith("about_") and k != "about_unresolved_heading")
+          # the one out-of-roster write, named so Alex can review each one (YED-264 review)
+          + "".join(f" · global: {n} → {t}:{en}" for s_, n, t, en in g.__dict__.get("global_links", []) if s_ == "about"))
     # YED-262: after the claims, so a usage problem can never cost the brief its claims; never changes rc
     print(log_research_usage(g, usage_from, doc_id) if usage_from else "usage: NOT LOGGED (no --usage-from passed)")
     return 0
@@ -2032,11 +2079,11 @@ def _research_selftest(ok) -> None:
        roster_match("Soxton", r) == ("company", "c1"))
     ok("roster: people are exact-only — 'Logan' never matches 'Logan Brown'", roster_match("Logan", r) is None)
     ok("roster: tier-3 pools companies + topics, so a heading contained in BOTH is unlinked, never picked",
-       roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Contract AI", "t1")]) is None)
+       roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Contract AI", "t1")]) is ROSTER_TIE)
     ok("roster: KNOWN LIMIT, pinned: a heading contained in exactly one entity of another type links to it",
        roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Agent Evals", "t1")]) == ("company", "c1"))
-    ok("roster: containment that hits two entities -> None",
-       roster_match("Holly", [("company", "Holly Health", "c1"), ("company", "Holly AI", "c2")]) is None)
+    ok("roster: containment that hits two entities -> ROSTER_TIE (distinct from no hit)",
+       roster_match("Holly", [("company", "Holly Health", "c1"), ("company", "Holly AI", "c2")]) is ROSTER_TIE)
     ok("ledger: a bold '**Evidence Ledger — X**' label opens a ledger too",
        len(parse_ledger("**Evidence Ledger — Amperos**\n- claim: Builds battery analytics for fleets | tier: web-verified"
                         " | source: amperos.com | url: https://amperos.com | date: 2026-09-01")[0]) == 1)
@@ -2046,8 +2093,8 @@ def _research_selftest(ok) -> None:
                              "- claim: Term Sheet reports a seed extension | tier: email-signal | source: Term Sheet | url: https://fortune.com/ts | date: 2026-09-02")
     ok("ledger: an email-signal row with a URL is STILL private when its text is correspondence or its source a mailbox",
        len(leak) == 1 and leak[0]["text"].endswith("seed extension") and why.get("email_signal_private") == 2)
-    ok("roster: same name in two types -> None (never guessed)",
-       roster_match("Holly", [("company", "Holly", "c9"), ("topic", "Holly", "t9")]) is None)
+    ok("roster: same name in two types -> ROSTER_TIE (never guessed)",
+       roster_match("Holly", [("company", "Holly", "c9"), ("topic", "Holly", "t9")]) is ROSTER_TIE)
     # ---- end to end on the fake graph --------------------------------------------------------------
     fg = _FakeGraph()
     pid = "3ded3699c2db816a828ec6410801d5de"
@@ -2114,42 +2161,80 @@ def _linking_selftest(ok) -> None:
                          f"web-verified | source: blog | url: https://example.com/{i} | date: 2026-10-01"
                          for i, h in enumerate(heads))
 
-    def run(heads, seed):
+    def run(heads, seed, entities=None):
         fg = _FakeGraph()
-        for table, name in seed:
-            fg.t[table].append({"id": f"off-{table}-{len(fg.t[table])}", "name": name})
+        for table, name, *meta in seed:
+            fg.t[table].append({"id": f"off-{table}-{len(fg.t[table])}", "name": name, **({"metadata": meta[0]} if meta else {})})
         m = {"event": {"notion_page_id": pid, "title": "Linking fixture", "event_date": "2026-10-02"},
-             "entities": [{"type": "company", "name": "Soxton.AI"}, {"type": "person", "name": "Logan Brown"},
-                          {"type": "topic", "name": "Contract AI"}]}
-        stage_research(fg, ledger(*heads), m, brief_ref=None)
+             "entities": entities or [{"type": "company", "name": "Soxton.AI"}, {"type": "person", "name": "Logan Brown"},
+                                      {"type": "topic", "name": "Contract AI"}]}
+        out = __import__("io").StringIO()
+        with __import__("contextlib").redirect_stdout(out):
+            stage_research(fg, ledger(*heads), m, brief_ref=None)
         ids = {r["name"]: r["id"] for t in ("company", "person", "topic") for r in fg.t[t]}
-        return fg, [(l["entity_type"], l["entity_id"]) for l in fg.t["claim_entity"]], ids, fg.stats.c.get("claim_entity", {})
+        graph = next((l for l in out.getvalue().splitlines() if l.startswith("Graph:")), "")
+        return graph, [(l["entity_type"], l["entity_id"]) for l in fg.t["claim_entity"]], ids, fg.stats.c.get("claim_entity", {})
 
-    _, links, ids, st = run(["Logan Brown (co-founder (since 2024), speaking)"], [])
-    ok("link (a): a nested-parenthetical heading links to its roster entity + counts about_parenthetical_strip",
-       links == [("person", ids["Logan Brown"])] and st.get("about_parenthetical_strip") == 1)
-    _, links, ids, st = run(["Fivetran (supplementary, via dbt Labs (merged 2025))"], [("company", "Fivetran")])
+    # ---- rule (a), parenthetical strip ------------------------------------------------------------------
+    _, links, ids, st = run(["Logan Brown (CEO (2024), Soxton.AI)"], [])
+    ok("roster tier 2 (strip_paren): 'Logan Brown (CEO (2024), Soxton.AI)' is the PERSON, not the company containment hits",
+       links == [("person", ids["Logan Brown"])])
+    lf = _FakeGraph()
+    ok("link (a): a nested parenthetical links to its roster entity + counts <stat>_parenthetical_strip",
+       link_fallback(lf, "Ryan (Timescale (2024))", [("person", "Ryan", "p1")], global_types=(), stat="speaker") == ("person", "p1")
+       and lf.stats.c["claim_entity"].get("speaker_parenthetical_strip") == 1)
+    ok("link (a): guard pinned — a bare single-token exact name ('Cher') is NOT a parenthetical match",
+       link_fallback(_FakeGraph(), "Cher", [("person", "Cher", "p1")], global_types=(), stat="speaker") is None)
+    # ---- rule (b), global exact ---------------------------------------------------------------------------
+    g_line, links, ids, st = run(["Fivetran (supplementary, via dbt Labs (merged 2025))"], [("company", "Fivetran")])
     ok("link (b): a global exact company match links when the roster misses + counts about_global_exact",
        links == [("company", "off-company-0")] and st.get("about_global_exact") == 1)
+    ok("audit: the Graph line names every global link ('global: <heading> → <type>:<name>')",
+       "· global: Fivetran (supplementary, via dbt Labs (merged 2025)) → company:Fivetran" in g_line)
     _, links, _, st = run(["Dana Smith"], [("person", "Dana Smith")])
     ok("link (b): a person NEVER links by global name match (people share names)",
        links == [] and "about_global_exact" not in st and st.get("about_unresolved_heading") == 1)
-    _, links, _, st = run(["Agent Evals"], [("topic", "Agent Evals"), ("topic", "Agent Evals")])
-    ok("link (b): two same-named topics -> no link, counted about_global_ambiguous",
+    _, links, _, st = run(["Linear"], [("company", "Linear"), ("topic", "Linear")])
+    ok("link (b): a company and a topic with the same name -> no link, counted about_global_ambiguous",
        links == [] and st.get("about_global_ambiguous") == 1 and st.get("about_unresolved_heading") == 1)
+    _, links, _, st = run(["Signals", "Notes (week 44)", "AI"], [("topic", "Signals"), ("topic", "Notes"), ("topic", "AI")],
+                            [{"type": "company", "name": "Pascal"}])
+    ok("link (b): catch-all headings ('Signals', 'Notes (…)') and short single tokens ('AI') never resolve globally",
+       links == [] and "about_global_exact" not in st and st.get("about_unresolved_heading") == 3)
+    _, links, _, st = run(["Evals"], [("topic", "Evals", {"merged_into": "nope"})])
+    ok("link (b): a dangling tombstone is counted about_global_error, never aborts the run",
+       links == [] and st.get("about_global_error") == 1)
     _, links, ids, st = run(["Soxton"], [("company", "Soxton")])
     ok("link: a roster match still wins over a global exact match ('Soxton' -> roster Soxton.AI, not global Soxton)",
        links == [("company", ids["Soxton.AI"])] and not any(k.startswith("about_global") for k in st))
-    # stage_claims founder-showcase path: Arist is off the event's roster but in the graph -> (b) links it
+    # ---- a roster TIE blocks both fallbacks -----------------------------------------------------------------
+    _, links, _, st = run(["Holly"], [("company", "Holly")], [{"type": "company", "name": "Holly Health"},
+                                                              {"type": "company", "name": "Holly AI"}])
+    ok("tie (research): roster Holly Health + Holly AI, heading 'Holly' -> no link (not the off-roster Holly), about_roster_tie",
+       links == [] and st.get("about_roster_tie") == 1 and "about_global_exact" not in st)
+    # stage_claims founder-showcase path: Arist is off the event's roster but in the graph -> (b) links it;
+    # North ties on the roster (North.Cloud + North Labs), so the off-roster 'North' must NOT be linked.
     fg = _FakeGraph()
-    fg.t["company"].append({"id": "off-arist", "name": "Arist"})
+    fg.t["company"] += [{"id": "off-arist", "name": "Arist"}, {"id": "off-north", "name": "North"}]
     em = {"event": {"notion_page_id": pid, "title": "Showcase fixture", "kind": "attended", "event_date": "2026-10-02"},
-          "entities": [{"type": "company", "name": "North.Cloud", "role": "subject"}]}
+          "entities": [{"type": "company", "name": "North.Cloud", "role": "subject"},
+                       {"type": "company", "name": "North Labs", "role": "subject"}]}
     fg.ensure_event(em)
     stage_claims(fg, SHOWCASE_SAMPLE, em, brief_ref=None, approve=False)
-    arist = [l for l in fg.t["claim_entity"] if l["entity_id"] == "off-arist"]
+    sc = fg.stats.c["claim_entity"]
     ok("link (b): stage-claims showcase company off the roster links by global exact (3 Arist claims)",
-       len(arist) == 3 and fg.stats.c["claim_entity"].get("company_global_exact") == 1)
+       len([l for l in fg.t["claim_entity"] if l["entity_id"] == "off-arist"]) == 3 and sc.get("company_global_exact") == 1)
+    ok("tie (showcase): 'North' ties North.Cloud + North Labs -> unlinked, company_roster_tie, global North untouched",
+       not any(l["entity_id"] == "off-north" for l in fg.t["claim_entity"]) and sc.get("company_roster_tie") == 1)
+    sp = _FakeGraph()
+    sm = {"event": {"notion_page_id": pid, "title": "Speaker fixture", "kind": "attended", "event_date": "2026-09-16"},
+          "entities": [{"type": "person", "name": "Ryan Booz", "role": "speaker"},
+                       {"type": "person", "name": "Ryan J Booz", "role": "speaker"}]}
+    sp.ensure_event(sm)
+    stage_claims(sp, SAMPLE_BRIEF, sm, brief_ref=None, approve=False)
+    ok("tie (speaker): 'Ryan Booz' matches two roster persons (Ryan Booz, Ryan J Booz) -> no asserted_by link, speaker_roster_tie",
+       sp.stats.c["claim_entity"].get("speaker_roster_tie") == 1
+       and not any(l["role"] == "asserted_by" for l in sp.t["claim_entity"]))
 
 
 def _usage_selftest(ok) -> None:
