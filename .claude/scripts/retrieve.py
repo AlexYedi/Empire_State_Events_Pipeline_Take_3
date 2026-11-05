@@ -12,7 +12,8 @@ D4's one retrieval path (Amendment 1: the job-search lens), not removed without 
     .venv/bin/python .claude/scripts/retrieve.py --selftest      (offline: job-lens isolation + company lens + usage, YED-149/260/262)
 
 seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
-            "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365}
+            "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365,
+            "event": "<event-slug>"}      # YED-262: binds the usage sidecar to the event being researched
 
 What it does (for every lens):
   1 resolve seed entities (notion_page_id, else exact name) — unresolved names are REPORTED, never guessed
@@ -40,6 +41,8 @@ against the unique (claim_id, document_id) pair, so a re-run of the same pack is
 but LOUD: the result lands on the audit line (`usage=logged N | not logged (<reason>) | failed (code)`);
 a write failure prints to stderr and never fails the pack itself. Without --usage-document the audit
 says why nothing was logged — the caller attributes usage once the consuming document id is known.
+Every --out run also writes `<out>.usage.json` (kept claim ids + lens + timestamp; ids only, never claim
+text), which `substrate.py stage-research --usage-from` logs once the research_brief document exists.
 """
 from __future__ import annotations
 import argparse, datetime as dt, json, math, os, re, sys
@@ -442,18 +445,35 @@ def usage_plan(kept_ids: list[str], document_id: str | None, existing: set[str],
     return rows, None
 
 
-def log_usage(kept_ids: list[str], document_id: str, consumer: str) -> str:
+def usage_sidecar(kept_ids: list[str], lens: str, now: str, event: str | None) -> dict:
+    """Pure. The `<out>.usage.json` body: kept claim ids (deduped, order kept), lens, the event it was pulled
+    for (the seed's `event`: the event slug or Notion page id) and a timestamp — IDS ONLY, never claim text.
+    stage-research refuses a sidecar bound to another event, another lens, or older than 12 h (YED-262 review)."""
+    return {"claim_ids": list(dict.fromkeys(str(c) for c in kept_ids)), "lens": lens, "event": event,
+            "generated_at": now}
+
+
+# Idempotent at the database too, not only by read-before-write: a concurrent writer that lands the same
+# (claim_id, document_id) between our read and our POST is skipped by Postgres, never a 409 that fails the batch.
+# guard_body reads the table from before the '?', so the PII guard still checks these rows as claim_usage.
+USAGE_WRITE_PATH = "claim_usage?on_conflict=claim_id,document_id"
+USAGE_PREFER = "resolution=ignore-duplicates,return=minimal"
+
+
+def log_usage(kept_ids: list[str], document_id: str, consumer: str, *, get_fn=None, write_fn=None) -> str:
     """Write claim_usage via spine_client (ADR-9; on the allowlist). Best-effort but LOUD: the
     outcome lands on the audit line either way, a failure prints to stderr, and the pack itself
-    never fails because logging did."""
-    existing_rows = get(f"/claim_usage?document_id=eq.{q(document_id)}&select=claim_id&limit=2000")
+    never fails because logging did. get_fn / write_fn are injectable so substrate.py stage-research
+    reuses this exact loop (with its Graph.get) instead of a second copy."""
+    get_fn, write_fn = get_fn or get, write_fn or write
+    existing_rows = get_fn(f"/claim_usage?document_id=eq.{q(document_id)}&select=claim_id&limit=2000")
     existing = {r["claim_id"] for r in (existing_rows or [])}
     rows, skip = usage_plan(kept_ids, document_id, existing, consumer)
     if skip:
         return f"not logged ({skip})"
     written = 0
     for i in range(0, len(rows), USAGE_BATCH):
-        code, _body = write("claim_usage", rows[i:i + USAGE_BATCH], prefer="return=minimal")
+        code, _body = write_fn(USAGE_WRITE_PATH, rows[i:i + USAGE_BATCH], prefer=USAGE_PREFER)
         if code not in (200, 201):
             print(f"  ⚠️ claim_usage write failed ({code}) at rows {i}..{i + USAGE_BATCH} — usage NOT "
                   f"logged; the pack is unaffected. Re-run with the same --usage-document to retry "
@@ -461,6 +481,31 @@ def log_usage(kept_ids: list[str], document_id: str, consumer: str) -> str:
             return f"failed ({code})"
         written += len(rows[i:i + USAGE_BATCH])
     return f"logged {written}"
+
+
+def _main_sidecar_check() -> tuple[str, bool]:
+    """main() end to end with build_pack faked (no network): what --out ACTUALLY writes next to the pack."""
+    import contextlib, io, shutil, tempfile
+    g, real = globals(), build_pack
+    tmp = tempfile.mkdtemp(prefix="yed262_")
+    seed, out = os.path.join(tmp, "seed.json"), os.path.join(tmp, "demo-night.context-pack.md")
+    with open(seed, "w", encoding="utf-8") as f:
+        json.dump({"entities": [], "text": "x", "event": "demo-night"}, f)
+    g["build_pack"] = lambda s, lens, budget: ("# pack\n- Soxton raised $4M c:00000000", {
+        "kept_claim_ids": ["00000000-0000-4000-9000-000000000001"], "audit_line": "AUDIT"}, 0)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(["--seed", seed, "--out", out])
+        side = json.load(open(out + ".usage.json", encoding="utf-8"))
+    except Exception:
+        rc, side = -1, {}
+    finally:
+        g["build_pack"] = real
+        shutil.rmtree(tmp, ignore_errors=True)
+    good = (rc == 0 and set(side) == {"claim_ids", "lens", "event", "generated_at"}
+            and side["claim_ids"] == ["00000000-0000-4000-9000-000000000001"] and side["lens"] == "event"
+            and side["event"] == "demo-night" and "Soxton" not in json.dumps(side))
+    return ("main --out: the sidecar written has exactly {claim_ids, lens, event, generated_at}, ids only", good)
 
 
 def selftest() -> bool:
@@ -525,7 +570,13 @@ def selftest() -> bool:
          usage_plan(["c1", "c2"], "d1", {"c1"}, "event") == ([{"claim_id": "c2", "document_id": "d1",
                                                                   "consumer": "event"}], None)
          and usage_plan(["c1"], "d1", {"c1"}, "event") == ([], "already logged for this document")),
+        ("usage sidecar: ids + lens + event + timestamp ONLY — no claim text, deduped in order",
+         usage_sidecar(["c2", "c1", "c2"], "event", "2026-11-05T00:00:00Z", "demo-night")
+         == {"claim_ids": ["c2", "c1"], "lens": "event", "event": "demo-night", "generated_at": "2026-11-05T00:00:00Z"}),
+        ("usage: the write is idempotent at the database (on_conflict on the unique pair + ignore-duplicates)",
+         USAGE_WRITE_PATH == "claim_usage?on_conflict=claim_id,document_id" and "ignore-duplicates" in USAGE_PREFER),
     ]
+    checks += [_main_sidecar_check()]
     for name, good in checks:
         print(f"  {'✓' if good else '✗'} {name}")
     fail = sum(1 for _, g in checks if not g)
@@ -559,6 +610,16 @@ def main(argv: list[str]) -> int:
         with open(a.out, "w", encoding="utf-8") as f:
             f.write(pack)
         print(f"pack -> {a.out}")
+        side = a.out + ".usage.json"          # YED-262: always, so Step 4.2 can log usage once the doc id exists
+        try:
+            now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            with open(side, "w", encoding="utf-8") as f:
+                json.dump(usage_sidecar(audit["kept_claim_ids"], a.lens, now, seed.get("event")), f)
+            print(f"usage sidecar -> {side} ({len(audit['kept_claim_ids'])} claim ids)")
+            if not seed.get("event"):
+                print("  ⚠️ seed has no `event` — Step 4.2b will refuse this sidecar (usage NOT LOGGED)", file=sys.stderr)
+        except OSError as e:
+            print(f"  ⚠️ usage sidecar NOT written ({e}) — Step 4.2 will report usage NOT LOGGED", file=sys.stderr)
     else:
         print(pack)
     print(audit["audit_line"], file=sys.stderr)

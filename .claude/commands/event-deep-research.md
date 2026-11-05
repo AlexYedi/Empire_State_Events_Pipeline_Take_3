@@ -65,7 +65,7 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 
 Before fan-out, load what the pipeline already knows about these entities so research **compounds** instead of restarting from web search every run. Run **Step 1.7 of `.claude/skills/event-research/SKILL.md`**:
 
-1. **1.7a Retrieve (this thread — MCP reads must run in the parent):** for entities **with a prior record** (from the Step 1.5b dedup — pure-NEW entities are skipped here and researched from scratch in Step 2), pull prior Event brief bodies, People/Companies page bodies, Topics `Current Events` (newsletter/trend notes), Gmail correspondence + `label:Content/newsletters newer_than:14d`, and Supabase graph context via the ONE retrieval path (S-01, YED-261): `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/seed.json --out <scratch>/context-pack.md`, with the seed built from the Step 1.5b entities **with a prior record** (`{"type", "name", "notion_page_id"}` each, verbatim invite as `text`, `window_days: 365`) — the script reads `SUPABASE_API_KEY` from `.env` itself, **never** the MCP (see `.claude/references/market-intel-spine.md`). Its Context Pack (Continuity Ledger · entity cards · scored Claims, each tagged `c:<8>`) feeds the conditioner with the Notion/Gmail pulls, and its AUDIT line is the `graph:` entry of the mandatory audit below. **Follow the enforced cost-guard procedure in SKILL Step 1.7a:** skip-no-prior → rank (event-series brief > returning people > companies with recent developments > topics) → hard-cap **N=8** → emit the mandatory audit line (`pulled · skipped-no-prior · capped/not-pulled · graph`) before dispatching the conditioner. **The graph read is best-effort:** on script failure / timeout / empty pack, record `graph: no signals (<reason>)` and continue — never block or retry-loop. Exit 5 = RETRIEVAL FAILURE (the graph holds claims for these entities but the pack kept none): surface it loudly, never proceed as if there were no prior knowledge. (YED-262: usage attribution lands later — once Step 4.2 stages the `research_brief` document row, a re-attribution run may pass `--log-usage event --usage-document <documents.id>`; at 1.7a the audit line's `usage=not logged` is expected.)
+1. **1.7a Retrieve (this thread — MCP reads must run in the parent):** for entities **with a prior record** (from the Step 1.5b dedup — pure-NEW entities are skipped here and researched from scratch in Step 2), pull prior Event brief bodies, People/Companies page bodies, Topics `Current Events` (newsletter/trend notes), Gmail correspondence + `label:Content/newsletters newer_than:14d`, and Supabase graph context via the ONE retrieval path (S-01, YED-261): `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/<event-slug>.seed.json --out <scratch>/<event-slug>.context-pack.md`, with the seed built from the Step 1.5b entities **with a prior record** (`{"type", "name", "notion_page_id"}` each, verbatim invite as `text`, `window_days: 365`, and `"event": "<event-slug>"`, where `<event-slug>` is the event title kebab-cased, the same `<slug>` as Step 4.2a) — the script reads `SUPABASE_API_KEY` from `.env` itself, **never** the MCP (see `.claude/references/market-intel-spine.md`). Its Context Pack (Continuity Ledger · entity cards · scored Claims, each tagged `c:<8>`) feeds the conditioner with the Notion/Gmail pulls, and its AUDIT line is the `graph:` entry of the mandatory audit below. **Follow the enforced cost-guard procedure in SKILL Step 1.7a:** skip-no-prior → rank (event-series brief > returning people > companies with recent developments > topics) → hard-cap **N=8** → emit the mandatory audit line (`pulled · skipped-no-prior · capped/not-pulled · graph`) before dispatching the conditioner. **The graph read is best-effort:** on script failure / timeout / empty pack, record `graph: no signals (<reason>)` and continue — never block or retry-loop. Exit 5 = RETRIEVAL FAILURE (the graph holds claims for these entities but the pack kept none): surface it loudly, never proceed as if there were no prior knowledge. (YED-262: `--out` also writes `<scratch>/<event-slug>.context-pack.md.usage.json`: the kept claim ids (ids only), bound to the seed's `event`, with lens and timestamp. **Keep it:** Step 4.2b logs it as `claim_usage` once the `research_brief` document exists. At 1.7a the audit line's `usage=not logged` is expected.)
 2. **1.7b Condition (delegated):** dispatch `knowledge-conditioning` with the `VERBATIM SOURCE` block + triage plan + the 1.7a raw pulls. It returns the **Prior-Context Pack** — relevance-filtered, provenance-tagged (`KNOWN` / `STALE` / `UNVERIFIED` + `[source · date]`), with a Continuity Ledger, per-entity cards, Graph Signals, and an Audit. Text-in / text-out; no I/O.
 3. **1.7c Persist (via `notion-writer`):** write the pack as a `prior_context_pack` Content Draft (`Platform: notion_only`, icon 🗃️) so "what prior knowledge fed this brief" is auditable. One-operation payload, same loop as Step 4: `key` = `draft:<event-slug>:prior_context_pack`, `dedup` = its title, manifest = the event's (`.claude/.state/notion-manifests/<event-slug>.json`); `notion_payload.py` → VALID → dispatch → show the table. Step 4 wave 4 relinks it and wave 3 mirrors a `## Prior-Context Pack` section onto the Event page.
 
@@ -180,9 +180,15 @@ attended row and attaches these claims to it automatically. Private-corresponden
 **4.2b Stage it:**
 ```
 .venv/bin/python .claude/scripts/substrate.py stage-research --manifest .claude/.state/research/<slug>.manifest.json \
-    --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g>
+    --evidence .claude/.state/research/<slug>.evidence.md --brief-ref notion:<research brief Content Draft id from 4g> \
+    --usage-from <scratch>/<slug>.context-pack.md.usage.json
 ```
-Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
+**`--usage-from` is mandatory** (YED-262): it logs one `claim_usage` row per claim the Step 1.7a pack kept, against
+this brief's `research_brief` document. It prints `usage: logged N` or `usage: NOT LOGGED (<reason>)`. It refuses a
+sidecar that isn't for this event (the seed's `event` must match `<slug>` or the Event page id), isn't lens `event`,
+or is older than 12 h. A first-touch event with no 1.7a pack still passes the flag and reads
+`NOT LOGGED (sidecar not found …)`. The usage line prints on exit 3 and exit 5 too. It never changes the exit code;
+it is a required line in the Step 6 summary. Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
 ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, tell
 Alex (list it in the Step 6 summary as an incomplete).
 
@@ -218,7 +224,10 @@ Run **Step 5 of `.claude/skills/event-research/SKILL.md`** in this conversation.
 
 ## Step 6 — Final summary
 
-Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot results + next steps).
+Present the Step 6 summary block from event-research SKILL.md (Notion + HubSpot results + next steps). Required items, never omitted:
+- `Graph:` the Step 4.2c line, as printed.
+- `usage:` the Step 4.2b usage line, as printed (`logged N` or `NOT LOGGED (<reason>)`, YED-262). A missing usage line
+  is itself a defect to report.
 
 ## Step 6.5 — Deep Read gate (run close — YED-139)
 
