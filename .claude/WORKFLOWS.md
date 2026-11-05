@@ -23,7 +23,7 @@ reflected in this table until the 2026-07-11 refresh (the doc had drifted ~2 mon
 
 | Command | Status | Purpose |
 |---|---|---|
-| `/post-event-content` | ✅ Wired | Day-to-day post-event: Supercut transcript (or audio file / paste) → conditioning → `post_event_brief` → content-correspondent drafts. |
+| `/post-event-content` | ✅ Wired | Day-to-day post-event: Supercut transcript (or audio file / paste) → conditioning → `post_event_brief` → content-correspondent drafts (skill in-thread, or the `alex:content-correspondent` agent). |
 | `/ingest-recording` | ✅ Wired | Any event audio (phone `.m4a`, or a Supercut audio asset) → ElevenLabs scribe_v2 roster-seeded, diarized transcript (feeds `/post-event-content`). |
 | `/interview-prep` | ✅ Wired | **Job-Search lens.** 4-axis dossier: 4 research specialists in parallel → synthesis in the parent against `me-model.md` §1.5 (skill `interview-prep-dossier`) → Notion. Judge gate, Postgres persist and `dossier-synthesizer` retired 2026-09-28. |
 | `/scan-roles` | ✅ Wired | Job-search signal scanner (skill `role-radar`), Notion-only, HITL, legitimate-sources only. |
