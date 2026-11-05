@@ -276,9 +276,6 @@ def main():
     # secret — the password rides in PGPASSWORD).
     print(f"evidence: target = {conn}")
 
-    if not os.environ.get("PHANTOM_TEST_DB_PASSWORD"):
-        sys.exit("PHANTOM_TEST_DB_PASSWORD not set.")
-
     exists = kv(conn, "select 'feed_items_exists', to_regclass('public.feed_items') is not null;")
     if exists.get("feed_items_exists") == "t":
         if not args.reset_first:
@@ -373,9 +370,11 @@ def main():
     # (no_api_grants x2, rls_on, no_policies, source_key_unique, kind_vocab,
     # service_role_rw). Each fault is planted, must fail its NAMED check (f — fail
     # closed), then its restore must return the FULL VERIFY to all-t. A check that
-    # stays t under a planted fault is dead weight and fails this gate. The other
-    # 8 checks are structural (shape/columns/nullability/PII) — verified by gate 3
-    # and the 1b live-check proof, not faultable at runtime.
+    # stays t under a planted fault is dead weight and fails this gate. Three more
+    # are exact-text comparisons and equally faultable at runtime (signal_vocab,
+    # signal_mapping, source_key_64hex — a widened CHECK or altered regex flips
+    # them to f); the remaining 5 are structural (shape/columns/nullability/PII),
+    # verified by gate 3 and the 1b live-check proof.
     FAULTS = [
         ("anon SELECT grant",
          "grant select on public.feed_items to anon;",
