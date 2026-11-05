@@ -91,6 +91,17 @@ class PriorReadError(RuntimeError):
     'the read broke')."""
 
 
+def _expect_iso_day(day: str) -> None:
+    """A real calendar date in YYYY-MM-DD form, or PriorReadError — never a raw
+    ValueError traceback (2026-13-99 passes a regex; only the calendar catches it)."""
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+        raise PriorReadError(f"prior day {day!r} is not YYYY-MM-DD")
+    try:
+        date.fromisoformat(day)
+    except ValueError:
+        raise PriorReadError(f"prior day {day!r} is not a real calendar date") from None
+
+
 def prior_read_url(base: str, day: str) -> str:
     """The twin PostgREST GET for last week's hiring_pulse rows (read-only; counts in metadata).
 
@@ -100,8 +111,7 @@ def prior_read_url(base: str, day: str) -> str:
     and every request answered 400 (the HTTPError behind the always-null baselines).
     ``day`` is the prior week's Sunday (the event_date contract: producers set it to the
     Sunday that ends the ISO week, 0016 §2)."""
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
-        raise PriorReadError(f"prior day {day!r} is not YYYY-MM-DD")
+    _expect_iso_day(day)
     # quote_via=quote (spine_client.q() parity): a plain urlencode turns the space into
     # '+', which leans on PostgREST's form decoding — if it ever read '+' literally the
     # filter would still answer 200 while silently matching nothing. %20 is unambiguous.
@@ -129,12 +139,15 @@ def prior_week_events(rows: object, day: str) -> tuple[str | None, list[dict]]:
     PriorReadError (an API contract change is loud, not an empty baseline), and a matched
     title whose ISO week is not the week of ``day`` raises too — the week must not depend
     on row order (a stray current-week row used to silently decide it).
+    Error messages carry counts, types and weeks ONLY — the target registry is private,
+    so a company name must never reach a public Actions log (round-2 review blocker).
     Rows not matching the title contract, or whose roles_open is not a plain int, are
     ignored (never invented). The week comes from the titles so build_manifest's same-week
     refusal keeps guarding a stale file."""
     if not isinstance(rows, list):
         raise PriorReadError(f"twin returned a non-array JSON body ({type(rows).__name__}) "
                              "— an API contract change is never guessed at")
+    _expect_iso_day(day)
     y, w, _ = date.fromisoformat(day).isocalendar()
     expected = f"{y}-W{w:02d}"          # the event_date contract: the Sunday ENDING the week
     week, events = None, []
@@ -151,16 +164,19 @@ def prior_week_events(rows: object, day: str) -> tuple[str | None, list[dict]]:
             continue
         md = row.get("metadata")
         if md is not None and not isinstance(md, dict):
-            raise PriorReadError(f"twin row {title!r} has non-object metadata "
-                                 f"({type(md).__name__}) — an API contract change is never "
-                                 "guessed at")
+            # counts and types only — the row's title names a registry company and must
+            # never enter an error message (round-2 review blocker)
+            raise PriorReadError(f"twin returned a hiring-pulse row with non-object "
+                                 f"metadata ({type(md).__name__}) — an API contract change "
+                                 "is never guessed at")
         pc = (md or {}).get("roles_open")
         if not isinstance(pc, int) or isinstance(pc, bool):
             continue
         if m.group(2) != expected:
-            raise PriorReadError(f"twin row {m.group(1)!r} is stamped {m.group(2)} but the "
-                                 f"prior day {day} ends {expected} — refusing at the source "
-                                 "instead of building a week off row order")
+            # week only — never the company name (round-2 review blocker)
+            raise PriorReadError(f"a matched hiring-pulse row is stamped {m.group(2)} but "
+                                 f"the prior day {day} ends {expected} — refusing at the "
+                                 "source instead of building a week off row order")
         week = expected
         events.append({"company": m.group(1), "metadata": {"roles_open": pc}})
     return (week if events else None), events
@@ -184,7 +200,6 @@ def fetch_prior_week(base: str, key: str, day: str, out_path: str, *,
     last = "untried"
     week, events, landed = None, [], False
     for attempt in range(1, max(attempts, 1) + 1):
-        transient = False
         try:
             conn = conn_cls(split.netloc, timeout=timeout)
             try:
@@ -201,9 +216,10 @@ def fetch_prior_week(base: str, key: str, day: str, out_path: str, *,
         else:
             if 200 <= status < 300:
                 try:
-                    rows = json.loads(body)
-                except json.JSONDecodeError as e:
-                    raise PriorReadError(f"twin returned HTTP {status} with a non-JSON body: {e}")
+                    rows = json.loads(body.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError) as e:
+                    raise PriorReadError(f"twin returned HTTP {status} with an undecodable "
+                                         f"or non-JSON body: {type(e).__name__}: {e}")
                 week, events = prior_week_events(rows, day)   # shape/contract errors raise, loud
                 landed = True
                 break
@@ -351,17 +367,24 @@ def event_manifests(manifest: dict) -> list[dict]:
     return out
 
 
-def lane_run_manifest(manifest: dict, events_written: int = 0) -> dict:
+def lane_run_manifest(manifest: dict, events_written: int = 0,
+                      note: str | None = None) -> dict:
     """The run's ledger entry in manifest form (kept local: it names boards in errored_boards).
 
     `written` counts rows ACTUALLY written to the graph — not events built. Event writes are
     dry-run (validate-only) until the guarded spine REF override lands, so the default is 0;
-    the live-write era passes the real count (a lower bound is never an overclaim)."""
+    the live-write era passes the real count (a lower bound is never an overclaim).
+    `note` records a degraded aspect of the run (e.g. the prior-week twin read failed):
+    counts only — never company names; the ledger row becomes 'partial' with the note in
+    its error column, so the ledger alone shows the run was degraded (round-2 review)."""
     lane = manifest.pop("_lane", {"seen": 0, "refused": 0, "errored_boards": []})
-    return {"lane": LANE, "week": manifest["week"], "ran_at": manifest["generated_at"],
-            "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
-            "seen": lane["seen"], "refused": lane["refused"],
-            "written": events_written, "errored_boards": lane["errored_boards"]}
+    out = {"lane": LANE, "week": manifest["week"], "ran_at": manifest["generated_at"],
+           "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
+           "seen": lane["seen"], "refused": lane["refused"],
+           "written": events_written, "errored_boards": lane["errored_boards"]}
+    if note:
+        out["note"] = note
+    return out
 
 
 def lane_run_row(lane: dict, started_at: str) -> dict:
@@ -369,19 +392,23 @@ def lane_run_row(lane: dict, started_at: str) -> dict:
     spine_client.write('lane_run', …) posts. Pure so the selftest can pin every mapping."""
     errored = list(lane.get("errored_boards") or [])
     err_text = ("errored boards: " + ", ".join(errored)) if errored else None
+    # a degraded-aspect note (e.g. the prior-week twin read failed) makes the run 'partial'
+    # even with green boards — the ledger alone shows the week ran degraded (round-2 review)
+    note = (lane.get("note") or "").strip() or None
+    err_parts = [p for p in (note, err_text) if p]
     return {
         "lane": lane["lane"],
         "started_at": started_at,
         "finished_at": lane["ran_at"],
         # lane_run.status CHECK is ('running','success','partial','failed','skipped') — errored
-        # boards are a 'partial' run, not a failure (the run itself succeeded).
-        "status": "success" if not errored else "partial",
+        # boards or a degraded note are a 'partial' run, not a failure (the run itself succeeded).
+        "status": "partial" if (errored or note) else "success",
         "items_seen": lane["seen"],
         "items_written": lane["written"],
         "items_refused": lane["refused"],
         "credits_spent": 0,               # ATS boards are free; this lane spends no credits
         # column CHECK caps error at 1000 chars; a longer list still records the first names.
-        "error": err_text[:1000] if err_text else None,
+        "error": "; ".join(err_parts)[:1000] if err_parts else None,
     }
 
 
@@ -934,8 +961,11 @@ def selftest() -> int:
     check("prior read: a 429 is transient and retries once",
           fetched == 1 and _PriorConn.state["requests"] == 2)
     class _ConnFail:
+        tries = 0
         def __init__(self, *a, **k):
+            _ConnFail.tries += 1
             raise OSError("connection refused (fake)")
+    _ConnFail.tries = 0
     try:
         fetch_prior_week("https://twin.example.supabase.co", "k", "2026-11-01",
                          os.path.join(tempfile.mkdtemp(), "prior.json"),
@@ -945,6 +975,8 @@ def selftest() -> int:
     except PriorReadError as e:
         check("prior read: connection errors are wrapped in PriorReadError after the retry "
               "budget, never swallowed", "connection refused (fake)" in str(e))
+    check("prior read: the retry budget makes exactly `attempts` CONNECTION attempts",
+          _ConnFail.tries == 2)
     try:
         _run_fetch([200], good_rows, out=os.path.join(tempfile.mkdtemp(), "no-such-dir", "p.json"))
         check("prior read: a LOCAL file-write failure is an OSError, never dressed up as an "
@@ -965,14 +997,15 @@ def selftest() -> int:
         check("prior read: a non-JSON 200 raises (an API response is never guessed at)", False)
     except PriorReadError:
         check("prior read: a non-JSON 200 raises (an API response is never guessed at)", True)
-    _raised = False
+    _raised = []
     for _body in (b"{}", b'{"message": "ok"}', b"null", b'"ok"'):
         try:
             _run_fetch([200], _body)
+            _raised.append(False)
         except PriorReadError:
-            _raised = True
-    check("prior read: a 200 whose body is not a JSON ARRAY raises (an empty-but-real "
-          "baseline is never invented from a contract change)", _raised)
+            _raised.append(True)
+    check("prior read: EVERY non-array 200 body raises (an empty-but-real baseline is never "
+          "invented from a contract change)", all(_raised))
     try:
         _run_fetch([200], json.dumps(
             [{"title": "Hiring pulse — Anthropic (2026-W44)", "metadata": "7"}]).encode())
@@ -994,6 +1027,30 @@ def selftest() -> int:
     except PriorReadError as e:
         check("prior read: a row stamped a DIFFERENT week than --prior-day raises (the week "
               "never depends on row order)", "2026-W43" in str(e) and "2026-W44" in str(e))
+    try:
+        _run_fetch([200], b"\xff\xfe\x00broken-utf8")
+        check("prior read: invalid UTF-8 in a 200 raises PriorReadError (no raw "
+              "UnicodeDecodeError traceback)", False)
+    except PriorReadError:
+        check("prior read: invalid UTF-8 in a 200 raises PriorReadError (no raw "
+              "UnicodeDecodeError traceback)", True)
+    try:
+        prior_read_url("https://twin.example.supabase.co", "2026-13-99")
+        check("prior read: an impossible calendar date (2026-13-99) is refused, not a raw "
+              "ValueError", False)
+    except PriorReadError:
+        check("prior read: an impossible calendar date (2026-13-99) is refused, not a raw "
+              "ValueError", True)
+    try:
+        prior_week_events([], "2026-02-30")
+        check("prior read: 2026-02-30 (regex-valid, not real) is refused at the parser too", False)
+    except PriorReadError:
+        check("prior read: 2026-02-30 (regex-valid, not real) is refused at the parser too", True)
+    check("prior read: _one_line flattens whitespace/control runs to single spaces and caps "
+          "at the limit",
+          _one_line(b"a\x00b\n  c\t\td") == "a\x00b c d"
+          and len(_one_line(b"x" * 999)) == 200
+          and "\n" not in _one_line(b"x" * 999))
     fetched, opath = _run_fetch([200], b"[]")
     with open(opath, encoding="utf-8") as fh:
         pf0 = json.load(fh)
@@ -1005,24 +1062,85 @@ def selftest() -> int:
                    "--prior-day", "2026-11-01"])
         check("prior read CLI: missing twin secrets refuse (exit 2), never a silent null", rc == 2)
         # a REAL api failure through the real main(): loopback port 1 refuses instantly —
-        # nothing leaves the box, and the retry budget burns one real 5s sleep
+        # nothing leaves the box. stderr is captured AND the retry sleep is stubbed: a
+        # selftest must never mint a failure-level ::error:: annotation or burn 5s on a
+        # green run (round-2 major 2)
+        import contextlib, io
         os.environ["MI_TWIN_URL"] = "https://127.0.0.1:1"
         os.environ["MI_TWIN_SUPABASE_API_KEY"] = "k"
         _cli_out = os.path.join(tempfile.mkdtemp(), "prior.json")
-        rc = main(["--fetch-prior-week", _cli_out, "--prior-day", "2026-11-01"])
+        _err_cli = io.StringIO()
+        with contextlib.redirect_stderr(_err_cli):
+            rc = main(["--fetch-prior-week", _cli_out, "--prior-day", "2026-11-01"],
+                      _sleep=lambda s: None)
         check("prior read CLI: a real API failure exits 5 and leaves NO file (never a silent null)",
               rc == 5 and not os.path.exists(_cli_out))
+        check("prior read CLI: the failure message is ::error::-shaped and one line",
+              "::error::" in _err_cli.getvalue() and "\n" not in _err_cli.getvalue().strip())
+        # round-2 BLOCKER regression: a refused 200 must not leak the company name through
+        # ANY printed CLI output — counts and weeks only
+        for _leaky in (
+            [{"title": "Hiring pulse — Anthropic (2026-W43)", "metadata": {"roles_open": 7}}],
+            [{"title": "Hiring pulse — Anthropic (2026-W44)", "metadata": "7"}],
+        ):
+            _PriorConn.state = {"statuses": [200], "body": json.dumps(_leaky).encode(),
+                                "requests": 0}
+            _err_leak = io.StringIO()
+            _leak_out = os.path.join(tempfile.mkdtemp(), "prior.json")
+            with contextlib.redirect_stderr(_err_leak), contextlib.redirect_stdout(io.StringIO()):
+                rc = main(["--fetch-prior-week", _leak_out, "--prior-day", "2026-11-01"],
+                          _conn_cls=_PriorConn, _sleep=lambda s: None)
+            check("prior read CLI: a 200 the parser refuses exits 5, writes NO file, and the "
+                  "log names NO company (counts and weeks only — round-2 blocker)",
+                  rc == 5 and not os.path.exists(_leak_out)
+                  and "Anthropic" not in _err_leak.getvalue())
+        _PriorConn.state = {"statuses": [200], "body": good_rows, "requests": 0}
+        with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+            rc = main(["--fetch-prior-week", os.path.join(tempfile.mkdtemp(), "no-dir", "p.json"),
+                       "--prior-day", "2026-11-01"], _conn_cls=_PriorConn, _sleep=lambda s: None)
+        check("prior read CLI: a LOCAL write failure exits 6 (an API success is never reported "
+              "as an API failure)", rc == 6)
+        _PriorConn.state = {"statuses": [200], "body": good_rows, "requests": 0}
+        _ok_out = io.StringIO()
+        with contextlib.redirect_stdout(_ok_out), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(["--fetch-prior-week", os.path.join(tempfile.mkdtemp(), "p.json"),
+                       "--prior-day", "2026-11-01"], _conn_cls=_PriorConn, _sleep=lambda s: None)
+        check("prior read CLI: the OK log reports the MATCHED count (never a bare baseline claim)",
+              rc == 0 and "1 matched prior companies" in _ok_out.getvalue())
     finally:
+        os.environ.pop("MI_TWIN_URL", None)
+        os.environ.pop("MI_TWIN_SUPABASE_API_KEY", None)
         if _saved_env[0] is not None:
             os.environ["MI_TWIN_URL"] = _saved_env[0]
         if _saved_env[1] is not None:
             os.environ["MI_TWIN_SUPABASE_API_KEY"] = _saved_env[1]
 
+    # --- lane_run degraded-note mapping (round-2 minor: the ledger alone must show it) -----
+    _lr = lane_run_row(lane_run_manifest(
+        {"week": "2026-W44", "generated_at": "t",
+         "_lane": {"seen": 3, "refused": 0, "errored_boards": []}},
+        note="prior-week twin read failed (delta_wow null)"), "s")
+    check("lane_run: a degraded note makes the row 'partial' with the note in the error "
+          "column (the ledger alone shows the degraded run)",
+          _lr["status"] == "partial" and _lr["error"].startswith("prior-week twin read failed"))
+    _lr2 = lane_run_row(lane_run_manifest(
+        {"week": "2026-W44", "generated_at": "t",
+         "_lane": {"seen": 3, "refused": 0, "errored_boards": []}}), "s")
+    check("lane_run: no note and green boards keeps 'success' with no error",
+          _lr2["status"] == "success" and _lr2["error"] is None)
+    _lr3 = lane_run_row(lane_run_manifest(
+        {"week": "2026-W44", "generated_at": "t",
+         "_lane": {"seen": 3, "refused": 0, "errored_boards": ["board-x"]}},
+        note="prior-week twin read failed (delta_wow null)"), "s")
+    check("lane_run: a note and errored boards combine in the error column, still 'partial'",
+          _lr3["status"] == "partial" and _lr3["error"].startswith("prior-week twin read failed")
+          and "errored boards: board-x" in _lr3["error"])
+
     # --- Workflow lint: the Action's guard stays file-reality-based ------------------------
     # Guards against re-introducing a string-compare on the prior step's OUTPUT (which lied:
     # the twin-read step exits 0 without writing the file when the read fails) — the crash
-    # behind run 41943575924. Checked textually so the selftest needs no yaml dependency;
-    # skipped when the workflow file isn't in the repo (e.g. running from a bare checkout).
+    # behind run 41943575924. Needs PyYAML for the structural lints below; skipped when the
+    # workflow file isn't in the repo (e.g. running from a bare checkout).
     wf = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                       ".github", "workflows", "ats-pulse.yml")
     if os.path.exists(wf):
@@ -1036,24 +1154,47 @@ def selftest() -> int:
               'if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json"' in wftext)
         check("workflow lint: the prior-week read runs through ats_pulse.py --fetch-prior-week "
               "(the inline urllib heredoc is gone — third bug in that untestable step; a real "
-              "API failure now fails the run instead of a silent null baseline)",
+              "API failure is captured and gated, never a silent null baseline)",
               "--fetch-prior-week /tmp/prior.json" in wftext
               and "urllib.request" not in wftext
               and "urlencode" not in wftext)
-        _prior_step = wftext.split("Read last week's pulse from the twin graph", 1)[1]\
-            .split("\n      - name:", 1)[0]
-        check("workflow lint: the prior step captures a failed read as prior_failed (rm the "
-              "file, keep the week running) — no '|| true' and no continue-on-error silencing",
-              "prior_failed" in _prior_step and "rm -f /tmp/prior.json" in _prior_step
-              and "|| true" not in _prior_step and "continue-on-error" not in _prior_step)
-        check("workflow lint: the prior step env names ONLY the twin secrets — the prod "
-              "SUPABASE_API_KEY never reaches any market-lane read",
-              "secrets.MI_TWIN_URL" in _prior_step
-              and "secrets.MI_TWIN_SUPABASE_API_KEY" in _prior_step
-              and "secrets.SUPABASE_API_KEY" not in _prior_step)
-        check("workflow lint: a late gate step fails the run when the prior read failed "
-              "(the ledger row and the summary still land first)",
-              "steps.prior.outputs.prior_failed == 'true'" in wftext)
+        # parsed, not string-matched: a mutant that reorders, re-arms or re-secrets a step
+        # must fail the selftest regardless of what nearby comments say (round-2 major 3).
+        # Comment lines are stripped from run bodies first — a commented-out line must
+        # never satisfy a lint.
+        import yaml as _yaml
+        _steps = _yaml.safe_load(wftext)["jobs"]["pulse"]["steps"]
+        def _code(step):
+            return "\n".join(l for l in (step.get("run") or "").splitlines()
+                             if not l.strip().startswith("#"))
+        _by_id = {s.get("id"): (i, s) for i, s in enumerate(_steps) if s.get("id")}
+        _prior_i, _prior = _by_id["prior"]
+        _gate_i, _gate = _by_id["prior_gate"]
+        _agg_i = next(i for i, s in enumerate(_steps)
+                      if "ats_pulse.py /tmp/roles.tsv" in _code(s))
+        _upl_i = next(i for i, s in enumerate(_steps)
+                      if str(s.get("uses", "")).startswith("actions/upload-artifact"))
+        _prior_code, _gate_code = _code(_prior), _code(_gate)
+        check("workflow lint (parsed): the prior step's env is EXACTLY the twin secrets + the "
+              "week output — an added secret (e.g. the prod SUPABASE_API_KEY) fails the selftest",
+              set(_prior.get("env") or {})
+              == {"MI_TWIN_URL", "MI_TWIN_SUPABASE_API_KEY", "PREV_SUNDAY"}
+              and _prior["env"]["MI_TWIN_URL"] == "${{ secrets.MI_TWIN_URL }}"
+              and _prior["env"]["MI_TWIN_SUPABASE_API_KEY"] == "${{ secrets.MI_TWIN_SUPABASE_API_KEY }}"
+              and "${{ secrets.SUPABASE_API_KEY }}" not in _prior_code
+              and "secrets.SUPABASE_API_KEY" not in _prior_code)
+        check("workflow lint (parsed): the prior step really continues past a failed read — "
+              "'set +e', the RC capture and 'rm -f /tmp/prior.json' in CODE (comments stripped), "
+              "no '|| true', no continue-on-error",
+              "set +e" in _prior_code and "--fetch-prior-week /tmp/prior.json" in _prior_code
+              and "rm -f /tmp/prior.json" in _prior_code and "|| true" not in _prior_code
+              and "continue-on-error" not in _prior)
+        check("workflow lint (parsed): the gate exits 1 in code, is not continue-on-error, and "
+              "runs AFTER the aggregate and the summary upload (the outputs land first)",
+              _gate_i > _agg_i and _gate_i > _upl_i
+              and "exit 1" in _gate_code and "exit 0" not in _gate_code
+              and "continue-on-error" not in _gate
+              and "steps.prior.outputs.prior_failed == 'true'" in (_gate.get("if") or ""))
 
         # --- Workflow lint: bash -n + heredoc pairing on EVERY run block -------------------
         # bash -n alone is insufficient: an EOF-terminated heredoc is only a WARNING (exit 0),
@@ -1081,7 +1222,7 @@ def selftest() -> int:
 # CLI
 # ---------------------------------------------------------------------------
 
-def main(argv=None) -> int:
+def main(argv=None, *, _conn_cls=None, _sleep=time.sleep) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("tsv", nargs="*", help="ats_pull TSV path(s); omit with --validate")
     ap.add_argument("--prior", help="last week's pulse.json (same-week priors are refused)")
@@ -1108,6 +1249,10 @@ def main(argv=None) -> int:
                          "runs the week, and a late gate step fails the run (only a successful "
                          "read, even with 0 rows, writes the file).")
     ap.add_argument("--prior-day", help="prior week's Sunday (YYYY-MM-DD) for --fetch-prior-week")
+    ap.add_argument("--lane-note",
+                    help="a degraded-aspect note for the lane_run ledger: the row's status "
+                         "becomes 'partial' and the note lands in its error column (counts "
+                         "only — never company names)")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -1158,7 +1303,8 @@ def main(argv=None) -> int:
         if not a.prior_day:
             ap.error("--fetch-prior-week needs --prior-day (YYYY-MM-DD, the prior week's Sunday)")
         try:
-            n = fetch_prior_week(base, key, a.prior_day, a.fetch_prior_week)
+            n = fetch_prior_week(base, key, a.prior_day, a.fetch_prior_week,
+                                 _conn_cls=_conn_cls, _sleep=_sleep)
         except PriorReadError as e:
             print(f"::error::ats_pulse: prior-week twin read FAILED (a real API error, not the "
                   f"optional case — the run must not pass as a null baseline): {_one_line(str(e).encode())}",
@@ -1192,7 +1338,7 @@ def main(argv=None) -> int:
     except ValueError as e:                       # same-week prior etc. — refuse, loud
         print(f"ats_pulse: {e}", file=sys.stderr)
         return 2
-    lane = lane_run_manifest(_json_copy(manifest))
+    lane = lane_run_manifest(_json_copy(manifest), note=a.lane_note)
     for target in (a.out, a.lane_run_out):
         if target and os.path.dirname(target):
             os.makedirs(os.path.dirname(target), exist_ok=True)

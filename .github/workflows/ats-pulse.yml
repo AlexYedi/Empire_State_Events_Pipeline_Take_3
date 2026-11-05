@@ -25,8 +25,9 @@
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
 #     would compare against itself). ats_pulse refuses a same-week --prior regardless. The
-#     read is the TESTED ats_pulse.py --fetch-prior-week path: a real API failure fails the
-#     run; only missing twin secrets degrade to a null baseline (the optional case).
+#     read is the TESTED ats_pulse.py --fetch-prior-week path: a real API failure is captured
+#     as prior_failed — the week completes on a null baseline and a late gate fails the run;
+#     only missing twin secrets skip silently (the optional case).
 #   * lane_run is REAL: the run ledger row is written through spine_client.write to PROD (see
 #     the prod exception above). items_written counts rows ACTUALLY written — 0 while event
 #     writes are dry-run; no caller override (MI_TWIN_URL) exists — spine_client's host is
@@ -79,6 +80,9 @@ jobs:
       - name: Selftest both producers (offline)
         if: steps.hold.outputs.held != 'true'
         run: |
+          # pyyaml: ats_pulse's selftest PARSES this workflow for its structure lints
+          # (step order, env sets, gate body) — a string-match would miss mutants
+          python3 -m pip install --quiet pyyaml
           python3 .claude/scripts/ats_pull.py --selftest
           python3 .claude/scripts/ats_pulse.py --selftest
 
@@ -169,9 +173,15 @@ jobs:
           # PRIOR=…`) so a missing file doesn't trip bash -e.
           PRIOR=""
           if [ -s /tmp/prior.json ]; then PRIOR="--prior /tmp/prior.json"; fi
+          # a degraded prior read marks the prod ledger row 'partial' with a note in its
+          # error column — the ledger alone shows the week ran on a null delta_wow baseline
+          LANE_NOTE=""
+          if [ "${{ steps.prior.outputs.prior_failed }}" = "true" ]; then
+            LANE_NOTE="--lane-note prior-week twin read failed: delta_wow null (see the prior step's error)"
+          fi
           python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --pull-summary /tmp/board_stats.json \
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
-            --lane-run-out /tmp/pulse-out/lane_run.json
+            --lane-run-out /tmp/pulse-out/lane_run.json $LANE_NOTE
 
       # The event manifests STAY a validate-only step (a live ensure-event needs the guarded twin
       # REF override in spine_client — human review). The lane_run LEDGER, though, is now written
@@ -221,6 +231,7 @@ jobs:
       # landed, so the run ends failed while the week's outputs survive (the failure issue
       # below then alerts as usual).
       - name: Fail the run if the prior-week twin read failed
+        id: prior_gate
         if: steps.hold.outputs.held != 'true' && steps.prior.outputs.prior_failed == 'true'
         run: |
           echo "::error::the prior-week twin read failed earlier (a real API error, not the optional-secrets case) — the lane completed on a null delta_wow baseline and this run is marked failed"
