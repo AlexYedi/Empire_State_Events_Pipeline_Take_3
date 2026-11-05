@@ -1415,8 +1415,15 @@ def main() -> int:
         return 1
     jd_reweighted = False
     if a.mode == "posting-tailored":
+        input_roles = [(r["title"], r["company"], r["dates"]) for r in me["roles"]]
         with open(a.jd, encoding="utf-8") as fh:
             me = reweight_for_jd(me, fh.read())
+        # YED-330: the reading-order gates below check against the reweighted `me`, so
+        # they can't see a role shuffle. Pin role order to the INPUT here (independent oracle).
+        if [(r["title"], r["company"], r["dates"]) for r in me["roles"]] != input_roles:
+            print("FAILED: posting-tailored reweighting moved roles; roles must keep the "
+                  "input (me-model) order (YED-330). Nothing rendered.")
+            return 1
         jd_reweighted = True
     html = build_resume_html(me, a.mode)
 
