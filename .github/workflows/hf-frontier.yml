@@ -1,0 +1,89 @@
+# Lane 3 research_frontier (YED-307) — weekly Hugging Face trending models + last week's papers.
+# Producer: .claude/scripts/hf_frontier.py (one process: fetch → filter → build → validate → guard →
+#   gated event write → lane_run). Mirrors lane 1 (ats-pulse.yml), minus everything lane 1 needs
+#   for its private registry: the HF API is public and unauthenticated, so there is no registry
+#   secret to materialise, no HF token, and no derived file is secret (all rows are public listings).
+#
+#   * PROD EXCEPTION — lane_run ONLY (the lane-1 decision, post-merge review of #271): the ledger row
+#     goes through spine_client.write to PROD with the existing SUPABASE_API_KEY secret. Without the
+#     key the run falls back to --dry-run (no database at all) and warns — it never half-runs.
+#   * EVENT WRITES are gated by EVENT_WRITES_LIVE (YED-327): only the exact value 'true' (repo
+#     variable, not a secret) inserts event rows; anything else builds, validates and guard-checks
+#     them and records items_written 0. Idempotent on event.source (prior-read through spine_client).
+#   * lane_registry activation is NOT a producer write: research_frontier stays inactive until a
+#     migration flips it (as 0018 did for hiring_pulse). Activate it together with EVENT_WRITES_LIVE,
+#     or the kill rule (items_written = 0 for 3 runs → FAIL) trips by construction.
+#   * Every run block is plain shell with env only (no ${{ }} inside run:), so the selftest lints
+#     each one with bash -n + heredoc pairing, and they can be executed offline as written.
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+name: YED-307 lane 3 research frontier (weekly)
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # Mondays 05:00 UTC — closes the previous ISO week before the Monday session
+  workflow_dispatch: {}
+
+concurrency:
+  group: hf-frontier
+  cancel-in-progress: false
+
+jobs:
+  frontier:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read        # checkout only; issues:write is for the failure-alert step
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Selftest the producer (offline)
+        run: |
+          python3 .claude/scripts/hf_frontier.py --selftest
+
+      - name: Fetch, build, gate event writes, write the lane_run ledger row to PROD
+        env:
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+          EVENT_WRITES_LIVE: ${{ vars.EVENT_WRITES_LIVE }}
+          OUT_DIR: /tmp/hf-out
+        run: |
+          mkdir -p "$OUT_DIR"
+          if [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::warning::SUPABASE_API_KEY not configured — running --dry-run (no lane_run row, no event writes)"
+            python3 .claude/scripts/hf_frontier.py --dry-run --out "$OUT_DIR/summary.json"
+          else
+            python3 .claude/scripts/hf_frontier.py --out "$OUT_DIR/summary.json"
+          fi
+
+      - name: Upload the counts-only summary for audit
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: research-frontier-summary-${{ github.run_id }}
+          path: /tmp/hf-out/summary.json
+          if-no-files-found: warn
+
+      # One-open-issue alerting (same pattern as lane 1): a persistent failure comments on the open
+      # issue instead of opening a new one each week; closing the issue re-arms it.
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "YED-307 research frontier FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "YED-307 research frontier FAILED (since $TODAY)" \
+              --body "The weekly lane-3 research-frontier job failed — selftest, a Hugging Face fetch, validation, or the lane_run write. The failing step says which (a fetch failure is also recorded as a 'failed' lane_run row). Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
