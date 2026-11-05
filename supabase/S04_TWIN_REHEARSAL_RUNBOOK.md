@@ -67,8 +67,11 @@ The evidence log contains twin hostnames and gate results only — the connectio
 
 ## Addendum: migration 0017 twin rehearsal (YED-309 / YED-319, 2026-11-05)
 
-Migration `0017_pii_backstop_intl_phone.sql` (PR #277, backstop NOT applied to
-prod) has its own executable harness: `supabase/scripts/rehearse_0017.py`.
+Migration `0017_pii_backstop_intl_phone.sql` (PR #277) is **live on prod**:
+Alex applied it via the dashboard at ~22:08 UTC on 2026-11-04, and the live
+function body was verified byte-identical to the migration file (md5
+`6b7dd66c…`; YED-309). It has its own executable harness:
+`supabase/scripts/rehearse_0017.py`.
 It follows the same gate shape as `rehearse_s04_d1.py` (preflight → snapshot A →
 probes → apply → verify → idempotent re-apply → rollback → snapshot C == A →
 leave applied) and refuses a prod target outright.
