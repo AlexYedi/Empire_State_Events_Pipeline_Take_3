@@ -30,7 +30,7 @@ Modes
                review queue to supabase/evidence/. No writes. --source fixture (default,
                offline) or --source twin (read-only; excludes merge tombstones).
   --check-twin Read-only schema + row-count probe of the twin (public.topic and
-               canonical_v2.topic, tombstone counts, event links).
+               legacy schemas, tombstone counts, event links).
 
   The nightly write path (--apply, reviewed on PR #266) is intentionally absent pending the
   dynamic-taxonomy design review; its code shape is retrievable from git history.
@@ -46,7 +46,8 @@ CAVEATS the report states explicitly (data corrections, 2026-11-03):
 Twin access (only for --source twin / --check-twin): psql, user postgres, password from env
 PHANTOM_TEST_DB_PASSWORD (same pattern as supabase/scripts/validate_twin.py); PSQL_BIN and
 TWIN_CONN override the connection. The fixture is committed name-only; the twin read path
-targets canonical_v2.topic where the cluster columns live.
+targets public.topic, where the cluster columns live since the post-0016-era swap
+(verified live 2026-11-05; canonical_v2 is gone).
 
 Dependencies: stdlib only for everything except embeddings — see
 supabase/scripts/requirements-topic-cluster.txt. Importing this module never loads
@@ -78,6 +79,11 @@ PROD_REF = "oicikjyzmxqfomrrqkvf"  # never a target of any kind; this script is 
 TWIN_CONN = (os.environ.get("TWIN_CONN")
              or f"host={TWIN_HOST} port=5432 user=postgres "
                 "dbname=postgres sslmode=require connect_timeout=30")
+# The live cluster-state table on the twin. Post-swap (2026-11-05 live probe) the cluster
+# columns live in public.topic and canonical_v2 is gone — legacy schemas are probed
+# informationally, never read from.
+TWIN_TOPIC_SCHEMA = "public"
+TWIN_LEGACY_SCHEMAS = ("canonical_v2",)
 
 # --- data ------------------------------------------------------------------------------------
 FIXTURE_PATH = os.path.join(REPO_ROOT, "supabase", "fixtures", "yed304_topic_clusters.json")
@@ -350,31 +356,36 @@ def twin_topic_columns(password: str, psql_bin: str, schema: str) -> set[str]:
 
 
 def fetch_topics_twin(password: str, psql_bin: str = "psql") -> tuple[list[Topic], dict]:
-    """Read the twin's clustering state from canonical_v2.topic (the cluster columns live
-    there; public.topic is still pre-swap — verified live 2026-11-03). Merge tombstones are
-    excluded from the unassigned pool per the data corrections. Returns (topics, meta)."""
-    cols = twin_topic_columns(password, psql_bin, "canonical_v2")
+    """Read the twin's clustering state from public.topic — the cluster columns
+    live there since the post-swap twin state (verified live 2026-11-05: public.topic has the
+    W1 columns, canonical_v2 is gone). Merge tombstones are excluded from the unassigned pool
+    per the data corrections. Returns (topics, meta)."""
+    cols = twin_topic_columns(password, psql_bin, TWIN_TOPIC_SCHEMA)
     missing = {c for c in ("id", "name", "cluster_id") if c not in cols}
     if missing:
-        raise RuntimeError(f"canonical_v2.topic lacks {sorted(missing)} — the W1-columned table "
-                           "is not where the review comment says; refusing to guess")
+        raise RuntimeError(f"{TWIN_TOPIC_SCHEMA}.topic lacks {sorted(missing)} — the W1-columned "
+                           "table is not where the probe says; refusing to guess")
     wanted = ["id", "name", "cluster_id", "cluster_assigned_by"]
     if "cluster_assignment_confidence" in cols:
         wanted.append("cluster_assignment_confidence")
     if "metadata" in cols:
         wanted.append("metadata")
     sel = ", ".join(f"{c}::text as {c}" if c == "metadata" else c for c in wanted)
-    out = psql(f"select {sel} from canonical_v2.topic", password, psql_bin=psql_bin)
+    out = psql(f"select {sel} from {TWIN_TOPIC_SCHEMA}.topic", password, psql_bin=psql_bin)
     topics, n_tomb = [], 0
     for row in csv.DictReader(io.StringIO(out)):
         conf = row.get("cluster_assignment_confidence")
         meta = row.get("metadata")
-        if row["cluster_id"] is None and meta and "merged_into" in meta:
+        # psql --csv renders NULL as the empty string (DictReader never yields None here),
+        # so the tombstone test must be falsy, not `is None` — the None form silently kept
+        # every merge tombstone in the unassigned pool (caught in the 2026-11-05 dry-run).
+        cluster_id = row["cluster_id"] or None
+        if cluster_id is None and meta and "merged_into" in meta:
             n_tomb += 1
             continue
         topics.append(Topic(
             id=row["id"], name=row["name"], description=None,  # twin copy: name-only is the basis
-            cluster_id=row["cluster_id"] or None,
+            cluster_id=cluster_id,
             cluster_assigned_by=row["cluster_assigned_by"] or None,
             cluster_assignment_confidence=float(conf) if conf not in ("", None) else None,
         ))
@@ -675,7 +686,8 @@ def run_dry_run(args: argparse.Namespace) -> int:
         topics, meta = fetch_topics_twin(password, args.psql_bin)
         attended_ids = fetch_attended_topic_ids(password, args.psql_bin)
         names: dict = {}
-        origin = f"twin {TWIN_HOST} (canonical_v2.topic; {meta['tombstones_excluded']} tombstones excluded)"
+        origin = (f"twin {TWIN_HOST} ({TWIN_TOPIC_SCHEMA}.topic; "
+                  f"{meta['tombstones_excluded']} tombstones excluded)")
     else:
         fx = load_fixture(args.fixture)
         topics = fx.topics
@@ -790,12 +802,15 @@ def run_check_twin(password: str, args: argparse.Namespace) -> int:
     missing, never guesses."""
     _check_twin_conn(TWIN_CONN)
     ok = True
-    for schema in ("public", "canonical_v2"):
+    # public.topic is required (the live cluster-state table); a legacy schema's absence
+    # is expected post-swap, not a failure.
+    for schema in (TWIN_TOPIC_SCHEMA,) + TWIN_LEGACY_SCHEMAS:
+        required = schema == TWIN_TOPIC_SCHEMA
         try:
             cols = twin_topic_columns(password, args.psql_bin, schema)
             if not cols:
-                print(f"  {schema}.topic: MISSING")
-                ok = False
+                print(f"  {schema}.topic: {'MISSING' if required else 'absent (legacy, expected)'}")
+                ok = ok and not required
                 continue
             wanted = sorted({"id", "name", "description", "cluster_id", "cluster_assigned_by",
                              "cluster_assignment_confidence", "metadata", "created_at"} & cols)

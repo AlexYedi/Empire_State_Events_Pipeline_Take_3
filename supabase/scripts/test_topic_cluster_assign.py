@@ -402,5 +402,70 @@ class TestTombstoneFilter(unittest.TestCase):
         self.assertIn("not", tca.TOMBSTONE_FILTER)
 
 
+TWIN_CSV_COLS = {"id", "name", "cluster_id", "cluster_assigned_by",
+                 "cluster_assignment_confidence", "metadata"}
+
+
+def fake_twin_psql(csv_text):
+    """Replace tca.psql / tca.twin_topic_columns with a canned twin response."""
+    orig = (tca.psql, tca.twin_topic_columns)
+    tca.twin_topic_columns = lambda *a, **k: set(TWIN_CSV_COLS)
+    tca.psql = lambda *a, **k: csv_text
+    return orig
+
+
+class TestFetchTopicsTwin(unittest.TestCase):
+    """Twin CSV parse: psql --csv renders NULL as the empty string, so the merge-tombstone
+    exclusion must test falsiness, not `is None`. Regression for the 2026-11-05 dry-run,
+    where the `is None` form silently kept 12 tombstones in the unassigned pool."""
+
+    CSV = (
+        "id,name,cluster_id,cluster_assigned_by,cluster_assignment_confidence,metadata\n"
+        '"11111111-1111-1111-1111-111111111111","assigned topic",'
+        '"c0000000-0000-0000-0000-000000000001","llm",0.900,"{}"\n'
+        '"22222222-2222-2222-2222-222222222222","live unassigned",,,,\n'
+        '"33333333-3333-3333-3333-333333333333","merged away",,,,'
+        '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
+
+        '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
+        '"44444444-4444-4444-4444-444444444444","merged but clustered",'
+        '"c0000000-0000-0000-0000-000000000001","session",0.950,'
+        '"{""merged_into"": ""aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa""}"\n'
+    )
+
+    def setUp(self):
+        self._orig = fake_twin_psql(self.CSV)
+
+    def tearDown(self):
+        tca.psql, tca.twin_topic_columns = self._orig
+
+    def load(self):
+        return tca.fetch_topics_twin("not-a-real-password")
+
+    def test_tombstone_is_excluded(self):
+        topics, meta = self.load()
+        self.assertEqual(meta["tombstones_excluded"], 1)
+        self.assertNotIn("33333333-3333-3333-3333-333333333333", {t.id for t in topics})
+
+    def test_null_cluster_parses_to_none_and_stays_in_pool(self):
+        topics, _ = self.load()
+        live = next(t for t in topics if t.id == "22222222-2222-2222-2222-222222222222")
+        self.assertIsNone(live.cluster_id)
+        self.assertIsNone(live.cluster_assigned_by)
+
+    def test_merged_but_clustered_row_stays_assigned(self):
+        # A tombstone marker on a row that still carries a cluster is an assigned row:
+        # the exclusion is for the unassigned pool only.
+        topics, meta = self.load()
+        self.assertEqual(meta["tombstones_excluded"], 1)
+        kept = next(t for t in topics if t.id == "44444444-4444-4444-4444-444444444444")
+        self.assertEqual(kept.cluster_id, "c0000000-0000-0000-0000-000000000001")
+
+    def test_empty_confidence_parses_to_none(self):
+        topics, _ = self.load()
+        live = next(t for t in topics if t.id == "22222222-2222-2222-2222-222222222222")
+        self.assertIsNone(live.cluster_assignment_confidence)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
