@@ -417,15 +417,22 @@ TWIN_CSV_COLS = {"id", "name", "cluster_id", "cluster_assigned_by",
 
 def fake_twin_psql(csv_text):
     """Replace tca.psql / tca.twin_topic_columns with a canned twin response. The fake records
-    every SQL string it is asked to run — the fetch-repoint regression asserts on them."""
+    every SQL string it is asked to run and every schema passed to the column probe — the
+    fetch-repoint regression asserts on both (the probe schema is what a hardcoded-to-
+    canonical_v2 mutation changes; the SQL alone wouldn't catch it)."""
     orig = (tca.psql, tca.twin_topic_columns)
 
     def fake(sql, *a, **k):
         fake.calls.append(sql)
         return csv_text
 
+    def fake_cols(password, psql_bin, schema):
+        fake.schemas.append(schema)
+        return set(TWIN_CSV_COLS)
+
     fake.calls = []
-    tca.twin_topic_columns = lambda *a, **k: set(TWIN_CSV_COLS)
+    fake.schemas = []
+    tca.twin_topic_columns = fake_cols
     tca.psql = fake
     return orig
 
@@ -465,8 +472,11 @@ class TestFetchTopicsTwin(unittest.TestCase):
 
     def test_fetch_queries_public_topic(self):
         # The repoint regression: the fetch must read public.topic (canonical_v2 is gone
-        # post-swap) — a re-repoint to the legacy schema must fail here.
+        # post-swap) — a re-repoint to the legacy schema must fail here. Assert on both the
+        # probe's schema argument (kills a hardcoded-to-canonical_v2 mutation of the column
+        # probe, which the SQL text alone would not catch) and the recorded SQL.
         self.load()
+        self.assertEqual(tca.psql.schemas, [tca.TWIN_TOPIC_SCHEMA])
         self.assertEqual(len(tca.psql.calls), 1)
         self.assertIn(f"from {tca.TWIN_TOPIC_SCHEMA}.topic", tca.psql.calls[0])
         self.assertNotIn("canonical_v2", " ".join(tca.psql.calls))

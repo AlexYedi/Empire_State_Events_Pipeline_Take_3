@@ -19,7 +19,7 @@ auto-assign; one row for Alex.
 | Ship point reproduced offline | k=3, thr=0.85 → auto 3 / review 99 | same run today, unchanged fixture → auto 3 / review 99 | ✅ exact reproduction |
 | Curated pool integrity | 170 LLM bootstrap assignments | 156 live `cluster_assigned_by='llm'`, cluster agreement **156/156**, 0 moved | ✅ zero drift |
 | The other 14 of 170 | 14 rows not among the 156 live | tombstoned with cluster retained — already in place when migration 0016's header recorded the prod facts on 2026-11-04 (same 272/170 with the 14 clustered tombstones present), not new since the fixture | ✅ accounted for |
-| Backlog | 102 unassigned (94 real after the 8 tombstones the fixture work identified) | 89 assigned since (all `session`), 12 tombstoned, 1 live | ✅ fully traced |
+| Backlog | 102 unassigned (94 real after the 8 tombstones the fixture work identified) | 89 assigned since (all `session`), 12 tombstoned, 1 live — 8 vs 12: four of the 94 real rows were merged away between the fixture and tonight's run (94 = 89 + 4 + 1), on top of the 8 already gone at fixture time | ✅ fully traced |
 | Attended-linked backlog | 33 flagged (changing snapshot, W4) | **0** | ✅ improved — every attended-linked topic now carries a theme |
 | Cluster count | 30 | 33 (`topic_intelligence.topic_cluster`) | ℹ️ 3 themes added since the fixture |
 
@@ -69,11 +69,11 @@ Auto-assign bar is 0.85; this row sits at 0.531 with a split vote — a genuine
 - `_check_twin_conn` substring-matches the conninfo (a crafted string could misdirect the
   twin password); parse the conninfo in a later hardening pass — also YED-342.
 - `canonicalization_backlog` (migration 0013) lacks a tombstone exclusion and overcounts;
-  tracked separately, needs a migration.
+  tracked as YED-342 (needs a migration).
 
 ## Caveats (carried from the baseline)
 
 - Name-only embeddings; confidence measures agreement with the LLM bootstrap taxonomy,
   not hand-labelled truth.
 - `attended_linked` and the backlog are moving snapshots; counts above are as of
-  2026-11-05T21:56:41Z.
+  2026-11-05T23:31:44Z (the regenerated dry-run evidence's mtime).

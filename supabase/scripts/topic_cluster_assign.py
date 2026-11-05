@@ -422,7 +422,8 @@ def fetch_topics_twin(password: str, psql_bin: str = "psql") -> tuple[list[Topic
         # itself parses the JSON rather than substring-matching: `substrate.py merge --revert`
         # pops the key entirely, and no writer emits `{"merged_into": null}` — so neither shape
         # is a tombstone, and a substring match would drop live rows from the pool. The SQL-side
-        # TOMBSTONE_FILTER (`metadata->>'merged_into' is not null`) agrees with this exactly.
+        # TOMBSTONE_MARK (`metadata->>'merged_into' is not null`) agrees with this exactly
+        # (TOMBSTONE_FILTER is its negation — see the constants).
         cluster_id = row["cluster_id"] or None
         if cluster_id is None and merged_into_marker(row.get("metadata")):
             n_tomb += 1
