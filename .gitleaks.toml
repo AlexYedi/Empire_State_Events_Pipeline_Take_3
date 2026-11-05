@@ -1,0 +1,48 @@
+# Secret-scan config (YED-304; single shared config for #270/#272 — whichever PR merges first
+# lands it; the other rebases onto it). Extends the default gitleaks rule set with ONE
+# value-scoped allowlist for fixture digests. Path-scoped, NOT commit-pinned — .gitleaksignore
+# fingerprints embed the commit SHA and break on squash merge (verified in PR #272's review:
+# secret-scan goes red on main).
+#
+# VALUE-SCOPED via condition = "AND" (arrays are required — scalar strings decode to empty
+# lists and AND goes vacuous): a finding is exempt only when its path is under
+# supabase/fixtures/ AND its secret is exactly 64 hex chars — i.e. the sha256 digests of
+# public *.example URLs (feeds.item_key). The directory pattern covers every lane's fixtures
+# under supabase/fixtures/, including #272's feeds_items/feeds_sources examples when that PR
+# merges — no per-file pinning needed. Nothing else is exempted. Verified 2026-11-04 in
+# gitleaks 8.30.1 GIT mode (the mode CI's secret-scan.yml runs, per its line 29): legit
+# feeds-fixture digests pass, and a planted sk_live_ token INSIDE feeds_items.example.json
+# is still flagged. Kept regression-tested by .claude/scripts/test_gitleaks_allowlist.py,
+# which also runs in CI's secret-scan workflow.
+#
+# KNOWN LIMITATION (verified 2026-11-04, debug logs): in `gitleaks dir` mode (ad-hoc local
+# working-tree scans, NOT what CI uses) a global allowlist's `paths` skips matched files
+# BEFORE any content evaluation, in scalar or array form — inside such files nothing is
+# value-checked. Verify allowlist changes with `gitleaks git --log-opts=...`, never `dir`.
+#
+# RETRACTED (was 368cc0e): a paths-only allowlist pinned to exact files. Alex's probe showed
+# paths-only entries exempt the WHOLE file — a real credential pasted into an exempted
+# fixture would pass the scanner. Do not switch to that form; if a non-digest secret ever
+# needs to live under supabase/fixtures/, the fix is to move it out, never to widen this.
+#
+# The selftest file IS allowlisted below, narrowly (Alex's direction, #270 2026-11-04): the
+# PR-range scan includes commit cd0a50f, whose historical version held a literal sentinel
+# `sk_live_ + sha256("test")[:32]`; removing it needs a history rewrite, which is banned, and
+# .gitleaksignore fingerprints break on squash. The current selftest builds the sentinel at
+# run time, so no live-tree literal ever matches any rule — the entry below matches only
+# that one historical value (8-hex prefix pinned + 24 hex) inside that one file. A different
+# live-style key in the selftest file stays flagged, as does any token in fixtures/.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials — anchored ^supabase/fixtures/, case-sensitive lowercase hex; any REAL 64-hex credential inside a fixture stays exempt: accepted residual (review 2026-11-05, minor 9)"
+condition = "AND"
+paths = ['''^supabase/fixtures/''']
+regexes = ['''^[0-9a-f]{64}$''']
+
+[[allowlists]]
+description = "the secret-scan selftest's historical cd0a50f sentinel (sk_live_ + sha256('test')[:32]): one file, one value shape; the config holds only the 8-hex prefix so no rule self-flags this file"
+condition = "AND"
+paths = ['''(^|/)\.claude/scripts/test_gitleaks_allowlist\.py$''']
+regexes = ['''sk_live_9f86d081([0-9a-f]{24})?''']  # bare prefix too: gitleaks generic-api-key captured the 16-char form in e161a70's runtime-prefix comment
