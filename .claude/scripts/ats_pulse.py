@@ -967,30 +967,61 @@ def selftest() -> int:
         check("prior read CLI: a failed read exits NON-fatally and leaves NO file (one "
               "::warning::, delta_wow null)",
               rc == 0 and not os.path.exists(_out) and "::warning::" in _err.getvalue())
-        # (5) privacy + non-fatality, one loop over the malformed-body classes: every one —
-        # a 400 that echoes a registry name, a stray-week row, non-object metadata, a
-        # non-array 200 that names a company, non-JSON garbage — is a shape or HTTP error:
-        # exits 0, ONE ::warning:: carrying status/type/week only (never a name), and NO file
+        # (5) privacy + non-fatality, one loop over every failure class — HTTP errors that
+        # echo a registry name, shape errors (stray week, non-object metadata, bare-string
+        # row, non-string title), non-JSON and invalid-UTF-8 bodies that name a company,
+        # connections that raise mid-call (ValueError, BadStatusLine), and a missing prior
+        # day: every one exits 0, prints exactly ONE ::warning:: whose text carries status,
+        # type or week only (never a company name, body fragment or key), and writes NO file
         os.environ["MI_TWIN_URL"] = "https://twin.example.supabase.co"
         _leak_name = "Anthropic"
-        for _why, _st, _bd in [
+
+        class _ConnRaise:
+            """FakeConn whose request() raises a pre-built exception carrying the name."""
+            err: BaseException = ValueError("boom")
+            def __init__(self, *a, **k): pass
+            def request(self, *a, **k): raise type(self.err)(str(self.err))
+            def close(self): pass
+
+        class _ValueErrorConn(_ConnRaise):     # str(e) would dump config incl. the name
+            err = ValueError(f"connection exploded — config dump: {_leak_name}")
+
+        class _BadStatusConn(_ConnRaise):      # BadStatusLine's str() holds the raw line
+            err = http.client.BadStatusLine(f"HTTP/1.1 200 OK — {_leak_name}")
+
+        for _why, _st, _bd, _conn in [
             ("a 400 whose BODY echoes a company name", 400, json.dumps(
-                {"code": "42703", "message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode()),
+                {"code": "42703", "message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode(), None),
             ("a 200 with a stray-week row", 200, json.dumps(
                 [{"title": f"Hiring pulse — {_leak_name} (2026-W40)",
-                  "metadata": {"roles_open": 3}}]).encode()),
+                  "metadata": {"roles_open": 3}}]).encode(), None),
             ("a 200 whose metadata is a string", 200, json.dumps(
-                [{"title": f"Hiring pulse — {_leak_name} (2026-W44)", "metadata": "7"}]).encode()),
+                [{"title": f"Hiring pulse — {_leak_name} (2026-W44)", "metadata": "7"}]).encode(), None),
+            ("a 200 whose row is a bare string", 200, json.dumps(
+                [f"Hiring pulse — {_leak_name} (2026-W44)"]).encode(), None),
+            ("a 200 whose row title is an array", 200, json.dumps(
+                [{"title": [f"Hiring pulse — {_leak_name}"],
+                  "metadata": {"roles_open": 3}}]).encode(), None),
             ("a non-array 200 naming a company", 200, json.dumps(
-                {"message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode()),
-            ("a non-JSON 200 body", 200, b"<html>gateway error</html>"),
+                {"message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode(), None),
+            ("a non-JSON 200 body naming a company", 200,
+             b"<html>gateway error \u2014 " + _leak_name.encode() + b"</html>", None),
+            ("an invalid-UTF-8 200 body naming a company", 200,
+             b'{"x": "' + _leak_name.encode() + b' \xff\xfe"}', None),
+            ("a connection raising ValueError mid-call", None, None, _ValueErrorConn),
+            ("a connection raising BadStatusLine", None, None, _BadStatusConn),
+            ("an empty --prior-day", None, None, _FakeConn),
         ]:
-            _FakeConn.state = {"status": _st, "body": _bd}
+            _conn_cls = _conn or _FakeConn
+            if _conn is None:
+                _FakeConn.state = {"status": _st, "body": _bd}
+            _argv = (["--fetch-prior-week", _out, "--prior-day", ""] if _why == "an empty --prior-day"
+                     else ["--fetch-prior-week", _out, "--prior-day", "2026-11-01"])
             _out = os.path.join(tempfile.mkdtemp(), "prior.json")
+            _argv[1] = _out                        # fresh file per case
             _err, _outcap = io.StringIO(), io.StringIO()
             with contextlib.redirect_stderr(_err), contextlib.redirect_stdout(_outcap):
-                rc = main(["--fetch-prior-week", _out, "--prior-day", "2026-11-01"],
-                          _conn_cls=_FakeConn)
+                rc = main(_argv, _conn_cls=_conn_cls)
             check(f"prior read CLI: {_why} — exits 0, ONE warning names NO company, NO file",
                   rc == 0 and _leak_name not in _err.getvalue() and _leak_name not in _outcap.getvalue()
                   and _err.getvalue().count("::warning::") == 1 and not os.path.exists(_out))
