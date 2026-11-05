@@ -1,0 +1,133 @@
+{
+ "run": "lane0-company-new-fable",
+ "at": "2026-11-05T15:25:26+00:00",
+ "rows_written": 21,
+ "links": [
+  {
+   "claim_id": "bfa0eee4-9598-4154-a433-e66f1b164f09",
+   "company_id": "30d8ebf8-4860-4fed-95f8-cacb94d8c5b0",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "56a4171a-7cce-4c72-8bd0-f8b085a3c7ad",
+   "company_id": "7a28114e-79b6-4364-8666-9ebba63d010c",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "0e2da669-4e9f-4a88-9dd6-4eb30aed5845",
+   "company_id": "79df6d77-090a-4d07-a61f-102d7151d97d",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "0e2da669-4e9f-4a88-9dd6-4eb30aed5845",
+   "company_id": "4cd5a4fa-fba2-46bd-b190-573f5c4bb1d8",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "46d666ca-bc7e-49a5-a4f1-273b4898ec4e",
+   "company_id": "7e5c878e-a3c6-49c9-8be6-dd31debca7b8",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "a6e47424-3de0-4e4d-9694-c673f2408ac7",
+   "company_id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "0da16514-2658-45f7-915a-48771f06d5c5",
+   "company_id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "3e91b2b1-7213-4890-b01d-85e221c9c2ac",
+   "company_id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "f57a538a-c375-41c4-8f8f-295d5a53e5f4",
+   "company_id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "b96bb747-83e6-4827-b74d-bcb1458ad3c5",
+   "company_id": "ceea981c-1d9f-44ec-bcbc-1c6ca72e1c91",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "e1dad892-8ece-4205-bb09-c26895cc0a05",
+   "company_id": "7d07d30f-7f44-4a1d-89f5-fdd989f551a9",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "23fd1f4e-2bd2-4112-a157-9c407b6d43ab",
+   "company_id": "dfdfb477-dfb5-497c-83fb-8aa000387f18",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "23fd1f4e-2bd2-4112-a157-9c407b6d43ab",
+   "company_id": "e92e69e4-08c9-4915-90d7-13b02f9daa76",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "224103c0-51f5-4813-bfb6-7adc41203671",
+   "company_id": "3939eaa0-c555-4f4d-9225-438cd6337bfe",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "33a665eb-54ed-4219-9b66-46fc0a6233fd",
+   "company_id": "0cceaadf-eeab-4214-a703-4d9a1e3b564c",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "964ff717-3970-4275-961e-ac81d0dccbf7",
+   "company_id": "0cceaadf-eeab-4214-a703-4d9a1e3b564c",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "d7d34e8b-be12-4c86-9bb3-e78cfbbbefd7",
+   "company_id": "0cceaadf-eeab-4214-a703-4d9a1e3b564c",
+   "role": "about",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "60d337b1-439e-4bdc-8a01-988b1006a985",
+   "company_id": "387e4142-6aa0-40e7-8607-b7d7a2177ece",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "a26c1d3d-0dc3-46ef-a941-13e5696a01e9",
+   "company_id": "387e4142-6aa0-40e7-8607-b7d7a2177ece",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "026805bd-f049-4806-af71-964d271d8ff3",
+   "company_id": "387e4142-6aa0-40e7-8607-b7d7a2177ece",
+   "role": "asserted_by",
+   "tier": "fable"
+  },
+  {
+   "claim_id": "8222a487-f60c-4ded-85d8-8dd314a81a8e",
+   "company_id": "79df6d77-090a-4d07-a61f-102d7151d97d",
+   "role": "about",
+   "tier": "fable"
+  }
+ ]
+}
