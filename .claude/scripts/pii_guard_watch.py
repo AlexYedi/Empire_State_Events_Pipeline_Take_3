@@ -332,13 +332,21 @@ def load_baseline(path: str, now: dt.datetime) -> tuple[dict | None, str | None]
             raise ValueError("columns must be a non-empty object")
         if not isinstance(data.get("checked_by"), str) or not data["checked_by"].strip():
             raise ValueError("checked_by must record who hand-checked the counts")
+        if not isinstance(data.get("method"), str) or not data["method"].strip():
+            raise ValueError("method must record how the counts were hand-checked")
         checked = dt.datetime.strptime(data["checked_at"], "%Y-%m-%d").replace(tzinfo=dt.timezone.utc)
         for label, cnt in data["columns"].items():
             if (not isinstance(cnt, dict) or set(cnt) != set(BASELINE_FIELDS)
                     or not all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in cnt.values())):
                 raise ValueError(f"column {label!r} must hold non-negative {'/'.join(BASELINE_FIELDS)} counts")
-    except (OSError, ValueError, TypeError) as e:
+    except (OSError, ValueError, TypeError, KeyError) as e:
+        # KeyError: a missing checked_at / method must read as malformed (F2 REVIEW), never crash
+        # the evaluation — F1 and F4 (the bypass detector) must still report.
         return None, f"baseline file malformed: {e}"
+    if checked.date() > now.date():
+        # A future checked_at would give a negative age and never go stale — reject it (F2 REVIEW).
+        return None, (f"baseline checked_at is in the future ({data['checked_at']}) — a baseline cannot be "
+                      "newer than the evaluation; fix the date and re-run")
     age_days = (now.date() - checked.date()).days   # date arithmetic: checked_at carries no time component
     if age_days > BASELINE_STALE_DAYS:
         return data, (f"baseline is stale (checked {data['checked_at']}, {age_days} days ago, "
@@ -383,13 +391,18 @@ def evaluate(shadow_data: dict | None, telemetry: list[dict] | None, now: dt.dat
     # YED-326: the acknowledged baseline (.claude/references/pii-guard-baseline.json) holds the
     # hand-checked per-column counts, so the weekly scan reviews only the DELTA — a column above its
     # acknowledged count, a corpus column that is new or no longer scanned, or a missing /
-    # unparseable / stale baseline (fail loud, never silently QUIET). Signals carry totals only:
-    # per-column detail (column names) stays in this run's local output, like F4's.
+    # unparseable / stale baseline (fail loud, never silently QUIET). NET-COUNT BLIND SPOT: the
+    # per-column comparison is over NET counts, so a new real phone plus a fixed false positive in
+    # the same column nets to zero, and a column cleaned below its baseline can climb back silently —
+    # a clean-but-below-baseline scan says "re-baseline down", not "watched" (flagged in the PASS
+    # signal). Signals carry totals only; the per-column delta detail (column names and counts — both
+    # already public) goes to the run's console output, which in CI is the public Actions log, like F4's.
     f2_cols: list[str] = []
     if not scanned:
         out["F2"] = _v(no_shadow, "no shadow scan")
     elif baseline_problem or baseline is None:
         out["F2"] = _v("REVIEW", f"baseline: {baseline_problem or 'no baseline provided'}",
+                       loose=T["loose"], live=T["live"],
                        current_loose_not_live=T["loose_not_live"], current_bare_digits_10_11=T["bare_digits_10_11"])
     else:
         bcols, cols_now = baseline["columns"], shadow_data["columns"]
@@ -406,11 +419,21 @@ def evaluate(shadow_data: dict | None, telemetry: list[dict] | None, now: dt.dat
                        + [f"baseline column no longer scanned: {c}" for c in gone])
             out["F2"] = _v("REVIEW", f"{len(over)} column(s) above the acknowledged baseline; "
                            f"{len(new)} new; {len(gone)} no longer scanned",
+                           loose=T["loose"], live=T["live"],
                            current_loose_not_live=T["loose_not_live"], acknowledged_loose_not_live=ack_l,
                            current_bare_digits_10_11=T["bare_digits_10_11"], acknowledged_bare_digits_10_11=ack_b)
         else:
+            # A clean scan below the acknowledged counts is the cue to re-baseline down (item 6,
+            # YED-326 review): the net-count blind spot means under-baseline columns are unwatched.
+            under = sorted(c for c in bcols if c in cols_now
+                           and any(cols_now[c][f] < bcols[c][f] for f in BASELINE_FIELDS))
+            f2_cols = [f"{c}: below the acknowledged baseline (net-count blind spot) — re-baseline down"
+                       for c in under]
+            note = (f"; {len(under)} column(s) below the acknowledged baseline: re-baseline down "
+                    f"(net-count blind spot)" if under else "")
             out["F2"] = _v("PASS", f"LOOSE-not-LIVE rows {T['loose_not_live']} (acknowledged {ack_l}); "
-                           f"bare 10/11-digit rows {T['bare_digits_10_11']} (acknowledged {ack_b})",
+                           f"bare 10/11-digit rows {T['bare_digits_10_11']} (acknowledged {ack_b})" + note,
+                           loose=T["loose"], live=T["live"],
                            current_loose_not_live=T["loose_not_live"], acknowledged_loose_not_live=ack_l,
                            current_bare_digits_10_11=T["bare_digits_10_11"], acknowledged_bare_digits_10_11=ack_b)
 
@@ -497,7 +520,7 @@ def render(verdict: dict) -> str:
             detail_local = (k == "F4" and v["verdict"] == "FIRE" and verdict.get("f4_columns")) \
                 or (k == "F2" and verdict.get("f2_columns"))
             if detail_local:
-                sig += "; column detail in the run's local output / Linear"
+                sig += "; column detail in the run's console output (in CI: the public Actions log)"
             lines.append(f"| {k} | {v['verdict']} | {sig} | {json.dumps(v['counts'])} |")
     lines += ["", "INSUFFICIENT = below the minimum n (no information), not a pass. "
               "Playbook: .claude/references/pii-guard-watch.md (YED-320)."]
@@ -615,6 +638,9 @@ def selftest() -> bool:
     fresh = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def shad(**t):
+        # Counts default to 0 — a fixture, not a claim. Baseline-relative F2 tests must set NONZERO
+        # counts explicitly (see the "nonzero counts AT the acknowledged baseline" cases below): an
+        # all-zero fixture would also pass the old absolute F2 that REVIEWed any nonzero count.
         tot = {f: 0 for f in COUNT_FIELDS}
         tot.update({"n_rows": 13086}, **t)
         return {"generated_at": fresh, "alt3_source": "fixture", "columns": {"claim.claim_text": dict(tot)}, "totals": tot}
@@ -674,9 +700,24 @@ def selftest() -> bool:
     ck("F2 REVIEW: a missing baseline file fails loud (never silently QUIET)",
        V(shad(), None, "F2", bl_problem="no baseline file (.claude/references/pii-guard-baseline.json)") == "REVIEW")
     ck("F2 REVIEW: no baseline provided fails loud", V(shad(), None, "F2") == "REVIEW")
-    ck("F2 REVIEW body stays counts-only (no column names, local output pointed to)",
+    nonzero_bl = bl_of(None, extra={"claim.claim_text": {"loose_not_live": 15, "bare_digits_10_11": 0}})
+    ck("F2 PASS: nonzero counts AT the acknowledged baseline (loose_not_live 15 vs 15)",
+       V(shad(loose_not_live=15), None, "F2", bl=nonzero_bl) == "PASS")
+    ck("F2 PASS: nonzero counts BELOW the acknowledged baseline (14 vs 15)",
+       V(shad(loose_not_live=14), None, "F2", bl=nonzero_bl) == "PASS")
+    ck("F2 PASS signal flags the net-count blind spot: below-baseline says re-baseline down, at-baseline does not",
+       "re-baseline down" in evaluate(shad(loose_not_live=14), None, now, baseline=nonzero_bl)["triggers"]["F2"]["signal"]
+       and "re-baseline down" not in evaluate(shad(loose_not_live=15), None, now, baseline=nonzero_bl)["triggers"]["F2"]["signal"])
+    ck("F2 counts payload keeps the loose/live totals",
+       all(k in evaluate(shad(loose_not_live=15), None, now, baseline=nonzero_bl)["triggers"]["F2"]["counts"]
+           for k in ("loose", "live", "current_loose_not_live", "acknowledged_loose_not_live")))
+    ck("a malformed baseline never crashes the evaluation: F2 REVIEWs and F1/F4 still report",
+       (lambda e: e["triggers"]["F2"]["verdict"] == "REVIEW" and e["triggers"]["F4"]["verdict"] == "PASS"
+        and e["triggers"]["F1"]["verdict"].startswith("INSUFFICIENT"))
+       (evaluate(shad(), None, now, baseline=None, baseline_problem="baseline file malformed: 'checked_at'")))
+    ck("F2 REVIEW body stays counts-only (no column names; detail is pointed to the console output)",
        "claim.claim_text" not in render(evaluate(shad(loose_not_live=2), None, now, baseline=bl_of(shad())))
-       and "column detail in the run's local output / Linear"
+       and "column detail in the run's console output (in CI: the public Actions log)"
        in render(evaluate(shad(loose_not_live=2), None, now, baseline=bl_of(shad()))))
 
     # load_baseline: fresh/stale boundary and the malformed-file cases (fail loud).
@@ -690,7 +731,7 @@ def selftest() -> bool:
         def lb(path: str) -> tuple[dict | None, str | None]:
             return load_baseline(path, now)
 
-        good = {"checked_by": "Alex", "checked_at": now.strftime("%Y-%m-%d"),
+        good = {"checked_by": "Alex", "checked_at": now.strftime("%Y-%m-%d"), "method": "selftest hand-check",
                 "columns": {"claim.claim_text": {"loose_not_live": 1, "bare_digits_10_11": 0}}}
         d90 = dict(good, checked_at=(now - dt.timedelta(days=90)).strftime("%Y-%m-%d"))
         d91 = dict(good, checked_at=(now - dt.timedelta(days=91)).strftime("%Y-%m-%d"))
@@ -708,6 +749,15 @@ def selftest() -> bool:
            lb(write_bl("n.json", dict(good, columns={"claim.claim_text": {"loose_not_live": -1, "bare_digits_10_11": 0}})))[1] is not None)
         ck("load_baseline: an unreadable checked_at rejected",
            lb(write_bl("t.json", dict(good, checked_at="11/04/2026")))[1] is not None)
+        ck("load_baseline: a MISSING checked_at is malformed (REVIEW), never a crash",
+           lb(write_bl("nc.json", {k: v for k, v in good.items() if k != "checked_at"}))[1] is not None)
+        ck("load_baseline: a future checked_at is rejected (no negative-age staleness bypass)",
+           (lb(write_bl("fu.json", dict(good, checked_at=(now + dt.timedelta(days=1)).strftime("%Y-%m-%d"))))[1]
+            or "").startswith("baseline checked_at is in the future"))
+        ck("load_baseline: a MISSING method rejected (a re-baseline needs how)",
+           lb(write_bl("nm.json", {k: v for k, v in good.items() if k != "method"}))[1] is not None)
+        ck("load_baseline: an empty method rejected",
+           lb(write_bl("em.json", dict(good, method="   ")))[1] is not None)
         ck("load_baseline: an empty checked_by rejected (a re-baseline needs who)",
            lb(write_bl("w.json", dict(good, checked_by="  ")))[1] is not None)
     ck("F3 FIRE: 3 multi-row refusals in 7d", V(None, tel(ok=1, refusals=[("email", 2)] * 3), "F3") == "FIRE")
@@ -752,9 +802,9 @@ def selftest() -> bool:
        and quiet["triggers"]["F1"]["legs"]["b_telemetry"]["verdict"] == "INSUFFICIENT (no telemetry in CI)")
     body = render(evaluate({**shad(live=1), "columns": {"doc_chunks.content": shad(live=1)["totals"]}}, None, now,
                            baseline=bl_of(shad())))
-    ck("the body carries no shape, raw value or column name; F4 FIRE points to local output",
+    ck("the body carries no shape, raw value or column name; F4 FIRE points to the console output",
        not re.search(r"\d{3}[\s.-]\d{3}|@|aaa|999|doc_chunks", body)
-       and "column detail in the run's local output / Linear" in body)
+       and "column detail in the run's console output (in CI: the public Actions log)" in body)
 
     # main(): --no-telemetry wins over a telemetry file that would fire. An explicit fixture baseline,
     # so the suite never depends on the repo baseline's age.
@@ -765,7 +815,7 @@ def selftest() -> bool:
         with open(sh_path, "w") as f:
             json.dump({**shad(), "generated_at": real_now.strftime("%Y-%m-%dT%H:%M:%SZ")}, f)
         with open(bl_path, "w") as f:
-            json.dump({"checked_by": "selftest", "checked_at": real_now.strftime("%Y-%m-%d"),
+            json.dump({"checked_by": "selftest", "checked_at": real_now.strftime("%Y-%m-%d"), "method": "selftest",
                        "columns": {"claim.claim_text": {"loose_not_live": 0, "bare_digits_10_11": 0}}}, f)
         with open(tel_path, "w") as f:
             for _ in range(3):
@@ -783,6 +833,7 @@ def selftest() -> bool:
         stale_bl = os.path.join(d, "stale-baseline.json")
         with open(stale_bl, "w") as f:
             json.dump({"checked_by": "selftest", "checked_at": (real_now - dt.timedelta(days=91)).strftime("%Y-%m-%d"),
+                       "method": "selftest",
                        "columns": {"claim.claim_text": {"loose_not_live": 0, "bare_digits_10_11": 0}}}, f)
         stale_rc = None
         with contextlib.redirect_stdout(io.StringIO()):
@@ -850,9 +901,11 @@ def main(argv: list[str]) -> int:
     print("\nverdict-json: " + json.dumps({k: v for k, v in verdict.items() if k not in ("f4_columns", "f2_columns")},
                                           sort_keys=True))
     if verdict["f4_columns"]:
-        print("F4 columns (this run's output only, not the issue): " + ", ".join(verdict["f4_columns"]))
+        print("F4 columns (the run's console output — in CI, the public Actions log; not the issue): "
+              + ", ".join(verdict["f4_columns"]))
     if verdict.get("f2_columns"):
-        print("F2 delta detail (this run's output only, not the issue): " + "; ".join(verdict["f2_columns"]))
+        print("F2 delta detail (the run's console output — in CI, the public Actions log; not the issue): "
+              + "; ".join(verdict["f2_columns"]))
     if a.json_out:
         with open(a.json_out, "w", encoding="utf-8") as f:
             json.dump(verdict, f, indent=1, sort_keys=True)
