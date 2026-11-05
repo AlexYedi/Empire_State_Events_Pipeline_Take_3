@@ -3,7 +3,9 @@
 text also holds a write tool (SEC-03, 10-15 routing audit; CLAUDE.md invariants 5-6).
 
 Rules, per agent .md (frontmatter between the first two `---` lines):
-  1. A non-empty `tools:` line. Missing, empty, or any `*` wildcard fails (not minimal).
+  1. A `tools:` line must be present. Missing or any `*` wildcard fails (not minimal).
+     An EMPTY list is the most minimal declaration — a prompt-only agent that can read
+     no files and hold no tools (review fix #270: the lane-4 feed-classifier).
   2. READERS (untrusted text in): WebSearch, WebFetch, any Gmail MCP tool, and any MCP tool whose name
      contains `search` or `fetch` on a server that is not INTERNAL_SERVERS.
      WRITERS (external effect out): Bash (it can curl/POST anywhere), any MCP tool whose name contains
@@ -32,7 +34,15 @@ EXTERNAL_READ = re.compile(r"search|fetch", re.I)
 
 
 def parse_tools(text: str) -> list[str] | None:
-    """Return the tools list, [] if the line is present but empty, None if missing (or no frontmatter)."""
+    """Return the tools list, [] if the line is present but truly empty, None if missing
+    (or no frontmatter). ALLOW-ONLY (review round 3): a present-but-empty value is valid
+    ONLY when the next non-blank frontmatter line is a column-0 `key:` or there is no
+    further frontmatter line. Every other shape raises ValueError — an unindented list
+    after a blank line, an indented scalar, a multi-line flow (`[` on its own line), a
+    block scalar (`tools: |`) or a comment value (`tools: # none`): the regex reader
+    cannot parse those reliably, and parsing them as [] would let a tools list through
+    as "no tools". Only the inline `tools: a, b` form is parsed as a list; use it in
+    every agent file."""
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -46,15 +56,33 @@ def parse_tools(text: str) -> list[str] | None:
         if not m:
             continue
         val = m.group(1).strip()
-        if val:                                            # inline: `a, b` or `[a, b]`
-            return [t.strip().strip("'\"") for t in val.strip("[]").split(",") if t.strip()]
-        items = []                                         # block list: `- a` lines
-        for nxt in fm[i + 1:]:
-            b = re.match(r"^\s+-\s*(.+)$", nxt)
-            if not b:
-                break
-            items.append(b.group(1).strip().strip("'\""))
-        return items
+        if val in ("", "[]"):                              # present-but-empty candidates
+            nxt_i = next((j for j in range(i + 1, len(fm)) if fm[j].strip()), None)
+            if nxt_i is None:                              # end of frontmatter: valid
+                return []
+            nxt = fm[nxt_i]
+            if not re.match(r"^[A-Za-z0-9_-]+\s*:", nxt):  # must be a column-0 sibling key
+                raise ValueError(
+                    f"`tools:` is followed by {nxt.strip()[:40]!r} — only a column-0 "
+                    "`key:` line may follow a present-but-empty tools value; block lists, "
+                    "indented scalars and multi-line flows are not parsed by the regex "
+                    "reader and would otherwise pass as an empty tools list — use the "
+                    "inline form `tools: a, b`")
+            return []
+        if val.startswith("[") or val.endswith("]"):       # bracket form must be balanced
+            if not (val.startswith("[") and val.endswith("]")):
+                raise ValueError(
+                    f"`tools:` value {val[:40]!r} opens or closes a flow that never "
+                    "balances on the same line — multi-line flows are not parsed; use "
+                    "the inline form `tools: a, b`")
+            val = val[1:-1]
+        parts = [p.strip().strip("'\"") for p in val.split(",")]
+        if any(p and not re.fullmatch(r"[A-Za-z0-9_-]+", p) for p in parts):
+            raise ValueError(
+                f"`tools:` value {val[:40]!r} is not a comma-separated list of tool "
+                "identifiers — block scalars (|, >), comments and prose are not "
+                "accepted; use the inline form `tools: a, b`")
+        return [p for p in parts if p]
     return None
 
 
@@ -96,11 +124,12 @@ def is_writer(tool: str) -> bool:
 
 def check(path: str) -> list[str]:
     with open(path, encoding="utf-8") as f:
-        tools = parse_tools(f.read())
+        try:
+            tools = parse_tools(f.read())
+        except ValueError as e:
+            return [str(e)]
     if tools is None:
         return ["no `tools:` line in frontmatter (rule 1: every agent declares a minimal tools list)"]
-    if not tools:
-        return ["`tools:` line is empty (rule 1)"]
     wild = [t for t in tools if "*" in t]
     if wild:
         return [f"wildcard in `tools:` ({', '.join(wild)}) is not minimal (rule 1)"]
@@ -126,7 +155,7 @@ def selftest() -> int:
     cases = [
         (fm("tools: Read"), True),
         (fm("description: no tools"), False),
-        (fm("tools:"), False),
+        (fm("tools:"), True),   # prompt-only agent, declares zero tools (review fix #270)
         (fm("tools: *"), False),
         (fm("tools: Read, mcp__notion__*"), False),
         (fm("tools: Read, Write, mcp__notion__notion-fetch, mcp__notion__notion-search, "
@@ -143,6 +172,15 @@ def selftest() -> int:
         (fm("tools: mcp__exa__web_search, mcp__linear__create_issue"), False),
         (fm("tools: WebFetch, mcp__claude_ai_HubSpot"), False),             # server-level grant
         (fm("tools:\n  - WebFetch\n  - mcp__notion__notion-update-page"), False),
+        (fm("tools:\n- WebSearch"), False),                  # unindented block list (blocker 1)
+        (fm("tools:\n  # my tools\n  - Bash"), False),       # comment before items (blocker 1)
+        (fm("tools:\nmodel: sonnet"), True),                # truly empty (feed-classifier shape)
+        (fm("tools: []\nmodel: sonnet"), True),             # inline-empty flow followed by a column-0 key
+        (fm("tools:\n\n- WebFetch"), False),                 # blank line then unindented list (round 3)
+        (fm("tools:\n  WebFetch, Bash"), False),             # indented scalar continuation (round 3)
+        (fm("tools: [\nWebFetch,\nBash]"), False),           # multi-line flow (round 3)
+        (fm("tools: |"), False),                             # block scalar (round 3)
+        (fm("tools: # none"), False),                        # comment value (round 3)
         ("no frontmatter\n", False),
     ]
     import tempfile

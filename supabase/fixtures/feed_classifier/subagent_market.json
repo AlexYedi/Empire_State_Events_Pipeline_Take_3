@@ -1,0 +1,10 @@
+{
+  "item_key": "56000113043b32df3919e8c53e4e02eedeb87c5ebafe9d3c10889a45fd99b804",
+  "relevance": 0.7,
+  "event_candidate": true,
+  "kind": "market",
+  "signal_type": "news",
+  "companies": ["Beta Software"],
+  "topics": ["Developer tooling"],
+  "reason": "Product changelog entry worth a market fact, not a launch — no named release event."
+}

@@ -1,0 +1,10 @@
+{
+  "item_key": "ecc11b987db4b57616fa1684718266608815b1e4b0ce95f7dd93a6a6a530156c",
+  "relevance": 0.9,
+  "event_candidate": true,
+  "kind": "launch",
+  "signal_type": null,
+  "companies": ["Acme Robotics"],
+  "topics": ["Agentic infrastructure"],
+  "reason": "GA announcement of an agent runtime by a watchlist company — a launch event with existing topic edges."
+}

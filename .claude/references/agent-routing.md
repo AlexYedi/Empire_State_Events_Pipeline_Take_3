@@ -1,6 +1,6 @@
 # Agent routing: candidate menu
 
-*Last verified 2026-10-15 · re-verify against `.claude/agents/` and the plugin on any registry change.*
+*Last verified 2026-11-05 · re-verify against `.claude/agents/` and the plugin on any registry change.*
 
 A menu, not a hard-code. Hard routes cover fixed chains only; everything else is a judgment the session states out loud.
 
@@ -37,6 +37,7 @@ HubSpot, the Supabase spine (`spine_client.py`), publishing and credit spend nev
 | Family | Candidates (pick one, say why) | Skills to load | Gap → interim |
 |---|---|---|---|
 | Research (market, company, trend) | `alex:research-analyst`; `topic-landscape-analyst` for a single-topic year review | `research-brief-blueprint`, `competitive-analysis`, `market-signal-tracker` | — |
+| Feeds classification (lane 4, #270) | `feed-classifier` — no-tools JSON-contract agent; the parent validates via `feed_classifier.py --validate/--finalize` | — | — |
 | Content (posts, notes, comment loops) | `alex:content-correspondent` | `content-correspondent`, `pre-event-content`, `steering-interview`; read `.claude/skills/content-patterns/*.md` (reference files, not a skill) | editorial lead (calendar, format approval) → parent thread |
 | Architecture / design | `alex:cto-principal-architect` (Fable); `Plan` for an implementation plan | `cto-architect`, `trade-off-analysis-method`, `ai-agent-design-patterns`, `multi-agent-orchestration` | — |
 | Systems diagnosis ("why does this keep happening") | `alex:systems-analyst` (Fable) for recurring dysfunction; `alex:diagnostician` for a single failure (inspect the data first, propose, never fix) | `systems-thinking`, `systems-analyze`, `post-mortems-retrospectives` | — |
@@ -66,7 +67,7 @@ A cap bounce or a spend-limit kill ends the wave: stop, report what landed, let 
 | Tier | Agents | Web | Writes | Private files |
 |---|---|---|---|---|
 | T1 web/inbox readers | `company-researcher`, `person-researcher` (both Gmail read), `competitive-signal-scanner`, `topic-landscape-analyst`, `alex:research-analyst`, `alex:learning-coach-mentor` | yes | **none**: they return text; the parent writes files | no |
-| T2 text-in / text-out | `knowledge-conditioning`, `event-research-synthesizer`, `field-guide-renderer`, `post-event-synthesizer` | no | none | only what the parent passes |
+| T2 text-in / text-out | `knowledge-conditioning`, `event-research-synthesizer`, `field-guide-renderer`, `post-event-synthesizer`, `feed-classifier` (YED-304 lane 4) | no | none | only what the parent passes |
 | T3 Notion writer | `notion-writer` | no | Notion create/update from a validated payload only | no |
 | T4 builder | `alex:builder` | no | repo files under the caller's allowlist; no MCP | no |
 | T5 renderer | `visual-renderer` | no | files in the named event folder only | no |

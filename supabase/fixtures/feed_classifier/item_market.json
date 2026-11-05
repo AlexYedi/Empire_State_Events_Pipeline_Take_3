@@ -1,0 +1,8 @@
+{
+  "title": "Changelog: bulk import for the workspace API",
+  "url": "https://beta.example/changelog/2026-11/bulk-import",
+  "published": "2026-11-03T09:00:00Z",
+  "summary": "Beta Software shipped bulk import for its workspace API, with CSV mapping and audit logs. The changelog notes a 2x throughput improvement over the single-record path.",
+  "feed": "https://beta.example/changelog/feed.xml",
+  "kind": "rss"
+}
