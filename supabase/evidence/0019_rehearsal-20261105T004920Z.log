@@ -1,0 +1,33 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com:5432 as postgres.ytfzzsxcxxbejnowmkmk (ref ytfzzsxcxxbejnowmkmk)  at 2026-11-05T00:49:20Z
+
+[0] preflight
+  tables present=9/9; tables where api roles hold writes=9 (prod: 9/9) -> matches prod
+
+[1] snapshot A (before)
+  A: tables=9 api-role entries with non-SELECT privileges=18 default-acl api={'anon': 'arwdDxtm', 'authenticated': 'arwdDxtm'}
+
+[2] apply 0019
+  OK  0019_revoke_api_role_writes.sql
+
+[3] verify
+  catalog(post-apply): PASS
+  behaviour(post-apply) as anon: PASS
+
+[4] re-apply 0019 (idempotency)
+  OK  0019 (re-apply)
+  catalog(post-reapply): PASS
+  behaviour(post-reapply) as anon: PASS
+
+[5] rollback (the migration's ROLLBACK block)
+  OK  0019 rollback block
+
+[6] snapshot C (after rollback): must EQUAL snapshot A
+  C: tables=9 api-role entries with non-SELECT privileges=18 default-acl api={'anon': 'arwdDxtm', 'authenticated': 'arwdDxtm'}
+  snapshot C == snapshot A: rollback PROVEN
+
+[7] leave applied: re-apply 0019 + verify (twin ends in prod's post-promotion state)
+  OK  0019 (leave applied)
+  catalog(leave-applied): PASS
+  behaviour(leave-applied) as anon: PASS
+
+0019 REHEARSAL: ALL GATES GREEN
