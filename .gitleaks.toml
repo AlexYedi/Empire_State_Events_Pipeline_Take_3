@@ -45,4 +45,4 @@ regexes = ['''^[0-9a-f]{64}$''']
 description = "the secret-scan selftest's historical cd0a50f sentinel (sk_live_ + sha256('test')[:32]): one file, one value shape; the config holds only the 8-hex prefix so no rule self-flags this file"
 condition = "AND"
 paths = ['''(^|/)\.claude/scripts/test_gitleaks_allowlist\.py$''']
-regexes = ['''sk_live_9f86d081[0-9a-f]{24}''']
+regexes = ['''sk_live_9f86d081([0-9a-f]{24})?''']  # bare prefix too: gitleaks generic-api-key captured the 16-char form in e161a70's runtime-prefix comment
