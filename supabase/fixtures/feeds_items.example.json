@@ -1,76 +1,44 @@
 {
   "fetched_at": "2026-11-04T05:00:00Z",
   "sources": 3,
-  "feed_errors": [],
   "items_fetched": 4,
-  "rows_quarantined": 0,
-  "staging_failed": 0,
-  "quarantined_source_keys": [],
   "items_staged": 4,
-  "items": [
+  "raw_items": [
     {
-      "source_key": "62311472bd8c6b581d663718ef85718dace329e06f17b92f16c9a5c801092d01",
-      "company": "Veris AI",
-      "feed_url": "https://veris.example/blog/feed.xml",
-      "url": "https://veris.example/blog/atlas-2?utm_source=rss",
       "title": "Introducing Atlas 2.0",
+      "url": "https://veris.example/blog/atlas-2?utm_source=rss",
       "published": "2026-11-02T14:00:00Z",
       "summary": "Atlas 2.0 is now available in general availability.",
-      "kind": "launch",
-      "signal_type_guess": null,
-      "fetched_at": "2026-11-04T05:00:00Z",
-      "metadata": {
-        "canonical_url": "https://veris.example/blog/atlas-2",
-        "source_format": "rss"
-      }
+      "feed": "https://veris.example/blog/feed.xml",
+      "company": "Veris AI",
+      "source_format": "rss"
     },
     {
-      "source_key": "0517e7cd1c99ed0b6756cdd4736123a21ae42adfc25ab8d5f2fc9c0a0cbbb72b",
-      "company": "Veris AI",
-      "feed_url": "https://veris.example/blog/feed.xml",
-      "url": "https://veris.example/blog/q3",
       "title": "Q3 field notes",
+      "url": "https://veris.example/blog/q3",
       "published": "2026-10-27T09:00:00Z",
       "summary": "What we learned releasing for enterprise GTM teams.",
-      "kind": "market",
-      "signal_type_guess": "news",
-      "fetched_at": "2026-11-04T05:00:00Z",
-      "metadata": {
-        "canonical_url": "https://veris.example/blog/q3",
-        "source_format": "rss"
-      }
+      "feed": "https://veris.example/blog/feed.xml",
+      "company": "Veris AI",
+      "source_format": "rss"
     },
     {
-      "source_key": "d67112324b91fbea239c9014bd6954d469c9edf37edaf82e6a85d78655a39b49",
-      "company": "Northbeam Labs",
-      "feed_url": "https://northbeam.example/atom.xml",
-      "url": "https://northbeam.example/news/series-b",
       "title": "Northbeam raises Series B",
+      "url": "https://northbeam.example/news/series-b",
       "published": "2026-11-03T10:00:00Z",
       "summary": "We raised a Series B to scale agentic retrieval. Questions: [redacted]",
-      "kind": "market",
-      "signal_type_guess": "news",
-      "fetched_at": "2026-11-04T05:00:00Z",
-      "metadata": {
-        "canonical_url": "https://northbeam.example/news/series-b",
-        "source_format": "atom"
-      }
+      "feed": "https://northbeam.example/atom.xml",
+      "company": "Northbeam Labs",
+      "source_format": "atom"
     },
     {
-      "source_key": "3d54ea1653348c4c26a6370924febbd963f13fb7574dac6480c92941ecc7c88c",
-      "company": "Harbor Systems",
-      "feed_url": "https://youtube.example/feeds/videos.xml?channel_id=UCexample123",
-      "url": "https://youtube.example/watch?v=abc123",
       "title": "Harbor Systems launches Harbor Agents",
+      "url": "https://youtube.example/watch?v=abc123",
       "published": "2026-11-01T12:00:00Z",
       "summary": "Walkthrough of the new agent runtime.",
-      "kind": "launch",
-      "signal_type_guess": null,
-      "fetched_at": "2026-11-04T05:00:00Z",
-      "metadata": {
-        "canonical_url": "https://youtube.example/watch?v=abc123",
-        "source_format": "youtube"
-      }
+      "feed": "https://youtube.example/feeds/videos.xml?channel_id=UCexample123",
+      "company": "Harbor Systems",
+      "source_format": "youtube"
     }
   ]
 }

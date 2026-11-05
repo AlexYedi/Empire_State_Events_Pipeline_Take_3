@@ -27,6 +27,7 @@ import re
 import socket
 import sys
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -152,9 +153,11 @@ def _rss_item(item: ET.Element) -> dict:
     }
 
 
-def parse(feed_xml: str) -> list[dict]:
+def parse(feed_xml: str, base_url: str = "") -> list[dict]:
     """Parse an RSS 2.0, Atom or YouTube feed document into items, in feed order.
 
+    Item URLs are resolved against base_url when given — an Atom feed with relative
+    links used to go silently dead (items parsed, 0 rows, rc=0; round-3 item 7).
     Raises ValueError on XML that does not parse at all — never swallowed.
     """
     try:
@@ -162,11 +165,17 @@ def parse(feed_xml: str) -> list[dict]:
     except ET.ParseError as e:
         raise ValueError(f"feeds: feed XML does not parse: {type(e).__name__}") from None
     if root.tag == "rss":
-        return [_rss_item(i) for i in root.iter("item")]
-    if root.tag == f"{ATOM}feed":
+        items = [_rss_item(i) for i in root.iter("item")]
+    elif root.tag == f"{ATOM}feed":
         source_format = "youtube" if root.find(f".//{YT}videoId") is not None else "atom"
-        return [_atom_entry(e, source_format) for e in root.findall(f"{ATOM}entry")]
-    raise ValueError("feeds: unrecognized feed root — not RSS 2.0 or Atom")
+        items = [_atom_entry(e, source_format) for e in root.findall(f"{ATOM}entry")]
+    else:
+        raise ValueError("feeds: unrecognized feed root — not RSS 2.0 or Atom")
+    if base_url:
+        for it in items:
+            if it["url"]:
+                it["url"] = urllib.parse.urljoin(base_url, it["url"])
+    return items
 
 
 def assign_feeds(items: list[dict], feed_url: str) -> list[dict]:
@@ -255,70 +264,43 @@ def _resolved_addresses(hostname: str) -> list:
     return [ipaddress.ip_address(i[4][0]) for i in socket.getaddrinfo(hostname, 443)]
 
 
-def _validated_pin(url: str) -> tuple[str, str]:
-    """SSRF guard (round-1 item 6 / round-2 item 3): https only, and EVERY resolved address
-    must be GLOBAL — `is_global` also refuses carrier-grade NAT (100.64.0.0/10), documentation
-    and benchmark ranges, which a private/loopback checklist lets through. Returns
-    (hostname, first_validated_ip) so the connection can be PINNED to the validated address,
-    closing the validate/connect DNS-rebinding window. Messages are generic on purpose: no
-    part of the URL is echoed back (registry privacy)."""
+NAT64_NET = ipaddress.ip_network("64:ff9b::/96")
+
+
+def _validate_feed_url(url: str) -> None:
+    """SSRF guard (round-3: smaller, not bigger). https only; the host is resolved and
+    checked ONCE, up front: every address must be global, non-multicast, and not in the
+    NAT64 translation range — `is_global` alone let 224.0.0.1, ff02::1 and 64:ff9b::7f00:1
+    through (round-3 item 4). Deliberately NO DNS pinning: the round-2 pin patched global
+    socket state from a worker thread the wall-clock deadline can abandon, so an orphaned
+    worker un-pinned other feeds mid-fetch (round-3 item 1 — removed, not patched). A
+    redirect is a feed error (round-3 item 2), so there are no hops to re-check. Messages
+    are generic on purpose: no part of the URL is echoed back (registry privacy)."""
     parts = urllib.parse.urlsplit(url)
     if parts.scheme != "https" or not parts.hostname:
         raise ValueError("feeds: refusing fetch — an https URL with a hostname is required")
-    addrs = _resolved_addresses(parts.hostname)
-    for ip in addrs:
-        if not ip.is_global:
+    for ip in _resolved_addresses(parts.hostname):
+        if not ip.is_global or ip.is_multicast or ip in NAT64_NET:
             raise ValueError("feeds: refusing fetch — the feed host resolved to a "
                              "non-public address")
-    return parts.hostname.lower(), str(addrs[0])
 
 
-def _assert_public_https(url: str) -> None:
-    """Refuse anything _validated_pin refuses (redirect hops, call sites) without pinning."""
-    _validated_pin(url)
-
-
-class _pinned_resolution:
-    """Force socket.getaddrinfo to return ONLY the validated address for this hostname —
-    the connection cannot silently re-resolve to a private range between validation and
-    connect (DNS rebinding; round-2 item 3). Other hostnames resolve normally, so redirect
-    hops keep their own validation. Single-flight by construction: the workflow runs
-    concurrency-gated, one fetch at a time."""
-
-    def __init__(self, hostname: str, ip: str) -> None:
-        self._host, self._ip = hostname, ip
-        self._orig = None
-
-    def __enter__(self):
-        self._orig = socket.getaddrinfo
-        pinned_ip, pinned_host = self._ip, self._host
-
-        def pinned(host, *rest, **kw):
-            out = self._orig(host, *rest, **kw)
-            if str(host).lower() != pinned_host:
-                return out
-            kept = [e for e in out if e[4][0] == pinned_ip]
-            if not kept:               # the validated address stopped resolving: fail, don't wander
-                raise OSError("feeds: the validated feed address stopped resolving — not connecting")
-            return kept
-
-        socket.getaddrinfo = pinned
-        return self
-
-    def __exit__(self, *exc) -> bool:
-        socket.getaddrinfo = self._orig
-        return False
-
-
-class _SSRFGuard(urllib.request.HTTPRedirectHandler):
-    """Re-validates EVERY redirect hop (round-1 item 6): a https feed must not bounce the
-    fetcher to loopback, a private range, or a downgrade. Residual (documented, round-2
-    item 3): a CROSS-host redirect re-validates but is not pinned — certificate checks
-    bound the abuse; pin per-host if a lane ever needs it."""
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirect is a feed error (round-3 item 2): the registry stores the FINAL URL, so
+    a 3xx means the entry is stale — fail the source, never follow. This deletes the
+    redirect surface the round-1/2 hop-validation guard covered, guard and tests alike."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        _assert_public_https(newurl)
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        raise urllib.error.HTTPError(
+            req.full_url, code,
+            "feeds: redirect refused — the registry stores the final URL; update it",
+            headers, fp)
+
+
+def _build_opener() -> urllib.request.OpenerDirector:
+    """The real opener stack (refuses redirects). Test seam: the selftest swaps this to
+    drive _fetch_once through a fake opener — behavior, not source inspection."""
+    return urllib.request.build_opener(_NoRedirect)
 
 
 def _with_deadline(deadline_s: float, fn) -> object:
@@ -343,9 +325,9 @@ def _with_deadline(deadline_s: float, fn) -> object:
     return outcome["ok"]
 
 
-def _fetch_once(url: str, timeout: int, pin: tuple[str, str] | None = None) -> str:
+def _fetch_once(url: str, timeout: int) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "empire-feed-layer/0.1"})
-    opener = urllib.request.build_opener(_SSRFGuard)
+    opener = _build_opener()
 
     def _open() -> str:
         with opener.open(request, timeout=timeout) as response:  # noqa: S310
@@ -354,21 +336,20 @@ def _fetch_once(url: str, timeout: int, pin: tuple[str, str] | None = None) -> s
                 raise RuntimeError(f"feeds: fetch failed: HTTP {response.status}")
             return response.read(2 * 1024 * 1024).decode("utf-8", errors="replace")
 
-    if pin is None:
-        return _open()
-    with _pinned_resolution(*pin):
-        return _open()
+    return _open()
 
 
 def fetch(url: str, timeout: int = 8, deadline_s: int = 90) -> str:
     """The ONLY network step, for the live run — never called from the selftest.
 
-    https-only with an SSRF guard on every redirect hop, the validated IP PINNED for the
-    connection (no validate/connect rebinding window); reads at most 2 MiB; non-2xx or
-    timeout raises (never swallowed); deadline_s caps the whole fetch on the wall clock.
+    https-only with a one-shot public-address validation up front (round-3 item 1: no DNS
+    pinning — global socket state must not be patched from a deadline-abandonable thread);
+    redirects are feed errors, never followed (round-3 item 2); reads at most 2 MiB;
+    non-2xx or timeout raises (never swallowed); deadline_s caps the whole fetch on the
+    wall clock.
     """
-    pin = _validated_pin(url)
-    return _with_deadline(deadline_s, lambda: _fetch_once(url, timeout, pin))
+    _validate_feed_url(url)
+    return _with_deadline(deadline_s, lambda: _fetch_once(url, timeout))
 
 
 # ---------------------------------------------------------------- live run (feeds.py fetch)
@@ -405,7 +386,7 @@ SIGNAL_RULES: list[tuple[str, tuple[str, ...]]] = [
 # language, round-1 item 11) — but "releases"/"releasing" ARE launch verbs, matched by a
 # regex that refuses a preceding "press " (round-2 item 8: inflections must not fall to news).
 LAUNCH_PHRASES: tuple[str, ...] = ("launch", "launches", "launched", "launching", "announcing",
-                                   "announced", "introducing", "now available",
+                                   "introducing", "now available",
                                    "general availability", "out of beta", "GA of", "shipping", "ships")
 _LAUNCH_RELEASE_RE = re.compile(r"(?<!press )\brelease(?:s|ing)\b", re.IGNORECASE)
 
@@ -489,7 +470,8 @@ def fetch_all(sources: list[dict], fetcher=fetch, timeout: int = 8):
             errors.append(f"{tag}: missing feed_url")
             continue
         try:
-            parsed = parse(fetcher(feed_url, timeout=timeout))
+            # base_url: relative item links resolve against the feed URL (round-3 item 7)
+            parsed = parse(fetcher(feed_url, timeout=timeout), base_url=feed_url)
             for parsed_item in assign_feeds(parsed, feed_url):
                 parsed_item["company"] = company
             items.extend(parsed)
@@ -631,10 +613,10 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
         description="lane-4 producer: fetch public feeds, stage feed_items rows on the MI twin")
     ap.add_argument("--sources", required=True,
                     help='JSON file of sources: [{"company": str, "feed_url": str}]')
-    ap.add_argument("--out", default=os.path.join(tempfile.gettempdir(), "feed_items.json"),
-                    help="staged-manifest output path (default: a temp path — the manifest "
-                         "holds the full registry; a repo-cwd default risked committing it "
-                         "to this public repo, round-2 item 4)")
+    ap.add_argument("--out", default=None,
+                    help="staged-manifest output path (default: a fresh tempfile.mkstemp "
+                         "path — the manifest holds the full registry; a repo-cwd default "
+                         "risked committing it to this public repo, round-2 item 4)")
     ap.add_argument("--dry-run", action="store_true",
                     help="stage + manifest only, never write (default posture until migration 0020 lands)")
     ap.add_argument("--fail-on-feed-errors", action="store_true",
@@ -642,14 +624,26 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
                          "FEEDS_FAIL_ON_FEED_ERRORS so the failure alarm fires")
     ap.add_argument("--timeout", type=int, default=8)
     a = ap.parse_args(argv)
+    if a.out is None:                    # round-3 item 10: a fresh temp file per run
+        fd, a.out = tempfile.mkstemp(prefix="feed_items_", suffix=".json")
+        os.close(fd)
 
     with open(a.sources, encoding="utf-8") as f:
         sources = json.load(f)
+    if not sources:
+        # round-3 item 10: an empty registry must say so, not report a quiet successful run
+        print("::warning::feeds: the source list is EMPTY — zero sources configured; "
+              "nothing will be fetched", file=sys.stderr)
     fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     items, errors = fetch_all(sources, fetcher=fetcher or fetch, timeout=a.timeout)
     for err in errors:
         print(f"feeds: feed failed: {err}", file=sys.stderr)
     rows, staging_failed = stage_rows(items, fetched_at)
+    if items and not rows and not errors:
+        # round-3 item 7: sources parsed items but NOTHING staged (e.g. links that could
+        # not be resolved pre-2026-11-05) is a FEED ERROR, not a quiet rc=0 — the Action
+        # must alarm instead of reporting a healthy-but-empty run.
+        errors.append(f"stage: {len(items)} item(s) parsed, 0 stageable rows")
 
     # Per-row guard quarantine (review 2026-11-04): one bad row is dropped and counted — it
     # never fails the whole batch. review 2026-11-05 item 2: keys (sha256, non-reversible)
@@ -686,11 +680,9 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
     # with a NameError while dry-runs stayed green (regression from bd8b863).
     sc = _spine()
     sc.REF = ref                        # _send() rebuilds the host from REF at call time
-    try:
-        exists = _table_exists(sc)
-    except Exception as e:              # allowlisted logging: type only, never text; a
-        raise RuntimeError(f"feeds: feed_items existence check failed: "
-                           f"{type(e).__name__}") from None  # chained traceback would print it
+    # round-3 item 8: _table_exists' own message is allowlisted (static text + HTTP code) —
+    # a 403 and a 500 must not read the same, so its exception is passed through untouched.
+    exists = _table_exists(sc)
     if not exists:
         sys.exit("feeds: feed_items does not exist on the target yet (migration 0020) — "
                  "HTTP 404; write held; apply the migration or run with --dry-run")
@@ -698,6 +690,10 @@ def _cmd_fetch(argv: list[str], fetcher=None) -> int:
     fresh = rows if existing is None else [r for r in rows if r["source_key"] not in existing]
     if existing:
         print(f"feeds: {len(rows) - len(fresh)} row(s) already on the twin — skipped")
+    if not fresh:
+        # round-3 item 10: never POST an empty batch
+        print("feeds: 0 fresh row(s) — nothing to write (all rows already on the twin)")
+        return 2 if a.fail_on_feed_errors and errors else 0
     try:
         status, resp = sc.write("feed_items?on_conflict=source_key", fresh,
                                 prefer="resolution=ignore-duplicates,return=minimal")
@@ -739,12 +735,14 @@ def selftest() -> int:
     """Offline: inline XML/HTML fixtures only. fetch() must never run here."""
     import time
 
-    def _raises(fn) -> bool:
+    def _raises(fn, *excs) -> bool:
+        """True iff fn raises something that IS one of excs (empty = any Exception).
+        Round-3 item 5: the old any-exception version let a typo'd probe pass."""
         try:
             fn()
             return False
-        except Exception:
-            return True
+        except Exception as e:
+            return not excs or isinstance(e, excs)
 
     def _sleep_two() -> None:
         time.sleep(2)                    # stands in for a drip-feeding host (no network)
@@ -952,6 +950,18 @@ def selftest() -> int:
           == ("market", "paper")
           and classify({"title": "New models from Acme", "summary": ""})
           == ("market", "model_release"))
+    check("classify: bare 'announced' over-fires — dropped (round-3 item 9); 'announcing' stays",
+          classify({"title": "Acme announced Q3 earnings", "summary": ""}) == ("market", "news")
+          and classify({"title": "Acme announcing Atlas", "summary": ""}) == ("launch", None))
+
+    atom_rel = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+                '<link rel="alternate" href="/blog/post-1"/><title>Rel</title></entry>'
+                '</feed>')
+    check("parse: relative atom links resolve against the feed URL (round-3 item 7)",
+          parse(atom_rel, base_url="https://ex.com/feed.xml")[0]["url"]
+          == "https://ex.com/blog/post-1")
+    check("parse: no base_url leaves item links as-is",
+          parse(atom_rel)[0]["url"] == "/blog/post-1")
     check("stage_rows: an item with NO url is quarantined (no shared empty key)",
           stage_rows([{"title": "x", "url": "", "company": "c", "feed": "f",
                        "source_format": "rss"}], "t") == ([], 1))
@@ -967,69 +977,140 @@ def selftest() -> int:
 
     # --- fetch hardening (review 2026-11-05, items 6/7) — offline: no fetch() call
     check("fetch guard: non-https scheme refused before any DNS",
-          _raises(lambda: _assert_public_https("http://ex.com/feed")))
+          _raises(lambda: _validate_feed_url("http://ex.com/feed"), ValueError))
     check("fetch guard: loopback/link-local/private literals refused (no DNS needed)",
-          all(_raises(lambda u=u: _assert_public_https(f"https://{u}/x"))
+          all(_raises(lambda u=u: _validate_feed_url(f"https://{u}/x"), ValueError)
               for u in ("127.0.0.1", "[::1]", "169.254.1.1", "10.0.0.5", "192.168.1.5",
                         "172.16.0.9")))
     check("fetch deadline: a drip-feeding fetch is killed by the wall clock",
-          _raises(lambda: _with_deadline(0.15, _sleep_two)))
+          _raises(lambda: _with_deadline(0.15, _sleep_two), TimeoutError))
     check("fetch deadline: a fast fn result passes through", _with_deadline(5, lambda: 7) == 7)
 
-    # --- round-2 wiring (item 2): the guards must survive mutation of the call-sites.
-    # Structural checks pin the wiring; behavioral ones drive the real guard objects.
-    import inspect
-    check("wiring: fetch() validates+pins and runs under the wall-clock deadline",
-          "_validated_pin" in inspect.getsource(fetch)
-          and "_with_deadline" in inspect.getsource(fetch))
-    check("wiring: _fetch_once builds its opener with _SSRFGuard and applies the pin",
-          "_SSRFGuard" in inspect.getsource(_fetch_once)
-          and "_pinned_resolution" in inspect.getsource(_fetch_once))
-    check("wiring: the redirect handler re-validates every hop",
-          "_assert_public_https" in inspect.getsource(_SSRFGuard.redirect_request))
-    check("wiring: _cmd_fetch refuses refs before it can write",
-          inspect.getsource(_cmd_fetch).index("twin_ref_or_die")
-          < inspect.getsource(_cmd_fetch).index("sc.write"))
-    check("redirect guard: a loopback redirect hop is refused",
-          _raises(lambda: _SSRFGuard().redirect_request(None, None, 302, "moved", {},
-                                                        "http://127.0.0.1/x")))
-    check("redirect guard: an http-downgrade redirect hop is refused",
-          _raises(lambda: _SSRFGuard().redirect_request(None, None, 302, "moved", {},
-                                                        "http://ex.com/x")))
-    check("fetch guard: CGNAT / documentation / benchmark ranges refused (is_global)",
-          all(_raises(lambda u=u: _assert_public_https(f"https://{u}/x"))
-              for u in ("100.64.0.1", "100.100.100.200", "203.0.113.9", "198.18.0.5")))
+    # --- round-3 item 5: BEHAVIOR tests through a fake opener — no inspect.getsource, so a
+    # mutant that keeps a guard's name but disables its call dies (the Z2-Z7 class).
+    class _FakeResponse:
+        def __init__(self, payload=b"hello", status=200):
+            self.status, self._payload = status, payload
 
-    _orig_gai = socket.getaddrinfo
-    _state = {"n": 0}
+        def read(self, n=-1):
+            self.read_n = n
+            return self._payload
 
-    def _flapper(host, *rest, **kw):     # rebinding attacker: later lookups MIX IN loopback
-        _state["n"] += 1
-        addrs = ["93.184.216.34"] if _state["n"] == 1 else ["127.0.0.1", "93.184.216.34"]
-        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (a, 0)) for a in addrs]
+        def __enter__(self):
+            return self
 
-    def _hijacked(host, *rest, **kw):    # worst case: the validated IP stops resolving
-        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0))]
+        def __exit__(self, *a):
+            return False
 
-    socket.getaddrinfo = _flapper
-    pinned_ok = False
+    class _FakeOpener:
+        def __init__(self, response=None, error=None):
+            self.seen, self._response, self._error = {}, response, error
+
+        def open(self, request, timeout=None):
+            self.seen.update(url=request.full_url, timeout=timeout,
+                             ua=request.headers.get("User-agent"))
+            if self._error is not None:
+                raise self._error
+            return self._response
+
+    _real_opener, _real_once = globals()["_build_opener"], globals()["_fetch_once"]
+    _real_gai = socket.getaddrinfo
     try:
-        host, ip = _validated_pin("https://attacker.example/x")   # validation lookup: public
-        with _pinned_resolution(host, ip):
-            pinned_ok = socket.getaddrinfo(host, 443)[0][4][0] == "93.184.216.34"
-    finally:
-        socket.getaddrinfo = _orig_gai
-    check("fetch pin: the validated IP is pinned against later DNS answers (rebinding)",
-          pinned_ok)
+        fake = _FakeOpener(_FakeResponse())
+        globals()["_build_opener"] = lambda: fake
+        got = _fetch_once("https://ex.com/feed", 8)
+        check("fetch_once: requests through the built opener with the caller's timeout",
+              got == "hello" and fake.seen["url"] == "https://ex.com/feed"
+              and fake.seen["timeout"] == 8
+              and fake.seen["ua"] == "empire-feed-layer/0.1")
 
-    socket.getaddrinfo = _hijacked      # DNS flips AFTER validation
-    wandered = False
-    try:
-        with _pinned_resolution(host, ip):
-            wandered = _raises(lambda: socket.getaddrinfo(host, 443))   # refuses, never wanders
+        capped = _FakeResponse(payload=b"x")
+        globals()["_build_opener"] = lambda: _FakeOpener(capped)
+        _fetch_once("https://ex.com/feed", 8)
+        check("fetch_once: caps the read at 2 MiB", capped.read_n == 2 * 1024 * 1024)
+
+        boom = _FakeOpener(error=RuntimeError("feeds: fetch failed: HTTP 503"))
+        globals()["_build_opener"] = lambda: boom
+        caught = None
+        try:
+            _fetch_once("https://ex.com/feed", 8)
+        except RuntimeError as e:
+            caught = str(e)
+        check("fetch_once: non-2xx message carries the STATUS only, never the URL",
+              caught == "feeds: fetch failed: HTTP 503")
+
+        req = urllib.request.Request("https://ex.com/feed")
+        check("redirect: the real handler refuses a 302 hop (a redirect is a feed error)",
+              _raises(lambda: _NoRedirect().redirect_request(
+                  req, None, 302, "moved", {}, "https://ex.com/elsewhere"),
+                  urllib.error.HTTPError))
+
+        # fetch() wiring, behaviorally: a non-public resolution refuses BEFORE any request;
+        # a slow fetch layer dies on the wall clock; the caller's timeout reaches it.
+        def _stub_gai(ip):
+            v6 = ":" in ip
+            return lambda h, *a, **k: [
+                (socket.AF_INET6 if v6 else socket.AF_INET,
+                 socket.SOCK_STREAM, 6, "", (ip, 0))]
+
+        def _never(*a, **k):
+            raise AssertionError("a request went out after a guard should have refused")
+
+        globals()["_fetch_once"] = _never
+        socket.getaddrinfo = _stub_gai("127.0.0.1")
+        check("fetch: a non-public resolution refuses BEFORE any request",
+              _raises(lambda: fetch("https://attacker.example/x"), ValueError))
+
+        seen_args = {}
+
+        def _slow_once(url, timeout):
+            seen_args.update(url=url, timeout=timeout)
+            time.sleep(2)
+
+        globals()["_fetch_once"] = _slow_once
+        socket.getaddrinfo = _stub_gai("93.184.216.34")
+        check("fetch: the wall-clock deadline covers the whole fetch layer",
+              _raises(lambda: fetch("https://ex.com/feed", timeout=8, deadline_s=0.15),
+                      TimeoutError))
+        check("fetch: the caller's timeout reaches the fetch layer",
+              seen_args["timeout"] == 8)
+
+        # round-3 item 4: multicast and the NAT64 prefix are refused (is_global alone let
+        # these through).
+        for bad, label in (("224.0.0.1", "multicast v4"), ("ff02::1", "multicast v6"),
+                           ("64:ff9b::7f00:1", "NAT64 translation")):
+            socket.getaddrinfo = _stub_gai(bad)
+            check(f"fetch guard: {label} addresses refused",
+                  _raises(lambda: _validate_feed_url("https://ex.com/x"), ValueError))
     finally:
-        socket.getaddrinfo = _orig_gai
-    check("fetch pin: a hijacked later answer is refused, not followed", wandered)
+        globals()["_build_opener"], globals()["_fetch_once"] = _real_opener, _real_once
+        socket.getaddrinfo = _real_gai
+
+    # Privacy layers (M7b/M10): redaction lands BEFORE staging — no email or phone can
+    # reach a row, the manifest, or the spine guard, whatever the item text says.
+    pii_item = {"title": "Contact press@acme.example today", "url": "https://ex.com/p1",
+                "summary": "call +1 212 555 0142", "company": "Acme",
+                "feed": "https://ex.com/feed", "source_format": "rss"}
+    pii_rows, pii_failed = stage_rows([pii_item], "2026-11-05T00:00:00Z")
+    check("privacy: a PII-bearing item stages with NO email or phone anywhere (M7b/M10)",
+          pii_failed == 0 and len(pii_rows) == 1
+          and "@" not in json.dumps(pii_rows[0]) and "555" not in json.dumps(pii_rows[0]))
+
+    # Logging rule (Z11/Z15): a feed failure logs only source[N] + exception TYPE — the
+    # fetcher's exception text (a URL, an email) must never reach the log.
+    import contextlib as _cl
+    import io as _io
+
+    def _leaky(url, timeout=8):
+        raise RuntimeError("boom at https://dead.example/feed mail jo@leak.example")
+
+    err_buf = _io.StringIO()
+    with _cl.redirect_stderr(err_buf):
+        _, lerrs = fetch_all([{"company": "Acme", "feed_url": "https://dead.example/feed"}],
+                             fetcher=_leaky)
+    check("logging: a feed failure logs only source[N] + exception TYPE (Z11/Z15)",
+          len(lerrs) == 1 and lerrs[0].startswith("source[")
+          and "https://" not in err_buf.getvalue() and "@" not in err_buf.getvalue())
 
     # --- _cmd_fetch (review 2026-11-05, item 3): the WRITE path is exercised with a stubbed
     # socket layer (spine_client._send) — no network, real req/write/guard logic.
@@ -1050,7 +1131,7 @@ def selftest() -> int:
         calls.append((method, path.split("?")[0], data, headers.get("apikey")))
         return (200, "[]") if method == "GET" else (201, "[]")
 
-    def run_fetch(out_dir: str, stub, dry_run: bool = False) -> int:
+    def run_fetch(out_dir: str, stub, dry_run: bool = False, fetcher=None) -> int:
         calls.clear()
         _sc._send = stub
         src_path = _os.path.join(out_dir, "sources.json")
@@ -1060,7 +1141,7 @@ def selftest() -> int:
         args = ["--sources", src_path, "--out", out_path, "--fail-on-feed-errors"]
         if dry_run:
             args.append("--dry-run")
-        return _cmd_fetch(args, fetcher=lambda u, timeout=8: pii_rss)
+        return _cmd_fetch(args, fetcher=fetcher or (lambda u, timeout=8: pii_rss))
 
     try:
         with tempfile.TemporaryDirectory() as td:
@@ -1100,6 +1181,40 @@ def selftest() -> int:
                            and "Acme" not in str(e) and "row echo" not in str(e))
             check("cmd_fetch: failed write raises with ALLOWLISTED details only (status + "
                   "short PostgREST code parsed from the raw-text body)", refused)
+
+            # Logging rule at the CLI layer (Z11/Z15): a failed write prints no URL, no
+            # email, no row text — the stdout/stderr of the whole run is public.
+            out_buf, err_buf2 = _io.StringIO(), _io.StringIO()
+            write_failed = False
+            with _cl.redirect_stdout(out_buf), _cl.redirect_stderr(err_buf2):
+                try:
+                    run_fetch(td, send_403)
+                except RuntimeError:
+                    write_failed = True
+            combined = out_buf.getvalue() + err_buf2.getvalue()
+            check("cmd_fetch: a failed write prints no URL, email, or row text (Z11/Z15)",
+                  write_failed and "ex.com" not in combined and "@" not in combined)
+
+            # round-3 item 7: items parsed but 0 stageable rows is a FEED ERROR (rc 2 with
+            # --fail-on-feed-errors), never a quiet rc=0.
+            nolink = '<rss version="2.0"><channel><item><title>No link</title></item>' \
+                     '</channel></rss>'
+            rc = run_fetch(td, stub_send, dry_run=True, fetcher=lambda u, timeout=8: nolink)
+            check("cmd_fetch: items with 0 stageable rows is a FEED ERROR, not rc=0 "
+                  "(round-3 item 7)", rc == 2)
+
+            # round-3 item 10: 0 fresh rows (all already on the twin) skips the POST.
+            p1_key = hashlib.sha256(b"https://ex.com/p1?x=1").hexdigest()
+
+            def send_all_present(method, path, data, headers, timeout, reuse):
+                calls.append((method, path.split("?")[0], data, headers.get("apikey")))
+                if method == "GET":
+                    return (200, json.dumps([{"source_key": p1_key}]))
+                return (201, "[]")
+
+            rc = run_fetch(td, send_all_present)
+            check("cmd_fetch: 0 fresh rows (all already on the twin) skips the POST",
+                  rc == 0 and calls and all(c[0] == "GET" for c in calls))
 
             # Round-2 item 1 (mutation M5a): the ref guard must fire through _cmd_fetch —
             # removing twin_ref_or_die from the flow has to fail these. calls == [] proves
@@ -1155,6 +1270,19 @@ def selftest() -> int:
     check("twin guard: unset refused", _exit_code(None) == 1 and _exit_code("") == 1)
     check("twin guard: unknown ref refused", _exit_code("oicikjyzmxqfomrrqkzz") == 1)
     check("twin guard: twin ref passes", _exit_code(TWIN_REF) == 0)
+
+    # round-3 item 6: the fixture stores RAW items — source_keys are computed here at
+    # runtime, so no stored digests need a gitleaks allowlist (this PR no longer ships
+    # .gitleaks.toml; #270's fate is Alex's call).
+    fixture_path = _os.path.join(
+        _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))),
+        "supabase", "fixtures", "feeds_items.example.json")
+    with open(fixture_path, encoding="utf-8") as fh:
+        fx = json.load(fh)
+    fx_rows, fx_failed = stage_rows(fx["raw_items"], fx["fetched_at"])
+    check("fixture: raw items compute to the documented rows — keys computed, never stored",
+          len(fx_rows) == fx["items_staged"] and fx_failed == 0
+          and "source_key" not in json.dumps(fx["raw_items"]))
 
     print(f"selftest: {ok}/{ran} passed")
     return 0 if ok == ran else 1
