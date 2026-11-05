@@ -57,8 +57,10 @@ failure, 2 = PIIViolation. K.json = {"companies": [...], "topics": [...]} — th
 already known to the graph (search resolve / graph reads), always supplied by the parent.
 """
 from __future__ import annotations
+import hashlib
 import json
 import os
+import re
 import sys
 import unicodedata
 
@@ -125,7 +127,10 @@ SCHEMA = {
                    "description": "EXISTING topic names to link — link-to-existing only"},
         "reason": {"type": "string", "minLength": 1, "maxLength": REASON_MAX,
                    "pattern": "^[^\\u0000-\\u001f\\u007f]*$",
-                   "description": "plain printable prose; treated as quoted data by the "
+                   "description": "plain printable prose; validation is stricter than the "
+                                  "pattern — invisible Unicode (Cc/Cf/Zl/Zp) and "
+                                  "confidentiality markers (incl. NBSP/whitespace-split "
+                                  "variants) are refused; treated as quoted data by the "
                                   "parent — never executed or interpolated unquoted"},
     },
 }
@@ -146,17 +151,22 @@ def _walk(value, where):
 
 
 def _scan_pii(obj: dict, where: str, problems: list[str]) -> None:
-    """Collect contact-PII findings using spine_client's patterns — no second dialect."""
+    """Collect contact-PII findings using spine_client's patterns — no second dialect.
+    The display path is bounded: it is built from model-controlled dict keys, so long
+    names are truncated to 48 chars plus a short sha256 (count/hash, never a full echo
+    — review round 3)."""
     for path, s in _walk(obj, where):
+        display = (f"{path[:48]}…#{hashlib.sha256(path.encode()).hexdigest()[:8]}"
+                   if len(path) > 48 else path)
         for m in EMAIL_RE.finditer(s):
             if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
                 problems.append(
-                    f"{path} contains an email address · ADR-9 tier 2: contact PII never "
+                    f"{display} contains an email address · ADR-9 tier 2: contact PII never "
                     f"enters the spine · fix: drop it from the producer (contact detail "
                     f"belongs in HubSpot) — hard fail, no in-run override")
         if PHONE_RE.search(s):
             problems.append(
-                f"{path} contains a phone number · ADR-9 tier 2: contact PII never enters "
+                f"{display} contains a phone number · ADR-9 tier 2: contact PII never enters "
                 f"the spine · fix: drop it from the producer (contact detail belongs in "
                 f"HubSpot) — hard fail, no in-run override")
 
@@ -204,9 +214,9 @@ def validate_record(record, item, known_companies=None, known_topics=None) -> No
         raise SchemaViolation(f"record: must be a JSON object · got {type(record).__name__}")
     unknown = set(record) - set(REQUIRED_KEYS)
     if unknown:
-        problems.append(f"record: unknown key(s) {sorted(unknown)} · additionalProperties: "
-                        f"false (the model must not echo body text — the parent computes "
-                        f"redacted_body itself)")
+        problems.append(f"record: {len(unknown)} unknown key(s) · additionalProperties: "
+                        f"false (key names are model-controlled and are not echoed — the "
+                        f"parent computes redacted_body itself)")
     missing = [k for k in REQUIRED_KEYS if k not in record]
     if missing:
         problems.append(f"record: missing required key(s) {missing}")
@@ -282,10 +292,18 @@ def validate_record(record, item, known_companies=None, known_topics=None) -> No
             problems.append("reason: control or invisible-format characters refused — "
                             "quoted data, plain printable prose only (review fix #270: "
                             "Unicode Cc/Cf/Zl/Zp, not just C0/DEL)")
-        elif CONFIDENTIAL_RE.search(record["reason"]):
-            problems.append("reason: carries a confidentiality marker — refused "
+        else:
+            # One dialect (substrate's CONFIDENTIAL_RE), two passes: the raw text, and a
+            # whitespace-compacted copy (str.split folds NBSP, narrow NBSP and newlines),
+            # so a marker split by NBSP or across a wrapped line is caught too — the
+            # compact pass also subsumes contiguous matching (review round 3).
+            compact = "".join(record["reason"].split())
+            if CONFIDENTIAL_RE.search(record["reason"]) or \
+                    re.search(CONFIDENTIAL_RE.pattern.replace(" ", ""), compact, re.IGNORECASE):
+                problems.append("reason: carries a confidentiality marker — refused "
                             "(the subagent is given redacted text and must not echo "
-                            "redaction-class text; CONFIDENTIAL_RE, review fix #270)")
+                            "redaction-class text; CONFIDENTIAL_RE incl. NBSP/whitespace-"
+                            "split variants, review fix #270)")
 
     pii = [p for p in problems if "ADR-9" in p]
     if pii:
@@ -347,7 +365,7 @@ def selftest() -> int:
     KNOWN = {"companies": {"Acme Robotics", "Beta Software", "Gamma Systems", "Delta Labs"},
              "topics": {"Agentic infrastructure", "Developer tooling", "NYC AI ecosystem"}}
     known_c, known_t = KNOWN["companies"], KNOWN["topics"]
-    selftest.total = 47  # keep in sync with the number of check() calls below
+    selftest.total = 57  # keep in sync with the number of check() calls below
 
     # --- positive fixtures validate AND finalize
     for tag in ("launch", "market", "confidential"):
@@ -547,6 +565,65 @@ def selftest() -> int:
     check("non-string item_key is named as a TYPE violation, not a silent skip nor a "
           "mismatch (mutant: type check dropped, identity check alone would fire)",
           "item_key: must be a string" in item_key_message())
+
+    # --- round-3 pins (review survivor set): finalize propagation, CLI fail-closed,
+    # echo-free messages, Zp, NBSP-split markers
+    known_c_full, known_t_full = known_c, known_t
+    check("finalize passes the REAL lists into validate (F2a pin): a known set missing the "
+          "record's company raises; the full set finalizes with redacted_body == "
+          "redact_body(item.summary)",
+          raises(SchemaViolation, lambda: finalize_record(
+              record, item, known_c_full - set(record["companies"]), known_t_full))
+          and finalize_record(record, item, known_c_full, known_t_full)["redacted_body"]
+          == redact_body(item.get("summary") or ""))
+
+    import subprocess, tempfile
+    def cli(*args):
+        return subprocess.run([sys.executable, os.path.abspath(__file__), *args],
+                              capture_output=True, text=True)
+    with tempfile.TemporaryDirectory() as td:
+        rp, ip_, kp = (os.path.join(td, n) for n in ("r.json", "i.json", "k.json"))
+        for path, obj in ((rp, record), (ip_, item), (kp, {"companies": [], "topics": []})):
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(obj, f)
+        check("CLI: --validate --known with EMPTY lists rejects invented names, exit 1 "
+              "(N10 pin: no set()-or-None fail-open on the CLI path)",
+              cli("--validate", "--record", rp, "--item", ip_, "--known", kp).returncode == 1)
+        check("CLI: --finalize WITHOUT --known exits 1 (fail closed)",
+              cli("--finalize", "--record", rp, "--item", ip_).returncode == 1)
+
+    def msg_of(exc, fn):
+        try:
+            fn()
+        except exc as e:
+            return str(e)
+        return ""
+
+    long_key = "k" * 300
+    check("unknown-key rejection does not echo the model-controlled key name (N7 pin)",
+          long_key not in msg_of(SchemaViolation,
+                                 lambda: validate_record({**record, long_key: "v"}, item)))
+    probe_email = "jane.doe@summit.example"  # synthetic, non-allowlisted, not real PII
+    big_item = {**load("item_confidential.json"), "x" * 300: f"contact {probe_email}"}
+    m = msg_of(PIIViolation, lambda: validate_record(load("subagent_confidential.json"), big_item))
+    check("PII rejection reports a bounded, hashed path — no 300-char key, no email echo "
+          "(N8/N9 pin; proven non-vacuous by the email being flagged at all)",
+          ("x" * 300) not in m and probe_email not in m and len(m) < 600)
+    names = [f"Ghost{i:02d}" for i in range(LIST_MAX + 1)]
+    m = msg_of(SchemaViolation, lambda: validate_record({**record, "companies": names}, item))
+    check("oversized-list rejection names the field and cap, never the members (N5 echo pin)",
+          "Ghost01" not in m and str(LIST_MAX) in m)
+    m = msg_of(SchemaViolation,
+               lambda: validate_record({**record, "reason": "y" * (REASON_MAX + 5)}, item))
+    check("reason-too-long rejection carries no reason text (N9 pin)", "y" * 64 not in m)
+    check("reason with Zp (U+2029 paragraph separator) refused (N2 pin)",
+          raises(SchemaViolation, lambda: validate_record({**record, "reason": "one\u2029two"}, item)))
+    check("reason with an NBSP-split marker ('off the\\xa0record') refused",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "off the\u00a0record"}, item)))
+    check("reason with a mid-word NBSP split ('confi\\xa0dential') refused (compact pass)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "confi\u00a0dential"}, item)))
 
     # --- purity: no network surface in this module's own imports (AST, not text —
     # spine_client itself imports urllib for REST reads; the guard path stays pure)

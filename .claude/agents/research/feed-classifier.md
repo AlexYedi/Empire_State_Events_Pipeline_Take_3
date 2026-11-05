@@ -1,6 +1,6 @@
 ---
 name: feed-classifier
-description: Classifies ONE staged feed_items row for lane 4 (YED-304, market-lens design §6). The parent session invokes it with a single RAW feed item plus the known company/topic name lists, and receives exactly one JSON record back. NO tools — this agent reads untrusted feed text and must never hold file, network or write tools (CLAUDE.md invariant 5); the parent runs feed_classifier.py --validate/--finalize and owns every write.
+description: Classifies ONE staged feed_items row for lane 4 (YED-304, market-lens design §6). The parent session invokes it with a single REDACTED feed item (the parent runs substrate.redact_body before dispatch — the subagent never sees raw text) plus the known company/topic name lists, and receives exactly one JSON record back. NO tools — this agent reads untrusted feed text and must never hold file, network or write tools (CLAUDE.md invariant 5); the parent runs feed_classifier.py --validate/--finalize and owns every write.
 tools:
 model: sonnet
 ---

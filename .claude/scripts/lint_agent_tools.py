@@ -35,12 +35,14 @@ EXTERNAL_READ = re.compile(r"search|fetch", re.I)
 
 def parse_tools(text: str) -> list[str] | None:
     """Return the tools list, [] if the line is present but truly empty, None if missing
-    (or no frontmatter). A block list (the next frontmatter line is a `-` item or a
-    comment) is NOT accepted as empty: the regex reader cannot parse those reliably, so
-    returning [] would let a tools list through as "no tools" (review round 2, blocker
-    1: an unindented list, or an indented one with a comment first, passed lint with
-    reader+writer tools). Those raise ValueError; check() turns that into a failure.
-    Only inline `tools: a, b` form is parsed; use it in every agent file."""
+    (or no frontmatter). ALLOW-ONLY (review round 3): a present-but-empty value is valid
+    ONLY when the next non-blank frontmatter line is a column-0 `key:` or there is no
+    further frontmatter line. Every other shape raises ValueError — an unindented list
+    after a blank line, an indented scalar, a multi-line flow (`[` on its own line), a
+    block scalar (`tools: |`) or a comment value (`tools: # none`): the regex reader
+    cannot parse those reliably, and parsing them as [] would let a tools list through
+    as "no tools". Only the inline `tools: a, b` form is parsed as a list; use it in
+    every agent file."""
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -54,15 +56,33 @@ def parse_tools(text: str) -> list[str] | None:
         if not m:
             continue
         val = m.group(1).strip()
-        if val:                                            # inline: `a, b` or `[a, b]`
-            return [t.strip().strip("'\"") for t in val.strip("[]").split(",") if t.strip()]
-        nxt = fm[i + 1] if i + 1 < len(fm) else ""
-        if re.match(r"^\s*(#|-)", nxt):                    # block list the reader can't own
+        if val in ("", "[]"):                              # present-but-empty candidates
+            nxt_i = next((j for j in range(i + 1, len(fm)) if fm[j].strip()), None)
+            if nxt_i is None:                              # end of frontmatter: valid
+                return []
+            nxt = fm[nxt_i]
+            if not re.match(r"^[A-Za-z0-9_-]+\s*:", nxt):  # must be a column-0 sibling key
+                raise ValueError(
+                    f"`tools:` is followed by {nxt.strip()[:40]!r} — only a column-0 "
+                    "`key:` line may follow a present-but-empty tools value; block lists, "
+                    "indented scalars and multi-line flows are not parsed by the regex "
+                    "reader and would otherwise pass as an empty tools list — use the "
+                    "inline form `tools: a, b`")
+            return []
+        if val.startswith("[") or val.endswith("]"):       # bracket form must be balanced
+            if not (val.startswith("[") and val.endswith("]")):
+                raise ValueError(
+                    f"`tools:` value {val[:40]!r} opens or closes a flow that never "
+                    "balances on the same line — multi-line flows are not parsed; use "
+                    "the inline form `tools: a, b`")
+            val = val[1:-1]
+        parts = [p.strip().strip("'\"") for p in val.split(",")]
+        if any(p and not re.fullmatch(r"[A-Za-z0-9_-]+", p) for p in parts):
             raise ValueError(
-                "`tools:` uses a block list (or has a comment before its items) — the "
-                "regex reader cannot parse that reliably, so it is not accepted as an "
-                "empty tools list; use the inline form `tools: a, b`")
-        return []                                          # truly empty (prompt-only agent)
+                f"`tools:` value {val[:40]!r} is not a comma-separated list of tool "
+                "identifiers — block scalars (|, >), comments and prose are not "
+                "accepted; use the inline form `tools: a, b`")
+        return [p for p in parts if p]
     return None
 
 
@@ -155,6 +175,12 @@ def selftest() -> int:
         (fm("tools:\n- WebSearch"), False),                  # unindented block list (blocker 1)
         (fm("tools:\n  # my tools\n  - Bash"), False),       # comment before items (blocker 1)
         (fm("tools:\nmodel: sonnet"), True),                # truly empty (feed-classifier shape)
+        (fm("tools: []\nmodel: sonnet"), True),             # inline-empty flow followed by a column-0 key
+        (fm("tools:\n\n- WebFetch"), False),                 # blank line then unindented list (round 3)
+        (fm("tools:\n  WebFetch, Bash"), False),             # indented scalar continuation (round 3)
+        (fm("tools: [\nWebFetch,\nBash]"), False),           # multi-line flow (round 3)
+        (fm("tools: |"), False),                             # block scalar (round 3)
+        (fm("tools: # none"), False),                        # comment value (round 3)
         ("no frontmatter\n", False),
     ]
     import tempfile

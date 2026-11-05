@@ -157,11 +157,53 @@ def main() -> int:
             failures.append("different sk_live in the selftest path NOT flagged — "
                             "the sentinel entry is wider than one value")
 
+        # 7-11 (round 3): anchoring pins — the sentinel entry exempts ONLY the exact
+        # bare-prefix form and the prefix+24hex form; anything longer or otherwise
+        # different in that file still flags. Digest anchoring is pinned the same way.
+        bare = "sk_live_" + hashlib.sha256(b"test").hexdigest()[:8]           # 16-char form (e161a70)
+        full = bare + hashlib.sha256(b"cd0a50f-sentinel").hexdigest()[:24]    # prefix+24hex (cd0a50f)
+        overlong = bare + hashlib.sha256(b"overlong").hexdigest()[:25]        # 25 hex tail — not exempt
+        in_path = lambda tag, content: findings(tag, {
+            ".claude/scripts/test_gitleaks_allowlist.py": content})
+
+        r_full = in_path("probe-sentinel-full", f'X = "{full}"\n')
+        print("PASS  full sentinel (prefix+24hex) in the selftest path is exempt"
+              if full not in r_full and not r_full else "FAIL  full sentinel was flagged")
+        if r_full:
+            failures.append("full sentinel flagged — anchored exemption broken")
+
+        r_bare = in_path("probe-sentinel-bare", f'X = "{bare}"\n')
+        print("PASS  bare 16-char sentinel form in the selftest path is exempt"
+              if not r_bare else "FAIL  bare 16-char form was flagged")
+        if r_bare:
+            failures.append("bare 16-char sentinel flagged — anchored exemption broken")
+
+        r_over = in_path("probe-sentinel-overlong", f'X = "{overlong}"\n')
+        print("PASS  a sentinel-PREFIX secret with a longer tail is still flagged"
+              if overlong not in r_over and r_over else "FAIL  overlong sentinel was NOT flagged")
+        if not r_over:
+            failures.append("overlong sentinel NOT flagged — entry behaves unanchored")
+
+        # 10 (round 3): config pin — the regexes must STAY anchored. (A scan-based pin
+        # for longer hex is impossible by construction: gitleaks' generic-api-key rule
+        # only captures well-shaped secrets, so a 65-hex string produces no finding
+        # with or without the allowlist — the anchored regex is the exposure boundary,
+        # and this pin makes un-anchoring a test failure.)
+        cfg = CONFIG.read_text()
+        anchored = ("^sk_live_9f86d081$" in cfg
+                    and "^sk_live_9f86d081[0-9a-f]{24}$" in cfg
+                    and "^[0-9a-f]{64}$" in cfg
+                    and "sk_live_9f86d081([0-9a-f]{24})?" not in cfg)
+        print("PASS  allowlist regexes are anchored in .gitleaks.toml"
+              if anchored else "FAIL  allowlist regexes lost their anchors")
+        if not anchored:
+            failures.append("allowlist regexes are not anchored — entry was widened")
+
     if failures:
         for failure in failures:
             print(f"FAIL  {failure}")
         return 1
-    print("OK: 6/6 gitleaks allowlist cases pass")
+    print("OK: 10/10 gitleaks allowlist cases pass")
     return 0
 
 
