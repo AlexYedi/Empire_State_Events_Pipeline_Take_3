@@ -24,18 +24,19 @@ begin;
 -- (the paste retries cleanly — nothing has been written yet).
 set local lock_timeout = '5s';
 
-update public.lane_registry
-   set active = true
- where lane = 'hiring_pulse';
-
--- In-transaction check: exactly 1 row must change. 0 means the hiring_pulse lane row is
--- missing (0016 not applied or seeded differently) — raise, and the transaction aborts with
--- nothing half-applied. A re-run after a successful apply still changes the row (UPDATE
--- counts it), so the check is re-run-safe.
+-- The UPDATE runs INSIDE the DO block so GET DIAGNOSTICS sees its row count. ROW_COUNT in
+-- PL/pgSQL counts only statements executed within the block: a separate DO after a top-level
+-- UPDATE always reads 0 (proven on prod 2026-11-04: a fresh DO block reports row_count = 0),
+-- which would abort every apply. Exactly 1 row must change; 0 means the hiring_pulse seed is
+-- missing (0016 not applied or seeded differently) — raise, and nothing is half-applied.
+-- Re-run-safe: a second paste updates the same row again (still 1) and passes.
 do $$
 declare
     changed integer;
 begin
+    update public.lane_registry
+       set active = true
+     where lane = 'hiring_pulse';
     get diagnostics changed = row_count;
     if changed <> 1 then
         raise exception '0018: expected exactly 1 lane_registry row to change, got %', changed;
