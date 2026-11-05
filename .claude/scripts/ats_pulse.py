@@ -207,15 +207,17 @@ def fetch_prior_week(base: str, key: str, day: str, out_path: str, *,
         finally:
             conn.close()
     except (http.client.HTTPException, OSError) as e:   # conn/DNS/TLS — all the same: optional read
-        raise PriorReadError(f"{type(e).__name__}: {e}") from None
+        # the TYPE only — str(e) can carry server text (BadStatusLine holds the raw status line)
+        raise PriorReadError(type(e).__name__) from None
     if not 200 <= status < 300:
         # status ONLY — the response body can echo a registry company name
         raise PriorReadError(f"HTTP {status}")
     try:
         rows = json.loads(body.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
-        raise PriorReadError(f"twin returned an undecodable or non-JSON body: "
-                             f"{type(e).__name__}: {e}") from None
+        # the TYPE only — str(e) can carry raw body fragments (UnicodeDecodeError quotes
+        # the bytes it choked on)
+        raise PriorReadError(f"twin returned an undecodable or non-JSON body ({type(e).__name__})") from None
     week, events = prior_week_events(rows, day)   # shape/contract errors raise, loud
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump({"week": week, "events": events}, fh)
@@ -965,20 +967,33 @@ def selftest() -> int:
         check("prior read CLI: a failed read exits NON-fatally and leaves NO file (one "
               "::warning::, delta_wow null)",
               rc == 0 and not os.path.exists(_out) and "::warning::" in _err.getvalue())
-        # (5) privacy: a 400 whose BODY names a registry company still cannot leak it —
-        # the warning carries the status only
+        # (5) privacy + non-fatality, one loop over the malformed-body classes: every one —
+        # a 400 that echoes a registry name, a stray-week row, non-object metadata, a
+        # non-array 200 that names a company, non-JSON garbage — is a shape or HTTP error:
+        # exits 0, ONE ::warning:: carrying status/type/week only (never a name), and NO file
         os.environ["MI_TWIN_URL"] = "https://twin.example.supabase.co"
-        _FakeConn.state = {"status": 400, "body": json.dumps(
-            {"code": "42703", "message": "echo: Hiring pulse — Anthropic (2026-W44)"}).encode()}
-        _out = os.path.join(tempfile.mkdtemp(), "prior.json")
-        _err = io.StringIO()
-        with contextlib.redirect_stderr(_err):
-            rc = main(["--fetch-prior-week", _out, "--prior-day", "2026-11-01"],
-                      _conn_cls=_FakeConn)
-        check("prior read CLI: a 400 whose BODY names a company still exits 0, writes NO "
-              "file, and the warning names NO company (status only)",
-              rc == 0 and not os.path.exists(_out)
-              and "Anthropic" not in _err.getvalue() and "HTTP 400" in _err.getvalue())
+        _leak_name = "Anthropic"
+        for _why, _st, _bd in [
+            ("a 400 whose BODY echoes a company name", 400, json.dumps(
+                {"code": "42703", "message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode()),
+            ("a 200 with a stray-week row", 200, json.dumps(
+                [{"title": f"Hiring pulse — {_leak_name} (2026-W40)",
+                  "metadata": {"roles_open": 3}}]).encode()),
+            ("a 200 whose metadata is a string", 200, json.dumps(
+                [{"title": f"Hiring pulse — {_leak_name} (2026-W44)", "metadata": "7"}]).encode()),
+            ("a non-array 200 naming a company", 200, json.dumps(
+                {"message": f"echo: Hiring pulse — {_leak_name} (2026-W44)"}).encode()),
+            ("a non-JSON 200 body", 200, b"<html>gateway error</html>"),
+        ]:
+            _FakeConn.state = {"status": _st, "body": _bd}
+            _out = os.path.join(tempfile.mkdtemp(), "prior.json")
+            _err, _outcap = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stderr(_err), contextlib.redirect_stdout(_outcap):
+                rc = main(["--fetch-prior-week", _out, "--prior-day", "2026-11-01"],
+                          _conn_cls=_FakeConn)
+            check(f"prior read CLI: {_why} — exits 0, ONE warning names NO company, NO file",
+                  rc == 0 and _leak_name not in _err.getvalue() and _leak_name not in _outcap.getvalue()
+                  and _err.getvalue().count("::warning::") == 1 and not os.path.exists(_out))
     finally:
         os.environ.pop("MI_TWIN_URL", None)
         os.environ.pop("MI_TWIN_SUPABASE_API_KEY", None)
@@ -1046,13 +1061,20 @@ def main(argv=None, *, _conn_cls=None) -> int:
             if not base or not key:
                 raise PriorReadError("twin URL or key missing")
             if not a.prior_day:
-                ap.error("--fetch-prior-week needs --prior-day (YYYY-MM-DD, the prior week's Sunday)")
+                raise PriorReadError("prior day missing")
             n = fetch_prior_week(base, key, a.prior_day, a.fetch_prior_week,
                                  _conn_cls=_conn_cls)
         except PriorReadError as e:
             # ONE warning, no file — the read is optional; the lane runs on delta_wow null.
             # The message is status/type/week only (never a response body or row text).
             print(f"::warning::ats_pulse: prior-week twin read failed ({_one_line(str(e).encode())}) "
+                  f"— running without a delta_wow baseline", file=sys.stderr)
+            return 0
+        except Exception as e:
+            # anything else a misconfigured twin URL/key can raise (schemeless URL, bad port,
+            # a key with a trailing newline — whose str() would print the key): type ONLY,
+            # same optional-read outcome, never a traceback
+            print(f"::warning::ats_pulse: prior-week twin read failed ({type(e).__name__}) "
                   f"— running without a delta_wow baseline", file=sys.stderr)
             return 0
         print(f"ats_pulse: prior-week twin read OK — {n} matched prior companies (counts only)")
