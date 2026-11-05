@@ -143,8 +143,9 @@ jobs:
           with open("/tmp/prior.json", "w") as fh:
               json.dump({"week": None, "events": events}, fh)
           print(f"prior-week baseline: {len(events)} companies (graph read OK)")
-          EOF
-          echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"
+          # the output is honest only when the heredoc actually wrote the file: the python
+          # exits 0 on a failed twin read too (warning path — no file, no failure)
+          if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
         if: steps.hold.outputs.held != 'true'
@@ -168,8 +169,14 @@ jobs:
       - name: Aggregate to hiring_pulse counts + per-company ensure-event manifests + lane_run
         if: steps.hold.outputs.held != 'true'
         run: |
+          # The guard tests FILE REALITY, not the prior step's output string. The twin-read
+          # step can exit 0 without writing /tmp/prior.json (secrets absent, or the read
+          # failed — its warning path), and the old string-compare guard passed --prior
+          # anyway: run 41943575924 crashed here with exit 3 ("--prior/--pull-summary
+          # unreadable"). if-form (not `[ -s f ] && PRIOR=…`) so a missing file doesn't
+          # trip bash -e.
           PRIOR=""
-          if [ "${{ steps.prior.outputs.prior }}" != "none" ]; then PRIOR="--prior /tmp/prior.json"; fi
+          if [ -s /tmp/prior.json ]; then PRIOR="--prior /tmp/prior.json"; fi
           python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --pull-summary /tmp/board_stats.json \
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
             --lane-run-out /tmp/pulse-out/lane_run.json
