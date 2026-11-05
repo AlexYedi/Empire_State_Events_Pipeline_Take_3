@@ -183,9 +183,11 @@ content; **minimal won**. The template is locked to this spec:
   quota-carrying post-sales positioning line.
 - **posting-tailored** — tailored against a pasted JD (`--jd posting.txt`, required in
   this mode), in two passes (spec-walk decision 2, 2026-10-31):
-  1. **Reorder (deterministic, script-side):** roles ranked by JD-term overlap across
-     their bullets, bullets re-ranked inside each role; stable sort keeps the me-model
-     order on ties, and a JD with zero overlap degrades visibly to the general resume.
+  1. **Reorder (deterministic, script-side):** roles **never move** — they keep me-model
+     (reverse-chronological) order; only the bullets inside each role are re-ranked by
+     JD-term overlap (YED-330, Alex 2026-11-05, amends spec-walk decision 2). Stable sort
+     keeps the me-model order on ties, and a JD with zero overlap degrades visibly to the
+     general resume.
   2. **Constrained rewording (model-side, skill):** bullets may be **reworded into the
      posting's vocabulary**, adding **no new facts** — every reworded bullet keeps its
      `source` note and carries **`original`** (the verbatim me-model bullet). The
