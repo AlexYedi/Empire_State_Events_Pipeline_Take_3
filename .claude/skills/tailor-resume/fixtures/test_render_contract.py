@@ -3,7 +3,7 @@
 
 Asserts that the tailor-resume synthetic fixture still satisfies the whole render contract
 the way CI runs it: schema validation, the seven locked content rules, reading order, the
-posting-tailored reorder pass, the constrained-rewording fidelity gate, the PDF
+posting-tailored bullet re-rank pass, the constrained-rewording fidelity gate, the PDF
 reading-order gate, and the decided me-model mapping + one-in-one-out retirement recorded
 in SKILL.md. Also runs the privacy grep gates: the gitignored private-input filenames and
 any PII must never appear inside fixture files.
@@ -84,8 +84,10 @@ def main() -> int:
     # Reweighting: reorder-only, deterministic, no-op on a disjoint JD.
     jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
     reweighted = rr.reweight_for_jd(me, jd)
-    check("reweight promotes the JD-relevant role first",
-          reweighted["roles"][0]["company"] == me["roles"][1]["company"])
+    check("reweight keeps roles in me-model order (YED-330)",
+          [r["company"] for r in reweighted["roles"]] == [r["company"] for r in me["roles"]])
+    check("reweight re-ranks bullets inside the JD-relevant role",
+          reweighted["roles"][1]["bullets"][0]["text"] == me["roles"][1]["bullets"][1]["text"])
     texts_before = sorted(b["text"] for r in me["roles"] for b in r["bullets"])
     texts_after = sorted(b["text"] for r in reweighted["roles"] for b in r["bullets"])
     check("reweight never rewrites a word", texts_before == texts_after)

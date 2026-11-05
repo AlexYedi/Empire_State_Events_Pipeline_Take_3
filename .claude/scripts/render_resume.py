@@ -18,8 +18,9 @@ The pipeline is split so the renderer's private-input surface is zero:
   - **PR B (YED-258)** — the content half now ships for real: the me-model → resume-input
     mapping is documented as the Blueprint default (Positioning → summary leading with
     quota-carrying post-sales; Experience → role entries with hunting-wins-as-account-growth
-    framing; Key accounts → the logo list), posting-tailored mode **reweights** by reordering
-    roles/bullets against a pasted JD (reorder-only — rule 5 forbids writing a word), proof
+    framing; Key accounts → the logo list), posting-tailored mode **reweights** by re-ranking
+    bullets inside each role against a pasted JD (roles stay in me-model order, YED-330;
+    reorder-only — rule 5 forbids writing a word), proof
     links get an optional live check (`--verify-links`, rule 4 "verified live"), and the
     rendered PDF is gated: exactly one page, `pdftotext` reading order intact, and section
     labels extracted unbroken (the ATS letter-spacing cap), exit code gates the run.
@@ -653,9 +654,11 @@ def _bullet_score(text: str, terms: set) -> int:
 
 
 def reweight_for_jd(me: dict, jd_text: str) -> dict:
-    """Deterministic JD reweighting: reorder roles and bullets by JD-term overlap.
+    """Deterministic JD reweighting: re-rank bullets inside each role by JD-term overlap.
 
-    The SCRIPT never writes a word — it only reorders what the JSON contains.
+    Roles never move: they keep the input (me-model, reverse-chronological) order
+    (YED-330, Alex 2026-11-05, amends spec-walk decision 2's "roles ranked by JD-term
+    overlap"). The SCRIPT never writes a word — it only reorders what the JSON contains.
     Bullet REWORDING is model-side (the skill), constrained by spec-walk decision 2
     (2026-10-31): a reworded bullet carries `original` (its verbatim me-model wording)
     and rewording_fidelity_errors() pins its facts to that original. Sorting is stable,
@@ -664,14 +667,12 @@ def reweight_for_jd(me: dict, jd_text: str) -> dict:
     visibly).
     """
     terms = jd_terms(jd_text)
-    scored = []
-    for i, role in enumerate(me["roles"]):
+    roles = []
+    for role in me["roles"]:
         bullet_scores = [(_bullet_score(b["text"], terms), j, b)
                          for j, b in enumerate(role["bullets"])]
         bullets = [b for _, _, b in sorted(bullet_scores, key=lambda t: (-t[0], t[1]))]
-        role_score = sum(s for s, _, _ in bullet_scores)
-        scored.append((-role_score, i, {**role, "bullets": bullets}))
-    roles = [r for _, _, r in sorted(scored, key=lambda t: (t[0], t[1]))]
+        roles.append({**role, "bullets": bullets})
     return {**me, "roles": roles}
 
 
@@ -1029,14 +1030,18 @@ def selftest() -> int:
     # PR B — posting-tailored reweighting: reorder-only, deterministic, no-op on disjoint JDs.
     analytics_jd = "Own analytics pilots and multi-team rollout; unstick a stalled pilot into a rollout."
     reweighted = reweight_for_jd(me, analytics_jd)
-    case("reweight promotes the JD-relevant role first",
-         reweighted["roles"][0]["company"] == me["roles"][1]["company"])
+    # YED-330: the later role out-scores the first (7 vs 0 JD-term hits) yet roles keep
+    # me-model order; only that role's bullets are re-ranked.
+    case("reweight keeps role order even when a later role far out-scores the first",
+         [r["company"] for r in reweighted["roles"]] == [r["company"] for r in me["roles"]])
+    case("reweight re-ranks the high-overlap later role's bullets in place",
+         [b["text"] for b in reweighted["roles"][1]["bullets"]]
+         == [me["roles"][1]["bullets"][1]["text"], me["roles"][1]["bullets"][0]["text"]])
     before = [b["text"] for r in me["roles"] for b in r["bullets"]]
     after = [b["text"] for r in reweighted["roles"] for b in r["bullets"]]
     case("reweight reorders but never rewrites a word", sorted(before) == sorted(after))
-    case("reweight promotes the JD-relevant bullet within a role",
-         [b["text"] for b in reweighted["roles"][0]["bullets"]][0]
-         == me["roles"][1]["bullets"][1]["text"])
+    case("reweight leaves a zero-overlap role's bullets in me-model order",
+         reweighted["roles"][0]["bullets"] == me["roles"][0]["bullets"])
     case("zero-overlap JD leaves the me-model order untouched",
          reweight_for_jd(me, "xyzzy plugh zork")["roles"] == me["roles"])
 
