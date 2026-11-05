@@ -21,7 +21,10 @@
         }
       ],
       "key_accounts": [
-        "Quillmark Freight (fictional)",
+        {
+          "name": "Quillmark Freight (fictional)",
+          "aliases": ["Quillmark", "QMF"]
+        },
         "Tessellate Foods (fictional)",
         "Orbitline Media (fictional)"
       ]

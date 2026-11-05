@@ -19,9 +19,12 @@ is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome pr
    (paste the JD verbatim).
 2. Source is `.claude/references/me-model.md`, read **by path only**. If it is absent
    (fresh worktree without the local file): stop and ask — nothing renders without it.
-3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `contact[]` (optional),
+3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `contact[]` (optional
+   in the schema, **required for a real render**: the run refuses without it),
    `positioning`, `roles[] {title, company, dates, bullets[] {text, source[, original]}
-   [, key_accounts[]]}`, `key_accounts[]` (top-level, OR per role, never both),
+   [, key_accounts[]]}`, `key_accounts[]` (top-level, OR per role, never both; each
+   account a string or `{name, aliases[]}`, with aliases filled from the me-model's short
+   forms; aliases are blocked by rule 2 and never rendered),
    `proof_links[]` OR `builds[] {links[][, description]}` (description: one line, ≤70
    chars, refused not truncated), `education[]` (optional)) and write it to
    `.claude/output/resume-input.json`.

@@ -36,6 +36,7 @@ Usage: render_resume.py <resume-input.json> [--mode general|posting-tailored]
                        [--out .claude/output/resume.pdf] [--jd posting.txt]
 """
 import argparse
+import html as htmllib
 import json
 import os
 import re
@@ -43,6 +44,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import urllib.error
 import urllib.request
 
@@ -112,13 +114,56 @@ def uses_per_role_accounts(me: dict) -> bool:
     return any(isinstance(r, dict) and "key_accounts" in r for r in me.get("roles") or [])
 
 
-def all_key_accounts(me: dict) -> list:
-    """Every client name the input declares — the rule-2 denylist for prose."""
-    accounts = list(me.get("key_accounts") or [])
+# A key account is a string, or {name, aliases[]} (Alex, 2026-11-05): aliases are short
+# forms rule 2 also blocks ("Quillmark" for "Quillmark Freight"). Only `name` renders.
+ACCOUNT_KEYS = {"name", "aliases"}
+
+
+def account_name(account) -> str:
+    return account["name"] if isinstance(account, dict) else account
+
+
+def account_names(accounts) -> list:
+    return [account_name(a) for a in accounts or []]
+
+
+def _account_list_errors(value, w: str) -> list:
+    if not isinstance(value, list) or not value:
+        return [f"{w}: optional, but when present it must be a non-empty array of accounts "
+                "(a string, or {name, aliases[]})"]
+    errors = []
+    for k, a in enumerate(value):
+        if isinstance(a, dict):
+            unknown = sorted(set(a) - ACCOUNT_KEYS)
+            if unknown:
+                errors.append(f"{w}[{k}]: unknown key(s) {unknown} — allowed: {sorted(ACCOUNT_KEYS)}")
+            if not _nonempty_str(a.get("name", "")):
+                errors.append(f"{w}[{k}].name: non-empty string required")
+            if not _nonempty_str_list(a.get("aliases")):
+                errors.append(f"{w}[{k}].aliases: non-empty array of non-empty strings "
+                              "required (use a plain string when there is no alias)")
+        elif not _nonempty_str(a):
+            errors.append(f"{w}[{k}]: a non-empty string or {{name, aliases[]}} required")
+    return errors
+
+
+def _all_account_items(me: dict) -> list:
+    items = list(me.get("key_accounts") or [])
     for r in me.get("roles") or []:
         if isinstance(r, dict):
-            accounts += r.get("key_accounts") or []
-    return accounts
+            items += r.get("key_accounts") or []
+    return items
+
+
+def all_key_accounts(me: dict) -> list:
+    """Every client name the input declares (the rendered names)."""
+    return account_names(_all_account_items(me))
+
+
+def account_block_terms(me: dict) -> list:
+    """(name, [name, *aliases]) per account — the rule-2 denylist for prose."""
+    return [(account_name(a), [account_name(a)] + list(a.get("aliases", []))
+             if isinstance(a, dict) else [a]) for a in _all_account_items(me)]
 
 
 def proof_links(me: dict) -> list:
@@ -215,9 +260,8 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     errors.append(f"{rw}.{key}: string required")
             if not _nonempty_str(role.get("title", "")):
                 errors.append(f"{rw}.title: non-empty string required")
-            if "key_accounts" in role and not _nonempty_str_list(role["key_accounts"]):
-                errors.append(f"{rw}.key_accounts: optional, but when present it must be a "
-                              "non-empty array of non-empty strings")
+            if "key_accounts" in role:
+                errors += _account_list_errors(role["key_accounts"], f"{rw}.key_accounts")
             bullets = role.get("bullets")
             if not isinstance(bullets, list) or not bullets:
                 errors.append(f"{rw}.bullets: non-empty array required")
@@ -236,7 +280,9 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     if "original" in bullet and not _nonempty_str(bullet["original"]):
                         errors.append(f"{bw}.original: non-empty string required when present "
                                       "(verbatim me-model wording of a reworded bullet)")
-    for key in ("key_accounts", "proof_links", "contact", "education"):
+    if "key_accounts" in data:
+        errors += _account_list_errors(data["key_accounts"], f"{where}.key_accounts")
+    for key in ("proof_links", "contact", "education"):
         value = data.get(key)
         if key in data and (not isinstance(value, list) or not value
                             or not all(_nonempty_str(x) for x in value)):
@@ -271,24 +317,40 @@ SECTION_LABELS = {"experience": "Experience", "key-accounts": "Key accounts",
                   "selected-builds": "Selected builds", "education": "Education"}
 
 
+def _esc(s: str) -> str:
+    """Text-node escape (& < >). Every resume-input field goes through this or _esc_attr;
+    quotes stay literal in text so plain-ASCII input renders byte-identical to before."""
+    return htmllib.escape(s, quote=False)
+
+
+def _esc_attr(s: str) -> str:
+    return htmllib.escape(s, quote=True)
+
+
+def _join(items, sep: str) -> str:
+    return sep.join(_esc(x) for x in items)
+
+
 def _role_accounts_html(r: dict) -> str:
     if not r.get("key_accounts"):
         return ""
     return ('\n    <p class="role-accounts"><span class="role-accounts-label">Key accounts:'
-            f'</span> {", ".join(r["key_accounts"])}</p>')
+            f'</span> {_join(account_names(r["key_accounts"]), ", ")}</p>')
 
 
 def _build_items(me: dict) -> list:
     """Selected-builds <li>s. Legacy proof_links and description-less builds render one
     link per <li>, exactly as before; a described build is one <li>: description, then
     its links."""
+    def anchor(u):
+        return f'<a href="{_esc_attr(u)}">{_esc(u)}</a>'
     if "builds" not in me:
-        return [f'<li><a href="{u}">{u}</a></li>' for u in me["proof_links"]]
+        return [f"<li>{anchor(u)}</li>" for u in me["proof_links"]]
     items = []
     for b in me["builds"]:
-        anchors = [f'<a href="{u}">{u}</a>' for u in b["links"]]
+        anchors = [anchor(u) for u in b["links"]]
         if b.get("description"):
-            items.append(f'<li><span class="build-desc">{b["description"]}</span> — '
+            items.append(f'<li><span class="build-desc">{_esc(b["description"])}</span> — '
                          + " · ".join(anchors) + "</li>")
         else:
             items += [f"<li>{a}</li>" for a in anchors]
@@ -298,12 +360,12 @@ def _build_items(me: dict) -> list:
 def build_resume_html(me: dict, mode: str = "general") -> str:
     roles_html = "\n".join(
         f'    <div class="role-head">\n'
-        f'      <h3 class="role-title">{r["title"]}</h3>\n'
-        f'      <span class="role-dates">{r["dates"]}</span>\n'
+        f'      <h3 class="role-title">{_esc(r["title"])}</h3>\n'
+        f'      <span class="role-dates">{_esc(r["dates"])}</span>\n'
         f'    </div>\n'
-        f'    <p class="role-company">{r["company"]}</p>\n'
+        f'    <p class="role-company">{_esc(r["company"])}</p>\n'
         f'    <ul class="bullets">\n'
-        + "\n".join(f"      <li>{b['text']}</li>" for b in r["bullets"]) + "\n    </ul>"
+        + "\n".join(f"      <li>{_esc(b['text'])}</li>" for b in r["bullets"]) + "\n    </ul>"
         + _role_accounts_html(r)
         for r in me["roles"])
     links_html = "\n".join(f"      {li}" for li in _build_items(me))
@@ -313,23 +375,24 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
         key_accounts_html = (
             '  <section class="key-accounts">\n'
             '    <h2 class="section-label">Key accounts</h2>\n'
-            f'    <p class="logo-line">{", ".join(me["key_accounts"])}</p>\n'
+            f'    <p class="logo-line">{_join(account_names(me["key_accounts"]), ", ")}</p>\n'
             '  </section>')
     contact_html = ""
     if me.get("contact"):
-        contact_html = f'\n  <p class="contact">{" · ".join(me["contact"])}</p>'
+        contact_html = f'\n  <p class="contact">{_join(me["contact"], " · ")}</p>'
     education_html = ""
     if me.get("education"):
         education_html = (
             '  <section id="education">\n'
             '    <h2 class="section-label">Education</h2>\n'
-            f'    <p class="education-line">{" · ".join(me["education"])}</p>\n'
+            f'    <p class="education-line">{_join(me["education"], " · ")}</p>\n'
             '  </section>')
+    name, positioning = _esc(me["name"]), _esc(me["positioning"])
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>{me['name']} — Resume ({mode})</title>
+<title>{name} — Resume ({mode})</title>
 <style>
   /* Minimal template — the winning blind-pick variant (PR 247, Alex's design decision).
      ATS-safe: single column, standard fonts, text-selectable (Chrome --print-to-pdf).
@@ -356,9 +419,9 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
 </head>
 <body>
   <header>
-    <h1 class="resume-name">{me['name']}</h1>{contact_html}
+    <h1 class="resume-name">{name}</h1>{contact_html}
   </header>
-  <p class="positioning">{me['positioning']}</p>
+  <p class="positioning">{positioning}</p>
   <section id="experience">
     <h2 class="section-label">Experience</h2>
 {roles_html}
@@ -374,6 +437,63 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
 </body>
 </html>
 """
+
+
+# ---- rule-2 matching: normalise both sides, then whole-word match (YED-280 review) ---------
+# NFKC does not fold Cyrillic/Greek look-alikes into Latin ("а" U+0430 stays Cyrillic), so
+# the common ones are mapped explicitly. Not a full UTS #39 confusables table: a look-alike
+# outside this map still slips through (documented in SKILL.md).
+_CONFUSABLES = str.maketrans({
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "і": "i",
+    "ј": "j", "ѕ": "s", "ԁ": "d", "һ": "h", "А": "A", "В": "B", "Е": "E", "К": "K",
+    "М": "M", "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T", "Х": "X", "І": "I",
+    "ο": "o", "α": "a", "ν": "v", "ρ": "p", "ι": "i", "Α": "A", "Β": "B", "Ε": "E",
+    "Ζ": "Z", "Η": "H", "Ι": "I", "Κ": "K", "Μ": "M", "Ν": "N", "Ο": "O", "Ρ": "P",
+    "Τ": "T", "Υ": "Y", "Χ": "X"})
+_APOSTROPHES = str.maketrans({c: "'" for c in "’‘ʼ′`"})
+
+
+def normalise_for_match(text: str) -> str:
+    """Case-kept normal form for rule 2: tags stripped and entities unescaped (repeated, so
+    an escaped tag or a double-escaped &amp; also resolves), NFKC, Latin look-alikes,
+    one apostrophe, dashes between letters as a space, whitespace runs collapsed."""
+    for _ in range(3):
+        text = htmllib.unescape(re.sub(r"<[^>]*>", "", text))
+    text = unicodedata.normalize("NFKC", text).translate(_CONFUSABLES).translate(_APOSTROPHES)
+    text = re.sub(r"(?<=\w)[-‐‑‒–—―](?=\w)", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _account_variants(account: str) -> list:
+    """The full name and its parenthetical-stripped form ("Northwind Analytics Co")."""
+    variants = [normalise_for_match(account)]
+    stripped = normalise_for_match(re.sub(r"\s*\([^)]*\)", "", account))
+    if stripped and stripped not in variants:
+        variants.append(stripped)
+    return [v for v in variants if v]
+
+
+def names_account(text: str, account: str) -> bool:
+    """True when `text` names `account` as a whole word sequence (optional possessive 's),
+    after normalising both sides and casefolding. Also catches the space-stripped form
+    ("QuillmarkFreight"). A ONE-word account must also be capitalised where it appears,
+    so "Gap" trips "Gap" / "GAP" but not "the pipeline gap"."""
+    kept = normalise_for_match(text)
+    folded = kept.casefold()
+    for variant in _account_variants(account):
+        words = variant.casefold().split(" ")
+        forms = [r"\s".join(map(re.escape, words))]
+        if len(words) > 1:
+            forms.append(re.escape("".join(words)))
+        for form in forms:
+            pattern = rf"(?<!\w){form}(?:'s)?(?!\w)"
+            if len(words) > 1:
+                if re.search(pattern, folded):
+                    return True
+            elif any(m.group(0)[0].isupper()
+                     for m in re.finditer(pattern, kept, re.IGNORECASE)):
+                return True
+    return False
 
 
 # ---- offline checks: the locked rules, verifiable without Chrome ---------------------------
@@ -408,25 +528,25 @@ def check_content_rules(html: str, json_text: str = "") -> list:
             data = json.loads(json_text)
         except json.JSONDecodeError:
             data = {}
-        accounts = all_key_accounts(data) if isinstance(data, dict) else []
-        bullets = re.findall(r"<li>(.*?)</li>", html, re.S)  # incl. build descriptions
+        accounts = account_block_terms(data) if isinstance(data, dict) else []
+        # List items = bullets + build descriptions. Link anchors are left unscanned (a
+        # known limitation, SKILL.md): a URL slug is not prose.
+        bullets = [re.sub(r"<a\b[^>]*>.*?</a>", " ", b, flags=re.S)
+                   for b in re.findall(r"<li>(.*?)</li>", html, re.S)]
         # Everything else a reader sees, minus the logo lines themselves and the employer
-        # field (YED-280: positioning, titles, headers — not only bullets — are prose).
+        # field (YED-280: positioning, titles, dates, headers — not only bullets — are prose).
+        # Tags become line breaks so separate elements never fuse into one word; tags
+        # INSIDE a field are escaped text here and fuse back in normalise_for_match.
         prose = re.sub(r"<head>.*?</head>|<li>.*?</li>"
                        r'|<p class="(?:logo-line|role-accounts|role-company)">.*?</p>',
-                       " ", html, flags=re.S)
-        prose = re.sub(r"<[^>]+>", " ", prose).lower()
-        for account in accounts:
-            variants = {account.lower()}
-            stripped = re.sub(r"\s*\([^)]*\)", "", account).strip().lower()
-            if stripped:
-                variants.add(stripped)
+                       "\n", html, flags=re.S)
+        prose = re.sub(r"<[^>]+>", "\n", prose)
+        for account, terms in accounts:  # terms = name + every alias
             for bullet in bullets:
-                for variant in variants:
-                    if variant in bullet.lower():
-                        fails.append(f"rule 2: client name {account!r} appears in bullet copy — "
-                                     "outcomes are described unnamed")
-            if any(v in prose for v in variants):
+                if any(names_account(bullet, t) for t in terms):
+                    fails.append(f"rule 2: client name {account!r} appears in bullet copy — "
+                                 "outcomes are described unnamed")
+            if any(names_account(prose, t) for t in terms):
                 fails.append(f"rule 2: client name {account!r} appears outside a Key accounts "
                              "line — outcomes are described unnamed")
             # Decision 2 (spec walk 2026-10-31): the verbatim `original` of a reworded
@@ -434,7 +554,7 @@ def check_content_rules(html: str, json_text: str = "") -> list:
             for i, role in enumerate(data.get("roles", [])):
                 for j, b in enumerate(role.get("bullets", [])):
                     original = b.get("original", "")
-                    if isinstance(original, str) and any(v in original.lower() for v in variants):
+                    if isinstance(original, str) and any(names_account(original, t) for t in terms):
                         fails.append(f"rule 2: client name {account!r} appears in the original "
                                      f"of roles[{i}].bullets[{j}] — outcomes are described unnamed")
     # Rule 3 — no vertical-territory labels in titles (PR-B review addition).
@@ -469,10 +589,10 @@ def check_reading_order(html: str, me: dict | None = None) -> list:
     per_role = me is not None and uses_per_role_accounts(me)
     if me is not None:
         for r in me["roles"]:
-            marks.append((f'<h3 class="role-title">{r["title"]}</h3>', f"role {r['title']!r}"))
+            marks.append((f'<h3 class="role-title">{_esc(r["title"])}</h3>', f"role {r['title']!r}"))
             if r.get("key_accounts"):  # this role's own list, not just any accounts line
                 marks.append(('class="role-accounts"', f"Key accounts under {r['title']!r}"))
-                marks.append((f'</span> {", ".join(r["key_accounts"])}</p>',
+                marks.append((f'</span> {_join(account_names(r["key_accounts"]), ", ")}</p>',
                               f"Key accounts under {r['title']!r}"))
     if not per_role:
         marks.append(('class="key-accounts"', "Key accounts"))
@@ -665,7 +785,7 @@ def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
     for r in me["roles"]:
         marks.append(r["title"])
         if r.get("key_accounts"):  # per-role line, under its own role (YED-280)
-            marks.append("Key accounts: " + ", ".join(r["key_accounts"]))
+            marks.append("Key accounts: " + ", ".join(account_names(r["key_accounts"])))
     if me.get("key_accounts"):
         marks.append("Key accounts")
     marks.append("Selected builds")
@@ -701,6 +821,26 @@ def section_label_extraction_errors(pdf_text: str, labels: list) -> list:
     return errors
 
 
+# The documented one-page envelopes (SKILL.md "Fit"), measured on rendered samples.
+FIT_ENVELOPE = {"per-role": (6, 13), "top-level": (7, 15)}
+
+
+def fit_summary(me: dict) -> str:
+    """Why a render overflowed: this input's counts against the documented envelope."""
+    roles = len(me["roles"])
+    bullets = sum(len(r["bullets"]) for r in me["roles"])
+    account_lines = sum(1 for r in me["roles"] if r.get("key_accounts"))
+    described = sum(1 for b in me.get("builds", []) if b.get("description"))
+    mode = "per-role" if account_lines else "top-level"
+    max_roles, max_bullets = FIT_ENVELOPE[mode]
+    return (f"This input: {roles} roles, {bullets} bullets, {account_lines} per-role Key "
+            f"accounts lines, {described} described builds. Documented envelope ({mode} "
+            f"accounts): {max_roles} roles / {max_bullets} bullets"
+            + (" with every per-role line and description at max." if mode == "per-role"
+               else " with the top-level Key accounts line.")
+            + " Cut roles or bullets first.")
+
+
 def verify_pdf(pdf_path: str, me: dict) -> list:
     """One-page + reading-order + label-extraction gate on the rendered PDF.
     pdftotext-missing is a loud skip (same pattern as the Chrome probe), never a silent
@@ -709,7 +849,8 @@ def verify_pdf(pdf_path: str, me: dict) -> list:
     with open(pdf_path, "rb") as fh:
         pages = pdf_page_count(fh.read())
     if pages != 1:
-        errors.append(f"PDF is {pages} pages — the resume is ONE page; fix content, not margins")
+        errors.append(f"PDF is {pages} pages — the resume is ONE page; fix content, not "
+                      f"margins. {fit_summary(me)}")
     if shutil.which("pdftotext"):
         proc = subprocess.run(["pdftotext", pdf_path, "-"], capture_output=True,
                               text=True, timeout=30)
@@ -974,7 +1115,7 @@ def selftest() -> int:
     # Spec 1 — per-role accounts render under the right role, in reading order.
     own_order = []
     for r in pr["roles"]:
-        own_order += [r["title"], "Key accounts: " + ", ".join(r["key_accounts"])]
+        own_order += [r["title"], "Key accounts: " + ", ".join(account_names(r["key_accounts"]))]
     case("each role's Key accounts line renders under that role, before the next role",
          in_order(visible(pr_html), own_order + ["Selected builds"]))
     # Every "Key accounts" on the page is a per-role line: no top-level label or logo line.
@@ -1027,6 +1168,125 @@ def selftest() -> int:
              names_outside_logo_lines(leaked_html, leaked) != []
              and any(r.startswith("rule 2") for r in check_content_rules(leaked_html,
                                                                        json.dumps(leaked))))
+
+    # Review fixes (YED-280): rule 2 normalises both sides and matches whole words.
+    def rule2_trips(account, text, field="bullet"):
+        d = json.loads(pr_text)
+        d["roles"][0]["key_accounts"] = [account]
+        if field == "bullet":
+            d["roles"][1]["bullets"][0]["text"] = text
+        else:
+            d["positioning"] = d["positioning"] + " " + text
+        return any(r.startswith("rule 2")
+                   for r in check_content_rules(build_resume_html(d), json.dumps(d)))
+    qf = "Quillmark Freight (fictional)"
+    for label, account, text, field in (
+            ("hyphenated", qf, "Grew Quillmark-Freight spend.", "bullet"),
+            ("en-dash", qf, "Grew Quillmark–Freight spend.", "bullet"),
+            ("no space", qf, "Grew QuillmarkFreight spend.", "bullet"),
+            ("double space", qf, "Grew Quillmark  Freight spend.", "bullet"),
+            ("NBSP", qf, "Grew Quillmark Freight spend.", "bullet"),
+            ("newline", qf, "Grew Quillmark\nFreight.", "positioning"),
+            ("UPPER case", qf, "Grew QUILLMARK FREIGHT.", "bullet"),
+            ("possessive 's", qf, "Grew Quillmark Freight's spend.", "bullet"),
+            ("curly apostrophe", "Macy's", "Grew Macy’s 2x.", "bullet"),
+            ("tag split Quill<b></b>mark", qf, "Grew Quill<b></b>mark Freight.", "bullet"),
+            ("&amp; entity", "Ben & Jerry's", "Grew Ben &amp; Jerry's.", "bullet"),
+            ("Cyrillic look-alike а (explicit confusables map; NFKC alone does not fold it)",
+             qf, "Grew Quillmаrk Freight.", "bullet"),
+            ("one-word account, exact", "Target", "Expanded Target 3x.", "bullet"),
+            ("one-word account, possessive", "Target", "Grew Target's spend.", "bullet")):
+        case(f"rule 2 catches a client name written {label}", rule2_trips(account, text, field))
+    for label, account, text, field in (
+            ("'targets' (account Target)", "Target", "Beat targets by 20%.", "bullet"),
+            ("'Targeted' (account Target)", "Target", "Targeted enterprise.", "positioning"),
+            ("'inbox' (account Box)", "Box", "Built an inbox triage tool.", "bullet"),
+            ("capitalised 'Inbox' (account Box)", "Box",
+             "Inbox triage tool, built from scratch.", "bullet"),
+            ("'Quillmark Freighters' (multi-word boundary)", qf,
+             "Grew the Quillmark Freighters league.", "bullet"),
+            ("'coaching' (account Coach)", "Coach", "Ran coaching for 4 reps.", "bullet"),
+            ("'pipeline gap' (account Gap: one-word accounts must be capitalised)",
+             "Gap", "Closed the pipeline gap.", "bullet")):
+        case(f"rule 2 does not trip on {label}", not rule2_trips(account, text, field))
+    case("NFKC alone leaves the Cyrillic а unfolded (why the confusables map exists)",
+         unicodedata.normalize("NFKC", "а") != "a"
+         and normalise_for_match("а") == "a")
+    url_only = json.loads(pr_text)
+    url_only["builds"][1]["links"].append("https://example.com/quillmark-freight")
+    case("link URLs stay unscanned by rule 2 (documented limitation)",
+         not any(r.startswith("rule 2") for r in check_content_rules(
+             build_resume_html(url_only), json.dumps(url_only))))
+
+    # Decision 2 (Alex, 2026-11-05): an account may carry aliases; rule 2 blocks every
+    # alias with the same normalisation + boundaries; only `name` ever renders.
+    aliased = pr["roles"][0]["key_accounts"][0]
+    case("per-role fixture carries a {name, aliases[]} account",
+         isinstance(aliased, dict) and "Quillmark" in aliased["aliases"])
+    alias_leak = json.loads(pr_text)
+    alias_leak["roles"][1]["bullets"][0]["text"] = "Grew Quillmark 3x across the book."
+    case("rule 2 refuses an account's short-form alias in a bullet",
+         any(r.startswith("rule 2") for r in check_content_rules(
+             build_resume_html(alias_leak), json.dumps(alias_leak))))
+    alias_upper = json.loads(pr_text)
+    alias_upper["positioning"] += " Ran the QMF rollout."
+    case("rule 2 refuses an alias in positioning (NBSP-adjacent)",
+         any(r.startswith("rule 2") for r in check_content_rules(
+             build_resume_html(alias_upper), json.dumps(alias_upper))))
+    case("aliases are never rendered; only the account name appears",
+         "QMF" not in visible(pr_html) and "Key accounts: Quillmark Freight (fictional), "
+         in visible(pr_html))
+    case("schema refuses an aliased account without aliases, or with an unknown key",
+         any("aliases" in e for e in schema_errors(
+             {**pr, "roles": [{**pr["roles"][0], "key_accounts": [{"name": "Solo Co"}]},
+                              pr["roles"][1]]}))
+         and any("unknown key" in e for e in schema_errors(
+             {**pr, "roles": [{**pr["roles"][0], "key_accounts": [
+                 {"name": "Solo Co", "aliases": ["Solo"], "tier": 1}]}, pr["roles"][1]]})))
+    # Decision 4 (Alex, 2026-11-05): single-account roles are allowed (no minimum).
+    case("schema accepts a role with a single key account",
+         schema_errors({**pr, "roles": [{**pr["roles"][0], "key_accounts": ["Solo Co"]},
+                                        pr["roles"][1]]}) == [])
+
+    # Decision 1 (Alex, 2026-11-05): contact is required on real renders; the schema keeps
+    # it optional (fixtures carry no personal data). Both paths run main() as a subprocess
+    # and stop before Chrome, so this stays CI-safe.
+    def main_output(data):
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        fd, path = tempfile.mkstemp(suffix=".json", dir=OUTPUT_DIR, prefix=".selftest-")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+        try:
+            proc = subprocess.run([sys.executable, os.path.abspath(__file__), path],
+                                  capture_output=True, text=True, timeout=60)
+        finally:
+            os.remove(path)
+        return proc.returncode, proc.stdout + proc.stderr
+    code, out_text = main_output({k: v for k, v in me.items() if k != "contact"})
+    case("a real render without contact fails loudly, naming the field",
+         code != 0 and "REFUSED" in out_text and "`contact`" in out_text)
+    # With contact present, the run gets past the contact check (stopped here by a
+    # deliberate rule-1 failure so no Chrome is needed).
+    code, out_text = main_output({**me, "positioning": "Customer success leader."})
+    case("a real render with contact passes the contact check",
+         code != 0 and "rule 1" in out_text and "`contact`" not in out_text)
+
+    # Review fix 5: every field is HTML-escaped; rule 2 matches the unescaped text.
+    escaped = json.loads(pr_text)
+    escaped["roles"][0]["bullets"][0]["text"] = "Ran R&D <script>x</script> pilots."
+    escaped["builds"][0]["description"] = "A & B <i>build</i>"
+    escaped_html = build_resume_html(escaped)
+    case("bullet and description markup is escaped, never emitted raw",
+         "R&amp;D &lt;script&gt;" in escaped_html and "<script>" not in escaped_html
+         and "A &amp; B &lt;i&gt;build&lt;/i&gt;" in escaped_html
+         and list_structure_errors(escaped_html) == [])
+
+    # Review fix 4: an overflow says why, against the documented envelope.
+    summary = fit_summary(pr)
+    case("overflow message names the counts and the documented envelope",
+         "2 roles, 4 bullets, 2 per-role Key accounts lines, 1 described builds" in summary
+         and "6 roles / 13 bullets" in summary
+         and "7 roles / 15 bullets" in fit_summary(me))
 
     # Spec 3 — a top-level-only legacy input renders byte-identical text to before YED-280.
     # The golden is the pre-YED-280 render of the untouched legacy fixture; the only
@@ -1082,12 +1342,19 @@ def selftest() -> int:
          and all(len(b.get("description", "")) == BUILD_DESCRIPTION_MAX for b in mx["builds"]))
     bin_ = chrome()
     if bin_ and shutil.which("pdftotext"):
+        # Local-only (CI has no Chrome). A Chrome failure records a FAIL case instead of
+        # exiting the selftest midway.
         fit_out = resolve_output_path(os.path.join(OUTPUT_DIR, ".selftest-max-fit.pdf"))
-        render_pdf(bin_, build_resume_html(mx), fit_out)
         try:
+            render_pdf(bin_, build_resume_html(mx), fit_out)
             fit_errors = verify_pdf(fit_out, mx)
+        except (SystemExit, OSError, subprocess.SubprocessError) as exc:
+            fit_errors = [f"Chrome render failed: {exc}"]
         finally:
-            os.remove(fit_out)
+            if os.path.exists(fit_out):
+                os.remove(fit_out)
+        for err in fit_errors:
+            print(f"    {err}")
         case("max fixture renders to exactly one page with pdftotext order + labels intact",
              fit_errors == [])
     else:
@@ -1134,6 +1401,13 @@ def main() -> int:
         ap.error("--mode posting-tailored requires --jd <posting.txt>")
 
     me = load_resume_input(a.source)
+    # Contact is required on every REAL render (Alex, 2026-11-05). The schema keeps it
+    # optional so committed fixtures carry no personal data; --selftest and the fixture
+    # contract test never reach main(), so they are exempt.
+    if not me.get("contact"):
+        print("REFUSED: resume-input has no `contact` — a real render needs the header "
+              "contact line (the schema allows omitting it only for fixtures). Nothing rendered.")
+        return 1
     jd_reweighted = False
     if a.mode == "posting-tailored":
         with open(a.jd, encoding="utf-8") as fh:
@@ -1168,15 +1442,24 @@ def main() -> int:
     if not bin_:
         sys.exit("Chrome not found — the Chrome render runs in-session where Chrome exists "
                  "(Alex's Mac); CI exercises `--selftest` (no Chrome).")
-    render_pdf(bin_, html, out)
+    # Render to a scratch name under OUTPUT_DIR; only a PDF that passes the gate ever lands
+    # at --out, so a failed render can never overwrite a good resume (YED-280 review).
+    fd, pending = tempfile.mkstemp(suffix=".pdf", dir=OUTPUT_DIR, prefix=".resume-pending-")
+    os.close(fd)
+    os.remove(pending)
+    render_pdf(bin_, html, pending)
 
     # The PDF gate: exactly one page, pdftotext reading order intact — exit code gates the run.
-    pdf_fails = verify_pdf(out, me)
+    pdf_fails = verify_pdf(pending, me)
     if pdf_fails:
+        failed = os.path.splitext(out)[0] + ".FAILED.pdf"
+        os.replace(pending, failed)
         print("PDF gate failed:")
         for f in pdf_fails:
             print(f"  - {f}")
+        print(f"  (the failed render is at {failed}; {out} was not written)")
         return 1
+    os.replace(pending, out)
 
     print(json.dumps({"ok": True, "pdf": out, "mode": a.mode,
                       "jd_reweighted": jd_reweighted, "roles": len(me["roles"])}))

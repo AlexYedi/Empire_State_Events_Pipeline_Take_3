@@ -79,12 +79,40 @@ resume files are not produced.
 - **Golden update rule.** `fixtures/resume-legacy.golden.html` is the pre-YED-280 render
   of the legacy fixture. Regenerate it only for a deliberate, reviewed template change,
   and say so in that PR.
+- **Account aliases (decided — Alex, 2026-11-05).** Each key account, top-level or per
+  role, is either a string or `{"name": "...", "aliases": ["..."]}`. Rule 2 blocks the
+  name **and every alias**, with the same normalisation and word boundaries. Aliases
+  never render: only `name` appears on the Key accounts line. **The skill fills aliases
+  from the me-model**: the short forms and nicknames Alex actually uses for a client
+  ("Quillmark" for "Quillmark Freight"). Use a plain string when there is none.
+- **Single-account roles are allowed (decided — Alex, 2026-11-05).** There is no
+  minimum. But one account on a role effectively names the client its bullets describe.
+  When that matters, prefer the top-level line or list 2+ accounts on the role.
+- **How rule 2 matches.** Both sides are normalised before matching: HTML tags stripped
+  and entities unescaped, NFKC, casefold, every apostrophe variant to `'`, a
+  hyphen/en/em dash between letters read as a space, whitespace runs (NBSP and newlines
+  too) collapsed. The match is then **whole-word** with an optional possessive `'s`.
+  It also catches the space-stripped form of a multi-word name ("QuillmarkFreight"). A
+  **one-word** account must be capitalised where it appears, so "Gap" trips "Gap" and
+  "GAP" but not "the pipeline gap", and "Target" trips "Target's" but not "targets".
+  Every field is HTML-escaped when rendered; rule 2 runs on the unescaped text.
+- **Rule-2 known limitations.** (a) The **`company`** (employer) field and **link URLs**
+  are not scanned: the employer is not a client claim, and a URL slug is not prose.
+  (b) Look-alike letters are folded only for the common Cyrillic/Greek ones in
+  `_CONFUSABLES`. NFKC alone does not fold Cyrillic "а", and this is not a full UTS #39
+  confusables table. (c) A one-word account typed in lower case ("target") and an
+  alias split by dashes letter by letter ("Q-M-F") are not caught. (d) Text inside a
+  Key accounts line is not checked for outcomes ("Quillmark grew 120%").
 
-- **`contact` and `education` are optional** (minimal-template follow-up, 2026-11-01):
-  arrays of non-empty strings. `contact` renders as the header line under the name
-  (joined " · "); `education` renders as the one-line Education section (degree ·
-  activities · certs). Absent → the section is omitted. No email or phone ever enters
+- **`contact` and `education` are optional in the schema** (minimal-template follow-up,
+  2026-11-01): arrays of non-empty strings. `contact` renders as the header line under
+  the name (joined " · "); `education` renders as the one-line Education section (degree
+  · activities · certs). Absent → the section is omitted. No email or phone ever enters
   committed fixtures — those stay in the gitignored output JSON only.
+  **Contact is required on every real render (decided — Alex, 2026-11-05):** `main()`
+  refuses a resume-input without `contact`, exiting non-zero with a message that names
+  the field. The schema keeps it optional only so fixtures carry no personal data;
+  `--selftest` and the fixture contract test are exempt.
 
 - Every bullet carries a **`source` note** — the trace-to-me-model rule (locked rule 5).
   The renderer refuses any bullet without one.
@@ -127,7 +155,13 @@ content; **minimal won**. The template is locked to this spec:
   three builds with 70-char descriptions) the one-page envelope is **6 roles / 13
   bullets**: each per-role line costs a line, and 7/15 spills Education onto page 2.
   `fixtures/resume-input-fixture-max.json` pins that envelope; the run's one-page gate
-  is the backstop beyond it.
+  is the backstop beyond it. **The 6/13 envelope is accepted (decided — Alex,
+  2026-11-05)**, with no template spacing change. An overflow names this input's counts
+  (roles, bullets, per-role lines, described builds) against the envelope
+  (`FIT_ENVELOPE`). A failed render never lands at `--out`: it is moved to
+  `<stem>.FAILED.pdf`, so a good resume is never overwritten. The page fit is verified
+  **locally only**. CI has no Chrome, so the selftest's render case prints a `WARN` and
+  skips there.
 
 ## The seven locked content rules (Blueprint region "tailor-resume")
 
