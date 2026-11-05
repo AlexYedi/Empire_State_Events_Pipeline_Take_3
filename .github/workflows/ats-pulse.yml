@@ -13,17 +13,22 @@
 #       - NO manifest, lane_run, event or board-stats file is uploaded — they name companies.
 #         The only artifact is the anonymous totals summary (week, company COUNT, totals).
 #       - every derived file is deleted by the always() cleanup step before the job ends.
-#   * NO PROD DATABASE CREDENTIALS in this workflow. The prod SUPABASE_API_KEY secret must NEVER
-#     appear here (twin-only rule). The optional prior-week read and the lane_run ledger write use
-#     ONLY the twin secrets below. Live ensure-event needs a guarded twin spine REF override in
-#     spine_client (spine_client.REF is hardcoded to prod; the override is a guarded-path change,
-#     human review) — until then the event write step is offline validation (dry-run).
+#   * PROD EXCEPTION — lane_run ONLY (Alex's decision, post-merge review of #271): the lane_run
+#     ledger row is written through spine_client.write to PROD, using the existing
+#     SUPABASE_API_KEY secret for that ONE step. lane_run is a PII-free ledger (counts and
+#     board-status only — the spine guard still fronts every write), lane_registry and its FK
+#     live in prod, and the YED-304 freshness healthcheck reads prod (a twin row would be
+#     invisible to it). This narrowly supersedes the earlier 'prod key forbidden in market-lane
+#     workflows' rule for this step: every OTHER write in the lane stays twin-only/dry-run (the
+#     optional prior-week READ uses the twin secrets below; live ensure-event still needs the
+#     guarded twin spine REF override — human review — so event writes stay offline validation).
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
 #     would compare against itself). ats_pulse refuses a same-week --prior regardless.
-#   * lane_run is REAL: the run ledger row is written through spine_client.write to the TWIN
-#     (migration 0016's public.lane_run; the twin pair MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY,
-#     mapped to SUPABASE_API_KEY for that one step — spine_client's only key source).
+#   * lane_run is REAL: the run ledger row is written through spine_client.write to PROD (see
+#     the prod exception above). items_written counts rows ACTUALLY written — 0 while event
+#     writes are dry-run; no caller override (MI_TWIN_URL) exists — spine_client's host is
+#     built from its hardcoded REF, full stop.
 #   * lane_registry activation is NOT a producer write (producers can't write the registry):
 #     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
 #     after a twin rehearsal.
@@ -178,15 +183,15 @@ jobs:
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
 
-      - name: Write the real lane_run ledger row to the twin (skipped without twin secrets)
+      - name: Write the real lane_run ledger row to PROD (the one deliberate exception; skipped without the key)
         if: steps.hold.outputs.held != 'true'
         env:
-          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
-          # mapped to spine_client's only key source for this step; the TWIN key — never prod
-          SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+          # the ONE prod exception (see the header): a PII-free ledger row through the spine
+          # guard; every other write in this lane stays twin-only/dry-run
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
         run: |
-          if [ -z "$MI_TWIN_URL" ] || [ -z "$SUPABASE_API_KEY" ]; then
-            echo "::warning::twin secrets not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
+          if [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::warning::SUPABASE_API_KEY not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
             exit 0
           fi
           python3 .claude/scripts/ats_pulse.py --write-lane-run /tmp/pulse-out/lane_run.json \
