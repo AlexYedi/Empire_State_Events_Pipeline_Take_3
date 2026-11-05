@@ -24,7 +24,9 @@
 #     guarded twin spine REF override — human review — so event writes stay offline validation).
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
-#     would compare against itself). ats_pulse refuses a same-week --prior regardless.
+#     would compare against itself). ats_pulse refuses a same-week --prior regardless. The
+#     read is the TESTED ats_pulse.py --fetch-prior-week path: a real API failure fails the
+#     run; only missing twin secrets degrade to a null baseline (the optional case).
 #   * lane_run is REAL: the run ledger row is written through spine_client.write to PROD (see
 #     the prod exception above). items_written counts rows ACTUALLY written — 0 while event
 #     writes are dry-run; no caller override (MI_TWIN_URL) exists — spine_client's host is
@@ -99,10 +101,12 @@ jobs:
           mkdir -p .claude/references
           printf '%s\n' "$TARGET_COMPANIES_REGISTRY" > .claude/references/target-companies.md
 
-      # Read-only, twin-only, optional: without the twin secrets the lane runs with delta_wow null
-      # (the null-baseline rule — never invent a baseline). Reads last Sunday's hiring_pulse events
-      # by title; counts land in /tmp/prior.json (names included → deleted by cleanup, never logged).
-      - name: Read last week's pulse from the twin graph (optional, read-only)
+      # Read-only, twin-only. WITHOUT the twin secrets the lane runs with delta_wow null (the
+      # null-baseline rule — never invent a baseline): the missing-secrets case is the ONLY
+      # soft path. A real API failure exits nonzero and FAILS the run — it is never passed
+      # off as a null baseline. Reads last Sunday's hiring_pulse events by title; counts land
+      # in /tmp/prior.json (names included → deleted by cleanup, never logged).
+      - name: Read last week's pulse from the twin graph (optional secrets; real failures are loud)
         id: prior
         if: steps.hold.outputs.held != 'true'
         env:
@@ -111,41 +115,17 @@ jobs:
           PREV_SUNDAY: ${{ steps.week.outputs.prev_sunday }}
         run: |
           if [ -z "$MI_TWIN_URL" ] || [ -z "$MI_TWIN_SUPABASE_API_KEY" ]; then
-            echo "Twin graph secrets not configured — running without a delta_wow baseline"
+            echo "Twin graph secrets not configured — running without a delta_wow baseline (the only optional case)"
             echo "prior=none" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          python3 - <<'EOF'
-          import json, os, re, sys, urllib.parse, urllib.request
-          base = os.environ["MI_TWIN_URL"].rstrip("/")
-          day = os.environ["PREV_SUNDAY"]
-          params = urllib.parse.urlencode({
-              "select": "title,metadata", "kind": "eq.market",
-              "title": "like.*Hiring pulse*",
-              "event_date": f"gte.{day}T00:00:00Z&event_date=lte.{day}T23:59:59Z"})
-          req = urllib.request.Request(f"{base}/rest/v1/event?{params}", headers={
-              "apikey": os.environ["MI_TWIN_SUPABASE_API_KEY"],
-              "Authorization": f"Bearer {os.environ['MI_TWIN_SUPABASE_API_KEY']}",
-              "Accept": "application/json"})
-          try:
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  rows = json.load(r)
-          except Exception as e:
-              print(f"::warning::prior-week read failed ({type(e).__name__}); running without a baseline")
-              sys.exit(0)
-          events = []
-          for row in rows:
-              m = re.match(r"Hiring pulse — (.+) \((\d{4}-W\d{2})\)$", row.get("title") or "")
-              pc = (row.get("metadata") or {}).get("roles_open")
-              if m and isinstance(pc, int) and not isinstance(pc, bool):
-                  events.append({"company": m[1], "metadata": {"roles_open": pc}})
-          # one open file, never printed: names are fine in /tmp, never in the log
-          with open("/tmp/prior.json", "w") as fh:
-              json.dump({"week": None, "events": events}, fh)
-          print(f"prior-week baseline: {len(events)} companies (graph read OK)")
-          EOF
-          # the output is honest only when the heredoc actually wrote the file: the python
-          # exits 0 on a failed twin read too (warning path — no file, no failure)
+          # The read lives in ats_pulse.py (selftested offline against fake connections): the
+          # old inline heredoc sent ONE '%'-encoded '&'-joined event_date filter — the twin
+          # answered 400 to every request and the bare except swallowed it into a silent null
+          # baseline. A real API failure now exits 5 and fails the run.
+          python3 .claude/scripts/ats_pulse.py --fetch-prior-week /tmp/prior.json \
+            --prior-day "$PREV_SUNDAY"
+          # the output is honest only when the file exists (written only on a real, successful read)
           if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)

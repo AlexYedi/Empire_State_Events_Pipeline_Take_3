@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import http.client
 import io
 import json
 import os
@@ -46,6 +47,8 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import time
+import urllib.parse
 from datetime import date, datetime, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -76,6 +79,105 @@ def week_sunday(week: str) -> date:
     if not m:
         raise ValueError(f"week {week!r} is not an ISO week bucket")
     return date.fromisocalendar(int(m[1]), int(m[2]), 7)
+
+
+PRIOR_TITLE_RE = re.compile(r"Hiring pulse — (.+) \((\d{4}-W\d{2})\)")
+
+
+class PriorReadError(RuntimeError):
+    """The prior-week twin read failed at the API layer. Never caught into a silent
+    null baseline — the workflow's only soft path is MISSING SECRETS, checked before this
+    CLI runs (the delta_wow null-baseline rule distinguishes 'no prior configured' from
+    'the read broke')."""
+
+
+def prior_read_url(base: str, day: str) -> str:
+    """The twin PostgREST GET for last week's hiring_pulse rows (read-only; counts in metadata).
+
+    The two event_date filters are SEPARATE query params via a tuple list. The original
+    inline workflow heredoc joined them into one value — urlencode percent-encoded the
+    inner '&', PostgREST saw a single event_date filter it could not cast to timestamptz,
+    and every request answered 400 (the HTTPError behind the always-null baselines).
+    ``day`` is the prior week's Sunday (the event_date contract: producers set it to the
+    Sunday that ends the ISO week, 0016 §2)."""
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+        raise PriorReadError(f"prior day {day!r} is not YYYY-MM-DD")
+    query = urllib.parse.urlencode([
+        ("select", "title,metadata"),
+        ("kind", "eq.market"),
+        ("signal_type", f"eq.{SIGNAL_TYPE}"),
+        ("title", "like.*Hiring pulse*"),
+        ("event_date", f"gte.{day}T00:00:00Z"),
+        ("event_date", f"lte.{day}T23:59:59Z"),
+    ])
+    return f"{base.rstrip('/')}/rest/v1/event?{query}"
+
+
+def prior_week_events(rows: object) -> tuple[str | None, list[dict]]:
+    """Twin event rows → (week, prior-baseline events). Rows not matching the hiring_pulse
+    title contract, or whose roles_open is not a plain int, are ignored (never invented).
+    The week comes from the titles themselves so a stray current-week row still trips
+    build_manifest's same-week refusal."""
+    week, events = None, []
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        m = PRIOR_TITLE_RE.fullmatch(row.get("title") or "")
+        pc = (row.get("metadata") or {}).get("roles_open")
+        if m and isinstance(pc, int) and not isinstance(pc, bool):
+            week = m.group(2)
+            events.append({"company": m.group(1), "metadata": {"roles_open": pc}})
+    return week, events
+
+
+def fetch_prior_week(base: str, key: str, day: str, out_path: str, *,
+                     timeout: int = 30, attempts: int = 2,
+                     _sleep=time.sleep, _conn_cls=None) -> int:
+    """Read-only twin GET → the --prior baseline file. Returns the parsed company count.
+
+    A real API failure raises PriorReadError (the CLI turns it into a loud nonzero exit);
+    a successful read with ZERO matching rows still writes the file — an empty-but-real
+    baseline, never an invented one. Transient failures (connection errors, HTTP 5xx/429)
+    retry once; a 4xx (bad query, bad auth) is permanent and fails immediately.
+    _conn_cls is the test seam — spine_client's FakeConn pattern, no monkeypatching."""
+    if not base or not key:
+        raise PriorReadError("twin URL or key missing — the workflow's optional-secrets "
+                             "guard must decide the missing-secrets case before this runs")
+    split = urllib.parse.urlsplit(prior_read_url(base, day))
+    conn_cls = _conn_cls or http.client.HTTPSConnection
+    last = "untried"
+    for attempt in range(1, max(attempts, 1) + 1):
+        transient = False
+        try:
+            conn = conn_cls(split.netloc, timeout=timeout)
+            try:
+                conn.request("GET", split.path + "?" + split.query, headers={
+                    "apikey": key, "Authorization": f"Bearer {key}",
+                    "Accept": "application/json"})
+                resp = conn.getresponse()
+                status, body = resp.status, resp.read()
+            finally:
+                conn.close()
+            if 200 <= status < 300:
+                try:
+                    rows = json.loads(body)
+                except json.JSONDecodeError as e:
+                    raise PriorReadError(f"twin returned HTTP {status} with a non-JSON body: {e}")
+                week, events = prior_week_events(rows)
+                with open(out_path, "w", encoding="utf-8") as fh:
+                    json.dump({"week": week, "events": events}, fh)
+                return len(events)
+            # the body may carry PostgREST's parse/auth detail; trimmed — it names no secrets
+            last = f"HTTP {status}: {body[:300].decode('utf-8', 'replace')}"
+            transient = status == 429 or status >= 500
+        except (http.client.HTTPException, OSError) as e:      # conn/DNS/TLS — retryable
+            last = f"{type(e).__name__}: {e}"
+            transient = True
+        if not transient:                       # a 4xx (bad query, bad auth) never retries
+            raise PriorReadError(last)
+        if attempt < attempts:
+            _sleep(5)
+    raise PriorReadError(last)
 
 
 def read_tsv(paths: list[str]) -> list[dict]:
@@ -707,6 +809,104 @@ def selftest() -> int:
     finally:
         os.unlink(fpath)
 
+    # --- Prior-week twin read: URL shape, parsing, LOUD failure --------------------------
+    # The workflow's old inline heredoc built ONE event_date param with an '&'-joined value;
+    # urlencode %-encoded the inner '&', the twin answered 400, and the bare
+    # `except Exception: exit 0` turned a real API failure into a silent null baseline
+    # (every run's delta_wow degraded). The read now lives here, tested.
+    _pu = prior_read_url("https://twin.example.supabase.co/", "2026-11-01")
+    _q = urllib.parse.parse_qs(_pu.split("?", 1)[1])
+    check("prior read: the query carries TWO separate event_date filters (a single '&'-joined "
+          "value is percent-encoded and the twin 400s every request)",
+          _q.get("event_date") == ["gte.2026-11-01T00:00:00Z", "lte.2026-11-01T23:59:59Z"])
+    check("prior read: filters pin the kind/signal_type/title contract",
+          _q.get("kind") == ["eq.market"] and _q.get("signal_type") == ["eq.hiring_pulse"]
+          and _q.get("title") == ["like.*Hiring pulse*"] and _q.get("select") == ["title,metadata"])
+    check("prior read: base URL keeps the /rest/v1/event path with no double slash",
+          _pu.startswith("https://twin.example.supabase.co/rest/v1/event?"))
+    try:
+        prior_read_url("https://twin.example.supabase.co", "next-sunday")
+        check("prior read: a malformed prior day is refused, not queried", False)
+    except PriorReadError:
+        check("prior read: a malformed prior day is refused, not queried", True)
+
+    class _PriorResp:
+        def __init__(self, status, body):
+            self.status, self._body = status, body
+        def read(self):
+            return self._body
+    class _PriorConn:
+        state: dict = {}
+        def __init__(self, host, timeout=None):
+            _PriorConn.state["host"] = host
+        def request(self, method, path, headers=None):
+            _PriorConn.state["requests"] = _PriorConn.state.get("requests", 0) + 1
+            _PriorConn.state["path"] = path
+            _PriorConn.state["headers"] = headers or {}
+        def getresponse(self):
+            statuses = _PriorConn.state["statuses"]
+            body = _PriorConn.state["body"]
+            status = statuses.pop(0) if len(statuses) > 1 else statuses[0]
+            return _PriorResp(status, body)
+        def close(self): pass
+    def _run_fetch(statuses, body, attempts=2, out=None):
+        _PriorConn.state = {"statuses": list(statuses), "body": body, "requests": 0}
+        opath = out or os.path.join(tempfile.mkdtemp(), "prior.json")
+        n = fetch_prior_week("https://twin.example.supabase.co", "k", "2026-11-01", opath,
+                             attempts=attempts, _sleep=lambda s: None, _conn_cls=_PriorConn)
+        return n, opath
+    good_rows = json.dumps([
+        {"title": "Hiring pulse — Anthropic (2026-W43)", "metadata": {"roles_open": 7}},
+        {"title": "Hiring pulse — Runway (2026-W43)", "metadata": {"roles_open": True}},   # bool → ignored
+        {"title": "Funding — Anthropic (2026-W43)", "metadata": {"roles_open": 3}},        # wrong title → ignored
+    ]).encode()
+    fetched, opath = _run_fetch([200], good_rows)
+    with open(opath, encoding="utf-8") as fh:
+        pf = json.load(fh)
+    check("prior read: a 200 parses the title contract into the baseline file (counts only)",
+          fetched == 1 and pf["week"] == "2026-W43"
+          and pf["events"] == [{"company": "Anthropic", "metadata": {"roles_open": 7}}])
+    check("prior read: the request reaches the twin host with apikey + Bearer headers",
+          _PriorConn.state["host"] == "twin.example.supabase.co"
+          and _PriorConn.state["headers"].get("apikey") == "k"
+          and _PriorConn.state["headers"].get("Authorization") == "Bearer k")
+    check("prior read: TWO event_date params reach the wire (the 400 root cause, pinned)",
+          _PriorConn.state["path"].count("event_date=") == 2)
+    try:
+        _run_fetch([400], b'{"message":"failed to parse filter"}')
+        check("prior read: a 400 raises PriorReadError on the FIRST attempt (loud, no retry)",
+              False)
+    except PriorReadError as e:
+        check("prior read: a 400 raises PriorReadError on the FIRST attempt (loud, no retry)",
+              "HTTP 400" in str(e) and _PriorConn.state["requests"] == 1)
+    fetched, _ = _run_fetch([503, 200], good_rows)
+    check("prior read: a transient 503 retries once and still lands the baseline", fetched == 1)
+    try:
+        _run_fetch([503, 503], b"{}")
+        check("prior read: two transient failures exhaust the retries and raise", False)
+    except PriorReadError as e:
+        check("prior read: two transient failures exhaust the retries and raise", "503" in str(e))
+    try:
+        _run_fetch([200], b"<html>not json</html>")
+        check("prior read: a non-JSON 200 raises (an API response is never guessed at)", False)
+    except PriorReadError:
+        check("prior read: a non-JSON 200 raises (an API response is never guessed at)", True)
+    fetched, opath = _run_fetch([200], b"[]")
+    with open(opath, encoding="utf-8") as fh:
+        pf0 = json.load(fh)
+    check("prior read: a real read with 0 rows STILL writes the file (empty baseline, never invented)",
+          fetched == 0 and pf0 == {"week": None, "events": []})
+    _saved_env = (os.environ.pop("MI_TWIN_URL", None), os.environ.pop("MI_TWIN_SUPABASE_API_KEY", None))
+    try:
+        rc = main(["--fetch-prior-week", os.path.join(tempfile.mkdtemp(), "prior.json"),
+                   "--prior-day", "2026-11-01"])
+        check("prior read CLI: missing twin secrets refuse (exit 2), never a silent null", rc == 2)
+    finally:
+        if _saved_env[0] is not None:
+            os.environ["MI_TWIN_URL"] = _saved_env[0]
+        if _saved_env[1] is not None:
+            os.environ["MI_TWIN_SUPABASE_API_KEY"] = _saved_env[1]
+
     # --- Workflow lint: the Action's guard stays file-reality-based ------------------------
     # Guards against re-introducing a string-compare on the prior step's OUTPUT (which lied:
     # the twin-read step exits 0 without writing the file when the read fails) — the crash
@@ -723,6 +923,12 @@ def selftest() -> int:
               and '!= "none"' not in wftext)
         check("workflow lint: the prior step sets its output ONLY when it actually wrote the file",
               'if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json"' in wftext)
+        check("workflow lint: the prior-week read runs through ats_pulse.py --fetch-prior-week "
+              "(the inline urllib heredoc is gone — third bug in that untestable step; a real "
+              "API failure now fails the run instead of a silent null baseline)",
+              "--fetch-prior-week /tmp/prior.json" in wftext
+              and "urllib.request" not in wftext
+              and "urlencode" not in wftext)
 
         # --- Workflow lint: bash -n + heredoc pairing on EVERY run block -------------------
         # bash -n alone is insufficient: an EOF-terminated heredoc is only a WARNING (exit 0),
@@ -769,6 +975,13 @@ def main(argv=None) -> int:
     ap.add_argument("--asof", help="override the bucket date (YYYY-MM-DD; default today, UTC)")
     ap.add_argument("--validate", metavar="MANIFEST",
                     help="validate an aggregate manifest (or --emit-events dir files) and exit")
+    ap.add_argument("--fetch-prior-week", metavar="OUT",
+                    help="read last week's hiring_pulse counts from the TWIN graph (read-only; "
+                         "MI_TWIN_URL + MI_TWIN_SUPABASE_API_KEY env, --prior-day YYYY-MM-DD) "
+                         "and write the --prior-shaped baseline file to OUT. A real API failure "
+                         "exits 5 loudly — only a successful read (even with 0 rows) writes the file.")
+    ap.add_argument("--twin-url", help="twin project URL for --fetch-prior-week (default MI_TWIN_URL env)")
+    ap.add_argument("--prior-day", help="prior week's Sunday (YYYY-MM-DD) for --fetch-prior-week")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -805,6 +1018,27 @@ def main(argv=None) -> int:
             print(f"FAIL  {p}", file=sys.stderr)
         print(f"ats_pulse: {problems or 'manifest valid'}")
         return 1 if problems else 0
+
+    if a.fetch_prior_week:
+        base = a.twin_url or os.environ.get("MI_TWIN_URL", "")
+        key = os.environ.get("MI_TWIN_SUPABASE_API_KEY", "")
+        if not base or not key:
+            # the optional-secrets case belongs to the workflow's shell guard; reaching here
+            # without them means the guard was bypassed — refuse rather than degrade
+            print("ats_pulse: MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY not set — refusing to "
+                  "guess; the workflow's optional-secrets guard handles that case first",
+                  file=sys.stderr)
+            return 2
+        if not a.prior_day:
+            ap.error("--fetch-prior-week needs --prior-day (YYYY-MM-DD, the prior week's Sunday)")
+        try:
+            n = fetch_prior_week(base, key, a.prior_day, a.fetch_prior_week)
+        except PriorReadError as e:
+            print(f"::error::ats_pulse: prior-week twin read FAILED (a real API error, not the "
+                  f"optional case — the run must not pass as a null baseline): {e}", file=sys.stderr)
+            return 5
+        print(f"ats_pulse: prior-week twin read OK — {n} prior baseline companies (counts only)")
+        return 0
 
     if not a.tsv:
         ap.error("a TSV path is required (or --validate / --selftest)")
