@@ -72,8 +72,9 @@ CANDIDATE_KINDS = ("launch", "market")
 # can carry news, partnerships, layoffs, papers and model releases, never hiring pulses.
 MARKET_SIGNAL_TYPES = ("news", "partnership", "layoff", "paper", "model_release")
 # event_candidate=true requires at least this relevance (#268: the Monday brief counts
-# only items the classifier judged relevant). Proposed default — the session-side
-# manifest step may tighten it, never loosen it below the floor it documents.
+# only items the classifier judged relevant). Adopted by Alex 2026-11-05 with a review
+# period — the session-side manifest step may tighten it, never loosen it below the
+# floor it documents.
 EVENT_CANDIDATE_FLOOR = 0.6
 
 # The SUBAGENT record shape — deliberately bodyless (review fix #270): the model never
