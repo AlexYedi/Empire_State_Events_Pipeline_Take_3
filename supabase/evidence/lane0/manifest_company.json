@@ -1,0 +1,5366 @@
+{
+ "run": "lane0-company",
+ "at": "2026-11-05T02:58:22+00:00",
+ "rows_planned": 893,
+ "rows_written": 893,
+ "links": [
+  {
+   "claim_id": "e36b0dc8-d0b3-4119-9238-7350c6cae6db",
+   "company_id": "4412122d-f623-404d-bd4a-8b9e7b994796",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "24ca36a8-c283-4a86-ae88-99465384d9ce",
+   "company_id": "4412122d-f623-404d-bd4a-8b9e7b994796",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0eef4e69-c76c-4a7b-83f6-3ad83be482a9",
+   "company_id": "4412122d-f623-404d-bd4a-8b9e7b994796",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "d6c9e77d-9def-40ee-b16e-5f35e5502326",
+   "company_id": "4412122d-f623-404d-bd4a-8b9e7b994796",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "008fae99-53c7-4180-8bf6-ab2d71aae94f",
+   "company_id": "4412122d-f623-404d-bd4a-8b9e7b994796",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "72f5eb69-d616-49c6-8231-2ac3255fa355",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "41dfac7f-5016-4c01-8327-a832d33eb3a6",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "0ffd2117-0bb3-4e3c-9d28-293935c85b69",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8c634f99-3ea8-425f-beca-1d66372234f5",
+   "company_id": "82025b87-1c57-4ec2-a72a-2bb1a71526ab",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b7104ff7-63c4-4138-aef0-5f1e3a93b683",
+   "company_id": "0e91d00e-1882-4dbe-a227-404fd9c4c9d5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d7704e51-7faf-4e77-9bbd-353da2d1a9fc",
+   "company_id": "0e91d00e-1882-4dbe-a227-404fd9c4c9d5",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "a4b82efb-3ccd-40dc-9dd9-29f8656133cd",
+   "company_id": "2281fb97-1d31-4217-9914-5e8b9c93710d",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b21ecfa8-9d66-49d0-b0a1-1ab0f63d2091",
+   "company_id": "2281fb97-1d31-4217-9914-5e8b9c93710d",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5f372140-4876-439c-87dc-fe9247d75d02",
+   "company_id": "2281fb97-1d31-4217-9914-5e8b9c93710d",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "64ad76a2-a59b-44f2-8bb5-24aca8b78e71",
+   "company_id": "2281fb97-1d31-4217-9914-5e8b9c93710d",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "25a42cf1-a1b4-44d4-be87-290e92a55a6f",
+   "company_id": "2281fb97-1d31-4217-9914-5e8b9c93710d",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "8f553a2d-1006-4f3c-9963-b584569a4fe4",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "193dda9f-cb85-47e8-9cdf-4e1be10191ef",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "49b54709-9e57-471c-adf2-762f976ba6aa",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6388967e-84b3-421b-9210-b63a4495276e",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "fc87b83a-d488-4fd7-b873-6ff1c6d4c1d6",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "dd772922-708c-420c-9606-ca536b7c52c8",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a80c67ec-f490-4e6f-8fa9-ee31410eb0cf",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "674ef187-45d1-4047-a696-ae572989a26b",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7e836cbe-d25a-4924-bd8d-ef8eb3b849d9",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "2965836a-9568-42d8-bc54-c6fd9b009550",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "25c1b5e0-4682-4ef3-b5db-2c2f47f1a3e5",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7aec1249-6873-457d-bbb1-cbf982b9e4a3",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "0c3cfbf4-9dc8-4fb5-bd6f-16eec041f231",
+   "company_id": "ab8dc1e7-55ad-414a-a39a-9809ae6437b0",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "00b0b401-7785-49f0-ab98-7bfadffba59c",
+   "company_id": "a24a74e3-99ac-45f5-95bc-3d0c0557e9c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8ec6eb50-80f0-43cd-a835-cff0e4775b09",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ab4ab0a3-8209-4589-8d0f-64fd6e5f8355",
+   "company_id": "848660b5-9ced-4bbd-a505-92db099a5365",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "300c93e8-252c-4ccd-8447-7c8296e9b6a0",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "300c93e8-252c-4ccd-8447-7c8296e9b6a0",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1b94f856-f8c0-4698-8440-87b7103363a3",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "57be44bd-fc24-4ea0-b128-2aea992113b7",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2930bd7a-1c47-45c0-8165-6de096c31cc4",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ea610a30-ed6a-4afb-aabc-9bff9aa903d2",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5bf9f28d-d46c-4c4d-8553-e03fca9cc5e8",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "72fdeddf-6ac5-43c6-80cc-fc67c1bde2dc",
+   "company_id": "0dd77027-338e-4ab7-961f-803fb075c079",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b9761265-7b78-4dc0-8690-d92ca8908d37",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "fed05af8-6a66-45e3-bbc8-ea9f64efc536",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b2064478-fb63-4bce-ab25-e7057562409d",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "4e7a6542-8dc7-460d-8e4b-4c3c67b729f9",
+   "company_id": "499bf099-193d-4d6d-9724-8abf794e21b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "809cda1c-a85d-4abb-914e-29eaf867cd7f",
+   "company_id": "3874259a-fa18-465b-9f68-0e6edbd8906f",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "14e89d3e-76c7-4ccc-ac84-43aead4f6a8e",
+   "company_id": "499bf099-193d-4d6d-9724-8abf794e21b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0fa44049-8236-4151-b1e4-ce64627e69c4",
+   "company_id": "499bf099-193d-4d6d-9724-8abf794e21b1",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "1b6fcf73-4865-4f4f-9c1d-2936ac286b6a",
+   "company_id": "499bf099-193d-4d6d-9724-8abf794e21b1",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "6ada694c-0798-4b61-972d-977dd2af8d65",
+   "company_id": "499bf099-193d-4d6d-9724-8abf794e21b1",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "308aaaf2-24e9-4312-a874-3a2e92a1d627",
+   "company_id": "a1b12f3f-0c68-4f7f-9085-6086a06d7318",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "308aaaf2-24e9-4312-a874-3a2e92a1d627",
+   "company_id": "a24a74e3-99ac-45f5-95bc-3d0c0557e9c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "082153df-f625-4934-a2aa-f98058ef904d",
+   "company_id": "a1b12f3f-0c68-4f7f-9085-6086a06d7318",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ba8ce0fa-08d4-4af4-b2ad-64c8e515ca38",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "81534a93-26a2-49a3-ae2a-615fdaa0230c",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "947a772d-cdeb-4d35-bd7b-c62cc04a7107",
+   "company_id": "77a6564e-bb4c-4834-b915-040a15559b05",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ed73caf3-2c0a-4733-9509-6d52ecbbf306",
+   "company_id": "77a6564e-bb4c-4834-b915-040a15559b05",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "3b2e1776-0208-43d2-8300-3659c7220b2c",
+   "company_id": "77a6564e-bb4c-4834-b915-040a15559b05",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a516dba0-c4be-4d12-97c7-5f800b4be38d",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "52747da2-caa1-4926-b41f-d107c256ce4f",
+   "company_id": "326fd31d-e207-49ac-8326-8289ef97bb8d",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "64776270-b84c-46b3-9c2a-1ee605046dc9",
+   "company_id": "7e5aadf2-910c-4557-a435-92dbd37f5f31",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c269721c-df05-4c32-9ff5-64a2d18daf19",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c269721c-df05-4c32-9ff5-64a2d18daf19",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "eb1966e5-e7a1-4e0c-b4f5-c5201bdc1385",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "e81cb017-5c75-4449-81b5-74563ae64870",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "20d1e2de-c6b9-4163-b8cd-808a31e3a4b9",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "b39484f4-ff3b-4592-b586-52b2df59ef8f",
+   "company_id": "326fd31d-e207-49ac-8326-8289ef97bb8d",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2df2f6ff-33e0-43c6-be61-67563523a73c",
+   "company_id": "87a0802a-4fab-4424-aec3-b79e8a9fc7c1",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "28d1e6ea-1cf8-4b63-9ba5-42f93202739c",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "63d6ab4c-1f7d-43c1-b957-850c3cf7a4e0",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ca93c529-490d-4b82-9365-77720928bc33",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9feb7982-f8e4-4705-9595-9486e80135d3",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "da30aebe-a3fb-46dc-a4f0-f8988e80f8af",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7a9f4919-45c4-44d5-ac6d-c7365641a51f",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "4f0e13f0-d9b3-43fc-80ba-3bdf5fffa7b1",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c59d37bb-1270-460e-aef7-7b0057b0b263",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "df4aed23-caff-4bf8-a877-be1c6fe03c7f",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c5a095e9-d0a6-4f33-99f4-7b85117ca494",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "78ca4b65-1b31-40f5-9c88-dde21b644f45",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "8592ed9a-0e63-4366-bfa4-075fa52df030",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "0cd4b6d6-9a5a-48dc-a6d4-9452666bbd08",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9a4b90aa-0ee4-49b3-bd6e-413fd02efee1",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "f741f5f9-cbeb-4d8d-9527-14a95992529b",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "bfa0eee4-9598-4154-a433-e66f1b164f09",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "2846113e-5894-48f8-a18f-399458ca3993",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "2c69fbaf-4260-40ee-9ee4-5ecf68c65763",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "b96916a5-7305-4302-ad6e-c9364015d8b7",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "0cc0e70d-30ef-4dd7-92e5-36ed2b45eeed",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "317d3ef9-c607-4e68-8746-f4623724a914",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "26bbfad8-eee1-4e45-a3e0-2e136fa7644a",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cc872297-b587-416f-955a-a040c1d0cfd9",
+   "company_id": "7e52ff26-6878-4a88-ab68-5c24c0e7599c",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "b7f80b55-afdc-4b08-98c2-068c16e491fd",
+   "company_id": "0d5b2c18-6ee9-4ac6-93d9-931e8ee11f04",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "d1551d77-96a2-49a3-ba79-79f7f0e7a1ec",
+   "company_id": "0d5b2c18-6ee9-4ac6-93d9-931e8ee11f04",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "2b4bedd4-1603-41f3-9c7d-0241f66c9ee9",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "2ab47fed-aed6-41e1-8a18-7065efb5fc9d",
+   "company_id": "9ce70c9d-76c7-42b7-9dad-9d1526cfda5f",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "270b687c-c425-4545-8ac4-8d2031a02225",
+   "company_id": "0e23e8a4-c23e-49f6-ba5e-c6f408335dea",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "7ac95aff-0a45-4364-9bfe-d060971d1102",
+   "company_id": "0e23e8a4-c23e-49f6-ba5e-c6f408335dea",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "1bbcc5ad-c20c-44cc-a976-a2734d99c9af",
+   "company_id": "0e23e8a4-c23e-49f6-ba5e-c6f408335dea",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "afd81956-6d89-45e7-8fdd-107738c45104",
+   "company_id": "0e23e8a4-c23e-49f6-ba5e-c6f408335dea",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "71c144b1-df9a-4c37-9025-97f3fb7b968c",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9ab044e2-95d0-4235-8938-31ac54e2e652",
+   "company_id": "0e23e8a4-c23e-49f6-ba5e-c6f408335dea",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5f4e155e-4f6e-493f-9d27-97f0ad173fa7",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "50cebe1b-0a0f-498a-b99c-b5cfcf59fe2b",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a1e31e22-4aac-4450-9f77-faaa72bcbabb",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "a1e31e22-4aac-4450-9f77-faaa72bcbabb",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "45b6bcd6-f4b1-4af7-8b88-fe73adf69e39",
+   "company_id": "0dd77027-338e-4ab7-961f-803fb075c079",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "45b6bcd6-f4b1-4af7-8b88-fe73adf69e39",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "131fd778-a694-425d-ac50-21ced5a7cd2b",
+   "company_id": "0dd77027-338e-4ab7-961f-803fb075c079",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "d11a9b74-db40-4926-9784-abe7d0271837",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "e8f2486d-4ee8-4ffb-a4a2-0dc0dd16842f",
+   "company_id": "60c929b5-8fa6-4c68-8a9f-e0bf62098f0c",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "1bada3be-6c11-4fc8-aac9-ee120fa1af44",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "758171ba-4358-4194-8411-829bb8eec94e",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ce0b25f9-8bef-4c48-b8c2-1dd4ff9821d7",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "424fdc26-f995-4da8-8700-81e4b27f8af6",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "edf8127b-043d-42c7-a397-1571feb48aa8",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7b58f2c4-3803-4022-a6a0-1eff376ead95",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "e1862fb6-6ad6-4482-8c6e-8057a08ea2ba",
+   "company_id": "60c929b5-8fa6-4c68-8a9f-e0bf62098f0c",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "0c5a6e1d-a8eb-4f1b-adb0-d3dc193cfe45",
+   "company_id": "0dd77027-338e-4ab7-961f-803fb075c079",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "0c5a6e1d-a8eb-4f1b-adb0-d3dc193cfe45",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "7250f449-ce2a-4c04-b8d3-d40b4f213a1d",
+   "company_id": "204c8845-e740-4d7f-a09a-4f0d4cd9642c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "fd505b23-f58a-45e0-8326-362b11d0c7ef",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "daf66a67-6ed3-4928-b4d7-47fa23bfefc7",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "3a8043b4-31a0-4d64-85d1-06d19b1e00e4",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c3e7d6e8-b2ea-43bc-9ea0-124779ec7f9a",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "130c2725-ae71-4b5a-8da7-a540b11e3c7d",
+   "company_id": "87a0802a-4fab-4424-aec3-b79e8a9fc7c1",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "041f6f27-03f4-4687-96c6-7d2d7ce65a6a",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "041f6f27-03f4-4687-96c6-7d2d7ce65a6a",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "d83b5040-3a9c-4907-8dba-fde132f87aa6",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5246797e-c3ec-4b0f-aefc-74289eb1b298",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "494b8db7-b8d3-4612-8f84-846aaf459369",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "3345ce25-f1b2-498e-aefb-f20dc088669f",
+   "company_id": "8f37d343-ef26-4d4d-8cfd-ef186966b15e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b42709ff-eb56-4d95-b16e-7e267952a1fe",
+   "company_id": "2ad72bc7-b919-4ffe-adfb-e1506ceed5dd",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "b42709ff-eb56-4d95-b16e-7e267952a1fe",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "e72a2083-d06d-4e1f-87ff-e278f3f08cee",
+   "company_id": "e5dbe72e-10f2-4efe-af56-a4689ec441ee",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "61c12336-a7b5-4df5-bb2a-7b5c7866e945",
+   "company_id": "bfa1de0f-688f-47e3-8526-0cd3d4707d7a",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "61c12336-a7b5-4df5-bb2a-7b5c7866e945",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "0f4e668b-8d48-4cd1-b557-5f8fd7a07241",
+   "company_id": "e5dbe72e-10f2-4efe-af56-a4689ec441ee",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a68046ad-7c6e-4fe8-92bd-54f9b75ec97c",
+   "company_id": "48b670a1-ffee-4267-b88c-ef508223c50e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8d1f58a2-a12c-4ee6-88c0-e92d2fe5f0c1",
+   "company_id": "48b670a1-ffee-4267-b88c-ef508223c50e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8d1f58a2-a12c-4ee6-88c0-e92d2fe5f0c1",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "ff92a34d-9dec-4fd3-8be7-50e3e03e99d8",
+   "company_id": "48b670a1-ffee-4267-b88c-ef508223c50e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ff92a34d-9dec-4fd3-8be7-50e3e03e99d8",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "f329796e-b8b1-4f64-8c73-a1a55e4fb22b",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7efa6125-36a9-47f4-8f22-0c000d112088",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "122e84fd-899b-41e1-ad18-a35020b10dd6",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "3ab69ac8-53b0-4429-987b-fafb0d94443a",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "3ab69ac8-53b0-4429-987b-fafb0d94443a",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "54959d4f-9eed-435d-8d3a-902f251d0945",
+   "company_id": "8f37d343-ef26-4d4d-8cfd-ef186966b15e",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5858841e-8d1a-4038-b818-efb9fb6765a6",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "033d8091-801b-4605-88a4-c714e6e11846",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "cd410064-0214-4079-a43c-47105a958c14",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "cd410064-0214-4079-a43c-47105a958c14",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "378b9b8f-6c88-49cc-a645-464d179c6c16",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "378b9b8f-6c88-49cc-a645-464d179c6c16",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "756cbaf1-991a-4f7d-a413-62993749a391",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "593ca832-6c05-402e-81a9-5d15f406199e",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "6c37c86c-117d-440d-8cd7-bfe97c064c5c",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "6c37c86c-117d-440d-8cd7-bfe97c064c5c",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "84b4b771-139b-4e7d-811b-f7275a7845af",
+   "company_id": "d2ac870a-5a89-4755-ae7e-573eb3c32b50",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b0893b83-310c-4198-9f12-d47b687a5a91",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "75663ae5-5373-41ec-b159-eb56dd8da008",
+   "company_id": "75637c10-cc5c-49b2-b84e-424b0cdfbce2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "1b0f7b2f-345f-4a3b-a2d9-5669ef1913e0",
+   "company_id": "75637c10-cc5c-49b2-b84e-424b0cdfbce2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a787271f-873e-43ea-a90b-435d11283d5f",
+   "company_id": "75637c10-cc5c-49b2-b84e-424b0cdfbce2",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "326d8acc-9462-4f4b-b4da-7ee5be159905",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "326d8acc-9462-4f4b-b4da-7ee5be159905",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a58c709a-b251-4a88-bbf4-b53bc24437e1",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a58c709a-b251-4a88-bbf4-b53bc24437e1",
+   "company_id": "ce1afd8b-ab9b-47b8-af23-a42c8e3a2f51",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "36919a02-3253-43f4-a04f-c4bdfb1190da",
+   "company_id": "6cd78f2b-53b6-4e84-b585-121221f28fb6",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c3d0e792-1c68-48f9-a6da-b210824cd913",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ca100add-a8e5-41bf-abe5-922bad47ad8c",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8d00f9d2-0e47-446f-b7cc-a6a516ae0c98",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5bdb573b-2831-45e5-9c31-300352dd2a56",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "c3116288-cb79-466f-b8ac-c890d7526e5a",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "78ad4cd6-a255-4379-9e1a-c1ebc44dfd03",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "78ad4cd6-a255-4379-9e1a-c1ebc44dfd03",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "3b247123-d6ba-4bc5-8538-496456d5d544",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "4c2cf338-db40-41b5-8703-51dc41ccccd8",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "12b9768f-7ceb-4fa3-a057-bf472ec1e142",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b7fa2f72-f9c5-4454-a739-888cfe382e6e",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9b2ad912-3781-449f-bbaf-20929345699f",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9b2ad912-3781-449f-bbaf-20929345699f",
+   "company_id": "14ce480f-01fe-4e72-84aa-e0ac83e6e078",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "9cb7d42d-5a88-4c58-a944-6c58924eec59",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "24fef088-94cf-40e6-9020-2b5a7f5eb832",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "753242b2-6e1a-498b-a898-e29ab238799e",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "90817690-5661-4c9f-a13f-1c4260ac19d2",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a10e8e39-bf96-442a-9d3e-7a6c36e78833",
+   "company_id": "f469bca9-ebfd-44d5-af78-6e3470f3a9d6",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "fe935652-9a38-4003-85de-527b1e5062ee",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "363ca8a1-3c57-4ffb-ae4e-12d07916d936",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "009fb4e1-105b-458e-9849-51e8672985f5",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "23fbdd99-c684-4f53-8dbb-d306fa3dfa1d",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "979334fc-adbe-4382-82e7-fafa9668ebc6",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "205274e6-9b51-4ff3-aff7-f366a4ea185e",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "bab2b4c6-8a75-4e21-aacd-4adb51a157ae",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "94b2f666-9121-4342-ab50-c36d560e2308",
+   "company_id": "e03ab6e7-dbd5-47ba-85e5-1114df4b9bff",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a2fd6d21-fd7e-4991-9ccd-1449ce20b79b",
+   "company_id": "e03ab6e7-dbd5-47ba-85e5-1114df4b9bff",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "a2fd6d21-fd7e-4991-9ccd-1449ce20b79b",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "f7c45378-97e8-4233-9010-a97bb4f20dfd",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "4d1079ba-b1eb-403f-8764-03b4fb5ff4c3",
+   "company_id": "54f84d48-e896-406f-a796-beaf1dea8960",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "fe774bdd-d1fa-4e9d-abd5-f731c9e341d7",
+   "company_id": "54f84d48-e896-406f-a796-beaf1dea8960",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "9a671ffe-e1f0-49bc-8862-5d53a02b4db2",
+   "company_id": "8e95862a-a10f-4b33-ba9d-96cf54f5b9ff",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7b426da6-6bef-4ede-b38d-2833cfa38771",
+   "company_id": "8e95862a-a10f-4b33-ba9d-96cf54f5b9ff",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5765cd74-3ec8-431c-8c6e-418b66aa57f4",
+   "company_id": "8e95862a-a10f-4b33-ba9d-96cf54f5b9ff",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "61113860-d24d-4fd0-b14d-de08e0392d88",
+   "company_id": "afa0da9e-db7d-4f81-a7ec-9015218c7f30",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "7fbd7bbc-4f95-46c5-bb01-582b370c2bac",
+   "company_id": "afa0da9e-db7d-4f81-a7ec-9015218c7f30",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "b8d584bd-26d4-4fc6-b0e3-2f5d95f21704",
+   "company_id": "8e95862a-a10f-4b33-ba9d-96cf54f5b9ff",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "4f3097f9-5788-4054-801c-6a4290249fe1",
+   "company_id": "199f10e4-364d-47de-841f-ecac0a2b9fd5",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8073b022-b933-421f-9b05-eec52a35c81a",
+   "company_id": "16e8b634-9f11-43ad-8c92-b7e51826b2ca",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "f1240f4c-0fb2-42a3-9221-9aecd7bcd7a1",
+   "company_id": "1b954cf3-03e7-4fab-8110-8b8376bfc858",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "39011da5-1dc7-4fc9-98a6-7e0cdbc3433e",
+   "company_id": "16e8b634-9f11-43ad-8c92-b7e51826b2ca",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ff168f0e-570f-48b5-917a-003a9816789b",
+   "company_id": "1b954cf3-03e7-4fab-8110-8b8376bfc858",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "19eda817-ad3e-453b-86e1-f4b0bb0868c2",
+   "company_id": "1b954cf3-03e7-4fab-8110-8b8376bfc858",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "c50e0350-0056-4955-96ed-ce684651a3e1",
+   "company_id": "1d2d722d-a362-48f0-ae89-67f8491f9e1b",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "91b1f1a0-84e5-43bc-9066-961a2c958279",
+   "company_id": "8e95862a-a10f-4b33-ba9d-96cf54f5b9ff",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "91b1f1a0-84e5-43bc-9066-961a2c958279",
+   "company_id": "1b954cf3-03e7-4fab-8110-8b8376bfc858",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "91b1f1a0-84e5-43bc-9066-961a2c958279",
+   "company_id": "1d2d722d-a362-48f0-ae89-67f8491f9e1b",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "1c1059f0-4681-4d4a-93b3-db516b7b7d35",
+   "company_id": "afa0da9e-db7d-4f81-a7ec-9015218c7f30",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "2197d0be-a9ae-4bdd-ba7d-7d66dcac565a",
+   "company_id": "afa0da9e-db7d-4f81-a7ec-9015218c7f30",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "8ef22138-c5f8-45d9-b6ee-56008380c392",
+   "company_id": "199f10e4-364d-47de-841f-ecac0a2b9fd5",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "ddf1c24c-077a-4727-a2ed-6bf0b4d275c7",
+   "company_id": "199f10e4-364d-47de-841f-ecac0a2b9fd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "a1f831b5-d9c5-4d0d-a4d1-5ab284438c69",
+   "company_id": "199f10e4-364d-47de-841f-ecac0a2b9fd5",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "5be02c14-cbd6-455a-9e53-b04455ee6f98",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "bae76c2d-4d01-45cd-861f-5025506b9f35",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "f1111c3c-2764-48e2-8cb0-02ecbd95982c",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 1
+  },
+  {
+   "claim_id": "8d21ed8d-93c3-4c7b-bc53-6246c13806f7",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f48ad986-40c1-43e7-9b48-68fe25dd1a1c",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "d9c928bd-1412-4f0f-b1c9-97c6f2594b87",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "92aeb8d8-c892-4179-9fe7-5932cca234a4",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "bcbe283e-c8e3-402b-9ff4-025d52694d61",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f1351fe4-57d3-4fa5-aab0-fa4e2c1c7708",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "8cf4f21e-1499-4fb1-9c5e-e1fa900d305d",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "5320770f-3a18-46cd-979e-2caacb0b2d4a",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "9794e200-2acb-47fe-b01b-466407ca6d12",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1ed96109-0750-4af7-bbcf-b720ec26f8f1",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "c8ff0a66-218a-4d69-93b7-6ca9c65be6a8",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "106db344-7fb7-45f9-81b7-e058bcd8be8e",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "d0b39f2a-c2ce-45fd-a138-10f3950f2c0f",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "e5eb508b-c145-43e5-83c2-80a86f14f2d3",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3c6e3b9d-eebe-45f2-b135-776e43bae687",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "a77a1ef8-1b94-49b3-aad6-491c58786ba2",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "8c1a3c51-e452-4749-a6e8-3c41cb81c1a0",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "f9abd986-e55f-49eb-97bf-cbd5c3e798be",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f2e05717-bc37-4451-b5b3-7f9548118806",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5699c2db-34fa-4391-a1f0-7c347cf84cb3",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "56c2d775-8ad8-4ea2-b3ab-c89ada359916",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "d3d183e4-13b1-42ae-9700-f7b2098e3ab3",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "ca94b444-03e1-47be-8945-f4891f54f214",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "25682e0f-bda6-4653-bc4c-9a61f3501d58",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "d98329fc-5488-469d-98b1-c5cc55e7aebc",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "58393dc6-1f00-41dc-a077-f9a3e87489c0",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "c531c643-13e1-4851-9064-bddbcca3c53d",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "1dc9f798-6c67-4374-b5ac-5b539b0c7699",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9e139d69-afab-4dc5-8e71-3e0c16c2315e",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0e755246-5ee0-4093-bd1b-200ea702c691",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "6fb8de48-58b2-4c54-8d25-8f896b312643",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "29a93b3a-50d2-4e82-8f48-4f3c4fda68f8",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "57a76ffc-e3c0-44c8-aff0-5cfa8b51b4be",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "e500134c-6c8c-4b84-bab4-ec80ee319d25",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "80433faf-6f7c-43ad-b9e7-a2de129be814",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "13e8454e-f9d7-48b8-931a-82b75ebd0289",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "778a446b-c407-4da4-920d-97cba9b86d06",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "eafd7f77-10b7-4fcb-85fb-bacc03e15f1c",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "866f3d5b-8923-4c64-b5e1-a4905193089c",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "414eca59-90a2-43d6-8fb2-30d47f26f3b8",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "60393744-c9f5-4e91-a7c8-81b17533305c",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b8a3271a-3603-4951-80dc-da671350160b",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "cfa27d9e-0ba7-45f1-bae3-c82545fba161",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "91c1c44d-3c28-4cd6-8905-a6ea23c6042c",
+   "company_id": "e03ab6e7-dbd5-47ba-85e5-1114df4b9bff",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "91c1c44d-3c28-4cd6-8905-a6ea23c6042c",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "cc4ad12e-4f6e-4bc3-8cb1-a8e19d5a14ef",
+   "company_id": "e03ab6e7-dbd5-47ba-85e5-1114df4b9bff",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "edbc2491-6ec9-44b6-b563-558b85e08a07",
+   "company_id": "e03ab6e7-dbd5-47ba-85e5-1114df4b9bff",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "24e9d13d-ff39-433f-ad6b-95657be540f4",
+   "company_id": "54f84d48-e896-406f-a796-beaf1dea8960",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4b8e19b9-af88-410f-b170-426d1ac958dd",
+   "company_id": "54f84d48-e896-406f-a796-beaf1dea8960",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "1aa35862-377f-4663-90b9-f69df14d48d0",
+   "company_id": "54f84d48-e896-406f-a796-beaf1dea8960",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3ed02c72-c999-4be9-8f7d-fb0931169c89",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f0413b3e-872a-4791-aee7-586c3917ddad",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "74b58118-cef5-49be-aacd-525c01444e76",
+   "company_id": "0e9709e3-d4ad-4551-aa11-14263e0b4499",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5f3015d7-c09e-4d0a-b067-01bda90af08c",
+   "company_id": "0e9709e3-d4ad-4551-aa11-14263e0b4499",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b70d71df-aaab-425c-9cde-bb01a0b2427d",
+   "company_id": "0e9709e3-d4ad-4551-aa11-14263e0b4499",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "90cdc254-5945-42f7-8848-84fbfcc2d56a",
+   "company_id": "0e9709e3-d4ad-4551-aa11-14263e0b4499",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "477d72e7-6d5c-40a3-b4fb-55de9607664b",
+   "company_id": "0e9709e3-d4ad-4551-aa11-14263e0b4499",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "5091df31-06ed-4120-8997-e1fe02e1edbc",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7ebc740a-ed2b-4b47-a502-e0fd0accb3e7",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5260040a-9e2b-414c-8b2d-9d0769c3e389",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "1937691a-9882-44a3-aaf4-18f7a86f2721",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5feb3990-385a-4186-b27a-ece87b9f61c5",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "439ed4e8-04c6-43a8-a87e-9bbf66581f06",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b83a7fd7-239f-4ce5-be38-0d631f00c171",
+   "company_id": "82025b87-1c57-4ec2-a72a-2bb1a71526ab",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "72b5a91b-559e-495e-ab15-f881feef3d1e",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8996d9b7-70b4-4327-ad2b-caf7795565e5",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "6c7dc2d7-a75a-4ea4-9568-e975ec7d6dfe",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f14f7c67-e062-421b-aea5-3f6335ab0727",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ed2e4d72-03ae-470b-a931-6a4a19b7d78a",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "5f712233-894e-4dc4-9d60-e16571c20dcd",
+   "company_id": "03cdf7ae-04d0-4d69-ad23-5f73f550e574",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "2d3b62e4-82b9-465b-87b8-c949ace4af45",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "2d3b62e4-82b9-465b-87b8-c949ace4af45",
+   "company_id": "04bb6578-0239-4574-89c0-e8dd2a100c70",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "deaa8376-1f35-47e0-a998-5bb55d52c18c",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "6194a5e4-a33f-4a5d-952f-69e8538879b5",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "70db626c-bde6-4813-a7ab-1b75ca7f95cd",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "39221646-08c9-48be-b979-42099694b0bc",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b4f74f1c-fe3f-466e-bb6c-a77c94a838ff",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7c92a76b-4e6a-414a-b1c8-1ba0489f03dc",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7770add9-5f44-48d8-8ae0-666c542c7115",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "68312a85-869a-4812-b435-bc21f3c1148d",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "987f0741-fd5e-4029-90d9-1b8a915f8383",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "358d561f-5f83-43a6-a5a1-6395601bcf75",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2963533f-b672-41f5-813a-4c66c9dbe030",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ead87fab-0b37-47a1-8bb7-5f6e67c70c92",
+   "company_id": "1cf5ebb5-0e78-4676-8856-0e463bdac7e1",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "5605823b-f35c-44a1-be8d-d06038e9046f",
+   "company_id": "1cf5ebb5-0e78-4676-8856-0e463bdac7e1",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4947752b-72bb-4b77-a545-104105414954",
+   "company_id": "1cf5ebb5-0e78-4676-8856-0e463bdac7e1",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "69d93eda-fa6b-4504-8444-ad344abb7d78",
+   "company_id": "036926f6-b8ab-4958-9ae4-7261ba6694fc",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "dfcae875-621b-4411-9460-55a268ae3c16",
+   "company_id": "a637f49c-f4ac-42d0-a36d-b1b96314c5c8",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "e2053c57-0a75-444e-89f4-95592a811d14",
+   "company_id": "a637f49c-f4ac-42d0-a36d-b1b96314c5c8",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c3eebb94-b30d-4592-b516-fade636459ff",
+   "company_id": "c182bdea-0c64-4a70-914d-8fd50bee3a5a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3401a3fe-48f6-46d0-b14a-3a835ba0acc8",
+   "company_id": "c182bdea-0c64-4a70-914d-8fd50bee3a5a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "34210d09-042a-43ef-8c09-2b639f422292",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "7b486482-311a-429b-90ab-5a92a3695165",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f293bb57-78b0-4c49-8cbb-ad3df3213ea6",
+   "company_id": "1cf5ebb5-0e78-4676-8856-0e463bdac7e1",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "f293bb57-78b0-4c49-8cbb-ad3df3213ea6",
+   "company_id": "72b8d227-6b01-4276-9685-857f39e23c66",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1acd656c-0f25-4d55-8fda-28f4f0028091",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0c5b757a-5098-4aa5-8cac-b1b3f20ddfea",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "09f05771-1719-4f17-b7a3-31d4218bfbb3",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "49f33528-9aa2-48bc-8ec9-bd55fa4381a8",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "783ecb11-83fc-4d58-9018-a778b06670a1",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "99b13109-42bd-4eaf-b6c7-3641c3c7ee21",
+   "company_id": "7953cf78-c9fa-45f1-bee0-d176389ac043",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "19c12b87-72ed-46b5-a129-c238bf80b5f6",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4c77fd9e-df00-40de-88f3-2c972210d67f",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9d29369c-112d-4901-bd94-f8729343a37a",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c178bf6a-7151-4498-8eed-920eafbdcec4",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9b60ebb0-0107-4a54-8ea5-c5ff61dd467c",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b0ad9ccd-5f00-41b3-a5de-dd5f0dac1782",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9cbe3e0a-1036-43c4-84fe-9210ea029609",
+   "company_id": "d9c6a0c0-f219-457b-ab28-5a9b6053a12b",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "5745d127-63ea-4cec-898c-0a028b67bea1",
+   "company_id": "08caeeab-c158-4131-a57c-15dc315b2e6b",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "419393fc-81ac-4e8c-aad9-1863d4bc8634",
+   "company_id": "08caeeab-c158-4131-a57c-15dc315b2e6b",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "acf4fac5-61bf-4163-81f3-958315fdf753",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "acf4fac5-61bf-4163-81f3-958315fdf753",
+   "company_id": "c182bdea-0c64-4a70-914d-8fd50bee3a5a",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "f703c873-c979-4f5e-b8be-abd690be71d9",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c9f0ecb6-4d79-4614-9864-f30ffa5ae8fe",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0afc7fbb-dbe4-48f3-8d31-6b6bad851e3a",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "10e519c3-5739-48d4-8023-7cee4fe7e8b2",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "e4d08641-bf21-4eb8-ada7-7aac11a793e3",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "6ebc2ec1-9013-4250-9ddd-70f309e899f3",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "6ebc2ec1-9013-4250-9ddd-70f309e899f3",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2399c775-d94a-4c13-80dc-dd409e928422",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "ab0c14d5-5f64-4d95-b4b9-1d7407f77a41",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0a82f737-bf0b-4fd6-bf3d-e9f255618e7c",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3e80aa07-c92f-408b-aabe-7ae3a5a4de7d",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4ebd8481-c2a7-4c47-9133-d006210c99a0",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7109d532-4aab-46a8-a6b4-8576ec30615e",
+   "company_id": "e783be92-f0a3-4aa0-895e-cbff190bdcb4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "93d38aa2-7c0a-4cf0-a46b-e84025cd51cd",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "93d38aa2-7c0a-4cf0-a46b-e84025cd51cd",
+   "company_id": "bc581b2f-0600-4925-894d-02beb0765296",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "703b3b54-6c75-4ce9-8755-24a14a5a2b11",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "d2ecb853-1267-4048-a1d5-8ebd6b79bf2a",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "86b55edb-c7c8-4f70-92e8-c696ca9fe397",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "cf7dbe0b-00cb-4bb7-87da-8d2dd2c84728",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f5db0627-c6c3-4690-9a0f-ae1bbe3f5ae1",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "12c9b836-3937-40e4-ad6f-f55c7a1496c7",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "01c179a0-44d8-47b0-a1b0-0ec992f2fa6f",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4a310b02-f1c6-42c5-b16a-94a4ed1e35e9",
+   "company_id": "f3a719e6-2af8-4c7e-af79-2628ce6769f5",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "bae33a70-dc11-4ec2-a10b-3d95879c113c",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2a2e4538-251a-49ca-b420-dbc756eb344f",
+   "company_id": "f33f2b9f-9150-458b-9518-329dafb7de31",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2a2e4538-251a-49ca-b420-dbc756eb344f",
+   "company_id": "5bf50e54-6823-45f7-b867-45a397864fd6",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "ebe5b819-a880-48c5-86d3-86b0f5f2125c",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9c52e09e-5ca0-46a8-a6bc-d83eef968089",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "77ca45f6-7cc9-4b24-928d-4e7b30edfb5a",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "d36a909f-14ec-40a0-bd73-17000c921048",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "57ff6338-4e81-4a48-8f6d-1e78b801a0cc",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2dd45b69-e208-43f2-acf7-862bf567b13b",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b9f23df6-4ef1-47a1-8694-ad23d483e95e",
+   "company_id": "5c0923ad-18a3-41d6-a697-7fa85e269132",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1f6eee75-6b0a-4707-9939-6d4ca12fea34",
+   "company_id": "8aeef02f-489b-4904-9818-367be539f7e7",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ba320b37-258a-491d-994f-4a39ce6a2ee1",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "00fbb16d-cc52-4803-88f9-0dcc30d9eecd",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f6eee677-61bc-4525-bc6c-2f5fb98efcfa",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8fb0e9b5-a2e5-4570-b498-395b9881cead",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8222a487-f60c-4ded-85d8-8dd314a81a8e",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "bd555ec6-f3a4-41e0-b0d6-caa128b3d7e8",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "92123cab-7b3b-4c44-9017-be17ed5a9034",
+   "company_id": "6cd78f2b-53b6-4e84-b585-121221f28fb6",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "fdb6df16-797d-4efc-a236-a57786df7b7d",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "fdb6df16-797d-4efc-a236-a57786df7b7d",
+   "company_id": "c0c9f150-279e-4414-90e6-730365cd8d46",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7eb85525-6ec8-4179-988b-a4a6d767a3ca",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7b9d8bf3-844b-4935-bb80-d025d6af4a0b",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3feb243b-83ac-4628-9d15-d646bc004195",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8d7b360e-0543-4608-8b0f-987de074ea91",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ab4c7b87-ad19-47b1-a24f-ab57500a3866",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b1e0bedd-af35-4386-836b-fda6560eeb54",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9127624b-a5fa-49c5-9592-d423f456c477",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0fae4acb-854e-4e2a-bc8e-a262617a672e",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "a55b8927-3cb2-409c-8fd5-e67e7de8bf09",
+   "company_id": "bdbe60d2-3218-4f1d-ab8b-85d03309b72f",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "92add5fb-a0b7-4c7e-b897-014e92f2d875",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "93a2c348-52f0-46d5-bbd2-323d1c652a43",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9cb24711-581b-42e0-8ddb-fc9243d394aa",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "66ce4e71-0c8a-4ab9-a98f-9234f337085a",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8c5f2b8b-4c13-4735-ad06-a287ce12dfba",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "49650f6d-60b1-4652-94c2-a37860d14f76",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "1e37e38f-f723-43eb-b599-3e1cae4c8441",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "92662fb5-daa2-495d-95a2-2814b591883e",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "92662fb5-daa2-495d-95a2-2814b591883e",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "cd2e3161-c9e2-4eac-a3a1-1f0def8f4994",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "fcb8c1d9-cacf-42ca-bc51-c7736f3f0576",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "178a4364-db4d-4061-9195-a499cc0f4a4d",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c4d26cbc-e3b0-4d92-a03e-9720fbd56e8d",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c4d26cbc-e3b0-4d92-a03e-9720fbd56e8d",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "d475bd00-35f3-43e2-9ced-22c491c89a1b",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "ef324b14-35d2-44b2-8454-9ea6837accf7",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "8cef2885-dba7-44f0-aba3-1137398c87ef",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "a3e104f5-8cac-4b74-9863-241225dc43b3",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "fcb8ae4f-1894-499b-8482-29a3b8a383ca",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "28b8d5b4-3a26-4462-940c-b83778fbc99c",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "483be529-9211-4668-b5e1-7f973d751e38",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "20172af2-31c5-4ecf-868f-cdaf288150d9",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "91f34044-5573-413c-ac2b-521f4f56a878",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "d0f7facf-2895-4122-ab10-1ed59cc45adf",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "f49ec67b-d15b-4e96-9ff9-259868831c6d",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "3dfd61a9-6d47-4e1d-bf39-cef1b9488e45",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "002e7f9d-2262-497a-aa4c-df5694834cda",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0153d8ac-bb4e-4fc8-b7f7-0fbc5bd7e180",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "f5eb0d72-e59e-4276-a5f4-09808ef663e9",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "036ace6e-1c6a-4e87-a5ef-b155805924de",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "848d5fd0-0d44-45d5-9791-a215088b1fd1",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9781f0e6-afad-47cf-b49f-39b1b5f7ce9e",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5742b038-5202-4b9a-8b98-c2c9f3647937",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2545fc73-cd3e-4f53-99a1-81e702c68546",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7e4547d6-350b-45f9-80dc-856ce2a529e6",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "b2c33124-b033-4b7d-88c0-732d6f02d680",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "5beaa0ee-6638-43a0-985c-52eb7a5a8d50",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "86bbb6a9-d445-44ed-a753-7e017bdc1b47",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "a00070cc-3874-453b-b394-b68d287bca9c",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c8908bdf-225a-4a35-908f-4e4470c27cb4",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "976ed752-b86e-4ede-8c6c-ea391ed39499",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ea13f810-790f-4f7b-897b-ebe0cd3e8c91",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "c113642a-2395-42f0-8afb-3ded0516e4f6",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "ef6331f2-f7ce-4a81-8f59-49807452be7c",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "75426dd2-4191-4add-a05d-8abc6ade2c11",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "e8f8377e-8acd-45ef-80fc-79e64a82c4d0",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "dfcc6a34-eb8c-4643-bb99-ce79a1bb437b",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "dfcc6a34-eb8c-4643-bb99-ce79a1bb437b",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "dfcc6a34-eb8c-4643-bb99-ce79a1bb437b",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "c99670c5-07ae-4c6d-9c76-3acf6f7cbf44",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "664b7de5-c4f4-46e5-bb4b-b30754f13899",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "318f5f43-f1a3-4cd7-8d99-d72623f27dff",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "cb83a697-137f-4ead-a706-2b32f4262ed5",
+   "company_id": "15106149-1e03-4174-8d2b-7bcbae8b2b4a",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "cb83a697-137f-4ead-a706-2b32f4262ed5",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "c002e2ab-c069-4424-9404-253a29ddaea6",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "2f10bf4f-7af9-46a9-9ae5-72a4e1cc67ea",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "23425171-9a64-4de1-aca3-d808d5457ef8",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "349ed715-4a38-472c-8da6-391b8a869616",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "349ed715-4a38-472c-8da6-391b8a869616",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "ab914730-c8fc-48cb-862a-4536a2a2b291",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "eccd9a63-996e-4f75-adaa-b71976f470b7",
+   "company_id": "76bbe626-23f1-4ad3-8f81-bd10fde14d01",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "7654b91e-64c7-4fc4-89bf-fcbf81284173",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "1d2dda8d-d756-4e1b-944f-5794edc9d68a",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "0c74fc1d-22e8-42cf-aa42-34d727fa59ae",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "9a45cc37-7b02-43c2-957d-8be11399b8ac",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 1.0
+  },
+  {
+   "claim_id": "4e816377-fd00-4308-8a50-aa9fc975cb62",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "c6be8784-23f3-4630-a7e9-1250cfa443fb",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "c2fc172b-c01b-4287-84f7-bfbb7fad52b4",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "811a428b-825a-46dd-a0de-32b34bf4c153",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5b4d5013-b740-4884-acfb-dce799e904e9",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0ab48045-f0ac-44db-8eac-33e978f2d61a",
+   "company_id": "4e5c26fa-6f58-4556-905f-2130524bfa7f",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "13e3388e-a9b4-42f4-9c8a-55cafc1d3a09",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a7d1e37a-96f0-42ce-a1b8-8715262a7073",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ac6e8091-67ae-4580-8818-fa20c2630074",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b709a552-4ea3-42bf-9029-80586d65556c",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4a3e0131-35c2-473d-a75d-ae501eabd3b1",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "bc4cc175-5f1b-4b08-846a-b6b46131f357",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c7baba26-2d8b-490a-b59a-e456055fc9e6",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "f9c0d587-731e-4fef-9ad3-7efb10552506",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6f946f68-8a9b-42a2-8d26-25b78d2efe72",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f8b00ee3-ec9f-4d50-b521-55eb8116d3b1",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "fd6adc67-b53a-4c7a-a9ca-8436ce9cb606",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "02e294c6-ee1b-4d86-ba89-7c309da9243a",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4f658fc8-e4f2-45f6-ba51-e9a3f15fcc13",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3d97ee05-7e63-4285-bbe7-12b6fcc22893",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "614af3e8-0151-4231-a2bb-cd530ddb158d",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3a63af2d-8a72-4624-82ab-ff0768af462e",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c977c485-ddb8-4d32-8d54-1547258d2eb0",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0fbf22b6-fd28-4441-bf8c-d7762a8d9dca",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1540e7e8-2def-4426-887e-bebd959e2fbd",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "419900c5-046d-4150-9ab1-a1f21a9372d8",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cfc630fd-8c2e-4952-b01b-1738c89d4685",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "31384d0d-aff6-4689-8c06-5bbf0f1edef8",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "0886b532-66c1-4639-a424-13f584b6e020",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "aae9384e-5521-4750-84e1-b9fe56f44f7f",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f4afb1b8-d5ff-499f-b6e6-ccfd5f618acc",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "d1adcfbf-a556-4c76-a1f5-0df869f9341f",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "26bd913e-31e8-40b7-bd35-0c4bf1feae4b",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ff001f51-42d8-45d0-bd02-ffe1de9ef1cf",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6faca020-57e3-45c1-846d-5859ef31674d",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "584818a8-3443-4878-b07f-66b78fa5d01e",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4ed1c136-2c64-4262-a3dd-f464a39613dc",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "95afcf86-c07a-4abc-9078-37bc50e6111c",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "17a45a12-7430-42f6-9174-b4bef924c571",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "17a45a12-7430-42f6-9174-b4bef924c571",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "ddf3c8ea-d641-425e-9cbf-ec2190be8158",
+   "company_id": "62337922-890b-458f-8499-caafe87cf690",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "684244e8-4562-48fc-ab8e-617af109ddda",
+   "company_id": "bac3f02c-3e1c-4aff-90fe-7252927f7458",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "684244e8-4562-48fc-ab8e-617af109ddda",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "188a33a9-74ff-45a4-9790-f3b38012e843",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "002df14d-6590-4820-87fd-a8867ecc9726",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1229175a-70fe-4ad7-ad9a-6818541e8d83",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1229175a-70fe-4ad7-ad9a-6818541e8d83",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "136d2c84-80ea-4b4f-b21f-ac8313e7eb88",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3529d11b-3226-44c8-9b1a-b27c14bee620",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a25852d9-44cb-454f-881b-44ee53c72fd6",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "39090258-66f3-4e04-92a9-c5c88e3ae836",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a44f2dfc-33ce-448d-b5e7-17f44a78c984",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a44f2dfc-33ce-448d-b5e7-17f44a78c984",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b6833c1d-b741-416c-a55d-d66022957e43",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f34ba8d1-0d5d-47af-9b7f-5f2d5e361df3",
+   "company_id": "15156906-a10a-42c5-a2a9-dc413875605e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "abacfba6-059d-4162-85f1-3f4695857f6a",
+   "company_id": "15156906-a10a-42c5-a2a9-dc413875605e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "eaa82e6d-c5ee-463e-b19a-a8a41d166936",
+   "company_id": "15156906-a10a-42c5-a2a9-dc413875605e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0cf75e6f-b9fe-4b99-80da-4e65f81f837d",
+   "company_id": "15156906-a10a-42c5-a2a9-dc413875605e",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "ae408017-d4be-4ae1-a1d5-9c0a10f356b4",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e1af1b74-77cc-4d67-b1fb-e3455419438a",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cb58fbc8-80ba-4c53-a88a-0f8423901329",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cb5251b3-1b7b-46e4-affb-e478ee4a8c45",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "cb5251b3-1b7b-46e4-affb-e478ee4a8c45",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "92f23ecd-c940-4fc9-bdc8-4ef24f6ed289",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "92f23ecd-c940-4fc9-bdc8-4ef24f6ed289",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "8fbc29e8-d200-464e-bf62-a60649df1384",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f87a90a5-c01d-4915-9032-522bd6a435f6",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "4f7118fa-0c50-4cf8-a85b-fa02341dc931",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "4f7118fa-0c50-4cf8-a85b-fa02341dc931",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "8891b533-5176-4155-b969-5311363d4e91",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b5333b8c-08b8-4b0f-8f6e-a20edbb48ad5",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "e6090141-bc73-46fe-9939-8b0df63e40bd",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "de38fffb-6677-459e-a17a-a78ff34f881e",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b766c499-3f94-49ad-bc9e-93122915b8f3",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b766c499-3f94-49ad-bc9e-93122915b8f3",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "eb55dcc8-5f4d-4d30-9485-4d166e65b7a3",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "eb55dcc8-5f4d-4d30-9485-4d166e65b7a3",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "25b8b3ba-08bd-435a-8cc2-89775fc2a530",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "25b8b3ba-08bd-435a-8cc2-89775fc2a530",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "1ff71cb6-5492-4dfc-bc76-5863117c9a30",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a6b00f59-496e-43d3-9940-1af3652f3bf2",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f2d7259d-4496-4093-87c8-1c260be07daa",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "afb57bd6-0763-4325-9aac-f0e7adbc366a",
+   "company_id": "d6e6fdec-7610-4737-802d-e3a7f026b40c",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "afb57bd6-0763-4325-9aac-f0e7adbc366a",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "1dd41866-316a-4224-8c0b-b601d5805587",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1dd41866-316a-4224-8c0b-b601d5805587",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7072ed1f-e7c7-4039-8810-306a388e0de4",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ab2b4ec8-ae2c-428f-84c5-1b45f5091e20",
+   "company_id": "214628c8-dd4a-4e84-bceb-cca654bb00b6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c23a8376-67f3-4ca8-8314-458b01687022",
+   "company_id": "f6cb5ab2-02d9-4c3f-a1ec-65883412048b",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5a9d5e83-84c8-4975-ba04-a9249412cb17",
+   "company_id": "974f51b6-773e-4094-8fd8-866896c25f6e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "255a9532-0456-4a62-9ecf-cdaaea71cb34",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "255a9532-0456-4a62-9ecf-cdaaea71cb34",
+   "company_id": "70916ed1-3e32-470a-8975-3466d1a5dd9f",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "05f389ae-2465-48b0-acd4-105f90f38c8e",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "43539333-9818-4a0e-9d56-601f872eee21",
+   "company_id": "70916ed1-3e32-470a-8975-3466d1a5dd9f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9e1bd5c0-b5db-4400-a895-a5df92190a0c",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6c6b6a83-75c2-4d40-a20c-688895a3dee5",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "dd15b801-1133-4a19-b2a4-d37fda221d17",
+   "company_id": "55373f7a-2594-4936-8f3d-604cc918a467",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "f149de98-c511-4b9b-b8b9-91e977ecef79",
+   "company_id": "a1b12f3f-0c68-4f7f-9085-6086a06d7318",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "2e623780-6001-41ba-8d18-767e91dd7460",
+   "company_id": "5b7ca0c4-e2aa-482a-9bd7-7f68b07bea41",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "2e623780-6001-41ba-8d18-767e91dd7460",
+   "company_id": "204c8845-e740-4d7f-a09a-4f0d4cd9642c",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "5de832c0-b5cf-45a7-8eb4-a058686481bd",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "ea7bedda-d36a-4dac-a560-38b9f6ae63f6",
+   "company_id": "e57baf33-dc78-4413-a49e-17bff0e774d0",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "aa78319f-bd5c-4de6-8f6f-caf116de10b6",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "9be1123d-03d3-4b0a-8c70-a228e11dc1e1",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "542978f5-db93-4ef2-b087-b6441b209d21",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "542978f5-db93-4ef2-b087-b6441b209d21",
+   "company_id": "f469bca9-ebfd-44d5-af78-6e3470f3a9d6",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "fac9fb4c-4dd2-4d91-b55b-1d44d1055034",
+   "company_id": "a1de33c3-9ef4-410b-979b-eb3330fba932",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "333c4d8f-f8d7-49b9-811e-eb97c7dcc862",
+   "company_id": "a1de33c3-9ef4-410b-979b-eb3330fba932",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "8930f712-e74d-40bd-9569-e790a4757cc4",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "69d8b2a0-a20f-4bbd-8c52-a9da5136bd26",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "933cfd35-fda1-4dd4-89f7-c4b30c1bfc55",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b6dd31fe-414f-4051-8f33-c336715cc480",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "cf70e5e0-2530-4c98-9ac5-9388444933a8",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "cf70e5e0-2530-4c98-9ac5-9388444933a8",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "b65d4ce8-bc20-4658-ae05-fe2ad8970cac",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ba21f9aa-89b6-43ec-a8ef-728bf905c0e9",
+   "company_id": "c97670a7-2a45-4482-864d-6238365bae6e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3538464b-c915-438f-9240-ef1744500520",
+   "company_id": "c97670a7-2a45-4482-864d-6238365bae6e",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7f07ae0f-eb25-466d-b747-7c7061cd684d",
+   "company_id": "c97670a7-2a45-4482-864d-6238365bae6e",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "245de4d9-537d-421e-b759-564de9e14f98",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "24435526-6c1d-4b75-a074-ea85f782abd2",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "2c9ea74f-b10b-4565-8164-c74bc82ecfcd",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "571fc1be-2275-48d8-98d0-68580e7a0d74",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "3cc59ea4-fe70-45e3-b6fb-810713e0bba4",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "0ff8093a-0d71-4dee-9174-169850185cb9",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "97b0cb72-2b45-4604-ba67-12d0148e8a8e",
+   "company_id": "babdadc6-66d4-4297-abc3-75347a7e3e80",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "863d4b8c-0481-4206-9e93-90763d2207f4",
+   "company_id": "babdadc6-66d4-4297-abc3-75347a7e3e80",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "0207695d-37be-4aaa-8fce-3c80e38acc41",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1090826f-12f4-4e30-8d3a-c5ea28d6e939",
+   "company_id": "8d7de5f7-c93e-41ec-9bac-2be0c876fcce",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8a487cdc-6cd3-4bf8-a489-1bba91b27337",
+   "company_id": "8d7de5f7-c93e-41ec-9bac-2be0c876fcce",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "900a40f6-047f-47d2-a993-abf1338b1462",
+   "company_id": "8d7de5f7-c93e-41ec-9bac-2be0c876fcce",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "14639976-e9b8-4c13-930b-0f49aab8a77a",
+   "company_id": "8d7de5f7-c93e-41ec-9bac-2be0c876fcce",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1177b1bb-7444-4925-9c43-46c8d1fcb30f",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f4a07398-db2e-499a-b8ef-df6c06cd2bd7",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "57e06873-2dcb-4f3c-bd76-9a88e737e795",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "be3caf72-1ee0-405d-92da-132a10664571",
+   "company_id": "7f94175f-539f-4464-958c-bc87c2fe74fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "15f46d8c-183b-4900-b000-a7b8432c01b7",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "496479f8-0312-45a5-aad9-bf88c494c5f6",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "ad0797ed-baf3-4d54-b976-94df4ab573fe",
+   "company_id": "6cd78f2b-53b6-4e84-b585-121221f28fb6",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "cda95c01-5696-44c6-9e3c-260c99f42f2f",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "96c9f8a8-be7a-454c-9844-fedfe31276b2",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "da7c4ba1-d2ab-43b5-893b-659a28b86830",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7d187ee4-8499-42fa-bce9-2cfe74d92b8f",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "07f1f662-63de-4014-b72d-d87997d05542",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "936cf32d-604b-41b8-9099-bf985cc725f2",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "54579fb4-76a1-4676-8873-cc0fc5880128",
+   "company_id": "1b69b278-9ae9-486b-bc48-793c16f953a9",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "54579fb4-76a1-4676-8873-cc0fc5880128",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "54579fb4-76a1-4676-8873-cc0fc5880128",
+   "company_id": "1b4358d4-58d6-460b-b12c-8a3091c57826",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "639a0963-e733-4989-aad2-bca1d7098c3b",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ada67be6-2ab7-4243-9c2d-88d55338a7af",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "4b8b22c4-5a48-4fe4-acc4-b0bf2be0d533",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "697f8cf7-16c2-4549-9e34-bd65711893c5",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "4209048c-966b-40c9-905c-e1f8d54401e7",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "014fc993-18ce-4458-8af1-c463d4f12f6b",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ba8ebc61-8c50-4496-b59b-954f93bb1c53",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "b4b285c9-2445-4a6d-ba89-ea997c5b6e74",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "96f69a86-3473-439c-b18d-1e2bd827810b",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "015fab39-1ef3-47c5-9eee-6fb13753154b",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "907541fe-d5d6-4a04-96d1-19ef566459b1",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7a2494f4-3e42-4be2-a1eb-9af79e9bff79",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b697f358-d5ff-4180-aee0-d8dfe7e80fba",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6c710866-35e9-4c99-8740-1abf1c2098ac",
+   "company_id": "036926f6-b8ab-4958-9ae4-7261ba6694fc",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "27216e5a-a4a9-4f68-9f30-6c1447379d4f",
+   "company_id": "8e6aa69b-a3dd-498a-98b2-f235179e50b1",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b3c5761e-82c7-453f-881d-ec28a5cd0d4b",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "84d91843-9320-45cc-bc95-f18981f85a27",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "26292c50-e5d0-4a61-8dc0-18a31f69821a",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f9565e28-31e5-4361-907e-5c7e79e2328c",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "de1315ea-c1c8-47b2-9489-17727f26ef5b",
+   "company_id": "c43e7acd-ec93-47f3-8afb-a7cc94d4e074",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "743d044f-ee1c-4352-8c4d-3df67ec20bab",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "f559d88e-4ae2-448e-adef-0df00ddb9c3c",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "cfe86db0-5d77-4807-84c1-03a3725e7d87",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "109778a6-62bb-4663-8350-2eac191c0af4",
+   "company_id": "5cc3d8b3-fa0f-4194-b0ce-025ec4efca71",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6b677e21-449c-499b-80a4-17ddce1e8ec0",
+   "company_id": "5cc3d8b3-fa0f-4194-b0ce-025ec4efca71",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "91ca7c79-acde-4a46-9096-7091f8fcabc6",
+   "company_id": "0dccdd5a-d950-413f-9f36-f79228c5b884",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "45991d8f-4379-4945-8439-ace64acee1a5",
+   "company_id": "0dccdd5a-d950-413f-9f36-f79228c5b884",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "26da6575-667a-48cf-8ad5-498ebe3205a4",
+   "company_id": "0dccdd5a-d950-413f-9f36-f79228c5b884",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "36d4b7be-3213-4c5e-a79a-37e04ce08545",
+   "company_id": "5cc3d8b3-fa0f-4194-b0ce-025ec4efca71",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "62d12b07-7001-4112-8e8a-832c7ff54afd",
+   "company_id": "5cc3d8b3-fa0f-4194-b0ce-025ec4efca71",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "62d12b07-7001-4112-8e8a-832c7ff54afd",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "89b8c8a4-7868-4ea2-bbff-fc64c659c176",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "a3e86a52-c03f-48ba-a5c3-c389645f7288",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d87a6d0d-1ad7-4c17-b59f-0d8480843220",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "f377d80e-44ac-4032-a47d-a8af92003bdb",
+   "company_id": "5378cf0d-1283-47c4-9b91-dc805207bb42",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "59b5b1b3-3891-491a-a7d5-4d90f7fad75b",
+   "company_id": "2967179c-68ca-453c-ae78-b0556f1dd21f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "124fe3e7-e98e-4efd-ae01-1288afaa8672",
+   "company_id": "2967179c-68ca-453c-ae78-b0556f1dd21f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cb3dda26-e668-4627-942c-d86be33133d6",
+   "company_id": "2967179c-68ca-453c-ae78-b0556f1dd21f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ba5899c8-5a48-42b1-a60b-e98fa08c6d0a",
+   "company_id": "04bb6578-0239-4574-89c0-e8dd2a100c70",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "5a2e3534-98a5-45bc-baff-958e7a23d1b4",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "df427827-8e3d-492b-a7a0-83c71671ae38",
+   "company_id": "0dccdd5a-d950-413f-9f36-f79228c5b884",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "dde11561-9d38-4ae2-a8bb-3984861d9944",
+   "company_id": "0dccdd5a-d950-413f-9f36-f79228c5b884",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3b2d5e33-4009-40de-9788-974f19019ac6",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "0cf51b65-d08c-44f5-826f-80d9c0252bb8",
+   "company_id": "53c58d66-b874-41c2-909e-8cfb768c2301",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "349255c9-b9bd-4a1f-9c49-e42ec0cef9d5",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "349255c9-b9bd-4a1f-9c49-e42ec0cef9d5",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "910a1254-5466-4955-92c4-e4756cd51b4c",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "63e94579-e5a4-421b-a453-d750d130548c",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "56d0ae6a-86ca-4bea-bb4d-493bdc62da4a",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "56d0ae6a-86ca-4bea-bb4d-493bdc62da4a",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "56d0ae6a-86ca-4bea-bb4d-493bdc62da4a",
+   "company_id": "babdadc6-66d4-4297-abc3-75347a7e3e80",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "9efaf59e-dd57-48a4-b95f-c3f159578616",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "9efaf59e-dd57-48a4-b95f-c3f159578616",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "1510b30b-c961-41d5-b19d-890cbb868b03",
+   "company_id": "9947d368-96da-474d-a282-ce88677d3446",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1fb50e5b-61a4-45ac-b482-fbb4f534851c",
+   "company_id": "9947d368-96da-474d-a282-ce88677d3446",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "bf30ec56-7477-44bd-aab2-081a1b724636",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "50950bd6-96d7-44c6-b960-558574261675",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "9339309c-d379-4bf5-a6bc-22785cc98660",
+   "company_id": "70aa9674-58af-4ed7-b027-78f524a5b26d",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "2d24978e-568b-44e6-9467-f8412b5c45d4",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "b33ee178-0227-4698-a372-077a1d2c02bf",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "39955652-52f8-40b7-8ddf-48cc061653b0",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e4f1634e-8de0-4a35-b3c9-f2e11d0b92fb",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "e4f1634e-8de0-4a35-b3c9-f2e11d0b92fb",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "6a4aa607-a993-4b5a-add8-55d2223ef596",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6a4aa607-a993-4b5a-add8-55d2223ef596",
+   "company_id": "8bc14ac1-a8f2-4661-a584-ad9bd3e1a921",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "bdef9123-e584-4c3a-bd7e-6b143af234ce",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "937ce55a-15c5-424d-8543-13d80d89d0a3",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "fc296a26-80a5-4735-9065-93eb1dea3469",
+   "company_id": "189abc70-d961-4e9e-ad91-fb46ca303337",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "e1ae74c3-6449-4672-af8b-d3308fd52172",
+   "company_id": "9947d368-96da-474d-a282-ce88677d3446",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ec671409-4979-4d4d-aca3-3fa56e3a52da",
+   "company_id": "9947d368-96da-474d-a282-ce88677d3446",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "809a8e10-6616-4f22-83d7-fecfbd695602",
+   "company_id": "9947d368-96da-474d-a282-ce88677d3446",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "96e74075-d418-4fae-8e67-965e63cfc6ad",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b17e2208-5a53-4a96-b672-0284fdba82e8",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "2f7a3471-573e-42a2-b195-20711b3160d2",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6adca2e4-c11a-46a5-88c8-6494701c9a99",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f3830cd6-0505-4335-a06f-e86428607d39",
+   "company_id": "18a2eca7-d275-44fe-9dcb-c07a33c93195",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7cc0a3f3-b346-40d3-a4da-b7e21d4879a5",
+   "company_id": "f33f2b9f-9150-458b-9518-329dafb7de31",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e2c74fb0-79e8-4915-b2e9-0529ebadd320",
+   "company_id": "f33f2b9f-9150-458b-9518-329dafb7de31",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cfaf8e09-2307-43ac-a974-ab5749a3b8cd",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8097dada-847a-485e-bb83-b26fa1bfff65",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3b6ce3e9-22d9-4dc4-92c1-ab1826d3a38a",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "32a9dad0-124a-41ca-91b9-b81bb6a82f6e",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "160834db-4177-428e-9548-fe3231f7ff94",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "78b555e2-430d-4359-b35e-3ab6ed575d4e",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "eabdf8ab-f293-474b-85ed-93e1715ad1fc",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "fe5e9d62-e14b-4cf0-8c61-6b7ebe0ae3ce",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "df9414bb-fb6a-4a02-8ae0-2cfa985eb82d",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "31a75a61-69ba-42ac-8bd6-e02046d0a6ee",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ccea7a43-661f-4ed1-a407-acca1112313a",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "14738806-e300-4338-9475-7d1f71553622",
+   "company_id": "0b5f924b-e4b8-4c4a-a3a6-4dd5d71be808",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2f3ab54d-59e8-4841-8caf-520241139582",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "0c2f776b-ece2-4b70-b6a0-1285b868a539",
+   "company_id": "523d592b-9a98-4e3d-92d7-c037978c020e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6e49aed2-d155-4492-bc69-d71e815dfc81",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0b2a2b72-b22d-45e9-9612-6aeca3e8d7f0",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "50cf1929-ee0a-44d4-90b5-21d192094650",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "50cf1929-ee0a-44d4-90b5-21d192094650",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "aec989b8-7493-4c5a-bcc1-f6e588fc838f",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ce489260-245f-4271-9d4b-d9e61c2230a1",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ce489260-245f-4271-9d4b-d9e61c2230a1",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "33a665eb-54ed-4219-9b66-46fc0a6233fd",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2319f9f2-8b60-4b56-a353-70775f8a60c5",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2319f9f2-8b60-4b56-a353-70775f8a60c5",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "964ff717-3970-4275-961e-ac81d0dccbf7",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c067b45a-9ae1-49c6-91d4-1fc8f6d0ac82",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f4a21475-0cd7-4fe1-a421-4ec751f14f9b",
+   "company_id": "70d80a69-13bd-4534-8f17-a3f18d32b2fd",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "793b084b-5284-4584-8deb-a75cb92da66a",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c67c103e-c599-436d-a404-c4d2276b9499",
+   "company_id": "e8d98a12-a2b5-4ddc-9c45-b1e7acafc5a6",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f95eaac5-87df-4fa3-900c-2cc21e039a4a",
+   "company_id": "986cdc44-b101-428b-9aa0-075dbaa27d00",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "23d22ef7-04b4-443a-8e3b-98c8caa5ba64",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "44263c23-7b83-4954-97b6-fee72426e362",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a6601750-911e-4c8d-a951-576100207e9b",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "7ee80bb5-241d-4b16-bf7c-77d6b106fd76",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "21103550-3104-4fa8-9b12-4b5eb290974a",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5aeac4f1-7950-4dd4-bd9c-a897320e2a85",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "a350f968-63a7-4517-9293-8323420f8930",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "aa8fdb89-1663-4089-8448-cf8eac124094",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "58bbbb41-97de-4217-af14-fb0b0154295d",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "784588fd-8f6e-4972-87d2-72e324c0c60f",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e56a42e7-5690-4958-b39d-c5c8c2566347",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a915dfe1-ce17-4d39-a45c-187a4cc2c2cd",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c32af470-d5aa-41cc-b22c-dbcd03c12aa2",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1ada519c-59c3-4007-864a-24eba0511aff",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "681c503e-7fd0-46ff-8419-1437a600c256",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "681c503e-7fd0-46ff-8419-1437a600c256",
+   "company_id": "f16bfa01-6aab-42aa-8efb-aa7e0291b5e5",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "d60a5367-95bb-4edb-8765-ccba697e513d",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "bced25c1-8cfc-4d29-bd6c-c01a20c8a67c",
+   "company_id": "bdbe60d2-3218-4f1d-ab8b-85d03309b72f",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "906b89c7-8f22-498c-ba09-a534de01d1cd",
+   "company_id": "bdbe60d2-3218-4f1d-ab8b-85d03309b72f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "906b89c7-8f22-498c-ba09-a534de01d1cd",
+   "company_id": "f16bfa01-6aab-42aa-8efb-aa7e0291b5e5",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "e18066a6-4828-4442-a805-f603a26c791d",
+   "company_id": "bdbe60d2-3218-4f1d-ab8b-85d03309b72f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "54f6ca85-9a25-448e-91be-475613d94d72",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "aec601bc-56bf-4b16-84cf-e1c0851169ba",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "527b6cfe-0f72-4ff1-96d0-0fb87c3cdccf",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "277d347b-4f0f-4935-8718-dee62aaa9938",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d7d34e8b-be12-4c86-9bb3-e78cfbbbefd7",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "42c9806f-fc74-4320-b5b6-9ebbeaa06332",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "42c9806f-fc74-4320-b5b6-9ebbeaa06332",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "3b51fc6f-9854-460a-b346-ef53ef7bbd90",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "fe861cff-d1fa-4676-a36a-3c5dd8484a62",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "287d5e93-9b1f-43f6-90d4-faaba153ab70",
+   "company_id": "bac3f02c-3e1c-4aff-90fe-7252927f7458",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "287d5e93-9b1f-43f6-90d4-faaba153ab70",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "287d5e93-9b1f-43f6-90d4-faaba153ab70",
+   "company_id": "ebbbd33f-01ce-4859-a3cb-cd2162388603",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "df1126e1-5165-404e-919e-33c656559e67",
+   "company_id": "ebbbd33f-01ce-4859-a3cb-cd2162388603",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e977a8a3-939e-437a-8ee3-4b318d08957d",
+   "company_id": "ebbbd33f-01ce-4859-a3cb-cd2162388603",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f2c9aa15-4d3c-4cee-97ce-0b6d38d83bd2",
+   "company_id": "ebbbd33f-01ce-4859-a3cb-cd2162388603",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "24f7d861-5159-4775-8de9-4d7b0eb9ed16",
+   "company_id": "ebbbd33f-01ce-4859-a3cb-cd2162388603",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a88088af-e5ad-410b-b3e7-369896323279",
+   "company_id": "bac3f02c-3e1c-4aff-90fe-7252927f7458",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "e02756f6-c697-4c3b-91ba-157eb3d1a86e",
+   "company_id": "bac3f02c-3e1c-4aff-90fe-7252927f7458",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "83fc7549-db13-40b7-a661-96a1eb11e1a0",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "38a1280b-bf21-407b-8838-07946f07175c",
+   "company_id": "8f486e26-c5bd-45e9-a9be-20dd34df1b97",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ab737b89-769e-4110-91f7-f7b2ea53cb0d",
+   "company_id": "775d65ef-c777-4caf-a2e3-c26127e2ff38",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6b219e49-5448-4180-b8a7-3e17eeeeee53",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ad1c8cce-723d-4701-bd67-e569e69b3675",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2995a2c6-3f5a-4515-8c59-f004cfd1563f",
+   "company_id": "c97670a7-2a45-4482-864d-6238365bae6e",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "590de060-b5fd-41c6-8188-9d8aa50ff52f",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "de3983a4-07df-422c-902d-81277b7813c9",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1559bfb8-6f50-4eeb-85af-c98b0957ddb1",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "02dd1182-776e-4afd-8cb9-d9dcae08dce8",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "14cf6e0d-be60-4f6a-acf5-2221da65404e",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3447a3a4-6d97-40d7-bdad-847f601685a2",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d4d136af-a0ae-415e-8e2d-0a7e27e91178",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "a281ec25-e71b-4100-a03f-d88244d6ac75",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "eeca48c0-e475-4f84-bfc6-c28de93a7193",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9a5e8caf-f4c6-485c-b983-811847e0b2fe",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "04da423e-6ccb-4f61-8f98-c55d4d7c60ab",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "98ac6838-cc0a-4cbe-bb5f-90eff13093f6",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e9ecc4c5-24b7-4b92-bda3-b00816db8675",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "90208343-d147-434f-8181-b91b33c52cde",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "99873915-75fe-44f3-a70b-2bceae57de10",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "50c090e4-d876-47de-a6c8-eb4bfb37537d",
+   "company_id": "dfbfdaf9-d848-4a6f-b4ce-74de8717ddb9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2684fae7-f744-450f-a584-c4480a14abae",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "fda60620-2c52-4e12-8ced-21fdf66a957a",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3f76befd-7fae-4897-bfb7-0ac79261a44c",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5774db2b-3b35-4149-8f69-cd07c68b163b",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5d7e2b94-2eaa-4e2a-a127-cfaf6d6f5aa9",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c044eeb4-acd7-44e8-803d-2a0584e4b2d2",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "91c64a70-a050-4023-9250-022b774731c3",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "289dc3ba-ce77-4bd5-a688-135ab825abc7",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2f7a4c7b-9966-4e6f-95f3-ae3dae631d00",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2f7a4c7b-9966-4e6f-95f3-ae3dae631d00",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "1c222e28-91e7-4d02-8637-ea7406b69e40",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "1c222e28-91e7-4d02-8637-ea7406b69e40",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "c57922f1-8fc6-497f-a374-4b6513688396",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cb485a19-2c1c-427d-af64-6a44302c7c09",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7b06ee5e-c834-4b4e-ba16-c8169c2cf066",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "769ef6bb-4e6f-4735-88b3-6c3879f7b456",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "458d7a43-5d03-4528-a8fa-d14de2782b64",
+   "company_id": "6bc6af9c-902e-4e8a-8648-cb40586548d2",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "62112a3d-9553-424b-958c-9d334d0256f2",
+   "company_id": "238aecc6-d2a7-42ef-b81c-77b2aac1be08",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "150b6bd7-9b2a-493a-8dfe-4bce0e8091bc",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "150b6bd7-9b2a-493a-8dfe-4bce0e8091bc",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "799ce834-175b-419f-8a48-e419638d154b",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4e5e647c-53a7-442c-95b2-37949dc59230",
+   "company_id": "893559bd-f21f-4fa5-b9ed-21b142513cd5",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9c7c80e1-f434-431a-9ec2-3bef8e713394",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6c4a27d7-99ba-494d-b9f3-8cc936241c68",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "902a9f2a-b9b3-4ac0-b010-570f6d169fa0",
+   "company_id": "0d069937-d2fd-4379-91de-077ee0cf6633",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3b04fa36-8890-482e-894a-2ba6a9f23b89",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8ea39db9-3cdc-443e-a409-aafeedaa39bd",
+   "company_id": "dfbfdaf9-d848-4a6f-b4ce-74de8717ddb9",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5907891d-fc1e-43b7-9c37-34e703dc5cb5",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5907891d-fc1e-43b7-9c37-34e703dc5cb5",
+   "company_id": "a637f49c-f4ac-42d0-a36d-b1b96314c5c8",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "52cebd33-6b76-44c8-ab61-38c1f7443253",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3aa55f73-7765-4966-99ad-57b23b7fadb4",
+   "company_id": "dfbfdaf9-d848-4a6f-b4ce-74de8717ddb9",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "976b460e-6268-4f5b-8392-afdf1847f5b1",
+   "company_id": "27e13f88-052a-41ce-9e96-04b9687e9b98",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "fec08935-613f-4d8c-94bf-f508212a6515",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "c283ffa6-71e2-490c-87f5-68f797d99091",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7fdc75d5-97e8-4b8c-ab0d-b81f5e1faf42",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6f5285ca-e93f-4e41-8c41-708b617b2481",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9bc204fe-324e-4f82-b9b9-bdcd87c6e6d1",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3751643f-fbf3-4fbd-b18b-d7b7c94de8f9",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "67229b85-84b0-4695-b2be-af7b08f41191",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f09549ed-1091-4824-b2ff-eb6cc821959e",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c2629cd7-944a-41d4-a6f9-9d89c5840566",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "bac1e62e-3470-45ee-82c9-4feea2b99028",
+   "company_id": "26e12422-3257-4354-8229-f521e38aa2e2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "74018393-50f6-4cd4-9bb2-e04cdbe65ff6",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "3a63ae94-bf87-44b8-ae01-2c03e20fe80a",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5a2bb5ce-f3d3-4bde-8185-400e2a6196f7",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "cc39831f-0aa4-4dc1-adfa-523f4fecc2fb",
+   "company_id": "47225ca9-e86f-4b2c-b424-cc0b7c14a723",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "d4c228cf-9fba-4322-8146-66d40c9d5b4a",
+   "company_id": "47225ca9-e86f-4b2c-b424-cc0b7c14a723",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7056d9f2-71af-4639-89a4-bbde9105f274",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5079f747-8d89-45f7-b783-2174b3ac6a08",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "bab905a8-a0b9-4714-8451-f6909bfa8e1d",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b8efb5fa-9db0-40d4-aff0-707bda501579",
+   "company_id": "344b6dc3-fbcf-434b-92ac-550529a97a62",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b8efb5fa-9db0-40d4-aff0-707bda501579",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "fbcde87f-3b70-4611-88fc-e69602eca480",
+   "company_id": "26e12422-3257-4354-8229-f521e38aa2e2",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "fbcde87f-3b70-4611-88fc-e69602eca480",
+   "company_id": "3f416487-b920-4d1c-b62c-04e8402ab1ed",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "5033a926-0bfc-4d4a-ab67-bd35c4100ed6",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9c6ac14c-40c4-49af-97ed-a0af0f5d54b4",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "01279c1b-b8cd-4b9d-81d8-8025831ca189",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2cc67f5c-933b-4b7a-b4ee-66c46e628f98",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c4851304-28ce-4da9-9bba-a52205c77252",
+   "company_id": "43e4866b-3190-497a-8b60-4c98b2844cad",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3cf5905f-b17d-4662-9a96-08742d83e3e9",
+   "company_id": "036926f6-b8ab-4958-9ae4-7261ba6694fc",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b0276a0d-dd6f-4f02-9d36-ab0a56f0175e",
+   "company_id": "43e4866b-3190-497a-8b60-4c98b2844cad",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b0276a0d-dd6f-4f02-9d36-ab0a56f0175e",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "ec415bc2-def6-497d-bb1d-c2ecda4461ad",
+   "company_id": "43e4866b-3190-497a-8b60-4c98b2844cad",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ec415bc2-def6-497d-bb1d-c2ecda4461ad",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "ac33498f-725b-458a-80f7-0ef484b813d4",
+   "company_id": "43e4866b-3190-497a-8b60-4c98b2844cad",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ac33498f-725b-458a-80f7-0ef484b813d4",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "c3f7d042-ad24-4498-b2b3-818525dd9a1a",
+   "company_id": "43e4866b-3190-497a-8b60-4c98b2844cad",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8a94b87e-70f8-4d35-a867-cc24b852b232",
+   "company_id": "036926f6-b8ab-4958-9ae4-7261ba6694fc",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d3447352-1093-47bd-a220-e7fc55afbecd",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "6cf43d15-8fe6-403b-b371-b407998335ab",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3f4d30bf-6b3d-4c4d-bf7b-72a2ba54d210",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e1cbbce9-a344-42e8-b2cf-b5d92d691b2e",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7c2d254f-27a5-4b9c-b1d5-8245f4264024",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "8df074ac-c6af-4a39-bb7a-395bad0546e4",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "b2246459-7316-4645-b53d-f094807e7c8f",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2a8290e4-4c70-47c6-a207-6f2d6c654dbd",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c1be5af3-844b-4fb4-aed1-f640ac0c33d6",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "b84bbec3-e7fb-4738-92a9-5300cfe906c7",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "b2b1f567-044a-49e7-a35b-3ac74ac0cf6a",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "314c9e4d-7242-4aa2-ad13-582ebdd755d5",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "87186453-cfb5-447a-8e6b-35bcfcc41735",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "87186453-cfb5-447a-8e6b-35bcfcc41735",
+   "company_id": "afd124ef-5d39-4ee6-9bad-7130a4bd58f9",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "87186453-cfb5-447a-8e6b-35bcfcc41735",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.8
+  },
+  {
+   "claim_id": "0467fe76-751c-4c85-8921-24798d806ecf",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7d798fb6-254f-4de4-a7b3-47b7cec6f7f4",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "35d3b0d2-bb1f-4a19-86fc-dbe8a0f4229e",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "01a66466-412c-45be-805b-60ca99262f73",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "159c616e-fff1-4eca-9706-0f05a4f037ba",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "04c7cf8a-5a2f-465f-bd90-35ad3d5e3eee",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "d289af4a-bd1a-413b-b6d0-4f040b7305fe",
+   "company_id": "e887be38-8639-4eca-8fad-768a9264a1af",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ca5e0193-b1cc-44a1-9351-6f404e871c73",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "ca5e0193-b1cc-44a1-9351-6f404e871c73",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "3cd0be71-5544-4126-94c5-119190d09fbe",
+   "company_id": "88072e38-4ed4-44e5-b14a-e6bf92d615fa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "21253748-b0ea-4609-a239-0da63ad25811",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3334f4aa-601b-4fcd-86a4-a7bbcd8eeefe",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "063acc3a-3070-4ecc-8712-27be12444c6a",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "7059b1bc-9feb-4fc4-9d3c-fbc0045939be",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "d4b0c40d-f6d0-492a-a672-ef2083c84c5d",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "051179d8-57d8-4fa1-b9a8-e7e17eb7e6b3",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "06b1d92a-4df4-4a43-b1b8-180f40e3575d",
+   "company_id": "7c728f58-6be2-4f7a-a943-552127e8fa74",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "c59470e4-dbd3-4514-8ed8-0a167fbf5c81",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9e73d9e0-11f0-4451-8d07-5e48499e3ba4",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "13ae5065-5a45-464c-bf37-16bb0532eaff",
+   "company_id": "4c0709c9-cb70-4c0c-8b3c-a883b16579aa",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "5d301267-8794-4a04-b7bf-938fe76ce5f7",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "2c3f72cc-8828-4b80-a323-3ce1dea79fe4",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4783e5c8-e477-499a-9b0c-379207e33151",
+   "company_id": "5d8d0ed2-17cb-40e6-b79e-c863529f434b",
+   "tier": "llm>=0.7",
+   "confidence": 0.75
+  },
+  {
+   "claim_id": "aa671c2e-9082-42c1-bee1-e8ab15167399",
+   "company_id": "94ddd7bc-8b8a-4b53-a3ce-bd2a39034148",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "dae0b68f-d1a2-4016-bbbf-720579f383b8",
+   "company_id": "e887be38-8639-4eca-8fad-768a9264a1af",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "37f1f111-9895-4758-b5c5-be79757ea4c6",
+   "company_id": "db694666-c94e-43de-a789-522568f665e4",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3a210cef-5808-40c9-bc1b-faaba96f31df",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "da97a3ab-6224-4909-abd2-ff1adbce038e",
+   "company_id": "797ce96c-6536-40a2-af6e-cb4d3f46a073",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "e6a8fc01-7317-4419-9d4a-e7d5cb55fa5c",
+   "company_id": "fe300662-1e70-48b2-a4f4-92da5e1f528f",
+   "tier": "llm>=0.7",
+   "confidence": 0.7
+  },
+  {
+   "claim_id": "14edc6ed-c3d8-4b22-bc0c-3062f26967bc",
+   "company_id": "d6ca57df-c7f3-4421-8f23-de82b27b5ae3",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "f513fdb7-9ee8-450b-9beb-5b3472b8b7f3",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.85
+  },
+  {
+   "claim_id": "a2edea76-bf21-4ddb-836a-3f01fd3d653e",
+   "company_id": "c46ac24e-6bb0-487e-a364-b2739fd90c05",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "9eea00a9-0ae5-4a92-b778-221c69ed4bcb",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "acf3dd1c-1f7c-4d9e-b992-16afd51c3033",
+   "company_id": "da9d346a-e685-425d-8423-d6cce7785a7d",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "4d8d038a-2e87-45b0-a9b5-b5a5870b4c42",
+   "company_id": "da9d346a-e685-425d-8423-d6cce7785a7d",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "9f93dd66-4cbf-4b8a-8d22-38a108d4ce17",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "a81269d5-b068-4fe5-8f29-c49a81e09b83",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "e37bbe70-519b-44e5-98b8-7455ab783a84",
+   "company_id": "c2970203-0f10-4268-a732-9cea496145c3",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "c7fd6e45-e97a-479d-9283-f048a79f7977",
+   "company_id": "fe300662-1e70-48b2-a4f4-92da5e1f528f",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "62313e2b-6965-4320-8e72-8779e8a30f99",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "0ed7af60-664e-4d3a-bbc4-1fd32a2fb120",
+   "company_id": "d69121a2-b336-4723-b84d-ba43046da409",
+   "tier": "llm>=0.7",
+   "confidence": 0.95
+  },
+  {
+   "claim_id": "3bb6599a-e9e7-419e-840b-dcccef55b063",
+   "company_id": "2e342dae-4a04-4613-afbc-ff516ccdf271",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  },
+  {
+   "claim_id": "2443ddee-f05b-4a70-b9b5-ed8279adb4b2",
+   "company_id": "fe300662-1e70-48b2-a4f4-92da5e1f528f",
+   "tier": "llm>=0.7",
+   "confidence": 0.9
+  }
+ ]
+}
