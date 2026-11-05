@@ -133,7 +133,7 @@ def _atom_entry(entry: ET.Element, kind: str) -> dict:
                                 _text(entry.find(f"{ATOM}updated"))),
         "summary": summary,
         "feed": "",  # filled by assign_feeds
-        "kind": kind,
+        "source_format": kind,
     }
 
 
@@ -145,7 +145,7 @@ def _rss_item(item: ET.Element) -> dict:
         "published": _published(_text(item.find("pubDate"))),
         "summary": _text(item.find("description")),
         "feed": "",
-        "kind": "rss",
+        "source_format": "rss",
     }
 
 
@@ -161,8 +161,8 @@ def parse(feed_xml: str) -> list[dict]:
     if root.tag == "rss":
         return [_rss_item(i) for i in root.iter("item")]
     if root.tag == f"{ATOM}feed":
-        kind = "youtube" if root.find(f".//{YT}videoId") is not None else "atom"
-        return [_atom_entry(e, kind) for e in root.findall(f"{ATOM}entry")]
+        source_format = "youtube" if root.find(f".//{YT}videoId") is not None else "atom"
+        return [_atom_entry(e, source_format) for e in root.findall(f"{ATOM}entry")]
     raise ValueError(f"feeds: unrecognized feed root <{root.tag}> — not RSS 2.0 or Atom")
 
 
@@ -268,15 +268,17 @@ def fetch(url: str, timeout: int = 8) -> str:
 TWIN_REF = "ytfzzsxcxxbejnowmkmk"     # MI twin (proposal §6)
 PROD_REF = "oicikjyzmxqfomrrqkvf"     # The-Prod-Brain — never a feeds-fetch write target
 
-# Signal vocabulary is #270's lane-4 contract: kind ∈ {launch, market}, signal_type ∈
-# {news, partnership, layoff, paper, model_release} (proposal §3.1 minus hiring_pulse — hiring
-# is lane 1 ats_pulse; funding/exec moves are akta lane 2). The guess is a PRIOR staged for the
-# Monday classifier, never the final label.
-MARKET_SIGNALS: tuple[str, ...] = ("news", "partnership", "layoff", "paper", "model_release")
+# Signal vocabulary is #270's lane-4 contract, ADOPTED AS-IS per Alex's ruling (2026-11-05):
+# kind ∈ {launch, market}; kind=launch ⇒ signal_type=null; kind=market ⇒ signal_type REQUIRED
+# ∈ {news, partnership, layoff, paper, model_release} (proposal §3.1 minus hiring_pulse — hiring
+# is lane 1 ats_pulse; funding/exec moves are akta lane 2). #270's EVENT_CANDIDATE_FLOOR=0.6
+# (also adopted, with a review period) gates the classifier's relevance on its side — the
+# fetcher stages no relevance, so every staged row is a candidate for classification. The
+# staged kind + signal_type_guess are a PRIOR for the Monday classifier, never the final label.
 
 # Fixed-priority rules over MARKET_SIGNALS, first match wins, default "news". Launch-flavored
-# items (product/GA announcements) guess None — kind=launch implies signal_type=null in the
-# #270 matrix. The Action runs no model, so scraped text cannot steer this table.
+# items (product/GA announcements) have no market signal — kind=launch, signal_type=null in
+# the adopted matrix. The Action runs no model, so scraped text cannot steer this table.
 SIGNAL_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("layoff", ("layoff", "layoffs", "downsizing", "workforce reduction", "restructuring")),
     ("partnership", ("partnership", "partners with", "partner with", "collaboration",
@@ -290,17 +292,23 @@ LAUNCH_PHRASES: tuple[str, ...] = ("launch", "launches", "launching", "announcin
                                    "out of beta", "release", "releases", "shipping", "ships")
 
 
-def signal_type_guess(item: dict) -> str | None:
-    """Deterministic coarse guess from title+summary text: a MARKET_SIGNALS value, or None for
-    launch-flavored items. Keyword rules only — the Action runs no model, so scraped text
-    cannot steer it."""
+def classify(item: dict) -> tuple[str, str | None]:
+    """Deterministic kind + signal_type guess from title+summary text, enforcing the adopted
+    #270 matrix in ONE place: kind="launch" iff the guess is None; kind="market" always
+    carries a MARKET_SIGNALS guess (default "news"). Keyword rules only — the Action runs no
+    model, so scraped text cannot steer it."""
     text = f"{item.get('title', '')} {item.get('summary', '')}".lower()
     for signal, words in SIGNAL_RULES:
         if any(w in text for w in words):
-            return signal
+            return "market", signal
     if any(w in text for w in LAUNCH_PHRASES):
-        return None                    # launch candidate: kind=launch, signal_type=null (#270)
-    return "news"
+        return "launch", None          # adopted matrix: kind=launch ⇒ signal_type=null
+    return "market", "news"
+
+
+def signal_type_guess(item: dict) -> str | None:
+    """The guess half of classify() — kept as a named entry point for the selftests."""
+    return classify(item)[1]
 
 
 def _spine():
@@ -377,6 +385,7 @@ def to_row(item: dict, fetched_at: str) -> dict:
     red = redact(item)
     url = red.get("url", "")
     summary = red.get("summary", "")
+    kind, guess = classify(red)        # adopted #270 matrix: kind ∈ {launch, market}
     return {
         "source_key": item_key(red),
         "company": red.get("company", ""),
@@ -385,10 +394,11 @@ def to_row(item: dict, fetched_at: str) -> dict:
         "title": red.get("title", ""),
         "published": red.get("published"),
         "summary": _redact_body(summary),
-        "kind": red.get("kind", ""),
-        "signal_type_guess": signal_type_guess(red),
+        "kind": kind,
+        "signal_type_guess": guess,
         "fetched_at": fetched_at,
-        "metadata": {"canonical_url": canonical_url(url) if url else ""},
+        "metadata": {"canonical_url": canonical_url(url) if url else "",
+                     "source_format": red.get("source_format", "")},
     }
 
 
@@ -584,7 +594,7 @@ def selftest() -> int:
     check("parse: rss RFC-822 date -> ISO UTC",
           items[0]["published"] == "2026-10-29T10:00:00Z")
     check("parse: rss missing pubDate -> None", items[1]["published"] is None)
-    check("parse: rss kind", all(i["kind"] == "rss" for i in items))
+    check("parse: rss source_format", all(i["source_format"] == "rss" for i in items))
 
     # --- parse: Atom
     atom = """<feed xmlns="http://www.w3.org/2005/Atom">
@@ -614,8 +624,8 @@ def selftest() -> int:
         <media:description>Walkthrough of the pipeline</media:description></entry>
     </feed>"""
     yt_items = parse(yt)
-    check("parse: youtube kind + media:description",
-          len(yt_items) == 1 and yt_items[0]["kind"] == "youtube"
+    check("parse: youtube source_format + media:description",
+          len(yt_items) == 1 and yt_items[0]["source_format"] == "youtube"
           and yt_items[0]["summary"] == "Walkthrough of the pipeline")
 
     # --- parse: malformed
@@ -678,6 +688,10 @@ def selftest() -> int:
           == "partnership")
     check("classify: launch-flavored item guesses None (kind=launch, signal_type=null, #270)",
           signal_type_guess({"title": "Introducing Atlas 2.0", "summary": ""}) is None)
+    check("classify: adopted matrix — market items carry a signal, launch items None",
+          classify({"title": "Acme announces a partnership with Benco", "summary": ""})
+          == ("market", "partnership")
+          and classify({"title": "Introducing Atlas 2.0", "summary": ""}) == ("launch", None))
     check("classify: default is news",
           signal_type_guess({"title": "Q3 notes from the field", "summary": ""}) == "news")
     check("classify: scraped instruction text cannot change the rule table",
@@ -728,6 +742,8 @@ def selftest() -> int:
           and r["metadata"]["canonical_url"] == "https://ex.com/p1")
     check("stage_rows: launch-flavored guess staged as None",
           r["signal_type_guess"] is None and r["fetched_at"] == "2026-11-04T00:00:00Z")
+    check("stage_rows: kind uses the adopted #270 matrix vocabulary",
+          r["kind"] == "launch" and r["metadata"]["source_format"] == "rss")
 
     bad_row = dict(r)
     bad_row["title"] = "Ping press@acme.example"
@@ -749,8 +765,8 @@ def selftest() -> int:
     check("twin guard: unknown ref refused", _exit_code("oicikjyzmxqfomrrqkzz") == 1)
     check("twin guard: twin ref passes", _exit_code(TWIN_REF) == 0)
 
-    print(f"selftest: {ok}/46 passed")
-    return 0 if ok == 46 else 1
+    print(f"selftest: {ok}/48 passed")
+    return 0 if ok == 48 else 1
 
 
 def main(argv: list[str]) -> int:

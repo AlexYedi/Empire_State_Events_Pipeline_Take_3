@@ -15,11 +15,12 @@
       "title": "Introducing Atlas 2.0",
       "published": "2026-11-02T14:00:00Z",
       "summary": "Atlas 2.0 is now available in general availability.",
-      "kind": "rss",
+      "kind": "launch",
       "signal_type_guess": null,
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
-        "canonical_url": "https://veris.example/blog/atlas-2"
+        "canonical_url": "https://veris.example/blog/atlas-2",
+        "source_format": "rss"
       }
     },
     {
@@ -30,11 +31,12 @@
       "title": "Q3 field notes",
       "published": "2026-10-27T09:00:00Z",
       "summary": "What we learned releasing for enterprise GTM teams.",
-      "kind": "rss",
+      "kind": "market",
       "signal_type_guess": "news",
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
-        "canonical_url": "https://veris.example/blog/q3"
+        "canonical_url": "https://veris.example/blog/q3",
+        "source_format": "rss"
       }
     },
     {
@@ -45,11 +47,12 @@
       "title": "Northbeam raises Series B",
       "published": "2026-11-03T10:00:00Z",
       "summary": "We raised a Series B to scale agentic retrieval. Questions: [redacted]",
-      "kind": "atom",
+      "kind": "market",
       "signal_type_guess": "news",
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
-        "canonical_url": "https://northbeam.example/news/series-b"
+        "canonical_url": "https://northbeam.example/news/series-b",
+        "source_format": "atom"
       }
     },
     {
@@ -60,11 +63,12 @@
       "title": "Harbor Systems launches Harbor Agents",
       "published": "2026-11-01T12:00:00Z",
       "summary": "Walkthrough of the new agent runtime.",
-      "kind": "atom",
+      "kind": "launch",
       "signal_type_guess": null,
       "fetched_at": "2026-11-04T05:00:00Z",
       "metadata": {
-        "canonical_url": "https://youtube.example/watch?v=abc123"
+        "canonical_url": "https://youtube.example/watch?v=abc123",
+        "source_format": "youtube"
       }
     }
   ]

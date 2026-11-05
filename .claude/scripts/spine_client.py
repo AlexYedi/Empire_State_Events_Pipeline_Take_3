@@ -23,7 +23,7 @@ the refusal still raises. Off switch: SPINE_TELEMETRY=off, or spine_client.telem
 
 Usage from scripts:      from spine_client import req, write, q, PIIViolation
 CLI (see spine_write.py) python3 .claude/scripts/spine_write.py <table> --json '{...}'
-Self-test:               python3 .claude/scripts/spine_client.py --selftest   (51 cases)
+Self-test:               python3 .claude/scripts/spine_client.py --selftest   (123 cases)
 Repo check (AC2):        python3 .claude/scripts/spine_client.py --check-writers
 
 Conventions preserved from the six writers this replaced: (status, parsed_json) return shape;
