@@ -150,15 +150,17 @@ def verify(conn):
     return rows
 
 
-BEHAVIOURAL_OK = """-- fixture-shaped insert (feeds.py to_row shape); launch-flavored item
+BEHAVIOURAL_OK = """-- fixture-shaped insert (feeds.py to_row shape, #272 commit 4820063); launch-flavored item
+-- kind is the classified launch/market pair per the adopted #270 matrix; the feed FORMAT lives in
+-- metadata.source_format. kind=launch ⇒ signal_type_guess NULL (matrix-enforced).
 begin;
 insert into public.feed_items (source_key, company, feed_url, url, title, published,
                               summary, kind, signal_type_guess, fetched_at, metadata)
 values ('{key}', 'Veris AI', 'https://veris.example/blog/feed.xml',
         'https://veris.example/blog/atlas-2?utm_source=rss', 'Introducing Atlas 2.0',
         '2026-11-02T14:00:00Z', 'Atlas 2.0 is now available in general availability.',
-        'rss', null, '2026-11-04T05:00:00Z',
-        '{{"canonical_url": "{url}"}}'::jsonb);
+        'launch', null, '2026-11-04T05:00:00Z',
+        '{{"canonical_url": "{url}", "source_format": "rss"}}'::jsonb);
 select 'behav_insert_ok', (select count(*) = 1 from public.feed_items where source_key = '{key}');
 select 'behav_launch_null_guess_ok', (select signal_type_guess is null from public.feed_items where source_key = '{key}');
 -- weekly-rerun idempotency: upsert on the source_key (feeds.py on_conflict=source_key)
@@ -167,16 +169,17 @@ insert into public.feed_items (source_key, company, feed_url, url, title, publis
 values ('{key}', 'Veris AI', 'https://veris.example/blog/feed.xml',
         'https://veris.example/blog/atlas-2?utm_source=rss', 'Introducing Atlas 2.1',
         '2026-11-02T14:00:00Z', 'Atlas 2.0 is now available in general availability.',
-        'rss', null, '2026-11-04T05:00:00Z',
-        '{{"canonical_url": "{url}"}}'::jsonb)
+        'launch', null, '2026-11-04T05:00:00Z',
+        '{{"canonical_url": "{url}", "source_format": "rss"}}'::jsonb)
 on conflict (source_key) do update set title = excluded.title, fetched_at = excluded.fetched_at;
 select 'behav_upsert_ok', (select count(*) = 1 and bool_and(title = 'Introducing Atlas 2.1') from public.feed_items where source_key = '{key}');
--- market-flavored item: a five-signal guess is accepted
+-- market-flavored item: kind=market requires a five-signal guess (mapping constraint)
 insert into public.feed_items (source_key, company, feed_url, url, title, summary,
-                              kind, signal_type_guess, fetched_at)
+                              kind, signal_type_guess, fetched_at, metadata)
 values ('{key2}', 'Veris AI', 'https://veris.example/blog/feed.xml',
         'https://veris.example/blog/q3', 'Q3 field notes', 'Partnership announcement.',
-        'atom', 'partnership', '2026-11-04T05:00:00Z');
+        'market', 'partnership', '2026-11-04T05:00:00Z',
+        '{{"source_format": "atom"}}'::jsonb);
 select 'behav_market_guess_ok', (select signal_type_guess = 'partnership' from public.feed_items where source_key = '{key2}');
 rollback;
 """.format(key=FIXTURE_KEY, key2=hashlib.sha256(b"https://veris.example/blog/q3").hexdigest(),
@@ -277,13 +280,13 @@ def main():
 
     dup = ("insert into public.feed_items (source_key, company, feed_url, url, title, summary, kind, fetched_at) "
            f"values ('{FIXTURE_KEY}', 'Veris AI', 'https://veris.example/blog/feed.xml', "
-           "'https://veris.example/blog/x', 't', 's', 'rss', now()); "
+           "'https://veris.example/blog/x', 't', 's', 'launch', now()); "
            "insert into public.feed_items (source_key, company, feed_url, url, title, summary, kind, fetched_at) "
            f"values ('{FIXTURE_KEY}', 'Veris AI', 'https://veris.example/blog/feed.xml', "
-           "'https://veris.example/blog/y', 't', 's', 'rss', now());")
+           "'https://veris.example/blog/y', 't', 's', 'launch', now());")
     expect_fail(conn, "duplicate source_key", dup, "feed_items_source_key_key")
 
-    def ins(kind="rss", guess=None, key="0" * 64):
+    def ins(kind="launch", guess=None, key="0" * 64):
         g = f"'{guess}'" if guess else "null"
         return ("insert into public.feed_items (source_key, company, feed_url, url, title, summary, "
                 "kind, signal_type_guess, fetched_at) values ('" + key + "', 'Veris AI', "
@@ -291,8 +294,15 @@ def main():
                 "'" + kind + "', " + g + ", now());")
 
     expect_fail(conn, "kind='blog'", ins(kind="blog"), "feed_items_kind_check")
-    expect_fail(conn, "signal_type_guess='funding' (out of lane)", ins(guess="funding"),
+    expect_fail(conn, "kind='rss' (feed format is NOT kind — regression guard for the 4820063 blocker)",
+                ins(kind="rss"), "feed_items_kind_check")
+    expect_fail(conn, "signal_type_guess='funding' (out of lane)",
+                ins(kind="market", guess="funding"),
                 "feed_items_signal_type_guess_check")
+    expect_fail(conn, "kind='market' with NULL guess (mapping requires a signal)",
+                ins(kind="market"), "feed_items_signal_mapping_check")
+    expect_fail(conn, "kind='launch' with a guess (mapping requires NULL)",
+                ins(kind="launch", guess="news"), "feed_items_signal_mapping_check")
     expect_fail(conn, "63-hex source_key", ins(key="a" * 63), "feed_items_source_key_check")
     expect_fail(conn, "anon INSERT (no grant, RLS)", "set role anon; " + ins(), "permission denied")
 

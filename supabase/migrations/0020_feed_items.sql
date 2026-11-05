@@ -22,9 +22,13 @@
 --                       quarantines failures by sha256 key. The DB adds no second PII
 --                       dialect (one-dialect rule, check_pii_regex_parity).
 --   published           item publish time (ISO-8601 from the feed), nullable.
---   kind                FEED FORMAT the item was parsed from: rss | atom | youtube
---                       (feeds.py parse). NOT event.kind — classified launch/market
---                       events are separate `event` rows (0009 event_kind_enum).
+--   kind                the staged item's kind per the ADOPTED #270 matrix (Alex,
+--                       2026-11-05, adopted as-is): launch | market — feeds.py classify()
+--                       (commit 4820063). launch-flavored items (product/GA announcements)
+--                       stage kind=launch with a NULL signal_type_guess; market items stage
+--                       kind=market with a required signal_type_guess. The feed FORMAT
+--                       (rss/atom/youtube) is NOT kind — it lives in metadata.source_format.
+--                       Classified launch/market *events* are separate `event` rows (0009).
 --   signal_type_guess   feeds.py's deterministic keyword guess — one of the five market
 --                       signals, or NULL for launch-flavored items, per the ADOPTED
 --                       mapping (Alex, 2026-11-05): kind=launch ⇒ signal_type null;
@@ -32,7 +36,8 @@
 --                       the schema-validated classifier (#270, EVENT_CANDIDATE_FLOOR
 --                       = 0.6) stays authoritative in the Monday session.
 --   fetched_at          when the Action fetched the batch.
---   metadata            jsonb, free-form provenance ({canonical_url} today).
+--   metadata            jsonb, free-form provenance ({canonical_url, source_format} today —
+--                       source_format is the feed format the item was parsed from).
 --
 -- NOTHING SEEDED. The table ships empty; the first fetch run stages the first rows.
 --
@@ -71,11 +76,14 @@ create table if not exists public.feed_items (
   published         timestamptz,
   summary           text not null default '',
   kind              text not null
-                      check (kind in ('rss', 'atom', 'youtube')),
+                      check (kind in ('launch', 'market')),
   signal_type_guess text
                       check (signal_type_guess is null or
                              signal_type_guess in
                              ('news', 'partnership', 'layoff', 'paper', 'model_release')),
+                      constraint feed_items_signal_mapping_check
+                      check ((kind = 'launch' and signal_type_guess is null) or
+                             (kind = 'market' and signal_type_guess is not null)),
   fetched_at        timestamptz not null,
   metadata          jsonb not null default '{}'::jsonb,
   created_at        timestamptz not null default now()
@@ -119,8 +127,9 @@ commit;
 -- select 'feed_items_column_order', (select string_agg(column_name, ',' order by ordinal_position) = 'item_id,source_key,company,feed_url,url,title,published,summary,kind,signal_type_guess,fetched_at,metadata,created_at' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items');
 -- select 'feed_items_source_key_64hex', exists (select 1 from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%source_key %^[0-9a-f]{64}$%');
 -- select 'feed_items_source_key_unique', exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'feed_items' and indexdef ~* 'unique.*source_key');
--- select 'feed_items_kind_vocab', (select pg_get_constraintdef(oid) ~ 'rss' and pg_get_constraintdef(oid) ~ 'atom' and pg_get_constraintdef(oid) ~ 'youtube' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and pg_get_constraintdef(oid) ~ 'kind');
--- select 'feed_items_guess_vocab', (select pg_get_constraintdef(oid) ~ 'news' and pg_get_constraintdef(oid) ~ 'partnership' and pg_get_constraintdef(oid) ~ 'layoff' and pg_get_constraintdef(oid) ~ 'paper' and pg_get_constraintdef(oid) ~ 'model_release' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and pg_get_constraintdef(oid) ~ 'signal_type_guess');
+-- select 'feed_items_kind_vocab', (select pg_get_constraintdef(oid) ~ 'launch' and pg_get_constraintdef(oid) ~ 'market' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_kind_check');
+-- select 'feed_items_signal_vocab', (select pg_get_constraintdef(oid) ~ 'news' and pg_get_constraintdef(oid) ~ 'partnership' and pg_get_constraintdef(oid) ~ 'layoff' and pg_get_constraintdef(oid) ~ 'paper' and pg_get_constraintdef(oid) ~ 'model_release' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_type_guess_check');
+-- select 'feed_items_signal_mapping', exists (select 1 from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_mapping_check');
 -- select 'feed_items_guess_nullable_launch_null', (select is_nullable = 'YES' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items' and column_name = 'signal_type_guess');
 -- select 'feed_items_rls_on', (select relrowsecurity from pg_class where oid = 'public.feed_items'::regclass);
 -- select 'feed_items_no_policies', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'feed_items');
