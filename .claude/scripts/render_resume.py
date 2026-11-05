@@ -84,13 +84,48 @@ def resolve_output_path(out: str) -> str:
 
 # ---- resume-input schema: validate, refuse unknown keys, never guess -----------------------
 RESUME_INPUT_KEYS = {"name", "positioning", "contact", "roles", "key_accounts",
-                     "proof_links", "education"}
-ROLE_KEYS = {"title", "company", "dates", "bullets"}
+                     "proof_links", "builds", "education"}
+# Always required. key_accounts and proof_links are each required unless their per-role /
+# builds[] replacement is used instead (YED-280) — see validate_resume_input.
+REQUIRED_KEYS = {"name", "positioning", "roles"}
+ROLE_KEYS = {"title", "company", "dates", "bullets", "key_accounts"}
 BULLET_KEYS = {"text", "source", "original"}
+BUILD_KEYS = {"description", "links"}
+# One line under Selected builds (YED-280). Over the cap is REFUSED, never truncated: an
+# auto-ellipsis could cut a fact mid-figure ("grew 12…" of "grew 120%"), which rule 5
+# forbids. The skill writes the line to fit; the renderer never adds or removes a word.
+BUILD_DESCRIPTION_MAX = 70
 
 
 def _nonempty_str(v) -> bool:
     return isinstance(v, str) and v.strip() != ""
+
+
+def _nonempty_str_list(v) -> bool:
+    return isinstance(v, list) and bool(v) and all(_nonempty_str(x) for x in v)
+
+
+def uses_per_role_accounts(me: dict) -> bool:
+    """Per-role mode (YED-280): any role carries its own key_accounts. The top-level
+    Key accounts line is then suppressed — the schema refuses mixing the two, so nothing
+    the skill wrote is ever dropped silently."""
+    return any(isinstance(r, dict) and "key_accounts" in r for r in me.get("roles") or [])
+
+
+def all_key_accounts(me: dict) -> list:
+    """Every client name the input declares — the rule-2 denylist for prose."""
+    accounts = list(me.get("key_accounts") or [])
+    for r in me.get("roles") or []:
+        if isinstance(r, dict):
+            accounts += r.get("key_accounts") or []
+    return accounts
+
+
+def proof_links(me: dict) -> list:
+    """Every proof link, from builds[] when present, else the legacy proof_links[]."""
+    if "builds" in me:
+        return [u for b in me["builds"] for u in b["links"]]
+    return me["proof_links"]
 
 
 def validate_resume_input(data, where: str = "resume-input") -> list:
@@ -105,6 +140,14 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                                      required whenever the skill reworded the bullet for a
                                      posting (spec-walk decision 2, 2026-10-31)
       key_accounts[], proof_links[]  non-empty arrays of non-empty strings
+      roles[].key_accounts[]         OPTIONAL per-role logo line (YED-280). When any role
+                                     carries one, the top-level key_accounts must be absent
+                                     (its line is suppressed; mixing would drop data).
+      builds[]                       OPTIONAL replacement for proof_links (YED-280):
+                                     {links[], description?} — description is one line,
+                                     ≤ BUILD_DESCRIPTION_MAX chars, refused (never
+                                     truncated) when longer. Exactly one of proof_links /
+                                     builds.
       contact[], education[]         OPTIONAL arrays of non-empty strings (minimal-template
                                      follow-up, PR #247 comment 6551704109): the header
                                      contact line and the one-line Education section
@@ -117,9 +160,41 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
     unknown = sorted(set(data) - RESUME_INPUT_KEYS)
     if unknown:
         errors.append(f"{where}: unknown key(s) {unknown} — allowed: {sorted(RESUME_INPUT_KEYS)}")
-    missing = sorted(RESUME_INPUT_KEYS - set(data))
+    missing = sorted(REQUIRED_KEYS - set(data))
     if missing:
         errors.append(f"{where}: missing key(s) {missing}")
+    per_role = uses_per_role_accounts(data)
+    if per_role and "key_accounts" in data:
+        errors.append(f"{where}: key_accounts given both top-level and per role — use one: "
+                      "per-role lines suppress the top-level line, so it would be dropped")
+    if not per_role and "key_accounts" not in data:
+        errors.append(f"{where}: missing key(s) ['key_accounts'] (top-level, or per role "
+                      "as roles[].key_accounts)")
+    if ("proof_links" in data) == ("builds" in data):
+        errors.append(f"{where}: exactly one of proof_links / builds required "
+                      f"(got {'both' if 'builds' in data else 'neither'})")
+    builds = data.get("builds")
+    if "builds" in data and (not isinstance(builds, list) or not builds):
+        errors.append(f"{where}.builds: non-empty array required when present")
+    elif isinstance(builds, list):
+        for k, build in enumerate(builds):
+            bw = f"{where}.builds[{k}]"
+            if not isinstance(build, dict):
+                errors.append(f"{bw}: expected an object with links[] and an optional description")
+                continue
+            unknown = sorted(set(build) - BUILD_KEYS)
+            if unknown:
+                errors.append(f"{bw}: unknown key(s) {unknown} — allowed: {sorted(BUILD_KEYS)}")
+            if not _nonempty_str_list(build.get("links")):
+                errors.append(f"{bw}.links: non-empty array of non-empty strings required")
+            if "description" in build:
+                desc = build["description"]
+                if not _nonempty_str(desc) or "\n" in desc:
+                    errors.append(f"{bw}.description: one non-empty line required when present")
+                elif len(desc) > BUILD_DESCRIPTION_MAX:
+                    errors.append(f"{bw}.description: {len(desc)} chars, over the "
+                                  f"{BUILD_DESCRIPTION_MAX}-char one-line cap — shorten it "
+                                  "(the renderer never truncates)")
     for key in ("name", "positioning"):
         if key in data and not _nonempty_str(data[key]):
             errors.append(f"{where}.{key}: non-empty string required")
@@ -140,6 +215,9 @@ def validate_resume_input(data, where: str = "resume-input") -> list:
                     errors.append(f"{rw}.{key}: string required")
             if not _nonempty_str(role.get("title", "")):
                 errors.append(f"{rw}.title: non-empty string required")
+            if "key_accounts" in role and not _nonempty_str_list(role["key_accounts"]):
+                errors.append(f"{rw}.key_accounts: optional, but when present it must be a "
+                              "non-empty array of non-empty strings")
             bullets = role.get("bullets")
             if not isinstance(bullets, list) or not bullets:
                 errors.append(f"{rw}.bullets: non-empty array required")
@@ -193,6 +271,30 @@ SECTION_LABELS = {"experience": "Experience", "key-accounts": "Key accounts",
                   "selected-builds": "Selected builds", "education": "Education"}
 
 
+def _role_accounts_html(r: dict) -> str:
+    if not r.get("key_accounts"):
+        return ""
+    return ('\n    <p class="role-accounts"><span class="role-accounts-label">Key accounts:'
+            f'</span> {", ".join(r["key_accounts"])}</p>')
+
+
+def _build_items(me: dict) -> list:
+    """Selected-builds <li>s. Legacy proof_links and description-less builds render one
+    link per <li>, exactly as before; a described build is one <li>: description, then
+    its links."""
+    if "builds" not in me:
+        return [f'<li><a href="{u}">{u}</a></li>' for u in me["proof_links"]]
+    items = []
+    for b in me["builds"]:
+        anchors = [f'<a href="{u}">{u}</a>' for u in b["links"]]
+        if b.get("description"):
+            items.append(f'<li><span class="build-desc">{b["description"]}</span> — '
+                         + " · ".join(anchors) + "</li>")
+        else:
+            items += [f"<li>{a}</li>" for a in anchors]
+    return items
+
+
 def build_resume_html(me: dict, mode: str = "general") -> str:
     roles_html = "\n".join(
         f'    <div class="role-head">\n'
@@ -202,8 +304,17 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
         f'    <p class="role-company">{r["company"]}</p>\n'
         f'    <ul class="bullets">\n'
         + "\n".join(f"      <li>{b['text']}</li>" for b in r["bullets"]) + "\n    </ul>"
+        + _role_accounts_html(r)
         for r in me["roles"])
-    links_html = "\n".join(f'      <li><a href="{u}">{u}</a></li>' for u in me["proof_links"])
+    links_html = "\n".join(f"      {li}" for li in _build_items(me))
+    # Top-level logo line only in legacy mode; per-role mode suppresses it (YED-280).
+    key_accounts_html = ""
+    if me.get("key_accounts"):
+        key_accounts_html = (
+            '  <section class="key-accounts">\n'
+            '    <h2 class="section-label">Key accounts</h2>\n'
+            f'    <p class="logo-line">{", ".join(me["key_accounts"])}</p>\n'
+            '  </section>')
     contact_html = ""
     if me.get("contact"):
         contact_html = f'\n  <p class="contact">{" · ".join(me["contact"])}</p>'
@@ -239,6 +350,8 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
   ul {{ margin: 1pt 0 3pt; padding-left: 12pt; }}
   li {{ margin: 0 0 1.5pt; }}
   p.logo-line, p.education-line {{ margin: 0; }}
+  p.role-accounts {{ font-size: 9pt; color: #3c4049; margin: 0 0 3pt; }}
+  span.role-accounts-label {{ font-weight: 600; }}
 </style>
 </head>
 <body>
@@ -250,10 +363,7 @@ def build_resume_html(me: dict, mode: str = "general") -> str:
     <h2 class="section-label">Experience</h2>
 {roles_html}
   </section>
-  <section class="key-accounts">
-    <h2 class="section-label">Key accounts</h2>
-    <p class="logo-line">{', '.join(me['key_accounts'])}</p>
-  </section>
+{key_accounts_html}
   <section id="selected-builds">
     <h2 class="section-label">Selected builds</h2>
     <ul>
@@ -278,8 +388,12 @@ def check_content_rules(html: str, json_text: str = "") -> list:
         low = bullet.lower()
         if ("hunting" in low or "new logos" in low) and "account growth" not in low:
             fails.append("rule 1: hunting win framed without 'proof of account growth'")
-    # Rule 2 — client names only as the one Key accounts line (addition 2).
-    if html.count('class="key-accounts"') != 1:
+    # Rule 2 — client names only as Key accounts logo lines (addition 2): the one top-level
+    # line, OR per-role lines under their roles (YED-280) — never both.
+    role_lines = html.count('class="role-accounts"')
+    if role_lines and 'class="key-accounts"' in html:
+        fails.append("rule 2: per-role Key accounts lines and a top-level line both rendered")
+    elif not role_lines and html.count('class="key-accounts"') != 1:
         fails.append("rule 2: exactly one Key accounts line expected")
     ka = html.find('class="key-accounts"')
     exp = html.find('id="experience"')
@@ -294,8 +408,14 @@ def check_content_rules(html: str, json_text: str = "") -> list:
             data = json.loads(json_text)
         except json.JSONDecodeError:
             data = {}
-        accounts = data.get("key_accounts", [])
-        bullets = re.findall(r"<li>(.*?)</li>", html, re.S)
+        accounts = all_key_accounts(data) if isinstance(data, dict) else []
+        bullets = re.findall(r"<li>(.*?)</li>", html, re.S)  # incl. build descriptions
+        # Everything else a reader sees, minus the logo lines themselves and the employer
+        # field (YED-280: positioning, titles, headers — not only bullets — are prose).
+        prose = re.sub(r"<head>.*?</head>|<li>.*?</li>"
+                       r'|<p class="(?:logo-line|role-accounts|role-company)">.*?</p>',
+                       " ", html, flags=re.S)
+        prose = re.sub(r"<[^>]+>", " ", prose).lower()
         for account in accounts:
             variants = {account.lower()}
             stripped = re.sub(r"\s*\([^)]*\)", "", account).strip().lower()
@@ -306,6 +426,9 @@ def check_content_rules(html: str, json_text: str = "") -> list:
                     if variant in bullet.lower():
                         fails.append(f"rule 2: client name {account!r} appears in bullet copy — "
                                      "outcomes are described unnamed")
+            if any(v in prose for v in variants):
+                fails.append(f"rule 2: client name {account!r} appears outside a Key accounts "
+                             "line — outcomes are described unnamed")
             # Decision 2 (spec walk 2026-10-31): the verbatim `original` of a reworded
             # bullet never names clients either — rule 2 covers BOTH texts.
             for i, role in enumerate(data.get("roles", [])):
@@ -338,16 +461,32 @@ def check_reading_order(html: str, me: dict | None = None) -> list:
     """Name → positioning → roles → Key accounts → Selected builds → Education, in DOM order
     (PR-A exit d; extended to the minimal-template sections). Education is conditional on
     the resume-input — pass `me` to have its absence flagged; without `me`, an education
-    section present in the HTML is still checked for position."""
+    section present in the HTML is still checked for position. With `me`, each role title
+    is checked in order and a per-role Key accounts line (YED-280) must sit after its own
+    role's title and before the next role's."""
     marks = [('class="resume-name"', "name"), ('class="positioning"', "positioning"),
-             ('id="experience"', "roles"), ('class="key-accounts"', "Key accounts"),
-             ('id="selected-builds"', "Selected builds")]
+             ('id="experience"', "roles")]
+    per_role = me is not None and uses_per_role_accounts(me)
+    if me is not None:
+        for r in me["roles"]:
+            marks.append((f'<h3 class="role-title">{r["title"]}</h3>', f"role {r['title']!r}"))
+            if r.get("key_accounts"):  # this role's own list, not just any accounts line
+                marks.append(('class="role-accounts"', f"Key accounts under {r['title']!r}"))
+                marks.append((f'</span> {", ".join(r["key_accounts"])}</p>',
+                              f"Key accounts under {r['title']!r}"))
+    if not per_role:
+        marks.append(('class="key-accounts"', "Key accounts"))
+    marks.append(('id="selected-builds"', "Selected builds"))
     if me is not None and me.get("education"):
         marks.append(('id="education"', "Education"))
-    positions = [html.find(m) for m, _ in marks]
-    if any(p == -1 for p in positions) or positions != sorted(positions):
-        return ["reading order broken: expected name → positioning → roles → Key accounts "
-                "→ Selected builds (→ Education when present)"]
+    cursor = 0
+    for m, label in marks:  # monotonic: each marker after the previous one
+        found = html.find(m, cursor)
+        if found == -1:
+            return ["reading order broken: expected name → positioning → roles (each with "
+                    "its Key accounts line when per-role) → Key accounts → Selected builds "
+                    f"(→ Education when present) — {label} out of place"]
+        cursor = found + len(m)
     return []
 
 
@@ -522,8 +661,15 @@ def pdf_reading_order_errors(pdf_text: str, me: dict) -> list:
     matching on raw text would false-fail a perfectly ordered PDF.
     """
     flat = _squash(pdf_text)
-    marks = [me["name"], me["positioning"]] \
-        + [r["title"] for r in me["roles"]] + ["Key accounts", "Selected builds"]
+    marks = [me["name"], me["positioning"]]
+    for r in me["roles"]:
+        marks.append(r["title"])
+        if r.get("key_accounts"):  # per-role line, under its own role (YED-280)
+            marks.append("Key accounts: " + ", ".join(r["key_accounts"]))
+    if me.get("key_accounts"):
+        marks.append("Key accounts")
+    marks.append("Selected builds")
+    marks += [b["description"] for b in me.get("builds", []) if b.get("description")]
     if me.get("education"):
         marks.append(" ".join(me["education"]))  # the one-line Education section content
     # Monotonic search: each marker must appear AFTER the previous marker's position.
@@ -571,8 +717,9 @@ def verify_pdf(pdf_path: str, me: dict) -> list:
             errors.append(f"pdftotext failed: {proc.stderr.strip()[:200]}")
         else:
             errors += pdf_reading_order_errors(proc.stdout, me)
-            labels = [SECTION_LABELS["experience"], SECTION_LABELS["key-accounts"],
-                      SECTION_LABELS["selected-builds"]]
+            labels = [SECTION_LABELS["experience"], SECTION_LABELS["selected-builds"]]
+            if me.get("key_accounts"):  # the top-level section exists only in legacy mode
+                labels.insert(1, SECTION_LABELS["key-accounts"])
             if me.get("education"):
                 labels.append(SECTION_LABELS["education"])
             errors += section_label_extraction_errors(proc.stdout,
@@ -797,11 +944,174 @@ def selftest() -> int:
     case("both modes render without Chrome",
          all(build_resume_html(me, m) for m in ("general", "posting-tailored")))
 
+    # ---- YED-280: per-role key accounts + build description line. These test the SPEC
+    # through the visible text (tags stripped — the pdftotext stand-in), not the markup.
+    def load_fx(name):
+        with open(os.path.join(os.path.dirname(FIXTURE), name), encoding="utf-8") as fh:
+            text = fh.read()
+        return json.loads(text), text
+
+    def visible(h):
+        h = re.sub(r"<head>.*?</head>", " ", h, flags=re.S)
+        return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h)).replace(" ,", ",")
+
+    def in_order(text, seq):
+        cursor = 0
+        for s in seq:
+            found = text.find(s, cursor)
+            if found == -1:
+                return False
+            cursor = found + len(s)
+        return True
+
+    pr, pr_text = load_fx("resume-input-fixture-per-role.json")
+    pr_html = build_resume_html(pr)
+    case("per-role fixture validates and passes every locked rule and template guard",
+         schema_errors(pr) == [] and check_content_rules(pr_html, pr_text) == []
+         and check_reading_order(pr_html, pr) == [] and list_structure_errors(pr_html) == []
+         and palette_errors(pr_html) == [] and letter_spacing_errors(pr_html) == [])
+
+    # Spec 1 — per-role accounts render under the right role, in reading order.
+    own_order = []
+    for r in pr["roles"]:
+        own_order += [r["title"], "Key accounts: " + ", ".join(r["key_accounts"])]
+    case("each role's Key accounts line renders under that role, before the next role",
+         in_order(visible(pr_html), own_order + ["Selected builds"]))
+    # Every "Key accounts" on the page is a per-role line: no top-level label or logo line.
+    case("per-role mode suppresses the top-level Key accounts line",
+         visible(pr_html).count("Key accounts") == len(pr["roles"])
+         == visible(pr_html).count("Key accounts:"))
+    swapped = json.loads(pr_text)
+    swapped["roles"][0]["key_accounts"], swapped["roles"][1]["key_accounts"] = \
+        swapped["roles"][1]["key_accounts"], swapped["roles"][0]["key_accounts"]
+    swapped_html = build_resume_html(swapped)
+    case("reading-order gate (HTML) fails accounts rendered under the wrong role",
+         check_reading_order(swapped_html, pr) != [])
+    case("reading-order gate (PDF text) fails accounts rendered under the wrong role",
+         pdf_reading_order_errors(visible(pr_html), pr) == []
+         and pdf_reading_order_errors(visible(swapped_html), pr) != [])
+    case("schema refuses top-level and per-role key_accounts together",
+         any("both top-level and per role" in e
+             for e in schema_errors({**pr, "key_accounts": ["Quillmark Freight (fictional)"]})))
+    no_accounts = json.loads(pr_text)
+    for r in no_accounts["roles"]:
+        del r["key_accounts"]
+    case("schema refuses an input with no key accounts anywhere",
+         any("key_accounts" in e for e in schema_errors(no_accounts)))
+    empty_role_accounts = json.loads(pr_text)
+    empty_role_accounts["roles"][0]["key_accounts"] = []
+    case("schema refuses an empty per-role key_accounts list",
+         any("roles[0].key_accounts" in e for e in schema_errors(empty_role_accounts)))
+
+    # Spec 2 — no client name appears anywhere outside a Key accounts line.
+    def names_outside_logo_lines(h, data):
+        h = re.sub(r'<p class="(?:logo-line|role-accounts)">.*?</p>', " ", h, flags=re.S)
+        text = visible(h).lower()
+        return [a for a in all_key_accounts(data)
+                if a.lower() in text or re.sub(r"\s*\([^)]*\)", "", a).strip().lower() in text]
+    case("per-role fixture names no client outside its Key accounts lines",
+         names_outside_logo_lines(pr_html, pr) == [])
+    for where, mutate in (
+            ("positioning", lambda d: d.update(
+                positioning=d["positioning"] + " Expanded Quillmark Freight.")),
+            ("a build description", lambda d: d["builds"][0].update(
+                description="Quillmark Freight rollout tracker")),
+            ("another role's bullet", lambda d: d["roles"][1]["bullets"][0].update(
+                text=d["roles"][1]["bullets"][0]["text"] + " Won Quillmark Freight.")),
+            ("a role title", lambda d: d["roles"][1].update(
+                title="Quillmark Freight Account Executive"))):
+        leaked = json.loads(pr_text)
+        mutate(leaked)
+        leaked_html = build_resume_html(leaked)
+        case(f"rule 2 fails a per-role client name leaked into {where}",
+             names_outside_logo_lines(leaked_html, leaked) != []
+             and any(r.startswith("rule 2") for r in check_content_rules(leaked_html,
+                                                                       json.dumps(leaked))))
+
+    # Spec 3 — a top-level-only legacy input renders byte-identical text to before YED-280.
+    # The golden is the pre-YED-280 render of the untouched legacy fixture; the only
+    # allowed difference is new CSS rules for classes the legacy markup never uses.
+    with open(os.path.join(os.path.dirname(FIXTURE), "resume-legacy.golden.html"),
+              encoding="utf-8") as fh:
+        golden = fh.read()
+    split = lambda h: (h.split("<style>")[1].split("</style>")[0], h.split("<body>", 1)[1])
+    (gold_css, gold_body), (now_css, now_body) = split(golden), split(html)
+    case("legacy input: <body> is byte-identical to the pre-YED-280 golden",
+         now_body == gold_body)
+    case("legacy input: every pre-YED-280 CSS line survives unchanged, in order",
+         in_order(now_css, gold_css.splitlines(keepends=True)))
+    as_builds = {k: v for k, v in me.items() if k != "proof_links"}
+    as_builds["builds"] = [{"links": me["proof_links"]}]
+    case("builds[] without a description renders byte-identical to legacy proof_links",
+         build_resume_html(as_builds) == html and schema_errors(as_builds) == [])
+    case("schema refuses proof_links and builds together, and neither",
+         any("exactly one of proof_links / builds" in e
+             for e in schema_errors({**me, "builds": [{"links": me["proof_links"]}]}))
+         and any("exactly one of proof_links / builds" in e
+                 for e in schema_errors({k: v for k, v in me.items() if k != "proof_links"})))
+    case("contact and education are genuinely optional (absent still validates)",
+         schema_errors({k: v for k, v in me.items() if k not in ("contact", "education")}) == [])
+
+    # Spec 4 — a description renders before its links and respects the cap.
+    desc = pr["builds"][0]["description"]
+    pr_vis = visible(pr_html)
+    case("a build description renders before its own links",
+         in_order(pr_vis, ["Selected builds", desc, pr["builds"][0]["links"][0],
+                           pr["builds"][1]["links"][0]]))
+    at_cap = "A" * BUILD_DESCRIPTION_MAX
+    over_cap = "A" * (BUILD_DESCRIPTION_MAX + 1)
+    with_desc = lambda d: {**pr, "builds": [{"description": d, "links": pr["builds"][0]["links"]}]}
+    case(f"a description exactly at the {BUILD_DESCRIPTION_MAX}-char cap validates and "
+         "renders whole (no truncation, no ellipsis added)",
+         schema_errors(with_desc(at_cap)) == []
+         and at_cap in build_resume_html(with_desc(at_cap))
+         and "…" not in build_resume_html(with_desc(at_cap)))
+    case("a description one char over the cap is refused, not truncated",
+         any("over the" in e and "cap" in e for e in schema_errors(with_desc(over_cap))))
+    case("a multi-line description is refused (one line)",
+         any("description" in e for e in schema_errors(with_desc("Line one\nLine two"))))
+    case("PDF reading-order gate fails a description that never rendered",
+         pdf_reading_order_errors(visible(pr_html.replace(desc, "")), pr) != [])
+
+    # Spec 5 — the page count stays 1 with every new field at its max. Needs Chrome +
+    # pdftotext; missing either is a loud skip, never a silent pass.
+    mx, _ = load_fx("resume-input-fixture-max.json")
+    case("max fixture fills every new field: per-role accounts on every role, every "
+         "description at the cap",
+         schema_errors(mx) == [] and all(r.get("key_accounts") for r in mx["roles"])
+         and all(len(b.get("description", "")) == BUILD_DESCRIPTION_MAX for b in mx["builds"]))
+    bin_ = chrome()
+    if bin_ and shutil.which("pdftotext"):
+        fit_out = resolve_output_path(os.path.join(OUTPUT_DIR, ".selftest-max-fit.pdf"))
+        render_pdf(bin_, build_resume_html(mx), fit_out)
+        try:
+            fit_errors = verify_pdf(fit_out, mx)
+        finally:
+            os.remove(fit_out)
+        case("max fixture renders to exactly one page with pdftotext order + labels intact",
+             fit_errors == [])
+    else:
+        print("WARN Chrome or pdftotext not found — max-length one-page render case SKIPPED")
+
     fails = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'ok  ' if ok else 'FAIL'} {n}")
     print(f"selftest: {len(checks) - len(fails)}/{len(checks)} render-resume cases pass")
     return 0 if not fails else 1
+
+
+def render_pdf(bin_: str, html: str, out: str) -> None:
+    """Chrome --print-to-pdf of `html` to `out` (already path-guarded by the caller)."""
+    # The intermediate HTML also lives under the gitignored output dir — nothing outside it.
+    fd, tmp_html = tempfile.mkstemp(suffix=".html", dir=OUTPUT_DIR, prefix=".resume-")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(html)
+    try:
+        run(bin_, ["--print-to-pdf=" + out, "file://" + tmp_html])
+    finally:
+        os.remove(tmp_html)
+    if not os.path.exists(out):
+        sys.exit(f"Chrome did not write {out}")
 
 
 def main() -> int:
@@ -846,7 +1156,7 @@ def main() -> int:
             print(f"  - {f}")
         return 1
     if a.verify_links:
-        link_fails = verify_proof_links(me["proof_links"])
+        link_fails = verify_proof_links(proof_links(me))
         if link_fails:
             print("Proof-link liveness failed — nothing rendered (rule 4: verified live):")
             for f in link_fails:
@@ -858,18 +1168,7 @@ def main() -> int:
     if not bin_:
         sys.exit("Chrome not found — the Chrome render runs in-session where Chrome exists "
                  "(Alex's Mac); CI exercises `--selftest` (no Chrome).")
-
-    # The intermediate HTML also lives under the gitignored output dir — nothing outside it.
-    fd, tmp_html = tempfile.mkstemp(suffix=".html", dir=OUTPUT_DIR, prefix=".resume-")
-    with os.fdopen(fd, "w", encoding="utf-8") as fh:
-        fh.write(html)
-    try:
-        run(bin_, ["--print-to-pdf=" + out, "file://" + tmp_html])
-    finally:
-        os.remove(tmp_html)
-
-    if not os.path.exists(out):
-        sys.exit(f"Chrome did not write {out}")
+    render_pdf(bin_, html, out)
 
     # The PDF gate: exactly one page, pdftotext reading order intact — exit code gates the run.
     pdf_fails = verify_pdf(out, me)

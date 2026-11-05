@@ -28,6 +28,8 @@ on PR #247, comment 6551704109) is applied as spec'd below.
 - **Experience sections** → `roles[]` entries **in me-model order**; hunting wins are
   framed as **proof of account growth**, never CSM/renewal-only framing.
 - **Key accounts** → the `key_accounts` logo list — client names appear nowhere else.
+  Where the me-model ties accounts to a role, use per-role `roles[].key_accounts`
+  instead (YED-280); never both.
 
 ## One in, one out (decided — Alex's spec walk, 2026-10-31)
 
@@ -47,13 +49,36 @@ resume files are not produced.
     { "title": "...", "company": "...", "dates": "...",
       "bullets": [ { "text": "...",
                      "source": "trace-to-me-model note (required)",
-                     "original": "verbatim me-model bullet (required when reworded)" } ] }
+                     "original": "verbatim me-model bullet (required when reworded)" } ],
+      "key_accounts": ["... (optional, per role — see below)"] }
   ],
-  "key_accounts": ["..."],
-  "proof_links": ["https://..."],
+  "key_accounts": ["... (top-level; omit when roles carry their own)"],
+  "proof_links": ["https://... (or builds[] instead — exactly one of the two)"],
+  "builds": [ { "description": "one line, optional", "links": ["https://..."] } ],
   "education": ["..."]
 }
 ```
+
+- **Per-role key accounts (YED-280).** `roles[].key_accounts` is optional. When any role
+  carries one, a `Key accounts: A, B` line renders under that role (after its bullets) and
+  the **top-level Key accounts line is suppressed**. The two modes do not mix: an input
+  with both a top-level `key_accounts` and any `roles[].key_accounts` is refused, so no
+  list the skill wrote is ever dropped silently. Roles without notable accounts simply
+  omit the key. A **top-level-only input renders exactly as before** (byte-identical
+  body, pinned by `fixtures/resume-legacy.golden.html`). Rule 2 holds either way: client
+  names appear only on Key accounts lines, and the renderer checks every other visible
+  line (positioning, titles, bullets, build descriptions), not just bullets.
+- **Build description line (YED-280).** `builds[]` is the optional replacement for
+  `proof_links`: each build is `{links[], description?}`. A description renders before
+  that build's links on one list item (`Description — link · link`); a build without one
+  renders one link per item, exactly as `proof_links` does. The description is **one
+  line of at most 70 characters**. Over the cap is **refused, never truncated** and no
+  ellipsis is ever added: a cut could land mid-figure ("grew 12…" of "grew 120%"), which
+  is rule 5's failure. Write the line to fit. 70 is measured, not picked: a 100-char line
+  plus its link wrapped to two lines on every build.
+- **Golden update rule.** `fixtures/resume-legacy.golden.html` is the pre-YED-280 render
+  of the legacy fixture. Regenerate it only for a deliberate, reviewed template change,
+  and say so in that PR.
 
 - **`contact` and `education` are optional** (minimal-template follow-up, 2026-11-01):
   arrays of non-empty strings. `contact` renders as the header line under the name
@@ -92,8 +117,17 @@ content; **minimal won**. The template is locked to this spec:
   the render refuses malformed list structure.
 - Section order: header (name → contact) → Positioning → Experience → Key accounts →
   Selected builds (the proof links) → Education (degree · lacrosse · certs on one line).
-- Fit: one page at **7 roles / 15 bullets** and the full education line — verified on the
-  rendered stress sample (pdftotext surface), not just asserted.
+  In per-role mode the Key accounts lines sit inside Experience, each under its role,
+  and the top-level section is absent.
+- Per-role Key accounts line: 9pt `#3c4049`, label "Key accounts:" at 600 (palette
+  unchanged).
+- Fit: one page at **7 roles / 15 bullets** and the full education line with the
+  top-level Key accounts line, verified on the rendered stress sample (pdftotext surface).
+  **With every YED-280 field at its max** (a full-line Key accounts list on every role,
+  three builds with 70-char descriptions) the one-page envelope is **6 roles / 13
+  bullets**: each per-role line costs a line, and 7/15 spills Education onto page 2.
+  `fixtures/resume-input-fixture-max.json` pins that envelope; the run's one-page gate
+  is the backstop beyond it.
 
 ## The seven locked content rules (Blueprint region "tailor-resume")
 
@@ -140,13 +174,15 @@ the fixture test fails if the two drift.
 After Chrome writes the PDF, the run is gated on:
 
 - **exactly one page** (a multi-page render fails the run — fix content, not margins);
-- **`pdftotext` reading order intact**: name → positioning → roles in order → Key
-  accounts → Selected builds (→ Education when present). If `pdftotext` is missing, the
-  check is skipped with a loud `WARN` — same pattern as the Chrome probe, never a silent
-  pass;
-- **section labels extract unbroken** (`EXPERIENCE`, `KEY ACCOUNTS`, `SELECTED BUILDS`,
-  `EDUCATION`) — the rendered-surface assertion of the ≤0.3pt letter-spacing ATS cap.
-  An over-spaced label ("E D U C AT I O N") fails the run.
+- **`pdftotext` reading order intact**: name → positioning → roles in order (each
+  followed by its own `Key accounts:` line in per-role mode) → Key accounts (top-level
+  mode) → Selected builds → each build description in order (→ Education when
+  present). If `pdftotext` is missing, the check is skipped with a loud `WARN`, the same
+  pattern as the Chrome probe, never a silent pass;
+- **section labels extract unbroken** (`EXPERIENCE`, `KEY ACCOUNTS` when the top-level
+  section renders, `SELECTED BUILDS`, `EDUCATION`) — the rendered-surface assertion of
+  the ≤0.3pt letter-spacing ATS cap. An over-spaced label ("E D U C AT I O N") fails
+  the run.
 
 ## Proof-link liveness (`--verify-links`, rule 4)
 
@@ -188,15 +224,28 @@ render: exactly one page, `pdftotext` reading order intact, exit code gates the 
 `.claude/skills/tailor-resume/fixtures/resume-input-fixture.json` is fully synthetic
 (fictional people/companies, `*.example` hub link, per-bullet source notes citing the
 fixture itself). The selftest validates schema, content rules, reading order, and path
-refusal against it.
+refusal against it. It is the **legacy (top-level-only) input** and stays untouched.
+
+YED-280 fixtures, equally synthetic:
+- `resume-input-fixture-per-role.json` — per-role key accounts (fictional clients distinct
+  from the employers) and `builds[]`, one with a description, one without.
+- `resume-input-fixture-max.json` — every new field at its max (6 roles / 13 bullets,
+  a full-line accounts list per role, three 70-char descriptions). The selftest renders
+  it through Chrome when Chrome and `pdftotext` exist and asserts one page; otherwise
+  it prints a loud `WARN ... SKIPPED`.
+- `resume-legacy.golden.html` — the pre-YED-280 render of the legacy fixture (see the
+  golden update rule above).
 
 ## Acceptance
 
 - Fixture renders to **one page** with `pdftotext` reading order intact: name → contact →
   positioning → roles in order → Key accounts → Selected builds → Education.
 - Section labels extract unbroken (the ATS letter-spacing cap holds on the rendered PDF).
-- Fit: **7 roles / 15 bullets** still render on exactly one page (stress-rendered sample,
-  pdftotext-verified).
+- Fit: **7 roles / 15 bullets** still render on exactly one page with the top-level
+  Key accounts line (stress-rendered sample, pdftotext-verified); **6 roles / 13
+  bullets** with every per-role and build-description field at its max (selftest-rendered).
+- Per-role mode: each role's `Key accounts:` line renders under that role, the top-level
+  line is suppressed, and no client name appears outside a Key accounts line.
 - The writer refuses any path outside `.claude/output/` (selftest-covered).
 - The renderer never opens the me-model (schema + JSON contract only).
 - **Post-merge:** the first real run in a fresh Claude Code session is Alex's acceptance
