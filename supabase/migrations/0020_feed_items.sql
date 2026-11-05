@@ -16,11 +16,14 @@
 --   source_key          sha256 of the canonical item URL (feeds.py item_key) — the
 --                       dedup key; weekly reruns upsert on_conflict=source_key.
 --   company             registry company name (link-to-existing; never a free-form entity).
---   feed_url / url / title / summary   the raw (redacted) item fields. Every string
---                       passes spine's EMAIL_RE/PHONE_RE + substrate.redact_body BEFORE
---                       staging (PR #272); the spine guard re-checks per row and
---                       quarantines failures by sha256 key. The DB adds no second PII
---                       dialect (one-dialect rule, check_pii_regex_parity).
+--   feed_url / url / title / summary   the item fields as the producer redacted them:
+--                       every string value passes spine's EMAIL_RE/PHONE_RE (feeds.py
+--                       redact()); the summary additionally passes substrate.redact_body
+--                       (to_row, PR #272). The spine guard re-checks per row and
+--                       quarantines failures by sha256 key. The DB performs NO PII
+--                       validation of its own: there is exactly one redaction dialect
+--                       (the spine's, applied before staging), and a DB-side regex would
+--                       be a second dialect that can drift from it.
 --   published           item publish time (ISO-8601 from the feed), nullable.
 --   kind                the staged item's kind per the ADOPTED #270 matrix (Alex,
 --                       2026-11-05, adopted as-is): launch | market — feeds.py classify()
@@ -42,10 +45,12 @@
 -- NOTHING SEEDED. The table ships empty; the first fetch run stages the first rows.
 --
 -- SECURITY MODEL (0016 pattern): `public`, RLS enabled, no policies, all privileges
--- revoked from public/anon/authenticated. The service-role REST path through
--- spine_client is the only writer. Note: migration 0019 already revoked the postgres
--- default ACL that used to grant anon/authenticated ALL on new tables — the explicit
--- REVOKE below is the belt for that suspenders (idempotent either way).
+-- revoked from public/anon/authenticated. The REVOKE is the SELECT control on this
+-- table — 0019 fixed postgres's default ACL so new tables are not auto-granted to
+-- anon/authenticated, but if default privileges ever drift, this explicit REVOKE is
+-- what holds (it is idempotent, so re-pasting is safe). RLS deny-by-default (no
+-- policies) backs it up for direct SQL; the service-role REST path through
+-- spine_client — which bypasses RLS and keeps its grants — is the only writer.
 --
 -- RE-RUNNABLE: every DDL statement is guarded (if not exists / no-op REVOKE); a second
 -- paste is a no-op.
@@ -81,12 +86,14 @@ create table if not exists public.feed_items (
                       check (signal_type_guess is null or
                              signal_type_guess in
                              ('news', 'partnership', 'layoff', 'paper', 'model_release')),
-                      constraint feed_items_signal_mapping_check
-                      check ((kind = 'launch' and signal_type_guess is null) or
-                             (kind = 'market' and signal_type_guess is not null)),
   fetched_at        timestamptz not null,
   metadata          jsonb not null default '{}'::jsonb,
-  created_at        timestamptz not null default now()
+  created_at        timestamptz not null default now(),
+  -- Table-level (it references two columns — a column constraint would lie about
+  -- scope): the ADOPTED #270 matrix, enforced at the DB.
+  constraint feed_items_signal_mapping_check
+  check ((kind = 'launch' and signal_type_guess is null) or
+         (kind = 'market' and signal_type_guess is not null))
 );
 
 comment on table public.feed_items is
@@ -127,9 +134,10 @@ commit;
 -- select 'feed_items_column_order', (select string_agg(column_name, ',' order by ordinal_position) = 'item_id,source_key,company,feed_url,url,title,published,summary,kind,signal_type_guess,fetched_at,metadata,created_at' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items');
 -- select 'feed_items_source_key_64hex', exists (select 1 from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%source_key %^[0-9a-f]{64}$%');
 -- select 'feed_items_source_key_unique', exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'feed_items' and indexdef ~* 'unique.*source_key');
--- select 'feed_items_kind_vocab', (select pg_get_constraintdef(oid) ~ 'launch' and pg_get_constraintdef(oid) ~ 'market' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_kind_check');
--- select 'feed_items_signal_vocab', (select pg_get_constraintdef(oid) ~ 'news' and pg_get_constraintdef(oid) ~ 'partnership' and pg_get_constraintdef(oid) ~ 'layoff' and pg_get_constraintdef(oid) ~ 'paper' and pg_get_constraintdef(oid) ~ 'model_release' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_type_guess_check');
--- select 'feed_items_signal_mapping', exists (select 1 from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_mapping_check');
+-- select 'feed_items_kind_vocab', (select pg_get_constraintdef(oid) = 'CHECK ((kind = ANY (ARRAY[''launch''::text, ''market''::text])))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_kind_check');
+-- select 'feed_items_signal_vocab', (select pg_get_constraintdef(oid) = 'CHECK (((signal_type_guess IS NULL) OR (signal_type_guess = ANY (ARRAY[''news''::text, ''partnership''::text, ''layoff''::text, ''paper''::text, ''model_release''::text]))))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_type_guess_check');
+-- select 'feed_items_signal_mapping', (select pg_get_constraintdef(oid) = 'CHECK ((((kind = ''launch''::text) AND (signal_type_guess IS NULL)) OR ((kind = ''market''::text) AND (signal_type_guess IS NOT NULL))))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_mapping_check');
+-- select 'feed_items_service_role_rw', (select has_table_privilege('service_role', 'public.feed_items', 'select') and has_table_privilege('service_role', 'public.feed_items', 'insert') and has_table_privilege('service_role', 'public.feed_items', 'update') and has_table_privilege('service_role', 'public.feed_items', 'delete'));
 -- select 'feed_items_guess_nullable_launch_null', (select is_nullable = 'YES' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items' and column_name = 'signal_type_guess');
 -- select 'feed_items_rls_on', (select relrowsecurity from pg_class where oid = 'public.feed_items'::regclass);
 -- select 'feed_items_no_policies', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'feed_items');

@@ -1,11 +1,18 @@
+evidence: migration sha256 = 7c0a5dbd50221f4d353250278631c843b7da8e03f7ee826a96bba564ec7d8d6e (/home/user/work/rehearse0020/supabase/migrations/0020_feed_items.sql)
   … db.ytfzzsxcxxbejnowmkmk.supabase.co unreachable, trying next
   … aws-0-us-east-2.pooler.supabase.com unreachable, trying next
 gate 0 preflight: twin reachable via aws-1-us-east-2.pooler.supabase.com
+evidence: target = host=aws-1-us-east-2.pooler.supabase.com port=5432 user=postgres.ytfzzsxcxxbejnowmkmk dbname=postgres sslmode=require connect_timeout=15
 gate 0 preflight: stale feed_items dropped (--reset-first)
 gate 1 snapshot A: recorded (feed_items ABSENT)
+  shape.ABSENT = shape.ABSENT
+  con.ABSENT = con.ABSENT
+  idx.ABSENT = idx.ABSENT
+  rls.ABSENT = rls.ABSENT
+  acl.ABSENT = acl.ABSENT
 gate 1b negative: VERIFY reports feed_items_exists = f pre-migration (checks are live)
 gate 2 apply: 0020 applied verbatim (psql rc=0)
-gate 3 verify: 13/13 checks t:
+gate 3 verify: 14/14 checks t:
   t  feed_items_exists
   t  feed_items_no_rows
   t  feed_items_column_order
@@ -14,12 +21,13 @@ gate 3 verify: 13/13 checks t:
   t  feed_items_kind_vocab
   t  feed_items_signal_vocab
   t  feed_items_signal_mapping
+  t  feed_items_service_role_rw
   t  feed_items_guess_nullable_launch_null
   t  feed_items_rls_on
   t  feed_items_no_policies
   t  feed_items_no_api_grants
   t  feed_items_no_pii_columns
-gate 3 behavioural: insert / launch-null guess / upsert / market guess — all ok (rolled back)
+gate 3 behavioural: 5/5 rows t (insert / launch-null guess / upsert / market guess / service_role ignore-dup) — rolled back
   ok  duplicate source_key refused (feed_items_source_key_key)
   ok  kind='blog' refused (feed_items_kind_check)
   ok  kind='rss' (feed format is NOT kind — regression guard for the 4820063 blocker) refused (feed_items_kind_check)
@@ -28,8 +36,19 @@ gate 3 behavioural: insert / launch-null guess / upsert / market guess — all o
   ok  kind='launch' with a guess (mapping requires NULL) refused (feed_items_signal_mapping_check)
   ok  63-hex source_key refused (feed_items_source_key_check)
   ok  anon INSERT (no grant, RLS) refused (permission denied)
-gate 4 re-apply: idempotent — verify 13/13 t again
+  ok  anon SELECT (the REVOKE is the SELECT control) refused (permission denied)
+  ok  anon SELECT grant: feed_items_no_api_grants went f under the fault, all-t after restore
+  ok  RLS disabled: feed_items_rls_on went f under the fault, all-t after restore
+  ok  policy added: feed_items_no_policies went f under the fault, all-t after restore
+  ok  unique source_key dropped: feed_items_source_key_unique went f under the fault, all-t after restore
+  ok  kind CHECK widened (exact-text VERIFY must catch it): feed_items_kind_vocab went f under the fault, all-t after restore
+gate 4 re-apply: idempotent — verify 14/14 t again
 gate 5 rollback: the ROLLBACK block ran (psql rc=0)
 gate 6 snapshot C == A: rollback PROVEN
-gate 7 leave-applied: 0020 applied + verify 13/13 t — the twin now carries feed_items for PR #272's fetch lane.
+  shape.ABSENT = shape.ABSENT
+  con.ABSENT = con.ABSENT
+  idx.ABSENT = idx.ABSENT
+  rls.ABSENT = rls.ABSENT
+  acl.ABSENT = acl.ABSENT
+gate 7 leave-applied: 0020 applied + verify 14/14 t — the twin now carries feed_items for PR #272's fetch lane.
 ALL GATES GREEN
