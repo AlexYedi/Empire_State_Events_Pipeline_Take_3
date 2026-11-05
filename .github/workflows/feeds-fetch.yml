@@ -74,9 +74,10 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$REGISTRY" ]; then
-            # review 2026-11-05, item 9: the secret does not exist yet — SKIP with a notice
-            # (green run) instead of a red run every Monday until it is configured.
-            echo "FEED_SOURCES_REGISTRY is empty — run skipped; add the repo secret (see workflow header)"
+            # round-2 item 7: the secret does not exist yet — SKIP with a NOTICE (green run)
+            # instead of a red run every Monday until it is configured. ::warning:: so a
+            # cleared secret cannot silence the lane without a trace in the run summary.
+            echo "::warning::FEED_SOURCES_REGISTRY is empty — the lane is SKIPPED (green). A cleared secret silences this lane silently; set it per the workflow header. The lane_run ledger row (a PROD write) lands when the lane goes active — see the PR body's session-side wiring list."
             echo "has_registry=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -155,6 +156,6 @@ jobs:
           else
             gh issue create \
               --title "Market feeds fetch FAILED (since $TODAY)" \
-              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: ADR-9 — inspect the staged row text), a missing migration 0020 (write held), or a twin write error. The failing step in the run says which; stderr carries counts and source indices only. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              --body "The lane-4 feeds fetch failed — a fetch/source error that emptied the run, a spine guard refusal (PIIViolation: a staged row carried PII; sha256 keys live in the manifest, row text is never logged), a missing migration 0020 (HTTP 404, write held), or a twin write error. The failing step in the run says which; stderr carries counts and source indices only. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
               || echo "issue-create failed; check the Actions run directly"
           fi
