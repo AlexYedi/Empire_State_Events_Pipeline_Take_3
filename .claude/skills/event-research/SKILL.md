@@ -186,10 +186,11 @@ URLs here breaks citations three stages downstream.
   leaf `label:newsletters` returns empty). Do this **once, centrally, here** — don't make
   each specialist re-run it.
 - **Supabase graph** — via the ONE retrieval path (S-01, YED-261), never the MCP:
-  `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/seed.json --out <scratch>/context-pack.md`.
+  `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/<event-slug>.seed.json --out <scratch>/<event-slug>.context-pack.md`.
   Build the seed from the Step 1.5b entities **with a prior record** (one
   `{"type", "name", "notion_page_id"}` each, the resolved Notion id first; the verbatim invite as
-  `text`; `window_days: 365`). The script reads `SUPABASE_API_KEY` from `.env` itself and returns a
+  `text`; `window_days: 365`; `"event": "<event-slug>"`, the event title kebab-cased, which binds the
+  usage sidecar to this event). The script reads `SUPABASE_API_KEY` from `.env` itself and returns a
   **Context Pack** — Continuity Ledger (prior occasions), People/Company/Topic cards, and scored
   Claims, every claim line tagged `c:<8>` for traceability. Unresolved seed names are reported in
   the pack, never guessed; the pack's AUDIT line (stderr, or `--json` for machine reading) is the
@@ -202,10 +203,13 @@ URLs here breaks citations three stages downstream.
   pack kept none): surface it loudly to Alex — do not silently proceed as if there were no prior
   knowledge. (Usage attribution, YED-262: at 1.7a time no consuming document id exists, so the
   audit line reads `usage=not logged (no --usage-document …)` — expected. `--out` also writes
-  `<scratch>/context-pack.md.usage.json` (the kept claim ids, ids only). **Mandatory:** Step 4.2b's
-  `substrate.py stage-research` passes `--usage-from <scratch>/context-pack.md.usage.json`. That
-  logs one `claim_usage` row per kept claim against the `research_brief` document, and prints
-  `usage: logged N` or a loud `usage: NOT LOGGED (<reason>)` that never blocks the brief.)
+  `<scratch>/<event-slug>.context-pack.md.usage.json` (the kept claim ids only, plus the event,
+  lens and timestamp). **Mandatory:** Step 4.2b's `substrate.py stage-research` passes
+  `--usage-from <scratch>/<event-slug>.context-pack.md.usage.json`. That logs one `claim_usage` row
+  per kept claim against the `research_brief` document. It refuses a sidecar for another event,
+  another lens, or older than 12 h, and prints `usage: logged N` or a loud
+  `usage: NOT LOGGED (<reason>)` that never blocks the brief. The usage line is a required Step 6
+  summary item.)
 
 **Cost guard — an enforced selection procedure, not a soft cap (v1.1, YED-132).** The cap is
 a step with a deterministic ranking + a required audit artifact, so it can't be silently

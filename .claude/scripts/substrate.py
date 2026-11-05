@@ -1320,15 +1320,44 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
 
 
 USAGE_CONSUMER = "event"     # what /event-deep-research passes retrieve.py today (`--log-usage event`)
+USAGE_MAX_AGE_H = 12         # a sidecar older than this is from another run: refused, never attributed
 
 
-def log_research_usage(g: Graph, sidecar: str, doc_id: str | None) -> str:
+def event_slug(s: str | None) -> str:
+    """'The Shortlist: September Showcase' -> 'the-shortlist-september-showcase' (the command's <slug>)."""
+    return re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
+
+
+def _sidecar_refusal(side: dict, ev: dict, now: str | None = None) -> str | None:
+    """Why this sidecar must NOT be attributed to `ev` (the manifest's event), or None when it may. Bound by the
+    seed's `event`: the event slug (or title) or its Notion page id, either storage form."""
+    bound = str(side.get("event") or "").strip()
+    if not bound:
+        return "sidecar has no event binding — add \"event\": \"<event-slug>\" to the 1.7a seed"
+    mine = {event_slug(ev.get("title")), *pid_variants(ev.get("notion_page_id"))} - {""}
+    if event_slug(bound) not in mine and not (set(pid_variants(bound)) & mine):
+        return "sidecar is for a different event"
+    if side.get("lens") != "event":
+        return f"sidecar lens is {side.get('lens')!r}, not 'event'"
+    import datetime
+    try:
+        made = datetime.datetime.strptime(str(side.get("generated_at")), "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return "sidecar corrupt: generated_at is not a UTC timestamp"
+    age_h = (datetime.datetime.strptime(now or _utcnow(), "%Y-%m-%dT%H:%M:%SZ") - made).total_seconds() / 3600
+    if age_h > USAGE_MAX_AGE_H:
+        return f"stale sidecar ({age_h:.0f} h old > {USAGE_MAX_AGE_H} h)"
+    return None
+
+
+def log_research_usage(g: Graph, sidecar: str, doc_id: str | None, ev: dict) -> str:
     """YED-262. retrieve.py's `<out>.usage.json` (claim ids only) -> one claim_usage row per kept claim against the
-    research_brief document, via spine_client.write (ADR-9; claim_usage is allowlisted). Read-before-write on the
-    unique (claim_id, document_id) pair (retrieve.usage_plan), so a re-run is a no-op. Best effort but LOUD: every
-    path returns one `usage: …` audit line, and nothing here raises — usage must never block the brief."""
+    research_brief document. The write loop IS retrieve.log_usage (read-before-write on the unique (claim_id,
+    document_id) pair, then spine_client.write with on_conflict + ignore-duplicates, ADR-9), with this Graph's
+    reads injected — one loop, not two. Refuses a sidecar bound to another event, lens or run (_sidecar_refusal).
+    Best effort but LOUD: every path returns one `usage: …` line, and nothing here raises."""
     import spine_client
-    from retrieve import usage_plan                 # lazy: retrieve imports this module
+    from retrieve import log_usage                  # lazy: retrieve imports this module
     try:
         if not doc_id or str(doc_id).startswith("dry:"):
             return ("usage: NOT LOGGED (dry-run)" if g.dry else
@@ -1343,16 +1372,17 @@ def log_research_usage(g: Graph, sidecar: str, doc_id: str | None) -> str:
         ids = side.get("claim_ids") if isinstance(side, dict) else None
         if not isinstance(ids, list) or not all(isinstance(i, str) and UUID_RE.match(i) for i in ids):
             return "usage: NOT LOGGED (sidecar corrupt: claim_ids must be a list of claim uuids)"
-        have = {r["claim_id"] for r in g.get(f"/claim_usage?document_id=eq.{q(doc_id)}&select=claim_id&limit=5000")}
-        rows, skip = usage_plan(ids, doc_id, have, USAGE_CONSUMER)
-        if skip:
-            return f"usage: logged 0 ({skip})"
-        for i in range(0, len(rows), 80):
-            code, _ = spine_client.write("claim_usage", rows[i:i + 80], prefer="return=minimal")
-            if code not in (200, 201):
-                return f"usage: NOT LOGGED (claim_usage write -> {code} after {i} rows; re-run to retry)"
-        g.stats.bump("claim_usage", "created", len(rows))
-        return f"usage: logged {len(rows)} (consumer {USAGE_CONSUMER})"
+        why = _sidecar_refusal(side, ev)
+        if why:
+            return f"usage: NOT LOGGED ({why})"
+        res = log_usage(ids, doc_id, USAGE_CONSUMER, get_fn=g.get,
+                        write_fn=lambda *a, **k: spine_client.write(*a, **k))   # resolved per call (patchable)
+        if res.startswith("logged "):
+            g.stats.bump("claim_usage", "created", int(res.split()[1]))
+            return f"usage: {res} (consumer {USAGE_CONSUMER})"
+        if res.startswith("not logged ("):
+            return f"usage: logged 0 {res.removeprefix('not logged ')}"
+        return f"usage: NOT LOGGED (claim_usage write {res}; re-run to retry — read-before-write skips what landed)"
     except (Exception, SystemExit) as e:            # Graph.get raises SystemExit on a non-200
         return f"usage: NOT LOGGED ({type(e).__name__}: {str(e)[:160]})"
 
@@ -1366,6 +1396,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     ev = manifest.get("event") or {}
     if not ev.get("notion_page_id"):
         sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims)\n")
+        print("usage: NOT LOGGED (stage-research exit 5: manifest lacks the Event page id — no brief document)")
         return 5
     items, skipped = parse_ledger(md)
     for why, n in sorted(skipped.items()):
@@ -1375,6 +1406,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
                          "headings with '- claim: … | tier: web-verified | source: … | url: … | date: …' rows. "
                          f"Skipped: {skipped or 'nothing matched'}. If the synthesizer dropped the headings, pass the "
                          "raw specialist returns instead.\n")
+        print("usage: NOT LOGGED (stage-research exit 3: 0 admissible ledger rows — no brief document)")
         return 3
     roster = []
     for e in manifest.get("entities", []):
@@ -1440,7 +1472,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
           # the one out-of-roster write, named so Alex can review each one (YED-264 review)
           + "".join(f" · global: {n} → {t}:{en}" for s_, n, t, en in g.__dict__.get("global_links", []) if s_ == "about"))
     # YED-262: after the claims, so a usage problem can never cost the brief its claims; never changes rc
-    print(log_research_usage(g, usage_from, doc_id) if usage_from else "usage: NOT LOGGED (no --usage-from passed)")
+    print(log_research_usage(g, usage_from, doc_id, ev) if usage_from else "usage: NOT LOGGED (no --usage-from passed)")
     return 0
 
 
@@ -2239,40 +2271,51 @@ def _linking_selftest(ok) -> None:
 
 def _usage_selftest(ok) -> None:
     """YED-262 stage-research --usage-from, offline: spine_client.write is monkeypatched onto _FakeGraph's
-    claim_usage table, so the read-before-write reads back exactly what the 'write' landed."""
+    claim_usage table and enforces the unique (claim_id, document_id) pair the way Postgres does — a duplicate is a
+    409 UNLESS the request carries on_conflict + ignore-duplicates, then it is skipped."""
     import contextlib, io, tempfile
     import spine_client
     real_write, calls = spine_client.write, []
     pid = "5bed3699c2db816a828ec6410801d5de"
-    m = {"event": {"notion_page_id": pid, "title": "Usage fixture", "event_date": "2026-11-05"},
+    m = {"event": {"notion_page_id": pid, "title": "Usage Fixture: Demo Night", "event_date": "2026-11-05"},
          "entities": [{"type": "company", "name": "Soxton.AI"}]}
     cids = [f"00000000-0000-4000-9000-00000000000{i}" for i in (1, 2, 3)]
     tmp = tempfile.mkdtemp(prefix="yed262_")
 
-    def side(name: str, body: str) -> str:
+    def side(name: str, body) -> str:
         p = os.path.join(tmp, name)
         with open(p, "w", encoding="utf-8") as f:
-            f.write(body)
+            f.write(body if isinstance(body, str) else json.dumps(body))
         return p
 
-    def run(fg, usage_from, write_code=201):
+    def body(**kw):
+        return {"claim_ids": cids, "lens": "event", "event": "usage-fixture-demo-night", "generated_at": _utcnow(), **kw}
+
+    def run(fg, usage_from, write_code=201, manifest=None, md=RESEARCH_SAMPLE):
         def fake_write(table, rows, prefer=None, **kw):
             calls.append((table, len(rows)))
-            if write_code in (200, 201):
-                for r in rows:
-                    guard(table, r)
-                    fg.t[table].append({**r, "id": fg.uuid()})
-            return write_code, None
+            if write_code not in (200, 201):
+                return write_code, None
+            tname, _, qs = table.partition("?")
+            skip_dups = "on_conflict=claim_id,document_id" in qs and "ignore-duplicates" in (prefer or "")
+            for r in rows:
+                guard(tname, r)
+                if any(u["claim_id"] == r["claim_id"] and u["document_id"] == r["document_id"] for u in fg.t[tname]):
+                    if skip_dups:
+                        continue
+                    return 409, {"code": "23505"}
+                fg.t[tname].append({**r, "id": fg.uuid()})
+            return 201, None
         spine_client.write = fake_write
         out = io.StringIO()
         try:
             with contextlib.redirect_stdout(out):
-                rc = stage_research(fg, RESEARCH_SAMPLE, m, brief_ref="notion:usagebrief", usage_from=usage_from)
+                rc = stage_research(fg, md, manifest or m, brief_ref="notion:usagebrief", usage_from=usage_from)
         finally:
             spine_client.write = real_write
         return rc, next((l for l in out.getvalue().splitlines() if l.startswith("usage:")), "")
 
-    good = side("pack.md.usage.json", json.dumps({"claim_ids": cids, "lens": "event", "generated_at": "2026-11-05T00:00:00Z"}))
+    good = side("usage-fixture-demo-night.context-pack.md.usage.json", body())
     fg = _FakeGraph()
     rc, line = run(fg, good)
     doc = fg.t["documents"][0]["id"] if fg.t["documents"] else None
@@ -2284,18 +2327,42 @@ def _usage_selftest(ok) -> None:
     rc, line = run(fg, good)
     ok("usage: a re-run writes 0 new rows (read-before-write on (claim_id, document_id))",
        rc == 0 and len(fg.t["claim_usage"]) == 3 and len(calls) == n_calls and line.startswith("usage: logged 0"))
+    # the race: a concurrent writer landed claim 1 AFTER our read -> the DB must skip it, not 409 the batch
+    race = _FakeGraph()
+    real_get = race.get
+    race.get = lambda path: [] if path.startswith("/claim_usage") else real_get(path)   # our read saw nothing
+    run(race, None)                                   # stage once so the brief document exists
+    doc = next(d["id"] for d in race.t["documents"] if d.get("source_type") == "research_brief")
+    race.t["claim_usage"].append({"id": "theirs", "claim_id": cids[0], "document_id": doc, "consumer": "event"})
+    rc, line = run(race, good)
+    ok("usage: a duplicate landed by a concurrent writer is skipped at the DB (on_conflict + ignore-duplicates), not a failed batch",
+       rc == 0 and line.startswith("usage: logged") and len(race.t["claim_usage"]) == 3)
     bad = [("missing", os.path.join(tmp, "absent.usage.json"), "sidecar not found"),
            ("not JSON", side("corrupt.usage.json", "{not json"), "sidecar unreadable"),
-           ("text not ids", side("text.usage.json", json.dumps({"claim_ids": ["Soxton raised $4M"]})), "sidecar corrupt")]
+           ("valid first id, invalid second", side("mixed.usage.json", body(claim_ids=[cids[0], "Soxton raised $4M"])),
+            "sidecar corrupt"),
+           ("another event's", side("other.usage.json", body(event="some-other-event")), "sidecar is for a different event"),
+           ("unbound (no event)", side("unbound.usage.json", body(event=None)), "sidecar has no event binding"),
+           ("company-lens", side("lens.usage.json", body(lens="company")), "sidecar lens is 'company'"),
+           ("13-hour-old", side("stale.usage.json", body(generated_at=__import__("datetime").datetime.fromtimestamp(
+               __import__("time").time() - 13 * 3600, __import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))),
+            "stale sidecar")]
     for what, path, why in bad:
         fg = _FakeGraph()
         rc, line = run(fg, path)
         ok(f"usage: {what} sidecar -> loud 'usage: NOT LOGGED ({why} …)', rc 0, no rows",
            rc == 0 and line.startswith(f"usage: NOT LOGGED ({why}") and fg.t["claim_usage"] == [] and len(fg.t["claim"]) == 7)
+    ok("usage: the sidecar may be bound by the Event's Notion page id (dashed form) instead of the slug",
+       run(_FakeGraph(), side("bypid.usage.json", body(event=pid_variants(pid)[1])))[1] == "usage: logged 3 (consumer event)")
     fg = _FakeGraph()
     rc, line = run(fg, good, write_code=500)
     ok("usage: a failed claim_usage write -> loud NOT LOGGED (… 500 …), rc 0, claims still staged",
-       rc == 0 and line.startswith("usage: NOT LOGGED (claim_usage write -> 500") and len(fg.t["claim"]) == 7)
+       rc == 0 and line.startswith("usage: NOT LOGGED (claim_usage write failed (500)") and len(fg.t["claim"]) == 7)
+    rc3, line3 = run(_FakeGraph(), good, md="## nothing here")
+    rc5, line5 = run(_FakeGraph(), good, manifest={"event": {}})
+    ok("usage: the exit-3 and exit-5 paths still print a usage line (never silent)",
+       rc3 == 3 and line3.startswith("usage: NOT LOGGED (stage-research exit 3")
+       and rc5 == 5 and line5.startswith("usage: NOT LOGGED (stage-research exit 5"))
     __import__("shutil").rmtree(tmp, ignore_errors=True)
 
 
