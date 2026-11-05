@@ -3,8 +3,6 @@
 # up automatically. One documented exception: inbox_boundary.py is skipped because two of its
 # live-file cases require inbox-denylist.md / inbox-allowlist.md — gitignored private inputs
 # (CLAUDE.md invariant 4) that can never exist in CI — so its selftest exits 1 here by design.
-# One selftest-only dependency: PyYAML, installed below — ats_pulse's selftest PARSES
-# .github/workflows/ats-pulse.yml for its structure lints (step order, env sets, gate body).
 # Skill fixture tests (.claude/skills/*/fixtures/test_*.py — offline convention checks that live
 # beside the fixtures they check, e.g. the dossier field-presence test) run in a second step.
 name: selftests
@@ -27,7 +25,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run every offline --selftest
         run: |
-          python3 -m pip install --quiet pyyaml  # ats_pulse selftest parses the ats-pulse workflow YAML
           cd .claude/scripts
           failed=0
           for f in *.py; do
