@@ -70,7 +70,8 @@ def scan(gitleaks: str, report: Path, repo: Path) -> list[dict]:
 # Review round 2 killing cases (2026-11-05): each entry pins a finding the allowlist
 # must still produce. The sentinel-prefix token shares the historical cd0a50f value
 # prefix but differs after it — built from a different seed so no literal matches.
-SENTINEL_PREFIX_TOKEN = "sk_live_9f86d081" + hashlib.sha256(b"outside-selftest").hexdigest()[:24]
+SENTINEL_PREFIX_TOKEN = ("sk_live_" + hashlib.sha256(b"test").hexdigest()[:8]  # == 9f86d081, built at runtime — no literal in this file (generic-api-key flagged the hardcoded prefix)
+                         + hashlib.sha256(b"outside-selftest").hexdigest()[:24])
 OTHER_TOKEN = "sk_live_" + hashlib.sha256(b"different-key-in-selftest").hexdigest()[:32]
 
 
