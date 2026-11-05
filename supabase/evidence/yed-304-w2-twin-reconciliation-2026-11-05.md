@@ -18,8 +18,8 @@ auto-assign; one row for Alex.
 |---|---|---|---|
 | Ship point reproduced offline | k=3, thr=0.85 → auto 3 / review 99 | same run today, unchanged fixture → auto 3 / review 99 | ✅ exact reproduction |
 | Curated pool integrity | 170 LLM bootstrap assignments | 156 live `cluster_assigned_by='llm'`, cluster agreement **156/156**, 0 moved | ✅ zero drift |
-| The other 14 of 170 | 8 tombstones identified in fixture work | tombstoned with cluster retained — already present at the 2026-11-04 twin snapshot (migration 0016's header showed the same 272/170 with the 14 clustered tombstones in place), not new since the fixture | ✅ accounted for |
-| Backlog | 102 unassigned (94 real after tombstones) | 89 assigned since (all `session`), 12 tombstoned, 1 live | ✅ fully traced |
+| The other 14 of 170 | 14 rows not among the 156 live | tombstoned with cluster retained — already in place when migration 0016's header recorded the prod facts on 2026-11-04 (same 272/170 with the 14 clustered tombstones present), not new since the fixture | ✅ accounted for |
+| Backlog | 102 unassigned (94 real after the 8 tombstones the fixture work identified) | 89 assigned since (all `session`), 12 tombstoned, 1 live | ✅ fully traced |
 | Attended-linked backlog | 33 flagged (changing snapshot, W4) | **0** | ✅ improved — every attended-linked topic now carries a theme |
 | Cluster count | 30 | 33 (`topic_intelligence.topic_cluster`) | ℹ️ 3 themes added since the fixture |
 
@@ -52,17 +52,22 @@ Auto-assign bar is 0.85; this row sits at 0.531 with a split vote — a genuine
    shared YED-312 read-only transaction (`BEGIN READ ONLY → SHOW → server-side assert →
    query → ROLLBACK`, verdict-gated fail-closed); the tombstone test parses the metadata
    JSON instead of substring-matching (reverted merges and `{"merged_into": null}` no
-   longer vanish); the SQL-side filter uses the 0016 `coalesce` idiom; the `public.topic`
-   repoint and `--check-twin` exit codes are regression-tested. Suite 62/62; live guarded
+   longer vanish); the SQL-side predicates use the `->>` null test (`TOMBSTONE_FILTER` =
+   live rows, `TOMBSTONE_MARK` = tombstones) so SQL and Python agree exactly; the
+   `public.topic` repoint and `--check-twin` exit codes are regression-tested. Round 2
+   (head 5a3f21d→) additionally fixed: `split("\n", 2)` instead of `splitlines()` (U+2028
+   in quoted metadata no longer corrupts rows), a literal argv pin on `psql()` plus its
+   prod-refusal exit, check-twin probe-SQL pins and empty/raising `public` exit cases,
+   and this file's tombstone provenance/timestamp corrections. Suite 68/68; live guarded
    probe reproduced the same numbers (305 rows · 278 assigned · 12 tombstones).
 
 ## Follow-up flagged in review
 
 - The 14 clustered tombstones still vote in the kNN pool while ADR-13 excludes them from
   membership. No effect on today's result (best confidence 0.531 < 0.85), but align the
-  pool definition before any future auto-assign pass.
+  pool definition before any future auto-assign pass — tracked as YED-342.
 - `_check_twin_conn` substring-matches the conninfo (a crafted string could misdirect the
-  twin password); parse the conninfo in a later hardening pass.
+  twin password); parse the conninfo in a later hardening pass — also YED-342.
 - `canonicalization_backlog` (migration 0013) lacks a tombstone exclusion and overcounts;
   tracked separately, needs a migration.
 
@@ -71,4 +76,4 @@ Auto-assign bar is 0.85; this row sits at 0.531 with a split vote — a genuine
 - Name-only embeddings; confidence measures agreement with the LLM bootstrap taxonomy,
   not hand-labelled truth.
 - `attended_linked` and the backlog are moving snapshots; counts above are as of
-  2026-11-05T21:18Z.
+  2026-11-05T21:56:41Z.

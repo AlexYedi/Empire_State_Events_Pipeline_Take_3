@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-05T21:56:41Z",
+  "generated_utc": "2026-11-05T23:31:44Z",
   "mode": "dry-run",
   "source": "twin db.ytfzzsxcxxbejnowmkmk.supabase.co (public.topic; 12 tombstones excluded)",
   "model": "BAAI/bge-small-en-v1.5",

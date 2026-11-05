@@ -400,11 +400,15 @@ class TestEmbedTopics(unittest.TestCase):
 
 class TestTombstoneFilter(unittest.TestCase):
     def test_fragment_matches_the_postgres_json_operator(self):
-        self.assertIn("?", tca.TOMBSTONE_FILTER)
-        self.assertIn("merged_into", tca.TOMBSTONE_FILTER)
-        self.assertIn("not", tca.TOMBSTONE_FILTER)
-        # NULL metadata must not drop a row: the 0016 coalesce idiom.
-        self.assertIn("coalesce", tca.TOMBSTONE_FILTER)
+        # SQL and Python must agree exactly: `metadata->>'merged_into' is not null` is true
+        # only for an explicit non-null target. A missing key and an explicit JSON null both
+        # yield SQL NULL (row kept), matching merged_into_marker(); `merge --revert` pops the
+        # key, so reverted live rows are never hidden.
+        self.assertEqual(tca.TOMBSTONE_MARK, "metadata->>'merged_into' is not null")
+        self.assertEqual(tca.TOMBSTONE_FILTER, "metadata->>'merged_into' is null")  # the negation
+        self.assertTrue(tca.merged_into_marker('{"merged_into": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}'))
+        self.assertFalse(tca.merged_into_marker('{"merged_into": null}'))
+        self.assertFalse(tca.merged_into_marker('{"merge_history": [{"merged_into": "x"}]}'))
 
 
 TWIN_CSV_COLS = {"id", "name", "cluster_id", "cluster_assigned_by",
@@ -602,19 +606,66 @@ class TestReadOnlyGuard(unittest.TestCase):
         finally:
             tca.subprocess.run = orig
 
+    def test_unicode_line_separators_survive_the_split(self):
+        # str.splitlines() also breaks on U+2028/U+0085 — a tombstone's quoted JSON string
+        # containing one would be corrupted into a raw newline, json.loads would fail, and the
+        # row would slip back into the pool as live. psql() must split on \n only.
+        orig = tca.subprocess.run
+        row = 'id,name\n"topic with \u2028 inside"\n'
+        tca.subprocess.run = self.fake_run("transaction_read_only\non\n" + row)
+        try:
+            self.assertEqual(tca.psql("select 1", "pw"), row)
+        finally:
+            tca.subprocess.run = orig
+
+    def test_psql_runs_the_guarded_argv(self):
+        seen = {}
+        orig = tca.subprocess.run
+
+        def run(argv, **k):
+            seen["argv"] = argv
+            return types.SimpleNamespace(returncode=0, stdout="transaction_read_only\non\nid,name\n")
+
+        tca.subprocess.run = run
+        try:
+            tca.psql("select 1", "pw")
+        finally:
+            tca.subprocess.run = orig
+        # Literal pin (not guarded_psql_argv's own output — that would be circular): the
+        # flags and the -c sequence must match ro_argv's YED-312 guard exactly.
+        self.assertEqual(seen["argv"], ["psql", tca.TWIN_CONN, "-X", "--csv", "-q", "-v",
+                                        "ON_ERROR_STOP=1",
+                                        "-c", "begin read only;",
+                                        "-c", "show transaction_read_only;",
+                                        "-c", tca.RO_ASSERT,
+                                        "-c", "select 1",
+                                        "-c", "rollback;"])
+
+    def test_psql_refuses_a_prod_connection(self):
+        with self.assertRaises(SystemExit):
+            tca.psql("select 1", "pw", conn=f"host=db.{tca.PROD_REF}.supabase.co port=5432")
+
 
 class TestCheckTwin(unittest.TestCase):
     """--check-twin exit codes: a required schema without cluster_id fails; a legacy probe
-    that cannot run is informational only. Regression for review finding Minor-4."""
+    that cannot run is informational only. Regression for review finding Minor-4; the SQL
+    and schema pins are the round-2 review items (public.topic repoint + tombstone filter)."""
 
     @staticmethod
-    def run_check(cols_by_schema, legacy_raises=False):
+    def run_check(cols_by_schema, legacy_raises=False, required_raises=False, record=None):
         def cols(password, psql_bin, schema):
+            if schema == tca.TWIN_TOPIC_SCHEMA:
+                if required_raises:
+                    raise RuntimeError("public.topic probe blew up")
+                if record is not None:
+                    record["schemas"].append(schema)
             if legacy_raises and schema != tca.TWIN_TOPIC_SCHEMA:
                 raise RuntimeError("no such table")
             return cols_by_schema.get(schema, set())
 
         def fake_psql(sql, *a, **k):
+            if record is not None:
+                record["sql"].append(sql)
             if " as n" in sql:
                 return "n\n5\n"
             if " as assigned" in sql:
@@ -647,6 +698,29 @@ class TestCheckTwin(unittest.TestCase):
                 "metadata", "description", "created_at"}
         rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: full, "canonical_v2": set()})
         self.assertEqual(rc, 0)
+
+    def test_empty_public_topic_fails(self):
+        rc = self.run_check({})
+        self.assertEqual(rc, 1)
+
+    def test_public_probe_failure_fails(self):
+        full = {"id", "name", "cluster_id", "cluster_assigned_by", "cluster_assignment_confidence",
+                "metadata", "description", "created_at"}
+        rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: full}, required_raises=True)
+        self.assertEqual(rc, 1)
+
+    def test_check_twin_pins_the_probe_sql(self):
+        full = {"id", "name", "cluster_id", "cluster_assigned_by", "cluster_assignment_confidence",
+                "metadata", "description", "created_at"}
+        record = {"sql": [], "schemas": []}
+        rc = self.run_check({tca.TWIN_TOPIC_SCHEMA: full}, record=record)
+        self.assertEqual(rc, 0)
+        self.assertIn(tca.TWIN_TOPIC_SCHEMA, record["schemas"])  # the required probe reads public
+        self.assertTrue(any("from public.topic" in s for s in record["sql"]))  # literal repoint pin
+        self.assertTrue(any(" as assigned" in s and tca.TOMBSTONE_FILTER in s
+                            for s in record["sql"]))  # assigned count excludes tombstones
+        self.assertTrue(any(" as tomb" in s and tca.TOMBSTONE_MARK in s
+                            for s in record["sql"]))  # tomb count uses the positive mark
 
 
 if __name__ == "__main__":

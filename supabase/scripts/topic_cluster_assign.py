@@ -347,20 +347,23 @@ def psql(sql: str, password: str, *, psql_bin: str = "psql", conn: str = TWIN_CO
         raise RuntimeError(f"psql failed (rc={p.returncode}): {p.stderr.strip()[:500]}")
     # With -q, the only stdout before the query's CSV is SHOW's own CSV: its header line,
     # then the verdict value. Anything else means we are not looking at what we think.
-    lines = p.stdout.splitlines()
-    if len(lines) < 2 or lines[0] != "transaction_read_only":
-        raise RuntimeError(f"read-only guard: unexpected SHOW output {lines[:1]!r} — discarding")
-    if not read_only_verdict(lines[1]):
-        raise RuntimeError(f"read-only guard failed (transaction_read_only={lines[1]!r}) — "
+    # split("\n", 2), not splitlines(): str.splitlines() also breaks on U+2028/U+0085, which
+    # psql --csv can emit raw inside a quoted JSON string — splitting there would corrupt the
+    # row (a raw newline in the JSON), so json.loads fails and a tombstone would slip back in.
+    parts = p.stdout.split("\n", 2)
+    if len(parts) < 3 or parts[0] != "transaction_read_only":
+        raise RuntimeError(f"read-only guard: unexpected SHOW output {parts[:1]!r} — discarding")
+    if not read_only_verdict(parts[1]):
+        raise RuntimeError(f"read-only guard failed (transaction_read_only={parts[1]!r}) — "
                            "discarding output; nothing is trusted outside a proven read-only txn")
-    return "\n".join(lines[2:]) + "\n" if len(lines) > 2 else ""
+    return parts[2]
 
 
 def guarded_psql_argv(psql_bin: str, conn: str, sql: str) -> list[str]:
     """topic_intel_compute.ro_argv's YED-312 guard (BEGIN READ ONLY -> SHOW -> server-side
     assert -> query -> ROLLBACK, one explicit transaction on one pooled connection) with
     --csv so the SELECT keeps its header for DictReader."""
-    return [psql_bin, conn, "--csv", "-q", "-v", "ON_ERROR_STOP=1",
+    return [psql_bin, conn, "-X", "--csv", "-q", "-v", "ON_ERROR_STOP=1",
             "-c", "begin read only;",
             "-c", "show transaction_read_only;",
             "-c", RO_ASSERT,
@@ -368,7 +371,8 @@ def guarded_psql_argv(psql_bin: str, conn: str, sql: str) -> list[str]:
             "-c", "rollback;"]
 
 
-TOMBSTONE_FILTER = "not coalesce(metadata ? 'merged_into', false)"  # merge tombstones are not backlog
+TOMBSTONE_FILTER = "metadata->>'merged_into' is null"      # live rows: no tombstone (used as `and {TOMBSTONE_FILTER}`)
+TOMBSTONE_MARK = "metadata->>'merged_into' is not null"    # tombstones: explicit non-null merge target
 
 
 def merged_into_marker(meta_text: str | None) -> bool:
@@ -416,8 +420,9 @@ def fetch_topics_twin(password: str, psql_bin: str = "psql") -> tuple[list[Topic
         # tombstone test must be falsy, not `is None` — the None form silently kept every merge
         # tombstone in the unassigned pool (caught in the 2026-11-05 dry-run). The tombstone test
         # itself parses the JSON rather than substring-matching: `substrate.py merge --revert`
-        # pops `merged_into` (leaving a `merge_history` snapshot), and `{"merged_into": null}`
-        # both occur on live reverted topics — a substring match would drop them from the pool.
+        # pops the key entirely, and no writer emits `{"merged_into": null}` — so neither shape
+        # is a tombstone, and a substring match would drop live rows from the pool. The SQL-side
+        # TOMBSTONE_FILTER (`metadata->>'merged_into' is not null`) agrees with this exactly.
         cluster_id = row["cluster_id"] or None
         if cluster_id is None and merged_into_marker(row.get("metadata")):
             n_tomb += 1
@@ -620,7 +625,7 @@ def render_validation_report(fx: FixtureData, assigned: list[Topic], unassigned:
         "- **attended_linked is a snapshot** that changes after the W4 data fixes; the fixture "
         "is regenerated before any backfill dry-run. Not treated as stable here.",
         f"- **Backlog:** the fixture's {n_unassigned} unassigned rows include 8 merge "
-        "tombstones (`metadata ? 'merged_into'`) that are not identifiable in the name-only "
+        "tombstones (a non-null `merged_into` in metadata) that are not identifiable in the name-only "
         "fixture; the real backlog is **94**. Twin-backed runs exclude them explicitly.",
         "",
         "## Method",
@@ -870,7 +875,7 @@ def run_check_twin(password: str, args: argparse.Namespace) -> int:
                 print(f"    assigned rows: {assigned}")
             if "metadata" in cols:
                 out = psql(f"select count(*)::int as tomb from {schema}.topic "
-                           "where cluster_id is null and metadata ? 'merged_into'",
+                           f"where cluster_id is null and {TOMBSTONE_MARK}",
                            password, psql_bin=args.psql_bin)
                 tomb = int(next(iter(csv.DictReader(io.StringIO(out))))["tomb"])
                 print(f"    merge tombstones (null cluster + merged_into): {tomb}")
