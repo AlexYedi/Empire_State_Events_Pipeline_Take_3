@@ -1,0 +1,1484 @@
+{
+ "run": "lane0-full-fa_04",
+ "at": "2026-11-05T01:06:47+00:00",
+ "rows_planned": 208,
+ "rows_written": 208,
+ "none": [
+  "1ddb63f2-a760-4fc8-8e3a-0eacd1561290",
+  "fd9e2fa0-516a-4fa3-8c55-23b31563a910",
+  "15810623-8ab7-48f2-9b84-93149ebba91d",
+  "27b598d1-283b-420e-a745-34276864ccf3",
+  "287d0933-9a06-4419-8679-14ad604804df",
+  "2dca3a09-47a7-4340-a4da-92884d4cae4b",
+  "4dd1df55-7420-466a-a742-09690ac7a3e9",
+  "590b9dd2-ae35-4d39-aaa9-eb3a242d1a25",
+  "5ec47df2-7e4e-4dc6-9942-e86e5fe79dd0",
+  "881b7136-9430-46fb-a38f-acb5fd0854b1",
+  "8c81ae5c-aea2-43bb-9b30-0a9b6bc16636",
+  "a576386e-4a22-4a01-9b47-c6ccaf6c3765",
+  "c8ad886f-c6b9-49c1-96fc-d61cd059dd80",
+  "e8db1f82-cbe5-466a-8b4e-43431f9c9f2d",
+  "fd41204f-c6fb-4eaa-80b5-14d754b94275",
+  "faf3041e-9602-4756-9993-49686d93cd35",
+  "19d585f2-eda5-43e5-89bd-926f4d3e9ef0",
+  "4c264a27-e7e9-422a-9625-daa5f285dc7e"
+ ],
+ "links": [
+  {
+   "claim_id": "8b88955c-8a95-422e-a1b1-741d3f1912f2",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "939e8c88-efa6-47bc-ab5b-b428d654b5f4",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "e08b2e6c-5fd4-42d6-9894-e11ba2b63c11",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "d52b6737-286a-462f-934f-dafce00c8365",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "fea4cad7-882c-4710-91e1-9aebe0f5867a",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "adeb1bf0-8ee9-4d7c-b6ea-2515828ece25",
+   "topic_id": "98e380a0-d558-4123-9761-f0efec1b1601",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "49fc43e8-3b95-4d5a-84ae-f0c21786afed",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f30609a3-5a88-4ad7-8912-5cd5c370c97b",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "24af0a17-a880-47be-8f1b-2909c0e09279",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "deabde84-b740-40f9-a6f4-2db05c99a947",
+   "topic_id": "dbfdade6-c6a3-469d-a20d-b161ec9d11d2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "181a5be1-c3b4-4234-8cfe-bb2e8b0e1fd1",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "af30de97-ce9d-40bc-a0b4-81d6718dd082",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ccaa3073-343c-4963-8360-773e86daf881",
+   "topic_id": "dbfdade6-c6a3-469d-a20d-b161ec9d11d2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ca771e7d-f85f-49bf-b09b-b2b6a49c113b",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ca771e7d-f85f-49bf-b09b-b2b6a49c113b",
+   "topic_id": "2e2d5c50-aa46-4a60-b816-691a0b86ad9c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7ffd74c6-653e-4f90-8860-1b10c4365ecd",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7ffd74c6-653e-4f90-8860-1b10c4365ecd",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8fc91de0-4038-4560-bf7f-4ac69e96beeb",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "251becff-082c-4762-9a5b-5b0f981f3461",
+   "topic_id": "7877135f-49af-444e-bd96-5aeed83390c9",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b18c8ca0-1122-45c7-80d9-c7dc3d79d98d",
+   "topic_id": "27792c17-6f2a-4d5b-8b7c-96ecbcd9f5bb",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b6bdc7f4-7411-4cbe-8528-0188beaf3a7b",
+   "topic_id": "585471de-23c4-4c48-b602-90962ebe08f4",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b6bdc7f4-7411-4cbe-8528-0188beaf3a7b",
+   "topic_id": "82be3f1e-5453-4d00-933d-3367993c637c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7bcdff1e-29d5-4842-bfc9-1bd60ca5eeb7",
+   "topic_id": "27792c17-6f2a-4d5b-8b7c-96ecbcd9f5bb",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6969fc47-0b42-4d35-bd00-6dc8a8b92416",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "feb5180c-a05f-4939-9467-843b7e91cf85",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "feb5180c-a05f-4939-9467-843b7e91cf85",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0bba6b30-62e8-4f6b-93cf-1a2f4b892230",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a215cc3d-d5bd-47d0-b850-922fa14de894",
+   "topic_id": "4ac0efd0-2859-4565-88bf-4f616379e322",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ad0e7aff-c2bb-44f9-b155-8f1f7675d3ad",
+   "topic_id": "7877135f-49af-444e-bd96-5aeed83390c9",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "cd5429a0-ae81-477d-81a6-766681881eb3",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "849c8c02-35cc-436d-bfe5-650b3c336612",
+   "topic_id": "27792c17-6f2a-4d5b-8b7c-96ecbcd9f5bb",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5194f322-ee67-4345-92e0-38fbd2d4ad64",
+   "topic_id": "661a5123-5960-49ac-b24d-ef1931ed9ba7",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5194f322-ee67-4345-92e0-38fbd2d4ad64",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "612b9ca1-5e6c-408a-8cf2-6fae2ac2450b",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9cfe9e48-52bc-4be2-9135-08a20a98c9ab",
+   "topic_id": "078ad9ee-ef97-4d1d-a27e-e390f776377e",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9cfe9e48-52bc-4be2-9135-08a20a98c9ab",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "051179d8-57d8-4fa1-b9a8-e7e17eb7e6b3",
+   "topic_id": "d1cf755f-ce95-492b-8eec-3d0b91526d01",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "research"
+  },
+  {
+   "claim_id": "0ace0cee-50f8-46ee-9655-aadb3e25df4b",
+   "topic_id": "2b499fc4-dfc8-4865-8948-2227678f742c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "110ce433-a710-4826-8d74-3384c77c786b",
+   "topic_id": "240f70e1-f00a-4161-9c87-9b8cbd3b902c",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "13ba2403-68e2-4b96-b472-f6c4e7d4f28e",
+   "topic_id": "661a5123-5960-49ac-b24d-ef1931ed9ba7",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1514df2c-7885-4a6f-b778-c2775165c22a",
+   "topic_id": "e6ae6859-c66d-444f-8ffc-904addbb2f38",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1b22afbb-dcdf-48da-a56c-b7dbd476d697",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "21d857c8-b9fc-4583-ae8a-09fa8f2ae797",
+   "topic_id": "6b43522b-9d6e-4038-ae56-0953444ef96c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "2d870de7-21a9-4c50-8fa7-68e3393c7fa7",
+   "topic_id": "ab26b1ae-742c-49ff-bc8a-e8f074b992a2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "300e6ba6-445f-424f-9f2f-e384cd3abcb5",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "30558344-3a4a-4354-bf73-89b385bfdfae",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "39a73cb0-e46e-43c3-a5e8-c75bc58946cd",
+   "topic_id": "3b967467-7791-4ac5-b0aa-25f336cc584a",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "39c2bf50-8775-46d5-837a-41fd1853c544",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3f76befd-7fae-4897-bfb7-0ac79261a44c",
+   "topic_id": "1e0d57ca-f0e9-4acc-a2de-689d218eabf3",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "40929885-56d6-48f3-9cbb-cd1ed763b3b7",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "490644f5-1482-430f-9694-6327940a4db0",
+   "topic_id": "dff36372-87ee-4a90-a717-86a8527294d7",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "490644f5-1482-430f-9694-6327940a4db0",
+   "topic_id": "a0bca3a4-b545-4d71-b2a9-6bd91296d88c",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "49afb3e2-b811-4844-9abe-67c34ca44620",
+   "topic_id": "d76526ec-4b85-4303-a8b3-895ce40328bb",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "4a5cffe5-4d1b-4262-ad45-74d4a729a66b",
+   "topic_id": "f9d58708-f866-44a4-b007-59e99b59a068",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "research"
+  },
+  {
+   "claim_id": "520a9d4c-ba16-4447-a418-d2976e54a374",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "566ab6b3-abb3-4a1f-9d89-c859f666b8d5",
+   "topic_id": "067cab22-7a19-4b7e-8531-83216fcea497",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "579bbea4-53aa-4870-980d-afb8e03f76ea",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "579bbea4-53aa-4870-980d-afb8e03f76ea",
+   "topic_id": "b75ec557-b6c7-4ef1-a5c1-7f0030d083f6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "7480e87f-4277-4984-9372-506a8cf481b9",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "803ca04f-a144-44aa-85c0-0814a68f5706",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "811adaf9-f9c5-4b27-973b-f5daeae41117",
+   "topic_id": "65eb0134-41fc-4676-9103-70402d3d9f08",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8f6bd140-9943-4057-90e1-27d84c6e30c5",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9bfba7f6-f11f-422b-a5eb-8fff5c3bd09b",
+   "topic_id": "d289d3ce-c6c2-4b10-9b96-4ba656490f9f",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9bfba7f6-f11f-422b-a5eb-8fff5c3bd09b",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a38d4d25-0a61-4caa-8be4-f34155abea2a",
+   "topic_id": "ab26b1ae-742c-49ff-bc8a-e8f074b992a2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b6e9d136-e211-407c-b0df-2b38fad79a09",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "c6da5c9a-6cf8-456c-8c5b-8ba615d108fb",
+   "topic_id": "8ba6d8f5-b29d-4896-b67e-3a9df8536654",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "research"
+  },
+  {
+   "claim_id": "cb50ae6a-f483-453c-8baf-b21734991f03",
+   "topic_id": "9e1d1ac7-2f96-4a32-bd59-3178aec82c44",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "cc7719a8-8beb-4ab1-9a1c-84fbed3352aa",
+   "topic_id": "79180e1f-6d49-4d2c-8688-a6831115699c",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ce91dbc0-c843-4cbb-9a87-336d800660af",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "d03858ec-28c7-43ec-be4e-5960387a2e1b",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "research"
+  },
+  {
+   "claim_id": "d4c01bd9-6932-4dba-b55e-2c0bd10c9e51",
+   "topic_id": "963c69aa-e3aa-4c3e-ad14-04db8d1626fe",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "eb664062-13d3-4c7c-8f39-adf4551197d1",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f82852a5-4e03-45bc-820a-c2e05952edfd",
+   "topic_id": "9e1d1ac7-2f96-4a32-bd59-3178aec82c44",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5b1ad49a-f02f-4d05-8c1b-45add5267021",
+   "topic_id": "f2b6efb6-bdab-4254-9cf0-48c7e0247638",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a635c49a-9968-4eed-be7a-39d48e3bc590",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5cd7f1d7-b9b7-4ce7-902e-c6aae91e0418",
+   "topic_id": "d289d3ce-c6c2-4b10-9b96-4ba656490f9f",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4c9fc180-ad69-473c-a4a8-49926f8fd7e0",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4c9fc180-ad69-473c-a4a8-49926f8fd7e0",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "e8dce176-68c3-495d-8f09-fd310e6aac1b",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "459e951b-e0c0-4009-9d97-7c65da16698f",
+   "topic_id": "61192274-1043-4a64-a5a9-87ea56fcf3e2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a1524253-07e8-401b-9f42-e13497d050bd",
+   "topic_id": "16dbca0b-a447-4833-8940-f6fcc8f5415f",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5d113090-2bd8-427c-85a0-e3404cd3f880",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9fb2a848-3627-4a5b-852c-b89c313fd815",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9fb2a848-3627-4a5b-852c-b89c313fd815",
+   "topic_id": "0300bdb3-c975-428e-bca5-ba4cd1fa3c76",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "23257a5e-7bab-4da9-bc08-25ce9d0b53ee",
+   "topic_id": "451caab5-b859-4285-8f2a-9d2a9cd1bc04",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b63d7810-0ce5-4d3b-b409-0b092e05c3f2",
+   "topic_id": "98e380a0-d558-4123-9761-f0efec1b1601",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6d731c7a-4724-4e7b-ab3f-b45903aa6d28",
+   "topic_id": "ed7bba47-cf97-4a17-b2bf-f00d44986b9e",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6d731c7a-4724-4e7b-ab3f-b45903aa6d28",
+   "topic_id": "cdefb733-510f-477c-9917-ef1f44d569de",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "2afb04df-d8a7-427d-84d9-1392f3f9f804",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.8,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8daccdcc-ac4b-4ab8-8c90-eb494d5f436d",
+   "topic_id": "98e380a0-d558-4123-9761-f0efec1b1601",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f0ae357f-1489-414b-8e4a-c770d3a817a3",
+   "topic_id": "f54cf207-ad2d-464c-8b67-e0619580e583",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "796df738-c059-4a3f-beaa-c272f4d73cee",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a6d61d43-a84e-411f-bd6d-49163388d3b9",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a6d61d43-a84e-411f-bd6d-49163388d3b9",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0f99dfd2-b578-44a0-bee4-f6b06f55086d",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7a28397b-15ad-41dc-91cc-756188de0f0e",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a7cadcfe-9e9d-410b-9026-f38a29d7f4de",
+   "topic_id": "988ceef1-bd03-48b5-a97f-1ec2850cc39a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "43e32e5b-9445-4b1c-b6b7-bd9236070971",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "43e32e5b-9445-4b1c-b6b7-bd9236070971",
+   "topic_id": "7a999ca6-5d20-4564-bded-a9de8fc726de",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9c04f273-59a5-48d6-9746-4aa4200acf40",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "24fd7359-6800-4849-b4e6-97a679c903e7",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b951c5f8-f40a-4ae2-843b-11bf965620c3",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5953d1bd-a22e-4c86-8d3c-3d7d5678fd74",
+   "topic_id": "65eb0134-41fc-4676-9103-70402d3d9f08",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0b5ea95b-d85c-4fdf-b47e-58727c2f806b",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9baedeac-9d53-419e-910e-8b78ba349bcf",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "cdf992ea-c22f-4a4a-b288-97f88e3ce877",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "794a8253-71da-4aa8-adb8-7da1f4e783f2",
+   "topic_id": "0e042fa3-fc9b-4a6a-9a6c-261d62ac62a1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0bdf645a-3cdd-45ab-a6b6-ecbcd3928dac",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "17b6adff-9dd8-4f2c-a062-3f425b1f0089",
+   "topic_id": "f2b6efb6-bdab-4254-9cf0-48c7e0247638",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "b1330645-ab89-404f-867f-ae355a8e7fb2",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "fa71c985-30bb-43c1-b332-2100787b16be",
+   "topic_id": "6e1532d9-cafd-427b-9b81-c228a25fc54e",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "9b5bf088-e80c-4c29-9185-0f2f3c681a4a",
+   "topic_id": "9c600e8d-8f28-4e40-93a5-13e3c4735e82",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1986d1b2-9e7c-40fe-8bb9-83619e55aa66",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "63dfb785-e505-489a-a9be-9efe1d3e4c10",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "63dfb785-e505-489a-a9be-9efe1d3e4c10",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "aa38e2f8-77d9-4fd8-9ec9-9e7b871b1953",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "86d7018b-dd61-45cd-bad0-19932687b4e1",
+   "topic_id": "5484f6e9-c834-4c27-af44-f24bd7cd176b",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "73e9e492-f037-45d9-9408-195b7dc99e80",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "bb20a89d-1ff6-4f80-a5f9-6c1f999afde1",
+   "topic_id": "f4b1913f-0600-422d-9e61-f6730c206b11",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "63adf040-6725-4b21-83ed-e8fdadfec218",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "12a523cc-c79d-4a1d-a122-a1dad90a5ad3",
+   "topic_id": "7877135f-49af-444e-bd96-5aeed83390c9",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "e80bc7fa-3edf-4e56-aa38-99002354ee91",
+   "topic_id": "cab6d8f4-3e33-45e4-a107-d798cf57f4f6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3eff9607-2ef6-43dc-8d8e-3ca628d07b21",
+   "topic_id": "f4b1913f-0600-422d-9e61-f6730c206b11",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3eff9607-2ef6-43dc-8d8e-3ca628d07b21",
+   "topic_id": "5a7cfd94-505d-4fa1-aced-a327d6605aa7",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6b31a132-bdda-4777-afc0-5785f14be654",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f832f412-83ad-49cd-8982-1dc8ef7374d8",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f832f412-83ad-49cd-8982-1dc8ef7374d8",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6943b158-a3a8-4ab8-a5ca-a8aeec07f205",
+   "topic_id": "9353593c-6d69-4fc4-89d6-2f3fb1e31552",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "bcd945a0-2866-4522-8356-465c17af5af1",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4152769e-818b-4bcf-a7dd-f70a661301c5",
+   "topic_id": "0f3b1a8f-664e-4f54-99ff-df7fad60bd97",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4152769e-818b-4bcf-a7dd-f70a661301c5",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "97c94b6a-14d6-4bbc-8668-4c21a967d5fd",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8598d91e-8e86-4c9f-8e51-eec40def4f3c",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "122ed19d-c145-4182-8df0-64cb08c888df",
+   "topic_id": "078ad9ee-ef97-4d1d-a27e-e390f776377e",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "2c41fafc-6f93-48eb-ab31-2af1f244ad61",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "124fb284-6d9a-4fc7-8e34-9e88c5cb34aa",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "579c1ca6-3646-4f6f-b1db-79d3007cf12b",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "80ace2df-47cd-40f8-9ffa-0360fdc31b29",
+   "topic_id": "65eb0134-41fc-4676-9103-70402d3d9f08",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "dc55c72b-3bc7-4e47-990e-50306dedad20",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "dc55c72b-3bc7-4e47-990e-50306dedad20",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5a78d1e7-871f-4ae7-bde4-74b7095a7c42",
+   "topic_id": "d289d3ce-c6c2-4b10-9b96-4ba656490f9f",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "fdf7b70d-bb8c-4a4a-a9c0-5183194ac3a8",
+   "topic_id": "008a6adb-c7e4-48cb-8672-5945a6849455",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "eb12cb0d-7ac3-45ba-9841-d360294a2ad7",
+   "topic_id": "6b636845-a760-4f1d-9056-453d42468c6a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "ced89cbc-f2bf-4b68-a6c0-3f015843b205",
+   "topic_id": "dff36372-87ee-4a90-a717-86a8527294d7",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3090d789-0791-451d-b59e-cb57eb0bf0b6",
+   "topic_id": "411fba56-1564-4aff-984b-ddf5e977caa4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3090d789-0791-451d-b59e-cb57eb0bf0b6",
+   "topic_id": "2b499fc4-dfc8-4865-8948-2227678f742c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "280a7a03-d2d0-4776-a950-99a2c1e68ed4",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0bd4b50f-e170-4676-9a7e-6175b3a6b6f0",
+   "topic_id": "677bf460-7e2a-4dd8-965a-365400327166",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0bd4b50f-e170-4676-9a7e-6175b3a6b6f0",
+   "topic_id": "f0ef024b-bf40-459a-826f-5c42e0f5b371",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "92a416cf-6e2e-4779-bf6f-de53f42aa9d5",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8f43dda4-e0d7-4d1d-a954-3aa6ab8bb5c4",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "a8481326-7c93-4961-8bcb-5c78d4fe6b65",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "0ed5bd77-711a-4784-b881-d6ce3f242315",
+   "topic_id": "963c69aa-e3aa-4c3e-ad14-04db8d1626fe",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1a716dac-b1bc-4375-b2be-cab74bf8ac56",
+   "topic_id": "5a64211f-d1b3-4076-96de-9a2de41cfefd",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "907f08c3-dba4-4ed7-bfd5-e9b4e1628267",
+   "topic_id": "98ed5235-52a9-499a-a588-84ae593ad7a9",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "35877b48-1a9b-469c-851f-afa2f4d334b5",
+   "topic_id": "37dafaf2-2668-41ea-8019-99f47f0d73ac",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4e5ce131-e521-4a1a-bfde-fbe188789459",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4e5ce131-e521-4a1a-bfde-fbe188789459",
+   "topic_id": "dbfdade6-c6a3-469d-a20d-b161ec9d11d2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "98e9d120-7462-4176-b7ff-2f26ec1f903b",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1926a8a8-e021-4358-9a0d-01f5b0c537d3",
+   "topic_id": "79180e1f-6d49-4d2c-8688-a6831115699c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "cfbd75be-fde2-4e00-9e46-4001d5f79b21",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "03625356-a042-425d-a31b-6905a9e2580a",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "58106ab9-008b-4360-b91f-76c630c2e035",
+   "topic_id": "f2b6efb6-bdab-4254-9cf0-48c7e0247638",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "58106ab9-008b-4360-b91f-76c630c2e035",
+   "topic_id": "349e5754-0f17-4594-8566-563bd1533d5e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "3e7d4feb-456a-4da4-bb05-3bc27c8d68f1",
+   "topic_id": "1c9738a3-47b4-4344-bd56-58a6f3238dff",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1b5a2436-fc38-429d-aaf6-804e5e43c255",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "28793ee3-527a-49ab-a412-9e64c91fdb75",
+   "topic_id": "9b9719c8-8491-4bb9-b78d-9e22de4e0eb2",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "28793ee3-527a-49ab-a412-9e64c91fdb75",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "fbfdb74a-e0b1-40c5-9423-ac1e98166cf8",
+   "topic_id": "fe21f72d-6e4c-43a1-bdb9-65f6f3e63b8d",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8010fe32-6658-42cb-983b-1571be9d924d",
+   "topic_id": "8178a3ef-47e9-4edf-b8cd-ea63834829a3",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5e96effa-d865-4489-94eb-ba385c1bd12b",
+   "topic_id": "86f6e399-783d-48f4-aa46-22cb9d7284b5",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5e96effa-d865-4489-94eb-ba385c1bd12b",
+   "topic_id": "9353593c-6d69-4fc4-89d6-2f3fb1e31552",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "d09c3c4a-44d1-4d99-87a4-0ef141285a6a",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f8a36efa-b18d-44c9-ac6f-3fd944fb20f1",
+   "topic_id": "f23987a0-55f1-4555-9c21-7aafdc1d9c36",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "d21f094e-7238-4df3-b4c0-5ddb75bffbcb",
+   "topic_id": "4a01feea-091e-40c1-a4ac-513a9a849639",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f11788de-3b33-47f8-832b-c0cb58f26b5b",
+   "topic_id": "79180e1f-6d49-4d2c-8688-a6831115699c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "4edf6fe9-03fd-4ecf-b25a-c3dbe74ef0c2",
+   "topic_id": "49f130ed-0891-450e-96d7-434319f39c83",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "c75416b4-b4bd-463e-9eec-2af5b70e4a56",
+   "topic_id": "f0f00065-1822-4f5c-89ed-ef2f986ad7c2",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "e372f088-945b-47ad-9850-7f0c2a8ff8d9",
+   "topic_id": "90e83e6d-70b6-4e8c-bae5-b64ece3849f5",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "e372f088-945b-47ad-9850-7f0c2a8ff8d9",
+   "topic_id": "2e2d5c50-aa46-4a60-b816-691a0b86ad9c",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1a4f7dff-00a6-4c01-b34b-1d5c6b5cd25a",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "70e1d529-bc61-4eb6-a9b3-d4be0436ec99",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7548f830-3881-41b9-a22f-aa14122f916a",
+   "topic_id": "79180e1f-6d49-4d2c-8688-a6831115699c",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "7548f830-3881-41b9-a22f-aa14122f916a",
+   "topic_id": "17df0806-47c9-4c9a-ab54-ab33acb419cc",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5358fc9d-fb67-4556-b2e4-55390112c7c4",
+   "topic_id": "078ad9ee-ef97-4d1d-a27e-e390f776377e",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5358fc9d-fb67-4556-b2e4-55390112c7c4",
+   "topic_id": "57420a4d-20d8-4ad7-8265-fda10201bcad",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "037f0778-631d-43e3-93f0-1d04d1c6b6d9",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "1cd516ef-8068-41be-8542-9a3021e6298a",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "780c1fa1-b190-4e57-89e8-7117aee28256",
+   "topic_id": "f299e8a2-b81a-4d24-b4cf-81844b825468",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "c693a0d1-4d51-453f-a563-61a9efd52b0a",
+   "topic_id": "f13c7802-c960-44f6-86c5-5d9af77fab19",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "46925a03-89f9-4d77-9d1a-31d6cac10b03",
+   "topic_id": "be437931-7c9b-415d-bafb-be298f79177d",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "52f41dec-27a6-40b9-8386-3e867582f304",
+   "topic_id": "5548778f-cced-4f9c-aa85-5d44639880d6",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "34a868c9-e657-4571-8d3b-dc5bc0000eba",
+   "topic_id": "37408825-adc1-443a-adee-6dd2b4821e93",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "be96317d-3d5f-4f87-b088-f5f4df4e96f7",
+   "topic_id": "ada99fd6-3901-4f09-a096-bd2b5e7b2a3b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "f4e08f5d-f858-4b9a-9e20-75caa7d7aabe",
+   "topic_id": "5f917500-0fc5-4016-b60e-ffbbbf137df4",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "24ba8603-05a6-47fd-9ba3-4ac57e9016cd",
+   "topic_id": "d97db548-6a36-4bce-a713-d57b6a3a1914",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "92203167-bfbb-406f-a806-0e69fbcbf454",
+   "topic_id": "98e380a0-d558-4123-9761-f0efec1b1601",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "c70067b9-2e9f-4bd7-8a42-7479f506840a",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8fa7c719-4803-4646-b7d1-fe3a17f89808",
+   "topic_id": "736a0663-9eb6-4fd7-bfda-0b77565fca4b",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6be6dce0-29b0-4bff-9c97-3e422572da5c",
+   "topic_id": "ba923897-c34d-4fc9-8369-d414731658b1",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "6998aca0-8b28-41b5-a2d8-04f03151613e",
+   "topic_id": "c60d65d5-8dac-496a-8576-ee7802c721c0",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "dc854eac-a9ec-4fe6-8583-55364015489c",
+   "topic_id": "ce95e102-76c0-42ba-9c62-47a5c30ac093",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "dc854eac-a9ec-4fe6-8583-55364015489c",
+   "topic_id": "b51d7e41-b7df-4705-8285-0cb7bce9f6fe",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "8376622b-61d6-49a2-9702-9042bc9085c1",
+   "topic_id": "27792c17-6f2a-4d5b-8b7c-96ecbcd9f5bb",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "55ec9f44-c93b-4e91-8654-cce3d0351288",
+   "topic_id": "f4b1913f-0600-422d-9e61-f6730c206b11",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "93fa22d0-9193-441a-b76c-ae25f7c993b5",
+   "topic_id": "4ac0efd0-2859-4565-88bf-4f616379e322",
+   "tier": "fable",
+   "confidence": 0.7,
+   "lens": "attended"
+  },
+  {
+   "claim_id": "5893a3f4-bd57-423b-b145-1d1dc4a09240",
+   "topic_id": "d20daea3-7426-4fe0-bcaf-b577dd05485a",
+   "tier": "fable",
+   "confidence": 0.75,
+   "lens": "attended"
+  }
+ ]
+}

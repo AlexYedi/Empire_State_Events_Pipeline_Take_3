@@ -19,10 +19,17 @@ is **`.claude/scripts/render_resume.py`** (reuses render_carousel.py's chrome pr
    (paste the JD verbatim).
 2. Source is `.claude/references/me-model.md`, read **by path only**. If it is absent
    (fresh worktree without the local file): stop and ask — nothing renders without it.
-3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `contact[]` (optional),
-   `positioning`, `roles[] {title, company, dates, bullets[] {text, source[, original]}}`,
-   `key_accounts[]`, `proof_links[]`, `education[]` (optional)) and write it to
+3. Build a **resume-input JSON** (schema in the SKILL.md: `name`, `contact[]` (optional
+   in the schema, **required for a real render**: the run refuses without it),
+   `positioning`, `roles[] {title, company, dates, bullets[] {text, source[, original]}
+   [, key_accounts[]]}`, `key_accounts[]` (top-level, OR per role, never both; each
+   account a string or `{name, aliases[]}`, with aliases filled from the me-model's short
+   forms; aliases are blocked by rule 2 and never rendered),
+   `proof_links[]` OR `builds[] {links[][, description]}` (description: one line, ≤70
+   chars, refused not truncated), `education[]` (optional)) and write it to
    `.claude/output/resume-input.json`.
+   Per-role key accounts render a `Key accounts:` line under each role and suppress the
+   top-level line (YED-280).
    Every bullet carries a `source` note (trace-to-me-model). Use the **decided mapping**
    (SKILL.md — Alex's spec walk, 2026-10-31): Positioning → summary leading with
    quota-carrying post-sales; Experience sections → role entries in me-model order;
@@ -49,8 +56,9 @@ python3 .claude/scripts/render_resume.py .claude/output/resume-input.json \
 ## Step 3 — Verify in-session
 
 The run itself is gated: it exits non-zero unless the PDF is exactly one page, the
-`pdftotext` reading order holds (name → positioning → roles in order → Key accounts →
-Selected builds → Education when present), and the section labels extract unbroken (the
+`pdftotext` reading order holds (name → positioning → roles in order, each with its own
+Key accounts line in per-role mode → Key accounts (top-level mode) → Selected builds with
+their description lines → Education when present), and the section labels extract unbroken (the
 ≤0.3pt letter-spacing ATS cap — "E D U C AT I O N" extraction fails the run).
 If `pdftotext` is missing the order check is skipped with a loud `WARN` — install
 poppler-utils rather than trust it.

@@ -1,0 +1,167 @@
+{
+  "name": "Jordan Avery Ellis",
+  "contact": [
+    "New York, NY",
+    "jaellis-fixture.example"
+  ],
+  "positioning": "Quota-carrying post-sales account executive who grew a book of business at two workflow-software companies; hunting wins are proof of account growth, not a side job.",
+  "roles": [
+    {
+      "title": "Senior Account Executive",
+      "company": "Meridian Workflow Systems",
+      "dates": "2024-Present",
+      "bullets": [
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: stress role 1 bullet 1 (fictional)"
+        },
+        {
+          "text": "Grew the average contract value 2.3x by attaching onboarding to every renewal save across the book.",
+          "source": "fixture: stress role 1 bullet 2 (fictional)"
+        },
+        {
+          "text": "Closed $860K of new and expansion revenue in a two-rep territory (proof of account growth).",
+          "source": "fixture: stress role 1 bullet 3 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Quillmark Freight (fictional)",
+        "Tessellate Foods (fictional)",
+        "Orbitline Media (fictional)",
+        "Beacon Sheets (fictional)"
+      ]
+    },
+    {
+      "title": "Account Executive",
+      "company": "Northwind Analytics Co (fictional)",
+      "dates": "2022-2024",
+      "bullets": [
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: stress role 2 bullet 1 (fictional)"
+        },
+        {
+          "text": "Grew the average contract value 2.3x by attaching onboarding to every renewal save across the book.",
+          "source": "fixture: stress role 2 bullet 2 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Halvorsen Outdoor (fictional)",
+        "Marrowgate Retail (fictional)",
+        "Fennick Apparel (fictional)",
+        "Corvane Beverage (fictional)"
+      ]
+    },
+    {
+      "title": "Account Executive",
+      "company": "Larchmont Data (fictional)",
+      "dates": "2020-2022",
+      "bullets": [
+        {
+          "text": "Closed $860K of new and expansion revenue in a two-rep territory (proof of account growth).",
+          "source": "fixture: stress role 3 bullet 1 (fictional)"
+        },
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: stress role 3 bullet 2 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Ashby Home (fictional)",
+        "Delacroix Beauty (fictional)",
+        "Wexford Sports (fictional)",
+        "Ingleby Pet (fictional)"
+      ]
+    },
+    {
+      "title": "Account Manager",
+      "company": "Pemberton Cloud (fictional)",
+      "dates": "2018-2020",
+      "bullets": [
+        {
+          "text": "Grew the average contract value 2.3x by attaching onboarding to every renewal save across the book.",
+          "source": "fixture: stress role 4 bullet 1 (fictional)"
+        },
+        {
+          "text": "Closed $860K of new and expansion revenue in a two-rep territory (proof of account growth).",
+          "source": "fixture: stress role 4 bullet 2 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Junica Travel (fictional)",
+        "Kestrel Toys (fictional)",
+        "Lumora Optics (fictional)",
+        "Mosswell Garden (fictional)"
+      ]
+    },
+    {
+      "title": "Account Manager",
+      "company": "Sablewood Software (fictional)",
+      "dates": "2016-2018",
+      "bullets": [
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: stress role 5 bullet 1 (fictional)"
+        },
+        {
+          "text": "Grew the average contract value 2.3x by attaching onboarding to every renewal save across the book.",
+          "source": "fixture: stress role 5 bullet 2 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Norrland Audio (fictional)",
+        "Pallisade Paper (fictional)",
+        "Quorra Kitchen (fictional)",
+        "Ravelin Bikes (fictional)"
+      ]
+    },
+    {
+      "title": "Sales Associate",
+      "company": "Cinder Labs (fictional)",
+      "dates": "2014-2016",
+      "bullets": [
+        {
+          "text": "Closed $860K of new and expansion revenue in a two-rep territory (proof of account growth).",
+          "source": "fixture: stress role 6 bullet 1 (fictional)"
+        },
+        {
+          "text": "Owned a $1.2M quota; closed 128% of plan with named-account expansion (proof of account growth).",
+          "source": "fixture: stress role 6 bullet 2 (fictional)"
+        }
+      ],
+      "key_accounts": [
+        "Sorrel Wellness (fictional)",
+        "Tamsin Jewelry (fictional)",
+        "Umbra Lighting (fictional)",
+        "Vellum Books (fictional)"
+      ]
+    }
+  ],
+  "builds": [
+    {
+      "description": "Resume Proof Fixture: a synthetic multi-agent GTM pipeline for testing",
+      "links": [
+        "https://github.com/jaellis-fixture/resume-proof-fixture"
+      ]
+    },
+    {
+      "description": "Hub Long Reads: the web-native long-form companion to every event post",
+      "links": [
+        "https://empire-state-hub.example/builds",
+        "https://empire-state-hub.example/long-reads"
+      ]
+    },
+    {
+      "description": "Role Radar Fixture: a synthetic scanner scoring postings against a fit",
+      "links": [
+        "https://github.com/jaellis-fixture/role-radar-fixture"
+      ]
+    }
+  ],
+  "education": [
+    "B.A. Economics, Empire State University (fictional)",
+    "Two seasons club lacrosse",
+    "Cert: Salesforce Administrator",
+    "Cert: HubSpot Sales Software"
+  ]
+}
