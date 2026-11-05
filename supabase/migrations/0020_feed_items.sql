@@ -21,13 +21,14 @@
 --                       redact()); the summary additionally passes substrate.redact_body
 --                       (to_row, PR #272). The spine guard re-checks per row and
 --                       quarantines failures by sha256 key. The DB performs NO PII
---                       validation of its own: there is exactly one redaction dialect
---                       (the spine's, applied before staging), and a DB-side regex would
---                       be a second dialect that can drift from it.
+--                       validation on this table: the DB-side backstop
+--                       (docs/adr/proposals/pii-db-check.sql, its regexes pinned to
+--                       the spine's by check_pii_regex_parity.py) is person-only by
+--                       scope; extending it to feed_items is Alex's call.
 --   published           item publish time (ISO-8601 from the feed), nullable.
 --   kind                the staged item's kind per the ADOPTED #270 matrix (Alex,
 --                       2026-11-05, adopted as-is): launch | market — feeds.py classify()
---                       (commit 4820063). launch-flavored items (product/GA announcements)
+--                       (#272 head 30f327b). launch-flavored items (product/GA announcements)
 --                       stage kind=launch with a NULL signal_type_guess; market items stage
 --                       kind=market with a required signal_type_guess. The feed FORMAT
 --                       (rss/atom/youtube) is NOT kind — it lives in metadata.source_format.
@@ -46,11 +47,12 @@
 --
 -- SECURITY MODEL (0016 pattern): `public`, RLS enabled, no policies, all privileges
 -- revoked from public/anon/authenticated. The REVOKE is the SELECT control on this
--- table — 0019 fixed postgres's default ACL so new tables are not auto-granted to
--- anon/authenticated, but if default privileges ever drift, this explicit REVOKE is
--- what holds (it is idempotent, so re-pasting is safe). RLS deny-by-default (no
--- policies) backs it up for direct SQL; the service-role REST path through
--- spine_client — which bypasses RLS and keeps its grants — is the only writer.
+-- table: 0019 revoked WRITES only and deliberately left the default SELECT grant for
+-- new tables in place (0019 "WHAT IS NOT CHANGED" — an open question for Alex), so
+-- WITHOUT this REVOKE anon/authenticated could read the table. It is idempotent, so
+-- re-pasting is safe. RLS deny-by-default (no policies) backs it up for direct SQL;
+-- the service-role REST path through spine_client — which bypasses RLS and keeps its
+-- grants — is the only writer.
 --
 -- RE-RUNNABLE: every DDL statement is guarded (if not exists / no-op REVOKE); a second
 -- paste is a no-op.
@@ -132,7 +134,7 @@ commit;
 -- select 'feed_items_exists', to_regclass('public.feed_items') is not null;
 -- select 'feed_items_no_rows', (select count(*) = 0 from public.feed_items);
 -- select 'feed_items_column_order', (select string_agg(column_name, ',' order by ordinal_position) = 'item_id,source_key,company,feed_url,url,title,published,summary,kind,signal_type_guess,fetched_at,metadata,created_at' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items');
--- select 'feed_items_source_key_64hex', exists (select 1 from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%source_key %^[0-9a-f]{64}$%');
+-- select 'feed_items_source_key_64hex', (select pg_get_constraintdef(oid) = 'CHECK ((source_key ~ ''^[0-9a-f]{64}$''::text))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_source_key_check');
 -- select 'feed_items_source_key_unique', exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'feed_items' and indexdef ~* 'unique.*source_key');
 -- select 'feed_items_kind_vocab', (select pg_get_constraintdef(oid) = 'CHECK ((kind = ANY (ARRAY[''launch''::text, ''market''::text])))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_kind_check');
 -- select 'feed_items_signal_vocab', (select pg_get_constraintdef(oid) = 'CHECK (((signal_type_guess IS NULL) OR (signal_type_guess = ANY (ARRAY[''news''::text, ''partnership''::text, ''layoff''::text, ''paper''::text, ''model_release''::text]))))' from pg_constraint where conrelid = 'public.feed_items'::regclass and contype = 'c' and conname = 'feed_items_signal_type_guess_check');
@@ -141,16 +143,15 @@ commit;
 -- select 'feed_items_guess_nullable_launch_null', (select is_nullable = 'YES' from information_schema.columns where table_schema = 'public' and table_name = 'feed_items' and column_name = 'signal_type_guess');
 -- select 'feed_items_rls_on', (select relrowsecurity from pg_class where oid = 'public.feed_items'::regclass);
 -- select 'feed_items_no_policies', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'feed_items');
--- select 'feed_items_no_api_grants', not exists (select 1 from unnest(array['anon', 'authenticated']) r where has_table_privilege(r, 'public.feed_items', 'select') or has_table_privilege(r, 'public.feed_items', 'insert') or has_table_privilege(r, 'public.feed_items', 'update') or has_table_privilege(r, 'public.feed_items', 'delete'));
+-- select 'feed_items_no_api_grants', not exists (select 1 from unnest(array['anon', 'authenticated']) r where has_table_privilege(r, 'public.feed_items', 'select') or has_table_privilege(r, 'public.feed_items', 'insert') or has_table_privilege(r, 'public.feed_items', 'update') or has_table_privilege(r, 'public.feed_items', 'delete') or has_table_privilege(r, 'public.feed_items', 'truncate') or has_table_privilege(r, 'public.feed_items', 'references') or has_table_privilege(r, 'public.feed_items', 'trigger') or has_table_privilege(r, 'public.feed_items', 'maintain'));
 -- select 'feed_items_no_pii_columns', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'feed_items' and column_name ~* '(e_?mail|phone|mobile|telephone|contact|address|linkedin)');
 -- VERIFY:END
 --
 -- =====================================================================
 -- ROLLBACK (uncomment to run). Drops only what 0020 creates: the table
--- (its two indexes go with it). No other object is touched.
+-- (its three indexes go with it). No other object is touched.
 --
 -- ROLLBACK:BEGIN
 -- drop table if exists public.feed_items;
 -- ROLLBACK:END
--- =====================================================================
 -- =====================================================================

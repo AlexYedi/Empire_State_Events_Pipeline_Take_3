@@ -1,4 +1,4 @@
-evidence: migration sha256 = 7c0a5dbd50221f4d353250278631c843b7da8e03f7ee826a96bba564ec7d8d6e (/home/user/work/rehearse0020/supabase/migrations/0020_feed_items.sql)
+evidence: migration sha256 = 0c3473b9b764b3a1c2c6a834f13389eaa3b08d79d18cf60bc6a513d6b2e9650f (/home/user/work/rehearse0020/supabase/migrations/0020_feed_items.sql)
   … db.ytfzzsxcxxbejnowmkmk.supabase.co unreachable, trying next
   … aws-0-us-east-2.pooler.supabase.com unreachable, trying next
 gate 0 preflight: twin reachable via aws-1-us-east-2.pooler.supabase.com
@@ -30,7 +30,7 @@ gate 3 verify: 14/14 checks t:
 gate 3 behavioural: 5/5 rows t (insert / launch-null guess / upsert / market guess / service_role ignore-dup) — rolled back
   ok  duplicate source_key refused (feed_items_source_key_key)
   ok  kind='blog' refused (feed_items_kind_check)
-  ok  kind='rss' (feed format is NOT kind — regression guard for the 4820063 blocker) refused (feed_items_kind_check)
+  ok  kind='rss' (feed format is NOT kind — regression guard for the round-1 blocker) refused (feed_items_kind_check)
   ok  signal_type_guess='funding' (out of lane) refused (feed_items_signal_type_guess_check)
   ok  kind='market' with NULL guess (mapping requires a signal) refused (feed_items_signal_mapping_check)
   ok  kind='launch' with a guess (mapping requires NULL) refused (feed_items_signal_mapping_check)
@@ -41,6 +41,8 @@ gate 3 behavioural: 5/5 rows t (insert / launch-null guess / upsert / market gue
   ok  RLS disabled: feed_items_rls_on went f under the fault, all-t after restore
   ok  policy added: feed_items_no_policies went f under the fault, all-t after restore
   ok  unique source_key dropped: feed_items_source_key_unique went f under the fault, all-t after restore
+  ok  anon TRUNCATE grant (RLS does not govern TRUNCATE — 0019): feed_items_no_api_grants went f under the fault, all-t after restore
+  ok  service_role SELECT revoked (the only writer must keep its grants): feed_items_service_role_rw went f under the fault, all-t after restore
   ok  kind CHECK widened (exact-text VERIFY must catch it): feed_items_kind_vocab went f under the fault, all-t after restore
 gate 4 re-apply: idempotent — verify 14/14 t again
 gate 5 rollback: the ROLLBACK block ran (psql rc=0)

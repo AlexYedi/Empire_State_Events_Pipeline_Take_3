@@ -36,10 +36,10 @@ Gates (all must pass, in order):
                  the twin then carries feed_items for PR #272's fetch lane
 
 HARD REFUSAL: never touches prod (oicikjyzmxqfomrrqkvf). No override flag.
-Env: PHANTOM_TEST_DB_PASSWORD (required); PSQL_BIN (default psql); TWIN_DB_HOST /
-TWIN_DB_PORT / TWIN_DB_USER (direct db.<ref>.supabase.co first, then the session
-pooler aws-0- / aws-1-<region>.pooler.supabase.com, user postgres.<ref> — the
-runbook addendum to S-04 records the twin answering on aws-1).
+Env: PHANTOM_TEST_DB_PASSWORD (required); PSQL_BIN (default psql). Twin endpoints are
+hardcoded below: direct db.<ref>.supabase.co first, then the session pooler aws-0- /
+aws-1-<region>.pooler.supabase.com, user postgres.<ref> — the runbook addendum to
+S-04 records the twin answering on aws-1.
 """
 from __future__ import annotations
 import argparse, datetime as dt, hashlib, os, re, subprocess, sys
@@ -170,7 +170,7 @@ def require_all_t(rows, gate):
         sys.exit(f"{gate} FAILED — rows not t: {fails}")
 
 
-BEHAVIOURAL_OK = """-- fixture-shaped insert (feeds.py to_row shape, #272 commit 4820063); launch-flavored item
+BEHAVIOURAL_OK = """-- fixture-shaped insert (feeds.py to_row shape, #272 head 30f327b); launch-flavored item
 -- kind is the classified launch/market pair per the adopted #270 matrix; the feed FORMAT lives in
 -- metadata.source_format. kind=launch ⇒ signal_type_guess NULL (matrix-enforced).
 begin;
@@ -276,7 +276,7 @@ def main():
     # secret — the password rides in PGPASSWORD).
     print(f"evidence: target = {conn}")
 
-    if os.environ.get("PHANTOM_TEST_DB_PASSWORD") in (None, "") and not ENV.get("PHANTOM_TEST_DB_PASSWORD"):
+    if not os.environ.get("PHANTOM_TEST_DB_PASSWORD"):
         sys.exit("PHANTOM_TEST_DB_PASSWORD not set.")
 
     exists = kv(conn, "select 'feed_items_exists', to_regclass('public.feed_items') is not null;")
@@ -355,7 +355,7 @@ def main():
                 "'" + kind + "', " + g + ", now());")
 
     expect_fail(conn, "kind='blog'", ins(kind="blog"), "feed_items_kind_check")
-    expect_fail(conn, "kind='rss' (feed format is NOT kind — regression guard for the 4820063 blocker)",
+    expect_fail(conn, "kind='rss' (feed format is NOT kind — regression guard for the round-1 blocker)",
                 ins(kind="rss"), "feed_items_kind_check")
     expect_fail(conn, "signal_type_guess='funding' (out of lane)",
                 ins(kind="market", guess="funding"),
@@ -369,10 +369,13 @@ def main():
     expect_fail(conn, "anon SELECT (the REVOKE is the SELECT control)",
                 "set role anon; select count(*) from public.feed_items;", "permission denied")
 
-    # --- 3.5 planted faults: every VERIFY check must catch its own break ------
-    # Each fault is planted, must fail its NAMED check (f — fail closed), then its
-    # restore must return the FULL VERIFY to all-t. A check that stays t under a
-    # planted fault is dead weight and fails this gate.
+    # --- 3.5 planted faults: 6 of the 14 VERIFY checks have a planted fault ----
+    # (no_api_grants x2, rls_on, no_policies, source_key_unique, kind_vocab,
+    # service_role_rw). Each fault is planted, must fail its NAMED check (f — fail
+    # closed), then its restore must return the FULL VERIFY to all-t. A check that
+    # stays t under a planted fault is dead weight and fails this gate. The other
+    # 8 checks are structural (shape/columns/nullability/PII) — verified by gate 3
+    # and the 1b live-check proof, not faultable at runtime.
     FAULTS = [
         ("anon SELECT grant",
          "grant select on public.feed_items to anon;",
@@ -390,6 +393,14 @@ def main():
          "alter table public.feed_items drop constraint feed_items_source_key_key;",
          "alter table public.feed_items add constraint feed_items_source_key_key unique (source_key);",
          "feed_items_source_key_unique"),
+        ("anon TRUNCATE grant (RLS does not govern TRUNCATE — 0019)",
+         "grant truncate on public.feed_items to anon;",
+         "revoke truncate on public.feed_items from anon;",
+         "feed_items_no_api_grants"),
+        ("service_role SELECT revoked (the only writer must keep its grants)",
+         "revoke select on public.feed_items from service_role;",
+         "grant select on public.feed_items to service_role;",
+         "feed_items_service_role_rw"),
         ("kind CHECK widened (exact-text VERIFY must catch it)",
          "alter table public.feed_items drop constraint feed_items_kind_check;\n"
          "alter table public.feed_items add constraint feed_items_kind_check "
