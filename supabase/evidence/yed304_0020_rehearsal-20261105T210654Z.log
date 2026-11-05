@@ -1,0 +1,31 @@
+  … db.ytfzzsxcxxbejnowmkmk.supabase.co unreachable, trying next
+  … aws-0-us-east-2.pooler.supabase.com unreachable, trying next
+gate 0 preflight: twin reachable via aws-1-us-east-2.pooler.supabase.com
+gate 0 preflight: stale feed_items dropped (--reset-first)
+gate 1 snapshot A: recorded (feed_items ABSENT)
+gate 1b negative: VERIFY reports feed_items_exists = f pre-migration (checks are live)
+gate 2 apply: 0020 applied verbatim (psql rc=0)
+gate 3 verify: 12/12 checks t:
+  t  feed_items_exists
+  t  feed_items_no_rows
+  t  feed_items_column_order
+  t  feed_items_source_key_64hex
+  t  feed_items_source_key_unique
+  t  feed_items_kind_vocab
+  t  feed_items_guess_vocab
+  t  feed_items_guess_nullable_launch_null
+  t  feed_items_rls_on
+  t  feed_items_no_policies
+  t  feed_items_no_api_grants
+  t  feed_items_no_pii_columns
+gate 3 behavioural: insert / launch-null guess / upsert / market guess — all ok (rolled back)
+  ok  duplicate source_key refused (feed_items_source_key_key)
+  ok  kind='blog' refused (feed_items_kind_check)
+  ok  signal_type_guess='funding' (out of lane) refused (feed_items_signal_type_guess_check)
+  ok  63-hex source_key refused (feed_items_source_key_check)
+  ok  anon INSERT (no grant, RLS) refused (permission denied)
+gate 4 re-apply: idempotent — verify 12/12 t again
+gate 5 rollback: the ROLLBACK block ran (psql rc=0)
+gate 6 snapshot C == A: rollback PROVEN
+gate 7 leave-applied: 0020 applied + verify 12/12 t — the twin now carries feed_items for PR #272's fetch lane.
+ALL GATES GREEN
