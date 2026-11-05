@@ -186,7 +186,8 @@ Idempotent: a re-run reports `created=0`. Exit codes: **3** = zero admissible
 ledger rows (loud; re-run with the raw specialist returns), **5** = the manifest lacks the Event page id. A network error: retry once; if it still fails, tell
 Alex (list it in the Step 6 summary as an incomplete).
 
-**4.2c Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`.
+**4.2c Report** one line for Step 6: `Graph: <N> research claims (web <W> · email-lead <E>) · skipped <S> · unlinked headings <list or none>`,
+plus `· parenthetical_strip <n> · global_exact <n> · global_ambiguous <n>` when a YED-264 linking fallback fired (paste it as printed).
 If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 
 ## Step 4.5 — Render + append the Deep Read (this conversation — decoupled, additive)

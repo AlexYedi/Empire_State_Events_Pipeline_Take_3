@@ -485,6 +485,53 @@ def roster_match(heading: str, roster: list[tuple[str, str, str]]) -> tuple[str,
     return None
 
 
+# YED-264 (YED-314 decision A′, 2026-11-05): two deterministic fallbacks, tried ONLY after a linker's existing
+# roster-scoped match fails. 21% of prod claims arrived with no claim_entity link; these close the cheap,
+# certain part of that gap at write time. Re-linking claims already in the graph is lane 0's job, not this file's.
+GLOBAL_LINK_TYPES = ("company", "topic")    # lower(name) is unique on both. Never person: people share names.
+
+
+def strip_paren(name: str) -> str:
+    """Drop ONE trailing balanced '(…)', nested parens included: 'Fivetran (supplementary, via dbt (2025))' ->
+    'Fivetran'. split_qualifier stops at nested parens; this does not. Unbalanced or no trailing ')' -> unchanged."""
+    s = (name or "").strip()
+    if not s.endswith(")"):
+        return s
+    depth = 0
+    for i in range(len(s) - 1, -1, -1):
+        depth += {")": 1, "(": -1}.get(s[i], 0)
+        if depth == 0:
+            return s[:i].strip() or s
+    return s
+
+
+def link_fallback(g: "Graph", name: str, roster: list[tuple[str, str, str]], *, global_types: tuple[str, ...],
+                  stat: str) -> tuple[str, str] | None:
+    """(a) parenthetical strip: `name` and the roster names compared with a trailing '(…)' removed (fires only when
+    one side actually carried one), roster first; a roster tie stops here — the roster already said 'two'.
+    (b) global exact: lower(name) equality against EVERY live company/topic (the full name, then the stripped one).
+    Persons are filtered out of (b) whatever the caller passes. >1 survivor = ambiguous: counted, never linked.
+    Counters land on claim_entity as <stat>_parenthetical_strip / _global_exact / _global_ambiguous."""
+    bare = strip_paren(name)
+    hits = {(t, i) for t, n, i in roster
+            if (bare != (name or "").strip() or strip_paren(n) != n.strip()) and norm_text(strip_paren(n)) == norm_text(bare)}
+    if len(hits) == 1:
+        g.stats.bump("claim_entity", f"{stat}_parenthetical_strip")
+        return next(iter(hits))
+    if hits:
+        return None
+    types = [t for t in global_types if t in GLOBAL_LINK_TYPES]
+    for cand in dict.fromkeys(x for x in ((name or "").strip(), bare) if x):
+        found = {(t, r["id"]) for t in types for r in g.live_by_name(t, cand)}
+        if len(found) == 1:
+            g.stats.bump("claim_entity", f"{stat}_global_exact")
+            return next(iter(found))
+        if found:
+            g.stats.bump("claim_entity", f"{stat}_global_ambiguous")
+            return None
+    return None
+
+
 OWNER_FIRST = "Alex"
 
 
@@ -1128,11 +1175,14 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         roster_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.person&select=entity_id")]
         roster = g.get(f"/person?id=in.({','.join(roster_ids)})&select=id,name") if roster_ids else []
         for name in speakers:
-            prows = [p for p in roster if same_person(name, p["name"])]
+            prows = [p["id"] for p in roster if same_person(name, p["name"])]
+            if len(prows) != 1:   # YED-264 rule (a) only — a person is never linked by a global name match
+                fb = link_fallback(g, name, [("person", p["name"], p["id"]) for p in roster], global_types=(), stat="speaker")
+                prows = [fb[1]] if fb else []
             if len(prows) != 1:
                 g.stats.bump("claim_entity", "speaker_unresolved")
                 continue
-            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "person", "entity_id": prows[0]["id"],
+            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "person", "entity_id": prows[0],
                       "role": "asserted_by"} for it in items if it["speaker"] == name and it["claim_key"] in ids]
             if links:
                 g.stats.bump("claim_entity", "linked (idempotent)", len(links))
@@ -1145,11 +1195,15 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
         co_ids = [r["entity_id"] for r in g.get(f"/event_entity?event_id=eq.{eid}&entity_type=eq.company&select=entity_id")]
         roster = g.get(f"/company?id=in.({','.join(co_ids)})&select=id,name") if co_ids else []
         for name in about:
-            match = [c for c in roster if same_company(name, c["name"])]
+            match = [c["id"] for c in roster if same_company(name, c["name"])]
+            if len(match) != 1:   # YED-264 fallbacks: (a) parenthetical strip on this roster, then (b) global exact
+                fb = link_fallback(g, name, [("company", c["name"], c["id"]) for c in roster],
+                                   global_types=("company",), stat="company")
+                match = [fb[1]] if fb else []
             if len(match) != 1:
                 g.stats.bump("claim_entity", "company_unresolved")
                 continue
-            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "company", "entity_id": match[0]["id"],
+            links = [{"claim_id": ids[it["claim_key"]], "entity_type": "company", "entity_id": match[0],
                       "role": "about"} for it in items if it.get("about_company") == name and it["claim_key"] in ids]
             if links:
                 g.stats.bump("claim_entity", "linked (idempotent)", len(links))
@@ -1272,9 +1326,13 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
         g.stats.bump("claim", "created", len(rows))
         g.post("claim", rows, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
     ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")} if not g.dry else {}
-    links, unresolved = [], set()
+    links, unresolved, resolved = [], set(), {}
     for it in items:
-        hit = roster_match(it["entity"], roster)
+        h = it["entity"]
+        if h not in resolved:     # once per heading, so the fallback counters count headings, like unresolved does
+            resolved[h] = roster_match(h, roster) or link_fallback(g, h, roster, global_types=GLOBAL_LINK_TYPES,
+                                                                   stat="about")
+        hit = resolved[h]
         if not hit:
             unresolved.add(it["entity"])
             continue
@@ -1291,7 +1349,9 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None) 
     # the exact Step 4.2c line, so the command can paste it into the Step 6 summary unchanged
     print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
-          f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}")
+          f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
+          + "".join(f" · {k.removeprefix('about_')} {v}" for k, v in sorted(g.stats.c.get("claim_entity", {}).items())
+                    if k.startswith("about_") and k != "about_unresolved_heading"))
     return 0
 
 
@@ -1998,6 +2058,57 @@ def _research_selftest(ok) -> None:
     ok("attend: another event's research claims are never touched", "event_id" not in other.t["claim"][0])
 
 
+def _linking_selftest(ok) -> None:
+    """YED-264 write-time fallbacks, end to end through stage_research / stage_claims on _FakeGraph. Each fixture
+    seeds an OFF-roster row in the graph so a link can only come from the rule under test."""
+    ok("strip_paren: nested trailing parenthetical; inner/unbalanced untouched",
+       strip_paren("Fivetran (supplementary, via dbt Labs (merged 2025))") == "Fivetran"
+       and strip_paren("Miaolai (Mila) Zhou") == "Miaolai (Mila) Zhou" and strip_paren("Acme (beta") == "Acme (beta")
+    pid = "4aed3699c2db816a828ec6410801d5de"
+
+    def ledger(*heads: str) -> str:
+        return "\n".join(f"##### Evidence Ledger — {h}\n- claim: Shipped a public product update this quarter | tier: "
+                         f"web-verified | source: blog | url: https://example.com/{i} | date: 2026-10-01"
+                         for i, h in enumerate(heads))
+
+    def run(heads, seed):
+        fg = _FakeGraph()
+        for table, name in seed:
+            fg.t[table].append({"id": f"off-{table}-{len(fg.t[table])}", "name": name})
+        m = {"event": {"notion_page_id": pid, "title": "Linking fixture", "event_date": "2026-10-02"},
+             "entities": [{"type": "company", "name": "Soxton.AI"}, {"type": "person", "name": "Logan Brown"},
+                          {"type": "topic", "name": "Contract AI"}]}
+        stage_research(fg, ledger(*heads), m, brief_ref=None)
+        ids = {r["name"]: r["id"] for t in ("company", "person", "topic") for r in fg.t[t]}
+        return fg, [(l["entity_type"], l["entity_id"]) for l in fg.t["claim_entity"]], ids, fg.stats.c.get("claim_entity", {})
+
+    _, links, ids, st = run(["Logan Brown (co-founder (since 2024), speaking)"], [])
+    ok("link (a): a nested-parenthetical heading links to its roster entity + counts about_parenthetical_strip",
+       links == [("person", ids["Logan Brown"])] and st.get("about_parenthetical_strip") == 1)
+    _, links, ids, st = run(["Fivetran (supplementary, via dbt Labs (merged 2025))"], [("company", "Fivetran")])
+    ok("link (b): a global exact company match links when the roster misses + counts about_global_exact",
+       links == [("company", "off-company-0")] and st.get("about_global_exact") == 1)
+    _, links, _, st = run(["Dana Smith"], [("person", "Dana Smith")])
+    ok("link (b): a person NEVER links by global name match (people share names)",
+       links == [] and "about_global_exact" not in st and st.get("about_unresolved_heading") == 1)
+    _, links, _, st = run(["Agent Evals"], [("topic", "Agent Evals"), ("topic", "Agent Evals")])
+    ok("link (b): two same-named topics -> no link, counted about_global_ambiguous",
+       links == [] and st.get("about_global_ambiguous") == 1 and st.get("about_unresolved_heading") == 1)
+    _, links, ids, st = run(["Soxton"], [("company", "Soxton")])
+    ok("link: a roster match still wins over a global exact match ('Soxton' -> roster Soxton.AI, not global Soxton)",
+       links == [("company", ids["Soxton.AI"])] and not any(k.startswith("about_global") for k in st))
+    # stage_claims founder-showcase path: Arist is off the event's roster but in the graph -> (b) links it
+    fg = _FakeGraph()
+    fg.t["company"].append({"id": "off-arist", "name": "Arist"})
+    em = {"event": {"notion_page_id": pid, "title": "Showcase fixture", "kind": "attended", "event_date": "2026-10-02"},
+          "entities": [{"type": "company", "name": "North.Cloud", "role": "subject"}]}
+    fg.ensure_event(em)
+    stage_claims(fg, SHOWCASE_SAMPLE, em, brief_ref=None, approve=False)
+    arist = [l for l in fg.t["claim_entity"] if l["entity_id"] == "off-arist"]
+    ok("link (b): stage-claims showcase company off the roster links by global exact (3 Arist claims)",
+       len(arist) == 3 and fg.stats.c["claim_entity"].get("company_global_exact") == 1)
+
+
 def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
     """A dry-run view over the same in-memory tables (reads real, writes suppressed)."""
     d = _FakeGraph()
@@ -2139,6 +2250,7 @@ def selftest() -> bool:
     _identity_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
+    _linking_selftest(ok)
     _roles_selftest(ok)
 
     fail = 0
