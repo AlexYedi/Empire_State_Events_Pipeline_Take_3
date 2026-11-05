@@ -60,10 +60,11 @@ from __future__ import annotations
 import json
 import os
 import sys
+import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from spine_client import EMAIL_ALLOWLIST_RE, EMAIL_RE, PHONE_RE, PIIViolation  # noqa: E402
-from substrate import redact_body  # noqa: E402  ONE confidentiality dialect (substrate.py:185)
+from substrate import CONFIDENTIAL_RE, redact_body  # noqa: E402  ONE confidentiality dialect (substrate.py:185)
 
 # event.kind values lane 4 may claim (event_kind_enum, migration 0009; #268 lane 4:
 # "classified launch/market events" — funding/exec_move are akta lane 2, not feeds).
@@ -161,14 +162,16 @@ def _scan_pii(obj: dict, where: str, problems: list[str]) -> None:
 
 
 def _names(record: dict, key: str, problems: list[str], known: set[str] | None) -> None:
-    vals = record[key]
+    vals = record.get(key)
     if not isinstance(vals, list):
-        problems.append(f"{key}: must be an array of strings · got {type(vals).__name__}")
+        problems.append(f"{key}: must be an array of strings · got "
+                        f"{type(vals).__name__ if vals is not None else 'missing'}")
         return
-    if len(vals) > LIST_MAX:
+    if len(vals) > LIST_MAX:   # stop at the first breach — never echo unbounded model output
         problems.append(f"{key}: {len(vals)} entries exceeds LIST_MAX={LIST_MAX} — "
                         f"bounded output for a channel that read untrusted text "
                         f"(review fix #270)")
+        return
     for i, v in enumerate(vals):
         if not isinstance(v, str) or not v.strip():
             problems.append(f"{key}[{i}]: must be a non-empty string")
@@ -176,7 +179,7 @@ def _names(record: dict, key: str, problems: list[str], known: set[str] | None) 
             problems.append(f"{key}[{i}]: exceeds {KEY_MAX} chars — link EXISTING names, "
                             f"not descriptions (#268 §3.2 link-to-existing only)")
         elif known is not None and v not in known:
-            problems.append(f"{key}[{i}]: {v!r} is not known to the graph — link-to-"
+            problems.append(f"{key}[{i}]: name not known to the graph — link-to-"
                             f"existing only; the parent passes the known-name list "
                             f"(review fix #270: injection channel closure)")
     if len(vals) != len({str(v) for v in vals}):
@@ -213,12 +216,17 @@ def validate_record(record, item, known_companies=None, known_topics=None) -> No
     _scan_pii(record, "record", problems)
     _scan_pii(item, "item", problems)
 
-    # Identity: the record must classify THE item it was given with.
-    if "item_key" in record and isinstance(record["item_key"], str):
-        from feeds import item_key
-        if record["item_key"] != item_key(item):
-            problems.append("item_key: does not match sha256(canonical item url) — "
-                            "record/classified item mismatch")
+    # Identity: the record must classify THE item it was given with. A non-string
+    # item_key is itself a violation — it must never skip the identity check (review
+    # fix #270: the check is total, not conditional on the model's type discipline).
+    if "item_key" in record:
+        if not isinstance(record["item_key"], str):
+            problems.append(f"item_key: must be a string · got {type(record['item_key']).__name__}")
+        else:
+            from feeds import item_key
+            if record["item_key"] != item_key(item):
+                problems.append("item_key: does not match sha256(canonical item url) — "
+                                "record/classified item mismatch")
 
     # Relevance.
     rel = record.get("relevance")
@@ -244,13 +252,16 @@ def validate_record(record, item, known_companies=None, known_topics=None) -> No
         if cand:
             if kind not in CANDIDATE_KINDS:
                 problems.append(f"kind: candidate must be one of {list(CANDIDATE_KINDS)} "
-                                f"· got {kind!r} (funding/exec_move are lane 2, not feeds)")
+                                f"(funding/exec_move are lane 2, not feeds) — field-only "
+                                f"rejection, model-controlled values are never echoed")
             if kind == "market" and sig not in MARKET_SIGNAL_TYPES:
                 problems.append(f"signal_type: kind='market' requires one of "
-                                f"{list(MARKET_SIGNAL_TYPES)} · got {sig!r}")
+                                f"{list(MARKET_SIGNAL_TYPES)} — field-only rejection, "
+                                f"model-controlled values are never echoed")
             if kind == "launch" and sig is not None:
                 problems.append(f"signal_type: kind='launch' is its own kind — signal_type "
-                                f"must be null · got {sig!r}")
+                                f"must be null — field-only rejection, model-controlled "
+                                f"values are never echoed")
             if not record.get("companies") and not record.get("topics"):
                 problems.append("event_candidate=true requires >=1 company or topic edge "
                                 "· market facts with no edge are refused (#268 §3.1)")
@@ -266,9 +277,15 @@ def validate_record(record, item, known_companies=None, known_topics=None) -> No
             problems.append("reason: must be a non-empty string")
         elif len(record["reason"]) > REASON_MAX:
             problems.append(f"reason: exceeds {REASON_MAX} chars")
-        elif any(ord(c) < 32 or ord(c) == 127 for c in record["reason"]):
-            problems.append("reason: control characters refused — quoted data, plain "
-                            "printable prose only (review fix #270)")
+        elif any(unicodedata.category(c) in ("Cc", "Cf", "Zl", "Zp")
+                 for c in record["reason"]):
+            problems.append("reason: control or invisible-format characters refused — "
+                            "quoted data, plain printable prose only (review fix #270: "
+                            "Unicode Cc/Cf/Zl/Zp, not just C0/DEL)")
+        elif CONFIDENTIAL_RE.search(record["reason"]):
+            problems.append("reason: carries a confidentiality marker — refused "
+                            "(the subagent is given redacted text and must not echo "
+                            "redaction-class text; CONFIDENTIAL_RE, review fix #270)")
 
     pii = [p for p in problems if "ADR-9" in p]
     if pii:
@@ -284,8 +301,15 @@ def finalize_record(record, item, known_companies, known_topics) -> dict:
     Validates the subagent record (PII guard included), computes redacted_body from
     the RAW item via substrate.redact_body (one confidentiality dialect), re-scans the
     finalized record so nothing computed or surviving redaction carries contact PII,
-    and returns a NEW dict; the input is never mutated.
+    and returns a NEW dict; the input is never mutated. known-name lists are REQUIRED
+    (None = fail closed): the known-name closure must never fail open because a caller
+    omitted them (review fix #270). Use validate_record(None) for unchecked selftests.
     """
+    if known_companies is None or known_topics is None:
+        raise SchemaViolation("finalize: known-name lists are required (got None) — "
+                              "the parent always passes known_companies / known_topics "
+                              "from graph reads; None would skip the known-name check "
+                              "and let invented names through (fail closed)")
     validated = validate_record(record, item, known_companies, known_topics)
     finalized = {**validated, "redacted_body": redact_body(item.get("summary") or "")}
     if set(finalized) != set(FINAL_KEYS):
@@ -323,6 +347,7 @@ def selftest() -> int:
     KNOWN = {"companies": {"Acme Robotics", "Beta Software", "Gamma Systems", "Delta Labs"},
              "topics": {"Agentic infrastructure", "Developer tooling", "NYC AI ecosystem"}}
     known_c, known_t = KNOWN["companies"], KNOWN["topics"]
+    selftest.total = 47  # keep in sync with the number of check() calls below
 
     # --- positive fixtures validate AND finalize
     for tag in ("launch", "market", "confidential"):
@@ -442,6 +467,87 @@ def selftest() -> int:
           raises(spine_client.PIIViolation, lambda: spine_client.guard(
               "topic", {"name": "feed-fixture", "metadata": {"summary": pii_item["summary"]}})))
 
+    # --- review fix #270, round 2: closure fails closed + type-total identity + rescan
+    check("finalize without known-name lists FAILS CLOSED (never accepts invented names)",
+          raises(SchemaViolation, lambda: finalize_record(record, item, None, None)))
+    check("--validate --known with EMPTY lists rejects invented names (fail closed, not skip)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "companies": ["Invented Co"], "topics": ["Invented Topic"]},
+              item, set(), set())))
+    check("non-string item_key is a violation, never a skipped identity check",
+          raises(SchemaViolation, lambda: validate_record({**record, "item_key": 123}, item)))
+    missing_edges = {k: v for k, v in record.items() if k not in ("companies", "topics")}
+    try:
+        validate_record(missing_edges, item)
+        raised = "none"
+    except KeyError:
+        raised = "KeyError"
+    except SchemaViolation:
+        raised = "SchemaViolation"
+    check("missing companies/topics is a schema violation, not a bare KeyError that "
+          "would mask a PII exit 2",
+          raised == "SchemaViolation")
+    check("reason with an invisible Unicode format char (ZWSP, Cf) refused",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "fine\u200bprose"}, item)))
+    check("reason with a line separator (U+2028, Zl) refused",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "line one\u2028line two"}, item)))
+    check("reason echoing a confidentiality marker refused (CONFIDENTIAL_RE — the "
+          "subagent gets redacted text and must not echo redaction-class text)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "This stays in the room, per the founder."}, item)))
+
+    # F1 (mutation test): a phone split across a line redact_body DROPS becomes
+    # adjacent only in redacted_body — validate passes, finalize's rescan catches it.
+    item_f1 = {**item, "summary": "Founder call at 212-555\n"
+                                  "\u26a0 Confidentiality flag: internal notes\n"
+                                  "0148 before Friday."}
+    check("F1 finalize rescan: phone split across a redacted line is caught ONLY by "
+          "the rescan (validate passes, finalize hard-fails)",
+          not raises(PIIViolation, lambda: validate_record(record, item_f1))
+          and raises(PIIViolation, lambda: finalize_record(record, item_f1, known_c, known_t)))
+
+    # --- boundary + message kills (mutation round 2): exact edges of every cap/range
+    check("relevance EXACTLY at the adopted floor 0.6 is accepted (mutant: < vs <=)",
+          validate_record({**record, "relevance": EVENT_CANDIDATE_FLOOR},
+                          item, known_c, known_t) is not None)
+    check("relevance EXACTLY 1.0 and 0.0 are inside the closed range (mutant: open range)",
+          validate_record({**record, "relevance": 1.0}, item, known_c, known_t) is not None
+          and validate_record({**load("subagent_confidential.json"), "relevance": 0.0},
+                              load("item_confidential.json")) is not None)
+    check("EXACTLY LIST_MAX entries accepted, LIST_MAX+1 rejected (mutant: off-by-one)",
+          validate_record({**record, "companies": [f"C{i:02d}" for i in range(LIST_MAX)]},
+                          item, {f"C{i:02d}" for i in range(LIST_MAX)}, known_t) is not None
+          and raises(SchemaViolation, lambda: validate_record(
+              {**record, "companies": [f"D{i:02d}" for i in range(LIST_MAX + 1)]},
+              item, {f"D{i:02d}" for i in range(LIST_MAX + 1)}, known_t)))
+    check("name of EXACTLY KEY_MAX chars accepted, KEY_MAX+1 rejected (mutant: off-by-one)",
+          validate_record({**record, "companies": ["A" * KEY_MAX]},
+                          item, {"A" * KEY_MAX}, known_t) is not None
+          and raises(SchemaViolation, lambda: validate_record(
+              {**record, "companies": ["A" * (KEY_MAX + 1)]}, item)))
+    check("reason of EXACTLY REASON_MAX chars accepted (mutant: off-by-one)",
+          validate_record({**record, "reason": "x" * REASON_MAX}, item) is not None)
+    check("duplicate company entries rejected (mutant: dedup check dropped)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "companies": ["Acme Robotics", "Acme Robotics"]}, item)))
+    check("whitespace-only reason rejected (mutant: blank check dropped)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "reason": "   "}, item)))
+    check("non-boolean event_candidate rejected (mutant: bool check dropped)",
+          raises(SchemaViolation, lambda: validate_record(
+              {**record, "event_candidate": "true"}, item)))
+    def item_key_message():
+        try:
+            validate_record({**record, "item_key": 123}, item)
+        except SchemaViolation as e:
+            return str(e)
+        return ""
+    check("non-string item_key is named as a TYPE violation, not a silent skip nor a "
+          "mismatch (mutant: type check dropped, identity check alone would fire)",
+          "item_key: must be a string" in item_key_message())
+
     # --- purity: no network surface in this module's own imports (AST, not text —
     # spine_client itself imports urllib for REST reads; the guard path stays pure)
     import ast
@@ -453,9 +559,8 @@ def selftest() -> int:
     check("pure/static: module imports no network surface",
           not imported & {"urllib", "requests", "http", "socket", "ftplib", "httpx", "aiohttp"})
 
-    total = 30
-    print(f"selftest: {ok}/{total} checks pass")
-    return 0 if ok == total else 1
+    print(f"selftest: {ok}/{selftest.total} checks pass")
+    return 0 if ok == selftest.total else 1
 
 
 def main(argv: list[str]) -> int:
@@ -468,16 +573,23 @@ def main(argv: list[str]) -> int:
         def _load(flag: str):
             return json.load(open(argv[argv.index(flag) + 1], encoding="utf-8"))
         record, item = _load("--record"), _load("--item")
-        known: dict = _load("--known") if "--known" in argv else {}
+        # --known present -> use the lists AS GIVEN (even empty: nothing known = every
+        # name rejected, fail closed); only a MISSING --known means unchecked (None).
+        # The old `set(...) or None` turned an empty list into None and the closure
+        # failed open (`--validate --known empty.json` exited 0 on invented names).
         try:
-            if "--finalize" in argv and "--known" not in argv:
+            if "--known" in argv:
+                known: dict = _load("--known")
+                known_c: set[str] | None = set(known.get("companies", []))
+                known_t: set[str] | None = set(known.get("topics", []))
+            else:
+                known_c, known_t = None, None
+            if "--finalize" in argv and known_c is None:
                 raise SchemaViolation("--finalize requires --known K.json (known-name "
                                       "lists from graph reads) — link-to-existing only")
-            out = (finalize_record(record, item, set(known.get("companies", [])),
-                                   set(known.get("topics", [])))
+            out = (finalize_record(record, item, known_c, known_t)
                    if "--finalize" in argv else
-                   validate_record(record, item, set(known.get("companies", [])) or None,
-                                   set(known.get("topics", [])) or None))
+                   validate_record(record, item, known_c, known_t))
         except PIIViolation as e:
             print(f"PIIViolation: {e}", file=sys.stderr)
             return 2

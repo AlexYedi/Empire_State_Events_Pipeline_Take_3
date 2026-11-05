@@ -34,7 +34,13 @@ EXTERNAL_READ = re.compile(r"search|fetch", re.I)
 
 
 def parse_tools(text: str) -> list[str] | None:
-    """Return the tools list, [] if the line is present but empty, None if missing (or no frontmatter)."""
+    """Return the tools list, [] if the line is present but truly empty, None if missing
+    (or no frontmatter). A block list (the next frontmatter line is a `-` item or a
+    comment) is NOT accepted as empty: the regex reader cannot parse those reliably, so
+    returning [] would let a tools list through as "no tools" (review round 2, blocker
+    1: an unindented list, or an indented one with a comment first, passed lint with
+    reader+writer tools). Those raise ValueError; check() turns that into a failure.
+    Only inline `tools: a, b` form is parsed; use it in every agent file."""
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -50,13 +56,13 @@ def parse_tools(text: str) -> list[str] | None:
         val = m.group(1).strip()
         if val:                                            # inline: `a, b` or `[a, b]`
             return [t.strip().strip("'\"") for t in val.strip("[]").split(",") if t.strip()]
-        items = []                                         # block list: `- a` lines
-        for nxt in fm[i + 1:]:
-            b = re.match(r"^\s+-\s*(.+)$", nxt)
-            if not b:
-                break
-            items.append(b.group(1).strip().strip("'\""))
-        return items
+        nxt = fm[i + 1] if i + 1 < len(fm) else ""
+        if re.match(r"^\s*(#|-)", nxt):                    # block list the reader can't own
+            raise ValueError(
+                "`tools:` uses a block list (or has a comment before its items) — the "
+                "regex reader cannot parse that reliably, so it is not accepted as an "
+                "empty tools list; use the inline form `tools: a, b`")
+        return []                                          # truly empty (prompt-only agent)
     return None
 
 
@@ -98,7 +104,10 @@ def is_writer(tool: str) -> bool:
 
 def check(path: str) -> list[str]:
     with open(path, encoding="utf-8") as f:
-        tools = parse_tools(f.read())
+        try:
+            tools = parse_tools(f.read())
+        except ValueError as e:
+            return [str(e)]
     if tools is None:
         return ["no `tools:` line in frontmatter (rule 1: every agent declares a minimal tools list)"]
     wild = [t for t in tools if "*" in t]
@@ -143,6 +152,9 @@ def selftest() -> int:
         (fm("tools: mcp__exa__web_search, mcp__linear__create_issue"), False),
         (fm("tools: WebFetch, mcp__claude_ai_HubSpot"), False),             # server-level grant
         (fm("tools:\n  - WebFetch\n  - mcp__notion__notion-update-page"), False),
+        (fm("tools:\n- WebSearch"), False),                  # unindented block list (blocker 1)
+        (fm("tools:\n  # my tools\n  - Bash"), False),       # comment before items (blocker 1)
+        (fm("tools:\nmodel: sonnet"), True),                # truly empty (feed-classifier shape)
         ("no frontmatter\n", False),
     ]
     import tempfile

@@ -36,10 +36,10 @@
 useDefault = true
 
 [[allowlists]]
-description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials"
+description = "feed fixture digests are sha256 of public *.example URLs (feeds.item_key), not credentials — anchored ^supabase/fixtures/, case-sensitive lowercase hex; any REAL 64-hex credential inside a fixture stays exempt: accepted residual (review 2026-11-05, minor 9)"
 condition = "AND"
-paths = ['''(^|/)supabase/fixtures/''']
-regexes = ['''(?i)^[0-9a-f]{64}$''']
+paths = ['''^supabase/fixtures/''']
+regexes = ['''^[0-9a-f]{64}$''']
 
 [[allowlists]]
 description = "the secret-scan selftest's historical cd0a50f sentinel (sk_live_ + sha256('test')[:32]): one file, one value shape; the config holds only the 8-hex prefix so no rule self-flags this file"

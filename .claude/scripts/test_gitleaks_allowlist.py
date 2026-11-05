@@ -67,27 +67,29 @@ def scan(gitleaks: str, report: Path, repo: Path) -> list[dict]:
     return parsed.get("leaks", []) if isinstance(parsed, dict) else parsed
 
 
-def build_scratch_repo(base: Path, with_token: bool) -> Path:
-    """Mirror Alex's probe matrix on #272: a digest fixture, optionally a planted
-    token, in a single-commit scratch repo. The clean-tree case is a repo that
-    never contained the token — git mode scans history, so removing a file is not
-    the same as never having committed it."""
-    repo = base / ("probe-token" if with_token else "probe-clean")
-    (repo / "supabase" / "fixtures").mkdir(parents=True)
+# Review round 2 killing cases (2026-11-05): each entry pins a finding the allowlist
+# must still produce. The sentinel-prefix token shares the historical cd0a50f value
+# prefix but differs after it — built from a different seed so no literal matches.
+SENTINEL_PREFIX_TOKEN = "sk_live_9f86d081" + hashlib.sha256(b"outside-selftest").hexdigest()[:24]
+OTHER_TOKEN = "sk_live_" + hashlib.sha256(b"different-key-in-selftest").hexdigest()[:32]
+
+
+def build_scratch_repo(base: Path, name: str, files: dict[str, str]) -> Path:
+    """Single-commit scratch repo with the shared config + the given files — every
+    allowlist claim is proven per-case, git mode only (dir mode skips path-matched
+    files before content evaluation)."""
+    repo = base / name
+    for rel, content in files.items():
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
     shutil.copy(CONFIG, repo / ".gitleaks.toml")
-    (repo / "supabase" / "fixtures" / "digest.json").write_text(
-        json.dumps({"source_key": DIGEST}) + "\n"
-    )
-    if with_token:
-        (repo / "supabase" / "fixtures" / "probe.json").write_text(
-            json.dumps({"api_key": PLANTED_TOKEN}) + "\n"
-        )
     run_git(repo, "init", "-q")
     # CI runners have no git identity; the probe repo needs one to commit.
     run_git(repo, "config", "user.name", "gitleaks-selftest")
     run_git(repo, "config", "user.email", "selftest@example.invalid")
     run_git(repo, "add", "-A")
-    run_git(repo, "commit", "-qm", "probe: allowlist selftest scratch repo")
+    run_git(repo, "commit", "-qm", f"probe: {name}")
     return repo
 
 
@@ -97,32 +99,68 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="gitleaks-allowlist-probe-") as tmp:
         base = Path(tmp)
         report = base / "report.json"  # outside the probe repos on purpose
+        fixture_digest = json.dumps({"source_key": DIGEST}) + "\n"
 
-        planted = scan(gitleaks, report, build_scratch_repo(base, with_token=True))
-        planted_secrets = {f.get("Secret") for f in planted}
-        if PLANTED_TOKEN in planted_secrets:
-            print("PASS  planted sk_live_ token in supabase/fixtures/ is flagged")
-        else:
-            failures.append(
-                f"planted token was NOT flagged (findings: {sorted(planted_secrets)}) — "
-                "the allowlist is exempting whole files or paths unconditionally"
-            )
-        if DIGEST not in planted_secrets:
-            print("PASS  sha256 digest of a public *.example URL is exempt")
-        else:
-            failures.append("digest was flagged — value-scoping too narrow")
+        def findings(name: str, files: dict[str, str]) -> set[str]:
+            leaks = scan(gitleaks, report, build_scratch_repo(base, name, files))
+            return {f.get("Secret") for f in leaks}
 
-        clean = scan(gitleaks, report, build_scratch_repo(base, with_token=False))
-        if not clean:
-            print("PASS  clean tree (digest fixture only) scans with zero leaks")
-        else:
+        # 1. planted token INSIDE the exempted path must still flag (value-scoping)
+        planted = findings("probe-token", {
+            "supabase/fixtures/digest.json": fixture_digest,
+            "supabase/fixtures/probe.json": json.dumps({"api_key": PLANTED_TOKEN}) + "\n",
+        })
+        print("PASS  planted sk_live_ token in supabase/fixtures/ is flagged"
+              if PLANTED_TOKEN in planted else "FAIL  planted token was NOT flagged")
+        if PLANTED_TOKEN not in planted:
+            failures.append("planted token NOT flagged — allowlist exempts whole files")
+
+        # 2. digest of a public *.example URL in the exempted path passes
+        print("PASS  sha256 digest of a public *.example URL is exempt"
+              if DIGEST not in planted else "FAIL  digest was flagged")
+        if DIGEST in planted:
+            failures.append("digest flagged — value-scoping too narrow")
+
+        # 3. clean tree: zero findings
+        clean = findings("probe-clean", {"supabase/fixtures/digest.json": fixture_digest})
+        print("PASS  clean tree (digest fixture only) scans with zero leaks"
+              if not clean else f"FAIL  clean tree findings: {clean}")
+        if clean:
             failures.append(f"clean tree produced findings: {clean}")
+
+        # 4. (round 2) 64-hex OUTSIDE supabase/fixtures/ must flag
+        outside = findings("probe-hex-outside", {"digest_root.json": fixture_digest})
+        print("PASS  64-hex outside supabase/fixtures/ is flagged"
+              if DIGEST in outside else "FAIL  64-hex outside fixtures was NOT flagged")
+        if DIGEST not in outside:
+            failures.append("64-hex outside fixtures NOT flagged — path too broad")
+
+        # 5. (round 2) sentinel-PREFIX sk_live outside the selftest path must flag
+        prefix_outside = findings("probe-prefix-outside", {
+            "probe_other.py": f'KEY = "{SENTINEL_PREFIX_TOKEN}"\n',
+        })
+        print("PASS  9f86d081-prefixed sk_live outside the selftest path is flagged"
+              if SENTINEL_PREFIX_TOKEN in prefix_outside
+              else "FAIL  sentinel-prefix token outside the selftest path was NOT flagged")
+        if SENTINEL_PREFIX_TOKEN not in prefix_outside:
+            failures.append("sentinel-prefix token outside the selftest path NOT flagged")
+
+        # 6. (round 2) a DIFFERENT sk_live in the selftest path must flag
+        in_path = findings("probe-other-token-selftest-path", {
+            ".claude/scripts/test_gitleaks_allowlist.py":
+                f'PLANTED = "{OTHER_TOKEN}"\n',
+        })
+        print("PASS  a different sk_live in the selftest path is flagged"
+              if OTHER_TOKEN in in_path else "FAIL  different sk_live in selftest path NOT flagged")
+        if OTHER_TOKEN not in in_path:
+            failures.append("different sk_live in the selftest path NOT flagged — "
+                            "the sentinel entry is wider than one value")
 
     if failures:
         for failure in failures:
             print(f"FAIL  {failure}")
         return 1
-    print("OK: 3/3 gitleaks allowlist cases pass")
+    print("OK: 6/6 gitleaks allowlist cases pass")
     return 0
 
 
