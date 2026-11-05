@@ -2,7 +2,7 @@
 # Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 · producer chain:
 #   ats_pull.py (boards → TSV + board stats) → ats_pulse.py (counts-only manifest, per-company
 #   ensure-event manifests, lane_run manifest) → substrate.py ensure-event (event writes stay
-#   dry-run: a live write needs the guarded twin REF override, human review).
+#   dry-run, offline validation only) · the lane_run ledger row → prod via spine_client's guard.
 #
 # SECRET HYGIENE — read before editing (Claude Code review, PR #271):
 #   * TARGET_COMPANIES_REGISTRY (repo secret): the private target list, materialised to
@@ -13,17 +13,20 @@
 #       - NO manifest, lane_run, event or board-stats file is uploaded — they name companies.
 #         The only artifact is the anonymous totals summary (week, company COUNT, totals).
 #       - every derived file is deleted by the always() cleanup step before the job ends.
-#   * NO PROD DATABASE CREDENTIALS in this workflow. The prod SUPABASE_API_KEY secret must NEVER
-#     appear here (twin-only rule). The optional prior-week read and the lane_run ledger write use
-#     ONLY the twin secrets below. Live ensure-event needs a guarded twin spine REF override in
-#     spine_client (spine_client.REF is hardcoded to prod; the override is a guarded-path change,
-#     human review) — until then the event write step is offline validation (dry-run).
+#   * PROD DATABASE CREDENTIALS: the prod SUPABASE_API_KEY appears in EXACTLY ONE step — "Write
+#     the lane_run ledger row to prod" — and nowhere else (no job-level env). That step writes ONE
+#     row to ONE table, public.lane_run (a PII-free run ledger), and only through
+#     spine_client.write, whose guard scans every string (error text included) and hard-fails on
+#     PII. No other table is written. Event writes stay DRY-RUN (offline validation): the lane
+#     writes no event rows, so lane_run.items_written is 0 until they go live. Adding the prod key
+#     to any other step, or writing any other table, is a guarded change (human review).
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
 #     would compare against itself). ats_pulse refuses a same-week --prior regardless.
-#   * lane_run is REAL: the run ledger row is written through spine_client.write to the TWIN
-#     (migration 0016's public.lane_run; the twin pair MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY,
-#     mapped to SUPABASE_API_KEY for that one step — spine_client's only key source).
+#   * lane_run is REAL and goes to PROD: 0016's public.lane_run, whose FK target lane_registry
+#     lives in prod and which the freshness check (#269) reads in prod. lane_run.lane is the
+#     registry key 'hiring_pulse' (the producer name 'ats_pulse' stays on events). The twin
+#     secrets are used ONLY by the read-only prior-week step.
 #   * lane_registry activation is NOT a producer write (producers can't write the registry):
 #     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
 #     after a twin rehearsal.
@@ -169,25 +172,24 @@ jobs:
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
             --lane-run-out /tmp/pulse-out/lane_run.json
 
-      # The event manifests STAY a validate-only step (a live ensure-event needs the guarded twin
-      # REF override in spine_client — human review). The lane_run LEDGER, though, is now written
-      # for real: 0016's public.lane_run, through spine_client.write, to the TWIN only.
+      # The event manifests STAY a validate-only step (dry-run: no event row is written). The
+      # lane_run LEDGER is written for real in the next step: prod, through spine_client.write.
       - name: Validate the manifests offline (event writes stay dry-run)
         if: steps.hold.outputs.held != 'true'
         run: |
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
 
-      - name: Write the real lane_run ledger row to the twin (skipped without twin secrets)
+      # The ONLY step that holds the prod key. One table (public.lane_run), one row, through
+      # spine_client.write's PII guard; no host override (spine_client owns the target).
+      - name: Write the lane_run ledger row to prod (through spine_client's guard)
         if: steps.hold.outputs.held != 'true'
         env:
-          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
-          # mapped to spine_client's only key source for this step; the TWIN key — never prod
-          SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
         run: |
-          if [ -z "$MI_TWIN_URL" ] || [ -z "$SUPABASE_API_KEY" ]; then
-            echo "::warning::twin secrets not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
-            exit 0
+          if [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::error::repo secret SUPABASE_API_KEY is not set — the lane_run ledger row cannot be written; the freshness check would read this run as missing"
+            exit 1
           fi
           python3 .claude/scripts/ats_pulse.py --write-lane-run /tmp/pulse-out/lane_run.json \
             --started-at "${{ steps.pull.outputs.run_start }}"
