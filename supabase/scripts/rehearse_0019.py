@@ -10,6 +10,9 @@ Gates (all must pass, in order):
                  the same anon/authenticated write grants as prod (if not, the
                  rehearsal still proves apply/idempotency/rollback, and says so)
   1  snapshot A  relacl of the 9 tables + the postgres default ACL in public
+  1b negative    the step-3 checks run on the UN-migrated state and must FAIL
+                 (a check that passes without the fix proves nothing); the INSERT
+                 case rejects an RLS refusal (same SQLSTATE 42501) as proof
   2  apply       0019, verbatim
   3  verify      catalog: every anon/authenticated entry on the 9 tables is
                  exactly `r` (SELECT); the postgres default ACL grants them
@@ -46,6 +49,10 @@ TWIN_USER = os.environ.get("TWIN_DB_USER", "postgres")
 TWIN_CONN = (f"host={TWIN_HOST} port={TWIN_PORT} user={TWIN_USER} "
              f"dbname=postgres sslmode=require connect_timeout=30")
 TLIST = ",".join(f"'{t}'" for t in TABLES)
+# Prod state recorded read-only 2026-11-05 (relacl / defaclacl text, grantor included).
+PROD_TABLE_ACL = ("{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,"
+                  "authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}")
+PROD_DEFAULT_ACL = PROD_TABLE_ACL
 
 SNAPSHOT_SQL = f"""
 select 'tbl.' || relname, coalesce(relacl::text, '-') from pg_class
@@ -111,7 +118,7 @@ def snapshot(label):
     return s
 
 
-def verify(label) -> bool:
+def verify(label, expect_pass=True) -> bool:
     s = kv(SNAPSHOT_SQL)
     bad = [f"{k}:{r}={p}" for k, v in s.items() if k.startswith("tbl.")
            for r, p in api_entries(v).items() if p != "r"]
@@ -120,14 +127,18 @@ def verify(label) -> bool:
     d = api_entries(s.get("defacl.postgres.public", ""))
     d_bad = [f"{r}={p}" for r, p in d.items() if set(p) - {"r"}]
     cat_ok = not bad and not missing and not d_bad
-    print(f"  catalog({label}): {'PASS' if cat_ok else 'FAIL'}"
-          + ("" if cat_ok else f" :: non-r={bad} missing-select={missing} defacl={d_bad}"))
+    if expect_pass:
+        print(f"  catalog({label}): {'PASS' if cat_ok else 'FAIL'}"
+              + ("" if cat_ok else f" :: non-r={bad} missing-select={missing} defacl={d_bad}"))
     # behaviour, as anon, in a rolled-back transaction
     cases = "\n".join(
         f"""  begin
     {stmt};
     raise exception 'FAIL: anon was ALLOWED: {name}';
-  exception when insufficient_privilege then null;
+  exception when insufficient_privilege then
+    if sqlerrm ilike '%row-level security%' then
+      raise exception 'FAIL: {name} refused by RLS, not by privilege (does not prove the revoke)';
+    end if;
   end;""" for name, stmt in [
             ("insert", "insert into public.claim_usage (claim_id, document_id, consumer) values (gen_random_uuid(), gen_random_uuid(), 'rehearse_0019')"),
             ("update", "update public.documents set title = title where false"),
@@ -147,6 +158,14 @@ rollback;
 """
     p = psql([], stdin=sql, check=False)
     beh_ok = p.returncode == 0 and "0019 BEHAVIOUR: PASS" in (p.stdout + p.stderr)
+    if not expect_pass:
+        ok = (not cat_ok) and (not beh_ok)
+        why = (p.stdout + p.stderr).strip().splitlines()
+        print(f"  negative control({label}): catalog-check {'fails' if not cat_ok else 'PASSES'}, "
+              f"behaviour-check {'fails' if not beh_ok else 'PASSES'} on the un-migrated state -> "
+              f"{'PASS (the checks discriminate)' if ok else 'FAIL (a check passes without the fix)'}"
+              + (f" :: first refusal: {next((l for l in why if 'FAIL' in l), '')[-160:]}" if ok else ""))
+        return ok
     print(f"  behaviour({label}) as anon: {'PASS' if beh_ok else 'FAIL'}"
           + ("" if beh_ok else f" :: {(p.stdout + p.stderr).strip()[-300:]}"))
     return cat_ok and beh_ok
@@ -169,13 +188,30 @@ def rollback_sql() -> str:
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     ap.add_argument("--no-leave", action="store_true")
+    ap.add_argument("--reset-first", action="store_true",
+                    help="apply the ROLLBACK block before preflight (twin left with 0019 applied by a prior run)")
     a = ap.parse_args()
     refuse_prod()
     print(f"TARGET twin: {TWIN_HOST}:{TWIN_PORT} as {TWIN_USER} (ref {TWIN_REF})  "
           f"at {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}\n")
 
+    if a.reset_first:
+        print("[reset] applying the ROLLBACK block first (prior run left 0019 applied)")
+        with tempfile.NamedTemporaryFile("w", suffix=".sql", delete=False) as f:
+            f.write(rollback_sql()); rb0 = f.name
+        if not apply_file(rb0, "0019 rollback block (reset)"):
+            sys.exit("STOP: reset failed")
+        os.unlink(rb0)
+        print()
     print("[0] preflight")
+    ver = psql(["-tA", "-c", "show server_version"]).stdout.strip()
+    print(f"  twin server_version={ver} (prod 17.6)")
     pre = kv(SNAPSHOT_SQL)
+    diffs = [k for k, v in pre.items() if k.startswith("tbl.") and v != PROD_TABLE_ACL]
+    dpre = pre.get("defacl.postgres.public", "")
+    print(f"  full relacl text equal to prod's on {9 - len(diffs)}/9 tables"
+          + (f" (differs: {diffs})" if diffs else "")
+          + f"; default ACL equal to prod's: {dpre == PROD_DEFAULT_ACL}")
     n_tbl = sum(1 for k in pre if k.startswith("tbl."))
     with_writes = sum(1 for k, v in pre.items() if k.startswith("tbl.")
                       and any(set(p) - {"r"} for p in api_entries(v).values()))
@@ -186,8 +222,10 @@ def main():
 
     print("\n[1] snapshot A (before)")
     A = snapshot("A")
+    print("\n[1b] negative control: the verify checks must FAIL before the fix")
+    g = [verify("pre-apply", expect_pass=False)]
     print("\n[2] apply 0019")
-    g = [apply_file(MIGRATION, "0019_revoke_api_role_writes.sql")]
+    g.append(apply_file(MIGRATION, "0019_revoke_api_role_writes.sql"))
     print("\n[3] verify")
     g.append(verify("post-apply"))
     print("\n[4] re-apply 0019 (idempotency)")

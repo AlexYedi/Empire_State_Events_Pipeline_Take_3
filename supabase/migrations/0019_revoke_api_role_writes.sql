@@ -39,21 +39,36 @@
 --
 -- IDEMPOTENT: REVOKE of a privilege not held is a no-op; a re-run is clean.
 --
--- PRE-APPLY PROBE (read-only; expect 18 rows = 9 tables x 2 roles, each with
--- write privileges):
---   select table_name, grantee, string_agg(privilege_type, ',' order by 1)
---   from information_schema.role_table_grants
---   where table_schema = 'public' and grantee in ('anon','authenticated')
---     and privilege_type in ('INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER')
---   group by 1, 2 order by 1, 2;
+-- PROBE OF RECORD (read-only; run BEFORE and AFTER the apply). It reads the ACLs
+-- themselves (relacl / defaclacl), not information_schema, which hides
+-- MAINTAIN (`m`) and some grantor rows. REVOKE by a non-grantor only WARNs and
+-- the SQL editor won't stop on a warning, so this probe is the real check.
+--   select c.relname, pg_get_userbyid(c.relowner) as owner, c.relacl::text
+--   from pg_class c
+--   where c.relnamespace = 'public'::regnamespace
+--     and c.relname in ('artifact_outcome','claim','claim_entity','claim_relation',
+--       'claim_usage','doc_chunks','doc_claims','document_entity','documents')
+--   union all
+--   select 'DEFAULT ACL (postgres, public, tables)', '-', d.defaclacl::text
+--   from pg_default_acl d
+--   where d.defaclrole = 'postgres'::regrole
+--     and d.defaclnamespace = 'public'::regnamespace and d.defaclobjtype = 'r'
+--   order by 1;
 --
--- POST-APPLY PROBE (expect 0 rows from the query above; SELECT still present):
---   select count(*) from information_schema.role_table_grants
---   where table_schema = 'public' and grantee in ('anon','authenticated')
---     and privilege_type = 'SELECT'
---     and table_name in ('artifact_outcome','claim','claim_entity','claim_relation',
---       'claim_usage','doc_chunks','doc_claims','document_entity','documents');
---   -- expect 18
+--   BEFORE, expect exactly (prod, read-only 2026-11-05): 9 table rows, owner
+--     postgres, each `{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,
+--     authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}`, plus the
+--     default-ACL row with the same anon/authenticated `arwdDxtm` entries.
+--     ANYTHING ELSE (a 10th table, a different owner or grantor, a missing
+--     table) -> STOP, don't apply, report on YED-311.
+--   AFTER, expect: every row shows `anon=r/postgres` and
+--     `authenticated=r/postgres`; postgres and service_role are unchanged.
+--
+-- Prod facts recorded 2026-11-05 (read-only): server_version 17.6; no GLOBAL
+-- (defaclnamespace = 0) default ACL for postgres, so Part 2 isn't shadowed.
+-- Out of scope here, filed separately: the postgres default ACL also grants
+-- anon/authenticated `rwU` on new SEQUENCES and `X` on new FUNCTIONS, in both
+-- public and storage.
 --
 -- ROLLBACK (restores the pre-0019 grants exactly; paste only if needed):
 --   grant insert, update, delete, truncate, references, trigger, maintain
@@ -65,6 +80,8 @@
 --     grant insert, update, delete, truncate, references, trigger, maintain
 --     on tables to anon, authenticated;
 -- =====================================================================
+
+begin;
 
 -- Part 1 · the nine tables: API roles keep SELECT only.
 revoke insert, update, delete, truncate, references, trigger, maintain
@@ -83,3 +100,5 @@ revoke insert, update, delete, truncate, references, trigger, maintain
 alter default privileges for role postgres in schema public
   revoke insert, update, delete, truncate, references, trigger, maintain
   on tables from anon, authenticated;
+
+commit;
