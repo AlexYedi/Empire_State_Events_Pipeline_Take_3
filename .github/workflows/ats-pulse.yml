@@ -51,6 +51,7 @@ concurrency:
 
 jobs:
   pulse:
+    environment: prod
     runs-on: ubuntu-latest
     permissions:
       contents: read        # checkout only; issues:write is scoped to this job's alert step
