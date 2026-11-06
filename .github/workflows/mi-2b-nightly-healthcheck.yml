@@ -9,6 +9,12 @@ name: MI topic-intelligence nightly (compute + health-check)
 #      independent recompute + the 8 structural invariants + the anon read-path probe + the lane
 #      freshness layer (lane_run staleness >=7 FLAG / >=14 FAIL + coverage, lane_registry
 #      cross-check, role_posted stall) — the lane halves SKIP until migration 0016 is applied.
+#   3. TOPIC-CLUSTER BASELINE — supabase/scripts/topic_cluster_assign.py --validate (YED-304,
+#      offline, no DB): revalidates the kNN fixed-taxonomy baseline (PR #266's measured bar) on
+#      the committed name-only fixture, so taxonomy/fixture drift that would break the study
+#      alarms instead of decaying (the L4/L6 lesson). This is a measured baseline, NOT
+#      production assignment; it runs after steps 1–2 so a baseline failure can never stall the
+#      prod refresh (L7), and exit 3 still fails the run into the shared failure issue.
 # Before 2026-09-28 only step 2 ran and nothing recomputed, so the stored snapshot froze at the
 # 2026-08-10 cutover and step 2 failed every night on staleness (#80 … #140).
 #
@@ -59,6 +65,21 @@ jobs:
           MI_SUPABASE_ANON_KEY: ${{ secrets.MI_SUPABASE_ANON_KEY }}
           PSQL_BIN: psql
         run: python3 supabase/scripts/healthcheck_2b.py
+      # YED-304: the assigner needs no secrets — fixture mode is offline and read-only; the
+      # only outputs are the evidence report (uploaded below) and the gate exit code.
+      - name: Topic-cluster assigner selftest (offline, no DB)
+        run: python3 supabase/scripts/topic_cluster_assign.py --selftest
+      - name: Topic-cluster baseline re-validation (fixture-backed, offline)
+        run: |
+          python3 -m pip install --quiet -r supabase/scripts/requirements-topic-cluster.txt
+          python3 supabase/scripts/topic_cluster_assign.py --validate --evidence-dir supabase/evidence
+      - name: Upload the baseline evidence report
+        if: always()   # --validate writes the report before failing the gate (exit 3)
+        uses: actions/upload-artifact@v4
+        with:
+          name: yed-304-holdout-validation
+          path: supabase/evidence/yed-304-holdout-validation-*.md
+          if-no-files-found: ignore
       # One open issue, not one per night (2026-09-27): a failure that persists used to open a new issue every
       # run — 9 in 9 nights (#80…#140) for a single cause (YED-230). Now: if an open "MI 2b health-check FAILED"
       # issue exists, add tonight's run as a comment on it; open a new issue only when none is open (i.e. the
@@ -77,6 +98,6 @@ jobs:
           else
             gh issue create \
               --title "MI 2b health-check FAILED (since $TODAY)" \
-              --body "The nightly topic-intelligence job failed — either the compute refused to write (ported SQL disagreed with the reference, or the write errored) or the health-check found the stored graph incoherent. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
+              --body "The nightly topic-intelligence job failed — either the compute refused to write (ported SQL disagreed with the reference, or the write errored), the health-check found the stored graph incoherent, or the YED-304 topic-cluster baseline re-validation failed (taxonomy/fixture drift; the report is on the run's artifacts). The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
               || echo "issue-create failed; check the Actions run directly"
           fi
