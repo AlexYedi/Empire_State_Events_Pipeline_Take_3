@@ -103,50 +103,22 @@ jobs:
       # (the null-baseline rule — never invent a baseline). Reads last Sunday's hiring_pulse events
       # by title; counts land in /tmp/prior.json (names included → deleted by cleanup, never logged).
       - name: Read last week's pulse from the twin graph (optional, read-only)
-        id: prior
         if: steps.hold.outputs.held != 'true'
         env:
           MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
           MI_TWIN_SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
           PREV_SUNDAY: ${{ steps.week.outputs.prev_sunday }}
         run: |
-          if [ -z "$MI_TWIN_URL" ] || [ -z "$MI_TWIN_SUPABASE_API_KEY" ]; then
-            echo "Twin graph secrets not configured — running without a delta_wow baseline"
-            echo "prior=none" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          python3 - <<'EOF'
-          import json, os, re, sys, urllib.parse, urllib.request
-          base = os.environ["MI_TWIN_URL"].rstrip("/")
-          day = os.environ["PREV_SUNDAY"]
-          params = urllib.parse.urlencode({
-              "select": "title,metadata", "kind": "eq.market",
-              "title": "like.*Hiring pulse*",
-              "event_date": f"gte.{day}T00:00:00Z&event_date=lte.{day}T23:59:59Z"})
-          req = urllib.request.Request(f"{base}/rest/v1/event?{params}", headers={
-              "apikey": os.environ["MI_TWIN_SUPABASE_API_KEY"],
-              "Authorization": f"Bearer {os.environ['MI_TWIN_SUPABASE_API_KEY']}",
-              "Accept": "application/json"})
-          try:
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  rows = json.load(r)
-          except Exception as e:
-              print(f"::warning::prior-week read failed ({type(e).__name__}); running without a baseline")
-              sys.exit(0)
-          events = []
-          for row in rows:
-              m = re.match(r"Hiring pulse — (.+) \((\d{4}-W\d{2})\)$", row.get("title") or "")
-              pc = (row.get("metadata") or {}).get("roles_open")
-              if m and isinstance(pc, int) and not isinstance(pc, bool):
-                  events.append({"company": m[1], "metadata": {"roles_open": pc}})
-          # one open file, never printed: names are fine in /tmp, never in the log
-          with open("/tmp/prior.json", "w") as fh:
-              json.dump({"week": None, "events": events}, fh)
-          print(f"prior-week baseline: {len(events)} companies (graph read OK)")
-          EOF
-          # the output is honest only when the heredoc actually wrote the file: the python
-          # exits 0 on a failed twin read too (warning path — no file, no failure)
-          if [ -s /tmp/prior.json ]; then echo "prior=/tmp/prior.json" >> "$GITHUB_OUTPUT"; fi
+          # The read lives in ats_pulse.py (tested offline): the old inline heredoc joined both
+          # event_date filters into ONE param — urlencode encoded the inner '&', PostgREST saw
+          # a single filter it could not cast to timestamptz, and every read answered 400
+          # while the bare except swallowed it into a silent null baseline. ANY failure here
+          # — missing secrets, API error, contract change — prints ONE ::warning:: (status,
+          # type and week only; never a response body or row text: the target registry is
+          # private), writes no file, and exits 0 — the read is optional and the lane runs
+          # on delta_wow null. The aggregate step below guards on FILE REALITY.
+          python3 .claude/scripts/ats_pulse.py --fetch-prior-week /tmp/prior.json \
+            --prior-day "$PREV_SUNDAY"
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
         if: steps.hold.outputs.held != 'true'
