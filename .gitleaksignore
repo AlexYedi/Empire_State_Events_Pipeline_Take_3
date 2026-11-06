@@ -1,3 +1,5 @@
 # Reviewed 2026-10-15 (YED-259): documentation placeholders (sk_live_... / <your-key>), not secrets.
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:27
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:30
+# YED-304 fixture source_key false positives are handled in .gitleaks.toml (path-scoped allowlist),
+# NOT here — ignore-file fingerprints pin the commit SHA and break on squash merges.
