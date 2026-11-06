@@ -36,3 +36,12 @@ Claims with no topical subject (bios, logistics, job posts, bare numbers, or fun
 - **Result, research lens:** claims with a company link went 2,181 → **2,293**. Claims with a company or person link went 3,008 / 3,543 = **84.9%**, up from 81.7% after phase 2. The pre-lane-0 baseline was 54.6%.
 - **Rollback:** delete the `claim_entity` rows in the two link manifests, then the `company` rows in `manifest_company_create.json`. Delete the links first, because of the FK direction.
 - Scripts `lane0_create_companies.py` and `lane0_relink_new.py` read their inputs from the directory they run in (the session scratchpad). They are committed as the record of the method.
+
+## Phase 4 (2026-11-05): roster-only person links (YED-332, decided by Alex: roster-only)
+
+- **Scope:** only the 507 `person` rows that already exist (speakers and hosts from attended events). No person row was created.
+- **Candidates:** claims whose text or quote names a person in full, matched as whole words, with no existing link to that person. That gave 127 candidates across 116 claims and 66 people. One name shared by two person rows was excluded.
+- **Role:** blinded Fable adjudication against the person's title and company: 98 `about`, 26 `asserted_by`, 3 `both` (one row for each role), 0 name collisions. 6 verdicts under 0.7 confidence were skipped and are listed in `skipped`.
+- **Written:** 123 rows covering 110 claims and 63 people (`manifest_person.json`; script `.claude/scripts/lane0_person_links.py`).
+- **Before → after:** person `about` 715 → 811, `asserted_by` 598 → 625. Research claims with any company or person link went 3,008 → 3,016 of 3,543, because most of these claims already carried a company link. What the phase adds is speaker-level questions ("what did X claim, and did it hold up"), not coverage.
+- **Rollback:** delete `claim_entity` rows matching (claim_id, 'person', person_id, role) for each entry in `links`.
