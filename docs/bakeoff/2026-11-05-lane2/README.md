@@ -49,6 +49,50 @@ The test from §3 of `docs/proposals/2026-11-05-company-signals-lane-stack.md` (
 - **Do not let akta lapse on this evidence alone.** The proposal's rule was: if $0 coverage is under 60% with Apollo in, buy Perigon. Apollo hasn't run yet. Next step: fix the Apollo key and the EDGAR User-Agent (YED-337) and re-run with `$0 + Apollo` before ~11/29. If funding and exec recall are still under 0.60, a $25–90/mo news API (Perigon Individual or NewsAPI.ai) is the measured fix.
 - **Drop GitHub releases** from the $0 design. **Re-shape GDELT** to one batched query per week.
 
+## Run 1b (2026-11-06): $0 + Clay
+
+Apollo was not bought, so the paid leg ran on Clay instead, using the credits the workspace already had. Same 40 companies and the same window. Clay resolved 38 of 40 companies; for 2, the domain matched only a different entity.
+
+**What ran:** a custom Claygent data point (Clay's web-research agent). It searches news outlets, press-release wires, partner releases and SEC coverage for the window. It **excludes the company's own site**, because the RSS leg already covers that. Output is one `date | kind | headline | URL` line per event.
+
+Two other configurations were tried on one company first and dropped:
+- Clay's standard "Recent News" returns 5 items across 12 months, with only 1 in the window. It also wraps every result in "growth opportunity" commentary drawn from the workspace's business profile.
+- A custom prompt that allowed the company's own site returned 7 items, all from the company blog. That duplicates RSS and missed the month's largest partnership.
+
+**Labelling:** the 85 Clay items were labelled by the same blinded Fable rubric. They were shuffled together with 60 items already labelled in run 1, shown as titles only so no row reveals its source. The labeller agreed with its run-1 true/false call on **59 of 60** anchors (53 of 60 exact class and kind).
+
+**Cited links:** 41 of 85 resolve. The other 44 return 401/403/429 (paywalls and bot walls) or time out. None return 404, so there is no sign of fabricated URLs.
+
+| | akta | $0 union | Clay alone | **$0 + Clay** |
+|---|---|---|---|---|
+| Items | 672 | 1,945 | 85 | 2,030 |
+| True signals | 373 | 320 | 78 | **398** |
+| Precision | 0.56 | 0.17 | **0.92** | 0.20 |
+| Coverage, all 40 (floor 0.60) | 0.90 | 0.62 | 0.82 | **0.88** |
+| Coverage, job-search targets | 27/30 | 17/30 | | **26/30** |
+| Recall vs akta (floor 0.60) | n/a | 0.42 | 0.46 | **0.69** |
+| Recall null (dates shifted −10 / +10 days) | | 0.06 / 0.13 | 0.01 / 0.07 | 0.07 / 0.18 |
+| Novel true signals | | 222 | 48 | 270 |
+| Cost | trial credits | $0 | ≈57 Clay credits (≈1.5 per company) | ≈57 credits |
+
+(The target denominator is 30 here, not 31, because this run matched names to the private target list programmatically.)
+
+**Recall vs akta by kind, $0 → $0 + Clay:**
+- funding 10 → 40 of 57
+- M&A 19 → 28 of 33
+- partnership 11 → 36 of 83
+- earnings 4 → 31 of 38
+- exec move 0 → 3 of 6
+- hiring/office 2 → 4 of 11
+- launch 73 → 75 of 93
+- incident 39 → 39 of 52
+
+**Reading it:** Clay fills the gap the $0 stack left. It is a third-party, deal-and-money feed, and it complements the company-owned launch feeds. **$0 + Clay clears all three floors** (recall 0.69, coverage 0.88 overall and 26 of 30 targets). The 0.20 precision is acceptable because the classifier in front of the brief is the precision layer.
+
+Clay is also a different kind of source. It returns a few curated events per company (median 2), not a firehose. That makes it cheap to label and high-precision, but it can miss smaller items. Partnerships are still the weakest kind, at 36 of 83.
+
+**Cost to run weekly:** about 1.5 credits per company per run, so 40 companies weekly comes to about 260 credits a month. The free workspace balance covers about 2 more weekly runs, so a standing Clay lane needs a paid plan or a narrower cadence.
+
 ## Re-running
 
 `fetch0.py <src|all>` → `gdelt_retry.py` (until there are no 429s) → `prep_label.py` → labeller dispatches (one `alex:research-analyst` per batch on Fable, compact `k CLASS KIND` output) → `extract.py <agent transcript> labels_NN.txt` → `score.py`. The scripts expect `companies.json` and `../akta/run1.json` beside them; both are private and are never committed.

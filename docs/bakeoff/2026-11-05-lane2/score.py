@@ -59,11 +59,14 @@ def metrics(name, items, cost=0.0):
             "kinds": dict(Counter(i["kind"] for i in t))}
 
 
-zero = [i for s, v in by_src.items() if s != "akta" for i in v]
+zero = [i for s, v in by_src.items() if s not in ("akta", "clay") for i in v]
 rows = [metrics("akta (reference)", ak)]
 for s in sorted(by_src):
-    if s != "akta": rows.append(metrics(f"$0: {s}", by_src[s]))
+    if s != "akta": rows.append(metrics(f"src: {s}", by_src[s]))
 rows.append(metrics("$0 stack (union)", zero))
+if "clay" in by_src:
+    rows.append(metrics("$0 + Clay (union)", zero + by_src["clay"]))
+    zero = zero + by_src["clay"]  # company-coverage lines below use the widest non-akta stack
 ak_cov = {i["company"] for i in ak_true}
 rows[0]["recall_vs_akta"] = 1.0
 for r in rows:
