@@ -76,6 +76,11 @@ Event Content/**/*.rtf
 Event Content/**/_slide-index.md
 Event Content/**/POST-EVENT BRIEF*
 **/post-event-brief.md
+# 2026-11-06 (YED-335): post-event working files are private by default (manifests, recaps,
+# drafts, do-not-publish lists). Only rendered carousel finals (.html/.pdf) stay committable.
+Event Content/**/post-event/*
+!Event Content/**/post-event/*.html
+!Event Content/**/post-event/*.pdf
 **/quote-bank.md
 Event Content/**/*.srt
 Event Content/06 23 26 Daytona AI Builders/POST-EVENT — 5 Takeaways + Brief.md
