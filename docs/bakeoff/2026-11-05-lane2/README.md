@@ -96,3 +96,15 @@ Clay is also a different kind of source. It returns a few curated events per com
 ## Re-running
 
 `fetch0.py <src|all>` → `gdelt_retry.py` (until there are no 429s) → `prep_label.py` → labeller dispatches (one `alex:research-analyst` per batch on Fable, compact `k CLASS KIND` output) → `extract.py <agent transcript> labels_NN.txt` → `score.py`. The scripts expect `companies.json` and `../akta/run1.json` beside them; both are private and are never committed.
+
+## Decision and lane design (2026-11-08)
+
+**Decision (Alex, YED-349):** lane 2 is the **$0 stack + Clay**. It is the only configuration that cleared all three floors (recall 0.69, coverage 0.88, 26 of 30 targets).
+
+**Lane design:**
+- **Weekly, Sunday GitHub Action** (`.github/workflows/company-signals.yml` → `.claude/scripts/company_signals.py fetch`). It runs GDELT as one batched OR query per week, chunked under the query-length limit with 429 backoff, plus HN Algolia stories with ≥5 points. EDGAR 8-Ks are added once the `EDGAR_USER_AGENT` secret exists (YED-337); until then the step skips with a notice. The Action is dry-run unless the repo variable `COMPANY_SIGNALS_WRITE_ENABLED` is `true`.
+- **Clay research agent every second Monday session** (`company_signals.py clay-ingest`). It runs the run-1b prompt (in the script's docstring): third-party sources only, the company's own site excluded, a 14-day window. At about 1.5 credits per company, that is about 60 credits a run and about 130 a month for 40 companies. The kill rule pauses the Clay leg above about 70 credits per run.
+- **Input** is the same 40-company watchlist the bake-off measured (`[{name, domain, q, cik}]`). The Action reads it from the private repo secret `COMPANY_SIGNALS_WATCHLIST` and skips green with a warning while that secret is empty. `q` disambiguates GDELT and HN queries and attributes hits; `cik` drives EDGAR. The ATS-table registry was not used because it would drop 12 of the 40 companies.
+- **Company RSS stays in lane 4** (`feeds.py`, PR #272). GitHub releases are dropped.
+- **Rows** are staged in `feed_items` (migration 0020, PR #305) as `kind = market`. Writes are held until `spine_client.ALLOW` carries `feed_items` (#272) and 0020 is applied. The Monday-session classifier stays the precision layer.
+- **Registry:** migration 0021 rewrites the lane's schedule and kill rule. Activation (`active = true`) comes in 0022, after the first good run.
