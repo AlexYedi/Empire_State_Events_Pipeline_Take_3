@@ -1,0 +1,121 @@
+# Systems Analysis: the post-event stage captures everything and consumes almost nothing
+
+Read-only evaluation, 2026-11-05. Sources: `.claude/commands/post-event-content.md` (511 lines), `.claude/WORKFLOWS.md`, `.claude/commands/event-deep-research.md`, `.claude/skills/event-research/SKILL.md` (Steps 1.7, 7), `.claude/skills/content-correspondent/SKILL.md`, `.claude/skills/content-patterns/{goal-tagging,speaker-deep-dive}.md`, `.claude/skills/tag-outcome/SKILL.md`, `.claude/agents/research/{post-event-synthesizer,knowledge-conditioning}.md`, `.claude/references/{market-intel-spine,notion-schema}.md`, `docs/adr/README.md`, `.claude/scripts/{substrate,retrieve}.py`, `.claude/evals/post-event-brief-template-evidence.md`, `docs/proposals/2026-11-03-visdom-layers-vs-pipeline.md`, the Agentics live case (`Event Content/11 04 26 Agentics Spotlight Skills, Harnesses  Agent Identity/post-event/*`), prior post-event folders (MCP Release Party, GTM Intelligence, NYC AI Demos #10, Shortlist April, Masterclass #5), `.claude/.state/{briefs,notion-manifests,research,deep-dives}`, `event-claim.py list`, `empire-state-hub/src/data/rooms.curated.json`, memory (`project_decisions_not_to_reopen.md`, MEMORY.md). Canonical systems references: `alex:systems-thinking` `references/` (Meadows).
+
+## Verdict
+
+The post-event stage is a strong capture machine and a weak consumption machine. The Agentics brief is 20,352 words in 17 sections, and only two things read it: `content-correspondent` (one round of posts, selecting from the Quote Bank, Pre→Post Gap and one of seven Documentarian Angles) and `substrate.py stage-claims` (seven section types → claims that `retrieve.py` reads back at the next event's Step 1.7a). Everything else — Concept Glossary (694 words), Tools/Companies (545), Anecdotes (491), Open Loops (293), six unused angle cuts, Enrichment Resolutions (1,206), People & Outreach State, the Pre→Post Gap verdicts themselves — is either listed as a `BOUNDARY_SECTION` in `substrate.py:181` (never staged) or has no reader after Step 4. There is no job-search hook, no Project Ideas writer, no series/community memory, no cadence owner, no content backlog, and no aggregated research-quality signal; the Step 7 retro that was designed to score success signals is orphaned (no command calls it). The stage's deduced purpose is "produce a reviewable brief and three post variants", not "compound knowledge"; that is a Seeking-the-Wrong-Goal shape with Drift-to-Low-Performance on every unenforced step (3.8b/c/d "mandatory but not enforced", Rooms page silently dropped since October, Themes omitted, deep-dives at zero runs). The fix is not more sections; it is a defined consumer per section and a close-check that reads real state.
+
+---
+
+## 1. Bounded system
+- **Parts:** transcript sources (Supercut / ElevenLabs / paste) → transcript-conditioning (3.5) → enrichment (3.6, `research-analyst`) → `post-event-synthesizer` (3.7) → Notion writes (3.8a, Step 5 via `notion-writer`) → graph writes (3.8b/c/d via `substrate.py`, `assign_clusters.py`) → steering Touch 2 (3.9) → `content-correspondent` (4) → `output-evaluator` (4.5) → HubSpot gate (5.5) → optional deep-dives (5.6) → Step 6 summary. Stores: Notion Events/People/Companies/Topics/Content Drafts/Project Ideas/Roles/To-dos; Supabase `event`, `event_entity`, `claim`, `claim_entity`, `document`, `claim_usage`, topic→theme; HubSpot; hub `rooms.curated.json`; Linear.
+- **Interconnections:** the brief is the hub. Forward edges: brief → posts (4), brief → claims (3.8c), brief → Event page mirror. Backward edges (what the next event reads): `retrieve.py --lens event` reads claims by entity neighbourhood; 1.7a reads prior Event brief bodies, People/Companies pages, Topics `Current Events`. That is the whole read loop.
+- **Function/purpose (deduced from behaviour):** ship three LinkedIn variants with verified quotes, and a reviewable brief. The 26-commit patch history on the command is almost entirely about write plumbing (3.8 ×4, notion-writer/markers ×4, quote safety ×3), never about consumers. The system optimises the fidelity of one round of posts.
+- **Boundary chosen:** from "Alex has a recording" to "the next event's Step 1.7 reads what this one wrote", plus the three non-content outlets the north star needs (job pipeline, builds, relationships). Reason: the question is value for the system going forward, which lives at the boundary between this run and the next consumer.
+- **Outside the boundary that might matter:** LinkedIn's own analytics (reach/outcomes), Alex's actual sending behaviour, the Market lens / slice layer (ADR-13) that will read themes; the hub long-read surface (not built).
+
+## 2. Stocks and flows
+| Stock | Written by post-event | Read back by anything | State |
+|---|---|---|---|
+| Claims (`thesis/practice/pitfall/hot_take/learning/statistic/question`) | 3.8c, `--approve` | `retrieve.py` at 1.7a (scored, ≤ budget) | Loop closed. Usage never logged (`usage=not logged is expected`, event-deep-research.md:68) |
+| Event + roster edges, topic→theme | 3.8b, 3.8d | `retrieve.py` neighbourhood; theme trends (ADR-13) | Closed, unenforced ("a skipped graph write closes green", post-event-content.md:231) |
+| Notion People/Companies/Topics | 3.8a (entities "the event touched") | 1.7a pulls | Closed for people/companies; **concepts never become Topics** (Agentics brief gaps: "Topic names on the Event were not passed") |
+| Concept Glossary, Tools/Companies, Anecdotes, Documentarian Angles, Open Loops, Enrichment Resolutions, Speaker Map, Slides, Conditioning | brief only | nothing (`BOUNDARY_SECTIONS`, substrate.py:181) | **Dead stock**: ~4,000 words/event written, zero outflow |
+| Pre→Post Gap verdicts (Confirmed/Reversed/Hit/Missed/Not predicted) | §3 of brief | nothing; Step 7 retro orphaned | Dead; this is the research-quality signal |
+| People & Outreach State (bucket, next action) | brief only | nothing; Day 7/21 cadence is prose in content-correspondent.md:76–104 with no owner | Dead |
+| Project Ideas DB | no writer (0 refs in command/skill) | — | Empty inflow |
+| Roles DB / target list / interview story bank | no writer; interview-prep-dossier never reads `retrieve.py` | — | Empty inflow |
+| Content backlog (alternate cuts, deep-dives, X cuts, hub long read, synthesis pairs) | none; 5.6 "ask, never auto-run" → 0 runs in `.claude/.state/deep-dives/`; Rooms page: 0 Oct/Nov entries in 30 | — | Empty |
+| Content Drafts `Themes` (back-catalog index) | pre-event sets it; post-event Step 5 property list omits it | content-style-guide back-catalog query | Half-closed |
+
+- **Buffers:** the brief itself (one page of everything), Notion `needs_review`, Linear. The brief is a buffer with no drain.
+- **Perverse balancing loop (Meadows, `feedback-loops-stocks-flows.md`):** "completeness over curation" raises the inflow to the brief every run; the outflow stays at two consumers. The stock looks healthy (long, rich) while most of it decays unread. Split the outflow: *used by a later consumer* vs *written and never read*.
+
+## 3. Feedback loops
+- **R1 (knowledge compounding, intended):** brief → claims → next event's pack → sharper questions → richer room → richer brief. Dominant only for the seven staged section types; starved for everything else.
+- **R2 (content → relationship → content, "The Closed Loop" in content-correspondent.md:206):** post → DM → engagement → warm context. Exists on paper; outreach is opt-in (correct) but the cadence has no trigger, so R2 rarely runs past touch 1.
+- **B1 (quote safety):** conditioning → HIGH/MED → output-evaluator. Strong, validated (0.95 vs 0.65 null, visdom proposal §1). Dominant loop today.
+- **B2 (write-back enforcement):** absent. The command admits it. Step 6.5 in `/event-deep-research` is the model of what is missing here.
+- **B3 (research quality):** Pre→Post Gap → prediction recall → better research. Designed (Step 7 retro, Success Signals in SKILL.md 2e), executed once by hand (NYC AI Demos #10 "Prediction Grade": "recall, not ranking, was the killer"), never institutionalised.
+- **Delays:** brief → next event on the same entities can be months; without a series concept the "Nori recurring community" signal has nowhere to accumulate between touches.
+- **Currently dominant:** B1 (quote safety) and the write-plumbing patch loop. **Likely to dominate next:** R1 if consumers are added; otherwise Drift (sections thin out silently because no one reads them — the eval file already allows "thin" everywhere).
+
+## 4. Archetype check
+- **High confidence — Seeking the Wrong Goal** (`system-archetypes.md`): brief completeness and quote fidelity are the measured goals; "most informed person in the room" and "pipeline-to-offer" are the stated goals. Evidence: 17 sections, 2 consumers; zero job-search hooks; 26 commits on plumbing. Escape: measure the consumer, not the artifact.
+- **Medium — Drift to Low Performance:** 3.8b/c/d, Rooms page, Themes, 5.6 all drift because "a skipped step closes green". Escape: an absolute standard read from real state (the Step 6.5 pattern).
+- **Considered and ruled out — Shifting the Burden:** the output-evaluator is not a symptomatic fix masking a root cause; it is the right balancing loop. **Rule Beating:** no gaming observed; the brief is honest. **Escalation / Success to the Successful:** n/a, single actor.
+
+## 5. Players and incentives (single actor, sub-roles)
+| Actor | Stated goal | Operational goal | Information they have | Incentives |
+|---|---|---|---|---|
+| Alex-reviewer | most informed in room; offer by 1/1/27 | approve three variants fast | the review head (≤300 words) | reads the head, not the 20k body; never sees §12–17 |
+| Alex-attendee | relationships over time | get the recap done | one-line recap next day | recap is a blocking gate he answers late (Agentics: "MISSING" in `00-post-event-inputs.md`, given 11-05) |
+| Synthesizer | completeness | fill 17 sections | transcript, enrichment, recap | long is correct; no signal that §12–17 are unread |
+| content-correspondent | two tracks compounding | one post + comment, 3 variants | brief, steer | cadence/backlog prose with no executor |
+| substrate.py | one producer path | parse 7 known headings | brief text | 0 claims = exit 3; glossary/tools/open loops by design excluded |
+| retrieve.py | aim the next research | score claims by neighbourhood | claims, edges | never told which claims got used (no `--usage-document` at 1.7a) |
+| Next session | resume the run | re-derive state from folder | claim held by another session (`event-claim list`: held 3h) | writes a hand-made `00-post-event-inputs.md` manifest because no run-state exists |
+
+## 6. Leverage points (`leverage-points.md`)
+- **Currently being pushed:** #10–#9 (structure/delays: markers, writer, manifests) and #6 (information flow into the brief). Direction: more capture.
+- **Highest workable:** #4 self-organisation / #5 rules — *every brief section names its consumer or is not produced at that length*; a close-check reads real state. This converts dead stock into flows without adding sections.
+- **Next-highest if blocked:** #6 information flows out of the brief into the three north-star outlets (Roles/target list, Project Ideas, To-dos/Linear) — small writes the parent already knows how to do.
+- **Counterintuitive direction warning:** do not push "more sections" or "longer brief". The capture side is already at diminishing returns (eval file: nothing earns deletion, Hot Takes/Stat Bank allowed thin). Push consumption.
+
+## 7. Second-order effects of the recommended intervention (consumer-per-section + close-check + job/build/relationship extracts)
+- **First-order:** brief gets a trailing machine-readable block; ~8–15 small writes per event (Linear issues, Project Ideas rows, To-dos, a gap-score line); a Step 6 check that can FAIL.
+- **Second-order:** Linear fills with per-event follow-ups; the "parked thoughts go to Linear same turn" rule (CLAUDE.md §5) gets honoured for Open Loops; Alex's review attention shifts from copy to decisions ("apply these 3 practices? pursue this company?").
+- **Third-order (adaptation):** sessions will start skipping the close-check when it fails on 3.8c (migration 0009 404) — so the check must distinguish *skipped with reason* from *silent*. Alex may triage-fatigue on Linear volume → cap at ≤5 open-loop issues per event, batch practices into one issue.
+- **Pre-mortem failure modes:** (a) Project Ideas floods with un-actionable ideas → require a traced quote + a one-line "why Alex" (anchor-to-problem-statement rule); (b) job-lens extract names companies that are not targets → it proposes, Alex confirms (same gate as HubSpot 5.5c); (c) gap-score becomes a vanity number → always paired with the invite-only null baseline.
+- **New loops introduced:** B2 (enforcement), B3 (research recall), R3 (event → build → post → event).
+- **Loops removed:** the hand-rolled manifest per stalled session; the orphaned Step 7 retro.
+
+## 8. Posture check
+- **Might be wrong about:** how much Alex actually reads §12–17 in Notion (I inferred from the review-head design and zero downstream references; Notion read analytics not checked). The Rooms page may be regenerated elsewhere in the hub (I checked `rooms.curated.json` only).
+- **Want more evidence on:** Notion `Themes` fill rate on post-event posts; `claim` row counts per event and whether `retrieve.py` packs ever surface post-event claims (live Supabase not queried); Linear issue counts per event.
+- **Extrapolating beyond canon:** "consumer-per-section" is my rule, not Meadows'; the archetype match to a single-operator content pipeline is an application, per `applications-to-product-and-engineering.md`.
+
+---
+
+## Ranked gaps
+
+| # | Gap | Evidence | Value lost | Proposed operationalisation (where it lives) | Effort | Conf |
+|---|---|---|---|---|---|---|
+| 1 | **Six brief sections have no consumer** (Glossary, Tools/Companies, Anecdotes, Open Loops, Angle alternates, Enrichment Resolutions) | `substrate.py:181` `BOUNDARY_SECTIONS`; Agentics brief §12–17 = ~3,500 words; "Net-new for 3.8 consideration" names 3 people with no rule; `## 18. — see §17` dup in MCP brief | the "most informed" stock decays unread; concepts never become Topics so 3.8d/trends starve | **Step 3.8e "route the brief"** (command): Glossary concepts → Topic rows or `(general)` theme tags (3.8b manifest); Open Loops → Linear issues with owner+due (already CLAUDE.md §5 rule); Angle alternates → Content Drafts rows `Content Status = idea` with the Theme set; Tools/Companies net-new → 3.8a delta. Synthesizer emits a trailing `⟦routing⟧` block the parent parses. | M | 85% |
+| 2 | **Zero job-search hook** | `grep -i "roles\|interview\|me-model"` on command + skill = 0 hits; interview-prep-dossier never calls `retrieve.py`; hiring signals in §3 ("Jesse hires for the ability to write… managers make better IC agentic engineers") have no reader | pipeline-to-offer (pillar 1) gets nothing from 40+ attended events; "I was in the room when X said Y" is the interview differentiator and is unbanked | **3.8e job-lens extract:** companies on stage + hiring signals → check against `target-companies.md` (local) and Roles DB; stage a `story_bank` claim_type (`first_hand`, speaker-linked) from Anecdotes + Hot Takes; `/interview-prep` Step 1 runs `retrieve.py --lens job` on the target company and surfaces first-hand claims as "you were there" hooks. | M | 80% |
+| 3 | **Pre→Post Gap never aggregated; Step 7 retro orphaned** | SKILL.md Step 7 (1050–1130) has no caller; Agentics §3 = 4 confirmed · 1 reversed · 2 partial · 2 missed signals · 10 not-predicted; Demos #10 did it once by hand | the only research-quality signal the pipeline produces is thrown away; no event-tier scoring for attendance choice | Synthesizer emits `gap_score` (counts + Success Signals hit/miss + tier A/B/C + anti-signals) → parent stages as `claim_type = retro` on the event + one line in Step 6; weekly roll-up by series. **Null baseline:** the invite-abstract-only prediction (what a no-research run would have predicted). Delete 7a–7e. | S–M | 75% |
+| 4 | **Relationship cadence has no owner; recurring-community strategy has no home** | content-correspondent.md:76–104 Day 7/21 table + "calendar reminder" prose; Agentics recap: "Nori runs recurring events… go deeper over time" → nowhere to persist; no `series` attribute on Events (hub has one in `rooms.curated.json`) | R2 never runs past touch 1; series intelligence (who returns, what moved) is re-derived | People & Outreach State rows with a next action → To-dos/Linear with due dates (Day 7/21) linking the draft; add `Series` to Events (Notion + graph `event.metadata.series`); 1.7a Continuity Ledger reads by series. | S (To-dos) / M (series) | 80% |
+| 5 | **No build trigger** | Project Ideas DB (17 props, Content Drafts relation) has 0 writers in `.claude/`; Agentics has 4+ repo-applicable build ideas (Graphviz CLAUDE.md, rationalization tables, compaction self-letter, description-field rule) | pillar 2 (event-tied builds) has no feed | Synthesizer "Build candidates" (idea · traced quote · why-Alex) → Project Ideas rows `needs_review` via notion-writer payload. | S | 75% |
+| 6 | **Pro-tips never reach Alex's own practice** | staged as `practice` claims for research only; tip #1 (skill descriptions say *when*, not *what*) applies to all 15 repo skills; glossary dies | upskilling goal (equal-weight standing goal) unserved | "Practice candidates" → one Linear issue per event ("apply/reject N") tagged `upskill`; glossary terms → Topic page `Current Events` or Knowledge Library note. | S | 70% |
+| 7 | **Content beyond one post is nominal** | 5.6 deep-dives: 0 runs; X cuts in skill but not in command Step 4 output; Hub long read only a link target (x-content.md:23); Rooms page: 0 Oct/Nov entries of 30; pattern-synthesis "triggered by post-event" — nothing in the command does | lean-audience pillar gets one post per event; 6 of 7 angles per event wasted | Step 4 emits a **content plan**: primary now + backlog rows (alternates, deep-dive per speaker, synthesis candidate when ≥2 briefs share a Theme — one SQL on Content Drafts) + X thread after variant pick + hub long read as the amended post-event artifact. Make Rooms page a close-check item or delete the line. | M–L | 75% |
+| 8 | **Run state lost between sessions** | `event-claim list`: Agentics held 3h by another session; `00-post-event-inputs.md` is a hand-written manifest; two folders for one event (`11 04 26 Agentics Spotlight` vs `…Skills, Harnesses  Agent Identity`) | duplicate effort; a resuming session cannot tell 3.7-done from 3.8-done | `.claude/.state/post-event/<slug>/run-state.json` (step → done/at/path), written by the parent per step; Step 1.0 reads and resumes; claim release tied to it; folder slug derived from the Notion Event title once. | S | 85% |
+| 9 | **Unenforced steps drift** | "mandatory but not enforced" (command:16, 231); Themes absent from Step 5 property list (command:373) while content-correspondent:247 requires it; Rooms line in Step 6 template unhonoured | theme trends, back-catalog callbacks and the hub starve silently | **Step 6.5 close-check script** reading real state: graph event row, claims >0 (or skipped-with-reason), themes assigned, Themes set on posts, Linear issues created, rooms entry. PASS/FAIL printed; never blocks the turn. | S | 80% |
+| 10 | **Recap gate blocks synthesis a day late** | synthesizer: "REQUIRED… never propose follow-up without it"; Agentics recap given 11-05 | the brief waits on a four-question interview that could be captured on the way home | A fixed 4-question Wispr template (who / follow-up / missed / left + "the one thing") captured as Field Color the same night; pass-1/pass-2 split already exists. | S | 70% |
+| 11 | **`claim_usage` never logged at 1.7a** | event-deep-research.md:68 "usage=not logged is expected"; retrieve.py:37 designed it | no signal on which brief sections earn their capture cost | Run the YED-262 re-attribution after 4.2 stages the document; monthly usage by `claim_type` with a uniform null baseline. | S | 65% |
+| 12 | **§17/§18 and Conditioning Notes duplicate §12–13 and `enrichment-step-3.6.md`** | Agentics §17 = 1,206 words restating the enrichment table; MCP brief `## 18. — see §17` | ~1,200 words/brief of drift surface | Merge: a Source column on §12/§13; keep the enrichment file as the record. | S | 80% |
+
+## What to REMOVE or merge
+- **Step 7 retro (event-research SKILL.md 7a–7e):** orphaned. Fold Success-Signal scoring, tier and anti-signals into the brief's §3 + `gap_score` (gap 3); delete the rest.
+- **§17 Enrichment Resolutions + §18 + the glossary half of Conditioning Notes:** merge into §12/§13 (gap 12).
+- **Step 5.6 as an in-command optional step:** zero uptake; replace with backlog rows from the content plan (gap 7).
+- **content-correspondent "Execution Infrastructure" 2-hour / Day 7 / Day 21 prose and the `event-signal-tracker` reference** (skill does not exist; Granola refs remain): replace with the To-dos/Linear rows (gap 4) or cut.
+- **Step 6 "Room page" line:** wire into the close-check or delete; today the summary template asserts something that has not happened since September.
+
+## Recommended sequence (first 3 builds)
+1. **Run-state + close-check** (gaps 8, 9). S. No judgment calls, unblocks resumption and makes drift visible. *Manual pilot today:* write `run-state.json` for Agentics by hand (3.5/3.6/3.7 done, 3.8/4/5 pending) and run the 3.8 checks against Supabase read-only.
+2. **Step 3.8e "route the brief"** (gaps 1, 2, 5, 6, 4-To-dos). M. One parent step after 3.8d: parse the synthesizer's routing block → Linear issues (open loops, practices), Project Ideas rows (builds), To-dos (outreach cadence), job-lens extract (companies/hiring signals vs targets; `story_bank` claims). *Manual pilot today:* from the Agentics brief, create by hand: 3–5 Linear issues from §16, 2–3 Project Ideas rows from §6/§7, two To-dos for the Amol/Jesse variant-A notes with Day 7 dates, and a "you were there" story line into `me-model.md` (Prime Radiant colleagues / rationalization tables).
+3. **gap_score + Series** (gaps 3, 4). S–M. Synthesizer emits the block; `Series` on Events; weekly roll-up. *Manual pilot today:* write the Agentics line (4 confirmed · 1 reversed · 2 partial · 2 signals missed · 10 not-predicted; tier B until a conversation lands) onto the Event page and set Series = "Agentics Spotlight (Nori)".
+
+All three pilot manually on Agentics today with no new code; only the automation needs a PR. Gaps 7 and 11 follow once 1–3 show consumption actually happening (watch: Linear issues closed, Project Ideas rows that ship, claims from `story_bank` surfacing in an interview dossier).
+
+## Recommendation
+- **Highest-leverage intervention:** a consumer per brief section (Step 3.8e) plus a real-state close-check, on leverage point #5 (rules) / #4 (self-organisation), addressing Seeking the Wrong Goal.
+- **Confidence:** 78% — moderately confident. The dead-stock evidence is file-level and firm; the value estimates for job/build routing are inferred from the north star, not measured.
+- **Watch for after intervening:** Linear volume per event (cap it), Project Ideas quality (traced quote required), close-check failures being "skipped with reason" vs silent, whether `story_bank` claims appear in any `/interview-prep` pack within 30 days.
+- **What would tell us this was wrong:** if Alex is in fact reading §12–17 in Notion and acting on them by hand (then the gap is capture-of-his-actions, not consumers); if Linear issues from open loops are closed as "won't do" at >70%.
+
+## Per-horizon view (project uses H1/H2/H3)
+- **H1 (this week):** manual pilot on Agentics (all three), run-state file, close-check script.
+- **H2 (this quarter):** 3.8e automated; `story_bank`/`retro` claim types; Series on Events; content plan with backlog rows; claim_usage logging.
+- **H3 (paradigm, deferred until trigger):** the brief stops being one page and becomes typed records written directly (claims, ideas, loops, stories) with the Notion page rendered *from* them — trigger: when ≥3 consumers read the same section and the markdown parse breaks twice.

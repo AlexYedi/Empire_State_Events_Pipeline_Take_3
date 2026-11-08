@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ten things a night on agent skills taught me</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined; palette per the visual brief and the
+   pre-event carousel (series continuity): ground #0F172A, ink #F8FAFC, one accent blue #3B82F6,
+   grey #94A3B8, #8FE83A name-mark underline only (slide 5). */
+:root{
+  --ground:#0F172A; --panel:#16213A; --rule:#2A3550; --ink:#F8FAFC; --muted:#94A3B8;
+  --accent:#8FE83A; --mark:#3B82F6;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:96px;line-height:1.0}
+h2{font-size:76px;line-height:1.05}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+
+/* Slide 1: map of the ten */
+.map{margin-top:52px;display:grid;grid-template-columns:repeat(3,1fr);column-gap:36px}
+.col{border-top:2px solid var(--rule);padding-top:22px}
+.col .hd{font-family:var(--mono);font-weight:700;font-size:24px;line-height:1.25;letter-spacing:.1em;color:var(--mark);min-height:62px}
+.item{display:grid;grid-template-columns:62px 1fr;margin-top:22px}
+.item .n{font-family:var(--display);font-weight:600;font-size:40px;line-height:1;color:var(--muted)}
+.item .t{font-family:var(--body);font-weight:600;font-size:30px;line-height:1.15}
+.item .tag{display:block;font-family:var(--mono);font-weight:400;font-size:20px;letter-spacing:.12em;color:var(--muted);margin-top:8px}
+.event{margin-top:auto;font-family:var(--body);font-size:26px;color:var(--ink);border-top:2px solid var(--rule);padding-top:20px}
+
+/* Slide 2: bars */
+.legend{margin-top:36px;font-family:var(--body);font-size:28px;line-height:1.3;color:var(--muted);max-width:860px}
+.bars{margin-top:36px}
+.bar{margin-bottom:26px}
+.bar .cat{font-family:var(--body);font-size:28px;line-height:1.2;margin-bottom:10px}
+.bar .track{display:flex;align-items:center}
+.bar .fill{height:64px;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:18px;font-family:var(--body);font-weight:700;font-size:38px;color:#0F172A;flex:none}
+.bar .note{position:absolute;left:676px;font-family:var(--body);font-style:italic;font-size:28px;color:var(--ink)}
+.bar .track{position:relative}
+.inset{margin-top:10px;border:2px solid var(--rule);background:var(--panel);border-radius:10px;padding:22px 28px;font-family:var(--body);font-size:28px;line-height:1.3}
+.annot{margin-top:22px;font-family:var(--display);font-style:italic;font-size:32px;line-height:1.25;color:var(--ink);max-width:880px}
+
+/* Slide 3: lanes */
+.h3{font-size:64px;text-wrap:wrap}
+.lanes{margin-top:26px;display:flex;flex-direction:column;gap:10px}
+.lane{border:2px solid var(--rule);border-radius:12px;padding:12px 24px;display:grid;grid-template-columns:168px 1fr;column-gap:22px}
+.lane.hot{border:4px solid var(--mark)}
+.lane .k{font-family:var(--mono);font-weight:700;font-size:24px;line-height:1.3;letter-spacing:.08em}
+.lane .k small{display:block;font-weight:400;color:var(--muted);letter-spacing:.06em;margin-top:6px;font-size:22px}
+.lane.hot .k{color:var(--mark)}
+.lane ul{list-style:none}
+.lane li{font-family:var(--body);font-size:34px;line-height:1.12;padding:1px 0}
+.lane li::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted);margin-right:16px;vertical-align:middle;position:relative;top:-3px}
+.lane.hot li::before{background:var(--mark)}
+.lane .else{font-family:var(--body);font-size:26px;line-height:1.25;color:var(--muted);margin-top:6px}
+.arrow{display:flex;justify-content:center;height:0}
+.cost{margin-top:12px;font-family:var(--body);font-size:24px;line-height:1.35;color:var(--muted)}
+
+/* Slides 4 and 5: shared two-column table frame */
+.tbl{margin-top:40px;display:grid;column-gap:14px;row-gap:10px}
+.tbl.three{grid-template-columns:150px .82fr 1.18fr}
+.tbl.two{grid-template-columns:1fr 1fr}
+.tbl .th{font-family:var(--mono);font-weight:700;font-size:26px;letter-spacing:.12em;padding:0 22px 12px;color:var(--muted);border-bottom:4px solid var(--rule)}
+.tbl .th.hot{color:var(--mark);border-bottom-color:var(--mark)}
+.tbl .rk{font-family:var(--mono);font-size:22px;line-height:1.3;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;padding:12px 0;align-self:center}
+.tbl .td{font-family:var(--body);font-size:30px;line-height:1.2;padding:16px 20px;background:var(--panel);border-radius:8px;display:flex;align-items:center}
+.tbl .td.dim{color:var(--muted)}
+.tbl .td.empty{background:repeating-linear-gradient(135deg,transparent 0 12px,rgba(148,163,184,.07) 12px 14px);border:2px dashed var(--rule)}
+.tbl .td.q{font-family:var(--display);font-style:italic;font-size:34px;color:var(--muted)}
+.tbl .td.r{font-weight:600}
+.persona{margin-top:36px;font-family:var(--display);font-style:italic;font-weight:600;font-size:52px;line-height:1.1}
+.method{margin-top:30px;font-family:var(--body);font-size:28px;line-height:1.3;color:var(--muted)}
+.closing{margin-top:40px;font-family:var(--display);font-weight:600;font-size:64px;line-height:1.08;text-wrap:balance}
+.namebox{margin-top:auto}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: A three-column map of ten takeaways about working with AI agents, grouped into writing instructions, architecting the work and trusting what agents do, each tagged by whether it came from the talk, the Superpowers repo or both. -->
+<section class="slide">
+  <h1>Ten rules for agents that listen</h1>
+  <div class="map">
+    <div class="col">
+      <div class="hd">WRITING INSTRUCTIONS</div>
+      <div class="item"><span class="n">1</span><span class="t">Redirect the excuse<span class="tag">BOTH</span></span></div>
+      <div class="item"><span class="n">2</span><span class="t">Watch it fail first<span class="tag">REPO</span></span></div>
+      <div class="item"><span class="n">3</span><span class="t">Which “don’ts” work<span class="tag">REPO, MEASURED</span></span></div>
+      <div class="item"><span class="n">4</span><span class="t">Description = trigger<span class="tag">BOTH</span></span></div>
+      <div class="item"><span class="n">5</span><span class="t">Ask why, then rewind<span class="tag">TALK</span></span></div>
+    </div>
+    <div class="col">
+      <div class="hd">ARCHITECTING THE WORK</div>
+      <div class="item"><span class="n">6</span><span class="t">Cheapen mechanics, not judgment<span class="tag">BOTH</span></span></div>
+      <div class="item"><span class="n">7</span><span class="t">One mission per agent<span class="tag">BOTH</span></span></div>
+      <div class="item"><span class="n">8</span><span class="t">Rulings, not stalls<span class="tag">REPO</span></span></div>
+    </div>
+    <div class="col">
+      <div class="hd">TRUSTING WHAT AGENTS DO</div>
+      <div class="item"><span class="n">9</span><span class="t">Identity = a job<span class="tag">TALK</span></span></div>
+      <div class="item"><span class="n">10</span><span class="t">“Done” isn’t done<span class="tag">BOTH</span></span></div>
+    </div>
+  </div>
+  <div class="event">Agentics Spotlight · NYU · Nov 4, 2026 · Jesse Vincent with Amol Kapoor</div>
+  <div class="foot"><span class="src">Sources: Agentics Spotlight talk, 2026 · github.com/obra/superpowers, 2026</span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: Bar chart from Superpowers' June 2026 micro-tests: a prohibition made the agent re-type 4.4 spec values versus 3.6 with no guidance, a positive recipe brought it to 3.0 with zero variance, and adding a nuance clause pushed it back up to 3.8; a separate plain "do not" rule held at 0 of 5 violations versus 3 of 5 without it. -->
+<!-- Bar widths: value / 4.4 x 580px, zero-based. 4.4 = 580 · 3.8 = 500.9 · 3.6 = 474.5 · 3.0 = 395.5 -->
+<section class="slide">
+  <h2>A “don’t” can be worse than nothing</h2>
+  <p class="legend">Spec values the agent re-typed into its dispatch. Lower is better. Opus, 5 runs per phrasing.</p>
+  <div class="bars">
+    <div class="bar"><div class="cat">“Don’t restate the brief” (prohibition)</div>
+      <div class="track"><div class="fill" style="width:580px;background:#F8FAFC">4.4</div><span class="note">worse than nothing</span></div></div>
+    <div class="bar"><div class="cat">Recipe + nuance clause</div>
+      <div class="track"><div class="fill" style="width:500.9px;background:#F8FAFC">3.8</div><span class="note">noisy</span></div></div>
+    <div class="bar"><div class="cat">No guidance (baseline)</div>
+      <div class="track"><div class="fill" style="width:474.5px;background:#94A3B8">3.6</div></div></div>
+    <div class="bar"><div class="cat">Positive recipe (“your dispatch should contain: (1)…(5)”)</div>
+      <div class="track"><div class="fill" style="width:395.5px;background:#3B82F6">3.0</div><span class="note">zero variance</span></div></div>
+  </div>
+  <div class="inset">But a plain rule held. ‘Do not ask reviewer to re-run tests’: 0 of 5 violations. No guidance: 3 of 5.</div>
+  <p class="annot">A ‘don’t’ about what to write fails when the model has its own agenda for the output.</p>
+  <div class="foot"><span class="src">Source: Superpowers, “Positive-Instruction Redesign of Skill Guidance” design spec, 2026-06-10 (micro-tests, programmatic scoring)</span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: A three-lane diagram of how Superpowers' cost spec says to split decisions: mechanics go to code or a cheap model, six named judgment calls stay with the top model, and four kinds of action stop for a human, with a cost breakdown of about $13 per run on one test project. -->
+<section class="slide">
+  <h2 class="h3">Jesse’s rule: cheap for mechanics, never for judgment.</h2>
+  <div class="lanes">
+    <div class="lane"><div class="k">CODE / CHEAP MODEL<small>mechanics</small></div>
+      <ul><li>chunk the plan</li><li>dispatch one agent per task</li><li>run the scripts</li><li>route the verdicts</li></ul></div>
+    <div class="lane hot"><div class="k">TOP MODEL<small>six judgment calls</small></div>
+      <ul><li>why a subagent is stuck</li><li>what a diff can’t prove</li><li>what each dispatch contains</li><li>review verdicts and severity</li><li>false-positive calls</li><li>knowing the plan itself is wrong</li></ul></div>
+    <div class="lane"><div class="k">HUMAN<small>four stops</small></div>
+      <div><ul><li>irreversible or destructive</li><li>security-sensitive</li><li>side effects outside the work (merge, push, publish)</li><li>a plan so broken every path is a guess</li></ul>
+      <p class="else">Everything else: the agent decides and logs a Ruling (what · why · cost if wrong).</p></div></div>
+  </div>
+  <!-- Cut per brief cut order (slide 3 failed the 375px thumb test on density): dropped the cost breakdown sentence "Controller ~$6–7 · implementers ~$5–6 · reviewers ~$1–1.5 · final review + fixes ~$1." Kept the scope line and the 4-of-5 line. -->
+  <p class="cost">Per run, one test project (go-fractals), June config: ~$13. In the spec’s tests, a cheaper controller let a planted defect through in 4 of 5 runs.</p>
+  <div class="foot"><span class="src">Sources: Superpowers strict-cost SDD design spec, 2026-06-10/11 · Superpowers subagent-driven-development skill, 2026 · Jesse Vincent, Agentics Spotlight, 2026</span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: A two-column comparison of an AI assistant and an AI colleague in Prime Radiant's setup, across who it works for, what it has, how it remembers, how it handles secrets and what happens when something breaks. -->
+<section class="slide">
+  <h2>An assistant serves you. A colleague has a job.</h2>
+  <div class="tbl three">
+    <div></div><div class="th">ASSISTANT</div><div class="th hot">COLLEAGUE</div>
+    <div class="rk">Works for</div><div class="td dim">one person</div><div class="td">a team, and other colleagues</div>
+    <div class="rk">Has</div><div class="td dim">tasks</div><div class="td">a job, an identity, its own credentials</div>
+    <div class="rk">Memory</div><div class="td dim">usually a new session per conversation</div><div class="td">one long session (the longest about six months), sorted by channel</div>
+    <div class="rk">Secrets</div><div class="td empty" aria-label="no entry"></div><div class="td">stored outside its container; it’s never allowed to see passwords or tokens</div>
+    <div class="rk">When something breaks</div><div class="td empty" aria-label="no entry"></div><div class="td">the PM ran a blameless postmortem</div>
+  </div>
+  <p class="persona">A persona, not a personality.</p>
+  <div class="foot"><span class="src">Source: Jesse Vincent, Agentics Spotlight, Nov 4 2026 · blog.fsck.com, Oct 2026</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: A two-column table pairing five excuses an AI agent gives for skipping verification with the rule that answers each, followed by the question of what a team still leaves to a prompt. -->
+<section class="slide">
+  <h2>Steal this excuse table</h2>
+  <div class="tbl two">
+    <div class="th">EXCUSE</div><div class="th hot">REALITY</div>
+    <div class="td q">“Should work now”</div><div class="td r">RUN the verification</div>
+    <div class="td q">“I’m confident”</div><div class="td r">Confidence ≠ evidence</div>
+    <div class="td q">“Agent said success”</div><div class="td r">Verify independently</div>
+    <div class="td q">“Too simple to test”</div><div class="td r">Simple code breaks. Test takes 30 seconds.</div>
+    <div class="td q">“Just this once”</div><div class="td r">No exceptions</div>
+  </div>
+  <p class="method">Build yours: ask the agent why it did it, write down the excuse, write the redirect.</p>
+  <p class="closing">What does your team still leave to a prompt?</p>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src">Source: Superpowers verification-before-completion and writing-skills (bulletproofing) skills, 2026</span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>
