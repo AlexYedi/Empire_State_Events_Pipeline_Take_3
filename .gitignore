@@ -177,3 +177,5 @@ Event Content/**/build-plan*.md
 # --- journal: do-not-publish flags + poller state (were only in .git/info/exclude, which does not travel with a clone) ---
 **/private-flags.md
 **/journal/state.json
+# agent worktrees: were only in .git/info/exclude (local to one machine)
+.claude/worktrees/
