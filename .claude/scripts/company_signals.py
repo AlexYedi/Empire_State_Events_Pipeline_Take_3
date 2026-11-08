@@ -48,6 +48,13 @@ lane_run ledger row (lane key 'company_signals', seeded inactive by 0016) is wri
 spine_client.write exactly as ats_pulse does; items_written counts rows ACTUALLY inserted (the
 upsert returns only new rows), never rows built.
 
+UNTRUSTED TEXT: every title, summary and URL in a row is third-party text (news sites, HN,
+Claygent output) and may carry prompt-injection payloads. This producer runs no model, so
+nothing here can be steered by it. The Monday-session classifier MUST treat the fields as
+data: run it in a no-tools subagent, and quote each field as data in its prompt (delimited,
+labelled, never spliced into instructions). Hostile URLs are counted invalid_url per item,
+and no exception text that could echo input ever reaches a log.
+
 PII (ADR-9), as ats_pulse: spine_client's own EMAIL_RE/PHONE_RE (never a local copy). A hit in
 an INPUT item counts that item refused and skips it; a hit in EMITTED text hard-fails the run.
 spine_client's guard re-checks every row on write.
@@ -367,14 +374,19 @@ def to_rows(items: list[dict], fetched_at: str, lo: datetime, hi: datetime) -> t
             stats["refused"] += 1
             continue
         url = (it.get("url") or "").strip()
-        if not url.lower().startswith(("http://", "https://")) or not urllib.parse.urlsplit(url).hostname:
+        try:
+            # urlsplit / canonical_url raise ValueError on hostile URLs ('host:notaport/x',
+            # 'http://[bad') and the message echoes the URL — per item, counted, never re-raised.
+            if not url.lower().startswith(("http://", "https://")) or not urllib.parse.urlsplit(url).hostname:
+                raise ValueError
+            key, canon = item_key({"url": url}), canonical_url(url)
+        except ValueError:
             stats["invalid_url"] += 1
             continue
         pub = it.get("published")
         if pub is None or not (lo <= pub < hi):
             stats["out_of_window"] += 1
             continue
-        key = item_key({"url": url})
         if key in keys:
             stats["duplicate"] += 1
             continue
@@ -382,7 +394,7 @@ def to_rows(items: list[dict], fetched_at: str, lo: datetime, hi: datetime) -> t
         hint = it.get("kind_hint")
         rows.append({
             "source_key": key, "company": it["company"], "feed_url": SOURCE_TAGS[it["src"]],
-            "url": canonical_url(url), "title": it.get("title") or "",
+            "url": canon, "title": it.get("title") or "",
             "published": pub.strftime("%Y-%m-%dT%H:%M:%SZ"), "summary": it.get("summary") or "",
             "kind": "market", "signal_type_guess": GUESS_FROM_HINT.get(hint, "news"),
             "fetched_at": fetched_at,
@@ -476,7 +488,7 @@ def fetch_gdelt(watchlist: list[dict], lo: datetime, hi: datetime, get=_get, sle
     notices = [f"gdelt: {len(skipped)} name(s) too short or long to query"] if skipped else []
     if unattributed:
         notices.append(f"gdelt: {unattributed} article(s) carried no watchlist query term in the title — dropped")
-    return items, errors, notices
+    return items, errors, notices, len(queries)
 
 
 def fetch_hn(watchlist: list[dict], lo: datetime, hi: datetime, get=_get, sleep=time.sleep):
@@ -534,17 +546,29 @@ def run_fetch(watchlist: list[dict], asof: date, days: int, get=_get, sleep=time
               edgar_ua: str | None = None) -> dict:
     started = _now()
     lo, hi = _window(asof, days)
-    items, errors, notices = [], [], []
-    got, err, note = fetch_gdelt(watchlist, lo, hi, get=get, sleep=sleep)
+    items, errors, notices, sources = [], [], [], {}
+    got, err, note, calls = fetch_gdelt(watchlist, lo, hi, get=get, sleep=sleep)
     items += got; errors += err; notices += note
+    sources["gdelt"] = {"calls": calls, "failed": len(err)}
     got, err = fetch_hn(watchlist, lo, hi, get=get, sleep=sleep)
     items += got; errors += err
+    sources["hn"] = {"calls": len(watchlist), "failed": len(err)}
     if edgar_ua:
         got, err = fetch_edgar(watchlist, edgar_ua, get=get, sleep=sleep)
         items += got; errors += err
+        sources["edgar"] = {"calls": sum(1 for e in watchlist if e["cik"]), "failed": len(err)}
     else:
         notices.append("edgar: skipped — EDGAR_USER_AGENT is not set (sec.gov needs a declared contact, YED-337)")
-    return build_run("fetch", items, errors, notices, lo, hi, started)
+    run = build_run("fetch", items, errors, notices, lo, hi, started)
+    run["sources"] = sources
+    return run
+
+
+def all_sources_failed(run: dict) -> bool:
+    """True only when EVERY source that made calls had all of them fail. A quiet week (zero rows)
+    with one source error is partial, not failed (review 2026-11-08, item 6)."""
+    used = [s for s in (run.get("sources") or {}).values() if s["calls"]]
+    return bool(used) and all(s["failed"] >= s["calls"] for s in used)
 
 
 def run_clay(values: dict, watchlist: list[dict] | None, asof: date, days: int, credits: float) -> dict:
@@ -553,8 +577,10 @@ def run_clay(values: dict, watchlist: list[dict] | None, asof: date, days: int, 
     items, drops = parse_clay(values, watchlist, lo.date(), asof)
     notices = [f"clay: {v} {k.replace('_', ' ')}" for k, v in drops.items() if v]
     unknown = drops["refused_unknown"]
-    return build_run("clay-ingest", items, [], notices, lo, hi, started, credits=credits,
-                     extra={"out_of_window": drops["out_of_window"], "seen": unknown, "refused": unknown})
+    run = build_run("clay-ingest", items, [], notices, lo, hi, started, credits=credits,
+                    extra={"out_of_window": drops["out_of_window"], "seen": unknown, "refused": unknown})
+    run["watchlisted"] = watchlist is not None     # write_run refuses an unvalidated Clay run
+    return run
 
 
 def _table_exists(sc) -> bool:
@@ -564,17 +590,34 @@ def _table_exists(sc) -> bool:
         return True
     if code == 404:
         return False
-    raise RuntimeError(f"company_signals: {TABLE} existence probe failed: HTTP {code}")
+    raise WriteError(f"company_signals: {TABLE} existence probe failed: HTTP {code}")
+
+
+class WriteError(RuntimeError):
+    """A write-path failure whose message is ours: static text + HTTP status / exception TYPE
+    only (an error body can echo a row). The CLI prints it; any other exception prints its type."""
+
+
+def _write_lane_run(sc, row: dict) -> dict:
+    code, _ = sc.write("lane_run", [row])
+    if not (isinstance(code, int) and code < 400):
+        raise WriteError(f"company_signals: lane_run write failed: HTTP {code}")
+    return row
 
 
 def write_run(run: dict, sc=None, batch: int = 500) -> dict:
     """The gated write. feed_items only if ALLOW has it AND the probe passes; the lane_run
-    row always (status 'skipped' when the gate held). Returns the lane_run row written."""
+    row always (status 'skipped' when the gate held). A feed_items batch that fails partway
+    still ledgers the run ('partial' with the rows actually written, 'failed' if none were),
+    then re-raises. Returns the lane_run row written."""
     if sc is None:
         import spine_client as sc
+    if run.get("mode") == "clay-ingest" and not run.get("watchlisted"):
+        raise WriteError("company_signals: a clay-ingest run without --watchlist cannot be written "
+                         "(feed_items.company is link-to-existing)")
     problems = validate_rows(run["rows"])
     if problems:
-        raise ValueError(f"company_signals: {len(problems)} row-contract problem(s); first: {problems[0]}")
+        raise WriteError(f"company_signals: {len(problems)} row-contract problem(s) — nothing written")
     written, held = 0, None
     if TABLE not in sc.ALLOW:
         held = f"write held: '{TABLE}' is not in spine_client.ALLOW (lands with PR #272, guard review)"
@@ -582,25 +625,30 @@ def write_run(run: dict, sc=None, batch: int = 500) -> dict:
         held = f"write held: {TABLE} does not exist yet (migration 0020)"
     else:
         for i in range(0, len(run["rows"]), batch):
-            code, resp = sc.write(f"{TABLE}?on_conflict=source_key&select=source_key", run["rows"][i:i + batch],
-                                  prefer="resolution=ignore-duplicates,return=representation")
-            if not (isinstance(code, int) and code < 400):
-                # an error body can echo a row (company names): status only
-                raise RuntimeError(f"company_signals: {TABLE} write failed: HTTP {code}")
+            try:
+                code, resp = sc.write(f"{TABLE}?on_conflict=source_key&select=source_key",
+                                      run["rows"][i:i + batch],
+                                      prefer="resolution=ignore-duplicates,return=representation")
+                if not (isinstance(code, int) and code < 400):
+                    # an error body can echo a row (company names): status only
+                    raise WriteError(f"company_signals: {TABLE} write failed: HTTP {code}")
+            except Exception as e:
+                why = str(e) if isinstance(e, WriteError) else f"{TABLE} write failed: {type(e).__name__}"
+                err = "; ".join([f"{why} after {written} row(s) written"] + run["errors"])
+                _write_lane_run(sc, lane_run_row(run, "partial" if written else "failed", written, err, _now()))
+                raise
             written += len(resp or [])       # ignore-duplicates returns only rows actually inserted
     if held:
         print(f"company_signals: {held} — dry-run, nothing staged")
         status = "skipped"
-    elif run["errors"] and not run["rows"]:
+    elif all_sources_failed(run):
         status = "failed"
     elif run["errors"]:
         status = "partial"
     else:
         status = "success"
     err = "; ".join(([held] if held else []) + run["errors"]) or None
-    row = lane_run_row(run, status, written, err, _now())
-    sc.write("lane_run", [row])
-    return row
+    return _write_lane_run(sc, lane_run_row(run, status, written, err, _now()))
 
 
 # ---------------------------------------------------------------------------
@@ -664,7 +712,8 @@ CLAY_FIXTURE = {
 
 class _FakeSC:
     """spine_client stand-in for the write-gate cases: records every call, sends nothing."""
-    def __init__(self, allow: bool, probe: int = 200, inserted: int | None = None):
+    def __init__(self, allow: bool, probe: int = 200, inserted: int | None = None,
+                 lane_code: int = 201, fail_batch: int | None = None):
         import spine_client as real
         self.ALLOW = dict(real.ALLOW)
         if allow:
@@ -672,6 +721,7 @@ class _FakeSC:
         else:
             self.ALLOW.pop(TABLE, None)
         self.probe, self.inserted, self.calls = probe, inserted, []
+        self.lane_code, self.fail_batch, self.batches, self.lane_rows = lane_code, fail_batch, 0, []
 
     def req(self, method, path, *a, **k):
         self.calls.append((method, path))
@@ -680,9 +730,23 @@ class _FakeSC:
     def write(self, table, rows, prefer=None, **k):
         self.calls.append(("POST", table))
         if table.startswith(TABLE):
+            self.batches += 1
+            if self.fail_batch == self.batches:
+                return 500, '{"message": "row echo would be here"}'
             n = len(rows) if self.inserted is None else min(self.inserted, len(rows))
             return 201, [{"source_key": r["source_key"]} for r in rows[:n]]
-        return 201, []
+        self.lane_rows.extend(rows)
+        return self.lane_code, []
+
+
+def _raises(fn, exc) -> bool:
+    try:
+        fn()
+    except exc:
+        return True
+    except Exception:
+        return False
+    return False
 
 
 def selftest() -> int:
@@ -820,8 +884,9 @@ def selftest() -> int:
           and not any("other" in u for u in cr) and crun["stats"]["refused"] == 3)   # 2 unknown + 1 PII
     check("clay: PII in a headline refuses the line", "https://news.example.com/pii" not in cr)
     nowl = run_clay(CLAY_FIXTURE, None, date(2026, 11, 5), 14, credits=0)
-    check("clay: without --watchlist, names pass through as given (no refusal)",
-          any(r["company"] == "Not On Watchlist" for r in nowl["rows"]) and nowl["stats"]["refused"] == 1)
+    check("clay: without --watchlist a DRY-RUN passes names through, but write_run refuses the run",
+          any(r["company"] == "Not On Watchlist" for r in nowl["rows"]) and nowl["stats"]["refused"] == 1
+          and _raises(lambda: write_run(nowl, sc=_FakeSC(allow=True)), WriteError))
     check("clay: utm stripped, metadata.source 'clay', feed_url 'clay:claygent', credits carried",
           "https://news.example.com/exec" in cr and cr["https://news.example.com/exec"]["metadata"]["source"] == "clay"
           and all(r["feed_url"] == "clay:claygent" for r in crun["rows"]) and crun["credits"] == 57.5)
@@ -882,6 +947,73 @@ def selftest() -> int:
           row4["status"] == "partial" and "Acmetron" not in (row4["error"] or ""))
     check("lane_run: error text capped at the column's 1000 chars",
           len(lane_run_row(run, "partial", 0, "x" * 2000, _now())["error"]) == 1000)
+
+    # --- Review 2026-11-08 (PR #314) ----------------------------------------------------
+    hostile = ["https://news.example.com:acmetron-raises/x",    # 'Port could not be cast…'
+               "http://[bad"]                                   # 'Invalid IPv6 URL'
+    mixed = [{"src": "gdelt", "company": "Acmetron", "title": "t", "url": u, "summary": "",
+              "published": lo + timedelta(days=1), "kind_hint": "news"}
+             for u in hostile + ["https://news.example.com/fine"]]
+    try:
+        mrows, mstats = to_rows(mixed, _now(), lo, hi)
+        check("malformed URL: hostile URLs are counted invalid_url per item; the run continues",
+              mstats["invalid_url"] == 2 and len(mrows) == 1)
+    except Exception:
+        check("malformed URL: hostile URLs are counted invalid_url per item; the run continues", False)
+    import contextlib
+    import io
+    import tempfile
+    tmp = tempfile.mkdtemp()
+    wl_path, vals_path = os.path.join(tmp, "wl.json"), os.path.join(tmp, "vals.json")
+    with open(wl_path, "w", encoding="utf-8") as fh:
+        json.dump(WATCHLIST, fh)
+    with open(vals_path, "w", encoding="utf-8") as fh:
+        json.dump({"Acmetron": "\n".join(f"2026-11-04 | F | Acmetron raises | {u}" for u in hostile)}, fh)
+    out, errs = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(errs):
+        rc = main(["clay-ingest", vals_path, "--watchlist", wl_path, "--asof", "2026-11-05"])
+    logged = out.getvalue() + errs.getvalue()
+    check("malformed URL: the CLI exits 0, logs no URL fragment / parser message, and emits no 'input refused' line",
+          rc == 0 and not any(s in logged for s in ("acmetron-raises", "[bad", "Port", "IPv6", "input refused")))
+    errs = io.StringIO()
+    with contextlib.redirect_stderr(errs), contextlib.redirect_stdout(io.StringIO()):
+        rc = main(["clay-ingest", vals_path, "--write"])
+    check("clay-ingest --write without --watchlist is refused (exit 3) before anything runs",
+          rc == 3 and "requires --watchlist" in errs.getvalue())
+    sc5 = _FakeSC(allow=True, probe=200, lane_code=500)
+    check("lane_run write answering 500 raises WriteError (the run fails, status only in the message)",
+          _raises(lambda: write_run(crun, sc=sc5), WriteError))
+    with open(os.path.join(tmp, "run.json"), "w", encoding="utf-8") as fh:
+        json.dump(crun, fh)
+    orig = globals()["write_run"]
+    globals()["write_run"] = lambda r: orig(r, sc=_FakeSC(allow=True, probe=200, lane_code=500))
+    try:
+        with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+            rc = main(["write", os.path.join(tmp, "run.json")])
+    finally:
+        globals()["write_run"] = orig
+    check("lane_run write answering 500 → the CLI exits non-zero", rc == 1)
+    sc6 = _FakeSC(allow=True, probe=200, fail_batch=2)
+    raised = _raises(lambda: write_run(crun, sc=sc6, batch=2), WriteError)
+    lr = sc6.lane_rows[-1] if sc6.lane_rows else {}
+    check("mid-batch failure: a 'partial' lane_run row with the rows actually written (2), then re-raise",
+          raised and lr.get("status") == "partial" and lr.get("items_written") == 2
+          and "after 2 row(s) written" in (lr.get("error") or "") and "row echo" not in (lr.get("error") or ""))
+    sc7 = _FakeSC(allow=True, probe=200, fail_batch=1)
+    _raises(lambda: write_run(crun, sc=sc7, batch=2), WriteError)
+    check("first-batch failure: the lane_run row is 'failed' with 0 written",
+          sc7.lane_rows and sc7.lane_rows[-1]["status"] == "failed" and sc7.lane_rows[-1]["items_written"] == 0)
+    quiet = {**run, "rows": [], "errors": ["hn company[0]: URLError"],
+             "sources": {"gdelt": {"calls": 2, "failed": 0}, "hn": {"calls": 5, "failed": 1}}}
+    dead = {**quiet, "sources": {"gdelt": {"calls": 2, "failed": 2}, "hn": {"calls": 5, "failed": 5}}}
+    check("exit rule: a quiet week (0 rows, one source error) is partial, not failed; all-failed is failed",
+          not all_sources_failed(quiet) and all_sources_failed(dead)
+          and write_run(quiet, sc=_FakeSC(allow=True))["status"] == "partial"
+          and write_run(dead, sc=_FakeSC(allow=True))["status"] == "failed")
+    check("exit rule: the live selftest fetch recorded per-source calls (gdelt 2, hn 5)",
+          run["sources"] == {"gdelt": {"calls": 2, "failed": 0}, "hn": {"calls": 5, "failed": 0}})
+    import shutil
+    shutil.rmtree(tmp, ignore_errors=True)
 
     # --- Logs stay name-free ----------------------------------------------------------
     line = summary_line(run) + summary_line(crun) + " ".join(run["errors"] + run["notices"] + crun["notices"])
@@ -952,33 +1084,54 @@ def main(argv=None) -> int:
     w.add_argument("--started-at", help="override the run's started_at")
     a = ap.parse_args(argv)
 
+    # EVERY message below is static text, a load_watchlist message (index + field, never a value),
+    # an HTTP status or an exception TYPE — no exception text that could echo input reaches a log.
+    # "input refused:" is the one line the Action greps into the public log: watchlist only.
+    if a.cmd == "clay-ingest" and a.write and not a.watchlist:
+        print("company_signals: input refused: clay-ingest --write requires --watchlist "
+              "(feed_items.company is link-to-existing)", file=sys.stderr)
+        return 3
+    wl = None
+    if a.cmd != "write" and a.watchlist:
+        try:
+            wl = _watchlist(a.watchlist)
+        except json.JSONDecodeError:
+            print("company_signals: input refused: the watchlist is not valid JSON", file=sys.stderr)
+            return 3
+        except ValueError as e:              # load_watchlist's own messages only
+            print(f"company_signals: input refused: {e}", file=sys.stderr)
+            return 3
+        except OSError as e:
+            print(f"company_signals: input unreadable: {type(e).__name__}", file=sys.stderr)
+            return 3
     try:
         if a.cmd == "write":
             with open(a.run, encoding="utf-8") as fh:
                 run = json.load(fh)
             if a.started_at:
                 run["started_at"] = a.started_at
-        else:
-            wl = _watchlist(a.watchlist) if a.watchlist else None
+        elif a.cmd == "clay-ingest":
+            with open(a.values, encoding="utf-8") as fh:
+                values = json.load(fh)
+            if not isinstance(values, dict):
+                print("company_signals: input unreadable: clay values must be a JSON object", file=sys.stderr)
+                return 3
+    except (OSError, ValueError) as e:
+        print(f"company_signals: input unreadable: {type(e).__name__}", file=sys.stderr)
+        return 3
+    try:
+        if a.cmd != "write":
             asof = date.fromisoformat(a.asof) if a.asof else datetime.now(timezone.utc).date()
             if a.cmd == "fetch":
                 run = run_fetch(wl, asof, a.days, edgar_ua=os.environ.get("EDGAR_USER_AGENT") or None)
             else:
-                with open(a.values, encoding="utf-8") as fh:
-                    values = json.load(fh)
-                if not isinstance(values, dict):
-                    raise ValueError("clay values must be a JSON object {company_name: text}")
                 run = run_clay(values, wl, asof, a.days, a.credits)
-    except ValueError as e:              # load_watchlist / shape messages carry no values
-        detail = str(e) if not isinstance(e, json.JSONDecodeError) else "not valid JSON"
-        print(f"company_signals: input refused: {detail}", file=sys.stderr)
-        return 3
-    except OSError as e:
-        print(f"company_signals: input unreadable: {type(e).__name__}", file=sys.stderr)
-        return 3
-    except PIIViolation as e:
+    except PIIViolation as e:                # spine_client's rule message: no value
         print(f"company_signals: emitted text failed the PII scan ({e}) — nothing saved or written", file=sys.stderr)
         return 2
+    except Exception as e:
+        print(f"company_signals: run failed: {type(e).__name__}", file=sys.stderr)
+        return 1
 
     if a.cmd != "write":
         _save(run, a.out)
@@ -988,13 +1141,20 @@ def main(argv=None) -> int:
         for err in run["errors"]:
             print(f"company_signals: source error: {err}")
     if a.cmd == "write" or a.write:
-        row = write_run(run)
+        try:
+            row = write_run(run)
+        except WriteError as e:
+            print(str(e), file=sys.stderr)
+            return 1
+        except Exception as e:
+            print(f"company_signals: write failed: {type(e).__name__}", file=sys.stderr)
+            return 1
         print(f"company_signals: lane_run written ({row['status']} · seen {row['items_seen']} · "
               f"written {row['items_written']} · refused {row['items_refused']} · credits {row['credits_spent']})")
-    elif a.cmd != "write":
+    else:
         print("company_signals: dry-run — nothing written (pass --write, or run `write <run.json>`)")
-    if run["errors"] and not run["rows"] and a.cmd == "fetch":
-        return 1                                    # every source failed: let the Action's alarm fire
+    if a.cmd == "fetch" and all_sources_failed(run):
+        return 1                                    # EVERY source failed: let the Action's alarm fire
     return 0
 
 

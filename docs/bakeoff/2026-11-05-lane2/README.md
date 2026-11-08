@@ -107,4 +107,6 @@ Clay is also a different kind of source. It returns a few curated events per com
 - **Input** is the same 40-company watchlist the bake-off measured (`[{name, domain, q, cik}]`). The Action reads it from the private repo secret `COMPANY_SIGNALS_WATCHLIST` and skips green with a warning while that secret is empty. `q` disambiguates GDELT and HN queries and attributes hits; `cik` drives EDGAR. The ATS-table registry was not used because it would drop 12 of the 40 companies.
 - **Company RSS stays in lane 4** (`feeds.py`, PR #272). GitHub releases are dropped.
 - **Rows** are staged in `feed_items` (migration 0020, PR #305) as `kind = market`. Writes are held until `spine_client.ALLOW` carries `feed_items` (#272) and 0020 is applied. The Monday-session classifier stays the precision layer.
+- **Titles and summaries are untrusted text** (news sites, HN, Claygent output) and may carry prompt injection. The producer runs no model. The Monday classifier must treat these fields as data: it runs in a no-tools subagent, and its prompt quotes each field as delimited data, never as instructions.
+- **`clay-ingest --write` requires `--watchlist`**, so a name outside the watchlist never reaches `feed_items.company`.
 - **Registry:** migration 0021 rewrites the lane's schedule and kill rule. Activation (`active = true`) comes in 0022, after the first good run.
