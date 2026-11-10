@@ -152,3 +152,30 @@ Event Content/**/*.log
 # 2026-10-30: Frontier Hackathon routing and integration notes reference private items (build-in-public.md); local only
 Event Content/10 30 26 Frontier Hackathon October/obvious-specs/07-linear-backlog.md
 Event Content/10 30 26 Frontier Hackathon October/obvious-specs/08-big-bets-and-integrations.md
+
+# 2026-11-08: close the gaps PR #310's adversarial pass flagged. Working files at the event-folder ROOT
+# (pre-YED-335 layout) carry the same names the post-event/* rule protects; employer deliverables, slide-text
+# catalogs and hackathon build plans are private by class; journal private flags were only in .git/info/exclude.
+# --- post-event working files by name, any depth (older root layout + any future folder) ---
+Event Content/**/alex-recap.md
+Event Content/**/*post-event-inputs*.md
+Event Content/**/post-event-drafts.md
+Event Content/**/step4-input.md
+Event Content/**/enrichment-step-*.md
+Event Content/**/*-learnings-shortlist.md
+Event Content/**/post-variant-*.md
+Event Content/**/connection-note-*.md
+Event Content/**/drafts/
+Event Content/**/speaker-map.md
+# --- slide-text catalogs: a text rendering of the vendor deck (same class as *-Slides.pdf, _slide-index.md) ---
+Event Content/**/slides-catalog*.md
+# --- employer (GKY) work product: named agency accounts, registrations, outreach to named contacts ---
+Event Content/**/gky-outputs/
+Event Content/**/*-debrief.md
+# --- hackathon build plans name role packs / target companies ---
+Event Content/**/build-plan*.md
+# --- journal: do-not-publish flags + poller state (were only in .git/info/exclude, which does not travel with a clone) ---
+**/private-flags.md
+**/journal/state.json
+# agent worktrees: were only in .git/info/exclude (local to one machine)
+.claude/worktrees/
