@@ -390,6 +390,254 @@
       }
      }
     }
+   },
+   {
+    "object": "page",
+    "id": "aaaaaaaa-0000-0000-0000-000000000007",
+    "last_edited_time": "2026-09-15T10:00:00.000Z",
+    "properties": {
+     "Title": {
+      "type": "title",
+      "title": [
+       {
+        "type": "text",
+        "text": {
+         "content": "Research brief — Fake Summit (old)",
+         "link": null
+        },
+        "annotations": {
+         "bold": false,
+         "italic": false,
+         "strikethrough": false,
+         "underline": false,
+         "code": false,
+         "color": "default"
+        },
+        "plain_text": "Research brief — Fake Summit (old)",
+        "href": null
+       }
+      ]
+     },
+     "Content Type": {
+      "type": "select",
+      "select": {
+       "name": "research_brief"
+      }
+     },
+     "Content Status": {
+      "type": "select",
+      "select": {
+       "name": "archived"
+      }
+     },
+     "Event Phase": {
+      "type": "select",
+      "select": {
+       "name": "pre_event"
+      }
+     },
+     "Event": {
+      "id": "relx",
+      "type": "relation",
+      "relation": [
+       {
+        "id": "eeeeeeee-0000-0000-0000-000000000001"
+       }
+      ],
+      "has_more": false
+     },
+     "Event Date": {
+      "type": "date",
+      "date": {
+       "start": "2026-09-01"
+      }
+     }
+    }
+   },
+   {
+    "object": "page",
+    "id": "aaaaaaaa-0000-0000-0000-000000000008",
+    "last_edited_time": "2026-09-02T10:00:00.000Z",
+    "properties": {
+     "Title": {
+      "type": "title",
+      "title": [
+       {
+        "type": "text",
+        "text": {
+         "content": "Private equity in AI — research brief",
+         "link": null
+        },
+        "annotations": {
+         "bold": false,
+         "italic": false,
+         "strikethrough": false,
+         "underline": false,
+         "code": false,
+         "color": "default"
+        },
+        "plain_text": "Private equity in AI — research brief",
+        "href": null
+       }
+      ]
+     },
+     "Content Type": {
+      "type": "select",
+      "select": {
+       "name": "research_brief"
+      }
+     },
+     "Content Status": {
+      "type": "select",
+      "select": {
+       "name": "needs_review"
+      }
+     },
+     "Event Phase": {
+      "type": "select",
+      "select": {
+       "name": "pre_event"
+      }
+     },
+     "Event": {
+      "id": "relx",
+      "type": "relation",
+      "relation": [],
+      "has_more": false
+     },
+     "Event Date": {
+      "type": "date",
+      "date": {
+       "start": "2026-09-01"
+      }
+     }
+    }
+   },
+   {
+    "object": "page",
+    "id": "aaaaaaaa-0000-0000-0000-000000000009",
+    "last_edited_time": "2026-09-03T10:00:00.000Z",
+    "properties": {
+     "Title": {
+      "type": "title",
+      "title": [
+       {
+        "type": "text",
+        "text": {
+         "content": "OTR: Fake roundtable",
+         "link": null
+        },
+        "annotations": {
+         "bold": false,
+         "italic": false,
+         "strikethrough": false,
+         "underline": false,
+         "code": false,
+         "color": "default"
+        },
+        "plain_text": "OTR: Fake roundtable",
+        "href": null
+       }
+      ]
+     },
+     "Content Type": {
+      "type": "select",
+      "select": {
+       "name": "research_brief"
+      }
+     },
+     "Content Status": {
+      "type": "select",
+      "select": {
+       "name": "needs_review"
+      }
+     },
+     "Event Phase": {
+      "type": "select",
+      "select": {
+       "name": "pre_event"
+      }
+     },
+     "Event": {
+      "id": "relx",
+      "type": "relation",
+      "relation": [
+       {
+        "id": "eeeeeeee-0000-0000-0000-000000000001"
+       }
+      ],
+      "has_more": false
+     },
+     "Event Date": {
+      "type": "date",
+      "date": {
+       "start": "2026-09-01"
+      }
+     }
+    }
+   },
+   {
+    "object": "page",
+    "id": "aaaaaaaa-0000-0000-0000-000000000010",
+    "last_edited_time": "2026-09-04T10:00:00.000Z",
+    "properties": {
+     "Title": {
+      "type": "title",
+      "title": [
+       {
+        "type": "text",
+        "text": {
+         "content": "Chatham House session notes",
+         "link": null
+        },
+        "annotations": {
+         "bold": false,
+         "italic": false,
+         "strikethrough": false,
+         "underline": false,
+         "code": false,
+         "color": "default"
+        },
+        "plain_text": "Chatham House session notes",
+        "href": null
+       }
+      ]
+     },
+     "Content Type": {
+      "type": "select",
+      "select": {
+       "name": "research_brief"
+      }
+     },
+     "Content Status": {
+      "type": "select",
+      "select": {
+       "name": "needs_review"
+      }
+     },
+     "Event Phase": {
+      "type": "select",
+      "select": {
+       "name": "pre_event"
+      }
+     },
+     "Event": {
+      "id": "relx",
+      "type": "relation",
+      "relation": [
+       {
+        "id": "eeeeeeee-0000-0000-0000-000000000001"
+       }
+      ],
+      "has_more": false
+     },
+     "Event Date": {
+      "type": "date",
+      "date": {
+       "start": "2026-09-01"
+      }
+     }
+    }
    }
   ],
   "has_more": false,
@@ -655,23 +903,6 @@
       {
        "type": "text",
        "text": {
-        "content": "Contact ",
-        "link": null
-       },
-       "annotations": {
-        "bold": false,
-        "italic": false,
-        "strikethrough": false,
-        "underline": false,
-        "code": false,
-        "color": "default"
-       },
-       "plain_text": "Contact ",
-       "href": null
-      },
-      {
-       "type": "text",
-       "text": {
         "content": "Pat",
         "link": null
        },
@@ -689,7 +920,7 @@
       {
        "type": "text",
        "text": {
-        "content": " at pat.fixture@fakeco.test or 212-555-0142; ",
+        "content": " spoke at ",
         "link": null
        },
        "annotations": {
@@ -700,7 +931,7 @@
         "code": false,
         "color": "default"
        },
-       "plain_text": " at pat.fixture@fakeco.test or 212-555-0142; ",
+       "plain_text": " spoke at ",
        "href": null
       },
       {
@@ -825,6 +1056,310 @@
     "has_children": false,
     "divider": {
      "rich_text": []
+    }
+   },
+   {
+    "object": "block",
+    "id": "x1",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "jane",
+        "link": null
+       },
+       "annotations": {
+        "bold": true,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "jane",
+       "href": null
+      },
+      {
+       "type": "text",
+       "text": {
+        "content": "@fakeco.test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "@fakeco.test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x2",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "call 212-555-",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "call 212-555-",
+       "href": null
+      },
+      {
+       "type": "text",
+       "text": {
+        "content": "0100",
+        "link": null
+       },
+       "annotations": {
+        "bold": true,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "0100",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x3",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "dana [at] fakeco [dot] test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "dana [at] fakeco [dot] test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x4",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "dana&#64;fakeco.test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "dana&#64;fakeco.test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x5",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "ring 212–555–0177",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "ring 212–555–0177",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x6",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "ring 2125550188",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "ring 2125550188",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x7",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "jane @ fakeco . test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "jane @ fakeco . test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x8",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "da​na@fakeco.test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "da​na@fakeco.test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "x9",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "dana%40fakeco.test",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "dana%40fakeco.test",
+       "href": null
+      }
+     ]
+    }
+   },
+   {
+    "object": "block",
+    "id": "k1",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "see https://fakeco.test/p/12345678901 and id aaaaaaaa000000000000000000000001",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "see https://fakeco.test/p/12345678901 and id aaaaaaaa000000000000000000000001",
+       "href": null
+      }
+     ]
     }
    }
   ],
@@ -1124,6 +1659,33 @@
      ],
      "language": "python"
     }
+   },
+   {
+    "object": "block",
+    "id": "b2-otr",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "This part is off the record.",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "This part is off the record.",
+       "href": null
+      }
+     ]
+    }
    }
   ],
   "has_more": false,
@@ -1252,5 +1814,98 @@
   ],
   "has_more": false,
   "next_cursor": null
+ },
+ "GET /blocks/aaaaaaaa-0000-0000-0000-000000000008/children": {
+  "object": "list",
+  "results": [
+   {
+    "object": "block",
+    "id": "b8-p",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "PE fixture body.",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "PE fixture body.",
+       "href": null
+      }
+     ]
+    }
+   }
+  ],
+  "has_more": false,
+  "next_cursor": null
+ },
+ "GET /pages/aaaaaaaa-0000-0000-0000-000000000005": {
+  "object": "page",
+  "id": "aaaaaaaa-0000-0000-0000-000000000005",
+  "last_edited_time": "2026-09-01T10:00:00.000Z",
+  "properties": {
+   "Title": {
+    "type": "title",
+    "title": [
+     {
+      "type": "text",
+      "text": {
+       "content": "Research brief — Second Fake Meetup",
+       "link": null
+      },
+      "annotations": {
+       "bold": false,
+       "italic": false,
+       "strikethrough": false,
+       "underline": false,
+       "code": false,
+       "color": "default"
+      },
+      "plain_text": "Research brief — Second Fake Meetup",
+      "href": null
+     }
+    ]
+   },
+   "Content Type": {
+    "type": "select",
+    "select": {
+     "name": "research_brief"
+    }
+   },
+   "Content Status": {
+    "type": "select",
+    "select": {
+     "name": "needs_review"
+    }
+   },
+   "Event Phase": {
+    "type": "select",
+    "select": {
+     "name": "pre_event"
+    }
+   },
+   "Event": {
+    "id": "relx",
+    "type": "relation",
+    "relation": [],
+    "has_more": false
+   },
+   "Event Date": {
+    "type": "date",
+    "date": {
+     "start": "2026-09-01"
+    }
+   }
+  }
  }
 }
