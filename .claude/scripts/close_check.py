@@ -10,7 +10,8 @@ write closes green" into a counted line. Each check is PASS / FAIL / SKIPPED (wi
   themes         every live topic linked to the event has a theme (topic.cluster_id); topics the session judged
                  "none fits" are covered when run-state `themes` carries meta none_fits=N
   themes-prop    `Themes` set on the post draft: SELF-REPORTED from run-state `notion-write` meta themes_prop=set
-  routing-rows   Linear / Notion routing rows: SELF-REPORTED from meta routing_rows=N; SKIPPED until 3.8e exists
+  routing-rows   Step 3.8e router (YED-387): SELF-REPORTED from run-state `route` meta routing_rows=N; SKIPPED
+                 when `route` was skipped with a reason; a missing `route` step is counted once, under run-state
   run-state      canonical steps neither done nor skipped are gaps
 
 Writes exactly one thing: the `close-check` step into run-state (local, gitignored), result in meta.
@@ -132,11 +133,17 @@ def run(event: str, notion_id: str, reader=None, state_dir: str | None = None) -
         results.append(_r("themes-prop", "FAIL", "Themes on the post draft not reported "
                           f"(got themes_prop={prop!r}; mark notion-write --meta themes_prop=set once it is)"))
 
-    routed = next((e["meta"]["routing_rows"] for e in steps.values() if (e.get("meta") or {}).get("routing_rows")), None)
-    if routed is not None:
+    route = steps.get("route") or {}
+    routed = (route.get("meta") or {}).get("routing_rows")
+    if route.get("status") == "done" and routed is not None:
         results.append(_r("routing-rows", "SELF-REPORTED", f"routing_rows={routed} (run-state meta)"))
+    elif route.get("status") == "done":
+        results.append(_r("routing-rows", "FAIL", "route done but routing_rows not reported "
+                          "(mark route --meta routing_rows=N)"))
+    elif route.get("status") == "skipped":
+        results.append(_r("routing-rows", "SKIPPED", f"route skipped: {route.get('reason') or 'no reason given'}"))
     else:
-        results.append(_r("routing-rows", "SKIPPED", "no Step 3.8e router yet; nothing to count"))
+        results.append(_r("routing-rows", "SKIPPED", "route step not recorded (counted under run-state)"))
 
     gaps = [f"{s}({e.get('status', 'missing')})" for s in run_state.STEP_IDS if s != "close-check"
             for e in [steps.get(s, {})] if e.get("status") not in run_state.FINISHED]

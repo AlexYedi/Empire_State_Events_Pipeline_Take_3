@@ -49,6 +49,18 @@ Return, in this order:
 1. **Review head (≤300 words), first.** What Alex must decide or check: missing inputs, LOW-confidence attributions, Rule 12 items, UNRESOLVED entities, the count of MED-tier quotes, off-the-record exclusions (location only). The brief is long by design; this head is what makes it reviewable. The parent puts the full quote bank inside a Notion toggle.
 2. **The brief**, in the Step 3.7 schema: the 18 numbered sections, then the operational sub-sections (Slides Catalog · People & Outreach State · Content Assets Produced, left as "fill after Step 5" · Conditioning Notes). Markdown the parent can write to Notion as-is: plain paragraphs, tables and bullets, no code blocks around prose.
 3. **Gaps and uncertainties**, short list: missing inputs, LOW-confidence attributions, un-enriched entities, quotes held at MED, off-the-record exclusions (location only), anything the parent should check before writing.
+4. **The routing block** (Step 3.8e, YED-387), last: `⟦routing⟧` … `⟦/routing⟧` with one JSON object per line, per
+   `.claude/references/post-event-routing.md` (read it before writing the block). It names what in the brief someone
+   should act on and where it goes. At most 12 items, each citing the section its evidence is in. No recap means no
+   `followup`. Nothing off the record. No contact details. The parent strips it before the Notion write.
+
+**Lite mode** (`/post-event-content` Lite debrief mode). Inputs are Alex's recap, plus the recording summary if any;
+there is no transcript. Return only `## Quick Take`, `## The Thesis`, `## Substantive Insights` (exactly three,
+paraphrased, each attributed "per Alex's recap" or "per the recording summary"; no quotes), `## People & Outreach
+State` (from the recap), then the routing block. Never fill a gap from general knowledge.
+
+**Routing-only mode.** When the parent passes an existing brief and asks for routing-only, return just the routing
+block plus a ≤120-word note (sections used, what you chose not to route, any item you were unsure of). Same rules.
 
 Then the teaching contract, short:
 - **What / why**: what you synthesized and the decision rule (completeness, content-derived attribution, no invention).
