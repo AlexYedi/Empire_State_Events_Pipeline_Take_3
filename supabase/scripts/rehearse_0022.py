@@ -1,58 +1,52 @@
 #!/usr/bin/env python3
 """
 rehearse_0022.py — prove migration 0022 (knowledge-graph phase 1, shared schema: event kind
-'researched' + lens_of, claim.use_count trigger + backfill, norm_name / name_norm indexes /
-entity_alias, sweep_query, CHECK widenings, four lane_registry rows; YED-384) on the
-Phantom-Test-Case twin before Alex pastes it into prod (CLAUDE.md invariant 2).
-Shape: rehearse_0016.py (twin-only constants, scrubbed child env, VERIFY/ROLLBACK parsed from the
-migration itself so the bytes Alex pastes are the bytes proven here) + rehearse_0019/0020's
+'researched' + lens_of, claim.use_count trigger + backfill, versioned name normalisers + name_norm
+indexes + entity_alias, sweep_query, DB PII CHECKs, CHECK widenings, four lane_registry rows; YED-384)
+on the Phantom-Test-Case twin before Alex pastes it into prod (CLAUDE.md invariant 2).
+Shape: rehearse_0016.py (twin-only constants, scrubbed child env, PREFLIGHT/VERIFY/ROLLBACK parsed
+from the migration itself so the bytes Alex pastes are the bytes proven here) + rehearse_0019/0020's
 negative control (the checks must FAIL on the un-migrated state, else they prove nothing).
 
 Gates (all must pass, in order):
-  0  preflight     twin reachable; prerequisites (0009 claim layer, 0016 lens_of + lane_registry,
-                   topic_intelligence.topic_cluster, service_role/anon); no 0022 objects yet
-                   (else --reset-first); no norm_name collisions in the twin's company/topic rows
+  0  preflight     twin reachable; prerequisites; no 0022 objects (else --reset-first); the
+                   migration's own PREFLIGHT block returns no collision rows on the twin; the
+                   committed dashboard runbook files equal what this script generates from the
+                   migration (else --emit-dashboard)
   0b fixtures      commit 3 claim_usage rows on the twin (used_at in 2000-01-01, the cleanup key)
-                   so the backfill has real work and use_count_matches_usage can discriminate
-  1  snapshot A    schema fingerprint (public, mi, topic_intelligence: columns, constraints,
-                   indexes, triggers, function ACL/config/BODY, relations + RLS + ACL, policies)
-                   + row counts + sum(use_count) + count(last_used_at)
-  1b negative      the VERIFY block on the un-migrated twin: every gated check that is not keep_*
-                   must NOT return t; every keep_* must return t (fail-closed: an error is never a pass)
+  1  snapshot A    schema fingerprint (public, mi, topic_intelligence; function ACL/config/BODY
+                   included) + row counts + sum(use_count) + count(last_used_at)
+  1b negative      VERIFY on the un-migrated twin: every gated non-keep_ check must NOT be t, every
+                   keep_ check must be t (fail-closed: an error is never a pass)
   2  apply 0022
-  3  re-apply      second paste must be a clean no-op (fingerprint + counts identical)
-  4  verify        every VERIFY row t (info_* printed only)
-  4b behaviour     twin-only, each case in its own rolled-back transaction under the named role:
-                   researched insert / observed refused; trigger insert/insert/update/delete keeps
-                   use_count + last_used_at exact; consumer brief/published + method llm accepted,
-                   junk refused; name_norm uniqueness bites as service_role; entity_alias norm,
-                   dedup and empty-norm refusal; sweep_query vocab / dedup (nulls not distinct) /
-                   counters; anon refused on both tables and on norm_name()
-  5  planted       each fault alone; VERIFY must fail on the NAMED check; re-apply must restore
-     faults        all-t:  5a drop the use_count trigger      -> use_count_trigger_present
-                           5b grant anon SELECT on entity_alias -> entity_alias_no_api_grants
-                           5c drift one claim's use_count       -> use_count_matches_usage
-                           5d drop company_name_norm_uq         -> company_name_norm_unique
-                           5e restore the pre-0022 kind CHECK   -> event_kind_researched
-                           5f restore 0016's lens_of body       -> lens_of_researched_null
+  3  re-apply      second paste is a clean no-op (fingerprint + counts identical)
+  4  verify        every VERIFY row t; the dashboard UNION ALL form reads 'true' on every gated row
+  4b behaviour     twin-only cases, each rolled back, under the named role (incl. documents
+                   source_type email / meeting_note / notion_comment accepted, junk refused; YED-390)
+  4c concurrency   TWO psql sessions insert claim_usage for one claim; A holds its transaction
+                   open, B must block, A commits, B commits. With the lock-free body planted the
+                   count MUST be lost (use_count 1 vs 2 rows: the test discriminates); with the
+                   shipped body it MUST be exact
+  4d parity        every twin company/topic/person name + an edge corpus through SQL
+                   norm_name_v1 / norm_plain_v1 and Python substrate.norm_company / norm_plain:
+                   0 divergences; the PREFLIGHT key expressions equal the functions on every row
+  5  planted       each fault alone; VERIFY must fail on the NAMED check; re-apply restores all-t
+     faults
   6  rollback      the ROLLBACK block, verbatim
-  7  snapshot C    must EQUAL snapshot A (fingerprint incl. lens_of body, every count, use_count
-                   sum, last_used_at count): ROLLBACK PROVEN only if so
-  8  cleanup       delete the 0b fixtures; twin claim_usage back to its preflight count
+  7  snapshot C    must EQUAL snapshot A: ROLLBACK PROVEN only if so
+  8  cleanup       delete the 0b fixtures; twin back to its preflight counts
   9  (optional)    --leave-applied re-applies 0022 + verify
 
 HARD REFUSAL: only ever connects to the twin's session pooler as the twin's tenant user with the
-twin's password. Host and user are constants (no env overrides), checked before every connection.
-Child processes get an environment scrubbed of every variable that names or holds prod material.
-No override flag. The password is read from .env and never printed.
-
-Default is a dry run: print the plan from the migration file and exit, with NO connection.
+twin's password. Host and user are constants, checked before every connection. Child processes get
+an environment scrubbed of every variable that names or holds prod material. No override flag.
+The password is read from .env and never printed.
 
 Usage:
   python supabase/scripts/rehearse_0022.py                      # dry run, no connection
+  python supabase/scripts/rehearse_0022.py --emit-dashboard     # (re)write the two runbook SQL files
   python supabase/scripts/rehearse_0022.py --preflight-only
   python supabase/scripts/rehearse_0022.py --execute            # full gate, ends rolled back
-  python supabase/scripts/rehearse_0022.py --execute --leave-applied
   python supabase/scripts/rehearse_0022.py --execute --reset-first   # after an interrupted run
 """
 from __future__ import annotations
@@ -60,15 +54,19 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import json
 import os
 import re
+import select
 import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUPA = os.path.dirname(HERE)
 REPO = os.path.dirname(SUPA)
 PSQL = os.environ.get("PSQL_BIN", "/opt/homebrew/opt/libpq/bin/psql")
+sys.path.insert(0, os.path.join(REPO, ".claude", "scripts"))
 
 TWIN_REF = "ytfzzsxcxxbejnowmkmk"
 PROD_REF = "oicikjyzmxqfomrrqkvf"
@@ -81,16 +79,17 @@ PROD_SECRET_KEYS = {"MARKET_INTEL_SUPABASE_DB_PASSWORD", "SUPABASE_API_KEY", "MI
                     "PGSERVICE", "PGPASSFILE"}
 
 MIGRATION = os.path.join(SUPA, "migrations", "0022_graph_phase1_shared.sql")
+DASH_PREFLIGHT = os.path.join(HERE, "0022_preflight_dashboard.sql")
+DASH_VERIFY = os.path.join(HERE, "0022_verify_dashboard.sql")
 FIXTURE_TS = "2000-01-01"          # fixture claim_usage rows carry used_at on this date (cleanup key)
 NEW_LANES = ("theme_sweep", "claim_review", "notion_prior", "reconcile")
+NEW_FUNCS = ("public.norm_name_v1(text)", "public.norm_plain_v1(text)", "public.no_contact_pii_v1(text)")
 
 SCHEMAS = "('public','mi','topic_intelligence')"
 COUNT_TABLES = ["public.company", "public.topic", "public.person", "public.event", "public.claim",
                 "public.claim_usage", "public.claim_relation", "public.documents",
                 "public.lane_registry", "public.lane_run"]
 
-# Everything 0022 could touch. Functions carry md5(prosrc): lens_of's BODY changes, so a rollback
-# that restored the signature but not the body would otherwise look identical.
 SNAPSHOT_SQL = f"""
 select 'cols', md5(coalesce(string_agg(table_schema||'.'||table_name||'.'||column_name||':'||data_type||':'||
          is_nullable||':'||coalesce(column_default,'')||':'||is_generated, '|' order by table_schema, table_name, column_name), ''))
@@ -118,6 +117,8 @@ select 'data.claim_use_count_sum', coalesce(sum(use_count), 0)::text from public
 select 'data.claim_last_used_at_set', count(last_used_at)::text from public.claim;
 select 'data.lane_registry_lanes', string_agg(lane, ',' order by lane) from public.lane_registry;
 """ + "\n".join(f"select 'count.{t}', count(*)::text from {t};" for t in COUNT_TABLES)
+NEW_COUNTS = ("select 'count.entity_alias', count(*)::text from public.entity_alias;\n"
+              "select 'count.sweep_query', count(*)::text from public.sweep_query;")
 
 PREFLIGHT_SQL = f"""
 select 'has.claim_usage', (to_regclass('public.claim_usage') is not null)::text;
@@ -130,7 +131,8 @@ select 'has.roles', (count(*) = 3)::text from pg_roles where rolname in ('servic
 select 'has.docs_with_claims', (count(*) >= 3)::text from public.claim where document_id is not null;
 select 'clean.no_entity_alias', (to_regclass('public.entity_alias') is null)::text;
 select 'clean.no_sweep_query', (to_regclass('public.sweep_query') is null)::text;
-select 'clean.no_norm_name', (to_regprocedure('public.norm_name(text)') is null)::text;
+select 'clean.no_new_funcs', (count(*) = 0)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public' and p.proname in ('norm_name_v1', 'norm_plain_v1', 'no_contact_pii_v1', 'norm_name');
 select 'clean.no_trigger', (count(*) = 0)::text from pg_trigger where tgrelid = 'public.claim_usage'::regclass and tgname = 'claim_usage_sync_use_count';
 select 'clean.no_researched', (count(*) = 0)::text from pg_constraint
  where conrelid = 'public.event'::regclass and conname = 'event_kind_enum' and pg_get_constraintdef(oid) like '%researched%';
@@ -141,17 +143,8 @@ select 'info.use_count_nonzero', count(*)::text from public.claim where use_coun
 """
 REQUIRED = ["has.claim_usage", "has.claim_relation", "has.lens_of", "has.lane_registry", "has.lane_run",
             "has.topic_cluster", "has.roles", "has.docs_with_claims"]
-CLEAN = ["clean.no_entity_alias", "clean.no_sweep_query", "clean.no_norm_name", "clean.no_trigger",
+CLEAN = ["clean.no_entity_alias", "clean.no_sweep_query", "clean.no_new_funcs", "clean.no_trigger",
          "clean.no_researched", "clean.no_new_lanes", "clean.no_fixtures"]
-
-# The exact norm the migration ships, inlined so the collision probe runs BEFORE the function exists.
-NORM_EXPR = ("nullif(trim(regexp_replace(regexp_replace(lower(coalesce(name, '')), "
-             "'\\m(inc|llc|ltd|corp|corporation|co|gmbh|plc|sa|ag|limited|incorporated)\\M\\.?', '', 'g'), "
-             "'[^a-z0-9]+', ' ', 'g')), '')")
-COLLISION_SQL = (f"select 'collisions.company', count(*)::text from (select {NORM_EXPR} k from public.company) s "
-                 f"where k is not null group by k having count(*) > 1;\n"
-                 f"select 'collisions.topic', count(*)::text from (select {NORM_EXPR} k from public.topic) s "
-                 f"where k is not null group by k having count(*) > 1;\n")
 
 # Three fixture usage rows: claim A used by its own document, claim B used by two documents.
 FIXTURE_SQL = f"""
@@ -172,18 +165,15 @@ commit;
 """
 FIXTURE_CLEANUP_SQL = f"delete from public.claim_usage where used_at < '{FIXTURE_TS}'::date + 1;"
 
-# Planted faults: (step, SQL, the VERIFY check that MUST go f).
-FAULTS = [
-    ("5a", "drop trigger claim_usage_sync_use_count on public.claim_usage;", "use_count_trigger_present"),
-    ("5b", "grant select on public.entity_alias to anon;", "entity_alias_no_api_grants"),
-    ("5c", f"update public.claim set use_count = use_count + 7 where id = (select claim_id from public.claim_usage "
-           f"where used_at < '{FIXTURE_TS}'::date + 1 order by claim_id limit 1);", "use_count_matches_usage"),
-    ("5d", "drop index public.company_name_norm_uq;", "company_name_norm_unique"),
-    ("5e", "alter table public.event drop constraint event_kind_enum; alter table public.event add constraint "
-           "event_kind_enum check (kind in ('attended', 'market', 'funding', 'launch', 'exec_move', 'role_posted', "
-           "'application', 'interview', 'reference', 'published'));", "event_kind_researched"),
-    ("5f", None, "lens_of_researched_null"),       # SQL = the 0016 lens_of body, taken from the ROLLBACK block
-]
+# Parity edge corpus: suffix positions, word boundaries, whitespace / newline / NBSP, unicode casing.
+EDGE = ["Acme, Inc.", "Acme Inc\n", "Acme Inc\t", "ACME INC.", "Acme Inc Ltd", "Co-Marketing Labs", "AG-UI",
+        "SA Power Networks", "Incident.io", "Disco", "Inca", "acme_co", "acme_inc", "Foo (Co)", "Foo Co.",
+        "Foo, Co", "Inc.", "co", "", "   ", "!!!", "Café Inc", "Ölmez AG", "São Paulo SA", "İSTANBUL Ltd",
+        "Kelvin Labs", "naïve co", "naïve co", "Ｆｕｌｌｗｉｄｔｈ Inc", "中文 Inc", "x inc",
+        "Foo Inc ", "Foo Inc", "Zed (AI)", "  Zed (AI) ", "AI-Agents", "Agents Inc", "Mc'Donald GmbH",
+        "O’Reilly Media, Inc.", "Straße AG", "ǅemal co", "x" * 180 + " inc", "123 Corp", "inc inc", "co-co",
+        "Foo Incorporated.", "foo corporation)", "ﬁnance co", "ⓐⓑ inc", "éinc", "inc_", "Ltd.", "GmbH & Co",
+        "Acme LLC.", "plc", "The Co. Group", "Acme\r\nInc"]
 
 
 # ----------------------------------------------------------------------------- behaviour cases
@@ -198,7 +188,6 @@ def _expect_error(sqlstate_name: str, stmt: str, label: str) -> str:
 def behaviour_cases() -> list[tuple[str, str, str]]:
     """(name, role, DO-body). Each runs in its own transaction that is rolled back."""
     ok_note = "raise notice 'PASS';"
-    fix = f"used_at < '{FIXTURE_TS}'::date + 1"
     return [
         ("researched_kind", "service_role", f"""
   insert into public.event (title, kind, source) values ('rehearse_0022 researched', 'researched', 'substrate:research');
@@ -236,15 +225,25 @@ begin
   insert into public.claim_relation (from_claim_id, to_claim_id, relation, method, confidence) values (c1, c2, 'corroborates', 'llm', 0.9);
 {_expect_error('check_violation', "insert into public.claim_relation (from_claim_id, to_claim_id, relation, method) values (c2, c1, 'refines', 'magic')", 'method')}
 {_expect_error('check_violation', "insert into public.claim_usage (claim_id, document_id, consumer) values (c2, d1, 'bogus')", 'consumer')}
+  insert into public.documents (title, source_type, sha256) values ('rehearse_0022 email', 'email', 'rehearse_0022_a');
+  insert into public.documents (title, source_type, sha256) values ('rehearse_0022 meeting', 'meeting_note', 'rehearse_0022_b');
+  insert into public.documents (title, source_type, sha256) values ('rehearse_0022 comment', 'notion_comment', 'rehearse_0022_c');
+{_expect_error('check_violation', "insert into public.documents (title, source_type, sha256) values ('rehearse_0022 sms', 'sms', 'rehearse_0022_d')", 'source_type')}
   {ok_note}
 end"""),
         ("name_norm_unique", "service_role", f"""
   insert into public.company (name) values ('Rehearse0022 Widgets');
-{_expect_error('unique_violation', "insert into public.company (name) values ('Rehearse0022 Widgets, Inc.')", 'company')}
+{_expect_error('unique_violation', "insert into public.company (name) values ('Rehearse0022 Widgets, Inc.')", 'company-suffix')}
+  insert into public.company (name) values ('Rehearse0022 Marketing');
+  insert into public.company (name) values ('Co-Rehearse0022 Marketing');       -- review: a leading 'Co' is NOT a suffix
+  insert into public.company (name) values ('AG-Rehearse0022 UI');
+  insert into public.company (name) values ('Rehearse0022 UI');
   insert into public.topic (name) values ('Rehearse0022 topic-x');
 {_expect_error('unique_violation', "insert into public.topic (name) values ('rehearse0022 TOPIC x')", 'topic')}
+  insert into public.topic (name) values ('Rehearse0022 Agents');
+  insert into public.topic (name) values ('Rehearse0022 Agents Inc');           -- topics: no suffix strip
   insert into public.person (name) values ('Rehearse0022 Same Name');
-  insert into public.person (name) values ('Rehearse0022 Same-Name');
+  insert into public.person (name) values ('Rehearse0022 Same-Name');           -- person index is non-unique
   {ok_note}"""),
         ("entity_alias", "service_role", f"""
 declare cid uuid; nrm text;
@@ -252,11 +251,16 @@ begin
   select id into cid from public.company order by id limit 1;
   insert into public.entity_alias (entity_type, entity_id, alias, source) values ('company', cid, 'Rehearse0022 Corp.', 'manual');
   select alias_norm into nrm from public.entity_alias where entity_id = cid and source = 'manual';
-  if nrm <> 'rehearse0022' then raise exception 'FAIL[norm]: %', nrm; end if;
+  if nrm <> 'rehearse0022' then raise exception 'FAIL[norm-company]: %', nrm; end if;
 {_expect_error('unique_violation', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('company', gen_random_uuid(), 'REHEARSE0022', 'sweep')", 'dedup')}
-  insert into public.entity_alias (entity_type, entity_id, alias, source) values ('topic', gen_random_uuid(), 'rehearse0022', 'sweep');
+  insert into public.entity_alias (entity_type, entity_id, alias, source) values ('topic', gen_random_uuid(), 'rehearse0022 corp', 'sweep');
+  select alias_norm into nrm from public.entity_alias where entity_type = 'topic' and source = 'sweep' and alias = 'rehearse0022 corp';
+  if nrm <> 'rehearse0022 corp' then raise exception 'FAIL[norm-topic]: %', nrm; end if;
+  insert into public.entity_alias (entity_type, entity_id, alias, source) values ('company', gen_random_uuid(), 'https://x.com/@rehearse0022', 'sweep');
 {_expect_error('check_violation', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('company', cid, '!!!', 'manual')", 'empty-norm')}
 {_expect_error('check_violation', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('event', cid, 'x', 'manual')", 'type')}
+{_expect_error('check_violation', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('person', gen_random_uuid(), 'jane.doe@example.com', 'manual')", 'pii-email')}
+{_expect_error('check_violation', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('person', gen_random_uuid(), 'Jane +44 20 7946 0958', 'manual')", 'pii-phone')}
 {_expect_error('generated_always', "insert into public.entity_alias (entity_type, entity_id, alias, alias_norm, source) values ('company', cid, 'y', 'y', 'manual')", 'generated')}
   {ok_note}
 end"""),
@@ -270,6 +274,8 @@ begin
 {_expect_error('check_violation', "insert into public.sweep_query (kind, template, iso_week) values ('trending', 'x', '2026-W46')", 'kind')}
 {_expect_error('check_violation', "insert into public.sweep_query (kind, template, iso_week) values ('gap', 'x', '2026-46')", 'iso_week')}
 {_expect_error('check_violation', "insert into public.sweep_query (kind, template, iso_week, items_written) values ('gap', 'y', '2026-W46', -1)", 'counter')}
+{_expect_error('check_violation', "insert into public.sweep_query (kind, template, iso_week) values ('entity', 'contact founder@veris.example.com', '2026-W46')", 'pii-email')}
+{_expect_error('check_violation', "insert into public.sweep_query (kind, template, iso_week) values ('entity', 'call 555-123-4567', '2026-W46')", 'pii-phone')}
   {ok_note}
 end"""),
         ("anon_refused", "anon", f"""
@@ -277,7 +283,9 @@ end"""),
 {_expect_error('insufficient_privilege', "insert into public.entity_alias (entity_type, entity_id, alias, source) values ('company', gen_random_uuid(), 'x', 'manual')", 'insert-alias')}
 {_expect_error('insufficient_privilege', "perform 1 from public.sweep_query limit 1", 'select-sweep')}
 {_expect_error('insufficient_privilege', "insert into public.sweep_query (kind, template, iso_week) values ('gap', 'x', '2026-W46')", 'insert-sweep')}
-{_expect_error('insufficient_privilege', "perform public.norm_name('x')", 'exec-norm')}
+{_expect_error('insufficient_privilege', "perform public.norm_name_v1('x')", 'exec-norm-name')}
+{_expect_error('insufficient_privilege', "perform public.norm_plain_v1('x')", 'exec-norm-plain')}
+{_expect_error('insufficient_privilege', "perform public.no_contact_pii_v1('x')", 'exec-pii')}
   {ok_note}"""),
     ]
 
@@ -306,6 +314,45 @@ def lens_of_0016(rollback_sql: str) -> str:
     if not m:
         sys.exit("ROLLBACK block has no lens_of restore")
     return m.group(1)
+
+
+def lockfree_trigger_body(src: str) -> str:
+    """The shipped trigger function MINUS its FOR UPDATE line: the pre-review body, planted to prove the
+    concurrency case discriminates."""
+    m = re.search(r"create or replace function public\.claim_usage_sync_use_count\(\).*?\n\$fn\$;", src, re.S)
+    lock = "  perform 1 from public.claim where id = any(ids) order by id for update;\n"
+    if not m or lock not in m.group(0):
+        sys.exit("cannot find the trigger function / its lock line in the migration")
+    return m.group(0).replace(lock, "")
+
+
+def preflight_exprs(preflight_sql: str) -> tuple[str, str]:
+    """The company / topic key expressions as written in the PREFLIGHT block (t -> name)."""
+    co = re.search(r"from \(select id, name, (.+?) as k from public\.company\)", preflight_sql)
+    tp = re.search(r"from \(select id, name, (.+?) as k from public\.topic\)", preflight_sql)
+    if not co or not tp:
+        sys.exit("PREFLIGHT block: cannot find the company / topic key expressions")
+    return co.group(1), tp.group(1)
+
+
+def dashboard_texts(src: str) -> tuple[str, str]:
+    pre = commented_block(src, "PREFLIGHT").strip() + "\n"
+    head_pre = ("-- 0022 PREFLIGHT for the Supabase SQL editor (project oicikjyzmxqfomrrqkvf, The-Prod-Brain).\n"
+                "-- GENERATED from supabase/migrations/0022_graph_phase1_shared.sql by rehearse_0022.py --emit-dashboard;\n"
+                "-- the rehearsal fails if this file drifts. READ-ONLY. APPLY 0021 FIRST, then run this, then 0022.\n"
+                "-- Expect: NO collision_* rows; baseline_claim_usage_rows >= 1282; baseline_use_count_nonzero = 0.\n"
+                "-- A collision row lists id:name of every row sharing the key: rename the loser (the tombstoned\n"
+                "-- row, else the newer one) to '<name> [dup <first 8 of id>]' via spine_client, re-run. Never merge to pass.\n")
+    parts = []
+    for line in commented_block(src, "VERIFY").splitlines():
+        m = re.match(r"^select '([a-z0-9_]+)', (.*);$", line.strip())
+        if m:
+            parts.append(f"select '{m.group(1)}' as check_name, ({m.group(2)})::text as ok")
+    head_ver = ("-- 0022 VERIFY for the Supabase SQL editor (project oicikjyzmxqfomrrqkvf, The-Prod-Brain).\n"
+                "-- GENERATED from the migration's VERIFY block by rehearse_0022.py --emit-dashboard (drift fails the\n"
+                "-- rehearsal). READ-ONLY. Run AFTER the 0022 paste. Expect %d rows; every row NOT starting with info_\n"
+                "-- must read true. info_claim_usage_rows >= 1282, info_lane_registry_rows = 10.\n" % len(parts))
+    return head_pre + pre, head_ver + "\nunion all\n".join(parts) + ";\n"
 
 
 # ----------------------------------------------------------------------------- env + psql
@@ -387,9 +434,9 @@ def apply(label: str) -> bool:
 
 
 def run_verify(verify_sql: str) -> dict:
-    """Run every VERIFY statement WITHOUT stopping on error: a statement that errors simply has no
-    row, and a missing row is a failure (fail-closed). Read-only SESSION, not one transaction: inside
-    a single transaction the first error would abort every later check."""
+    """Every VERIFY statement WITHOUT stopping on error: an erroring statement has no row, and a missing
+    row is a failure (fail-closed). Read-only SESSION, not one transaction: inside a single transaction
+    the first error would abort every later check."""
     p = psql(["-tA", "-F", "\t"], stdin="set default_transaction_read_only = on;\n" + verify_sql + "\n",
              check=False, stop_on_error=False)
     return dict(line.split("\t", 1) for line in p.stdout.splitlines() if "\t" in line)
@@ -415,12 +462,11 @@ def negative_control(verify_sql: str, expected: list[str]) -> bool:
     new = [n for n in gated if not n.startswith("keep_")]
     passing_new = [n for n in new if got.get(n) == "t"]
     failing_keep = [n for n in keep if got.get(n) != "t"]
-    ok = not passing_new and not failing_keep
     print(f"  {len(new)} 0022 checks on the un-migrated twin: {len(new) - len(passing_new)} fail (must be all)"
           + (f" :: PASSING WITHOUT THE FIX {passing_new}" if passing_new else ""))
     print(f"  {len(keep)} keep_ checks: {len(keep) - len(failing_keep)} pass (must be all)"
           + (f" :: failing {failing_keep}" if failing_keep else ""))
-    return ok
+    return not passing_new and not failing_keep
 
 
 def behaviour() -> bool:
@@ -436,24 +482,94 @@ def behaviour() -> bool:
     return all_ok
 
 
+def _readline_until(proc: subprocess.Popen, marker: str, timeout: float) -> bool:
+    end = time.time() + timeout
+    while time.time() < end:
+        r, _, _ = select.select([proc.stdout], [], [], max(0.0, end - time.time()))
+        if not r:
+            break
+        line = proc.stdout.readline()
+        if not line:
+            return False
+        if marker in line:
+            return True
+    return False
+
+
+def concurrency_case(label: str) -> tuple[bool, str]:
+    """Two sessions, one claim. Returns (count_exact, detail). Commits fixture-stamped rows, then
+    deletes them (the trigger recounts the claim back to 0)."""
+    sel = kv("select 'c', c.id::text from public.claim c where not exists (select 1 from public.claim_usage u "
+             "where u.claim_id = c.id) order by c.id limit 1;\n"
+             "select 'd1', id::text from public.documents order by id limit 1;\n"
+             "select 'd2', id::text from public.documents order by id offset 1 limit 1;")
+    cid = sel["c"]
+    ins = lambda doc, s: (f"insert into public.claim_usage (claim_id, document_id, consumer, used_at) values "   # noqa: E731
+                          f"('{cid}', '{doc}', 'dev', '{FIXTURE_TS} 00:00:0{s}+00') /* rehearse_0022_concurrency */;")
+    refuse_non_twin()
+    cmd = [PSQL, TWIN_CONN, "-X", "-q", "-tA", "-v", "ON_ERROR_STOP=1"]
+    a = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                         env=child_env(), bufsize=1)
+    b = None
+    try:
+        a.stdin.write("begin;\n" + ins(sel["d1"], 7) + "\n\\echo A_READY\n")
+        a.stdin.flush()
+        if not _readline_until(a, "A_READY", 30):
+            return False, "session A never got its insert in"
+        b = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             env=child_env())
+        b.stdin.write("begin;\n" + ins(sel["d2"], 8) + "\ncommit;\n\\echo B_DONE\n")
+        b.stdin.close()
+        blocked = False
+        for _ in range(40):
+            w = kv("select 'w', count(*)::text from pg_stat_activity where wait_event_type = 'Lock' "
+                   "and query like '%rehearse_0022_concurrency%' and pid <> pg_backend_pid();")
+            if w.get("w", "0") != "0":
+                blocked = True
+                break
+            time.sleep(0.5)
+        a.stdin.write("commit;\n\\echo A_DONE\n")
+        a.stdin.close()
+        a.wait(60)
+        b.wait(60)
+        if a.returncode or b.returncode:
+            return False, f"session error A rc={a.returncode} B rc={b.returncode}: {(b.stderr.read() or '')[-200:]}"
+        got = kv(f"select 'n', use_count::text from public.claim where id = '{cid}';\n"
+                 f"select 'u', count(*)::text from public.claim_usage where claim_id = '{cid}';")
+        exact = got["n"] == got["u"]
+        return exact, f"B blocked={blocked}; use_count={got['n']} vs claim_usage rows={got['u']}"
+    finally:
+        for p in (a, b):
+            if p and p.poll() is None:
+                p.kill()
+        psql([], stdin=f"delete from public.claim_usage where claim_id = '{cid}' and used_at < '{FIXTURE_TS}'::date + 1;")
+
+
+def parity() -> tuple[bool, int, list]:
+    from substrate import norm_company, norm_plain
+    for s in EDGE:
+        if "$e$" in s:
+            sys.exit("edge corpus string contains the dollar-quote tag")
+    lits = ",".join(f"$e${s}$e$" for s in EDGE)
+    sql = ("select json_agg(json_build_array(s, public.norm_name_v1(s), public.norm_plain_v1(s))) from ("
+           "select name as s from public.company union select name from public.topic union "
+           f"select name from public.person union select unnest(array[{lits}]::text[])) x;")
+    rows = json.loads(psql(["-tA"], stdin=sql).stdout.strip())
+    bad = [(s, sn, norm_company(s), sp, norm_plain(s)) for s, sn, sp in rows
+           if sn != norm_company(s) or sp != norm_plain(s)]
+    return not bad, len(rows), bad[:10]
+
+
+def preflight_expr_parity(preflight_sql: str) -> tuple[bool, dict]:
+    co, tp = preflight_exprs(preflight_sql)
+    got = kv(f"select 'company', count(*)::text from public.company where ({co}) is distinct from public.norm_name_v1(name);\n"
+             f"select 'topic', count(*)::text from public.topic where ({tp}) is distinct from public.norm_plain_v1(name);\n"
+             f"select 'person', count(*)::text from public.person where ({tp}) is distinct from public.norm_plain_v1(name);")
+    return all(v == "0" for v in got.values()) and len(got) == 3, got
+
+
 def diff(a: dict, b: dict) -> dict:
     return {k: (a.get(k), b.get(k)) for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k)}
-
-
-# ----------------------------------------------------------------------------- plan
-def plan(src: str, verify_sql: str, rollback_sql: str) -> None:
-    sha = hashlib.sha256(src.encode()).hexdigest()[:16]
-    names = verify_names(verify_sql)
-    print("rehearse_0022 — DRY RUN (no connection made)\n")
-    print(f"  target           twin {TWIN_REF} via {TWIN_HOST} as {TWIN_USER} (hard-coded; prod refused)")
-    print(f"  migration        {os.path.relpath(MIGRATION, REPO)}  sha256:{sha}…  {len(src.splitlines())} lines")
-    print(f"  verify checks    {len(names)}: {', '.join(names)}")
-    print(f"  rollback stmts   {len([l for l in rollback_sql.splitlines() if l.strip()])} lines")
-    print(f"  behaviour cases  {', '.join(n for n, _, _ in behaviour_cases())}")
-    print("  planted faults   " + "; ".join(f"{s} -> must fail {n}" for s, _, n in FAULTS))
-    print("\n  steps: 0 preflight · 0b fixtures · 1 snapshot A · 1b negative control · 2 apply · 3 re-apply no-op · "
-          "4 verify · 4b behaviour · 5 planted faults + restore · 6 rollback · 7 snapshot C == A · 8 cleanup")
-    print("\n  run with --execute to perform it (twin only).")
 
 
 # ----------------------------------------------------------------------------- main
@@ -462,6 +578,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="print the plan only (default)")
     ap.add_argument("--execute", action="store_true", help="run the full gate against the twin")
     ap.add_argument("--preflight-only", action="store_true", help="connect, run preflight, stop")
+    ap.add_argument("--emit-dashboard", action="store_true", help="write the two runbook SQL files and exit")
     ap.add_argument("--leave-applied", action="store_true", help="end in the 0022 state (with --execute)")
     ap.add_argument("--reset-first", action="store_true",
                     help="run the ROLLBACK block and delete fixtures before preflight (after an interrupted run)")
@@ -470,21 +587,52 @@ def main() -> int:
     src = read_migration()
     verify_sql = commented_block(src, "VERIFY")
     rollback_sql = commented_block(src, "ROLLBACK")
+    preflight_block = commented_block(src, "PREFLIGHT")
     expected = verify_names(verify_sql)
-    if not expected:
-        sys.exit("VERIFY block parsed to zero checks")
-    faults = [(s, sql if sql else lens_of_0016(rollback_sql), n) for s, sql, n in FAULTS]
+    dash_pre, dash_ver = dashboard_texts(src)
+    if a.emit_dashboard:
+        for path, text in ((DASH_PREFLIGHT, dash_pre), (DASH_VERIFY, dash_ver)):
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+            print(f"wrote {os.path.relpath(path, REPO)}")
+        return 0
+    faults = [
+        ("5a", "drop trigger claim_usage_sync_use_count on public.claim_usage;", "use_count_trigger_present"),
+        ("5b", "grant select on public.entity_alias to anon;", "entity_alias_no_api_grants"),
+        ("5c", f"update public.claim set use_count = use_count + 7 where id = (select claim_id from public.claim_usage "
+               f"where used_at < '{FIXTURE_TS}'::date + 1 order by claim_id limit 1);", "use_count_matches_usage"),
+        ("5d", "drop index public.company_name_norm_uq;", "company_name_norm_unique"),
+        ("5e", "alter table public.event drop constraint event_kind_enum; alter table public.event add constraint "
+               "event_kind_enum check (kind in ('attended', 'market', 'funding', 'launch', 'exec_move', 'role_posted', "
+               "'application', 'interview', 'reference', 'published'));", "event_kind_researched"),
+        ("5f", lens_of_0016(rollback_sql), "lens_of_researched_null"),
+        ("5g", "alter table public.entity_alias drop constraint entity_alias_alias_no_pii;", "entity_alias_pii_check"),
+        ("5h", "alter table public.sweep_query drop constraint sweep_query_template_no_pii;", "sweep_query_pii_check"),
+        ("5i", lockfree_trigger_body(src), "use_count_fn_locks_rows"),
+        ("5j", "grant execute on function public.norm_name_v1(text) to anon;", "norm_fns_exec_service_role_only"),
+        ("5k", "alter table public.documents drop constraint documents_source_type_check; alter table public.documents "
+               "add constraint documents_source_type_check check (source_type in ('book', 'whitepaper', 'filing', 'pdf', "
+               "'other', 'research_brief', 'deep_read', 'prior_context_pack', 'post_event_brief', 'transcript', "
+               "'linkedin_post', 'carousel', 'connection_note', 'dossier', 'project_idea', 'scan_digest', 'build_retro', "
+               "'note', 'glossary'));", "documents_source_type_vocab"),
+    ]
     missing = [n for _, _, n in faults if n not in expected]
     if missing:
         sys.exit(f"planted faults name checks that VERIFY lacks: {missing}")
 
     if not (a.execute or a.preflight_only) or a.dry_run:
-        plan(src, verify_sql, rollback_sql)
+        print("rehearse_0022 — DRY RUN (no connection made)\n")
+        print(f"  target           twin {TWIN_REF} via {TWIN_HOST} as {TWIN_USER} (hard-coded; prod refused)")
+        print(f"  migration        {os.path.relpath(MIGRATION, REPO)}  sha256:{hashlib.sha256(src.encode()).hexdigest()[:16]}…")
+        print(f"  verify checks    {len(expected)}: {', '.join(expected)}")
+        print(f"  behaviour cases  {', '.join(n for n, _, _ in behaviour_cases())}")
+        print("  planted faults   " + "; ".join(f"{s} -> {n}" for s, _, n in faults))
+        print(f"  parity corpus    twin names + {len(EDGE)} edge strings")
+        print("\n  run with --execute to perform it (twin only).")
         return 0
 
     refuse_non_twin()
-    print(f"TARGET twin: {TWIN_HOST} as {TWIN_USER}  at "
-          f"{dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}")
+    print(f"TARGET twin: {TWIN_HOST} as {TWIN_USER}  at {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}")
     print(f"migration sha256: {hashlib.sha256(src.encode()).hexdigest()}")
     if a.reset_first:
         print("\n[-] reset: ROLLBACK block + fixture cleanup")
@@ -503,11 +651,18 @@ def main() -> int:
                  "re-run with --reset-first")
     if pf.get("info.use_count_nonzero") != "0":
         sys.exit("PREFLIGHT FAIL — twin has non-zero use_count/last_used_at before 0022 (prod: 0 everywhere)")
-    coll = kv(COLLISION_SQL)
-    print(f"  norm_name collisions on the twin: company={coll.get('collisions.company', '0')} "
-          f"topic={coll.get('collisions.topic', '0')} (prod probe 2026-11-11: 0 / 0)")
-    if coll:
-        sys.exit("PREFLIGHT FAIL — the unique name_norm indexes would fail on the twin's data")
+    out = psql(["-tA", "-F", "\t"], stdin="set default_transaction_read_only = on;\n" + preflight_block).stdout
+    rows = [l.split("\t") for l in out.splitlines() if l.strip()]
+    coll = [r for r in rows if r[0].startswith("collision_")]
+    base = {r[0]: r[2] for r in rows if r[0].startswith("baseline_")}
+    print(f"  migration PREFLIGHT block: collision rows={len(coll)} baseline={base}")
+    if coll or len(base) != 2:
+        sys.exit(f"PREFLIGHT FAIL — the unique name_norm indexes would fail on the twin: {coll}")
+    for path, text in ((DASH_PREFLIGHT, dash_pre), (DASH_VERIFY, dash_ver)):
+        cur = open(path, encoding="utf-8").read() if os.path.exists(path) else None
+        if cur != text:
+            sys.exit(f"PREFLIGHT FAIL — {os.path.relpath(path, REPO)} drifted from the migration; run --emit-dashboard")
+    print("  dashboard runbook files in sync with the migration")
     base_usage = pf.get("info.claim_usage_rows")
     if a.preflight_only:
         return 0
@@ -531,12 +686,10 @@ def main() -> int:
         sys.exit("GATE FAIL at step 2")
 
     print("\n[3] re-apply 0022 (must be a clean no-op)")
-    new_counts = ("select 'count.entity_alias', count(*)::text from public.entity_alias;\n"
-                  "select 'count.sweep_query', count(*)::text from public.sweep_query;")
-    snap_b1 = {**kv(SNAPSHOT_SQL), **kv(new_counts)}
+    snap_b1 = {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS)}
     if not apply("0022 second paste"):
         sys.exit("GATE FAIL at step 3 — 0022 is not re-runnable")
-    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(new_counts)})
+    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS)})
     if d:
         sys.exit(f"GATE FAIL at step 3 — second paste changed state: {d}")
     print("  OK  state identical after second paste")
@@ -544,14 +697,47 @@ def main() -> int:
     print("\n[4] verify")
     if not verify(verify_sql, expected)[0]:
         sys.exit("GATE FAIL at step 4")
+    dash = psql(["-tA", "-F", "\t"], stdin="set default_transaction_read_only = on;\n" + dash_ver, check=False).stdout
+    drows = [l.split("\t") for l in dash.splitlines() if "\t" in l]
+    dbad = [n for n, v in drows if not n.startswith("info_") and v != "true"]
+    print(f"  dashboard VERIFY: {len(drows)} rows, non-info rows not 'true': {dbad or 'none'}")
+    if dbad or len(drows) != len(expected):
+        sys.exit("GATE FAIL at step 4 — the dashboard VERIFY form disagrees")
 
     print("\n[4b] behaviour (twin only; every case rolled back)")
     if not behaviour():
         sys.exit("GATE FAIL at step 4b")
-    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(new_counts)})
+    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS)})
     if d:
         sys.exit(f"GATE FAIL at step 4b — a behaviour case leaked state: {d}")
     print("  OK  no state leaked from the behaviour cases")
+
+    print("\n[4c] concurrency — two sessions insert claim_usage for ONE claim")
+    psql([], stdin=lockfree_trigger_body(src))
+    exact, detail = concurrency_case("lock-free body")
+    print(f"  pre-review body (no FOR UPDATE): {detail} -> {'LOST UPDATE reproduced' if not exact else 'NOT reproduced'}")
+    if exact:
+        sys.exit("GATE FAIL at step 4c — the lock-free body did not lose an update; the case does not discriminate")
+    if not apply("0022 restore (shipped trigger body)"):
+        sys.exit("GATE FAIL at step 4c — restore failed")
+    exact, detail = concurrency_case("shipped body")
+    print(f"  shipped body (FOR UPDATE):        {detail} -> {'EXACT' if exact else 'LOST'}")
+    if not exact:
+        sys.exit("GATE FAIL at step 4c — the shipped trigger lost an update under concurrency")
+    d = diff(snap_b1, {**kv(SNAPSHOT_SQL), **kv(NEW_COUNTS)})
+    if d:
+        sys.exit(f"GATE FAIL at step 4c — the concurrency case leaked state: {d}")
+
+    print("\n[4d] normaliser parity — SQL vs Python (substrate.py)")
+    ok, n, bad = parity()
+    print(f"  {n} distinct strings (twin company/topic/person names + {len(EDGE)} edge cases): "
+          f"{'0 divergences' if ok else f'{len(bad)}+ DIVERGENCES {bad}'}")
+    if not ok:
+        sys.exit("GATE FAIL at step 4d — Python and SQL normalisers disagree")
+    ok, got = preflight_expr_parity(preflight_block)
+    print(f"  PREFLIGHT key expressions vs functions, rows differing: {got}")
+    if not ok:
+        sys.exit("GATE FAIL at step 4d — the PREFLIGHT expressions are not the shipped functions")
 
     print("\n[5] planted faults — verify must catch each, re-apply must restore")
     for step, fault_sql, must_fail in faults:
@@ -592,8 +778,8 @@ def main() -> int:
         if not apply("0022") or not verify(verify_sql, expected)[0]:
             sys.exit("re-apply verify failed")
 
-    print("\n0022 REHEARSAL: GREEN — safe for Alex to paste 0022 into prod (The-Prod-Brain), then run the "
-          "VERIFY block there.")
+    print("\n0022 REHEARSAL: GREEN — safe for Alex to paste 0022 into prod (The-Prod-Brain) after 0021, then run "
+          "supabase/scripts/0022_verify_dashboard.sql there.")
     return 0
 
 
