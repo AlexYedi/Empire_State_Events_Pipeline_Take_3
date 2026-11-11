@@ -1,0 +1,539 @@
+{
+ "_comment": "FAKE data only (market_brief selftest). Served by a GET-only stub of spine_client.req.",
+ "mi_slice": {
+  "view": "mi.theme_week",
+  "rows": [
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000001",
+    "theme": "Voice AI Infrastructure",
+    "iso_week": "2026-W39",
+    "lens": "attended",
+    "facts": 2,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000001",
+    "theme": "Voice AI Infrastructure",
+    "iso_week": "2026-W41",
+    "lens": "attended",
+    "facts": 2,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000001",
+    "theme": "Voice AI Infrastructure",
+    "iso_week": "2026-W46",
+    "lens": "attended",
+    "facts": 2,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000002",
+    "theme": "Agent Evals",
+    "iso_week": "2026-W43",
+    "lens": "research",
+    "facts": 2,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000002",
+    "theme": "Agent Evals",
+    "iso_week": "2026-W44",
+    "lens": "research",
+    "facts": 2,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000002",
+    "theme": "Agent Evals",
+    "iso_week": "2026-W45",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000002",
+    "theme": "Agent Evals",
+    "iso_week": "2026-W46",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W35",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W36",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W37",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W38",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W39",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W40",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W41",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W42",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W43",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W44",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W45",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W46",
+    "lens": "research",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   },
+   {
+    "theme_id": "00000000-0000-4000-8000-000000000003",
+    "theme": "Robotics",
+    "iso_week": "2026-W40",
+    "lens": "market",
+    "facts": 1,
+    "distinct_companies": 1,
+    "distinct_sources": 1,
+    "general_facts": 0,
+    "floor_flag": null,
+    "theme_resolved": true
+   }
+  ],
+  "denominators": {},
+  "window": {
+   "from_week": "2026-W35",
+   "to_week": "2026-W46"
+  }
+ },
+ "company": [
+  {
+   "id": "c1",
+   "name": "Knownco",
+   "created_at": "2026-08-01T12:00:00+00:00"
+  },
+  {
+   "id": "c2",
+   "name": "Acme Voice",
+   "created_at": "2026-11-10T15:00:00+00:00"
+  },
+  {
+   "id": "c3",
+   "name": "Beta Robotics",
+   "created_at": "2026-11-14T15:00:00+00:00"
+  },
+  {
+   "id": "p1",
+   "name": "Prior Co 1",
+   "created_at": "2026-09-16T15:00:00+00:00"
+  },
+  {
+   "id": "p2",
+   "name": "Prior Co 2",
+   "created_at": "2026-09-23T15:00:00+00:00"
+  },
+  {
+   "id": "p3",
+   "name": "Prior Co 3",
+   "created_at": "2026-09-30T15:00:00+00:00"
+  },
+  {
+   "id": "p4",
+   "name": "Prior Co 4",
+   "created_at": "2026-10-07T15:00:00+00:00"
+  },
+  {
+   "id": "p5",
+   "name": "Prior Co 5",
+   "created_at": "2026-10-14T15:00:00+00:00"
+  },
+  {
+   "id": "p6",
+   "name": "Prior Co 6",
+   "created_at": "2026-10-21T15:00:00+00:00"
+  },
+  {
+   "id": "p7",
+   "name": "Prior Co 7",
+   "created_at": "2026-10-28T15:00:00+00:00"
+  },
+  {
+   "id": "p8",
+   "name": "Prior Co 8",
+   "created_at": "2026-11-04T15:00:00+00:00"
+  }
+ ],
+ "claim": [
+  {
+   "id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "event_id": "e1",
+   "provenance_tier": "first_hand",
+   "use_count": 0,
+   "nid": null
+  },
+  {
+   "id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "use_count": 0,
+   "nid": null
+  },
+  {
+   "id": "00000003-aaaa-4aaa-8aaa-000000000003",
+   "event_id": null,
+   "provenance_tier": "reference",
+   "use_count": 0,
+   "nid": null
+  },
+  {
+   "id": "00000004-aaaa-4aaa-8aaa-000000000004",
+   "event_id": "e1",
+   "provenance_tier": "first_hand",
+   "use_count": 0,
+   "nid": null
+  },
+  {
+   "id": "00000005-aaaa-4aaa-8aaa-000000000005",
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "use_count": 0,
+   "nid": null
+  },
+  {
+   "id": "00000006-aaaa-4aaa-8aaa-000000000006",
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "use_count": 0,
+   "nid": null
+  }
+ ],
+ "event": [
+  {
+   "id": "e1",
+   "kind": "attended",
+   "title": "Fixture Voice Meetup",
+   "event_date": "2026-10-20",
+   "source": "fixture",
+   "notion_page_id": null
+  }
+ ],
+ "documents": [],
+ "claim_entity": [
+  {
+   "claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "entity_type": "company",
+   "entity_id": "c1"
+  },
+  {
+   "claim_id": "00000004-aaaa-4aaa-8aaa-000000000004",
+   "entity_type": "company",
+   "entity_id": "c1"
+  },
+  {
+   "claim_id": "00000005-aaaa-4aaa-8aaa-000000000005",
+   "entity_type": "company",
+   "entity_id": "c1"
+  }
+ ],
+ "topic": [
+  {
+   "id": "t1",
+   "name": "Voice Agents"
+  }
+ ],
+ "topic_cluster_membership": [
+  {
+   "topic_id": "t1",
+   "cluster_id": "00000000-0000-4000-8000-000000000001",
+   "valid_to": null
+  }
+ ],
+ "claim_relation": [],
+ "_claim_relation_populated": [
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.95,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.9,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.85,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.8,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.75,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.72,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000001-aaaa-4aaa-8aaa-000000000001",
+   "to_claim_id": "00000002-aaaa-4aaa-8aaa-000000000002",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.7,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000004-aaaa-4aaa-8aaa-000000000004",
+   "to_claim_id": "00000005-aaaa-4aaa-8aaa-000000000005",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.6,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000003-aaaa-4aaa-8aaa-000000000003",
+   "to_claim_id": "00000006-aaaa-4aaa-8aaa-000000000006",
+   "relation": "contradicts",
+   "method": "rule",
+   "confidence": 0.9,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  },
+  {
+   "from_claim_id": "00000004-aaaa-4aaa-8aaa-000000000004",
+   "to_claim_id": "00000006-aaaa-4aaa-8aaa-000000000006",
+   "relation": "corroborates",
+   "method": "rule",
+   "confidence": 0.8,
+   "created_at": "2026-11-14T00:00:00+00:00"
+  }
+ ],
+ "lane_registry": [
+  {
+   "lane": "feeds",
+   "active": false,
+   "freshness_flag_days": 7,
+   "freshness_fail_days": 14
+  },
+  {
+   "lane": "hiring_pulse",
+   "active": true,
+   "freshness_flag_days": 7,
+   "freshness_fail_days": 14
+  },
+  {
+   "lane": "research_frontier",
+   "active": false,
+   "freshness_flag_days": 7,
+   "freshness_fail_days": 14
+  }
+ ],
+ "lane_run": [
+  {
+   "lane": "hiring_pulse",
+   "started_at": "2026-11-15T12:00:00+00:00",
+   "status": "success",
+   "items_seen": 170,
+   "items_written": 0
+  },
+  {
+   "lane": "hiring_pulse",
+   "started_at": "2026-11-8T12:00:00+00:00",
+   "status": "success",
+   "items_seen": 170,
+   "items_written": 0
+  },
+  {
+   "lane": "hiring_pulse",
+   "started_at": "2026-11-1T12:00:00+00:00",
+   "status": "success",
+   "items_seen": 170,
+   "items_written": 0
+  },
+  {
+   "lane": "research_frontier",
+   "started_at": "2026-11-09T13:00:00+00:00",
+   "status": "success",
+   "items_seen": 250,
+   "items_written": 5
+  }
+ ],
+ "claim_usage": [
+  {
+   "claim_id": "00000001-aaaa-4aaa-8aaa-000000000001"
+  },
+  {
+   "claim_id": "00000001-aaaa-4aaa-8aaa-000000000001"
+  },
+  {
+   "claim_id": "00000002-aaaa-4aaa-8aaa-000000000002"
+  }
+ ]
+}
