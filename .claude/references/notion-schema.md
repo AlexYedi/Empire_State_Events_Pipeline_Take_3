@@ -49,7 +49,8 @@ database gains, renames or drops a property, `notion-fetch` its schema and updat
   `content-style-guide.md` → Variants and prior-post callbacks; post drafts only, roundups untagged),
   Format (select — documented 2026-09-28, voice v2: `clip` / `photo` / `motion` / `audio` / `poll` for
   field-media and non-text posts, per `visual-briefs.md` 1/1/1 options; docs-first: `notion-fetch` the live
-  DB and add or confirm the property/values before the first write that sets it),
+  DB and add or confirm the property/values before the first write that sets it, then add it to
+  `notion-property-names.json` or `notion_payload.py` refuses it),
   relations to Event/People/Topics/Project Ideas
   Note: Goal + Target are the **assigned-goal** (set at creation); Outcome/Outcome Value/Outcome Date are the
   **realized outcome** (set post-publish by `/tag-outcome`). Together = the acted-on-value north-star.
@@ -88,8 +89,9 @@ database gains, renames or drops a property, `notion-fetch` its schema and updat
   prototype/small_tool/MVP/full_project), Stack Coverage % (number), Relevance (number 1-10),
   Creativity & Uniqueness (number 1-10), Tool Coverage (number 1-10), Conversation Starter
   (number 1-10), Demonstrability (number 1-10), Content Moments (number 1-10),
-  Composite Score (number), Architecture Summary (text), Created (created_time),
-  Last Updated (last_edited_time), relations to Events/Topics/Content Drafts
+  Composite Score (number), Architecture Summary (text), Due (date), Horizon (select), Linear (url),
+  Pillar (select), Priority (select), date:Created (created_time), date:Last Updated (last_edited_time),
+  relations to **Event** (singular; not "Events", YED-398)/Topics/Content Drafts
   Active projects tracked via Status select. No hard cap — Alex manages bandwidth manually (cap removed 2026-04-20).
 
 ## Proposed (E-05 — pending in the live DB)

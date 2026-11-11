@@ -189,6 +189,22 @@ def target_ds(o, page_keys):
     return key_ds(o.get("key"))
 
 
+def manifest_page_keys(path):
+    """{normalized page id: [manifest keys]} for resolving which database an updated page lives in."""
+    out = {}
+    for k, v in read_manifest(path).items():
+        if isinstance(v, dict) and v.get("page_id"):
+            out.setdefault(norm(v["page_id"]), []).append(k)
+    return out
+
+
+def unchecked_ops(p):
+    """Keys of property-carrying updates whose database cannot be resolved offline (so not name-checked)."""
+    pk = manifest_page_keys(p["manifest"]) if isinstance(p.get("manifest"), str) else {}
+    return [str(o.get("key")) for o in p.get("operations") or []
+            if isinstance(o, dict) and o.get("op") == "update" and o.get("properties") and not target_ds(o, pk)]
+
+
 def property_name_problems(tag, o, ds, schema):
     props = o.get("properties")
     if not ds or not isinstance(props, dict) or ds not in schema:
@@ -204,13 +220,14 @@ def property_name_problems(tag, o, ds, schema):
                 out.append(f"{tag} date property '{k}' must be written as 'date:{k}:start' (and :end / :is_datetime)")
         elif m and known.get(m.group(1)) == "date":
             continue
-        elif k.startswith("userDefined:") and k[len("userDefined:"):] in known:
-            continue
         elif f"userDefined:{k}" in known:
             out.append(f"{tag} property '{k}' must be written as 'userDefined:{k}' in {db}")
         else:
             near = difflib.get_close_matches(k, list(known), n=1)
-            hint = f"; did you mean '{near[0]}'?" if near else ""
+            if near and known[near[0]] in READ_ONLY_TYPES:
+                hint = f"; the close match '{near[0]}' is read-only ({known[near[0]]}), Notion sets it"
+            else:
+                hint = f"; did you mean '{near[0]}'?" if near else ""
             out.append(f"{tag} property '{k}' does not exist in {db}{hint} (YED-398; if the database gained it, "
                        f"notion-fetch the schema and add it to {SCHEMA_FILE.name})")
     return out
@@ -306,10 +323,7 @@ def problems(p):
         allowed = []
     known = load_manifest(p.get("manifest", "")) if isinstance(p.get("manifest"), str) else {}
     known_ids = set(known) | {norm(a) for a in allowed}
-    page_keys = {}
-    for k, v in (read_manifest(p["manifest"]) if isinstance(p.get("manifest"), str) else {}).items():
-        if isinstance(v, dict) and v.get("page_id"):
-            page_keys.setdefault(norm(v["page_id"]), []).append(k)
+    page_keys = manifest_page_keys(p["manifest"]) if isinstance(p.get("manifest"), str) else {}
     schema = load_schema()
     if schema is None:
         out.append(f"property-name snapshot {SCHEMA_FILE} is missing or unreadable (YED-398); cannot check names")
@@ -599,6 +613,14 @@ def selftest():
                      allowed_page_ids=[good_uuid]), "does not exist in People")))
     ck("names: an update whose database cannot be resolved is not name-checked",
        not hits(pay([update_op(properties={"Anything": "x"})], allowed_page_ids=[good_uuid]), "YED-398"))
+    ck("names: a userDefined: prefix Notion does not use refused (People has a plain 'Name')",
+       bool(hits(pay([create_op(parent={"data_source_id": PEOPLE_DS}, key="person:selftest",
+                                properties={"userDefined:Name": "x"})]), "does not exist in People")))
+    ck("names: a near-miss of a read-only property says read-only, not did-you-mean",
+       bool(hits(pay([create_op(properties={"Project Name": "Selftest Idea", "Created": "x"}, **idea)]),
+                 "is read-only")))
+    ck("names: an unresolvable property update is reported as unchecked",
+       unchecked_ops(pay([update_op(properties={"Anything": "x"})])) == ["update:selftest"])
     snap = load_schema()
     ck("names: the snapshot covers all 8 known databases", snap is not None and set(snap) == set(DATA_SOURCES))
 
@@ -669,8 +691,11 @@ def main():
         print("INVALID:\n- " + "\n- ".join(errs))
         return 1
     ops = payload["operations"]
+    unchecked = unchecked_ops(payload)
+    note = (f" · property names NOT checked on {len(unchecked)} update(s) whose database could not be resolved "
+            f"({', '.join(unchecked)}); notion-writer checks them live") if unchecked else ""
     print(f"VALID: {len(ops)} operations ({sum(o['op'] == 'create' for o in ops)} create, "
-          f"{sum(o['op'] == 'update' for o in ops)} update) · manifest {payload['manifest']}")
+          f"{sum(o['op'] == 'update' for o in ops)} update) · manifest {payload['manifest']}{note}")
     return 0
 
 
