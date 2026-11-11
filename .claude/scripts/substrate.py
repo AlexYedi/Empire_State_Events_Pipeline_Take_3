@@ -34,6 +34,10 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   `merge --revert --table T --from <id|name>` restores from the snapshot. The agent PROPOSES
                   with --dry-run; Alex runs the live one. Replaces merge_topics.py (retired 2026-09-27 — it
                   hard-deleted the source, contra ADR-4 D3).
+  reconcile       --report | --queue [PATH] [--root DIR] [--baseline PRIOR.json]
+                  (YED-384, plan B1) READ-ONLY completeness ledger: joins Event Content/ folders, event-transcripts/,
+                  .claude/.state/{research,briefs,post-event}/ and prod (GETs only) by date + title; one row per event
+                  with a status vector + gap list. Writes nothing to any database. Lives in reconcile.py.
 
 Identity (YED-47 S1b-lite, no DDL): company `Name (Qualifier)` resolves to `Name` ONLY when the bare-name
 candidate is unique AND both website hosts agree; every less-certain case is created AND surfaced to
@@ -2510,6 +2514,8 @@ def selftest() -> bool:
     _linking_selftest(ok)
     _usage_selftest(ok)
     _roles_selftest(ok)
+    from reconcile import selftest as _reconcile_selftest   # YED-384: offline fixture tree + stubbed req
+    _reconcile_selftest(ok)
 
     fail = 0
     for name, good in checks:
@@ -2523,6 +2529,9 @@ def selftest() -> bool:
 def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return 0 if selftest() else 1
+    if argv[:1] == ["reconcile"]:                  # YED-384: read-only, its own parser (reconcile.py)
+        from reconcile import main as reconcile_main
+        return reconcile_main(argv[1:])
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
