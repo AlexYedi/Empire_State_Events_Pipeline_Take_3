@@ -8,6 +8,13 @@ personal social handle anywhere, dedup by canonical URL (feeds.canonical_url), a
 recomputed against a known-entities list. It never writes to a database; the `stage-market` writer
 comes after 0022.
 
+Item-level quarantine: an error confined to ONE item (bad kind, out-of-window date, bad URL, PII or a
+social handle in a field, an oversize field, a duplicate URL, any other per-item schema slip) drops
+that item and counts it under `dropped: {reason: count}`; the rest of the batch survives. Structural
+errors still fail the whole manifest: unknown or missing top-level keys, window or theme_id mismatch,
+cap exceeded, unparseable JSON, depth or file-size limits, and PII or a bad field anywhere outside
+`items` (top level, new_entities, audit). Zero surviving items is a failure too.
+
 Never echoes attacker text. Errors name a schema path and a rule; a key the schema does not know
 prints as `<unknown key #n>`; the summary counts only valid kinds. The manifest is page-derived, and
 echoing it back into a session is how an injection travels.
@@ -24,7 +31,8 @@ Usage:
   python3 sweep_manifest.py validate MANIFEST.json --window FROM TO --theme-id UUID|null --cap N
                             [--known KNOWN.json] [--out NORMALIZED.json]
   python3 sweep_manifest.py --selftest
-Exit: 0 valid · 2 manifest violates the contract (incl. unparseable / too deep / too big) · 1 bad
+Exit: 0 valid with >= 1 surviving item · 2 structural violation or zero survivors (incl. unparseable /
+too deep / too big) · 1 bad
 invocation or unreadable known-entities file. Stdlib only (CI runs it with plain python3).
 
 Manifest schema (strict: unknown keys are a violation, so a stray contact field cannot ride along):
@@ -124,6 +132,7 @@ SAFE_KEYS = TOP_KEYS | ITEM_KEYS | ENTITY_KEYS | PERSON_KEYS | AUDIT_KEYS | WIND
 URL_FIELDS = {"url", "primary_url", "website"}
 ID_FIELDS = {"theme_id", "query_id"}          # uuids and row ids: long digit runs by nature
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+ITEM_PATH = re.compile(r"^items\[(\d+)\]")
 SUFFIXES = ("inc", "llc", "ltd", "corp", "corporation", "co", "gmbh", "sa")
 
 # --- normalized-copy PII layer (this file; spine_client's regexes are the raw layer) -------------
@@ -206,6 +215,8 @@ class Report:
     def __init__(self):
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.drops: list[str] = []             # "path: rule" of quarantined items; rules never carry values
+        self.dropped: dict[str, int] = {}      # reason -> items dropped
         self._unknown: dict[str, int] = {}
 
     def key(self, k) -> str:
@@ -279,6 +290,22 @@ def _social(r: Report, obj: dict, keys: tuple, path: str):
             r.err(f"{path}.{k}", "personal social handle or profile link")
 
 
+def _drop_reason(errs: list[str]) -> str:
+    """One reason per dropped item, PII first. Reads paths and fixed rule text only."""
+    def has(pred):
+        return any(pred(*e.split(": ", 1)) for e in errs)
+    if has(lambda p, rule: "email address" in rule or "phone number" in rule or "contact-field key" in rule):
+        return "pii"
+    if has(lambda p, rule: "social handle" in rule):
+        return "social_handle"
+    if has(lambda p, rule: "longer than" in rule):
+        return "oversize"
+    for field in ("kind", "date", "url", "primary_url", "quote"):
+        if has(lambda p, rule, f=field: p.endswith("." + f)):
+            return {"primary_url": "url"}.get(field, field)
+    return "schema"
+
+
 def validate(m, known: set[str] | None = None, *, cap: int, window: tuple[str, str],
              theme_id: str | None) -> tuple[Report, dict]:
     """(report, normalized). The parent's cap, window and theme_id are required: the agent never
@@ -300,6 +327,13 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
         _pii(r, path, field, s)
     if any("nesting deeper" in e for e in r.errors):
         return r, {}
+    # Findings inside one item quarantine that item; anywhere else they stay fatal.
+    item_errs: dict[int, list[str]] = {}
+    fatal = []
+    for e in r.errors:
+        mi = ITEM_PATH.match(e)
+        (item_errs.setdefault(int(mi.group(1)), []) if mi else fatal).append(e)
+    r.errors = fatal
 
     _str(r, m, "theme", "manifest", 1, 120)
     _str(r, m, "query_id", "manifest", 1, 64, nullable=True)
@@ -327,7 +361,9 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
     seen: dict[str, int] = {}
     for i, it in enumerate(items):
         p = f"items[{i}]"
+        e0, w0 = len(r.errors), len(r.warnings)
         if not _keys(r, it, ITEM_KEYS, ITEM_KEYS, p):
+            _quarantine(r, item_errs.get(i, []) + r.errors[e0:], e0, w0)
             continue
         d = parse_date(it.get("date"))
         if d is None:
@@ -380,10 +416,18 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
             r.err(f"{p}.novel", "boolean")
 
         keys = {cu for _, cu in urls.values()}
-        for k in keys:
-            if k in seen:
-                r.err(f"{p}.url", f"duplicate of items[{seen[k]}] by canonical URL")
-                break
+        errs = item_errs.get(i, []) + r.errors[e0:]
+        if not errs:                           # dedup only against items that survived
+            dup = next((seen[k] for k in keys if k in seen), None)
+            if dup is not None:
+                errs = [f"{p}.url: duplicate of items[{dup}] by canonical URL"]
+                r.dropped["duplicate"] = r.dropped.get("duplicate", 0) + 1
+                r.drops += errs
+                del r.errors[e0:], r.warnings[w0:]
+                continue
+        if errs:
+            _quarantine(r, errs, e0, w0)
+            continue
         for k in keys:
             seen.setdefault(k, i)
 
@@ -433,8 +477,18 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
     # Self-consistency: the graph mapping must only ever produce values the live CHECKs accept.
     assert all(ek in GRAPH_EVENT_KINDS and st in GRAPH_SIGNAL_TYPES for ek, st in KIND_MAP.values())
 
-    normalized = {**m, "items": norm_items, "new_entities": norm_ents}
+    if not r.errors and not norm_items:
+        r.err("items", "every item was dropped" if items else "no items (nothing to stage)")
+    normalized = {**m, "items": norm_items, "new_entities": norm_ents, "dropped": dict(r.dropped)}
     return r, normalized
+
+
+def _quarantine(r: Report, errs: list[str], e0: int, w0: int):
+    """Move one item's errors out of the fatal list and count the drop; its warnings go too."""
+    reason = _drop_reason(errs)
+    r.dropped[reason] = r.dropped.get(reason, 0) + 1
+    r.drops += errs
+    del r.errors[e0:], r.warnings[w0:]
 
 
 def summary(r: Report, normalized: dict) -> str:
@@ -449,8 +503,10 @@ def summary(r: Report, normalized: dict) -> str:
     lines = [f"sweep_manifest: {'VALID' if not r.errors else 'INVALID'} · items {len(items)} · "
              f"novel {sum(1 for it in items if it.get('novel'))}/{len(items)} (agent flag overridden {overrides}) · "
              f"new_entities {len(ents)} (novel {sum(1 for e in ents if e.get('novel'))}) · "
-             f"kinds {json.dumps(kinds, sort_keys=True)}"]
+             f"kinds {json.dumps(kinds, sort_keys=True)} · "
+             f"dropped {json.dumps(r.dropped, sort_keys=True)}"]
     lines += [f"  ERROR {e}" for e in r.errors]
+    lines += [f"  drop  {d}" for d in r.drops]
     lines += [f"  warn  {w}" for w in r.warnings]
     return "\n".join(lines)
 
@@ -498,22 +554,25 @@ def selftest() -> bool:
         kw = {"cap": 20, "window": FX_WINDOW, "theme_id": FX_THEME, **kw}
         return validate(m, known, **kw)
 
-    cases = [  # (fixture, expect_valid, rule substring that must appear in an error)
-        ("manifest_valid.json", True, None),
-        ("manifest_bad_out_of_window.json", False, "outside the window"),
-        ("manifest_bad_http_url.json", False, "https URL"),
-        ("manifest_bad_email_headline.json", False, "email address"),
-        ("manifest_bad_phone_why.json", False, "phone number"),
-        ("manifest_bad_duplicate_url.json", False, "duplicate of items[0]"),
-        ("manifest_bad_kind.json", False, "kind: not in"),
-        ("manifest_bad_contact_key.json", False, "unknown key"),
+    # Each bad fixture has ONE bad item: it is quarantined, the other two survive, the batch stays valid.
+    cases = [  # (fixture, expected dropped counts, rule substring that must appear in a drop line)
+        ("manifest_valid.json", {}, None),
+        ("manifest_bad_out_of_window.json", {"date": 1}, "outside the window"),
+        ("manifest_bad_http_url.json", {"url": 1}, "https URL"),
+        ("manifest_bad_email_headline.json", {"pii": 1}, "email address"),
+        ("manifest_bad_phone_why.json", {"pii": 1}, "phone number"),
+        ("manifest_bad_duplicate_url.json", {"duplicate": 1}, "duplicate of items[0]"),
+        ("manifest_bad_kind.json", {"kind": 1}, "kind: not in"),
+        ("manifest_bad_contact_key.json", {"pii": 1}, "unknown key"),
     ]
-    for fn, want_valid, rule in cases:
+    for fn, want_dropped, rule in cases:
         with open(os.path.join(FIXTURES, fn), encoding="utf-8") as f:
             m = json.load(f)
         r, norm = run(m)
-        passed = (not r.errors) == want_valid and (rule is None or any(rule in e for e in r.errors))
-        check(f"{fn}: {'valid' if not r.errors else r.errors[:1]}", passed)
+        passed = (not r.errors and r.dropped == want_dropped and norm["dropped"] == want_dropped
+                  and len(norm["items"]) == 3 - sum(want_dropped.values())
+                  and (rule is None or any(rule in d for d in r.drops)))
+        check(f"{fn}: {'valid' if not r.errors else r.errors[:1]} dropped {r.dropped}", passed)
         if fn == "manifest_valid.json":
             check("novel recomputed vs known list + kind mapped to graph",
                   [it["novel"] for it in norm["items"]] == [True, False, True]
@@ -529,10 +588,38 @@ def selftest() -> bool:
         return m
 
     def fails(name, fn, rule, **kw):
+        """The rule fires, as a fatal error or as an item drop."""
         r, _ = run(mut(fn), **kw)
-        check(f"{name} -> {rule!r}", any(rule in e for e in r.errors))
+        check(f"{name} -> {rule!r}", any(rule in e for e in r.errors + r.drops))
 
     check("--cap enforced", any("exceed the cap" in e for e in run(base, cap=2)[0].errors))
+
+    # 0. item-level quarantine vs structural failure
+    r, n = run(mut(lambda m: m["items"][1].__setitem__("kind", "blog")))
+    check("bad kind drops 1 item, keeps the rest", not r.errors and r.dropped == {"kind": 1}
+          and [it["company"] for it in n["items"]] == [base["items"][0]["company"], base["items"][2]["company"]])
+    r, n = run(mut(lambda m: (m["items"][0].__setitem__("kind", "blog"), m["items"][1].__setitem__("date", "2001-01-01"),
+                              m["items"][2].__setitem__("url", "http://plain.example.com/x"))))
+    check("every item dropped -> invalid, reasons counted",
+          r.errors == ["items: every item was dropped"] and r.dropped == {"kind": 1, "date": 1, "url": 1}
+          and n["items"] == [])
+    r, _ = run(mut(lambda m: m.__setitem__("items", [])))
+    check("empty items -> invalid (nothing to stage)", any("no items" in e for e in r.errors))
+    r, n = run(mut(lambda m: (m["window"].__setitem__("to", "2026-11-30"), m["items"][0].__setitem__("kind", "blog"))))
+    check("window mismatch still fails everything", any("parent's --window" in e for e in r.errors))
+    r, _ = run(mut(lambda m: (m.__setitem__("bogus", 1), m["items"][0].__setitem__("kind", "blog"))))
+    check("top-level unknown key still fails everything", any("unknown key" in e for e in r.errors))
+    r, _ = run(mut(lambda m: m.__setitem__("theme", "contact dana@example.com")))
+    check("top-level PII fails everything", any("email address" in e for e in r.errors))
+    r, _ = run(mut(lambda m: m["new_entities"][0].__setitem__("why", "call 555-123-4567")))
+    check("PII outside items (new_entities) fails everything", any("phone number" in e for e in r.errors))
+    r, _ = run(mut(lambda m: (m["items"][0].__setitem__("why", "a" * 5000),
+                              m["items"][1]["people"].append({"name": "Dana", "role": "CEO (@danaexample)"}))))
+    check("oversize and social-handle items drop with their reasons",
+          not r.errors and r.dropped == {"oversize": 1, "social_handle": 1})
+    r, _ = run(mut(lambda m: (m["items"][0].__setitem__("why", "dana@example.com"),
+                              m["items"][0].__setitem__("kind", "blog"))))
+    check("PII outranks other reasons on one item", r.dropped == {"pii": 1})
     check("canonical_url folds case, tracking params, fragment, trailing slash",
           canonical_url("https://Example.com/a/?utm_source=x#frag") == canonical_url("https://example.com/a"))
 
@@ -546,9 +633,15 @@ def selftest() -> bool:
     m = mut(lambda m: (m["items"][0].__setitem__(inj, 1), m.__setitem__(inj + "!", 1),
                        m["items"][1].__setitem__("kind", inj), m["audit"]["source_mix"].__setitem__(inj + "?", 1)))
     r, n = run(m)
-    out = summary(r, n) + "\n".join(r.errors + r.warnings)
+    out = summary(r, n) + "\n".join(r.errors + r.warnings + r.drops)
     check("injected key and kind strings never appear in any output", inj not in out and "evil" not in out
-          and "<unknown key #1>" in out and '"invalid": 1' in out)
+          and "<unknown key #1>" in out)
+    m = mut(lambda m: (m["items"][0].__setitem__(inj, 1), m["items"][1].__setitem__("kind", inj),
+                       m["items"][2].__setitem__("why", inj + " dana@example.com")))
+    r, n = run(m)
+    out = summary(r, n) + "\n".join(r.errors + r.warnings + r.drops) + json.dumps(n["dropped"])
+    check("dropped items never echo their values", inj not in out and "evil" not in out and "dana@" not in out
+          and r.dropped == {"schema": 1, "kind": 1, "pii": 1})
 
     # 3. normalized-copy PII layer
     for s in ("dana [at] example [dot] com", "dana(at)example.com", "dana＠example.com", "dana%40example.com",
@@ -560,7 +653,7 @@ def selftest() -> bool:
         fails(f"phone form {s.encode('ascii', 'backslashreplace').decode()!r}",
               lambda m, s=s: m["items"][0].__setitem__("why", s), "phone number")
     r, _ = run(mut(lambda m: m["items"][1].__setitem__("url", "https://x.example.com/status/12345678901234567890")))
-    check("bare digit rule skips URL fields (long ids are not phones)", not r.errors)
+    check("bare digit rule skips URL fields (long ids are not phones)", not r.errors and not r.drops)
 
     # 4. the parent sets the limits
     fails("agent widened its own window", lambda m: m["window"].__setitem__("from", "2000-01-01"), "parent's --window")
@@ -599,7 +692,7 @@ def selftest() -> bool:
     for u in ("https://xn--pple-43d.com/x", "https://аpple.com/x"):
         r, _ = run(mut(lambda m, u=u: m["items"][1].__setitem__("url", u)))
         check(f"punycode / non-ASCII host warns {u.encode('unicode_escape').decode()[:30]!r}",
-              not r.errors and any("punycode" in w for w in r.warnings))
+              not r.errors and not r.drops and any("punycode" in w for w in r.warnings))
     _, n = run(mut(lambda m: m["items"][1].__setitem__("url", "https://KnownCo.example.org/changelog/v2/?utm_source=x")))
     check("normalized manifest stores the canonical URL", n["items"][1]["url"] == "https://knownco.example.org/changelog/v2")
 
