@@ -53,7 +53,7 @@ def complete(rs, sd, **over):
     for s in rs.STEP_IDS[:-1]:
         if s in over:
             continue
-        meta = {"themes_prop": "set"} if s == "notion-write" else None
+        meta = {"themes_prop": "set"} if s == "notion-write" else {"routing_rows": "5"} if s == "route" else None
         rs.mark(EVENT, s, "done", meta=meta, state_dir=sd)
     for s, (status, reason) in over.items():
         rs.mark(EVENT, s, status, reason=reason, state_dir=sd)
@@ -81,7 +81,7 @@ def run():
         out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
         ck("complete run → CLOSE-CHECK: PASS", out["verdict"] == "CLOSE-CHECK: PASS", out)
         ck("Themes prop is SELF-REPORTED", status(out, "themes-prop") == "SELF-REPORTED", out)
-        ck("routing rows SKIPPED until 3.8e exists", status(out, "routing-rows") == "SKIPPED", out)
+        ck("routing rows SELF-REPORTED from the route step", status(out, "routing-rows") == "SELF-REPORTED", out)
         ck("no rooms check any more (YED-374)", all(r["check"] != "rooms" for r in out["results"]), out)
         cs = rs.load(EVENT, sd)["steps"]["close-check"]
         ck("close-check step written to run-state with result", cs["status"] == "done" and cs["meta"]["result"] == "PASS")
@@ -116,6 +116,16 @@ def run():
         out = cc.run(EVENT, NID, reader=FakeReader(boom="GET /event -> 401"), state_dir=sd)
         ck("unreachable graph → graph checks SKIPPED, no crash",
            status(out, "graph-event") == "SKIPPED" and status(out, "themes") == "SKIPPED", out)
+
+    with tempfile.TemporaryDirectory() as d:
+        sd = os.path.join(d, "state")
+        complete(rs, sd, route=("skipped", "walk-in: nothing routable"))
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
+        ck("route skipped with reason → routing-rows SKIPPED, run still PASS",
+           status(out, "routing-rows") == "SKIPPED" and out["verdict"] == "CLOSE-CHECK: PASS", out)
+        rs.mark(EVENT, "route", "done", state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
+        ck("route done without routing_rows → FAIL", status(out, "routing-rows") == "FAIL", out)
 
     with tempfile.TemporaryDirectory() as d:
         sd = os.path.join(d, "state")
