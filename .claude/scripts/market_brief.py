@@ -254,7 +254,8 @@ def load_sweeps(sweeps_dir: str | None, companies, mon: date, sun: date):
     known = ({sweep_manifest.norm_name(c["name"]) for c in companies if c.get("name")}
              if isinstance(companies, list) else set())
     lo = mon - timedelta(days=7)
-    out = {"valid": [], "invalid": 0, "out_of_window": 0, "files": 0, "novelty_from_graph": bool(known)}
+    out = {"valid": [], "invalid": 0, "out_of_window": 0, "files": 0, "items_dropped": 0,
+           "novelty_from_graph": bool(known)}
     for fn in sorted(os.listdir(sweeps_dir)):
         if not fn.endswith(".json") or PRIVATE_RE.search(fn):
             continue
@@ -276,6 +277,8 @@ def load_sweeps(sweeps_dir: str | None, companies, mon: date, sun: date):
         if t < lo or f > sun:
             out["out_of_window"] += 1
             continue
+        # The validator quarantines bad items one by one (#327): count them, never show them.
+        out["items_dropped"] += sum((norm.get("dropped") or {}).values())
         out["valid"].append(norm)
     return out
 
@@ -555,7 +558,8 @@ def render(d: dict) -> str:
         ents = [e for m in sw["valid"] for e in m.get("new_entities", [])]
         nov = sum(1 for it in items if it.get("novel"))
         L += [f"**Sweeps:** {len(sw['valid'])} valid manifest{'' if len(sw['valid']) == 1 else 's'} of {sw['files']} files ({sw['invalid']} failed "
-              f"validation and are not shown, {sw['out_of_window']} cover another week). {len(items)} items, {nov} "
+              f"validation and are not shown, {sw['out_of_window']} cover another week; {sw.get('items_dropped', 0)} item"
+              f"{'' if sw.get('items_dropped', 0) == 1 else 's'} dropped by the validator and not shown). {len(items)} items, {nov} "
               f"about a company the graph does not have yet (baseline: every item is novel when the graph knows "
               f"nothing; novelty is rechecked against the graph's {'company names' if sw['novelty_from_graph'] else 'company names, which could not be read, so all items count as novel'}). "
               f"Only company, kind, date and source are shown; headlines are web text and stay in the manifest.", ""]
@@ -822,8 +826,11 @@ def selftest() -> bool:
         # new to graph
         ok("new: companies created last week counted with baseline",
            "**2 companies first seen in 2026-W46**" in text and "prior 8-week average of 1 a week" in text)
-        ok("sweeps: valid manifest rendered, invalid one counted and hidden",
-           "1 valid manifest of 3 files (1 failed validation" in text and "1 cover another week" in text)
+        ok("sweeps: the bad item is dropped, the rest of its manifest kept, and the drop counted",
+           "2 valid manifests of 3 files (0 failed validation" in text and "1 cover another week" in text
+           and "1 item dropped by the validator" in text)
+        ok("sweeps: the dropped item's text never reaches the brief", "dana@example.com" not in text
+           and "contact dana" not in text)
         ok("sweeps: novelty recomputed against graph names", "- **NEW** Quillstack Labs" in text
            and "- Knownco Inc." in text)
         ok("sweeps: no headline, people or quote text", "Dana Example" not in text and "low-latency" not in text
