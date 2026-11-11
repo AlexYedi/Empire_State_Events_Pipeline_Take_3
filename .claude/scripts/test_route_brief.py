@@ -151,6 +151,9 @@ def run():
         pay = os.path.join(slugdir, "routing-notion-payload.json")
         v = subprocess.run([sys.executable, os.path.join(HERE, "notion_payload.py"), pay], capture_output=True, text=True)
         ck("Notion payload passes notion_payload.py", v.returncode == 0, v.stdout + v.stderr)
+        props = json.load(open(pay, encoding="utf-8"))["operations"][0]["properties"]
+        ck("build idea links the event via the live relation name 'Event' (Project Ideas has no 'Events')",
+           "Event" in props and "Events" not in props, sorted(props))
         r = subprocess.run(cli + ["strip", brief],
                            capture_output=True, text=True)
         ck("strip CLI prints the brief without the block", r.returncode == 0 and "⟦routing⟧" not in r.stdout)
