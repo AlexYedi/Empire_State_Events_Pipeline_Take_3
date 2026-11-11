@@ -65,7 +65,7 @@ A cap bounce or a spend-limit kill ends the wave: stop, report what landed, let 
 
 | Tier | Agents | Web | Writes | Private files |
 |---|---|---|---|---|
-| T1 web/inbox readers | `company-researcher`, `person-researcher` (both Gmail read), `competitive-signal-scanner`, `topic-landscape-analyst`, `alex:research-analyst`, `alex:learning-coach-mentor` | yes | **none**: they return text; the parent writes files | no |
+| T1 web/inbox readers | `company-researcher`, `person-researcher` (both Gmail read), `competitive-signal-scanner`, `topic-landscape-analyst`, `theme-sweeper` (JSON manifest only; `sweep_manifest.py` validates it), `alex:research-analyst`, `alex:learning-coach-mentor` | yes | **none**: they return text; the parent writes files | no |
 | T2 text-in / text-out | `knowledge-conditioning`, `event-research-synthesizer`, `field-guide-renderer`, `post-event-synthesizer` | no | none | only what the parent passes |
 | T3 Notion writer | `notion-writer` | no | Notion create/update from a validated payload only | no |
 | T4 builder | `alex:builder` | no | repo files under the caller's allowlist; no MCP | no |
