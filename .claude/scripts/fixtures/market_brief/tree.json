@@ -1,0 +1,51 @@
+{
+ "_comment": "FAKE data only (market_brief selftest). `files` become empty files in a temp dir; `json` entries are written as JSON.",
+ "files": [
+  "Event Content/11 17 26 Voice Agents Night/notes.md",
+  "Event Content/11 19 26 Robotics Demo Day/notes.md",
+  "Event Content/11 09 26 Last Week Party/notes.md",
+  "Event Content/12 01 26 Next Month Summit/notes.md",
+  "Event Content/11 16 26 Upcoming Week/post.md",
+  "Event Content/11 18 26 Secret Dinner.PRIVATE/notes.md"
+ ],
+ "json": {
+  ".claude/.state/research/voice-agents-night.manifest.json": {
+   "event": {
+    "notion_page_id": null,
+    "title": "Voice Agents Night: Latency Talk",
+    "event_date": "2026-11-17"
+   },
+   "entities": [
+    {
+     "type": "topic",
+     "name": "Voice Agents"
+    },
+    {
+     "type": "company",
+     "name": "Knownco"
+    },
+    {
+     "type": "company",
+     "name": "Unseen Startup"
+    },
+    {
+     "type": "person",
+     "name": "Pat Speakerson"
+    }
+   ]
+  },
+  ".claude/.state/research/secret.PRIVATE.manifest.json": {
+   "event": {
+    "notion_page_id": null,
+    "title": "Secret Salon",
+    "event_date": "2026-11-18"
+   },
+   "entities": [
+    {
+     "type": "company",
+     "name": "Hidden Co"
+    }
+   ]
+  }
+ }
+}

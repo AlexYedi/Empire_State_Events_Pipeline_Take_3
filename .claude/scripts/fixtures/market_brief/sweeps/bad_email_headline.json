@@ -1,0 +1,81 @@
+{
+ "theme": "Voice AI Infrastructure (fixture)",
+ "theme_id": "00000000-0000-4000-8000-000000000001",
+ "query_id": null,
+ "window": {
+  "from": "2026-11-04",
+  "to": "2026-11-11"
+ },
+ "items": [
+  {
+   "date": "2026-11-06",
+   "kind": "funding",
+   "company": "Quillstack Labs",
+   "headline": "Quillstack Labs raised a seed; contact dana@example.com for the deck.",
+   "url": "https://news.example.com/quillstack-seed",
+   "primary_url": "https://quillstack.example.com/blog/seed",
+   "source_kind": "news",
+   "why": "A new routing layer between ASR and LLM vendors in the voice stack.",
+   "quote": "We route every utterance to the fastest model that clears the quality bar.",
+   "people": [
+    {
+     "name": "Dana Example",
+     "role": "CEO, Quillstack Labs"
+    }
+   ],
+   "confidence": 0.8,
+   "novel": true
+  },
+  {
+   "date": "2026-11-09",
+   "kind": "release",
+   "company": "Knownco Inc.",
+   "headline": "Knownco released v2 of its open-weights streaming TTS model.",
+   "url": "https://knownco.example.org/changelog/v2",
+   "primary_url": null,
+   "source_kind": "changelog",
+   "why": "Open-weights TTS pressures closed voice vendors on price.",
+   "quote": null,
+   "people": [],
+   "confidence": 0.9,
+   "novel": true
+  },
+  {
+   "date": "2026-11-10",
+   "kind": "market",
+   "company": "Murmur Analytics",
+   "headline": "Murmur Analytics published a benchmark of voice-agent latency across five providers.",
+   "url": "https://news.ycombinator.com/item?id=1",
+   "primary_url": null,
+   "source_kind": "hn",
+   "why": "Third-party latency numbers are rare in voice infrastructure.",
+   "quote": null,
+   "people": [],
+   "confidence": 0.5,
+   "novel": true
+  }
+ ],
+ "new_entities": [
+  {
+   "name": "Quillstack Labs",
+   "website": "https://quillstack.example.com",
+   "why": "Seed-stage speech routing layer."
+  },
+  {
+   "name": "Knownco",
+   "website": null,
+   "why": "Open-weights TTS vendor."
+  }
+ ],
+ "audit": {
+  "searches": 18,
+  "fetches": 6,
+  "dropped_out_of_window": 3,
+  "dropped_no_date": 1,
+  "source_mix": {
+   "news": 1,
+   "changelog": 1,
+   "hn": 1
+  }
+ }
+}

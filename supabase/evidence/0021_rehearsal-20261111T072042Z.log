@@ -1,0 +1,71 @@
+== twin ytfzzsxcxxbejnowmkmk · 0021 rehearsal · 20261111T072042Z · branch chore/yed-349-rehearse-0021 @ 2e5914a (origin/main)
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk  at 2026-11-11T07:20:42Z
+migration sha256:87904740ad71c072…
+
+[0] preflight
+  server_version         17.6 (prod 17.6)
+  six_present            true
+  registry_rows          6
+  extra_lanes            -
+  cs_seed_schedule       true
+  cs_seed_kill_rule      true
+  cs_active              false
+  active_lanes           -
+  has_0020_feed_items    true
+  lane_run_rows          0
+  NOTE 0020 (feed_items) on twin: yes
+
+[1] snapshot A (before)
+  lane_registry.rows     0b6034cb4c04937454dff1bf0412f754
+  lane_registry.count    6
+  lane_registry.acl_rls  {postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres} rls=true
+  lane_run.count         0
+  public.cols            59c1c88eba966c968ad97d198f6c1324
+  public.constraints     526c9d91c926ecbf59a8a209e210317d
+  public.relations       cd85af3028f4655b7db051f7ad6cab45
+  public.policies        d41d8cd98f00b204e9800998ecf8427e
+
+[1b] negative control: VERIFY on the un-migrated twin
+    company_signals_schedule=f  company_signals_kill_rule=f  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  value checks f: True; keep-style checks t: True -> PASS (the checks discriminate)
+
+[2] apply 0021
+  OK  0021_lane_registry_company_signals.sql
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  VERIFY(post-apply) -> PASS (8/8 t)
+  lane_registry.rows after apply: 6e716beac744650a6b802aa7d5231a85
+
+[3] re-apply 0021 (idempotency)
+  OK  0021 second paste
+  snapshot after re-apply == after apply: True
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  VERIFY(post-reapply) -> PASS (8/8 t)
+
+[4] planted faults: VERIFY must flag each one; the fix must restore the applied state
+  [4a] plant: update public.lane_registry set active = true where lane = 'company_signals';
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=f  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  flagged: ['company_signals_still_inactive'] -> company_signals_still_inactive caught
+  [4a] fix:   update public.lane_registry set active = false where lane = 'company_signals';
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  VERIFY(after fix 4a) -> PASS (8/8 t)
+  snapshot after fix == applied state: True
+  [4b] plant: grant select on public.lane_registry to anon;
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=f
+  flagged: ['registry_no_api_grants'] -> registry_no_api_grants caught
+  [4b] fix:   revoke select on public.lane_registry from anon;
+    company_signals_schedule=t  company_signals_kill_rule=t  company_signals_still_inactive=t  company_signals_contract_intact=t  other_lanes_untouched=t  registry_original_six_present=t  registry_rls_still_on=t  registry_no_api_grants=t
+  VERIFY(after fix 4b) -> PASS (8/8 t)
+  snapshot after fix == applied state: True
+
+[5] rollback (the migration's ROLLBACK block, verbatim)
+  OK  ROLLBACK block
+
+[6] snapshot C (after rollback): must EQUAL snapshot A
+  snapshot C == snapshot A: ROLLBACK PROVEN
+
+[7] cleanup: twin left in its pre-0021 state (snapshot A); no re-apply
+
+gates: 1b negative control=PASS  2 apply + verify=PASS  3 re-apply idempotent=PASS  4a fault -> company_signals_still_inactive=PASS  4b fault -> registry_no_api_grants=PASS  5 rollback runs=PASS  6 snapshot C == A=PASS
+
+0021 REHEARSAL: GREEN — safe for Alex to paste 0021 into prod (The-Prod-Brain) outside 07:00–09:00 UTC, then run the VERIFY block there.
+exit=0
