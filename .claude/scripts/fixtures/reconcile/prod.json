@@ -1,0 +1,159 @@
+{
+ "_comment": "FAKE prod rows (reconcile selftest). claim_text carries a fake email to prove it never reaches the output. e3 is stored as the next UTC day (8:30pm New York) to prove the local-day conversion.",
+ "event": [
+  {
+   "id": "e1",
+   "kind": "attended",
+   "title": "AI Builders Week 3: Tool Calling, Custom Skills & MCP",
+   "event_date": "2026-10-01T23:00:00+00:00",
+   "source": "substrate:notion",
+   "notion_page_id": null
+  },
+  {
+   "id": "e2",
+   "kind": "attended",
+   "title": "Elastic{ON} New York — AI Week Fall",
+   "event_date": "2026-10-08T00:00:00+00:00",
+   "source": "substrate:notion",
+   "notion_page_id": null
+  },
+  {
+   "id": "e3",
+   "kind": "attended",
+   "title": "Revolt! 2026 — Day 1 (RevGenius)",
+   "event_date": "2026-10-15T00:30:00+00:00",
+   "source": "substrate:notion",
+   "notion_page_id": null
+  },
+  {
+   "id": "e4",
+   "kind": "attended",
+   "title": "Revolt! 2026 — Day 2 (RevGenius)",
+   "event_date": "2026-10-15T00:00:00+00:00",
+   "source": "substrate:notion",
+   "notion_page_id": null
+  },
+  {
+   "id": "e5",
+   "kind": "attended",
+   "title": "Agents in Production: Durable State",
+   "event_date": "2026-10-12T00:00:00+00:00",
+   "source": "increment_2b_gtm",
+   "notion_page_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+ ],
+ "claim": [
+  {
+   "event_id": "e1",
+   "provenance_tier": "first_hand",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT alice@corp.com"
+  },
+  {
+   "event_id": "e1",
+   "provenance_tier": "first_hand",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT alice@corp.com"
+  },
+  {
+   "event_id": "e1",
+   "provenance_tier": "web_verified",
+   "nid": "cccccccccccccccccccccccccccccccc",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": "e4",
+   "provenance_tier": "first_hand",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": "e4",
+   "provenance_tier": "first_hand",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": "e4",
+   "provenance_tier": "first_hand",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "email_signal",
+   "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "nid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "web_verified",
+   "nid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": null,
+   "provenance_tier": "notion_prior",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT"
+  }
+ ],
+ "documents": [
+  {
+   "id": "d1",
+   "source_type": "research_brief",
+   "event_id": null,
+   "title": "Research brief — Some Future Talk",
+   "doc_date": "2026-11-20T00:00:00+00:00",
+   "nid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  {
+   "id": "d2",
+   "source_type": "post_event_brief",
+   "event_id": "e4",
+   "title": "Post-event brief — Revolt Day 2",
+   "doc_date": "2026-10-15T00:00:00+00:00",
+   "nid": null
+  },
+  {
+   "id": "d3",
+   "source_type": "research_brief",
+   "event_id": null,
+   "title": "Research brief — Revolt! 2026 Demo Day | Day 2",
+   "doc_date": "2026-11-05T00:00:00+00:00",
+   "nid": "dddddddddddddddddddddddddddddddd"
+  },
+  {
+   "id": "d4",
+   "source_type": "research_brief",
+   "event_id": null,
+   "title": "Research brief — Hack Day 1",
+   "doc_date": "2026-10-08T00:00:00+00:00",
+   "nid": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  }
+ ]
+}
