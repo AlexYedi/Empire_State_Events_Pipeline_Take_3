@@ -753,34 +753,53 @@ def selftest() -> bool:
         lambda: guard("documents", {"title": "Brief", "source_type": "research_brief", "sha256": "h",
                                     "external_ref": "notion:3ded3699", "version": 1, "is_current": True}), False)
     # 0022 (YED-384): the two new tables open their columns, never the PII boundary (each free-text column probed).
+    # Each refusal must come from the NAMED layer (its message), so a case can't pass on the wrong one: before the
+    # ALLOW entries existed, every row here was refused by no_allowlist, which proves nothing about the PII scan.
+    def _by(layer: str, fn):
+        def run():
+            try:
+                fn()
+            except PIIViolation as e:
+                if layer in str(e):
+                    raise
+                return                         # refused, but by another layer -> reported as a failure
+        return run
+    EMAIL_L, PHONE_L = "contains an email address", "contains a phone number"
+    COL_L, PII_COL_L = "is not an allowlisted column", "is a contact-PII column"
     add("entity_alias clean row → pass",
         lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Elastic N.V.",
                                        "source": "notion", "confidence": 0.9}), False)
-    add("entity_alias.alias carrying an email → refuse",
-        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "jane.doe@example.com",
-                                       "source": "notion"}), True)
-    add("entity_alias.alias carrying a phone → refuse",
-        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane (555) 123-4567",
-                                       "source": "manual"}), True)
-    add("entity_alias.source carrying an email → refuse",
-        lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
-                                       "source": "ops@acme.example.com"}), True)
-    add("entity_alias.alias_norm set → refuse (generated column, never written)",
-        lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
-                                       "alias_norm": "acme", "source": "manual"}), True)
-    add("entity_alias email column → refuse",
-        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane", "email": "x"}), True)
+    add("entity_alias.alias carrying an email → refuse (email scan)",
+        _by(EMAIL_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1",
+                                                    "alias": "jane.doe@example.com", "source": "notion"})), True)
+    add("entity_alias.alias carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1",
+                                                    "alias": "Jane (555) 123-4567", "source": "manual"})), True)
+    add("entity_alias.source carrying an email → refuse (email scan)",
+        _by(EMAIL_L, lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
+                                                    "source": "ops@acme.example.com"})), True)
+    add("entity_alias.alias_norm set → refuse (not allowlisted: generated column, never written)",
+        _by(COL_L, lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
+                                                  "alias_norm": "acme", "source": "manual"})), True)
+    add("entity_alias email column → refuse (forbidden contact-PII column)",
+        _by(PII_COL_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane",
+                                                      "email": "x"})), True)
     add("sweep_query clean row → pass",
         lambda: guard("sweep_query", {"kind": "room_topic", "theme_id": "t1", "template": "agent evals 28d news",
                                       "seed_event_id": "e1", "iso_week": "2026-W46", "items_returned": 12,
                                       "items_written": 4, "searches": 3, "status": "ran"}), False)
-    add("sweep_query.template carrying an email → refuse",
-        lambda: guard("sweep_query", {"kind": "entity", "template": "contact founder@veris.example.com",
-                                      "iso_week": "2026-W46"}), True)
-    add("sweep_query.template carrying an intl phone → refuse",
-        lambda: guard("sweep_query", {"kind": "entity", "template": "call +44 20 7946 0958", "iso_week": "2026-W46"}), True)
-    add("sweep_query page-text column → refuse (template is the parent's query, never page text)",
-        lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46", "page_text": "..."}), True)
+    add("sweep_query.template carrying an email → refuse (email scan)",
+        _by(EMAIL_L, lambda: guard("sweep_query", {"kind": "entity", "template": "contact founder@veris.example.com",
+                                                   "iso_week": "2026-W46"})), True)
+    add("sweep_query.template carrying an intl phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("sweep_query", {"kind": "entity", "template": "call +44 20 7946 0958",
+                                                   "iso_week": "2026-W46"})), True)
+    add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
+        _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
+                                                 "page_text": "..."})), True)
+    add("_by: a refusal from the WRONG layer does not count (unknown table refused by no_allowlist, not the scan)",
+        lambda: None if _by(EMAIL_L, lambda: guard("not_a_table", {"x": "a@b.co"}))() is None
+        else (_ for _ in ()).throw(PIIViolation("x")), False)
     add("prose scan catches `POST /entity_alias`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /entity_alias` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
     add("prose scan catches `POST /claim`",
