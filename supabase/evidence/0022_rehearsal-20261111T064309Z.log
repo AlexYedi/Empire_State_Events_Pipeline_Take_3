@@ -1,0 +1,142 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk  at 2026-11-11T06:43:09Z
+migration sha256: ca40ea59696a05ca5c603b3dec795d23b8c3af381a8ecf9345bab8f802ade5a7
+
+[-] reset: ROLLBACK block + fixture cleanup
+  OK  rollback (reset; errors tolerated if 0022 was not applied)
+  OK  fixture cleanup
+
+[0] preflight
+  twin server_version=17.6 (prod 17.6)
+  has.claim_usage              true
+  has.claim_relation           true
+  has.lens_of                  true
+  has.lane_registry            true
+  has.lane_run                 true
+  has.topic_cluster            true
+  has.roles                    true
+  has.docs_with_claims         true
+  clean.no_entity_alias        true
+  clean.no_sweep_query         true
+  clean.no_new_funcs           true
+  clean.no_trigger             true
+  clean.no_researched          true
+  clean.no_new_lanes           true
+  clean.no_fixtures            true
+  info.claim_usage_rows        0
+  info.use_count_nonzero       0
+  migration PREFLIGHT block: collision rows=0 baseline={'baseline_claim_usage_rows': '0', 'baseline_use_count_nonzero': '0'}
+  dashboard runbook files in sync with the migration
+
+[0b] fixtures: 3 claim_usage rows (2 claims; one used by 2 documents)
+  OK  fixture insert
+  claim_usage rows now 3 (was 0)
+
+[1] snapshot A (before)
+  lanes: company_signals,corpus_mine,feeds,hiring_pulse,research_frontier,segment_enrichment; use_count sum=0
+
+[1b] negative control — 0022's checks must FAIL before the fix; keep_* must pass
+  34 0022 checks on the un-migrated twin: 34 fail (must be all)
+  5 keep_ checks: 5 pass (must be all)
+
+[2] apply 0022
+  OK  0022_graph_phase1_shared.sql
+
+[3] re-apply 0022 (must be a clean no-op)
+  OK  0022 second paste
+  OK  state identical after second paste
+
+[4] verify
+  info  info_claim_usage_rows = 3
+  info  info_claims_with_use_count = 2
+  info  info_lane_registry_rows = 10
+  info  info_null_lane_claims_under_events = 0
+  verify -> PASS (39/39)
+  dashboard VERIFY: 43 rows, non-info rows not 'true': none
+
+[4b] behaviour (twin only; every case rolled back)
+  PASS researched_kind (as service_role)
+  PASS use_count_trigger (as service_role)
+  PASS check_widenings (as service_role)
+  PASS name_norm_unique (as service_role)
+  PASS entity_alias (as service_role)
+  PASS sweep_query (as service_role)
+  PASS anon_refused (as anon)
+  OK  no state leaked from the behaviour cases
+
+[4c] concurrency — two sessions insert claim_usage for ONE claim
+  pre-review body (no FOR UPDATE): B blocked=True; use_count=1 vs claim_usage rows=2 -> LOST UPDATE reproduced
+  OK  0022 restore (shipped trigger body)
+  shipped body (FOR UPDATE):        B blocked=True; use_count=2 vs claim_usage rows=2 -> EXACT
+
+[4d] normaliser parity — SQL vs Python (substrate.py)
+  1228 distinct strings (twin company/topic/person names + 57 edge cases): 0 divergences
+  PREFLIGHT key expressions vs functions, rows differing: {'company': '0', 'topic': '0', 'person': '0'}
+
+[5] planted faults — verify must catch each, re-apply must restore
+  [5a] plant -> expect use_count_trigger_present
+  verify -> FAIL (38/39) :: failed ['use_count_trigger_present']
+  OK  fault caught by use_count_trigger_present
+  OK  0022 restore after 5a
+  verify -> PASS (39/39)
+  [5b] plant -> expect entity_alias_no_api_grants
+  verify -> FAIL (38/39) :: failed ['entity_alias_no_api_grants']
+  OK  fault caught by entity_alias_no_api_grants
+  OK  0022 restore after 5b
+  verify -> PASS (39/39)
+  [5c] plant -> expect use_count_matches_usage
+  verify -> FAIL (38/39) :: failed ['use_count_matches_usage']
+  OK  fault caught by use_count_matches_usage
+  OK  0022 restore after 5c
+  verify -> PASS (39/39)
+  [5d] plant -> expect company_name_norm_unique
+  verify -> FAIL (38/39) :: failed ['company_name_norm_unique']
+  OK  fault caught by company_name_norm_unique
+  OK  0022 restore after 5d
+  verify -> PASS (39/39)
+  [5e] plant -> expect event_kind_researched
+  verify -> FAIL (38/39) :: failed ['event_kind_researched']
+  OK  fault caught by event_kind_researched
+  OK  0022 restore after 5e
+  verify -> PASS (39/39)
+  [5f] plant -> expect lens_of_researched_null
+  verify -> FAIL (38/39) :: failed ['lens_of_researched_null']
+  OK  fault caught by lens_of_researched_null
+  OK  0022 restore after 5f
+  verify -> PASS (39/39)
+  [5g] plant -> expect entity_alias_pii_check
+  verify -> FAIL (38/39) :: failed ['entity_alias_pii_check']
+  OK  fault caught by entity_alias_pii_check
+  OK  0022 restore after 5g
+  verify -> PASS (39/39)
+  [5h] plant -> expect sweep_query_pii_check
+  verify -> FAIL (38/39) :: failed ['sweep_query_pii_check']
+  OK  fault caught by sweep_query_pii_check
+  OK  0022 restore after 5h
+  verify -> PASS (39/39)
+  [5i] plant -> expect use_count_fn_locks_rows
+  verify -> FAIL (38/39) :: failed ['use_count_fn_locks_rows']
+  OK  fault caught by use_count_fn_locks_rows
+  OK  0022 restore after 5i
+  verify -> PASS (39/39)
+  [5j] plant -> expect norm_fns_exec_service_role_only
+  verify -> FAIL (38/39) :: failed ['norm_fns_exec_service_role_only']
+  OK  fault caught by norm_fns_exec_service_role_only
+  OK  0022 restore after 5j
+  verify -> PASS (39/39)
+  [5k] plant -> expect documents_source_type_vocab
+  verify -> FAIL (38/39) :: failed ['documents_source_type_vocab']
+  OK  fault caught by documents_source_type_vocab
+  OK  0022 restore after 5k
+  verify -> PASS (39/39)
+
+[6] rollback
+  OK  ROLLBACK block
+
+[7] snapshot C must equal snapshot A
+  OK  schema fingerprint (8 parts, lens_of body included) + 13 data values identical — ROLLBACK PROVEN
+
+[8] cleanup fixtures
+  OK  fixture delete
+  OK  claim_usage rows 0 (preflight 0); use_count non-zero rows 0
+
+0022 REHEARSAL: GREEN — safe for Alex to paste 0022 into prod (The-Prod-Brain) after 0021, then run supabase/scripts/0022_verify_dashboard.sql there.

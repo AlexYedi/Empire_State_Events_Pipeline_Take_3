@@ -147,6 +147,30 @@ def norm_text(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip().lower())
 
 
+# Migration 0022 (YED-384): Python twins of public.norm_name_v1 (companies) and public.norm_plain_v1
+# (topics, persons), the keys behind the name_norm indexes. Same semantics, byte for byte:
+# rehearse_0022.py runs every twin name plus an edge corpus through both and fails on any divergence.
+# Postgres \m / \M (word start / end, word = alnum or _) are the lookarounds below; `$` is \Z (Python's
+# `$` would also match before a trailing newline). Change one side only together with a _v2 function.
+_LEGAL_SUFFIX_RE = re.compile(r"(?<!\w)(?:inc|llc|ltd|corp|corporation|co|gmbh|plc|sa|ag|limited|incorporated)"
+                              r"(?!\w)[^a-z0-9]*\Z")
+_NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
+
+
+def norm_plain(s: str | None) -> str | None:
+    """= public.norm_plain_v1: lowercase, non-[a-z0-9] runs -> one space, trim; empty -> None."""
+    return _NON_ALNUM_RE.sub(" ", (s or "").lower()).strip(" ") or None
+
+
+def norm_company(s: str | None) -> str | None:
+    """= public.norm_name_v1: norm_plain after stripping ONE legal suffix anchored to the end
+    ('Acme, Inc.' -> 'acme'; 'Co-Marketing' and 'AG-UI' keep their leading token)."""
+    return _NON_ALNUM_RE.sub(" ", _LEGAL_SUFFIX_RE.sub("", (s or "").lower(), count=1)).strip(" ") or None
+
+
+NAME_KEY = {"company": norm_company, "topic": norm_plain, "person": norm_plain}
+
+
 def sha(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
@@ -687,14 +711,23 @@ class Graph:
         self.dry, self.stats, self._n = dry_run, stats, 0
         self._made: dict[tuple[str, str], str] = {}   # (table, normalized name) -> id created THIS run
 
+    @staticmethod
+    def _key(table: str, name: str) -> str:
+        """Per-run cache key: the 0022 index key where one applies (person callers pass a composed
+        name|company key, already normalised), else the old case/space key."""
+        fn = NAME_KEY.get(table) if table != "person" else None
+        return (fn(name) if fn else None) or norm_text(name)
+
     def _cached(self, table: str, name: str) -> str | None:
-        hit = self._made.get((table, norm_text(name)))
+        hit = self._made.get((table, self._key(table, name)))
         if hit:
             self.stats.bump(table, "matched")
         return hit
 
-    def _remember(self, table: str, name: str, rid: str) -> str:
-        self._made[(table, norm_text(name))] = rid
+    def _remember(self, table: str, name: str, rid: str | None) -> str | None:
+        if rid is None:                           # an unresolved conflict: nothing to remember
+            return None
+        self._made[(table, self._key(table, name))] = rid
         self.__dict__.setdefault("_made_names", []).append((table, name))   # display casing, for review output
         return rid
 
@@ -747,6 +780,46 @@ class Graph:
         if st not in (200, 204):
             raise SystemExit(f"PATCH /{table}?{flt} -> {st}: {str(body)[:400]}")
 
+    def _post_try(self, table: str, row: dict) -> tuple[int, object]:
+        """One guarded POST that RETURNS the status instead of exiting (the conflict path needs it)."""
+        guard(table, row)
+        self._invalidate(table)
+        return req("POST", f"/{table}", [row], prefer="return=representation")
+
+    def create_entity(self, table: str, row: dict) -> str | None:
+        """Create one company/topic/person. A unique-name conflict (409 / 23505: 0022's name_norm indexes, or
+        the older lower(name) ones) means another writer, or a spelling the lookup missed, got there first:
+        re-resolve by the index key and REUSE that row. Never exits mid-run on a conflict; an unresolvable
+        one returns None (counted + printed), and every caller skips a None id."""
+        if self.dry:
+            return self.post(table, row)[0]["id"]
+        st, body = self._post_try(table, row)
+        if st in (200, 201):
+            return (body or [{}])[0].get("id")
+        if st == 409 or "23505" in str(body):
+            hits = self.live_by_name(table, row["name"]) or self._scan_by_key(table, row["name"])
+            if len(hits) == 1:
+                self.stats.bump(table, "conflict_reused")
+                return hits[0]["id"]
+            self.stats.bump(table, "conflict_unresolved")
+            sys.stderr.write(f"  ⚠️  {table} '{row['name']}': create hit a unique-name conflict and "
+                             f"{len(hits)} row(s) share its key — skipped, nothing written. "
+                             f"Resolve by hand (rename the loser), then re-run.\n")
+            return None
+        raise SystemExit(f"POST /{table} -> {st}: {str(body)[:400]}")
+
+    def _scan_by_key(self, table: str, name: str) -> list[dict]:
+        """Full-table fallback for the conflict path (tables are hundreds of rows): every row whose index
+        key equals `name`'s, followed through tombstones and de-duplicated."""
+        fn = NAME_KEY[table]
+        key = fn(name)
+        out: dict[str, dict] = {}
+        for r in self.get(f"/{table}?select=*&limit=10000"):
+            if key is not None and fn(r.get("name")) == key:
+                r = self.follow(table, r)
+                out.setdefault(r["id"], r)
+        return list(out.values())
+
     # -- lookups -------------------------------------------------------------------------------
     def follow(self, table: str, row: dict | None) -> dict | None:
         """Spec item 3 (YED-47): a row soft-merged away (metadata.merged_into) resolves to its live target.
@@ -772,12 +845,22 @@ class Graph:
         return self.follow(table, rows[0]) if rows else None
 
     def live_by_name(self, table: str, name: str) -> list[dict]:
-        """Every row whose name equals `name` (case/space-insensitive), each followed through its tombstone
-        and de-duplicated by id — a tombstone and its target count once."""
-        rows = self.get(f"/{table}?name=ilike.{q(name.replace('*', ''))}&select=*&limit=5")
+        """Every row whose name has the same key as `name`, each followed through its tombstone and
+        de-duplicated by id — a tombstone and its target count once. For company / topic / person the key is
+        0022's index key (norm_company / norm_plain), so a lookup is never narrower than the unique index
+        and a create can't trip it on a spelling the lookup missed. The ilike pattern is a superset: every
+        row with key 'a b' contains 'a' then 'b' in its name."""
+        fn = NAME_KEY.get(table)
+        key = fn(name) if fn else None
+        if key is None:                              # no index key (e.g. punctuation-only): exact path
+            rows = self.get(f"/{table}?name=ilike.{q(name.replace('*', ''))}&select=*&limit=5")
+            same = lambda r: norm_text(r["name"]) == norm_text(name)   # noqa: E731
+        else:
+            rows = self.get(f"/{table}?name=ilike.{q('*' + '*'.join(key.split(' ')) + '*')}&select=*&limit=1000")
+            same = lambda r: fn(r["name"]) == key                       # noqa: E731
         out: dict[str, dict] = {}
         for r in rows:
-            if norm_text(r["name"]) == norm_text(name):
+            if same(r):
                 r = self.follow(table, r)
                 out.setdefault(r["id"], r)
         return list(out.values())
@@ -826,7 +909,7 @@ class Graph:
             return hit
         self.stats.bump("company", "created")
         return self._remember("company", e["name"],
-                              self.post("company", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
+                              self.create_entity("company", {**{k: v for k, v in fields.items() if v}, "source": SOURCE}))
 
     def ensure_topic(self, e: dict) -> str | None:
         if not e.get("name"):                        # id-only topic (name not yet pulled from Notion)
@@ -847,7 +930,7 @@ class Graph:
             return hit
         self.stats.bump("topic", "created")
         return self._remember("topic", e["name"],
-                              self.post("topic", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
+                              self.create_entity("topic", {**{k: v for k, v in fields.items() if v}, "source": SOURCE}))
 
     def note_ambiguous(self, table: str, name: str, rivals: list[dict], why: str) -> None:
         """A same-name row exists but was not matched. Creating a second row may be right (two real people)
@@ -895,12 +978,12 @@ class Graph:
         # The per-run cache is keyed by name AND company for persons. Keyed by name alone it handed the
         # second 'Angie Jones' in one run the first one's id right after note_ambiguous had said a NEW row
         # was being created — caught by the YED-47 offline selftest, 2026-09-27.
-        ckey = f"{e['name']}|{company_id or ''}"
+        ckey = f"{norm_plain(e['name']) or norm_text(e['name'])}|{company_id or ''}"
         if (hit := self._cached("person", ckey)):
             return hit
         self.stats.bump("person", "created")
         return self._remember("person", ckey,
-                              self.post("person", {**{k: v for k, v in fields.items() if v}, "source": SOURCE})[0]["id"])
+                              self.create_entity("person", {**{k: v for k, v in fields.items() if v}, "source": SOURCE}))
 
     def ensure_entity(self, e: dict) -> tuple[str, str]:
         t = e["type"]
@@ -1842,6 +1925,19 @@ class _FakeGraph(Graph):
             out.append(dict(r))
         return out
 
+    # 0022's unique name indexes (plus the older lower(name) ones), as the DB enforces them on create.
+    UNIQUE_KEYS = {"company": norm_company, "topic": norm_plain}
+
+    def _post_try(self, table, row):
+        guard(table, row)
+        fn = self.UNIQUE_KEYS.get(table)
+        if fn:
+            k, low = fn(row.get("name")), (row.get("name") or "").lower()
+            for o in self.t[table]:
+                if (k is not None and fn(o.get("name")) == k) or (o.get("name") or "").lower() == low:
+                    return 409, '{"code":"23505","message":"duplicate key value violates unique constraint"}'
+        return 201, self.post(table, row)
+
     def _patch_try(self, table, flt, row):
         guard(table, row, op="update")
         hits = self._select(f"/{table}?{flt}")
@@ -1857,6 +1953,71 @@ class _FakeGraph(Graph):
 
     def patch(self, table, flt, row):
         self._patch_try(table, flt, row)
+
+
+def _norm_selftest(ok) -> None:
+    """0022 (YED-384): the Python index keys + resolve-before-create + reuse-on-conflict, offline.
+    SQL parity of norm_company / norm_plain is proven on the twin by rehearse_0022.py, not here."""
+    ok("norm_company: one legal suffix stripped, anchored to the end",
+       norm_company("Acme, Inc.") == "acme" and norm_company("LangChain Inc") == "langchain"
+       and norm_company("Foo Co.") == "foo" and norm_company("Acme Inc Ltd") == "acme inc"
+       and norm_company("Acme Inc\n") == "acme" and norm_company("Foo (Co)") == "foo")
+    ok("norm_company: a suffix-word at the START or MIDDLE is kept (review: Co-Marketing, AG-UI)",
+       norm_company("Co-Marketing Labs") == "co marketing labs" and norm_company("AG-UI") == "ag ui"
+       and norm_company("SA Power Networks") == "sa power networks" and norm_company("Incident.io") == "incident io")
+    ok("norm_company: whole words only ('Disco' keeps its 'co', 'Inca' its 'inc')",
+       norm_company("Disco") == "disco" and norm_company("Inca") == "inca" and norm_company("acme_co") == "acme co")
+    ok("norm_company: empty after normalising -> None (the index allows many NULLs)",
+       norm_company("Inc.") is None and norm_company("") is None and norm_company(None) is None)
+    ok("norm_plain: no suffix strip, punctuation/case folded",
+       norm_plain("Agents Inc") == "agents inc" and norm_plain("AI-Agents") == "ai agents"
+       and norm_plain("  Zed (AI) ") == "zed ai" and norm_plain("!!!") is None)
+    fg = _FakeGraph()
+    acme = fg.post("company", {"name": "Acme, Inc.", "website": "https://acme.example"})[0]["id"]
+    ok("resolve: 'Acme' matches the existing 'Acme, Inc.' by the index key (no create, no 409)",
+       fg.ensure_company({"name": "Acme"}) == acme and len(fg.t["company"]) == 1
+       and fg.stats.c["company"].get("matched") == 1)
+    cm = fg.ensure_company({"name": "Co-Marketing Labs"})
+    ok("resolve: 'Co-Marketing Labs' is NOT folded into an existing 'Marketing Labs'",
+       (lambda ml: cm != ml)(fg.post("company", {"name": "Marketing Labs"})[0]["id"]) and len(fg.t["company"]) == 3)
+    agents = fg.post("topic", {"name": "AI Agents"})[0]["id"]
+    ok("resolve: topic 'ai-agents' matches 'AI Agents'; 'AI Agents Inc' is a different topic",
+       fg.ensure_topic({"name": "ai-agents"}) == agents and fg.ensure_topic({"name": "AI Agents Inc"}) != agents)
+    jd = fg.post("person", {"name": "Jane Doe", "company_id": acme})[0]["id"]
+    ok("resolve: person 'Jane-Doe' at the same company matches 'Jane Doe'",
+       fg.ensure_person({"name": "Jane-Doe", "company": "Acme"}) == jd and len(fg.t["person"]) == 1)
+    # A race: the lookup misses (another writer's row lands between lookup and create) -> 409 -> reuse.
+    fg2 = _FakeGraph()
+    real = fg2.live_by_name
+    calls = {"n": 0}
+
+    def racy(table, name):
+        calls["n"] += 1
+        if calls["n"] == 1:                       # the pre-create lookup sees nothing...
+            fg2.t["company"].append({"id": "00000000-0000-4000-8000-00000000beef", "name": "Veris AI, Inc."})
+            return []                             # ...and the other writer's row lands right after
+        return real(table, name)
+    fg2.live_by_name = racy
+    vid = fg2.ensure_company({"name": "Veris AI"})
+    ok("conflict: a 409 on create re-resolves and REUSES the winner (no SystemExit, no second row)",
+       vid == "00000000-0000-4000-8000-00000000beef" and len(fg2.t["company"]) == 1
+       and fg2.stats.c["company"].get("conflict_reused") == 1)
+    fg3 = _FakeGraph()
+    fg3._post_try = lambda table, row: (409, '{"code":"23505"}')     # conflict, but nothing shares the key
+    import io
+    err, sys.stderr = sys.stderr, io.StringIO()
+    try:
+        out = fg3.ensure_company({"name": "Ghost Co"})
+        ev = fg3.post("event", {"title": "E", "kind": "attended"})[0]["id"]
+        t, iid = fg3.ensure_entity({"type": "company", "name": "Ghost Co"})
+    finally:
+        sys.stderr = err
+    ok("conflict: unresolvable -> None + counted, the run continues (callers skip a None id)",
+       out is None and iid is None and ev and fg3.stats.c["company"].get("conflict_unresolved") == 2)
+    d = _dry_fake(fg)
+    d._post_try = lambda table, row: (_ for _ in ()).throw(AssertionError("dry run reached the network path"))
+    ok("dry-run: create_entity never reaches _post_try (the network path)",   # the fake's post() ignores dry
+       bool(d.ensure_company({"name": "Brand New Co"})))
 
 
 def _identity_selftest(ok) -> None:
@@ -2505,6 +2666,7 @@ def selftest() -> bool:
 
     # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
     _identity_selftest(ok)
+    _norm_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
     _linking_selftest(ok)
@@ -2633,6 +2795,8 @@ def main(argv: list[str]) -> int:
         did = g.ensure_document(m["document"], event_id=eid)
         for e in m.get("entities", []):
             t, iid = g.ensure_entity(e)
+            if iid is None:                          # unresolved create conflict (reported) or deferred
+                continue
             g.stats.bump("document_entity", "linked")
             g.post("document_entity", {"document_id": did, "entity_type": t, "entity_id": iid,
                                        "role": e.get("role", "about")},
