@@ -6,9 +6,16 @@ Deterministic, no model. Four seed sources, each a `kind` of the planned `sweep_
   velocity     mi.theme_week, per theme PER LENS (attended, research; never summed, ADR-13 rule 1):
                obs = facts in the last 4 ISO weeks. Permutation test per theme-lens: shuffle the
                12 week labels 200x (seeded); p = share of shuffles whose last-4 sum reaches obs.
-               Seeded when p < 0.05 and obs >= 5; top 5 by p, then z. (The draft's Poisson band
-               fired on 13/31 themes against a shuffle null of 13.1: no information on bursty
-               counts.) The aggregate null re-runs the same test on shuffled series; stderr.
+               Seeded when p < 0.05 and obs >= 5 (label `rising`), or when the prior 8 weeks hold
+               0 facts and obs >= 5 (label `new`). Order: new by obs, then rising by p, then z;
+               top 5. Each theme-lens draws from its own RNG (sha256 of seed + key), so adding a
+               theme never moves another theme's p. (The draft's Poisson band fired on 13/31
+               themes against a shuffle null of 13.1: no information on bursty counts.) The
+               aggregate null re-runs the same rules on shuffled series; stderr.
+               Resolution limit: 12 weeks choose 4 recent = 495 arrangements, and 200 shuffles
+               put the floor on p at 1/201 ~ 0.005. Facts in only 1 or 2 distinct weeks can never
+               reach p < 0.05 (all-recent odds 4/12 and 6/66), so a theme needs facts in >= 3 weeks,
+               clustered recently, to be `rising`; a brand-new theme is why `new` exists.
   gap          themes with attended or research facts >= 3 over 12 weeks and market facts < 3.
   event        pre-event triage manifests (`.claude/.state/research/*.manifest.json`: event title,
                date, topic and company entities; person entities are skipped at load) dated
@@ -20,7 +27,7 @@ Deterministic, no model. Four seed sources, each a `kind` of the planned `sweep_
 
 Output: a JSON list of {theme, theme_id, kind, query, seed_ref, window}, matching the planned
 sweep_query columns (kind values: velocity|gap|event|entity|room_topic|room_entity|open_question|
-room_vs_market; this script emits the first four sources). Stdout, or --out FILE. Summary and the
+room_vs_market; this script emits EMITTED_KINDS). Stdout, or --out FILE. Summary and the
 null report go to stderr so stdout stays parseable.
 
 Reads go through spine_client.req with GET only (mi_slice is GET-callable, 0016); `_get` refuses any
@@ -33,6 +40,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -47,7 +55,8 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 FIXTURES = os.path.join(HERE, "fixtures", "sweep")
 sys.path.insert(0, HERE)
 
-QUERY_KINDS = ("velocity", "gap", "event", "entity", "room_topic", "room_entity", "open_question", "room_vs_market")
+EMITTED_KINDS = ("velocity", "gap", "event", "room_topic", "room_entity")   # sweep_query also plans entity,
+                                                                           # open_question, room_vs_market
 WEEKS = 12            # 4 recent + 8 prior
 RECENT = 4
 OBS_FLOOR = 5         # a 1 -> 4 jump does not count
@@ -116,6 +125,22 @@ def perm_dist(counts: list[int], rng: random.Random, n: int = SHUFFLES) -> list[
     return out
 
 
+def key_rng(seed: int, key: tuple[str, str], salt: str) -> random.Random:
+    """An RNG per theme-lens (and per use), so one theme's shuffles never depend on another's."""
+    return random.Random(int(hashlib.sha256(f"{seed}|{key[0]}|{key[1]}|{salt}".encode()).hexdigest()[:16], 16))
+
+
+def label(counts: list[int], dist: list[int]) -> tuple[str | None, float]:
+    """(`new` | `rising` | None, p) for one series against its own permutation null."""
+    obs = sum(counts[-RECENT:])
+    p = p_value(obs, dist)
+    if obs < OBS_FLOOR:
+        return None, p
+    if sum(counts[:-RECENT]) == 0:
+        return "new", p
+    return ("rising" if p < ALPHA else None), p
+
+
 def p_value(obs: int, dist: list[int]) -> float:
     """One-sided permutation p, (1 + #{null >= obs}) / (1 + n): never 0 (Phipson & Smyth 2010)."""
     return (1 + sum(1 for x in dist if x >= obs)) / (1 + len(dist))
@@ -133,33 +158,39 @@ def velocity_queries(rows: list[dict], today: date, seed: int = 7) -> tuple[list
     weeks = iso_weeks(today)
     ser = series(rows, weeks)
     names = theme_names(rows)
-    rng = random.Random(seed)
     keys = sorted(k for k in ser if k[1] in VELOCITY_LENSES)
-    dists = {k: perm_dist(ser[k], rng) for k in keys}
+    dists = {k: perm_dist(ser[k], key_rng(seed, k, "dist")) for k in keys}
+
+    def rank(lab, obs, p, z):          # new first (by obs), then rising (by p, then z)
+        return (0, -obs, 0.0) if lab == "new" else (1, p, -z)
+
     best: dict[str, tuple] = {}
     for k in keys:
         tid, lens = k
+        lab, p = label(ser[k], dists[k])
+        if lab is None:
+            continue
         obs, rate, z = stats(ser[k])
-        p = p_value(obs, dists[k])
-        if p < ALPHA and obs >= OBS_FLOOR and (tid not in best or (p, -z) < (best[tid][3], -best[tid][4])):
-            best[tid] = (lens, obs, rate, p, z)
-    ranked = sorted(best.items(), key=lambda kv: (kv[1][3], -kv[1][4]))
+        if tid not in best or rank(lab, obs, p, z) < rank(best[tid][0], best[tid][2], best[tid][4], best[tid][5]):
+            best[tid] = (lab, lens, obs, rate, p, z)
+    ranked = sorted(best.items(), key=lambda kv: rank(kv[1][0], kv[1][2], kv[1][4], kv[1][5]))
     out = [{"theme": names.get(tid), "theme_id": tid, "kind": "velocity",
             "query": f"{names.get(tid)}: what happened in the last 7 days (funding, launches, releases, papers, exec moves)",
-            "seed_ref": f"mi.theme_week:{tid}:{lens} obs={obs} prior_rate={rate:.1f} p={p:.3f} z={z:.1f}",
-            "window": window(today, 7)} for tid, (lens, obs, rate, p, z) in ranked[:VELOCITY_TOP]]
+            "seed_ref": f"mi.theme_week:{tid}:{lens} {lab} obs={obs} prior_rate={rate:.1f} p={p:.3f} z={z:.1f}",
+            "window": window(today, 7)} for tid, (lab, lens, obs, rate, p, z) in ranked[:VELOCITY_TOP]]
+    shufflers = {k: key_rng(seed, k, "null") for k in keys}
     null = []
     for _ in range(SHUFFLES):
         hit = set()
         for k in keys:
             c = ser[k][:]
-            rng.shuffle(c)
-            o = sum(c[-RECENT:])
-            if o >= OBS_FLOOR and p_value(o, dists[k]) < ALPHA:
+            shufflers[k].shuffle(c)
+            if label(c, dists[k])[0]:
                 hit.add(k[0])
         null.append(len(hit))
     null.sort()
-    report = {"rising_observed": len(best), "themes": len({k[0] for k in ser}),
+    report = {"rising_observed": sum(1 for v in best.values() if v[0] == "rising"),
+              "new_observed": sum(1 for v in best.values() if v[0] == "new"), "themes": len({k[0] for k in ser}),
               "null": {"shuffles": SHUFFLES, "mean": round(sum(null) / SHUFFLES, 2),
                        "p95": null[int(0.95 * (SHUFFLES - 1))], "max": null[-1]}}
     return out, report
@@ -366,8 +397,8 @@ def build(theme_rows, room, triage, folders, triage_themes, today) -> tuple[list
     seeds = (vel + event_queries(triage, folders, today, names, triage_themes)
              + room_queries(events, links, topics, companies, topic_theme, names, today)
              + gap_queries(theme_rows, today))
-    assert all(s["kind"] in QUERY_KINDS for s in seeds)
-    report["by_kind"] = {k: sum(1 for s in seeds if s["kind"] == k) for k in QUERY_KINDS if any(s["kind"] == k for s in seeds)}
+    assert all(s["kind"] in EMITTED_KINDS for s in seeds)
+    report["by_kind"] = {k: sum(1 for s in seeds if s["kind"] == k) for k in EMITTED_KINDS if any(s["kind"] == k for s in seeds)}
     report["room_events"] = len(events)
     return seeds, report
 
@@ -401,8 +432,17 @@ def selftest() -> bool:
     burst = series(rows, weeks)[("t-burst", "research")]
     check("velocity: bursty-but-flat theme stays quiet (the Poisson band fires on it, the permutation does not)",
           poisson_rising(burst) and "t-burst" not in vids)
-    check("velocity: real step-up seeds with p < 0.05", any(q["theme_id"] == "t-rise" and "p=0.00" in q["seed_ref"]
+    check("velocity: real step-up seeds with p < 0.05", any(q["theme_id"] == "t-rise" and " rising " in q["seed_ref"]
+                                                              and float(re.search(r"p=([\d.]+)", q["seed_ref"]).group(1)) < ALPHA
                                                               for q in vel))
+    check("velocity: new theme (0 prior facts, obs 6) seeds, labelled new",
+          any(q["theme_id"] == "t-new" and " new obs=6" in q["seed_ref"] for q in vel))
+    check("velocity: new-theme counter-case (0 prior, obs 4 < floor) stays quiet", "t-small" not in vids)
+    extra = rows + [{"theme_id": "t-zzz", "theme": "Unrelated", "lens": "research", "iso_week": f"2026-W{w}", "facts": w % 3}
+                    for w in range(35, 47)]
+    ref = lambda qs: [q["seed_ref"] for q in qs if q["theme_id"] == "t-rise"]
+    check("velocity: adding a theme never moves another theme's p (one RNG per theme-lens)",
+          ref(vel) and ref(vel) == ref(velocity_queries(extra, today)[0]))
     check("velocity: null band reported, deterministic under the seed",
           rep["null"] == velocity_queries(rows, today)[1]["null"] and rep["null"]["shuffles"] == SHUFFLES)
     gids = [q["theme_id"] for q in gap_queries(rows, today)]
@@ -483,8 +523,8 @@ def main(argv=None) -> int:
     else:
         print(text)
     n = report["null"]
-    print(f"sweep_seed: {len(seeds)} queries {json.dumps(report['by_kind'])} · rising {report['rising_observed']} of "
-          f"{report['themes']} themes vs shuffle null mean {n['mean']} / p95 {n['p95']} ({n['shuffles']}x) · "
+    print(f"sweep_seed: {len(seeds)} queries {json.dumps(report['by_kind'])} · rising {report['rising_observed']} + new "
+          f"{report['new_observed']} of {report['themes']} themes vs shuffle null mean {n['mean']} / p95 {n['p95']} ({n['shuffles']}x) · "
           f"room events (last {ROOM_DAYS}d) {report['room_events']}", file=sys.stderr)
     return 0
 

@@ -1,5 +1,5 @@
 {
- "_note": "Fake data only. today = 2026-11-11 (ISO W46); window W35..W46. t-rise = real step-up (1/wk then 3/wk); t-burst = bursty but flat (one burst before, one after).",
+ "_note": "Fake data only. today = 2026-11-11 (ISO W46); window W35..W46. t-rise = real step-up (1/wk then 3/wk); t-burst = bursty but flat (one burst before, one after). t-new = 0 prior facts, 6 recent (seeds as new); t-small = 0 prior, 4 recent (under the floor).",
  "today": "2026-11-11",
  "theme_week": [
   {
@@ -272,6 +272,18 @@
    "lens": "research",
    "iso_week": "2026-W45",
    "facts": 12,
+   "floor_flag": "ok",
+   "general_facts": 0,
+   "theme_resolved": "asof",
+   "distinct_sources": 1,
+   "distinct_companies": 0
+  },
+  {
+   "theme_id": "t-new",
+   "theme": "Brand New Theme",
+   "lens": "research",
+   "iso_week": "2026-W45",
+   "facts": 6,
    "floor_flag": "ok",
    "general_facts": 0,
    "theme_resolved": "asof",

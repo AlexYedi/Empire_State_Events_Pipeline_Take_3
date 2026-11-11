@@ -1,7 +1,7 @@
 ---
 name: theme-sweeper
 description: Read-only market sweep for ONE theme over ONE date window (discovery loop, ADR-14 §2.2, YED-384). Given a theme, a window, seed queries from sweep_seed.py, the graph's known entity names and an item cap, it searches news, company blogs and changelogs, Hacker News, arXiv/Hugging Face and curated newsletter or roundup archives for dated market events, fetches primary sources, and returns ONLY a strict JSON manifest. Use when the parent runs the theme sweep. The parent validates the manifest with .claude/scripts/sweep_manifest.py and does every write; this agent never writes.
-tools: WebSearch, WebFetch, Read
+tools: WebSearch, WebFetch
 model: sonnet
 ---
 
