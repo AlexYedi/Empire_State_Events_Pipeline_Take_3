@@ -1,7 +1,7 @@
 ---
 name: company-researcher
 description: Researches companies surfaced from an event invite. Produces structured per-company output led by a Value Frame (value prop / for whom / problem / how / unique bet / our read), then recent news, funding, industry classification, relevance to the event, and headwinds. Use when invoked from /event-deep-research (parent thread) with a list of Company entities and their triage paths (NEW / REFRESH-light / REFRESH-full / FRAME-ONLY / SKIP). Returns one company block per entity in the schema defined by event-research SKILL.md Step 2c.
-tools: WebSearch, WebFetch, Read, mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread
+tools: WebSearch, WebFetch, mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread
 model: sonnet
 ---
 

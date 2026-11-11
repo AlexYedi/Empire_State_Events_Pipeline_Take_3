@@ -1,0 +1,148 @@
+# Lane 2 company signals (YED-349) — the weekly free-source fetch of the "$0 stack + Clay" lane.
+# Decision: Alex, 2026-11-08 (YED-349), on docs/bakeoff/2026-11-05-lane2/README.md (run 1 + 1b).
+# Producer: .claude/scripts/company_signals.py fetch — GDELT (one batched query per week, chunked,
+# 429 backoff) + HN Algolia (>= 5 points) + SEC EDGAR 8-Ks for watchlist entries with a cik (only
+# when EDGAR_USER_AGENT is set — sec.gov needs a declared contact, YED-337). Company RSS is lane 4
+# (feeds.py); the Clay leg runs in the Monday session every second week (clay-ingest), not here.
+#
+# REQUIRED / OPTIONAL CONFIGURATION (set by Alex; none is echoed):
+#   COMPANY_SIGNALS_WATCHLIST       repo SECRET, JSON array [{"name", "domain", "q", "cik"}] — the
+#                                   bake-off's companies.json shape (extra keys such as gh ignored).
+#                                   Empty → the lane is SKIPPED with a ::warning:: (green run).
+#   EDGAR_USER_AGENT                repo SECRET, optional — the sec.gov declared contact (YED-337).
+#                                   Unset → EDGAR is skipped with a notice.
+#   SUPABASE_API_KEY                repo SECRET (existing) — the write step only.
+#   COMPANY_SIGNALS_WRITE_ENABLED   repo VARIABLE — 'true' enables the write step; anything else = dry-run.
+#
+# SECRET HYGIENE (ats-pulse.yml rules — logs and artifacts on a public repo are public):
+#   * The watchlist is materialised to $RUNNER_TEMP (outside the checkout), never echoed. Everything
+#     derived from it names companies: the run file and the producer's stderr stay on the runner and
+#     the always() cleanup deletes them. NO artifact is uploaded.
+#   * stdout carries counts and source tags only (company_signals.summary_line); stderr goes to a
+#     file that is never printed (a traceback could carry a batched GDELT URL). A malformed
+#     watchlist fails with an index + field message only, never a value.
+#   * DRY-RUN by default: nothing is written unless COMPANY_SIGNALS_WRITE_ENABLED is 'true'. Even
+#     then the producer holds the feed_items write until spine_client.ALLOW carries feed_items
+#     (PR #272) AND migration 0020 is applied; the lane_run ledger row (lane company_signals) is
+#     written either way, status 'skipped' when held.
+#   * SUPABASE_API_KEY is scoped to the write step only — the fetch step never holds it.
+# NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
+
+name: YED-349 lane 2 company signals (weekly)
+
+on:
+  schedule:
+    - cron: "0 5 * * 0"   # Sundays 05:00 UTC — an hour before ats-pulse, clear of the 07:00–09:00 nightly window
+  workflow_dispatch: {}
+
+concurrency:
+  group: company-signals
+  cancel-in-progress: false
+
+jobs:
+  signals:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read        # checkout only; issues:write is for the failure-alert step
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Selftest the producer (offline)
+        run: |
+          python3 .claude/scripts/company_signals.py --selftest
+
+      - name: Materialize the watchlist from the repo secret (never echoed or logged)
+        id: watchlist
+        env:
+          WATCHLIST: ${{ secrets.COMPANY_SIGNALS_WATCHLIST }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WATCHLIST" ]; then
+            # lane 4's pattern: SKIP green with a warning until the secret is configured, so a
+            # cleared secret leaves a trace in the run summary instead of a weekly red run.
+            echo "::warning::COMPANY_SIGNALS_WATCHLIST is empty — the lane is SKIPPED (green). Set it per the workflow header."
+            echo "has_watchlist=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/cs-out"
+          printf '%s' "$WATCHLIST" > "$RUNNER_TEMP/cs-out/watchlist.json"
+          echo "has_watchlist=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch GDELT + HN (+ EDGAR) into a local run file (no key held; counts-only log)
+        id: fetch
+        if: steps.watchlist.outputs.has_watchlist == 'true'
+        env:
+          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
+        run: |
+          echo "run_start=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          set +e
+          python3 .claude/scripts/company_signals.py fetch \
+            --watchlist "$RUNNER_TEMP/cs-out/watchlist.json" --days 7 \
+            --out "$RUNNER_TEMP/cs-out/run.json" 2>"$RUNNER_TEMP/cs-out/fetch.err"
+          RC=$?
+          set -e
+          if [ $RC -eq 3 ]; then
+            # exit 3 = malformed watchlist; its message is index + field only, never a value
+            grep '^company_signals: input refused:' "$RUNNER_TEMP/cs-out/fetch.err" || true
+          fi
+          if [ $RC -ne 0 ]; then
+            # never cat the err file: a traceback can carry a batched GDELT URL (company names)
+            echo "::error::company_signals fetch failed (exit $RC); detail stays in a file the cleanup deletes"
+            exit $RC
+          fi
+
+      - name: Write feed_items + the lane_run ledger row (only when COMPANY_SIGNALS_WRITE_ENABLED is 'true')
+        if: steps.watchlist.outputs.has_watchlist == 'true' && vars.COMPANY_SIGNALS_WRITE_ENABLED == 'true'
+        env:
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+          RUN_START: ${{ steps.fetch.outputs.run_start }}
+        run: |
+          if [ -z "$SUPABASE_API_KEY" ]; then
+            echo "::warning::SUPABASE_API_KEY not configured — nothing written (the run file is deleted by cleanup)"
+            exit 0
+          fi
+          set +e
+          python3 .claude/scripts/company_signals.py write "$RUNNER_TEMP/cs-out/run.json" \
+            --started-at "$RUN_START" 2>"$RUNNER_TEMP/cs-out/write.err"
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            echo "::error::company_signals write failed (exit $RC); detail stays in a file the cleanup deletes"
+            exit $RC
+          fi
+
+      - name: Dry-run notice
+        if: steps.watchlist.outputs.has_watchlist == 'true' && vars.COMPANY_SIGNALS_WRITE_ENABLED != 'true'
+        run: |
+          echo "dry-run: repo variable COMPANY_SIGNALS_WRITE_ENABLED is not 'true' — nothing written, no lane_run row"
+
+      - name: Cleanup — delete every file derived from the watchlist
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/cs-out"
+          ls "$RUNNER_TEMP/cs-out" 2>/dev/null && exit 1 || echo "watchlist-derived files removed"
+
+      # One-open-issue alerting (ats-pulse pattern): a persistent failure comments on the open issue.
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --state open --search "YED-349 company signals FAILED in:title" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "Still failing on $TODAY. Run: $RUN_URL" \
+              || echo "issue-comment failed; check the Actions run directly"
+          else
+            gh issue create \
+              --title "YED-349 company signals FAILED (since $TODAY)" \
+              --body "The weekly lane-2 company-signals job failed — selftest, malformed watchlist, fetch (every source down), or write. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              || echo "issue-create failed; check the Actions run directly"
+          fi
