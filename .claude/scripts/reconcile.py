@@ -18,6 +18,7 @@ Gaps per row (the work queue the nightly job will drain later):
   post_event_not_staged     a local post-event brief, 0 first-hand claims
   transcript_not_staged     a local transcript, 0 first-hand claims
   attended_no_local_source  an attended row with 0 first-hand claims and nothing on disk to stage from (needs Notion)
+  ambiguous                 an item that scored equally against 2+ rows; never merged, kept as its own row for Alex
 
 Privacy (ADR-9, invariant 4): output carries event titles, dates and counts only. Claim text is never selected
 (the claim GET names its columns), file CONTENTS are never read except the event title/date/id of a research
@@ -26,7 +27,7 @@ every title passes the spine_client email/phone patterns before it reaches stdou
 Attendance is never inferred (ADR-10 D9): `attendance_evidence_uploaded` is a proposal for Alex to confirm.
 """
 from __future__ import annotations
-import argparse, datetime as dt, json, os, re, sys, tempfile
+import argparse, datetime as dt, json, os, re, sys, tempfile, zoneinfo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -38,7 +39,8 @@ DEFAULT_QUEUE = os.path.join(ROOT, ".claude", ".state", "reconcile-queue.json")
 OCCASION_KINDS = ("attended", "researched")    # `researched` is plan B0; harmless to ask for before it exists
 RESEARCH_TIERS = ("web_verified", "email_signal")
 GAP_TYPES = ("no_row", "research_not_staged", "post_event_not_staged", "transcript_not_staged",
-             "attended_no_local_source")
+             "attended_no_local_source", "ambiguous")
+NY = zoneinfo.ZoneInfo("America/New_York")
 # The null baseline (plan Part 2 §2.1, prod read 2026-11-10). Gap totals have no prior number: this run is their null.
 BASELINE_2026_11_10 = {"attended_first_hand": [30, 85], "attended_any_claim": [32, 85],
                        "researched_with_row": [7, 50], "research_claims_with_event": [852, 5800]}
@@ -54,7 +56,10 @@ STOP = {"the", "a", "an", "with", "and", "of", "in", "at", "by", "for", "on", "t
         "brief", "event", "events", "recording", "transcript", "elevenlabs", "raw", "md", "txt", "json"}
 YEARS = {"2025", "2026", "2027", "25", "26", "27"}
 GENERIC = {"ai", "nyc", "meetup", "night", "week", "day", "talk", "talks", "panel", "session", "live", "virtual",
-           "webinar", "agents", "agent", "gtm", "builders", "hackathon", "summit"}
+           "webinar", "agents", "agent", "gtm", "builders", "hackathon", "summit", "demo", "demos", "party",
+           "january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+           "november", "december", "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov",
+           "dec"}                                                     # month words: the date already carries them
 
 
 def safe(s: str) -> str:
@@ -91,39 +96,77 @@ def _shift(d: str, days: int) -> str:
     return (dt.date.fromisoformat(d) + dt.timedelta(days=days)).isoformat()
 
 
-def match(item: dict, rows: list[dict]) -> dict | None:
-    """Best existing row for an inventory item, or None (a new row). Pure; covered by the selftest.
-    Tiers: notion id · same date (containment ≥0.6) · same date, session file, one row sharing a specific non-numeric token ·
-    ±1 day (containment ≥0.8 and Jaccard ≥0.6) · undated (containment ≥0.75, ≥2 shared, unique best)."""
+def local_day(v) -> str | None:
+    """The New York calendar day of a timestamptz. Exactly 00:00:00 UTC is a date-only write (76/85 prod rows on
+    2026-11-11, e.g. Revolt Day 1 = 2026-10-14T00:00Z) and keeps its UTC date; any real time of day is converted."""
+    s = str(v or "")
+    try:
+        t = dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        return s[:10] or None
+    if t.tzinfo is None or (t.utcoffset() == dt.timedelta(0) and t.time() == dt.time(0)):
+        return t.date().isoformat()
+    return t.astimezone(NY).date().isoformat()
+
+
+def specific(tk: frozenset) -> frozenset:
+    """Tokens that can tell two events apart: generic words out, numbers kept (the number guard needs them)."""
+    return tk - GENERIC
+
+
+class Ambiguous:
+    """match() result when 2+ rows score equally: the item is never merged (a false merge costs more than a split)."""
+    def __init__(self, rows):
+        self.rows = rows
+
+
+def match(item: dict, rows: list[dict]) -> dict | Ambiguous | None:
+    """Best existing row for an inventory item, None (a new row) or Ambiguous (a tie). Pure; covered by the selftest.
+    Containment and overlap count specific (non-generic) words; Jaccard ranks on all words. Tiers: notion id · same date (containment ≥0.6) · same date,
+    session file, one row sharing ≥2 specific words (1 word only when it is the date's sole row) · ±1 day
+    (containment ≥0.8 and Jaccard ≥0.6, ≥2 shared) · undated (containment ≥0.75, ≥2 shared). Any equal-score tie
+    is Ambiguous; attendance never breaks a tie."""
     cands = [r for r in rows if not r["non_event"]]
     if item.get("nid"):
         for r in cands:
             if item["nid"] in r["nids"]:
                 return r
-    tk, d = item["tokens"], item.get("date")
+    tk, d = specific(item["tokens"]), item.get("date")
 
     def best(pool, min_cont, min_jac=0.0, min_inter=1):
         scored = []
         for r in pool:
             if _numbers_conflict(tk, r["tokens"]):
                 continue
-            c, j, n = _score(tk, r["tokens"])
+            c, _, n = _score(tk, specific(r["tokens"]))               # gate on words that tell events apart
+            j = _score(item["tokens"], r["tokens"])[1]                    # rank on all words, as before
             if c >= min_cont and j >= min_jac and n >= min_inter:
-                scored.append(((c, j, r["in_graph"]), r))          # a tie prefers the attended row (briefs are post-event)
+                scored.append(((c, j), r))
         scored.sort(key=lambda x: x[0], reverse=True)
-        if not scored or (len(scored) > 1 and scored[0][0] == scored[1][0]):
-            return None                                               # nothing, or a tie: never guess
-        return scored[0][1]
+        if not scored:
+            return None
+        tied = [r for s, r in scored if s == scored[0][0]]
+        return tied[0] if len(tied) == 1 else Ambiguous(tied)
 
     if d:
         same = [r for r in cands if r["date"] == d]
         r = best(same, 0.6)
         if r:
             return r
+        if not tk:                                                    # an all-generic title ("AI Demo Night") joins
+            plain = [r for r in same if not specific(r["tokens"])     # only a row that adds nothing specific either
+                     and _score(item["tokens"], r["tokens"])[0] >= 0.6]
+            if len(plain) == 1:
+                return plain[0]
+            if plain:
+                return Ambiguous(plain)
         if item["source"] in ("transcript", "brief"):                 # session-level file names (speaker · talk)
-            hits = [r for r in same if {w for w in tk & r["tokens"] if not w.isdigit()} - GENERIC]
+            words = lambda r: {w for w in tk & r["tokens"] if not w.isdigit()}  # noqa: E731
+            hits = [r for r in same if len(words(r)) >= 2 or (len(same) == 1 and words(r))]
             if len(hits) == 1:
                 return hits[0]
+            if hits:
+                return Ambiguous(hits)
         return best([r for r in cands if r["date"] in (_shift(d, -1), _shift(d, 1))], 0.8, 0.6, 2)
     return best(cands, 0.75, 0.0, 2)
 
@@ -142,7 +185,7 @@ def classify(name: str) -> set:
         out.add("research")
     # Hackathon build journals are post-event content too (Alex, 2026-11-11: attended = post-event
     # content uploaded and acknowledged). Name-only, like every other class.
-    if re.search(r"journal|week[-_ ]log|retro", n):
+    if re.search(r"journal|week[-_ ]log|(?<![a-z])retro(?![a-z])", n):
         out.add("journal")
     return out
 
@@ -161,6 +204,9 @@ def local_items(root: str, inv: dict) -> list[dict]:
     for name in sorted(os.listdir(ec)) if os.path.isdir(ec) else []:
         path = os.path.join(ec, name)
         m = FOLDER_RE.match(name)
+        if PRIVATE_RE.search(name):                                     # never walked, never titled
+            inv["private_skipped"] += 1
+            continue
         if not os.path.isdir(path) or not m:
             inv["folders_unparsed"] += 1
             continue
@@ -168,7 +214,8 @@ def local_items(root: str, inv: dict) -> list[dict]:
         flags = set()
         for dirpath, dirs, files in os.walk(path):
             dirs[:] = [x for x in dirs if not PRIVATE_RE.search(x) and not x.startswith(".")]
-            if os.path.basename(dirpath).lower() == "journal" and files:
+            if os.path.basename(dirpath).lower() == "journal" and any(
+                    not PRIVATE_RE.search(f) and not f.startswith(".") for f in files):
                 flags.add("journal")
             for fn in files:
                 flags |= classify(fn)
@@ -180,7 +227,8 @@ def local_items(root: str, inv: dict) -> list[dict]:
     et = os.path.join(root, "event-transcripts")
     for fn in sorted(os.listdir(et)) if os.path.isdir(et) else []:
         m = DATED_FILE_RE.match(fn)
-        if not m or not os.path.isfile(os.path.join(et, fn)) or PRIVATE_RE.search(fn):
+        if (not m or not os.path.isfile(os.path.join(et, fn)) or PRIVATE_RE.search(fn)
+                or fn.lower().endswith(MEDIA_EXT)):                     # an image or audio file is not a transcript
             inv["transcripts_unparsed"] += 1
             continue
         inv["transcripts"] += 1
@@ -192,12 +240,13 @@ def local_items(root: str, inv: dict) -> list[dict]:
         if not fn.endswith(".manifest.json") or PRIVATE_RE.search(fn):
             continue
         try:
-            ev = (json.load(open(os.path.join(rd, fn), encoding="utf-8")).get("event") or {})
+            with open(os.path.join(rd, fn), encoding="utf-8") as fh:
+                ev = json.load(fh).get("event") or {}
         except (OSError, ValueError):
             inv["manifests_unreadable"] += 1
             continue
         inv["manifests"] += 1                                         # only title / date / page id are read
-        add("manifest", ev.get("title") or fn[:-14], (ev.get("event_date") or "")[:10] or None,
+        add("manifest", ev.get("title") or fn[:-14], local_day(ev.get("event_date")),
             nid=ev.get("notion_page_id"), flags={"research"})
     bd = os.path.join(st, "briefs")
     for fn in sorted(os.listdir(bd)) if os.path.isdir(bd) else []:
@@ -211,10 +260,14 @@ def local_items(root: str, inv: dict) -> list[dict]:
     pd = os.path.join(st, "post-event")
     for slug in sorted(os.listdir(pd)) if os.path.isdir(pd) else []:
         rs = os.path.join(pd, slug, "run-state.json")
+        if PRIVATE_RE.search(slug):
+            inv["private_skipped"] += 1
+            continue
         if not os.path.isfile(rs):
             continue
         try:
-            name = json.load(open(rs, encoding="utf-8")).get("event") or slug
+            with open(rs, encoding="utf-8") as fh:
+                name = json.load(fh).get("event") or slug
         except (OSError, ValueError):
             name = slug
         inv["ledgers"] += 1
@@ -251,17 +304,28 @@ def prod_inventory() -> dict:
 def _new_row(title, date, non_event=False):
     return {"title": title, "date": date, "tokens": tokens(title), "non_event": non_event, "nids": set(),
             "event_id": None, "kind": None, "in_graph": False, "research_doc_in_graph": False,
-            "post_event_doc_in_graph": False, "flags": set(), "folders": [], "sources": set()}
+            "post_event_doc_in_graph": False, "flags": set(), "folders": [], "sources": set(), "ambiguous_with": []}
+
+
+def _place(m, title, date, rows, non_event=False) -> dict:
+    """The row an item lands on: its match, or a new row (an Ambiguous match records the tied titles and stays apart)."""
+    if isinstance(m, dict):
+        return m
+    r = _new_row(title, date, non_event)
+    if isinstance(m, Ambiguous):
+        r["ambiguous_with"] = sorted(x["title"] for x in m.rows)
+    rows.append(r)
+    return r
 
 
 def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
     today = today or dt.date.today().isoformat()
     inv = {k: 0 for k in ("folders", "folders_non_event", "folders_unparsed", "transcripts", "transcripts_unparsed",
-                          "manifests", "manifests_unreadable", "briefs", "ledgers")}
+                          "manifests", "manifests_unreadable", "briefs", "ledgers", "private_skipped")}
     rows: list[dict] = []
     by_event: dict[str, dict] = {}
     for e in prod["events"]:                                           # prod rows are anchors; never merged together
-        r = _new_row(safe(e.get("title")), (e.get("event_date") or "")[:10] or None)
+        r = _new_row(safe(e.get("title")), local_day(e.get("event_date")))
         r.update(event_id=e["id"], kind=e.get("kind"), in_graph=e.get("kind") == "attended")
         r["nids"] |= {pid(e.get("notion_page_id"))} - {None}
         r["sources"].add("prod_event")
@@ -275,20 +339,14 @@ def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
         if d.get("source_type") != "research_brief":
             continue
         title = re.sub(r"^research brief\s*[—–-]\s*", "", d.get("title") or "", flags=re.I)
-        it = {"source": "prod_doc", "title": safe(title), "date": (d.get("doc_date") or "")[:10] or None,
+        it = {"source": "prod_doc", "title": safe(title), "date": local_day(d.get("doc_date")),
               "nid": pid(d.get("nid")), "tokens": tokens(title)}
-        r = by_event.get(d.get("event_id")) or match(it, rows)
-        if not r:
-            r = _new_row(it["title"], it["date"])
-            rows.append(r)
+        r = _place(by_event.get(d.get("event_id")) or match(it, rows), it["title"], it["date"], rows)
         r["research_doc_in_graph"] = True
         r["nids"] |= {it["nid"]} - {None}
         r["sources"].add("prod_doc")
     for it in local_items(root, inv):
-        r = None if it["non_event"] else match(it, rows)
-        if not r:
-            r = _new_row(it["title"], it["date"], it["non_event"])
-            rows.append(r)
+        r = _place(None if it["non_event"] else match(it, rows), it["title"], it["date"], rows, it["non_event"])
         r["flags"] |= it["flags"]
         r["nids"] |= {it["nid"]} - {None}
         r["sources"].add(it["source"])
@@ -323,10 +381,13 @@ def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
                "has_journal": "journal" in f,
                "post_event_doc_in_graph": r["post_event_doc_in_graph"],
                "first_hand_claims": fh.get(r["event_id"], 0),
-               "folders": sorted(r["folders"]), "sources": sorted(r["sources"])}
+               "folders": sorted(r["folders"]), "sources": sorted(r["sources"]),
+               "ambiguous_with": r["ambiguous_with"]}
         row["attendance_evidence_uploaded"] = row["has_transcript"] or row["has_post_event_brief"] or row["has_journal"]
         gaps = []
-        if not row["non_event"]:
+        if row["ambiguous_with"] and not row["in_graph"]:
+            gaps.append("ambiguous")                                  # identity unknown: no other gap is claimed
+        elif not row["non_event"]:
             if row["attendance_evidence_uploaded"] and not row["in_graph"]:
                 gaps.append("no_row")
             if row["has_research_file"] and row["research_claims"] == 0:
@@ -347,9 +408,10 @@ def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
 
 def summarize(rows: list[dict], res_linked: int, res_total: int) -> dict:
     ev = [r for r in rows if not r["non_event"]]
-    att = [r for r in ev if r["in_graph"]]
-    evid = [r for r in ev if r["attendance_evidence_uploaded"]]
-    researched = [r for r in ev if r["has_research_file"] or r["research_doc_in_graph"] or r["research_claims"]]
+    known = [r for r in ev if "ambiguous" not in r["gap"]]               # metrics count resolved rows only
+    att = [r for r in known if r["in_graph"]]
+    evid = [r for r in known if r["attendance_evidence_uploaded"]]
+    researched = [r for r in known if r["has_research_file"] or r["research_doc_in_graph"] or r["research_claims"]]
     return {
         "rows": len(rows), "event_rows": len(ev),
         "gaps": {g: sum(g in r["gap"] for r in ev) for g in GAP_TYPES},
@@ -404,12 +466,17 @@ def render(res: dict, baseline: dict | None = None) -> str:
     nr = [r for r in res["rows"] if "no_row" in r["gap"]]
     L += ["", f"attendance confirmation candidates (no_row; proposals, never inferred — ADR-10 D9): {len(nr)}"]
     L += [f"  {r['event_date'] or '????-??-??'}  {r['title']}" for r in nr]
+    am = [r for r in res["rows"] if "ambiguous" in r["gap"]]
+    L += ["", f"tied items (gap: ambiguous; never merged, Alex to place): {len(am)}"]
+    L += [f"  {r['event_date'] or '????-??-??'}  {r['title']}  <-> {' | '.join(r['ambiguous_with'])}" for r in am]
     return "\n".join(L)
 
 
 def _assert_clean(text: str) -> None:
     if EMAIL_RE.search(text):
         raise RuntimeError("reconcile: an email-shaped string reached the output; refusing to emit it")
+    if PHONE_RE.search(text):
+        raise RuntimeError("reconcile: a phone-shaped string reached the output; refusing to emit it")
 
 
 def main(argv: list[str]) -> int:
@@ -426,7 +493,10 @@ def main(argv: list[str]) -> int:
         ap.error("nothing to do: pass --report and/or --queue [PATH]")
     res = reconcile(os.path.abspath(a.root), prod_inventory())
     if a.report:
-        base = json.load(open(a.baseline, encoding="utf-8")) if a.baseline else None
+        base = None
+        if a.baseline:
+            with open(a.baseline, encoding="utf-8") as fh:
+                base = json.load(fh)
         text = render(res, base)
         _assert_clean(text)
         print(text)
@@ -448,7 +518,18 @@ def main(argv: list[str]) -> int:
 FIXTURES = os.path.join(HERE, "fixtures", "reconcile")
 
 
-def _stub_req(prod: dict, seen: list):
+def _stub_req(prod: dict, seen: list, handed: dict):
+    """A GET-only PostgREST stand-in that honours `select=` (aliases included), so a widened select would hand
+    reconcile the claim text and the 'columns handed back' check fails."""
+    def project(row, select):
+        if not select or select == "*":
+            return dict(row)
+        out = {}
+        for f in select.split(","):
+            alias, _, expr = f.partition(":")
+            out[alias] = row.get(alias) if expr else row.get(f)
+        return out
+
     def req(method, path, body=None, **kw):
         seen.append((method, path))
         if method != "GET" or body is not None:
@@ -456,8 +537,19 @@ def _stub_req(prod: dict, seen: list):
         table = path.split("?")[0].strip("/")
         if "offset=" in path and not path.endswith("offset=0"):
             return 200, []
-        return 200, prod.get(table, [])
+        sel = re.search(r"[?&]select=([^&]*)", path)
+        rows = [project(r, sel.group(1) if sel else "*") for r in prod.get(table, [])]
+        handed.setdefault(table, []).extend(rows)
+        return 200, rows
     return req
+
+
+def _raises(fn) -> bool:
+    try:
+        fn()
+    except RuntimeError:
+        return True
+    return False
 
 
 def selftest(ok=None) -> bool:
@@ -465,30 +557,75 @@ def selftest(ok=None) -> bool:
     if ok is None:
         def ok(name, cond):
             checks.append((name, bool(cond)))
-    spec = json.load(open(os.path.join(FIXTURES, "tree.json"), encoding="utf-8"))
-    prod = json.load(open(os.path.join(FIXTURES, "prod.json"), encoding="utf-8"))
-    tmp = tempfile.mkdtemp(prefix="reconcile-selftest-")
-    for rel in spec["files"]:
-        p = os.path.join(tmp, rel)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        open(p, "w").close()
-    for rel, body in spec["json_files"].items():
-        p = os.path.join(tmp, rel)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        json.dump(body, open(p, "w"))
+    with open(os.path.join(FIXTURES, "tree.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    with open(os.path.join(FIXTURES, "prod.json"), encoding="utf-8") as fh:
+        prod = json.load(fh)
 
     ok("reconcile: Elastic{ON} New York == ElasticON NYC", tokens("Elastic{ON} New York") == tokens("ElasticON NYC"))
-    same = lambda t: {"source": "folder", "title": t, "date": "2026-06-24", "tokens": tokens(t)}  # noqa: E731
+    on = lambda t, d="2026-06-24", src="folder": {"source": src, "title": t, "date": d, "tokens": tokens(t)}  # noqa: E731
     r10 = [_new_row("NYC AI Demos #10", "2026-06-24")]
-    ok("reconcile: near-miss 'AI Demos #11' does not match '#10' on the same date", match(same("AI Demos #11"), r10) is None)
-    ok("reconcile: 'AI Demos 10' matches '#10'", match(same("NYC AI Demos 10"), r10) is r10[0])
+    ok("reconcile: near-miss 'AI Demos #11' does not match '#10' on the same date", match(on("AI Demos #11"), r10) is None)
+    ok("reconcile: 'AI Demos 10' matches '#10'", match(on("NYC AI Demos 10"), r10) is r10[0])
+    # finding 1: sibling events on one date share only generic words
+    ok("reconcile: same date, 'AI Week Closing Party' does not match 'AI Week Opening Party'",
+       match(on("AI Week Closing Party"), [_new_row("AI Week Opening Party", "2026-06-24")]) is None)
+    ok("reconcile: same date, 'Demo Night' does not match 'Robotics Demo Night'",
+       match(on("Demo Night"), [_new_row("Robotics Demo Night", "2026-06-24")]) is None)
+    ok("reconcile: same date, all-generic 'AI Demo Night' still joins 'AI Demo Night New York'",
+       isinstance(match(on("AI Demo Night"), [_new_row("AI Demo Night New York", "2026-06-24")]), dict))
+    ok("reconcile: same date, 'Frontier Hackathon October' joins '... Frontier Hackathon: ... — Oct 30 2026'",
+       isinstance(match(on("Frontier Hackathon October"),
+                        [_new_row("NYC Frontier Hackathon: Build your Autonomous Code Factory — Oct 30 2026",
+                                  "2026-06-24")]), dict))
+    # finding 2: a session file sharing one word with one of several same-date events
+    dd = lambda: [_new_row("Deepline Deepdives: Clay workflows", "2026-11-10"),  # noqa: E731
+                  _new_row("Hard Negatives Debate Night", "2026-11-10")]
+    ok("reconcile: session file sharing one word ('Clay') does not join when the date has another event",
+       match(on("Clay-Kareem-talk-on-retrieval", "2026-11-10", "transcript"), dd()) is None)
+    ok("reconcile: session file sharing one word joins when it is the date's only event",
+       isinstance(match(on("Clay-Kareem-talk-on-retrieval", "2026-11-10", "transcript"), dd()[:1]), dict))
+    ok("reconcile: session file sharing two specific words joins among several events",
+       match(on("Clay-workflows-Kareem-demo", "2026-11-10", "transcript"), dd())["title"].startswith("Deepline"))
+    # finding 5: an equal-score tie is never broken by attendance
+    tie = [_new_row("Vector Search Night", "2026-11-12"), _new_row("Vector Search Night", "2026-11-12")]
+    tie[0]["in_graph"] = True
+    ok("reconcile: an equal-score tie (attended vs not) is Ambiguous, not the attended row",
+       isinstance(match(on("Vector Search Night", "2026-11-12"), tie), Ambiguous))
+    # finding 4: timestamptz -> New York day
+    ok("reconcile: local_day — 8:30pm EDT stored as the next UTC day -> the New York day",
+       local_day("2026-10-15T00:30:00+00:00") == "2026-10-14")
+    ok("reconcile: local_day — exactly 00:00 UTC is a date-only write and keeps its date",
+       local_day("2026-10-14T00:00:00+00:00") == "2026-10-14" and local_day("2026-10-12") == "2026-10-12"
+       and local_day(None) is None)
+    # finding 3: each privacy layer alone
+    ok("reconcile: _assert_clean raises on a raw email", _raises(lambda: _assert_clean("x jane.doe@example.com y")))
+    ok("reconcile: _assert_clean raises on a raw phone", _raises(lambda: _assert_clean("call 212-555-0147 now")))
+    ok("reconcile: _assert_clean passes ISO dates and counts", not _raises(lambda: _assert_clean("2026-11-11 860/5808")))
+    ok("reconcile: safe() redacts a phone-shaped folder title",
+       safe("11 07 26 Call 212-555-0147 Night") == "11 07 26 Call [redacted] Night")
+    # finding 8
+    ok("reconcile: 'retrofit' is not a retro journal; 'retro.md' is",
+       "journal" not in classify("retrofit-notes.md") and "journal" in classify("hackathon_retro.md"))
 
-    real_req, seen = spine_client.req, []
-    spine_client.req = _stub_req(prod, seen)
-    try:
-        res = reconcile(tmp, prod_inventory(), today="2026-11-11")
-    finally:
-        spine_client.req = real_req
+    seen, handed = [], {}
+    real_req = spine_client.req
+    with tempfile.TemporaryDirectory(prefix="reconcile-selftest-") as tmp:
+        for rel in spec["files"]:
+            p = os.path.join(tmp, rel)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "w"):
+                pass
+        for rel, body in spec["json_files"].items():
+            p = os.path.join(tmp, rel)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(body, fh)
+        spine_client.req = _stub_req(prod, seen, handed)
+        try:
+            res = reconcile(tmp, prod_inventory(), today="2026-11-11")
+        finally:
+            spine_client.req = real_req
     rows = res["rows"]
     by = lambda frag: [r for r in rows if frag.lower() in r["title"].lower()]  # noqa: E731
     gaps = lambda frag: by(frag)[0]["gap"] if by(frag) else None  # noqa: E731
@@ -496,26 +633,29 @@ def selftest(ok=None) -> bool:
     ok("reconcile: every request is a GET", seen and all(m == "GET" for m, _ in seen))
     ok("reconcile: claim GET never selects claim_text / quote / *",
        all("claim_text" not in p and "quote" not in p and "select=*" not in p for _, p in seen))
+    ok("reconcile: claim rows handed back (stub honours select=) carry no claim_text",
+       handed.get("claim") and all("claim_text" not in r for r in handed["claim"]))
     ok("reconcile: documents table checked by a GET before use", any(p.startswith("/documents?select=id&limit=1") for _, p in seen))
     ok("reconcile: transcript, no attended row -> no_row + transcript_not_staged",
        gaps("Grok Bot") == ["no_row", "transcript_not_staged"])
     ok("reconcile: same-date near-miss stays its own row (Alt Cloud is not Revolt)",
        len(by("Alt Cloud")) == 1 and "no_row" in gaps("Alt Cloud") and "Alt Cloud" not in str(by("— Day 1")[0]["folders"]))
-    ok("reconcile: folder 'Revolt 2026' joins prod 'Revolt! 2026 — Day 1 (RevGenius)'",
-       by("— Day 1")[0]["folders"] == ["10 14 26 Revolt 2026"])
+    ok("reconcile: folder 'Revolt 2026' (10-14) joins 'Revolt! 2026 — Day 1' stored 10-15 UTC (8:30pm New York)",
+       by("— Day 1")[0]["folders"] == ["10 14 26 Revolt 2026"] and by("— Day 1")[0]["event_date"] == "2026-10-14")
     ok("reconcile: attended, 0 first-hand, nothing on disk -> attended_no_local_source",
        gaps("— Day 1") == ["attended_no_local_source"])
-    ok("reconcile: undated brief 'revolt-2026-day-2' lands on Day 2, not Day 1",
-       by("— Day 2")[0]["has_post_event_brief"] and not by("— Day 1")[0]["has_post_event_brief"])
+    ok("reconcile: undated brief tied between Day 2 and doc-only 'Demo Day | Day 2' -> ambiguous, merged into neither",
+       gaps("revolt-2026-day-2") == ["ambiguous"] and len(by("revolt-2026-day-2")[0]["ambiguous_with"]) == 2
+       and not by("Demo Day")[0]["has_post_event_brief"] and not by("— Day 1")[0]["has_post_event_brief"])
+    ok("reconcile: report shows the ambiguous gap with its own count",
+       res["summary"]["gaps"]["ambiguous"] == 1 and "tied items (gap: ambiguous" in render(res))
     ok("reconcile: attended with first-hand claims and a brief -> no gap", gaps("— Day 2") == [])
-    ok("reconcile: session transcript joins Elastic{ON} -> transcript_not_staged",
-       gaps("Elastic{ON}") == ["transcript_not_staged"] and len(by("Picheria")) == 0)
+    ok("reconcile: session transcript sharing one word with Elastic{ON} stays apart (Hack Day 1 shares the date)",
+       gaps("Elastic{ON}") == ["attended_no_local_source"] and gaps("Picheria") == ["no_row", "transcript_not_staged"])
     ok("reconcile: transcript 09-23 + folder 09-24 GTM World Tour -> one row (±1 day)",
        len(by("GTM World Tour")) == 1 and gaps("GTM World Tour") == ["no_row", "transcript_not_staged"])
     ok("reconcile: two Deal Flow folders, one row", len(by("Deal Flow")) == 1 and len(by("Deal Flow")[0]["folders"]) == 2)
     ok("reconcile: brief slug with a trailing date joins its event", by("Deal Flow")[0]["has_post_event_brief"])
-    ok("reconcile: undated brief tie (prod row vs doc-only 'Demo Day | Day 2') goes to the attended row",
-       not by("Demo Day")[0]["has_post_event_brief"])
     ok("reconcile: research file, 0 research claims -> research_not_staged (not merged into AI Builders)",
        gaps("AI Demos #11") == ["research_not_staged"] and not by("AI Builders")[0]["has_research_file"])
     ap_row = by("Durable State")[0]
@@ -526,15 +666,24 @@ def selftest(ok=None) -> bool:
        and not by("Future Talk")[0]["in_graph"])
     ok("reconcile: post-event ledger counts as uploaded evidence", by("Ledger Night")[0]["attendance_evidence_uploaded"])
     ok("reconcile: a hackathon journal counts as uploaded evidence", by("Journal Hack")[0]["attendance_evidence_uploaded"])
+    ok("reconcile: a journal/ folder holding only *.PRIVATE.* files sets no journal flag",
+       not by("Quiet Hack")[0]["has_journal"] and not by("Quiet Hack")[0]["attendance_evidence_uploaded"])
+    ok("reconcile: 'retrofit-notes.md' is not a journal", not by("Retrofit")[0]["has_journal"])
+    ok("reconcile: an image in event-transcripts/ is not a transcript",
+       not by("Slide-Photo") and res["inventory"]["transcripts_unparsed"] >= 1)
     ok("reconcile: content folder (Upcoming Week) -> non_event, no gaps",
        by("Upcoming Week")[0]["non_event"] and gaps("Upcoming Week") == [])
     ok("reconcile: *.PRIVATE.* files never count as evidence",
        by("Ghosts")[0]["has_transcript"] is False and gaps("Ghosts") == [])
     blob = json.dumps(res, default=sorted) + render(res)
+    ok("reconcile: privacy — a private Event Content folder is never titled or walked",
+       "Private Dinner" not in blob and res["inventory"]["private_skipped"] == 2)
+    ok("reconcile: privacy — a private post-event slug is skipped before its ledger is read", "Offsite Ledger" not in blob)
     ok("reconcile: privacy — email in a folder title is redacted", "jane.doe@example.com" not in blob and by("[redacted]"))
+    ok("reconcile: privacy — phone in a folder title is redacted", "212-555-0147" not in blob and by("Call [redacted]"))
     ok("reconcile: privacy — no claim text and no email from the stubbed prod rows reach the output",
        "SECRET CLAIM TEXT" not in blob and "alice@corp.com" not in blob)
-    ok("reconcile: privacy — output passes the email assertion", (lambda: (_assert_clean(blob), True)[1])())
+    ok("reconcile: privacy — output passes the email + phone assertion", not _raises(lambda: _assert_clean(blob)))
     m = res["summary"]["metrics"]
     ok("reconcile: attended_first_hand counts prod attended rows", m["attended_first_hand"] == [2, 5])
     ok("reconcile: research_claims_with_event", m["research_claims_with_event"] == [1, 7])

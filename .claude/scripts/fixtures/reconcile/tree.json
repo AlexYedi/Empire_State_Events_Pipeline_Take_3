@@ -21,7 +21,13 @@
   "Event Content/Upcoming Weeks/readme.md",
   "Event Content/content-drafts-moves.json",
   ".claude/.state/briefs/deal-flow-vc-hackathon-2026-10-24.md",
-  "Event Content/10 31 26 Journal Hack Day/journal/week-log.md"
+  "Event Content/10 31 26 Journal Hack Day/journal/week-log.md",
+  "Event Content/11 07 26 Call 212-555-0147 Night/recording — Transcript (ElevenLabs).md",
+  "Event Content/11 08 26 Private Dinner/recording — Transcript (ElevenLabs).md",
+  "Event Content/11 09 26 Quiet Hack/notes.md",
+  "Event Content/11 09 26 Quiet Hack/journal/notes.PRIVATE.md",
+  "Event Content/11 03 26 Retrofit Summit/retrofit-notes.md",
+  "event-transcripts/2026-11-04_Slide-Photo-Talk.png"
  ],
  "json_files": {
   ".claude/.state/research/agents-in-production.manifest.json": {
@@ -35,6 +41,11 @@
   ".claude/.state/post-event/ledger-night/run-state.json": {
    "event": "Ledger Night Meetup",
    "slug": "ledger-night",
+   "steps": {}
+  },
+  ".claude/.state/post-event/offsite-private/run-state.json": {
+   "event": "Offsite Ledger Talk",
+   "slug": "offsite-private",
    "steps": {}
   }
  }

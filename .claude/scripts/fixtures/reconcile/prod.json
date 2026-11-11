@@ -1,5 +1,5 @@
 {
- "_comment": "FAKE prod rows (reconcile selftest). claim_text carries a fake email to prove it never reaches the output.",
+ "_comment": "FAKE prod rows (reconcile selftest). claim_text carries a fake email to prove it never reaches the output. e3 is stored as the next UTC day (8:30pm New York) to prove the local-day conversion.",
  "event": [
   {
    "id": "e1",
@@ -21,7 +21,7 @@
    "id": "e3",
    "kind": "attended",
    "title": "Revolt! 2026 — Day 1 (RevGenius)",
-   "event_date": "2026-10-14T00:00:00+00:00",
+   "event_date": "2026-10-15T00:30:00+00:00",
    "source": "substrate:notion",
    "notion_page_id": null
   },
