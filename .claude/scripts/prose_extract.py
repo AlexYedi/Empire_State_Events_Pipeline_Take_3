@@ -8,8 +8,9 @@ deterministic gate). This file is everything EXCEPT the model and the writer. It
 Verbs:
   prepass  <brief_dir> [--out packet.json]
            research_brief.md + manifest.json -> a packet: knowledge sections only (Topics / Primer / Landscape /
-           Topic Foundations / People / Companies / Questions), numbered paragraphs, roster-matched entity headings,
-           URLs per paragraph with `[n]` footnotes resolved through Endnotes. Briefs under 300 words exit 3 (stub).
+           Topic Foundations / People / Companies; playbook headings and mostly-imperative paragraphs dropped),
+           numbered paragraphs, roster-matched entity headings, URLs per paragraph with `[n]` footnotes resolved
+           through Endnotes. Briefs under 300 words exit 3 (stub).
   splitter <packet> [--out claims.json]
            the NULL BASELINE: every sentence of every kept paragraph is one claim (quote = its first 25 words). Same
            output schema as the LLM extractor, so `check` scores both identically.
@@ -45,12 +46,25 @@ CLAIM_KEYS = {"text", "quote", "para_idx", "url_ref", "entity", "entity_type", "
 ENTITY_TYPES = {"person", "company", "topic"}
 CLAIM_TYPES = {"fact", "statistic", "thesis", "prediction", "question"}
 
-# A level-1..3 heading naming one of these opens a section. Exclusion wins over keep ('People' never rescues
-# 'Verification Flags'). Synthesis and Alex's playbook are not world facts (design §1).
-KEEP_RE = re.compile(r"\b(topics?|topic foundations|primer|landscape|people|companies|questions)\b")
+# A level-1..3 heading naming one of these opens a section. Playbook and exclusion win over keep ('People' never
+# rescues 'Verification Flags'; 'Topic' never rescues 'Topic pitches'). Synthesis and Alex's playbook are not world
+# facts (design §1). Pilot 1 (2026-11-11): 16 of 18 extractor failures were advice/questions from playbook sections.
+KEEP_RE = re.compile(r"\b(topics?|topic foundations|primer|landscape|people|companies)\b")
+# Matched on heading WORDS with parentheticals removed: '(contested questions inside each)' and '(opener for the
+# hosts)' qualify a factual section, they do not make it a playbook.
+PLAYBOOK_RE = re.compile(r"\b(questions?|conversation kits?|pitch(?:es)?|talking points?|hooks?|angles?|asks?|"
+                         r"openers?|what to say|playbook|prep|your move|plays)\b")
 EXCLUDE_RE = re.compile(r"quick take|\bframe\b|cross-event|documentarian|hooks?\b|success signals|verification"
                         r"|confidential|endnotes|sources|references|guards|retro|who to prioriti|gaps to close"
                         r"|signal log|why this matters|⛔")
+# A sentence opening with one of these is advice to Alex, not a world fact (prepass paragraph filter + check).
+IMPERATIVE_VERBS = frozenset("""ask lead mention open start bring use say try avoid frame pitch position raise probe
+push offer skip drop follow reference cite tell introduce connect highlight emphasize emphasise steer anchor listen
+watch prepare consider don't do keep make pick share flag acknowledge compliment invite pivot mirror lean name close
+remember expect skim read check request propose suggest""".split())
+IMPERATIVE_LEAD_RE = re.compile(r"^[\W_]*(?:(?:Q\d+|A|B|C|\d+)[:.)]\s*)?[\W_]*([A-Za-z][A-Za-z'’-]*)")
+# Noun compounds that open factual lines in real briefs ('Use Cases: …', 'Lead time: …', a 'Name | Title' header).
+NOT_IMPERATIVE_RE = re.compile(r"(?i)^(?:use cases?|lead (?:times?|investors?|authors?|engineers?)|name \|)")
 ENDNOTE_SECTION_RE = re.compile(r"endnotes|sources|references")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 LIST_ITEM_RE = re.compile(r"^\s*(?:[-*+]|\d{1,3}[.)])\s+")
@@ -80,11 +94,26 @@ def words(s: str) -> int:
 # ---------------------------------------------------------------------------------------------------------------
 def classify(title: str) -> str | None:
     t = re.sub(r"^[\W\d_]+", "", clean_md(title).lower())
+    if PLAYBOOK_RE.search(re.sub(r"\([^()]*\)", " ", t)):
+        return "playbook"
     if EXCLUDE_RE.search(t):
         return "exclude"
     if KEEP_RE.search(t):
         return "keep"
     return None
+
+
+def is_imperative(sentence: str) -> bool:
+    m = IMPERATIVE_LEAD_RE.match(sentence or "")
+    return bool(m) and m.group(1).lower().replace("’", "'") in IMPERATIVE_VERBS \
+        and not NOT_IMPERATIVE_RE.match(sentence[m.start(1):])
+
+
+def mostly_imperative(text: str) -> bool:
+    """Most (strictly more than half) of the paragraph's sentences open with an imperative verb ('Ask…', 'Lead
+    with…'). A fact followed by one 'Ask…' survives; the prompt and the check handle the ask."""
+    sents = sentences(text)
+    return 2 * sum(map(is_imperative, sents)) > len(sents)
 
 
 def resolve_entity(name: str, roster: list[tuple[str, str, str]]):
@@ -165,9 +194,10 @@ def prepass(brief_dir: str) -> tuple[dict | None, str]:
     notes = endnote_map(md)
     # Heading stack: the deepest level-1..3 heading that names a known section is the section; the deepest heading
     # below it is the entity heading. Covers both '## People / ### Name' and '### People / #### Name' generations.
-    stack: list[tuple[int, str, str | None]] = []      # (level, title, 'keep'|'exclude'|None)
+    stack: list[tuple[int, str, str | None]] = []      # (level, title, 'keep'|'exclude'|'playbook'|None)
     groups: list[tuple[tuple, list[str]]] = []          # consecutive lines sharing (kind, section, heading)
-    dropped = {"excluded_section": 0, "outside_known_section": 0, "tiny_or_url_only": 0}
+    dropped = {"playbook_section": 0, "excluded_section": 0, "outside_known_section": 0, "tiny_or_url_only": 0,
+               "imperative": 0}
     for line in redact_body(md).splitlines():          # the same confidentiality rules as stage-research
         h = HEADING_RE.match(line)
         if h:
@@ -187,13 +217,17 @@ def prepass(brief_dir: str) -> tuple[dict | None, str]:
     for (kind, section, heading), lines in groups:
         blocks = _blocks(lines)
         if kind != "keep":
-            dropped["excluded_section" if kind == "exclude" else "outside_known_section"] += len(blocks)
+            why = {"exclude": "excluded_section", "playbook": "playbook_section"}.get(kind, "outside_known_section")
+            dropped[why] += len(blocks)
             continue
         hit = resolve_entity(heading, roster) if heading else None
         for raw in blocks:
             text = clean_md(raw)
             if words(BARE_URL_RE.sub("", text)) < 4:
                 dropped["tiny_or_url_only"] += 1
+                continue
+            if mostly_imperative(text):
+                dropped["imperative"] += 1
                 continue
             paragraphs.append({"idx": len(paragraphs), "section": section, "entity_hint": hit[1] if hit else None,
                                "entity_type_hint": hit[0] if hit else None, "heading": heading, "text": text,
@@ -314,6 +348,9 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
             continue
         if not ws(c["text"]) or words(c["text"]) > TEXT_MAX_WORDS:
             drop("text_empty_or_over_30_words")
+            continue
+        if is_imperative(c["text"]) or ws(c["text"]).endswith("?"):
+            drop("not_declarative")
             continue
         if ws(c["quote"]) not in ws(p["text"]):
             drop("quote_not_verbatim")
@@ -438,8 +475,19 @@ def selftest() -> bool:
     ok("prepass: inline markdown link harvested", omar["urls"] == ["https://fictional.example.org/team"])
     noref = next(p for p in paras if p["text"].startswith("Most buyers"))
     ok("prepass: paragraph without a marker has no URLs (no brief-wide promotion)", noref["urls"] == [])
-    qs = [p for p in paras if p["section"] == "Questions to ask"]
-    ok("prepass: each question bullet is its own paragraph", len(qs) == 2)
+    ok("prepass: playbook sections dropped (Questions to ask, Conversation kit)",
+       not any("?" in p["text"] or "KIT_SENTINEL" in p["text"] for p in paras)
+       and pk["dropped_paragraphs"]["playbook_section"] == 3)
+    ok("prepass: mostly-imperative paragraph dropped and counted",
+       "Lead with the 18%" not in blob and pk["dropped_paragraphs"]["imperative"] == 1)
+    ok("prepass: playbook words inside a parenthetical do not make a section playbook",
+       classify("THE SIX ENABLING TECHNOLOGIES (contested questions inside each)") is None
+       and classify("Hard-negatives primer (opener for the hosts)") == "keep"
+       and classify("Topic pitches (if proposing in an unconference)") == "playbook"
+       and classify("Conversation kits (9 topics)") == "playbook")
+    ok("prepass: one imperative sentence does not drop a factual paragraph",
+       not mostly_imperative("Acme Widgets raised $6M in 2024. Ask about pricing.")
+       and not is_imperative("Use Cases: widget pricing, freight quotes") and is_imperative("*Ask* Dana about steel."))
     ok("prepass: table rows kept, separator dropped", any(p["text"] == "Customers served | about 1,400 in the Northeast" for p in paras)
        and not any("---" in p["text"] for p in paras))
     stub, swhy = prepass(os.path.join(FIX, "brief_stub"))
@@ -452,7 +500,7 @@ def selftest() -> bool:
     ok("splitter: no quote fails containment", "quote_not_verbatim" not in res["dropped"])
     ok("splitter: its own output never trips a schema check", not any(k.startswith("schema") for k in res["dropped"]))
     ok("splitter: an un-hinted paragraph naming one roster entity is attributed to it, with its type",
-       any(c["para_idx"] == 2 and c["entity"] == "Acme Widgets" and c["entity_type"] == "company" for c in sp["claims"]))
+       any(c["para_idx"] == 4 and c["entity"] == "Acme Widgets" and c["entity_type"] == "company" for c in sp["claims"]))
     ok("prepass: consecutive lines are separate paragraphs (Notion export: one block per line)",
        sum(p["heading"] == "Acme Widgets" for p in paras) == 4)
     ok("splitter: abbreviation guard ('e.g.') does not split", sentences("Use a tool, e.g. Acme, for this. Next one.")
@@ -478,8 +526,8 @@ def selftest() -> bool:
     ok("check: entity prefixed when the claim text does not name it", ref and ref["claim_text"].startswith("Acme Widgets: "))
     ok("check: url_ref from ANOTHER paragraph -> downgraded to reference, not dropped", r["flags"]["url_downgraded"] == 1
        and any("raised a $6M seed" in t and a["provenance_tier"] == "reference" for t, a in acc.items()))
-    q = next((a for a in acc.values() if a["claim_type"] == "question"), None)
-    ok("check: question with a URL stays reference @0.40", q and q["provenance_tier"] == "reference")
+    ok("check: a question and an imperative claim are dropped as not_declarative",
+       d.get("not_declarative") == 2 and not any(a["claim_text"].endswith("?") for a in acc.values()))
     ok("check: non-verbatim quote dropped and counted", d.get("quote_not_verbatim") == 1)
     ok("check: unknown key dropped (strict schema)", d.get("schema_unknown_or_bad_shape") == 1)
     ok("check: missing key dropped", d.get("schema_missing_key") == 1)

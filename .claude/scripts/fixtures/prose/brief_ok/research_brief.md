@@ -38,7 +38,7 @@ Most buyers still order widgets by phone or email rather than through a marketpl
 This line is confidential and must never reach the packet.
 
 #### Where it is heading
-Analysts expect widget marketplaces to handle a quarter of small-buyer orders by 2028, according to one trade survey [4]. That forecast assumes freight prices stay flat, which nobody in the trade press is willing to promise.
+Analysts expect widget marketplaces to handle a quarter of small-buyer orders by 2028, according to one trade survey [4]. That forecast assumes freight prices stay flat, which nobody in the trade press is willing to promise. The survey lists Acme Widgets among the marketplaces it tracked.
 
 ### Companies
 
@@ -51,6 +51,11 @@ Acme Widgets raised a $6M seed round led by Fictional Ventures in 2024, accordin
 | Metric | Value |
 |---|---|
 | Customers served | about 1,400 in the Northeast |
+
+Ask Dana Fixture about the steel index before the panel starts. Lead with the 18% figure, then mention the seed round.
+
+### Conversation kit (3 topics)
+KIT_SENTINEL Acme Widgets is the obvious opener because the founder loves talking about steel.
 
 ### Cross-Event Threads
 THREADS_SENTINEL Widget Night connects to last month's hardware meetup through the same investor.
