@@ -2,8 +2,8 @@
 """prose_extract — the deterministic cage around prose claim extraction from research briefs (YED-384).
 
 Design: the 2026-11-11 prose-extraction design note (hybrid: deterministic pre-pass -> no-tools LLM extractor ->
-deterministic gate). This file is everything EXCEPT the model and the writer. It never writes to the spine: the
-`stage-prose` writer waits for the pilot to clear the 0.90 precision floor against the splitter baseline.
+deterministic gate). This file is everything EXCEPT the writer. It never writes to the spine: `substrate.py
+stage-prose` is the writer (pilot iter2 cleared the floor: precision 1.00 vs the splitter's 0.43).
 
 Verbs:
   prepass  <brief_dir> [--out packet.json]
@@ -20,6 +20,10 @@ Verbs:
            overlap. Output rows are in stage-research's claim shape, status 'candidate', lane 'research'.
   sample   <checked.json ...> [--n 100] [--stratify] [--seed N] [--packets p.json ...] [--out sample.json]
            draws the pilot labelling sample; --stratify = equal allocation per (extractor, brief).
+  batch    --briefs-dir D --out-dir O [--model sonnet] [--concurrency 4]
+           prepass -> headless tool-less LLM (the pilot's `claude -p` command) -> check, for every brief dir that has
+           a manifest and a research_brief.md, is not skip_staging, not an interview dossier, and has no ledger claims
+           (GET-only prod read). Writes files + O/batch-summary.json, nothing else. Staging is a separate step.
 
 Provenance (decided by the parent, 2026-11-11): URL in the same paragraph -> web_verified @0.55; otherwise
 reference @0.40; questions are always reference @0.40; every confidence is hard-capped at 0.60 here, in code.
@@ -434,6 +438,105 @@ def sample(checked: list[dict], *, n: int, stratify: bool, seed: int, packets: l
 
 
 # ---------------------------------------------------------------------------------------------------------------
+# batch (no writes: prepass -> headless LLM -> check, per brief; staging stays `substrate.py stage-prose`)
+# ---------------------------------------------------------------------------------------------------------------
+PROMPT_PATH = os.path.join(HERE, "..", "references", "prose-extractor-prompt.md")
+DOSSIER_PREFIX = "undated-interview-dossier-"
+
+
+def llm_cmd(model: str) -> list[str]:
+    """The pilot's headless command (iter2 run_llm_pilot.sh): no tools, no MCP, no slash commands, text out."""
+    return ["claude", "-p", "--model", model, "--tools", "", "--strict-mcp-config", "--mcp-config",
+            '{"mcpServers":{}}', "--disable-slash-commands", "--output-format", "text"]
+
+
+def run_llm(packet: dict, model: str) -> tuple[dict, str, str]:
+    """One tool-less extraction. Runs from an empty temp dir (outside every repo: no CLAUDE.md, no project agents).
+    Returns (claims doc, raw stdout, stderr); an unparseable reply becomes {"claims": []}, as in the pilot."""
+    import subprocess
+    prompt = open(PROMPT_PATH, encoding="utf-8").read().replace(
+        "{PACKET_JSON}", json.dumps(packet, indent=1, ensure_ascii=False) + "\n")
+    with tempfile.TemporaryDirectory() as cwd:
+        p = subprocess.run(llm_cmd(model), input=prompt, capture_output=True, text=True, cwd=cwd, timeout=1200)
+    m = re.search(r"\{.*\}", p.stdout, re.S)
+    try:
+        doc = json.loads(m.group(0)) if m else {"claims": []}
+    except json.JSONDecodeError:
+        doc = {"claims": []}
+    return doc, p.stdout, p.stderr + (f"\n[exit {p.returncode}]" if p.returncode else "")
+
+
+def _prod_ledger_count():
+    """GET-only ledger lookup against prod through substrate's Graph in dry-run mode (it never writes)."""
+    from substrate import Graph, Stats, ledger_claim_count
+    g = Graph(dry_run=True, stats=Stats())
+    return lambda skey: ledger_claim_count(g, skey)
+
+
+def batch(briefs_dir: str, out_dir: str, *, model: str = "sonnet", concurrency: int = 4,
+          ledger_count=None, llm=None) -> dict:
+    """Every eligible brief dir -> <slug>.packet.json, .llm.raw.txt, .llm.claims.json, .llm.checked.json in out_dir,
+    plus batch-summary.json. Skips (counted, never crashing): interview dossiers, no manifest, no research_brief.md,
+    skip_staging (YED-391), no event page id, ledger present (ledger beats prose), already checked, stubs."""
+    from concurrent.futures import ThreadPoolExecutor
+    ledger_count = ledger_count or _prod_ledger_count()
+    llm = llm or run_llm
+    os.makedirs(out_dir, exist_ok=True)
+    skipped: dict[str, list[str]] = {}
+    todo: list[tuple[str, dict]] = []
+
+    def skip(why: str, name: str):
+        skipped.setdefault(why, []).append(name)
+    names = sorted(d for d in os.listdir(briefs_dir) if os.path.isdir(os.path.join(briefs_dir, d)))
+    for name in names:
+        d = os.path.join(briefs_dir, name)
+        if name.startswith(DOSSIER_PREFIX):
+            skip("interview_dossier", name); continue
+        if not os.path.exists(os.path.join(d, "manifest.json")):
+            skip("no_manifest", name); continue
+        if not os.path.exists(os.path.join(d, "research_brief.md")):
+            skip("no_research_brief", name); continue
+        manifest = json.load(open(os.path.join(d, "manifest.json"), encoding="utf-8"))
+        if (manifest.get("notion_export") or {}).get("skip_staging") is True:
+            skip("skip_staging_otr", name); continue
+        pid = (manifest.get("event") or {}).get("notion_page_id")
+        if not pid:
+            skip("manifest_missing_event_page_id", name); continue
+        if ledger_count(research_source_key(pid)) > 0:
+            skip("ledger_present", name); continue
+        if os.path.exists(os.path.join(out_dir, f"{name}.llm.checked.json")):
+            skip("already_checked", name); continue
+        pk, why = prepass(d)
+        if pk is None:
+            skip(why.split(" ")[0], name); continue
+        _emit(pk, os.path.join(out_dir, f"{name}.packet.json"))
+        todo.append((name, pk))
+
+    def one(item):
+        name, pk = item
+        try:
+            doc, raw, err = llm(pk, model)
+            for suffix, body in ((".llm.raw.txt", raw), (".llm.err.txt", err)):
+                with open(os.path.join(out_dir, name + suffix), "w", encoding="utf-8") as f:
+                    f.write(body or "")
+            _emit(doc, os.path.join(out_dir, f"{name}.llm.claims.json"))
+            res = check(pk, doc, extractor="claude", model=model)
+            _emit(res, os.path.join(out_dir, f"{name}.llm.checked.json"))
+            return {"brief": name, "claims_in": res["claims_in"], "accepted_n": res["accepted_n"],
+                    "dropped": res["dropped"]}
+        except Exception as e:                       # one brief failing never stops the batch; reason only, no content
+            return {"brief": name, "error": type(e).__name__}
+    with ThreadPoolExecutor(max_workers=max(1, concurrency)) as ex:
+        results = list(ex.map(one, todo))
+    summary = {"briefs_seen": len(names), "model": model, "extracted": [r for r in results if "error" not in r],
+               "errors": [r for r in results if "error" in r],
+               "skipped_counts": {k: len(v) for k, v in sorted(skipped.items())}, "skipped": skipped,
+               "accepted_total": sum(r.get("accepted_n", 0) for r in results)}
+    _emit(summary, os.path.join(out_dir, "batch-summary.json"))
+    return summary
+
+
+# ---------------------------------------------------------------------------------------------------------------
 # self-test
 # ---------------------------------------------------------------------------------------------------------------
 FIX = os.path.join(HERE, "fixtures", "prose")
@@ -574,8 +677,68 @@ def selftest() -> bool:
         with redirect_stderr(io.StringIO()):
             rc3 = main(["prepass", os.path.join(FIX, "brief_stub"), "--out", os.path.join(td, "s.json")])
         ok("cli: stub exits 3 and writes nothing", rc3 == 3 and not os.path.exists(os.path.join(td, "s.json")))
+    _batch_selftest(ok)
     print(f"selftest: {'PASS' if not fails else 'FAIL'} ({len(fails)} failing)")
     return not fails
+
+
+def _batch_selftest(ok) -> None:
+    """batch over a temp tree of fixture copies; LLM and ledger lookup stubbed (no network, no subprocess)."""
+    import shutil
+    with tempfile.TemporaryDirectory() as td:
+        bd, od = os.path.join(td, "briefs"), os.path.join(td, "out")
+        os.makedirs(bd)
+
+        def clone(name, src="brief_ok", pid=None, otr=False, drop=None):
+            d = os.path.join(bd, name)
+            shutil.copytree(os.path.join(FIX, src), d)
+            m = json.load(open(os.path.join(d, "manifest.json")))
+            if pid:
+                m["event"]["notion_page_id"] = pid
+            if otr:
+                m.setdefault("notion_export", {})["skip_staging"] = True
+            json.dump(m, open(os.path.join(d, "manifest.json"), "w"))
+            if drop:
+                os.remove(os.path.join(d, drop))
+        clone("2026-10-01-eligible")
+        clone("2026-10-02-ledgered", pid="00000000-0000-4000-8000-00000000e1e1")
+        clone("2026-10-03-otr", otr=True)
+        clone("2026-10-04-no-manifest", drop="manifest.json")
+        clone("2026-10-05-no-brief", drop="research_brief.md")
+        clone("2026-10-06-stub", src="brief_stub")
+        clone(DOSSIER_PREFIX + "someone")
+        ledgered = research_source_key("00000000-0000-4000-8000-00000000e1e1")
+        calls = []
+
+        def fake_llm(pk, model):
+            calls.append(pk["source_key"])
+            return splitter(pk), "{}", ""
+        res = batch(bd, od, model="sonnet-fixture", ledger_count=lambda k: 3 if k == ledgered else 0, llm=fake_llm)
+        sc = res["skipped_counts"]
+        ok("batch: only the eligible brief reaches the LLM", len(calls) == 1 and [r["brief"] for r in res["extracted"]]
+           == ["2026-10-01-eligible"] and res["accepted_total"] > 0)
+        ok("batch: no manifest / no research_brief.md skipped + counted, never a FileNotFoundError",
+           sc.get("no_manifest") == 1 and sc.get("no_research_brief") == 1 and not res["errors"])
+        ok("batch: skip_staging, interview dossier, ledger present, stub each skipped + counted",
+           sc.get("skip_staging_otr") == 1 and sc.get("interview_dossier") == 1 and sc.get("ledger_present") == 1
+           and sc.get("stub_under_300_words") == 1)
+        ok("batch: checked file + summary written", os.path.exists(os.path.join(od, "2026-10-01-eligible.llm.checked.json"))
+           and os.path.exists(os.path.join(od, "batch-summary.json")))
+        calls.clear()
+        res2 = batch(bd, od, ledger_count=lambda k: 3 if k == ledgered else 0, llm=fake_llm)
+        ok("batch: a rerun skips briefs already checked (no second LLM spend)",
+           not calls and res2["skipped_counts"].get("already_checked") == 1)
+
+        def boom(pk, model):
+            raise RuntimeError("SECRET_BRIEF_TEXT")
+        shutil.rmtree(od)
+        res3 = batch(bd, od, ledger_count=lambda k: 0, llm=boom)
+        ok("batch: one LLM failure is recorded by type, no content, and does not stop the batch",
+           res3["errors"] and all(e["error"] == "RuntimeError" for e in res3["errors"])
+           and "SECRET_BRIEF_TEXT" not in json.dumps(res3))
+    ok("batch: the LLM command is the pilot's tool-less headless call",
+       llm_cmd("sonnet")[:4] == ["claude", "-p", "--model", "sonnet"] and "--strict-mcp-config" in llm_cmd("sonnet")
+       and llm_cmd("sonnet")[llm_cmd("sonnet").index("--tools") + 1] == "")
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -601,6 +764,8 @@ def main(argv: list[str]) -> int:
     a = sub.add_parser("sample"); a.add_argument("checked", nargs="+"); a.add_argument("--n", type=int, default=100)
     a.add_argument("--stratify", action="store_true"); a.add_argument("--seed", type=int, default=384)
     a.add_argument("--packets", nargs="*"); a.add_argument("--out")
+    a = sub.add_parser("batch"); a.add_argument("--briefs-dir", required=True); a.add_argument("--out-dir", required=True)
+    a.add_argument("--model", default="sonnet"); a.add_argument("--concurrency", type=int, default=4)
     a = ap.parse_args(argv)
     load = lambda p: json.load(open(p, encoding="utf-8"))   # noqa: E731
     if a.verb == "prepass":
@@ -631,6 +796,11 @@ def main(argv: list[str]) -> int:
                      packets=[load(p) for p in a.packets or []])
         _emit(res, a.out)
         sys.stderr.write(f"sample: {res['n']} claims from {res['strata']} strata · {res['by_extractor']}\n")
+    elif a.verb == "batch":
+        res = batch(a.briefs_dir, a.out_dir, model=a.model, concurrency=a.concurrency)
+        sys.stderr.write(f"batch: {res['briefs_seen']} dirs · extracted {len(res['extracted'])} · errors "
+                         f"{len(res['errors'])} · accepted {res['accepted_total']} · skipped {res['skipped_counts']}\n")
+        return 1 if res["errors"] else 0
     return 0
 
 

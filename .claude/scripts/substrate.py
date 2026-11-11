@@ -24,6 +24,13 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                   post-event ensure-event attaches these claims when the attended row appears.
                   Spec: docs/archive/notes/yed-205-spec-2026-09-27.md
+  stage-prose     --checked b.llm.checked.json --manifest m.json [--brief research_brief.md] [--dry-run]
+                  (YED-384) prose_extract.py `check` rows -> claim (lane research, candidate, cap 0.60), through the
+                  same Graph.post path. Ledger beats prose: any non-prose claim under the event's research key -> skip,
+                  exit 0, "ledger present". No event row -> a 'researched' occasion if 0022 is applied, else unlinked.
+                  --brief defaults to research_brief.md beside the manifest (the research_brief document row).
+  YED-391: stage-research / stage-claims / stage-prose exit 6 on notion_export.skip_staging: true unless
+                  --allow-otr-reviewed.
   ensure-roles    --manifest r.json   (YED-149) {"roles": [Notion Roles rows, SQL shape], "company_aliases": {slug|name: Name}}
                   -> one `role_posted` event each +
                   a company edge; keyed ONLY by the Roles page id; ICP Tier `drop` skipped. Spec:
@@ -1173,7 +1180,11 @@ class Graph:
 # ---------------------------------------------------------------------------------------------
 # stage-claims
 # ---------------------------------------------------------------------------------------------
-def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, approve: bool) -> int:
+def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, approve: bool,
+                 allow_otr_reviewed: bool = False) -> int:
+    rc = otr_refusal(manifest, "stage-claims", allow_otr_reviewed)   # YED-391: before any read or write
+    if rc:
+        return rc
     ev = manifest["event"]
     items = parse_brief(md)
     if not items:
@@ -1391,12 +1402,18 @@ def log_research_usage(g: Graph, sidecar: str, doc_id: str | None, ev: dict) -> 
         return f"usage: NOT LOGGED ({type(e).__name__}: {str(e)[:160]})"
 
 
-def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, usage_from: str | None = None) -> int:
+def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, usage_from: str | None = None,
+                   allow_otr_reviewed: bool = False) -> int:
     """YED-205 — the pre-event write. Spec: docs/archive/notes/yed-205-spec-2026-09-27.md.
     Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
     claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
     already exists for this page (a re-run after attendance), claims attach to it. Returns 3 on zero claims
-    (loud), 5 when the manifest lacks the Notion event page id (4 is retired: it was the graph freeze's)."""
+    (loud), 5 when the manifest lacks the Notion event page id (4 is retired: it was the graph freeze's), 6 on an
+    off-the-record manifest (YED-391)."""
+    rc = otr_refusal(manifest, "stage-research", allow_otr_reviewed)
+    if rc:
+        print("usage: NOT LOGGED (stage-research exit 6: off-the-record manifest — nothing staged)")
+        return rc
     ev = manifest.get("event") or {}
     if not ev.get("notion_page_id"):
         sys.stderr.write("stage-research: manifest.event.notion_page_id is required (it keys the claims)\n")
@@ -1477,6 +1494,150 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
           + "".join(f" · global: {n} → {t}:{en}" for s_, n, t, en in g.__dict__.get("global_links", []) if s_ == "about"))
     # YED-262: after the claims, so a usage problem can never cost the brief its claims; never changes rc
     print(log_research_usage(g, usage_from, doc_id, ev) if usage_from else "usage: NOT LOGGED (no --usage-from passed)")
+    return 0
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-391 — an off-the-record brief never stages. The Notion exporter sets notion_export.skip_staging when a brief
+# carries OTR flags; every stage verb refuses it unless Alex has reviewed the redactions by hand.
+OTR_EXIT = 6
+
+
+def otr_refusal(manifest: dict, verb: str, allow_otr_reviewed: bool) -> int | None:
+    if (manifest.get("notion_export") or {}).get("skip_staging") is True and not allow_otr_reviewed:
+        sys.stderr.write(f"{verb}: REFUSED — manifest has notion_export.skip_staging: true (off-the-record material). "
+                         "Nothing written. Pass --allow-otr-reviewed only after reviewing the brief's redactions (YED-391).\n")
+        return OTR_EXIT
+    return None
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-384 — stage-prose: prose_extract.py `check` output -> claim rows. Design: prose-extraction design note 2026-11-11.
+# Same write path as stage-research (Graph.post -> spine_client guard). The cage (containment, roster, cap) already ran
+# in `check`; the cap, tier, status and lane are re-enforced here in code because the checked file is just a file.
+# ---------------------------------------------------------------------------------------------
+PROSE_EXTRACTORS = ("claude", "splitter")
+PROSE_CONF_CAP = 0.60
+PROSE_TIERS = ("web_verified", "reference")
+PROSE_EXIT_MISMATCH = 2
+
+
+def ledger_claim_count(g: "Graph", skey: str) -> int:
+    """Claims under a research source_key that did NOT come from prose extraction (the Evidence Ledger's rows). A brief's
+    ledger always beats its prose: one non-prose claim means stage-prose must not run. A NULL extractor counts as ledger."""
+    return sum(r.get("extractor") not in PROSE_EXTRACTORS for r in g.get(f"/claim?source_key=eq.{skey}&select=extractor"))
+
+
+def researched_kind_allowed(g: "Graph") -> bool:
+    """Is migration 0022 (event.kind 'researched') applied? Its VERIFY reads pg_constraint, which REST cannot. 0022 is one
+    transaction that also creates public.entity_alias (service_role SELECT), so a zero-row read of that table is the cheap
+    proxy. Any failure reads as 'not applied': the caller then stages unlinked claims, never fails."""
+    try:
+        g.get("/entity_alias?select=id&limit=0")
+        return True
+    except (SystemExit, KeyError):
+        return False
+
+
+def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | None = None,
+                allow_otr_reviewed: bool = False) -> int:
+    """Rows from `prose_extract.py check` -> `claim` (lane research, status candidate). Returns 0 on success OR on the
+    ledger skip, 3 on zero rows, 5 without the event page id, 2 when the checked file belongs to another event,
+    6 on an off-the-record manifest (YED-391)."""
+    rc = otr_refusal(manifest, "stage-prose", allow_otr_reviewed)
+    if rc:
+        return rc
+    ev = manifest.get("event") or {}
+    if not ev.get("notion_page_id"):
+        sys.stderr.write("stage-prose: manifest.event.notion_page_id is required (it keys the claims)\n")
+        return 5
+    skey = research_source_key(ev["notion_page_id"])
+    rows_in = list(checked.get("accepted") or [])
+    if checked.get("source_key") != skey or any(r.get("source_key") != skey for r in rows_in):
+        sys.stderr.write("stage-prose: the checked file's source_key is not this manifest's event — refusing.\n")
+        return PROSE_EXIT_MISMATCH
+    if not rows_in:
+        sys.stderr.write("LOUD FAILURE: 0 accepted rows in the checked file — nothing to stage.\n")
+        return 3
+    n_ledger = ledger_claim_count(g, skey)               # read before ANY write, ensure_entity included
+    if n_ledger:
+        print(f"stage-prose: ledger present ({n_ledger} ledger claims under this event's research key) — skipped, "
+              "nothing written. A brief's ledger always beats its prose.")
+        g.stats.bump("claim", "skipped_ledger_present", len(rows_in))
+        return 0
+    rows, capped = [], 0
+    for r in rows_in:
+        if r.get("provenance_tier") not in PROSE_TIERS:
+            g.stats.bump("claim", "skipped_bad_tier")
+            continue
+        conf = min(float(r.get("confidence") or 0), PROSE_CONF_CAP)
+        capped += conf < float(r.get("confidence") or 0)
+        rows.append({**r, "confidence": conf, "status": "candidate", "lane": "research"})
+    g.stats.bump("claim", "confidence_capped", capped)
+    # event linkage: an existing row by Notion page id; else a 'researched' occasion (0022); else unlinked + reported
+    existing = g.find_event(ev)
+    eid, linkage = (existing["id"], f"matched ({existing.get('kind')})") if existing else (None, None)
+    if not existing:
+        if researched_kind_allowed(g):
+            try:
+                eid = g.ensure_event({"event": {**ev, "kind": "researched"}, "entities": manifest.get("entities", [])})
+                linkage = "created researched"
+            except SystemExit as e:
+                if "23514" not in str(e):
+                    raise
+                linkage = "none — 'researched' kind refused (23514); staged unlinked"
+        else:
+            linkage = "none — migration 0022 not applied; staged unlinked"
+    roster = []
+    for e in manifest.get("entities", []):
+        t, iid = g.ensure_entity(e)
+        if iid:
+            roster.append((t, e["name"], iid))
+    brief_ref = next((r["metadata"]["brief_ref"] for r in rows if (r.get("metadata") or {}).get("brief_ref")), None)
+    doc_id = None
+    if brief_ref and brief_md:
+        doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
+                                    "source_type": "research_brief", "body_text": redact_body(brief_md),
+                                    "doc_date": (ev.get("event_date") or "")[:10] or None,
+                                    "produced_by": "/event-deep-research",
+                                    "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
+                                                 "phase": "pre_event"}}, event_id=eid)
+    have = {r["claim_key"] for r in g.get(f"/claim?source_key=eq.{skey}&select=claim_key")}
+    new = [r for r in rows if r["claim_key"] not in have]
+    g.stats.bump("claim", "matched", len(rows) - len(new))
+    out = []
+    for r, vec in zip(new, g.embed([r["claim_text"] for r in new]) if new else []):
+        row = {k: v for k, v in r.items() if k != "entity_type"}        # entity_type is a link hint, not a column
+        row.update({"document_id": doc_id, "event_id": eid, "embedding": vec, "embedding_model": EMBED_MODEL})
+        out.append({k: v for k, v in row.items() if v is not None})
+    if out:
+        g.stats.bump("claim", "created", len(out))
+        g.post("claim", out, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
+    if eid:
+        g.attach_research({"notion_page_id": ev["notion_page_id"]}, eid)   # an earlier unlinked run's rows, if any
+    ids = {r["claim_key"]: r["id"] for r in g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key")} if not g.dry else {}
+    by_name = {(t, norm_text(n)): iid for t, n, iid in roster}
+    links, unresolved = [], 0
+    for r in rows:
+        hit = by_name.get((r.get("entity_type"), norm_text((r.get("locator") or {}).get("entity") or "")))
+        if not hit:
+            unresolved += 1
+            continue
+        if r["claim_key"] in ids:
+            links.append({"claim_id": ids[r["claim_key"]], "entity_type": r["entity_type"], "entity_id": hit, "role": "about"})
+    g.stats.bump("claim_entity", "about_unresolved", unresolved)
+    if links:
+        g.stats.bump("claim_entity", "linked (idempotent)", len(links))
+        g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+               on_conflict="claim_id,entity_type,entity_id,role")
+    tiers = {t: sum(r["provenance_tier"] == t for r in rows) for t in PROSE_TIERS}
+    print(f"stage-prose: {len(rows)} prose claims (web {tiers['web_verified']} · reference {tiers['reference']}) · "
+          f"new {len(out)} · already staged {len(rows) - len(new)} · capped {capped} · roster-unresolved {unresolved} · "
+          f"event row: {linkage}")
+    if g.dry:
+        for r in out[:3]:
+            print("  dry row: " + json.dumps({k: v for k, v in r.items() if k not in ("claim_text", "quote", "embedding")},
+                                             ensure_ascii=False, sort_keys=True))
     return 0
 
 
@@ -1835,6 +1996,8 @@ class _FakeGraph(Graph):
     DEFAULTS = {"documents": {"is_current": True, "version": 1}}   # column defaults the real schema applies
 
     def post(self, table, row, prefer="return=representation", on_conflict=None):
+        if self.dry:                                  # the real Graph's dry branch: guard, fake ids, nothing stored
+            return Graph.post(self, table, row, prefer, on_conflict)
         out = []
         cols = on_conflict.split(",") if on_conflict else []
         for r in (row if isinstance(row, list) else [row]):
@@ -2370,6 +2533,129 @@ def _usage_selftest(ok) -> None:
     __import__("shutil").rmtree(tmp, ignore_errors=True)
 
 
+def _prose_selftest(ok) -> None:
+    """YED-384 stage-prose, offline against _FakeGraph: ledger skip, unlinked fallback, researched path, 23514, cap,
+    idempotent rerun, dry-run output shape."""
+    import contextlib, io
+    pid = "00000000-0000-4000-8000-0000000a0a0a"
+    skey = research_source_key(pid)
+    man = {"event": {"notion_page_id": pid, "title": "Prose Fixture Night", "event_date": "2026-10-01"},
+           "entities": [{"type": "company", "name": "Acme Widgets"}, {"type": "topic", "name": "Widget Pricing"}]}
+
+    def row(text, tier, conf, etype, ent):
+        return {"source_key": skey, "claim_key": claim_key(text), "claim_text": text, "claim_type": "fact",
+                "quote": text[:40], "locator": {"section": "Companies", "entity": ent, "para_idx": 0, "url": None},
+                "provenance_tier": tier, "confidence": conf, "asserted_at": "2026-10-01", "status": "candidate",
+                "extractor": "claude", "extractor_model": "sonnet", "lane": "research", "entity_type": etype,
+                "metadata": {"phase": "pre_event", "extraction": "prose", "brief_ref": "notion:fixture-brief"}}
+    checked = {"source_key": skey, "accepted": [
+        row("Acme Widgets raised a $6M seed in 2024", "web_verified", 0.55, "company", "Acme Widgets"),
+        row("Widget Pricing: list prices rose 18% in 2025", "reference", 0.95, "topic", "Widget Pricing"),
+        row("Offroster Co: sells gaskets", "reference", 0.40, "company", "Offroster Co")]}
+
+    def run(fg, chk=checked, m=man, **kw):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            rc = stage_prose(fg, chk, m, brief_md="# Brief\n\nAcme Widgets raised a $6M seed.", **kw)
+        return rc, out.getvalue()
+    # unlinked fallback: 0022 not applied (no entity_alias table in the fake)
+    fg = _FakeGraph()
+    rc, out = run(fg)
+    cl = fg.t["claim"]
+    ok("stage-prose: 0022 absent -> 3 claims staged with NO event_id, reported, rc 0",
+       rc == 0 and len(cl) == 3 and all("event_id" not in c for c in cl) and not fg.t["event"]
+       and "0022 not applied; staged unlinked" in out)
+    ok("stage-prose: cap enforced in code (a 0.95 row lands at 0.60); every confidence <= 0.60",
+       max(c["confidence"] for c in cl) == 0.60 and "capped 1" in out)
+    ok("stage-prose: rows are lane research · candidate · extractor claude; entity_type never written as a column",
+       all(c["lane"] == "research" and c["status"] == "candidate" and c["extractor"] == "claude"
+           and "entity_type" not in c for c in cl))
+    ok("stage-prose: roster entities linked about; the off-roster entity counted, not linked",
+       len(fg.t["claim_entity"]) == 2 and "roster-unresolved 1" in out)
+    ok("stage-prose: research_brief document row attached", len(fg.t["documents"]) == 1
+       and all(c.get("document_id") == fg.t["documents"][0]["id"] for c in cl))
+    n_ce = len(fg.t["claim_entity"])
+    rc2, out2 = run(fg)
+    ok("stage-prose: idempotent rerun -> 0 new claims, 0 new edges, not mistaken for a ledger",
+       rc2 == 0 and len(fg.t["claim"]) == 3 and len(fg.t["claim_entity"]) == n_ce and "new 0" in out2
+       and "ledger present" not in out2)
+    fg.t["entity_alias"] = []                                 # 0022 applied later: the rerun links the earlier rows
+    run(fg)
+    ok("stage-prose: rerun after 0022 -> researched event created and the unlinked rows attached to it",
+       len(fg.t["event"]) == 1 and fg.t["event"][0]["kind"] == "researched"
+       and all(c.get("event_id") == fg.t["event"][0]["id"] for c in fg.t["claim"]))
+    # researched-kind path, fresh
+    rg = _FakeGraph()
+    rg.t["entity_alias"] = []
+    rc, out = run(rg)
+    ev = rg.t["event"]
+    ok("stage-prose: 0022 applied + no event -> one 'researched' event by page id; claims carry its id",
+       rc == 0 and len(ev) == 1 and ev[0]["kind"] == "researched" and ev[0]["notion_page_id"] == pid
+       and all(c["event_id"] == ev[0]["id"] for c in rg.t["claim"]) and "created researched" in out)
+    ok("stage-prose: the researched event gets its roster edges", len(rg.t["event_entity"]) == 2)
+    # an existing event (any kind) is matched by page id, never duplicated
+    eg = _FakeGraph()
+    eg.t["event"].append({"id": "ev-attended", "notion_page_id": pid, "kind": "attended", "title": "Prose Fixture Night"})
+    run(eg)
+    ok("stage-prose: an existing event row (by notion page id) is linked, none created",
+       len(eg.t["event"]) == 1 and all(c["event_id"] == "ev-attended" for c in eg.t["claim"]))
+
+    class _Refuses(_FakeGraph):                               # entity_alias visible but the CHECK still refuses the kind
+        def post(self, table, row, prefer="return=representation", on_conflict=None):
+            if table == "event":
+                raise SystemExit('POST /event -> 400: {"code":"23514","message":"violates check constraint"}')
+            return super().post(table, row, prefer, on_conflict)
+    xg = _Refuses()
+    xg.t["entity_alias"] = []
+    rc, out = run(xg)
+    ok("stage-prose: a 23514 on the researched create -> staged unlinked, rc 0, reported",
+       rc == 0 and len(xg.t["claim"]) == 3 and "23514" in out and all("event_id" not in c for c in xg.t["claim"]))
+    # ledger beats prose
+    lg = _FakeGraph()
+    lg.t["claim"].append({"id": "l1", "source_key": skey, "claim_key": "k", "extractor": "parse"})
+    rc, out = run(lg)
+    ok("stage-prose: a ledger claim under the research key -> 'ledger present', rc 0, nothing written (entities too)",
+       rc == 0 and "ledger present" in out and len(lg.t["claim"]) == 1 and not lg.t["company"] and not lg.t["topic"])
+    mg = _FakeGraph()
+    rc, _ = run(mg, chk={**checked, "source_key": "someone-else"})
+    ok("stage-prose: a checked file for another event is refused (rc 2), nothing written", rc == 2 and not mg.t["claim"])
+    # dry-run: counts + first 3 rows' non-text fields only
+    dg = _dry_fake(_FakeGraph())
+    rc, out = run(dg)
+    dry_rows = [ln for ln in out.splitlines() if ln.startswith("  dry row: ")]
+    ok("stage-prose --dry-run: writes nothing; prints <= 3 rows with no claim_text / quote",
+       rc == 0 and not dg.t["claim"] and 0 < len(dry_rows) <= 3
+       and not any("raised a $6M" in ln or '"claim_text"' in ln or '"quote"' in ln for ln in dry_rows))
+
+
+def _otr_selftest(ok) -> None:
+    """YED-391: each stage verb refuses an off-the-record manifest at the CLI, before any network call."""
+    import contextlib, io, tempfile
+    pid = "00000000-0000-4000-8000-0000000b0b0b"
+    otr = {"event": {"notion_page_id": pid, "title": "OTR Night", "kind": "attended", "event_date": "2026-10-02"},
+           "entities": [], "notion_export": {"skip_staging": True}}
+    with tempfile.TemporaryDirectory() as td:
+        mp, bp, cp = (os.path.join(td, n) for n in ("m.json", "b.md", "c.json"))
+        json.dump(otr, open(mp, "w"))
+        open(bp, "w").write(SAMPLE_BRIEF)
+        json.dump({"source_key": research_source_key(pid), "accepted": []}, open(cp, "w"))
+        for verb, extra in (("stage-research", ["--evidence", bp]), ("stage-claims", ["--brief", bp]),
+                            ("stage-prose", ["--checked", cp])):
+            err = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                rc = main([verb, "--manifest", mp, *extra])     # a real Graph: a network call would not return 6
+            ok(f"YED-391: {verb} on skip_staging: true -> exit {OTR_EXIT}, clear message, nothing written",
+               rc == OTR_EXIT and "skip_staging" in err.getvalue() and "REFUSED" in err.getvalue())
+    fg = _FakeGraph()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        rc_r = stage_research(fg, RESEARCH_SAMPLE, otr, brief_ref="notion:x")
+        rc_c = stage_claims(fg, SAMPLE_BRIEF, otr, brief_ref=None, approve=False)
+    ok("YED-391: the functions refuse too (no table touched)", rc_r == rc_c == OTR_EXIT and not any(fg.t.values()))
+    ok("YED-391: --allow-otr-reviewed lets a reviewed manifest through; skip_staging false never refuses",
+       otr_refusal(otr, "stage-prose", True) is None
+       and otr_refusal({**otr, "notion_export": {"skip_staging": False}}, "stage-prose", False) is None)
+
+
 def _dry_fake(fg: "_FakeGraph") -> "_FakeGraph":
     """A dry-run view over the same in-memory tables (reads real, writes suppressed)."""
     d = _FakeGraph()
@@ -2514,6 +2800,8 @@ def selftest() -> bool:
     _linking_selftest(ok)
     _usage_selftest(ok)
     _roles_selftest(ok)
+    _prose_selftest(ok)          # YED-384 stage-prose
+    _otr_selftest(ok)            # YED-391
     from reconcile import selftest as _reconcile_selftest   # YED-384: offline fixture tree + stubbed req
     _reconcile_selftest(ok)
 
@@ -2535,7 +2823,11 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "stage-research", "ensure-roles"])
+                                     "stage-research", "ensure-roles", "stage-prose"])
+    ap.add_argument("--checked", metavar="BRIEF.llm.checked.json", help="(stage-prose) prose_extract.py check output")
+    ap.add_argument("--allow-otr-reviewed", action="store_true",
+                    help="(stage-research/-claims/-prose, YED-391) stage a manifest marked notion_export.skip_staging "
+                         "ONLY after Alex has reviewed its off-the-record redactions")
     ap.add_argument("--evidence", help="(stage-research) the Evidence Set, or the raw specialist returns, as markdown")
     ap.add_argument("--usage-from", metavar="PACK.usage.json",
                     help="(stage-research, YED-262) retrieve.py's usage sidecar; logs claim_usage for the research brief")
@@ -2631,7 +2923,14 @@ def main(argv: list[str]) -> int:
         if not a.evidence:
             ap.error("stage-research needs --evidence")
         rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref,
-                            usage_from=a.usage_from)
+                            usage_from=a.usage_from, allow_otr_reviewed=a.allow_otr_reviewed)
+    elif a.verb == "stage-prose":
+        if not a.checked:
+            ap.error("stage-prose needs --checked")
+        brief = a.brief or os.path.join(os.path.dirname(os.path.abspath(a.manifest)), "research_brief.md")
+        rc = stage_prose(g, json.load(open(a.checked, encoding="utf-8")), m,
+                         brief_md=open(brief, encoding="utf-8").read() if os.path.exists(brief) else None,
+                         allow_otr_reviewed=a.allow_otr_reviewed)
     elif a.verb == "ensure-event":
         g.ensure_event(m)
     elif a.verb == "ensure-document":
@@ -2663,7 +2962,8 @@ def main(argv: list[str]) -> int:
     elif a.verb == "stage-claims":
         if not a.brief:
             ap.error("stage-claims needs --brief")
-        rc = stage_claims(g, open(a.brief, encoding="utf-8").read(), m, brief_ref=a.brief_ref, approve=a.approve)
+        rc = stage_claims(g, open(a.brief, encoding="utf-8").read(), m, brief_ref=a.brief_ref, approve=a.approve,
+                          allow_otr_reviewed=a.allow_otr_reviewed)
     print(("DRY-RUN " if a.dry_run else "") + f"{a.verb}: created={stats.created()}")
     print(stats.report())
     if a.json:
