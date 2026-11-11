@@ -1,0 +1,16 @@
+{
+ "event": {
+  "notion_page_id": "00000000-fake",
+  "title": "Mystery Evening",
+  "event_date": "2026-11-13"
+ },
+ "entities": [
+  {
+   "type": "company",
+   "name": "Otherco",
+   "website": "https://otherco.example.com",
+   "linkedin_url": "",
+   "notion_page_id": "fake"
+  }
+ ]
+}
