@@ -5,6 +5,8 @@ CLAUDE.md 2026-06-02 to keep always-loaded context lean — content is unchanged
 in CLAUDE.md ("Notion Database IDs"). Live schema in Notion is the ultimate source of truth; verify
 with `notion-fetch` on the data_source URL before any batch create (see
 `notion-write-gotchas.md` rule e).
+`notion-property-names.json` is the snapshot `notion_payload.py` checks every property name against (YED-398). When a
+database gains, renames or drops a property, `notion-fetch` its schema and update that file in the same change.
 
 ## Notion (Content + Research Hub) — 6 interconnected databases (verified via MCP, 2026-04-09)
 
