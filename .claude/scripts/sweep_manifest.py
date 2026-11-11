@@ -477,8 +477,10 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
     # Self-consistency: the graph mapping must only ever produce values the live CHECKs accept.
     assert all(ek in GRAPH_EVENT_KINDS and st in GRAPH_SIGNAL_TYPES for ek, st in KIND_MAP.values())
 
-    if not r.errors and not norm_items:
-        r.err("items", "every item was dropped" if items else "no items (nothing to stage)")
+    # A quiet window (the agent returned items: []) is a valid result: the nightly lane must not alarm on it.
+    # A batch where every item was dropped is a failure: the agent produced only bad records.
+    if not r.errors and not norm_items and items:
+        r.err("items", "every item was dropped")
     normalized = {**m, "items": norm_items, "new_entities": norm_ents, "dropped": dict(r.dropped)}
     return r, normalized
 
@@ -604,7 +606,7 @@ def selftest() -> bool:
           r.errors == ["items: every item was dropped"] and r.dropped == {"kind": 1, "date": 1, "url": 1}
           and n["items"] == [])
     r, _ = run(mut(lambda m: m.__setitem__("items", [])))
-    check("empty items -> invalid (nothing to stage)", any("no items" in e for e in r.errors))
+    check("empty items (quiet window) -> valid, nothing to stage", not r.errors and _["items"] == [])
     r, n = run(mut(lambda m: (m["window"].__setitem__("to", "2026-11-30"), m["items"][0].__setitem__("kind", "blog"))))
     check("window mismatch still fails everything", any("parent's --window" in e for e in r.errors))
     r, _ = run(mut(lambda m: (m.__setitem__("bogus", 1), m["items"][0].__setitem__("kind", "blog"))))
