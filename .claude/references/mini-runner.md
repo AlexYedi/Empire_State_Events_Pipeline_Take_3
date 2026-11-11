@@ -34,14 +34,38 @@ Database reads go through `spine_client.py` only (invariant 1). REST paths need 
 
 | Job | LaunchAgent | Schedule | State |
 |---|---|---|---|
-| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS run directly 2026-11-11 18:03Z; launchd proof pending install |
-| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | not installed until Alex approves the report |
+| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS under launchd 2026-11-11 19:26Z (runner checkout, `a0d47ed`) |
+| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | installed 2026-11-11 on Alex's yes; first run 2026-11-12 05:00 ET (check: YED-399) |
+| `sync` | `com.esep.sync-inputs` | hourly, and once at load | YED-395; see "Laptop input sync" below |
 
 `StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
 when it wakes (missed runs coalesce into one).
 
-Known data-locality gap (YED-395): the mini has no `.claude/.state/{research,briefs,post-event}` and no `event-transcripts/`
-(they live on the laptop), so its reconcile report over-counts `attended_no_local_source` and under-counts `*_not_staged`.
+## Laptop input sync (YED-395)
+
+The local inventories reconcile reads (untracked `Event Content/` files, `event-transcripts/`,
+`.claude/.state/{research,briefs,post-event}`) are produced on the laptop. The mini **pulls** a read-only mirror of them
+every hour into `~/Developer/esep-inputs/`, which sits outside every git work tree, and `reconcile` reads that mirror
+(`--root`), after one best-effort fresh pull.
+
+- Transport: `rsync` over Tailscale to `alexs-macbook-pro-2`, using a dedicated key `~/.ssh/esep_sync` (no passphrase, used for nothing else).
+- Laptop side: that key is pinned in `~/.ssh/authorized_keys` to `restrict,command="/opt/homebrew/bin/rrsync -ro <checkout>"`, so it can
+  only **read** the repo checkout, with no shell, no port forwarding and no writes.
+- Why pull, not push: the laptop sleeps (a failed hour just retries), and a laptop-side launchd push would hit the same TCC block
+  on `~/Documents` that moved the mini's runner to `~/Developer`.
+- `--delete` only ever touches the mirror. `*.PRIVATE.*` files are never copied; reconcile skips them by name anyway.
+- The mirror holds private inputs. It never enters git (invariant 4), and the mini has FileVault on.
+
+Laptop setup, once (Alex, **on the laptop**):
+1. System Settings → General → Sharing → **Remote Login** on, then (i) → **Allow full disk access for remote users** on
+   (needed because the checkout is under `~/Documents`).
+2. `brew install rsync` (provides `rrsync`). Homebrew's `rrsync` hard-codes `RSYNC = '/usr/bin/rsync'` (Apple's openrsync, which
+   rejects `--confine-root`), so make a patched copy:
+   `mkdir -p ~/.local/bin && sed 's#^RSYNC = .*#RSYNC = "/opt/homebrew/bin/rsync"#' /opt/homebrew/bin/rrsync > ~/.local/bin/rrsync-esep && chmod 755 ~/.local/bin/rrsync-esep`
+   (re-run after a `brew upgrade rsync` if you want the newer rrsync; the old copy keeps working).
+3. Append the mini's public key with the restriction:
+   `echo "restrict,command=\"$HOME/.local/bin/rrsync-esep -ro $HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3\" <contents of esep_sync.pub>" >> ~/.ssh/authorized_keys`
+To revoke: delete that line on the laptop.
 
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
@@ -51,8 +75,9 @@ Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
 2. Smoke: `launchctl bootout gui/$(id -u)/com.esep.runner-smoke 2>/dev/null; cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
    then `tail -5 "$(ls -t ~/Library/Logs/esep-runner/smoke-*.log | head -1)"` shows `SMOKE: ALL PASS`.
 3. Nightly reconcile (only after approving a report): `cp ops/mini-runner/com.esep.nightly-reconcile.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.nightly-reconcile.plist`
-4. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
-5. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
+4. Input sync (after the laptop setup above): `cp ops/mini-runner/com.esep.sync-inputs.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.sync-inputs.plist`
+5. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
+6. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
 
 LaunchAgents start only once the user is logged in. That is why the restart procedure below matters.
 
