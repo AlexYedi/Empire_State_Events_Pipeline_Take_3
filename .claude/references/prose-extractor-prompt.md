@@ -32,6 +32,10 @@ You extract atomic factual claims from one research brief. The brief has already
   - hedged guesses the paragraph marks as unconfirmed, and anything not about a roster entity.
 - **Keep the paragraph's hedges.** "says", "reports", "about", "an inference", "unconfirmed" stay in `text`. Turning a hedge into a flat fact is an error.
 - Do not add facts from your own knowledge. If it is not in the paragraph, it is not a claim.
+- **Write `text` only in the paragraph's own words.** Every word in `text` must appear in paragraph `para_idx` or in the entity's name; small function words (the, of, is, has, that) are free. Reuse the paragraph's exact wording, trimmed to one atomic claim, with pronouns replaced by the entity name. Do not paraphrase, swap in synonyms or change a word's form ("evaporate" for "evaporation", "margins" for "margin"). A claim with any other word is dropped as `text_not_grounded`.
+  - Paragraph (invented): `"Acme Widgets ships custom brackets to regional builders [2]. Its founder Dana Fixture warns that margin evaporation hits small widget makers first."`
+  - Accepted: `"Dana Fixture warns that margin evaporation hits small widget makers first"` (every word is in the paragraph).
+  - Rejected: `"Dana Fixture says small widget makers see their margins evaporate first"` ("says", "see", "margins" and "evaporate" are not in the paragraph, even though the meaning is the same).
 
 ### Fields
 
@@ -39,7 +43,7 @@ Emit exactly these seven keys per claim. Any other key fails the whole claim.
 
 | key | rule |
 |---|---|
-| `text` | ≤ 30 words, standalone, names the entity, faithful to the paragraph (paraphrase allowed, new facts not). |
+| `text` | ≤ 30 words, standalone, names the entity, faithful to the paragraph, in the paragraph's own words (no paraphrase, no new facts). |
 | `quote` | ≤ 25 words, **copied character for character** from paragraph `para_idx`'s `text`, including any `[n]` markers and punctuation inside the span. Only whitespace may differ. Pick the shortest span that supports the claim. A quote that is not verbatim is dropped. |
 | `para_idx` | the `idx` of the one paragraph the quote comes from. |
 | `url_ref` | one URL copied exactly from that paragraph's `urls` list when it supports the claim, else `null`. Never a URL from another paragraph, never one you construct. |
