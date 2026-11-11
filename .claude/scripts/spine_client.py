@@ -97,6 +97,12 @@ ALLOW: dict[str, set[str]] = {
     "artifact_outcome": {"document_id", "goal", "target", "outcome", "outcome_value", "outcome_date",
                          "source", "updated_at"},
     "claim_usage": {"id", "claim_id", "document_id", "consumer", "used_at"},
+    # --- migration 0022 (YED-384): identity + discovery-loop ledger. entity_alias.alias_norm is generated
+    # (never written). alias and sweep_query.template are the free-text columns; the PII scan covers them.
+    "entity_alias": {"id", "entity_type", "entity_id", "alias", "source", "confidence", "created_at"},
+    "sweep_query": {"query_id", "kind", "theme_id", "template", "seed_event_id", "seed_claim_id", "iso_week",
+                    "lane_run_id", "status", "items_returned", "items_written", "items_used", "searches",
+                    "created_at", "last_run_at"},
 }
 # Forbidden on EVERY table, regardless of allowlist — contact PII never enters the spine.
 FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "telephone"}
@@ -568,7 +574,7 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
 _SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
 _WRITE_TABLES = (r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims|claim|"
                  r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage|"
-                 r"company_segment_history|lane_run|lane_registry)")
+                 r"company_segment_history|lane_run|lane_registry|entity_alias|sweep_query)")
 _PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
 _PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
 
@@ -746,6 +752,37 @@ def selftest() -> bool:
     add("documents our-artifact row (no blob) → pass",
         lambda: guard("documents", {"title": "Brief", "source_type": "research_brief", "sha256": "h",
                                     "external_ref": "notion:3ded3699", "version": 1, "is_current": True}), False)
+    # 0022 (YED-384): the two new tables open their columns, never the PII boundary (each free-text column probed).
+    add("entity_alias clean row → pass",
+        lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Elastic N.V.",
+                                       "source": "notion", "confidence": 0.9}), False)
+    add("entity_alias.alias carrying an email → refuse",
+        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "jane.doe@example.com",
+                                       "source": "notion"}), True)
+    add("entity_alias.alias carrying a phone → refuse",
+        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane (555) 123-4567",
+                                       "source": "manual"}), True)
+    add("entity_alias.source carrying an email → refuse",
+        lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
+                                       "source": "ops@acme.example.com"}), True)
+    add("entity_alias.alias_norm set → refuse (generated column, never written)",
+        lambda: guard("entity_alias", {"entity_type": "company", "entity_id": "c1", "alias": "Acme",
+                                       "alias_norm": "acme", "source": "manual"}), True)
+    add("entity_alias email column → refuse",
+        lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane", "email": "x"}), True)
+    add("sweep_query clean row → pass",
+        lambda: guard("sweep_query", {"kind": "room_topic", "theme_id": "t1", "template": "agent evals 28d news",
+                                      "seed_event_id": "e1", "iso_week": "2026-W46", "items_returned": 12,
+                                      "items_written": 4, "searches": 3, "status": "ran"}), False)
+    add("sweep_query.template carrying an email → refuse",
+        lambda: guard("sweep_query", {"kind": "entity", "template": "contact founder@veris.example.com",
+                                      "iso_week": "2026-W46"}), True)
+    add("sweep_query.template carrying an intl phone → refuse",
+        lambda: guard("sweep_query", {"kind": "entity", "template": "call +44 20 7946 0958", "iso_week": "2026-W46"}), True)
+    add("sweep_query page-text column → refuse (template is the parent's query, never page text)",
+        lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46", "page_text": "..."}), True)
+    add("prose scan catches `POST /entity_alias`",
+        lambda: None if _PROSE_VERB_RE.search("then `POST /entity_alias` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
     add("prose scan catches `POST /claim`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /claim` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
     add("batch body guards every row → refuse on 2nd",
