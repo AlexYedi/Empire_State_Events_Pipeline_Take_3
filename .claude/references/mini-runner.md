@@ -15,7 +15,8 @@ loop started 2026-11-06, before the rename), and its id survived only because th
 | Piece | Value |
 |---|---|
 | Machine | Mac mini (Mac18,5), hostname `esep-mini`, macOS 27, FileVault **on** |
-| Real checkout | `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3`, always on `main`. `run-job.sh` refuses to run on any other branch and fast-forwards `main` before each job, so launchd only runs merged code |
+| Runner checkout | `~/Developer/Empire_State_Events_Pipeline_Take_3`, always on `main`, used only by launchd jobs. `run-job.sh` refuses to run on any other branch and fast-forwards `main` before each job, so launchd only runs merged code. It has its own `.venv` and its own copy of `.env` (Alex copies it) |
+| Why not `~/Documents` | macOS privacy protection (TCC) blocks launchd-started programs from `~/Documents`: the first launchd smoke failed with `zsh: can't open input file` (exit 127). `~/Developer` is not protected, so no binary needs Full Disk Access. Interactive sessions and Remote Control keep using `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3` |
 | Job runner | `ops/mini-runner/run-job.sh` (jobs: `reconcile`, `smoke`); one log per run in `~/Library/Logs/esep-runner/<job>-<UTC>.log` |
 | Remote access | LaunchAgent `com.esep.remote-control` keeps one `claude remote-control --spawn worktree` up, for phone/web access only. Not part of the scheduler; its environment id changes on restart, so never pin a routine to it |
 | Power | `pmset`: `sleep 0`, `disksleep 0`, `autorestart 1` (boots itself after a power cut, then waits at the FileVault screen) |
@@ -44,10 +45,10 @@ Known data-locality gap (YED-395): the mini has no `.claude/.state/{research,bri
 
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
-Merge the PR first: the plists point at `run-job.sh` in the real checkout.
+Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
 
-1. `cd ~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3 && git pull --ff-only`
-2. Smoke: `cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
+1. `cd ~/Developer/Empire_State_Events_Pipeline_Take_3 && git pull --ff-only` (one-time setup: `git clone` there, `uv venv --python 3.12 .venv`, copy `.env` in)
+2. Smoke: `launchctl bootout gui/$(id -u)/com.esep.runner-smoke 2>/dev/null; cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
    then `tail -5 "$(ls -t ~/Library/Logs/esep-runner/smoke-*.log | head -1)"` shows `SMOKE: ALL PASS`.
 3. Nightly reconcile (only after approving a report): `cp ops/mini-runner/com.esep.nightly-reconcile.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.nightly-reconcile.plist`
 4. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`

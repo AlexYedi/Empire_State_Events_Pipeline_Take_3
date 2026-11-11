@@ -3,7 +3,7 @@
 # Called by launchd: run-job.sh <job>. Runs in the REAL checkout (it holds the gitignored inputs), on main only.
 # Never prints secrets: .env is read by spine_client.py itself, never by this script.
 set -u
-REAL="$HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3"
+REAL="$HOME/Developer/Empire_State_Events_Pipeline_Take_3"
 LOGDIR="$HOME/Library/Logs/esep-runner"
 JOB="${1:-}"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
