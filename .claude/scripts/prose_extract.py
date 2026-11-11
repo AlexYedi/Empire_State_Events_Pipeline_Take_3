@@ -15,9 +15,10 @@ Verbs:
            the NULL BASELINE: every sentence of every kept paragraph is one claim (quote = its first 25 words). Same
            output schema as the LLM extractor, so `check` scores both identically.
   check    <packet> <claims.json> [--extractor claude|splitter] [--model ID] [--out checked.json]
-           the gate. Drops (never downgrades) anything off-schema, non-verbatim, off-roster, over-length or carrying
-           contact PII; downgrades a URL not in the claim's own paragraph to `reference`; flags low claim/quote
-           overlap. Output rows are in stage-research's claim shape, status 'candidate', lane 'research'.
+           the gate. Drops (never downgrades) anything off-schema, non-verbatim, off-roster, over-length, carrying
+           contact PII (raw or normalized), carrying a URL or `@` in its text, using words its paragraph lacks
+           (`text_not_grounded`) or with low claim/quote overlap; downgrades a URL not in the claim's own paragraph to
+           `reference`. claim_key = (para_idx, quote). Output rows are in stage-research's claim shape, status 'candidate', lane 'research'.
   sample   <checked.json ...> [--n 100] [--stratify] [--seed N] [--packets p.json ...] [--out sample.json]
            draws the pilot labelling sample; --stratify = equal allocation per (extractor, brief).
   batch    --briefs-dir D --out-dir O [--model sonnet] [--concurrency 4]
@@ -38,7 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from substrate import (ROSTER_TIE, claim_key, clean_md, norm_text, pid_variants, redact_body,  # noqa: E402
                        research_source_key, roster_match, strip_paren)
-from spine_client import EMAIL_ALLOWLIST_RE, EMAIL_RE, PHONE_RE  # noqa: E402  (ADR-9 patterns, never copied)
+import pii_normalize  # noqa: E402  (spine_client's raw patterns + the normalized copy + bare 10-digit runs)
 
 MIN_WORDS = 300
 QUOTE_MAX_WORDS = 25          # the claim.quote licensing guard (0009), producer-enforced
@@ -185,8 +186,12 @@ def _blocks(lines: list[str]) -> list[str]:
 
 
 def prepass(brief_dir: str) -> tuple[dict | None, str]:
-    md = open(os.path.join(brief_dir, "research_brief.md"), encoding="utf-8").read()
-    manifest = json.load(open(os.path.join(brief_dir, "manifest.json"), encoding="utf-8"))
+    return prepass_doc(open(os.path.join(brief_dir, "research_brief.md"), encoding="utf-8").read(),
+                       json.load(open(os.path.join(brief_dir, "manifest.json"), encoding="utf-8")))
+
+
+def prepass_doc(md: str, manifest: dict) -> tuple[dict | None, str]:
+    """The pure half of prepass; stage-prose rebuilds the packet with it to re-verify a checked file."""
     ev = manifest.get("event") or {}
     if not ev.get("notion_page_id"):
         return None, "manifest_missing_event_page_id"
@@ -295,12 +300,24 @@ def jaccard(a: str, b: str) -> float:
 
 
 def has_pii(*vals) -> bool:
-    for v in vals:
-        if not isinstance(v, str):
-            continue
-        if any(not EMAIL_ALLOWLIST_RE.search(m.group(0)) for m in EMAIL_RE.finditer(v)) or PHONE_RE.search(v):
-            return True
-    return False
+    """Raw AND normalized copy (pii_normalize: `[at]`/`[dot]`, fullwidth ＠, Unicode dashes, bare 10-digit runs)."""
+    return any(isinstance(v, str) and pii_normalize.has_pii(v) for v in vals)
+
+
+URL_OR_AT_RE = re.compile(r"https?://|\bwww\.|[@＠]")
+
+
+def grounded(text: str, para_text: str, *entity_names: str) -> bool:
+    """claim_text may only use content words found in its paragraph or the roster entity's name. `quote` proves the
+    span exists; this proves the claim says nothing the span doesn't (no injected instruction, no invented figure)."""
+    allowed = content_tokens(para_text).union(*(content_tokens(n) for n in entity_names))
+    return content_tokens(text) <= allowed
+
+
+def prose_claim_key(para_idx: int, quote: str) -> str:
+    """Prose claims are keyed on (source_key, para_idx, quote), not on the model's wording: a re-extraction that
+    rephrases the same span lands on the same key."""
+    return claim_key(f"prose|{para_idx}|{ws(quote)}")
 
 
 class GateError(Exception):
@@ -330,8 +347,8 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
     roster = [(r["type"], r["name"], r["name"]) for r in packet["roster"]]
     ev = packet["event"]
     dropped: dict[str, int] = {}
-    flags = {"url_downgraded": 0, "low_overlap": 0, "entity_type_corrected": 0}
-    accepted, seen = [], set()
+    flags = {"url_downgraded": 0, "entity_type_corrected": 0}
+    accepted, seen, seen_text = [], set(), set()
 
     def drop(why: str):
         dropped[why] = dropped.get(why, 0) + 1
@@ -356,6 +373,9 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
         if is_imperative(c["text"]) or ws(c["text"]).endswith("?"):
             drop("not_declarative")
             continue
+        if URL_OR_AT_RE.search(c["text"]):
+            drop("text_has_url_or_at")
+            continue
         if ws(c["quote"]) not in ws(p["text"]):
             drop("quote_not_verbatim")
             continue
@@ -367,6 +387,12 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
             drop("entity_unresolved")
             continue
         etype, ename = hit
+        if not grounded(c["text"], p["text"], ename, c["entity"]):
+            drop("text_not_grounded")
+            continue
+        if jaccard(c["text"], c["quote"]) < JACCARD_FLAG:
+            drop("low_overlap")
+            continue
         if etype != c["entity_type"]:
             flags["entity_type_corrected"] += 1
         url = c["url_ref"] if c["url_ref"] in p["urls"] else None
@@ -377,17 +403,14 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
         text = ws(c["text"])
         if norm_text(strip_paren(ename)) not in norm_text(text):
             text = f"{ename}: {text}"                       # stands alone in retrieval, as stage-research does
-        key = claim_key(text)
-        if key in seen:
+        key = prose_claim_key(p["idx"], c["quote"])
+        if key in seen or norm_text(text) in seen_text:
             drop("duplicate_claim")
             continue
         seen.add(key)
-        low = jaccard(c["text"], c["quote"]) < JACCARD_FLAG
-        flags["low_overlap"] += low
+        seen_text.add(norm_text(text))
         meta = {"phase": "pre_event", "extraction": "prose", "notion_event_id": pid_variants(ev["notion_page_id"])[0],
                 "brief_ref": packet.get("brief_ref"), "url": url}
-        if low:
-            meta["low_overlap"] = True
         row = {"source_key": packet["source_key"], "claim_key": key, "claim_text": text,
                "claim_type": c["claim_type"], "quote": ws(c["quote"]),
                "locator": {"section": p["section"], "entity": ename, "heading": p["heading"],
@@ -446,24 +469,38 @@ DOSSIER_PREFIX = "undated-interview-dossier-"
 
 def llm_cmd(model: str) -> list[str]:
     """The pilot's headless command (iter2 run_llm_pilot.sh): no tools, no MCP, no slash commands, text out."""
-    return ["claude", "-p", "--model", model, "--tools", "", "--strict-mcp-config", "--mcp-config",
-            '{"mcpServers":{}}', "--disable-slash-commands", "--output-format", "text"]
+    return ["claude", "-p", "--model", model, "--tools", "", "--setting-sources", "", "--strict-mcp-config",
+            "--mcp-config", '{"mcpServers":{}}', "--disable-slash-commands", "--output-format", "text"]
+
+
+class LLMError(Exception):
+    """An extraction that must not count as done (non-zero exit, no JSON object). Message carries no reply text."""
+
+
+def parse_reply(stdout: str, returncode: int) -> dict:
+    """The FIRST top-level JSON object after the first '{' (raw_decode, not a greedy regex that spans two objects)."""
+    if returncode:
+        raise LLMError(f"extractor exited {returncode}")
+    i = (stdout or "").find("{")
+    if i < 0:
+        raise LLMError("no JSON object in the reply")
+    try:
+        doc, _ = json.JSONDecoder().raw_decode(stdout[i:])
+    except json.JSONDecodeError:
+        raise LLMError("reply is not valid JSON") from None
+    return doc
 
 
 def run_llm(packet: dict, model: str) -> tuple[dict, str, str]:
-    """One tool-less extraction. Runs from an empty temp dir (outside every repo: no CLAUDE.md, no project agents).
-    Returns (claims doc, raw stdout, stderr); an unparseable reply becomes {"claims": []}, as in the pilot."""
+    """One tool-less extraction. Runs from an empty temp dir (outside every repo: no CLAUDE.md, no project agents) with
+    no setting sources (no user/project hooks). Returns (claims doc, raw stdout, stderr); raises LLMError on a failed
+    call or an unparseable reply, so a failure is never recorded as an empty extraction."""
     import subprocess
     prompt = open(PROMPT_PATH, encoding="utf-8").read().replace(
         "{PACKET_JSON}", json.dumps(packet, indent=1, ensure_ascii=False) + "\n")
     with tempfile.TemporaryDirectory() as cwd:
         p = subprocess.run(llm_cmd(model), input=prompt, capture_output=True, text=True, cwd=cwd, timeout=1200)
-    m = re.search(r"\{.*\}", p.stdout, re.S)
-    try:
-        doc = json.loads(m.group(0)) if m else {"claims": []}
-    except json.JSONDecodeError:
-        doc = {"claims": []}
-    return doc, p.stdout, p.stderr + (f"\n[exit {p.returncode}]" if p.returncode else "")
+    return parse_reply(p.stdout, p.returncode), p.stdout, p.stderr
 
 
 def _prod_ledger_count():
@@ -476,9 +513,12 @@ def _prod_ledger_count():
 def batch(briefs_dir: str, out_dir: str, *, model: str = "sonnet", concurrency: int = 4,
           ledger_count=None, llm=None) -> dict:
     """Every eligible brief dir -> <slug>.packet.json, .llm.raw.txt, .llm.claims.json, .llm.checked.json in out_dir,
-    plus batch-summary.json. Skips (counted, never crashing): interview dossiers, no manifest, no research_brief.md,
+    plus batch-summary.json. out_dir must be outside any git work tree or git-ignored. A failed extraction is retried
+    once, then recorded in `errors` with no checked file (so a rerun tries it again). Skips (counted, never crashing): interview dossiers, no manifest, no research_brief.md,
     skip_staging (YED-391), no event page id, ledger present (ledger beats prose), already checked, stubs."""
     from concurrent.futures import ThreadPoolExecutor
+    from notion_export import ensure_ignored         # realpath + true-case + `git check-ignore` (one guard, reused)
+    ensure_ignored(out_dir)                          # packets and replies carry brief text: never into a tracked path
     ledger_count = ledger_count or _prod_ledger_count()
     llm = llm or run_llm
     os.makedirs(out_dir, exist_ok=True)
@@ -515,7 +555,10 @@ def batch(briefs_dir: str, out_dir: str, *, model: str = "sonnet", concurrency: 
     def one(item):
         name, pk = item
         try:
-            doc, raw, err = llm(pk, model)
+            try:
+                doc, raw, err = llm(pk, model)
+            except LLMError:                         # the prompt doc's rule: redispatch once, then count it failed
+                doc, raw, err = llm(pk, model)
             for suffix, body in ((".llm.raw.txt", raw), (".llm.err.txt", err)):
                 with open(os.path.join(out_dir, name + suffix), "w", encoding="utf-8") as f:
                     f.write(body or "")
@@ -622,7 +665,8 @@ def selftest() -> bool:
        and good["confidence"] == 0.55 and good["locator"]["url"] == "https://acme.example.com/about")
     ok("check: stage shape (candidate, lane research, extractor claude, model kept)",
        good and good["status"] == "candidate" and good["lane"] == "research" and good["extractor"] == "claude"
-       and good["extractor_model"] == "claude-sonnet-fixture" and good["claim_key"] == claim_key(good["claim_text"]))
+       and good["extractor_model"] == "claude-sonnet-fixture"
+       and good["claim_key"] == prose_claim_key(good["locator"]["para_idx"], good["quote"]))
     ref = next((a for t, a in acc.items() if "by phone or email" in t), None)
     ok("check: no URL in paragraph -> reference @0.40", ref and ref["provenance_tier"] == "reference"
        and ref["confidence"] == 0.40)
@@ -640,8 +684,28 @@ def selftest() -> bool:
     ok("check: quote over 25 words dropped", d.get("quote_empty_or_over_25_words") == 1)
     ok("check: para_idx out of range dropped", d.get("para_idx_out_of_range") == 1)
     ok("check: duplicate claim dropped", d.get("duplicate_claim") == 1)
-    ok("check: low claim/quote overlap flagged, not dropped", r["flags"]["low_overlap"] >= 1
-       and any(a["metadata"].get("low_overlap") for a in acc.values()))
+    ok("check: low claim/quote overlap is a DROP now (review #330), never a flag",
+       "low_overlap" not in r["flags"] and not any("low_overlap" in a["metadata"] for a in acc.values())
+       and not any("small factories" in t for t in acc))
+    probes = json.load(open(os.path.join(FIX, "claims_probes.json"), encoding="utf-8"))
+    pr = check(pk, probes)
+    ok("check: the 5 review probes (injection, URL, @handle, invented figure, paraphrase) are ALL dropped",
+       pr["accepted_n"] == 0 and sum(pr["dropped"].values()) == 5)
+    ok("check: probe drop reasons are the grounding gates, not incidental ones",
+       set(pr["dropped"]) <= {"text_not_grounded", "text_has_url_or_at", "low_overlap"})
+    ok("check: grounding allows the roster entity's name and paragraph words only",
+       grounded("Acme Widgets sells industrial widgets", pk["paragraphs"][5]["text"], "Acme Widgets")
+       and not grounded("Acme Widgets sells rockets", pk["paragraphs"][5]["text"], "Acme Widgets"))
+    base = {"quote": "Acme Widgets sells configurable industrial widgets", "para_idx": 5, "url_ref": None,
+            "entity": "Acme Widgets", "entity_type": "company", "claim_type": "fact"}
+    for pii in ("dana [at] example [dot] com", "555\u2011123\u20114567", "5551234567", "dana\uff20example.com"):
+        rr = check(pk, {"claims": [{**base, "text": f"Acme Widgets sells configurable industrial widgets {pii}"}]})
+        ok(f"check: obfuscated contact {pii.encode('unicode_escape').decode()!r} dropped as PII (normalized layer)",
+           rr["dropped"] == {"pii_contact_detail": 1})
+    ok("check: one span rephrased twice is ONE key (para_idx, quote), the second a duplicate",
+       check(pk, {"claims": [{**base, "text": "Acme Widgets sells configurable industrial widgets"},
+                             {**base, "text": "Acme Widgets sells industrial widgets that are configurable"}]})["dropped"]
+       == {"duplicate_claim": 1})
     ok("check: entity_type taken from the roster when the extractor mislabels it", r["flags"]["entity_type_corrected"] == 1)
     dumped = json.dumps(r) + err.getvalue()
     ok("check: no dropped claim's text or unknown key echoes into output or stderr",
@@ -664,10 +728,10 @@ def selftest() -> bool:
             ok(f"check: top-level schema rejected ({type(bad).__name__}), message names no content",
                "extra" not in str(e))
 
-    s = sample([r, res], n=10, stratify=True, seed=1, packets=[pk])
-    ok("sample: stratified across (extractor, brief) strata", s["n"] == 10 and set(s["by_extractor"]) == {"claude", "splitter"}
+    s = sample([r, res], n=8, stratify=True, seed=1, packets=[pk])    # 4 claude rows survive the gate
+    ok("sample: stratified across (extractor, brief) strata", s["n"] == 8 and set(s["by_extractor"]) == {"claude", "splitter"}
        and abs(s["by_extractor"]["claude"] - s["by_extractor"]["splitter"]) <= 1)
-    ok("sample: deterministic for a seed", sample([r, res], n=10, stratify=True, seed=1)["sample"][0]["claim_text"]
+    ok("sample: deterministic for a seed", sample([r, res], n=8, stratify=True, seed=1)["sample"][0]["claim_text"]
        == s["sample"][0]["claim_text"])
     ok("sample: paragraph attached when packets passed", all("paragraph" in it for it in s["sample"]))
     with tempfile.TemporaryDirectory() as td:          # CLI round trip
@@ -736,6 +800,44 @@ def _batch_selftest(ok) -> None:
         ok("batch: one LLM failure is recorded by type, no content, and does not stop the batch",
            res3["errors"] and all(e["error"] == "RuntimeError" for e in res3["errors"])
            and "SECRET_BRIEF_TEXT" not in json.dumps(res3))
+        flaky = {"n": 0}
+
+        def flaky_llm(pk, model):
+            flaky["n"] += 1
+            if flaky["n"] == 1:
+                raise LLMError("extractor exited 1")
+            return splitter(pk), "{}", ""
+        shutil.rmtree(od)
+        res4 = batch(bd, od, ledger_count=lambda k: 3 if k == ledgered else 0, llm=flaky_llm)
+        ok("batch: a failed call is redispatched once and then counts", flaky["n"] == 2 and len(res4["extracted"]) == 1)
+
+        def dead(pk, model):
+            raise LLMError("extractor exited 1")
+        shutil.rmtree(od)
+        res5 = batch(bd, od, ledger_count=lambda k: 3 if k == ledgered else 0, llm=dead)
+        ok("batch: a call failing twice -> errors, NO checked file (a rerun retries it, never 'already checked')",
+           [e["error"] for e in res5["errors"]] == ["LLMError"] and not res5["extracted"]
+           and not os.path.exists(os.path.join(od, "2026-10-01-eligible.llm.checked.json")))
+        tracked = os.path.join(FIX, "_batch_out_selftest")
+        try:
+            batch(bd, tracked, ledger_count=lambda k: 0, llm=fake_llm)
+            refused = False
+        except SystemExit:
+            refused = True
+        ok("batch: --out-dir inside a git work tree and not ignored is refused before anything is written",
+           refused and not os.path.exists(tracked))
+    ok("parse_reply: first top-level object only (a greedy regex would swallow the second)",
+       parse_reply('noise {"claims": []} trailing {"x": 1}', 0) == {"claims": []})
+    for out, code, why in (('{"claims": []}', 1, "non-zero exit"), ("sorry, no JSON", 0, "no object"),
+                           ('{"claims": [', 0, "truncated JSON")):
+        try:
+            parse_reply(out, code)
+            ok(f"parse_reply: {why} raises LLMError", False)
+        except LLMError:
+            ok(f"parse_reply: {why} raises LLMError", True)
+    cmd = llm_cmd("sonnet")
+    ok("batch: extractor subprocess loads no setting sources (no user/project hooks or settings)",
+       cmd[cmd.index("--setting-sources") + 1] == "")
     ok("batch: the LLM command is the pilot's tool-less headless call",
        llm_cmd("sonnet")[:4] == ["claude", "-p", "--model", "sonnet"] and "--strict-mcp-config" in llm_cmd("sonnet")
        and llm_cmd("sonnet")[llm_cmd("sonnet").index("--tools") + 1] == "")

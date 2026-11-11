@@ -1,12 +1,14 @@
 # Prose claim extractor: instruction text (YED-384)
 
-*Read by the parent, pasted as the task for an existing read-only text agent (no tools needed). Not an agent file. The model atomises prose; `.claude/scripts/prose_extract.py check` does everything code can do (containment, URL, roster, PII, schema, cap, and a `not_declarative` drop for any claim that opens with an imperative verb or ends with "?") and drops what fails. Iteration 2 (2026-11-11): pilot 1 scored 0.68 because advice and questions leaked through, so the prepass now drops playbook sections and this prompt extracts declarative facts only. Pilot gate: precision ≥ 0.90 on 100 sampled claims, measured against the `splitter` null baseline. If the extractor is within +0.10 of the splitter, ship the splitter and retire this prompt.*
+*Run headless by `prose_extract.py batch` (`claude -p`, no tools, no MCP, no setting sources, from an empty temp dir). Not an agent file. The model atomises prose; `.claude/scripts/prose_extract.py check` does everything code can do (containment, URL, roster, PII, schema, cap, and a `not_declarative` drop for any claim that opens with an imperative verb or ends with "?") and drops what fails. Iteration 2 (2026-11-11): pilot 1 scored 0.68 because advice and questions leaked through, so the prepass now drops playbook sections and this prompt extracts declarative facts only. Pilot gate: precision ≥ 0.90 on 100 sampled claims, measured against the `splitter` null baseline. If the extractor is within +0.10 of the splitter, ship the splitter and retire this prompt.*
 
 ## How the parent uses it
 
-1. `python3 .claude/scripts/prose_extract.py prepass <brief_dir> --out packet.json`, which exits 3 on a stub (skip it).
-2. Dispatch one agent per brief, with the **Instruction** below followed by the packet JSON inside the `<packet>` fence. Sonnet; up to 4 in parallel from the parent.
-3. Save the agent's JSON reply as `claims.json`, unedited. Then run `prose_extract.py check packet.json claims.json --extractor claude --model <id> --out checked.json`. A reply that is not exactly `{"claims": [...]}` is rejected whole (exit 2): redispatch once, then count the brief as failed.
+`python3 .claude/scripts/prose_extract.py batch --briefs-dir D --out-dir O` does all three steps per eligible brief, 4 in parallel (`--out-dir` must be git-ignored or outside every repo):
+1. `prepass` builds the packet (a stub under 300 words is skipped and counted).
+2. This file, with `{PACKET_JSON}` replaced by the packet, is piped to `claude -p --model sonnet --tools "" --setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --disable-slash-commands --output-format text`.
+3. The first top-level JSON object of the reply is saved as `claims.json` and judged by `check` into `checked.json`. A non-zero exit or a reply with no parseable object is redispatched once, then the brief is counted as failed (no checked file, so a rerun retries it).
+Staging is separate and explicit: `substrate.py stage-prose --checked O/<brief>.llm.checked.json --manifest D/<brief>/manifest.json`.
 
 ---
 
