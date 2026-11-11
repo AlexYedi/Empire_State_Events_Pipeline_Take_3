@@ -59,9 +59,12 @@ every hour into `~/Developer/esep-inputs/`, which sits outside every git work tr
 Laptop setup, once (Alex, **on the laptop**):
 1. System Settings → General → Sharing → **Remote Login** on, then (i) → **Allow full disk access for remote users** on
    (needed because the checkout is under `~/Documents`).
-2. `brew install rsync` (provides `rrsync`).
+2. `brew install rsync` (provides `rrsync`). Homebrew's `rrsync` hard-codes `RSYNC = '/usr/bin/rsync'` (Apple's openrsync, which
+   rejects `--confine-root`), so make a patched copy:
+   `mkdir -p ~/.local/bin && sed 's#^RSYNC = .*#RSYNC = "/opt/homebrew/bin/rsync"#' /opt/homebrew/bin/rrsync > ~/.local/bin/rrsync-esep && chmod 755 ~/.local/bin/rrsync-esep`
+   (re-run after a `brew upgrade rsync` if you want the newer rrsync; the old copy keeps working).
 3. Append the mini's public key with the restriction:
-   `echo "restrict,command=\"/opt/homebrew/bin/rrsync -ro $HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3\" <contents of esep_sync.pub>" >> ~/.ssh/authorized_keys`
+   `echo "restrict,command=\"$HOME/.local/bin/rrsync-esep -ro $HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3\" <contents of esep_sync.pub>" >> ~/.ssh/authorized_keys`
 To revoke: delete that line on the laptop.
 
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)

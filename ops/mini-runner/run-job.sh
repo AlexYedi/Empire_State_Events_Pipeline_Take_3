@@ -31,8 +31,8 @@ sync_inputs() {
   mkdir -p "$INPUTS"
   /opt/homebrew/bin/rsync -a --delete --relative --exclude='*.PRIVATE.*' --exclude='.DS_Store' \
     -e "ssh -i $HOME/.ssh/esep_sync -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" \
-    "$LAPTOP:Event Content/" "$LAPTOP:event-transcripts/" \
-    "$LAPTOP:.claude/.state/research/" "$LAPTOP:.claude/.state/briefs/" "$LAPTOP:.claude/.state/post-event/" \
+    "$LAPTOP:Event Content/" ":event-transcripts/" \
+    ":.claude/.state/research/" ":.claude/.state/briefs/" ":.claude/.state/post-event/" \
     "$INPUTS/"
   local rc=$?
   # 23/24 = partial transfer (e.g. one source dir doesn't exist on the laptop yet): keep what arrived, don't fail the job.
@@ -45,7 +45,8 @@ case "$JOB" in
     sync_inputs
     RC=$?
     [[ $RC -eq 0 ]] && echo "sync OK: $(find "$INPUTS" -type f | wc -l | tr -d ' ') files in $INPUTS" \
-                    || echo "sync FAIL rc=$RC (laptop asleep or unreachable is expected; next hour retries)"
+                    || { [[ $RC -eq 255 ]] && echo "sync SKIP: laptop unreachable (asleep / off Tailscale); next hour retries" \
+                                           || echo "sync FAIL rc=$RC: a real error, read this log"; }
     ;;
   reconcile)
     # Read-only (reconcile.py writes nothing to any database). Only output: the gitignored queue file + this log.
