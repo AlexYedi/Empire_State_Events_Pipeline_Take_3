@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- YED-347: on-demand smoke of the launchd + claude -p runner. No schedule: fire with
+     launchctl kickstart gui/$(id -u)/com.esep.runner-smoke . Installed by Alex. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.esep.runner-smoke</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/run-job.sh</string>
+    <string>smoke</string>
+  </array>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-runner-smoke.log</string>
+  <key>StandardErrorPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-runner-smoke.log</string>
+</dict>
+</plist>
