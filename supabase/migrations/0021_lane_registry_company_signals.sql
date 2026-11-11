@@ -13,7 +13,7 @@
 --
 -- NOT ACTIVATED HERE: active stays false. The nightly healthcheck (#284) FAILs an ACTIVE lane
 -- with no successful/partial lane_run row, so activation waits for the first good run.
--- FOLLOW-UP 0022: flip active = true for company_signals (0018's shape) after the first
+-- FOLLOW-UP (next free migration number; 0022 is taken by the graph phase-1 schema): flip active = true for company_signals (0018's shape) after the first
 -- 'success' or 'partial' company_signals lane_run row lands on prod.
 --
 -- PRODUCERS CANNOT WRITE THE REGISTRY (ADR-13): lane_registry is not in spine_client.ALLOW;
@@ -61,7 +61,7 @@ commit;
 -- select 'company_signals_still_inactive', (select not active from public.lane_registry where lane = 'company_signals');
 -- select 'company_signals_contract_intact', (select owner = 'alex' and consumer = 'Q2-Q6; Monday Market Brief' and freshness_flag_days = 7 and freshness_fail_days = 14 from public.lane_registry where lane = 'company_signals');
 -- select 'other_lanes_untouched', (select schedule = 'weekly GitHub Action (Sunday)' from public.lane_registry where lane = 'hiring_pulse');
--- select 'registry_rowcount_unchanged', (select count(*) = 6 from public.lane_registry);
+-- select 'registry_original_six_present', (select count(*) = 6 from public.lane_registry where lane in ('corpus_mine', 'hiring_pulse', 'company_signals', 'research_frontier', 'feeds', 'segment_enrichment'));  -- names its lanes, so later migrations (0022 adds 4 rows) don't turn this red
 -- select 'registry_rls_still_on', (select relrowsecurity from pg_class where oid = 'public.lane_registry'::regclass);
 -- select 'registry_no_api_grants', not exists (select 1 from unnest(array['anon', 'authenticated']) r where has_table_privilege(r, 'public.lane_registry', 'select') or has_table_privilege(r, 'public.lane_registry', 'insert') or has_table_privilege(r, 'public.lane_registry', 'update') or has_table_privilege(r, 'public.lane_registry', 'delete'));
 -- VERIFY:END
