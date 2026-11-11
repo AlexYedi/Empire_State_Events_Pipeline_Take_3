@@ -12,7 +12,7 @@ Deterministic, no model. Four seed sources, each a `kind` of the planned `sweep_
                theme never moves another theme's p. (The draft's Poisson band fired on 13/31
                themes against a shuffle null of 13.1: no information on bursty counts.) The
                aggregate null re-runs the same rules on shuffled series; stderr.
-               Resolution limit: 12 weeks choose 4 recent = 495 arrangements, and 200 shuffles
+               Resolution limit: 12 weeks choose 4 recent = 495 arrangements, and 2000 shuffles
                put the floor on p at 1/2001 ~ 0.0005. Facts in only 1 or 2 distinct weeks can never
                reach p < 0.05 (all-recent odds 4/12 and 6/66), so a theme needs facts in >= 3 weeks,
                clustered recently, to be `rising`; a brand-new theme is why `new` exists.
