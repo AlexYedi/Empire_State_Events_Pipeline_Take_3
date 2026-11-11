@@ -1,50 +1,59 @@
 # esep-mini: the always-on scheduled runner
 
 Decision YED-385 · build YED-347 / YED-334 · first consumer YED-384 (graph phase 1).
-Read on demand when a scheduled routine misbehaves, the mini restarts, or a new nightly job is added.
+Read on demand when a scheduled job misbehaves, the mini restarts, or a new nightly job is added.
 
-## What runs where
+## Design (and why not routines)
+
+Scheduled jobs run from **launchd on the mini**, through `ops/mini-runner/run-job.sh <job>`, in the **real checkout**.
+Claude Code routines on a bridge environment were tried first and rejected on 2026-11-11: a bridge environment's id is
+minted per `claude remote-control` process, so every restart (reboot, crash, KeepAlive respawn, auto-update) gives a new id,
+and every routine is pinned to an id. Measured: two consecutive LaunchAgent starts gave `env_017oHa…` then `env_0144mE…`, and
+stopping a Terminal instance deleted `env_01LkCP…`. The earlier "laptop" environment `Mac:…:fc0e` was in fact this mini (a tmux
+loop started 2026-11-06, before the rename), and its id survived only because that process never restarted.
 
 | Piece | Value |
 |---|---|
 | Machine | Mac mini (Mac18,5), hostname `esep-mini`, macOS 27, FileVault **on** |
-| Real checkout | `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3`, always on `main` (Remote Control serves from it; never switch its branch) |
-| Bridge environment | `env_01LkCPq468uT6wRAt5EE1B5q` (registered by `claude remote-control --spawn worktree` from the checkout) |
-| Keep-alive | LaunchAgent `com.esep.remote-control` (`ops/mini-runner/com.esep.remote-control.plist`), logs in `~/Library/Logs/esep-runner/` |
+| Real checkout | `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3`, always on `main`. `run-job.sh` refuses to run on any other branch and fast-forwards `main` before each job, so launchd only runs merged code |
+| Job runner | `ops/mini-runner/run-job.sh` (jobs: `reconcile`, `smoke`); one log per run in `~/Library/Logs/esep-runner/<job>-<UTC>.log` |
+| Remote access | LaunchAgent `com.esep.remote-control` keeps one `claude remote-control --spawn worktree` up, for phone/web access only. Not part of the scheduler; its environment id changes on restart, so never pin a routine to it |
 | Power | `pmset`: `sleep 0`, `disksleep 0`, `autorestart 1` (boots itself after a power cut, then waits at the FileVault screen) |
 | Python | uv-managed CPython 3.12 (`.venv`, no packages: the runner's scripts are stdlib-only). System python is 3.9: never use it |
 
-A routine fires into a **fresh git worktree** at `<checkout>/.claude/worktrees/bridge-<session>` cut from `origin/main`.
-`.env` is present there; `.venv` and every untracked or gitignored input (`.claude/.state/`, `event-transcripts/`) are **not**.
-So every routine prompt must (1) bootstrap `uv venv --python 3.12 .venv` itself and (2) point any `--root` / output path at
-the real checkout, never at the worktree, which is discarded.
+Jobs:
+- **Deterministic jobs run as plain Python, with no LLM** (the reconcile is one fixed command; wrapping it in `claude -p` buys nothing and costs tokens).
+- **Judgment jobs** (theme sweeps, Monday brief) use `claude -p` with `--permission-mode dontAsk` (anything not allow-listed is denied, never prompted),
+  a narrow `--allowedTools` list, `--strict-mcp-config` and `ENABLE_CLAUDEAI_MCP_SERVERS=false` (no MCP / connectors), and `--no-session-persistence`.
+  The `smoke` job is the template.
 
-The Remote Control process must be running when a routine fires. If it is down, the fire leaves no run in `list_runs`:
-check the routine with `RemoteTrigger get` and the LaunchAgent state, not just the run list.
+Database reads go through `spine_client.py` only (invariant 1). REST paths need a leading slash: `req('GET', '/lane_registry?...')`.
 
-## Routines on this environment
+## Jobs
 
-| Routine | Id | Schedule | State |
+| Job | LaunchAgent | Schedule | State |
 |---|---|---|---|
-| Smoke (read-only, one-time) | `trig_0196DksQ6YNptsFLR3BUyhMt` | ran 2026-11-11 17:24Z | ALL PASS (selftest 129/129, REST GET 200, WebSearch, hostname `esep-mini`) |
-| Nightly reconcile `--report` | `trig_012BJeWGvSa8pfCHr6SnVVz3` | `0 10 * * *` (05:00 ET) | created **disabled**; enable only on Alex's yes |
+| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS run directly 2026-11-11 18:03Z; launchd proof pending install |
+| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | not installed until Alex approves the report |
 
-All routines here: `clear_mcp_connections: true`, minimal `allowed_tools`, read-only prompts. Database reads go through
-`spine_client.py` only (invariant 1). REST paths need a leading slash: `req('GET', '/lane_registry?...')`.
+`StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
+when it wakes (missed runs coalesce into one).
 
-Known data-locality gap: the mini has no `.claude/.state/{research,briefs,post-event}` and no `event-transcripts/`
-(they live on the laptop), so its reconcile report over-counts `attended_no_local_source` and under-counts `*_not_staged`
-relative to the laptop.
+Known data-locality gap (YED-395): the mini has no `.claude/.state/{research,briefs,post-event}` and no `event-transcripts/`
+(they live on the laptop), so its reconcile report over-counts `attended_no_local_source` and under-counts `*_not_staged`.
 
-## Install / reinstall the keep-alive (Alex runs this; it needs a real Terminal)
+## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
-1. Stop any Remote Control running in a Terminal window (Ctrl-C), so only one server serves the checkout.
-2. `mkdir -p ~/Library/Logs/esep-runner && cp ~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
-3. Verify: `launchctl print gui/$(id -u)/com.esep.remote-control | grep -E 'state|pid'` shows `state = running`, and
-   `tail ~/Library/Logs/esep-runner/remote-control.*.log` shows it connected.
-4. Remove: `launchctl bootout gui/$(id -u)/com.esep.remote-control`.
+Merge the PR first: the plists point at `run-job.sh` in the real checkout.
 
-A LaunchAgent starts only once the user is logged in. That is why the restart procedure below matters.
+1. `cd ~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3 && git pull --ff-only`
+2. Smoke: `cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
+   then `tail -5 "$(ls -t ~/Library/Logs/esep-runner/smoke-*.log | head -1)"` shows `SMOKE: ALL PASS`.
+3. Nightly reconcile (only after approving a report): `cp ops/mini-runner/com.esep.nightly-reconcile.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.nightly-reconcile.plist`
+4. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
+5. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
+
+LaunchAgents start only once the user is logged in. That is why the restart procedure below matters.
 
 ## Restart procedure (FileVault)
 
@@ -53,9 +62,9 @@ A LaunchAgent starts only once the user is logged in. That is why the restart pr
 sudo fdesetup authrestart
 ```
 in a real Terminal (the `!` prefix has no TTY for sudo). It unlocks FileVault for the next boot only, so the mini comes back
-logged in, the LaunchAgent starts Remote Control, and routines keep firing. `fdesetup supportsauthrestart` returns `true` on this
-machine. **Never** use a plain Restart from the Apple menu or `sudo shutdown -r`: the mini will sit at the FileVault unlock
-screen and every routine silently stops firing until someone types the password.
+logged in and every LaunchAgent starts. `fdesetup supportsauthrestart` returns `true` on this machine. **Never** use a plain
+Restart from the Apple menu or `sudo shutdown -r`: the mini will sit at the FileVault unlock screen and every job silently
+stops until someone types the password.
 
 **Unplanned (power cut, crash):** `autorestart 1` boots the mini, but it stops at the FileVault pre-boot screen. Nothing runs
 until it is unlocked.
@@ -63,13 +72,11 @@ until it is unlocked.
   unlock the disk from it. **Unverified on this mini**: test it once with a planned plain restart while on the same LAN
   (`ssh sameoldexpressions@esep-mini.local`, enter the login password, then wait for the full boot). Tailscale and other
   user-space VPNs are not up before unlock, so this works from the LAN only, not over the `100.x` address.
-- If that does not work: unlock in person (keyboard or a monitor at the mini), or log in via Screen Sharing only once the
-  OS has booted past FileVault.
-- After any restart, check: `launchctl print gui/$(id -u)/com.esep.remote-control | grep state` and that routine runs
-  resume (`RemoteTrigger list_runs` on the nightly routine).
+- If that does not work: unlock in person (keyboard or a monitor at the mini), or via Screen Sharing only once the OS has booted past FileVault.
+- After any restart: `launchctl print gui/$(id -u)/com.esep.nightly-reconcile | grep -E 'state|last exit code'` and the newest log in `~/Library/Logs/esep-runner/`.
 
-## Adding a nightly job
+## Adding a job
 
-Copy the reconcile routine's shape: one-time smoke first, then cron, created `enabled: false`, run once manually, show
-Alex the output, enable on his yes. No writes from a routine until its lane passes the writer checks
-(`spine_client.py --check-writers`) and Alex approves the write path.
+Add a `case` to `run-job.sh` and a plist modelled on `com.esep.nightly-reconcile.plist`, in a PR. Prove it with a direct
+`run-job.sh <job>` run, then a launchd kickstart, show Alex the output, and install the schedule only on his yes. No job
+writes to the spine until its lane passes `spine_client.py --check-writers` and Alex approves the write path.
