@@ -34,8 +34,8 @@ Database reads go through `spine_client.py` only (invariant 1). REST paths need 
 
 | Job | LaunchAgent | Schedule | State |
 |---|---|---|---|
-| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS run directly 2026-11-11 18:03Z; launchd proof pending install |
-| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | not installed until Alex approves the report |
+| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS under launchd 2026-11-11 19:26Z (runner checkout, `a0d47ed`) |
+| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | installed 2026-11-11 on Alex's yes; first run 2026-11-12 05:00 ET (check: YED-399) |
 
 `StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
 when it wakes (missed runs coalesce into one).
