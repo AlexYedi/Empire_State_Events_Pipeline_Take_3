@@ -11,22 +11,19 @@ write closes green" into a counted line. Each check is PASS / FAIL / SKIPPED (wi
                  "none fits" are covered when run-state `themes` carries meta none_fits=N
   themes-prop    `Themes` set on the post draft: SELF-REPORTED from run-state `notion-write` meta themes_prop=set
   routing-rows   Linear / Notion routing rows: SELF-REPORTED from meta routing_rows=N; SKIPPED until 3.8e exists
-  rooms          the event is listed in empire-state-hub src/data/rooms.curated.json
   run-state      canonical steps neither done nor skipped are gaps
 
 Writes exactly one thing: the `close-check` step into run-state (local, gitignored), result in meta.
-Usage: close_check.py <event> --notion-event-id <id> [--json] [--strict] [--hub DIR]
+The Rooms check was removed on 2026-11-11 (YED-374: Rooms cut from post-event).
+Usage: close_check.py <event> --notion-event-id <id> [--json] [--strict]
 """
 from __future__ import annotations
-import argparse, json, os, re, sys
+import argparse, json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run_state  # noqa: E402
 
-HUB_DIR = os.path.expanduser("~/Documents/GitHub/empire-state-hub")
-ROOMS_REL = os.path.join("src", "data", "rooms.curated.json")
-STOP = {"and", "the", "a", "of", "in", "on", "for", "with", "x", "nyc", "new", "york", "ai", "to", "at", "by"}
 
 
 class GraphReader:
@@ -59,33 +56,7 @@ def _r(check: str, status: str, detail: str) -> dict:
     return {"check": check, "status": status, "detail": detail}
 
 
-def _tokens(s: str) -> set[str]:
-    return {t for t in re.split(r"[^a-z0-9]+", s.lower()) if t and t not in STOP and not t.isdigit()}
-
-
-def rooms_check(event: str, event_date: str | None, hub_dir: str) -> dict:
-    p = os.path.join(hub_dir, ROOMS_REL)
-    try:
-        with open(p, encoding="utf-8") as f:
-            rooms = json.load(f)
-    except OSError:
-        return _r("rooms", "SKIPPED", f"rooms file not found at {p}")
-    except ValueError as e:
-        return _r("rooms", "SKIPPED", f"rooms file unreadable: {e}")
-    slug = run_state.slugify(event)
-    slugs = [r.get("slug", "") for r in rooms if isinstance(r, dict)]
-    day = (event_date or "")[:10]
-    # Hub slugs are YYYY-MM-DD-<hand-shortened title>: exact title match, else same day + a shared title token.
-    for s in slugs:
-        if s[11:] == slug or (day and s.startswith(day) and _tokens(s[11:]) & _tokens(slug)):
-            return _r("rooms", "PASS", f"listed as {s}")
-    near = [s for s in slugs if day and s.startswith(day)]
-    return _r("rooms", "FAIL", f"not in rooms.curated.json ({len(slugs)} entries"
-              + (f"; same-day entries without a title match: {', '.join(near)}" if near else "")
-              + (")" if day else "; no event date to match on)"))
-
-
-def run(event: str, notion_id: str, reader=None, hub_dir: str = HUB_DIR, state_dir: str | None = None) -> dict:
+def run(event: str, notion_id: str, reader=None, state_dir: str | None = None) -> dict:
     state = run_state.load(event, state_dir) or {}
     steps = state.get("steps", {})
     results: list[dict] = []
@@ -167,8 +138,6 @@ def run(event: str, notion_id: str, reader=None, hub_dir: str = HUB_DIR, state_d
     else:
         results.append(_r("routing-rows", "SKIPPED", "no Step 3.8e router yet; nothing to count"))
 
-    results.append(rooms_check(event, (ev or {}).get("event_date"), hub_dir))
-
     gaps = [f"{s}({e.get('status', 'missing')})" for s in run_state.STEP_IDS if s != "close-check"
             for e in [steps.get(s, {})] if e.get("status") not in run_state.FINISHED]
     if not state:
@@ -199,9 +168,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--notion-event-id", required=True)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--strict", action="store_true", help="exit 1 on FAIL (tests only; the pipeline never blocks)")
-    ap.add_argument("--hub", default=HUB_DIR, help="empire-state-hub checkout (for rooms.curated.json)")
     a = ap.parse_args(argv)
-    out = run(a.event, a.notion_event_id, hub_dir=a.hub)
+    out = run(a.event, a.notion_event_id)
     print(json.dumps(out, indent=1) if a.json else render(out))
     return 1 if (a.strict and out["fails"]) else 0
 

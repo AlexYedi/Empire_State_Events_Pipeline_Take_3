@@ -476,8 +476,7 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 python3 .claude/scripts/close_check.py "<event name>" --notion-event-id <Notion Event page id>
 ```
 
-Read-only: graph event row, claims > 0 (or `claims` skipped with a reason), every linked topic themed, and the Rooms
-entry. The Notion-side `Themes` on the post draft is self-reported from run-state meta, and so are the routing rows
+Read-only: graph event row, claims > 0 (or `claims` skipped with a reason), every linked topic themed. The Notion-side `Themes` on the post draft is self-reported from run-state meta, and so are the routing rows
 (skipped until Step 3.8e exists). The run-state gaps print last. The script always exits 0 and records its own
 `close-check` step. On `CLOSE-CHECK: FAIL (n) — …`, **report the items and offer the fix for each** (re-run the step,
 or mark it skipped with the reason). Don't stop the run, and don't hide the line.
@@ -500,7 +499,6 @@ Drafts created: N  (notion-writer: created C · skipped S · failed F · manifes
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 Speaker deep-dives (Step 5.6): [N drafts / later / no]
-Room page: [added to empire-state-hub rooms.curated.json — run `pnpm gen:rooms` once the recap is published / already listed]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
