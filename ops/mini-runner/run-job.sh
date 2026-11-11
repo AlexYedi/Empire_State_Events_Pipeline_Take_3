@@ -29,7 +29,12 @@ INPUTS="$HOME/Developer/esep-inputs"
 LAPTOP="${ESEP_LAPTOP:-alexs-macbook-pro-2}"
 sync_inputs() {
   mkdir -p "$INPUTS"
-  /opt/homebrew/bin/rsync -a --delete --relative --exclude='*.PRIVATE.*' --exclude='.DS_Store' \
+  # Media is excluded: reconcile classifies by file NAME and returns no evidence class for MEDIA_EXT
+  # (reconcile.py), so copying recordings/slides would move gigabytes for zero signal. Keep this list in step with MEDIA_EXT.
+  local media=(png jpg jpeg gif pdf html m4a mp3 mp4 mov wav docx pptx svg webp zip)
+  local ex=(--exclude='*.PRIVATE.*' --exclude='.DS_Store')
+  for e in $media; do ex+=(--exclude="*.$e" --exclude="*.${(U)e}"); done
+  /opt/homebrew/bin/rsync -a --delete --delete-excluded --relative "${ex[@]}" \
     -e "ssh -i $HOME/.ssh/esep_sync -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" \
     "$LAPTOP:Event Content/" ":event-transcripts/" \
     ":.claude/.state/research/" ":.claude/.state/briefs/" ":.claude/.state/post-event/" \
