@@ -320,7 +320,7 @@ def stage(manifest_path: str, dry_run: bool, native_kinds: bool, out=print) -> i
     row = dict(validate_manifest(m))
     if native_kinds:
         row["source_type"] = row["metadata"]["vault_kind"]
-    st, body = _spine.write(UPSERT_TABLE, row, prefer="resolution=merge-duplicates,return=representation",
+    st, body = _spine.write(UPSERT_TABLE, row, prefer="resolution=ignore-duplicates,return=representation",
                             dry_run=dry_run)
     if not dry_run and st not in (200, 201):
         out(f"stage: POST documents -> {st}: {str(body)[:300]}")
@@ -559,7 +559,7 @@ def selftest() -> bool:
             assert stage(mpath, True, native, out=o) == 0
             method, path, row, prefer, dry = _spine.calls[0]
             assert method == "POST" and path == "/documents?on_conflict=sha256,retrieval_profile" and dry
-            assert "merge-duplicates" in prefer and "retrieval_profile" not in row
+            assert "ignore-duplicates" in prefer and "retrieval_profile" not in row
             assert row["source_type"] == ("email" if native else "other")
         case("stage dry-run upserts on (sha256, retrieval_profile), mapped kind", lambda: _stage(False))
         case("stage --native-kinds writes source_type = vault_kind", lambda: _stage(True))
