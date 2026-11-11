@@ -5,7 +5,7 @@ Deterministic, no model. Four seed sources, each a `kind` of the planned `sweep_
 
   velocity     mi.theme_week, per theme PER LENS (attended, research; never summed, ADR-13 rule 1):
                obs = facts in the last 4 ISO weeks. Permutation test per theme-lens: shuffle the
-               12 week labels 200x (seeded); p = share of shuffles whose last-4 sum reaches obs.
+               12 week labels 2000x (seeded); p = share of shuffles whose last-4 sum reaches obs.
                Seeded when p < 0.05 and obs >= 5 (label `rising`), or when the prior 8 weeks hold
                0 facts and obs >= 5 (label `new`). Order: new by obs, then rising by p, then z;
                top 5. Each theme-lens draws from its own RNG (sha256 of seed + key), so adding a
@@ -13,7 +13,7 @@ Deterministic, no model. Four seed sources, each a `kind` of the planned `sweep_
                themes against a shuffle null of 13.1: no information on bursty counts.) The
                aggregate null re-runs the same rules on shuffled series; stderr.
                Resolution limit: 12 weeks choose 4 recent = 495 arrangements, and 200 shuffles
-               put the floor on p at 1/201 ~ 0.005. Facts in only 1 or 2 distinct weeks can never
+               put the floor on p at 1/2001 ~ 0.0005. Facts in only 1 or 2 distinct weeks can never
                reach p < 0.05 (all-recent odds 4/12 and 6/66), so a theme needs facts in >= 3 weeks,
                clustered recently, to be `rising`; a brand-new theme is why `new` exists.
   gap          themes with attended or research facts >= 3 over 12 weeks and market facts < 3.
@@ -62,7 +62,7 @@ RECENT = 4
 OBS_FLOOR = 5         # a 1 -> 4 jump does not count
 FACT_FLOOR = 3        # the mi floor (insufficient_data below it)
 VELOCITY_TOP = 5
-SHUFFLES = 200
+SHUFFLES = 2000  # Monte Carlo error near alpha 0.05 ~ +-0.005 (was 200: +-0.015, flipped borderline themes)
 ALPHA = 0.05
 ROOM_DAYS = 7
 EVENT_DAYS = 7
