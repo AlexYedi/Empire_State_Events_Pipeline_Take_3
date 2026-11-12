@@ -21,6 +21,11 @@ Verbs:
            `reference`. claim_key = (para_idx, quote). Output rows are in stage-research's claim shape, status 'candidate', lane 'research'.
   sample   <checked.json ...> [--n 100] [--stratify] [--seed N] [--packets p.json ...] [--out sample.json]
            draws the pilot labelling sample; --stratify = equal allocation per (extractor, brief).
+  selfcheck <packet> <checked.json> [--model sonnet] [--out selfchecked.json]
+  selfcheck-dir --out-dir O [--model sonnet] [--concurrency 4]
+           (YED-407) second gate after `check`: a tool-less model pass drops accepted claims that aren't self-contained,
+           widen the paragraph's scope, lose a hedge or add a fact (references/prose-selfcheck-prompt.md). Removes rows
+           only; fail-closed (no verdict = dropped). Stage the .llm.selfchecked.json, not the .llm.checked.json.
   batch    --briefs-dir D --out-dir O [--model sonnet] [--concurrency 4]
            prepass -> headless tool-less LLM (the pilot's `claude -p` command) -> check, for every brief dir that has
            a manifest and a research_brief.md, is not skip_staging, not an interview dossier, and has no ledger claims
@@ -430,6 +435,8 @@ def check(packet: dict, claims_doc, *, extractor: str = "claude", model: str | N
 def sample(checked: list[dict], *, n: int, stratify: bool, seed: int, packets: list[dict] | None = None) -> dict:
     rng = random.Random(seed)
     text_of = {(pk["source_key"], p["idx"]): p["text"] for pk in (packets or []) for p in pk["paragraphs"]}
+    ctx_of = {(pk["source_key"], p["idx"]): {k: p.get(k) for k in ("section", "heading", "entity_hint")}
+              for pk in (packets or []) for p in pk["paragraphs"]}
     strata: dict[tuple, list[dict]] = {}
     for doc in checked:
         for r in doc["accepted"]:
@@ -452,12 +459,14 @@ def sample(checked: list[dict], *, n: int, stratify: bool, seed: int, packets: l
                 "provenance_tier": r["provenance_tier"], "label": None}
         if (r["source_key"], r["locator"]["para_idx"]) in text_of:
             item["paragraph"] = text_of[(r["source_key"], r["locator"]["para_idx"])]
+            item.update(ctx_of[(r["source_key"], r["locator"]["para_idx"])])   # YED-407: label WITH the heading
         out.append(item)
     by: dict[str, int] = {}
     for it in out:
         by[it["extractor"]] = by.get(it["extractor"], 0) + 1
     return {"n": len(out), "by_extractor": by, "strata": len(strata), "seed": seed,
-            "label_rule": "faithful to the brief paragraph (not true in the world): yes | no", "sample": out}
+            "label_rule": "faithful to the brief paragraph read under its section/heading (not true in the world), "
+                          "and self-contained: yes | no", "sample": out}
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -501,6 +510,91 @@ def run_llm(packet: dict, model: str) -> tuple[dict, str, str]:
     with tempfile.TemporaryDirectory() as cwd:
         p = subprocess.run(llm_cmd(model), input=prompt, capture_output=True, text=True, cwd=cwd, timeout=1200)
     return parse_reply(p.stdout, p.returncode), p.stdout, p.stderr
+
+
+SELFCHECK_PROMPT_PATH = os.path.join(HERE, "..", "references", "prose-selfcheck-prompt.md")
+
+
+def selfcheck_items(packet: dict, checked: dict) -> list[dict]:
+    """The model's input: each accepted claim with its paragraph and that paragraph's section/heading. No ids, keys or
+    URLs leave the machine beyond what the brief already holds; `i` is the row's position in `accepted`."""
+    para = {p["idx"]: p for p in packet["paragraphs"]}
+    out = []
+    for i, r in enumerate(checked.get("accepted") or []):
+        p = para.get((r.get("locator") or {}).get("para_idx"), {})
+        out.append({"i": i, "claim": r["claim_text"], "section": p.get("section"), "heading": p.get("heading"),
+                    "paragraph": p.get("text")})
+    return out
+
+
+def run_selfcheck_llm(items: list[dict], model: str) -> dict:
+    """One tool-less verdict call (same isolation as run_llm). Raises LLMError on a failed call or unparseable reply."""
+    import subprocess
+    prompt = open(SELFCHECK_PROMPT_PATH, encoding="utf-8").read().replace(
+        "{ITEMS_JSON}", json.dumps(items, indent=1, ensure_ascii=False) + "\n")
+    with tempfile.TemporaryDirectory() as cwd:
+        p = subprocess.run(llm_cmd(model), input=prompt, capture_output=True, text=True, cwd=cwd, timeout=1200)
+    return parse_reply(p.stdout, p.returncode)
+
+
+def selfcheck(packet: dict, checked: dict, *, model: str = "sonnet", llm=None) -> dict:
+    """YED-407 second gate: drop accepted claims a reader couldn't interpret without the brief (or that widen scope,
+    lose a hedge or add a fact). Removes rows only, never rewrites one. Fail-closed: a row with no `keep: true`
+    verdict is dropped. Returns a new checked doc (same shape) with dropped/accepted_n/flags updated."""
+    llm = llm or run_selfcheck_llm
+    items = selfcheck_items(packet, checked)
+    rows = list(checked.get("accepted") or [])
+    if not items:
+        return dict(checked)
+    try:
+        doc = llm(items, model)
+    except LLMError:                                 # redispatch once, as batch does, then let it raise
+        doc = llm(items, model)
+    keep = {v.get("i") for v in (doc.get("verdicts") or []) if isinstance(v, dict) and v.get("keep") is True}
+    said = {v.get("i") for v in (doc.get("verdicts") or []) if isinstance(v, dict) and isinstance(v.get("keep"), bool)}
+    kept = [r for i, r in enumerate(rows) if i in keep]
+    dropped = dict(checked.get("dropped") or {})
+    n_drop = sum(1 for i in range(len(rows)) if i in said and i not in keep)
+    n_none = sum(1 for i in range(len(rows)) if i not in said)
+    if n_drop:
+        dropped["not_self_contained"] = dropped.get("not_self_contained", 0) + n_drop
+    if n_none:
+        dropped["selfcheck_no_verdict"] = dropped.get("selfcheck_no_verdict", 0) + n_none
+    flags = {**(checked.get("flags") or {}), "selfcheck_model": model}
+    return {**checked, "accepted": kept, "accepted_n": len(kept), "dropped": dropped, "flags": flags}
+
+
+def selfcheck_dir(out_dir: str, *, model: str = "sonnet", concurrency: int = 4, llm=None) -> dict:
+    """Every <name>.llm.checked.json in out_dir that has its <name>.packet.json and no <name>.llm.selfchecked.json
+    -> <name>.llm.selfchecked.json. Files only; staging stays `substrate.py stage-prose --checked <selfchecked>`."""
+    from concurrent.futures import ThreadPoolExecutor
+    from notion_export import ensure_ignored
+    ensure_ignored(out_dir)
+    todo = []
+    for f in sorted(os.listdir(out_dir)):
+        if not f.endswith(".llm.checked.json"):
+            continue
+        name = f[: -len(".llm.checked.json")]
+        if os.path.exists(os.path.join(out_dir, name + ".llm.selfchecked.json")):
+            continue
+        if os.path.exists(os.path.join(out_dir, name + ".packet.json")):
+            todo.append(name)
+
+    def one(name):
+        try:
+            pk = json.load(open(os.path.join(out_dir, name + ".packet.json"), encoding="utf-8"))
+            ck = json.load(open(os.path.join(out_dir, name + ".llm.checked.json"), encoding="utf-8"))
+            res = selfcheck(pk, ck, model=model, llm=llm)
+            _emit(res, os.path.join(out_dir, name + ".llm.selfchecked.json"))
+            return {"brief": name, "in": ck.get("accepted_n", 0), "kept": res["accepted_n"]}
+        except Exception as e:                       # reason only, never content; a rerun retries it
+            return {"brief": name, "error": type(e).__name__}
+    with ThreadPoolExecutor(max_workers=max(1, concurrency)) as ex:
+        results = list(ex.map(one, todo))
+    summary = {"model": model, "briefs": len(results), "errors": [r for r in results if "error" in r],
+               "in_total": sum(r.get("in", 0) for r in results), "kept_total": sum(r.get("kept", 0) for r in results)}
+    _emit(summary, os.path.join(out_dir, "selfcheck-summary.json"))
+    return summary
 
 
 def _prod_ledger_count():
@@ -742,6 +836,42 @@ def selftest() -> bool:
             rc3 = main(["prepass", os.path.join(FIX, "brief_stub"), "--out", os.path.join(td, "s.json")])
         ok("cli: stub exits 3 and writes nothing", rc3 == 3 and not os.path.exists(os.path.join(td, "s.json")))
     _batch_selftest(ok)
+    # YED-407 selfcheck: removes rows only, fail-closed, counts drops, sample carries heading context
+    spk = {"source_key": "sk", "paragraphs": [{"idx": 0, "section": "Companies", "heading": "Ramp", "entity_hint": "Ramp",
+                                               "text": "State of play: $2.44B total raised."},
+                                              {"idx": 1, "section": "Landscape", "heading": None, "entity_hint": None,
+                                               "text": "Knock raised a Series A."}]}
+    rows = [{"claim_text": "Ramp $2.44B total raised", "locator": {"para_idx": 0}, "source_key": "sk",
+             "extractor": "claude", "quote": "$2.44B total raised"},
+            {"claim_text": "Knock (Series A)", "locator": {"para_idx": 1}, "source_key": "sk", "extractor": "claude",
+             "quote": "Series A"},
+            {"claim_text": "Unjudged row", "locator": {"para_idx": 1}, "source_key": "sk", "extractor": "claude",
+             "quote": "Knock"}]
+    sck = {"source_key": "sk", "extractor": "claude", "claims_in": 3, "accepted_n": 3, "dropped": {"low_overlap": 1},
+           "flags": {}, "accepted": rows}
+    items = selfcheck_items(spk, sck)
+    ok("selfcheck: items carry heading + paragraph, index = row position",
+       items[0]["heading"] == "Ramp" and items[1]["paragraph"].startswith("Knock") and [i["i"] for i in items] == [0, 1, 2])
+    fake = lambda its, m: {"verdicts": [{"i": 0, "keep": True}, {"i": 1, "keep": False, "why": "1 fragment"}]}   # noqa: E731
+    res = selfcheck(spk, sck, llm=fake)
+    ok("selfcheck: keeps the self-contained row, drops the fragment", [r["claim_text"] for r in res["accepted"]] == ["Ramp $2.44B total raised"])
+    ok("selfcheck: fail-closed — a row with no verdict is dropped and counted",
+       res["dropped"].get("selfcheck_no_verdict") == 1 and res["dropped"].get("not_self_contained") == 1)
+    ok("selfcheck: prior drops kept, accepted_n updated, model flagged",
+       res["dropped"]["low_overlap"] == 1 and res["accepted_n"] == 1 and res["flags"]["selfcheck_model"] == "sonnet")
+    ok("selfcheck: kept rows are unchanged (never rewritten)", res["accepted"][0] is rows[0])
+    junk = lambda its, m: {"verdicts": [{"i": 0, "keep": "yes"}, "x", {"i": 7, "keep": True}]}   # noqa: E731
+    ok("selfcheck: non-boolean / out-of-range verdicts keep nothing", selfcheck(spk, sck, llm=junk)["accepted_n"] == 0)
+    calls = []
+    def flaky(its, m):
+        calls.append(1)
+        if len(calls) == 1:
+            raise LLMError("no JSON object in the reply")
+        return {"verdicts": [{"i": 0, "keep": True}, {"i": 1, "keep": True}, {"i": 2, "keep": True}]}
+    ok("selfcheck: one LLMError is retried once", selfcheck(spk, sck, llm=flaky)["accepted_n"] == 3 and len(calls) == 2)
+    smp = sample([{"accepted": [{**rows[0], "provenance_tier": "reference"}]}], n=1, stratify=False, seed=1, packets=[spk])
+    ok("sample: item carries section + heading + entity_hint (YED-407)",
+       smp["sample"][0]["heading"] == "Ramp" and smp["sample"][0]["section"] == "Companies")
     print(f"selftest: {'PASS' if not fails else 'FAIL'} ({len(fails)} failing)")
     return not fails
 
@@ -868,6 +998,10 @@ def main(argv: list[str]) -> int:
     a.add_argument("--packets", nargs="*"); a.add_argument("--out")
     a = sub.add_parser("batch"); a.add_argument("--briefs-dir", required=True); a.add_argument("--out-dir", required=True)
     a.add_argument("--model", default="sonnet"); a.add_argument("--concurrency", type=int, default=4)
+    a = sub.add_parser("selfcheck"); a.add_argument("packet"); a.add_argument("checked"); a.add_argument("--out")
+    a.add_argument("--model", default="sonnet")
+    a = sub.add_parser("selfcheck-dir"); a.add_argument("--out-dir", required=True)
+    a.add_argument("--model", default="sonnet"); a.add_argument("--concurrency", type=int, default=4)
     a = ap.parse_args(argv)
     load = lambda p: json.load(open(p, encoding="utf-8"))   # noqa: E731
     if a.verb == "prepass":
@@ -893,6 +1027,14 @@ def main(argv: list[str]) -> int:
         _emit(res, a.out)
         sys.stderr.write(f"check: {res['accepted_n']}/{res['claims_in']} accepted · dropped {res['dropped']} · "
                          f"flags {res['flags']}\n")
+    elif a.verb == "selfcheck":
+        res = selfcheck(load(a.packet), load(a.checked), model=a.model)
+        _emit(res, a.out)
+        sys.stderr.write(f"selfcheck: {res['accepted_n']} kept · dropped {res['dropped']}\n")
+    elif a.verb == "selfcheck-dir":
+        res = selfcheck_dir(a.out_dir, model=a.model, concurrency=a.concurrency)
+        sys.stderr.write(f"selfcheck-dir: {res['briefs']} briefs · kept {res['kept_total']}/{res['in_total']} · "
+                         f"errors {len(res['errors'])}\n")
     elif a.verb == "sample":
         res = sample([load(p) for p in a.checked], n=a.n, stratify=a.stratify, seed=a.seed,
                      packets=[load(p) for p in a.packets or []])
