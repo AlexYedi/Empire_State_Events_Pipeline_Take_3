@@ -43,6 +43,13 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   `merge --revert --table T --from <id|name>` restores from the snapshot. The agent PROPOSES
                   with --dry-run; Alex runs the live one. Replaces merge_topics.py (retired 2026-09-27 — it
                   hard-deleted the source, contra ADR-4 D3).
+  approve-claims  --manifest m.json [--lane A|research] [--include-prose] [--dry-run]
+                  inherited approval of one event's candidate claims; do_not_publish never approves; refused on an
+                  off-the-record manifest. --lane research (YED-407): Evidence Ledger rows only unless --include-prose.
+                  Prints the batch's reviewed_at stamp (find or revert a batch by it).
+  reject-claims   --ids-file ids.txt --reason "…" [--revert] [--dry-run]
+                  HUMAN-RUN (YED-407): status rejected (retrieval drops it), reason + prior status in metadata,
+                  nothing deleted; --revert restores the prior status.
   reconcile       --report | --queue [PATH] [--root DIR] [--baseline PRIOR.json]
                   (YED-384, plan B1) READ-ONLY completeness ledger: joins Event Content/ folders, event-transcripts/,
                   .claude/.state/{research,briefs,post-event}/ and prod (GETs only) by date + title; one row per event
@@ -1592,7 +1599,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
 # YED-391 — an off-the-record brief never stages. The Notion exporter sets notion_export.skip_staging when a brief
 # carries OTR flags; every stage verb refuses it unless Alex has reviewed the redactions by hand.
 OTR_EXIT = 6
-OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "ensure-document", "ensure-event")
+OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "ensure-document", "ensure-event", "approve-claims")
 
 
 def otr_refusal(manifest: dict, verb: str, allow_otr_reviewed: bool) -> int | None:
@@ -1601,6 +1608,73 @@ def otr_refusal(manifest: dict, verb: str, allow_otr_reviewed: bool) -> int | No
                          "Nothing written. Pass --allow-otr-reviewed only after reviewing the brief's redactions (YED-391).\n")
         return OTR_EXIT
     return None
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-407 — review verbs for the brief backfill. Approval never touches rejected or do_not_publish rows; rejection is
+# reversible (prior status kept in metadata) and deletes nothing.
+def _utc_stamp() -> str:
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool = False) -> str:
+    """Inherited approval for one event's candidate claims. lane 'A' = the post-event brief (unchanged behaviour);
+    lane 'research' = the pre-event brief: Evidence Ledger rows (extractor 'parse', URL-backed) by default, prose
+    extractions (extractor 'claude') only with include_prose. Returns the reviewed_at stamp shared by the batch, so a
+    batch can be found (and reverted) by it."""
+    skey = (research_source_key if lane == "research" else source_key_for_event)(ev["notion_page_id"])
+    rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate&select=id,metadata,extractor")
+    ids, held_dnp, held_prose = [], 0, 0
+    for r in rows:
+        if (r.get("metadata") or {}).get("do_not_publish"):
+            held_dnp += 1
+        elif lane == "research" and r.get("extractor") != "parse" and not include_prose:
+            held_prose += 1
+        else:
+            ids.append(r["id"])
+    stamp = _utc_stamp()
+    for i in range(0, len(ids), 50):
+        g.patch("claim", f"id=in.({','.join(ids[i:i + 50])})", {"status": "approved", "reviewed_at": stamp})
+    g.stats.bump("claim", "approved", len(ids))
+    g.stats.bump("claim", "held_do_not_publish", held_dnp)
+    if lane == "research":
+        g.stats.bump("claim", "held_prose", held_prose)
+    return stamp
+
+
+def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = False) -> int:
+    """HUMAN-RUN. Mark claims rejected (retrieval drops them) with the reason and prior status in metadata; with
+    revert, restore the prior status and remove the keys. Nothing is deleted. Returns rows changed."""
+    if not revert and not (reason or "").strip():
+        raise SystemExit("reject-claims: --reason is required")
+    n = 0
+    for cid in ids:
+        rows = g.get(f"/claim?id=eq.{cid}&select=id,status,metadata")
+        if not rows:
+            g.stats.bump("claim", "not_found")
+            continue
+        r, md = rows[0], dict(rows[0].get("metadata") or {})
+        if revert:
+            if r["status"] != "rejected" or "prior_status" not in md:
+                g.stats.bump("claim", "revert_skipped")
+                continue
+            prior = md.pop("prior_status")
+            for k in ("rejected_reason", "rejected_at"):
+                md.pop(k, None)
+            g.patch("claim", f"id=eq.{cid}", {"status": prior, "metadata": md})
+            g.stats.bump("claim", "reverted")
+        else:
+            if r["status"] == "rejected":
+                g.stats.bump("claim", "already_rejected")
+                continue
+            stamp = _utc_stamp()
+            g.patch("claim", f"id=eq.{cid}", {"status": "rejected", "reviewed_at": stamp,
+                                              "metadata": {**md, "prior_status": r["status"],
+                                                           "rejected_reason": reason.strip(), "rejected_at": stamp}})
+            g.stats.bump("claim", "rejected")
+        n += 1
+    return n
 
 
 # ---------------------------------------------------------------------------------------------
@@ -2193,6 +2267,50 @@ class _FakeGraph(Graph):
 
     def patch(self, table, flt, row):
         self._patch_try(table, flt, row)
+
+
+def _review_verbs_selftest(ok) -> None:
+    """YED-407: approve-claims research lane + reject-claims (and its revert), offline on _FakeGraph."""
+    pid = "3ded3699c2db816a828ec6410801d5de"
+    rk, ak = research_source_key(pid), source_key_for_event(pid)
+    fg = _FakeGraph()
+    fg.t["claim"] = [
+        {"id": "r-led", "source_key": rk, "status": "candidate", "extractor": "parse", "metadata": {}},
+        {"id": "r-pro", "source_key": rk, "status": "candidate", "extractor": "claude", "metadata": {"extraction": "prose"}},
+        {"id": "r-dnp", "source_key": rk, "status": "candidate", "extractor": "parse", "metadata": {"do_not_publish": True}},
+        {"id": "r-rej", "source_key": rk, "status": "rejected", "extractor": "parse", "metadata": {}},
+        {"id": "a-1", "source_key": ak, "status": "candidate", "extractor": "parse", "metadata": {}},
+    ]
+    st = {c["id"]: c for c in fg.t["claim"]}
+    stamp = approve_claims(fg, {"notion_page_id": pid}, lane="research")
+    ok("approve research: ledger row approved, stamped", st["r-led"]["status"] == "approved" and st["r-led"]["reviewed_at"] == stamp)
+    ok("approve research: prose held without --include-prose", st["r-pro"]["status"] == "candidate")
+    ok("approve research: do_not_publish never approved", st["r-dnp"]["status"] == "candidate")
+    ok("approve research: rejected row untouched", st["r-rej"]["status"] == "rejected")
+    ok("approve research: other lane untouched", st["a-1"]["status"] == "candidate")
+    approve_claims(fg, {"notion_page_id": pid}, lane="research", include_prose=True)
+    ok("approve research --include-prose: prose approved, dnp still held",
+       st["r-pro"]["status"] == "approved" and st["r-dnp"]["status"] == "candidate")
+    approve_claims(fg, {"notion_page_id": pid})
+    ok("approve lane A unchanged: post-event claim approved", st["a-1"]["status"] == "approved")
+    ok("approve-claims is refused on an off-the-record manifest", "approve-claims" in OTR_VERBS)
+    n = reject_claims(fg, ["a-1", "missing"], "brief confidentiality section")
+    md = st["a-1"]["metadata"]
+    ok("reject: status rejected, reason + prior status kept, missing id skipped",
+       n == 1 and st["a-1"]["status"] == "rejected" and md["prior_status"] == "approved"
+       and md["rejected_reason"] == "brief confidentiality section")
+    ok("reject: idempotent on an already-rejected row", reject_claims(fg, ["a-1"], "again") == 0
+       and st["a-1"]["metadata"]["rejected_reason"] == "brief confidentiality section")
+    try:
+        reject_claims(fg, ["r-led"], "  ")
+        ok("reject: empty reason refused", False)
+    except SystemExit:
+        ok("reject: empty reason refused", st["r-led"]["status"] == "approved")
+    ok("reject --revert: prior status restored, keys removed",
+       reject_claims(fg, ["a-1"], "", revert=True) == 1 and st["a-1"]["status"] == "approved"
+       and not {"prior_status", "rejected_reason", "rejected_at"} & set(st["a-1"]["metadata"]))
+    ok("reject --revert: a row rejected elsewhere (no prior_status) is left alone",
+       reject_claims(fg, ["r-rej"], "", revert=True) == 0 and st["r-rej"]["status"] == "rejected")
 
 
 def _norm_selftest(ok) -> None:
@@ -3080,6 +3198,7 @@ def selftest() -> bool:
 
     # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
     _identity_selftest(ok)
+    _review_verbs_selftest(ok)
     _norm_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
@@ -3109,11 +3228,18 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "stage-research", "ensure-roles", "stage-prose"])
+                                     "stage-research", "ensure-roles", "stage-prose", "reject-claims"])
     ap.add_argument("--checked", metavar="BRIEF.llm.checked.json", help="(stage-prose) prose_extract.py check output")
     ap.add_argument("--replace", action="store_true",
                     help="(stage-prose) a different extraction is already staged: retire its candidate rows "
                          "(status rejected, metadata.retired) and stage this one")
+    ap.add_argument("--lane", choices=["A", "research"], default="A",
+                    help="(approve-claims, YED-407) A = post-event brief claims; research = pre-event brief claims")
+    ap.add_argument("--include-prose", action="store_true",
+                    help="(approve-claims --lane research) also approve prose extractions (extractor claude); "
+                         "default is Evidence Ledger rows only")
+    ap.add_argument("--ids-file", metavar="IDS.txt|IDS.json",
+                    help="(reject-claims) claim ids, one per line or a JSON list; HUMAN-RUN")
     ap.add_argument("--allow-otr-reviewed", action="store_true",
                     help="(stage-research/-claims/-prose, YED-391) stage a manifest marked notion_export.skip_staging "
                          "ONLY after Alex has reviewed its off-the-record redactions")
@@ -3187,6 +3313,15 @@ def main(argv: list[str]) -> int:
         if a.json:
             print(json.dumps({"verb": "backfill", "dry_run": a.dry_run, "created": stats.created(), "stats": stats.c}))
         return 0
+    if a.verb == "reject-claims":                  # YED-407: HUMAN-RUN, no manifest; reversible with --revert
+        if not a.ids_file:
+            ap.error("reject-claims needs --ids-file")
+        raw = open(a.ids_file, encoding="utf-8").read()
+        ids = json.loads(raw) if raw.lstrip().startswith("[") else [x.strip() for x in raw.splitlines() if x.strip()]
+        n = reject_claims(g, ids, a.reason or "", revert=a.revert)
+        print(("DRY-RUN " if a.dry_run else "") + f"reject-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
+        print(stats.report())
+        return 0
     if not a.manifest:
         ap.error(f"{a.verb} needs --manifest")
     m = json.load(open(a.manifest, encoding="utf-8"))
@@ -3245,18 +3380,9 @@ def main(argv: list[str]) -> int:
                    prefer="resolution=ignore-duplicates,return=minimal",
                    on_conflict="document_id,entity_type,entity_id,role")
     elif a.verb == "approve-claims":
-        # Inherited approval (Alex, 2026-09-18): claims parsed from a brief he has reviewed are approved.
-        # do_not_publish claims are NEVER approved by this path.
-        skey = source_key_for_event(ev["notion_page_id"])
-        rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate&select=id,metadata")
-        ids = [r["id"] for r in rows if not (r.get("metadata") or {}).get("do_not_publish")]
-        held = len(rows) - len(ids)
-        for i in range(0, len(ids), 50):
-            g.patch("claim", f"id=in.({','.join(ids[i:i + 50])})",
-                    {"status": "approved", "reviewed_at": __import__("datetime").datetime.now(
-                        __import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
-        stats.bump("claim", "approved", len(ids))
-        stats.bump("claim", "held_do_not_publish", held)
+        # Inherited approval (Alex, 2026-09-18; research lane 2026-11-12, YED-407). do_not_publish never approves.
+        stamp = approve_claims(g, ev, lane=a.lane, include_prose=a.include_prose)
+        print(f"  approve-claims: lane={a.lane} reviewed_at={stamp}")
     elif a.verb == "stage-claims":
         if not a.brief:
             ap.error("stage-claims needs --brief")
