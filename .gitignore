@@ -179,3 +179,9 @@ Event Content/**/build-plan*.md
 **/journal/state.json
 # agent worktrees: were only in .git/info/exclude (local to one machine)
 .claude/worktrees/
+
+# 2026-11-12: local-only Event Content found untracked during clone reconcile
+Event Content/10 30 26 Frontier Hackathon October/journal/
+Event Content/10 30 26 Frontier Hackathon October/obvious-specs/06-x-content.md
+Event Content/11 02 26 Can your agents actually ship?/*-carousel.html
+Event Content/11 02 26 Can your agents actually ship?/*-carousel.pdf
