@@ -1256,7 +1256,13 @@ class Graph:
         body = d.get("body_text") or open(d["body_path"], encoding="utf-8").read()
         digest = sha(body)
         ref = d["external_ref"]
-        cur = self.get(f"/documents?external_ref=eq.{q(ref)}&is_current=is.true&select=id,sha256,version&limit=1")
+        # YED-406: a Notion ref names the same page dashed or undashed; match either form, never mint a duplicate.
+        refs = [ref]
+        if ref.startswith("notion:") and pid_variants(ref[7:]):
+            refs = [ref] + [f"notion:{v}" for v in pid_variants(ref[7:]) if f"notion:{v}" != ref]
+        flt = f"external_ref=eq.{q(ref)}" if len(refs) == 1 else \
+            "external_ref=in.(" + ",".join(f'"{r}"' for r in refs) + ")"
+        cur = self.get(f"/documents?{flt}&is_current=is.true&select=id,sha256,version&limit=1")
         if cur and cur[0]["sha256"] == digest:
             self.stats.bump("documents", "matched")
             return cur[0]["id"]
@@ -2193,7 +2199,7 @@ class _FakeGraph(Graph):
         if op == "eq":
             return str(cur) == val
         if op == "in":
-            return str(cur) in [x.strip() for x in val.strip("()").split(",")]
+            return str(cur) in [x.strip().strip('"') for x in val.strip("()").split(",")]
         if op == "is":
             return (cur is None) if val == "null" else (cur is not None)
         if op in ("gte", "lte"):
@@ -2311,6 +2317,22 @@ def _review_verbs_selftest(ok) -> None:
        and not {"prior_status", "rejected_reason", "rejected_at"} & set(st["a-1"]["metadata"]))
     ok("reject --revert: a row rejected elsewhere (no prior_status) is left alone",
        reject_claims(fg, ["r-rej"], "", revert=True) == 0 and st["r-rej"]["status"] == "rejected")
+
+
+def _docref_selftest(ok) -> None:
+    """YED-406: ensure_document matches a Notion ref in either id form instead of creating a duplicate."""
+    fg = _FakeGraph()
+    body = "brief body"
+    fg.t["documents"] = [{"id": "doc-1", "external_ref": "notion:3fad3699c2db8193a00ed1fb3a3d8e89", "sha256": sha(body),
+                          "version": 1, "is_current": True}]
+    did = fg.ensure_document({"external_ref": "notion:3fad3699-c2db-8193-a00e-d1fb3a3d8e89", "title": "t",
+                              "source_type": "post_event_brief", "body_text": body})
+    ok("ensure_document: dashed ref matches the undashed row (no duplicate)", did == "doc-1" and len(fg.t["documents"]) == 1)
+    did2 = fg.ensure_document({"external_ref": "notion:3fad3699c2db8193a00ed1fb3a3d8e89", "title": "t",
+                               "source_type": "post_event_brief", "body_text": body})
+    ok("ensure_document: same-form ref still matches", did2 == "doc-1" and len(fg.t["documents"]) == 1)
+    fg.ensure_document({"external_ref": "file:other.md", "title": "t", "source_type": "post_event_brief", "body_text": body})
+    ok("ensure_document: non-Notion refs unaffected (new row)", len(fg.t["documents"]) == 2)
 
 
 def _norm_selftest(ok) -> None:
@@ -3199,6 +3221,7 @@ def selftest() -> bool:
     # ---- identity S1b-lite (YED-47): tier · tombstone follow · merge/revert, offline ------------
     _identity_selftest(ok)
     _review_verbs_selftest(ok)
+    _docref_selftest(ok)
     _norm_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
