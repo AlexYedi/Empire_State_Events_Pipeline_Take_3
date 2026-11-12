@@ -1722,6 +1722,64 @@ def researched_kind_allowed(g: "Graph") -> bool:
         return False
 
 
+BRIEF_PREFIX = "Research brief — "
+
+
+def link_research(g: "Graph") -> dict:
+    """YED-386 backfill: pre-event research claims staged before 0022 carry no event_id (attendance is never inferred,
+    ADR-10 D9). For each research_brief document still unlinked, give its Notion page a 'researched' occasion and attach
+    the brief's claims + document through the SAME ensure_event -> attach_research path stage-prose uses. Matching is
+    conservative: an event row with this Notion page id is used as-is; a title that the reconciler's matcher pairs with
+    an existing attended/researched row (same day, +/-1 day, or any date) or ties with several is HELD for Alex, never
+    merged or created. Dry-run reads only. Returns {linked, created, held, claims}."""
+    from reconcile import Ambiguous, OCCASION_KINDS, local_day, match, pid as rpid, safe, tokens
+    out = {"created": [], "matched": [], "held": [], "skipped": 0, "claims": 0, "held_claims": 0}
+    if not researched_kind_allowed(g):
+        sys.stderr.write("link-research: migration 0022 ('researched' kind) is not applied — nothing to do\n")
+        out["refused"] = True
+        return out
+    docs = g.get("/documents?source_type=eq.research_brief&event_id=is.null&select=id,title,doc_date,metadata")
+    briefs: dict[str, dict] = {}
+    for d in docs:
+        nid = (d.get("metadata") or {}).get("notion_event_id")
+        if nid and nid not in briefs:
+            briefs[nid] = d
+    evs = g.get(f"/event?kind=in.({','.join(OCCASION_KINDS)})&select=id,title,kind,event_date,notion_page_id")
+    rows = [{"id": e["id"], "title": e.get("title") or "", "kind": e.get("kind"), "tokens": tokens(e.get("title") or ""),
+             "nids": {rpid(e.get("notion_page_id"))} - {None}, "date": local_day(e.get("event_date")),
+             "non_event": False} for e in evs]
+    for nid, d in sorted(briefs.items(), key=lambda kv: (str(kv[1].get("doc_date")), kv[0])):
+        loose = g.get(f"/claim?source_key=eq.{research_source_key(nid)}&event_id=is.null&select=id")
+        if not loose:
+            out["skipped"] += 1
+            continue
+        title = (d.get("title") or "")
+        title = title[len(BRIEF_PREFIX):] if title.startswith(BRIEF_PREFIX) else title
+        day = str(d.get("doc_date") or "")[:10] or None
+        rec = {"title": safe(title), "date": day, "claims": len(loose)}
+        ev = {"title": title, "kind": "researched", "event_date": day, "notion_page_id": nid}
+        if g.by_pid("event", nid):                   # the page id IS the key: no title judgment needed
+            g.attach_research(ev, g.ensure_event({"event": ev, "entities": []}))
+            out["matched"].append(rec)
+            out["claims"] += len(loose)
+            continue
+        # source 'link', not 'brief': the matcher's lenient one-shared-word rule is for session-level FILE names
+        item = {"tokens": tokens(title), "date": day, "nid": None, "source": "link"}
+        hits = [match(item, rows), match({**item, "date": None}, rows)]
+        hit = next((h for h in hits if h is not None), None)
+        if hit is not None:
+            near = hit.rows if isinstance(hit, Ambiguous) else [hit]
+            out["held"].append({**rec, "near": [f"{r['date']} {safe(r['title'])} ({r['kind']})" for r in near]})
+            out["held_claims"] += len(loose)
+            continue
+        # ensure_event attaches research onto ATTENDED rows only (decision 1); a researched row attaches explicitly,
+        # exactly as stage-prose does
+        g.attach_research(ev, g.ensure_event({"event": ev, "entities": []}))
+        out["created"].append(rec)
+        out["claims"] += len(loose)
+    return out
+
+
 def _as_extractor_claim(r: dict) -> dict:
     """A checked row back into the extractor's schema, so `check` can judge it again from scratch. Wrong types pass
     through unchanged on purpose: check's strict schema drops them."""
@@ -3051,6 +3109,55 @@ def _prose_selftest(ok) -> None:
        and not any("Fictional" in ln or '"claim_text"' in ln or '"quote"' in ln for ln in dry_rows))
 
 
+def _link_research_selftest(ok) -> None:
+    """YED-386 link-research, offline: create + attach, page-id match, held on a title pair, idempotent, dry-run."""
+    p1, p2, p3 = "1" * 32, "2" * 32, "3" * 32
+    def world():
+        fg = _FakeGraph()
+        fg.t["entity_alias"] = []
+        fg.t["event"].append({"id": "ev-att", "title": "Revolt! 2026 — Day 1 (RevGenius)", "kind": "attended",
+                              "event_date": "2026-10-14T00:00:00Z", "notion_page_id": "9" * 32})
+        for nid, t, day in ((p1, "NYC Alt Cloud Meetup (Oct 2026)", "2026-10-14"),
+                            (p2, "Revolt! 2026 Demo Day | Day 1", "2026-11-04"),
+                            (p3, "AI Demos #11: Media", "2026-10-01")):
+            fg.t["documents"].append({"id": f"doc-{nid[0]}", "title": BRIEF_PREFIX + t, "doc_date": day,
+                                      "source_type": "research_brief", "metadata": {"notion_event_id": nid}})
+            for i in range(3):
+                fg.t["claim"].append({"id": f"c{nid[0]}{i}", "source_key": research_source_key(nid), "claim_key": str(i),
+                                      "lane": "research", "document_id": f"doc-{nid[0]}", "metadata": {}})
+        return fg
+    fg = world()
+    r = link_research(fg)
+    made = {e["notion_page_id"].replace("-", ""): e for e in fg.t["event"] if e.get("kind") == "researched"}
+    ok("link-research: a clean miss -> one 'researched' event per brief page; its claims and document attach",
+       set(made) == {p1, p3} and all(c.get("event_id") == made[p1]["id"] for c in fg.t["claim"] if c["id"].startswith("c1"))
+       and next(d for d in fg.t["documents"] if d["id"] == "doc-1").get("event_id") == made[p1]["id"])
+    ok("link-research: a title the matcher pairs with an existing event (any date) is HELD, nothing created or attached",
+       len(r["held"]) == 1 and r["held"][0]["date"] == "2026-11-04" and p2 not in made
+       and all(c.get("event_id") is None for c in fg.t["claim"] if c["id"].startswith("c2")))
+    ok("link-research: attendance is never inferred (no row becomes attended; the attended row is untouched)",
+       fg.t["event"][0]["kind"] == "attended" and all(e["kind"] == "researched" for e in fg.t["event"][1:]))
+    n_ev = len(fg.t["event"])
+    r2 = link_research(fg)
+    ok("link-research: a re-run is a no-op (no new events, only the held brief remains)",
+       len(fg.t["event"]) == n_ev and not r2["created"] and len(r2["held"]) == 1)
+    pg = world()
+    pg.t["event"].append({"id": "ev-pid", "title": "renamed", "kind": "researched", "event_date": None, "notion_page_id": p2})
+    r3 = link_research(pg)
+    ok("link-research: an event row with the brief's page id is used as-is (page id beats the title matcher)",
+       any(m["date"] == "2026-11-04" for m in r3["matched"])
+       and all(c.get("event_id") == "ev-pid" for c in pg.t["claim"] if c["id"].startswith("c2")))
+    dg = world()
+    dg.dry = True
+    rd = link_research(dg)
+    ok("link-research --dry-run: reports the same plan, writes nothing",
+       len(rd["created"]) == 2 and len(rd["held"]) == 1 and len(dg.t["event"]) == 1
+       and all(c.get("event_id") is None for c in dg.t["claim"]))
+    ng = world()
+    del ng.t["entity_alias"]
+    ok("link-research: 0022 not applied -> refused, nothing written", link_research(ng).get("refused") and len(ng.t["event"]) == 1)
+
+
 def _otr_selftest(ok) -> None:
     """YED-391: each stage verb refuses an off-the-record manifest at the CLI, before any network call."""
     import contextlib, io, tempfile
@@ -3230,6 +3337,7 @@ def selftest() -> bool:
     _roles_selftest(ok)
     _prose_selftest(ok)          # YED-384 stage-prose
     _otr_selftest(ok)            # YED-391
+    _link_research_selftest(ok)  # YED-386 backfill
     from reconcile import selftest as _reconcile_selftest   # YED-384: offline fixture tree + stubbed req
     _reconcile_selftest(ok)
 
@@ -3251,7 +3359,8 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "stage-research", "ensure-roles", "stage-prose", "reject-claims"])
+                                     "stage-research", "ensure-roles", "stage-prose", "reject-claims",
+                                     "link-research"])
     ap.add_argument("--checked", metavar="BRIEF.llm.checked.json", help="(stage-prose) prose_extract.py check output")
     ap.add_argument("--replace", action="store_true",
                     help="(stage-prose) a different extraction is already staged: retire its candidate rows "
@@ -3344,6 +3453,23 @@ def main(argv: list[str]) -> int:
         n = reject_claims(g, ids, a.reason or "", revert=a.revert)
         print(("DRY-RUN " if a.dry_run else "") + f"reject-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
         print(stats.report())
+        return 0
+    if a.verb == "link-research":                  # YED-386: no manifest; reads the graph's unlinked research briefs
+        r = link_research(g)
+        if r.get("refused"):
+            return 2
+        tag = "DRY-RUN " if a.dry_run else ""
+        for k, label in (("created", "researched event"), ("matched", "existing row (page id)")):
+            for x in r[k]:
+                print(f"  {tag}{label:24s} {x['date']}  {x['title']}  · {x['claims']} claims")
+        for x in r["held"]:
+            print(f"  HELD (Alex places)       {x['date']}  {x['title']}  · {x['claims']} claims  ~ " + " | ".join(x["near"]))
+        print(f"{tag}link-research: {len(r['created'])} researched events · {len(r['matched'])} matched by page id · "
+              f"{r['claims']} claims linked · {len(r['held'])} held ({r['held_claims']} claims) · "
+              f"{r['skipped']} briefs already linked")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": "link-research", "dry_run": a.dry_run, **{k: r[k] for k in r}, "stats": stats.c}))
         return 0
     if not a.manifest:
         ap.error(f"{a.verb} needs --manifest")
