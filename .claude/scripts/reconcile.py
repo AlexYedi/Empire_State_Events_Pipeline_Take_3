@@ -36,6 +36,9 @@ from spine_client import EMAIL_RE, PHONE_RE  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 DEFAULT_QUEUE = os.path.join(ROOT, ".claude", ".state", "reconcile-queue.json")
+# YED-406: reviewed file-name -> event Notion page id aliases, for session-level or undated files whose names can't
+# title-match their event ("revolt-s2-airspeed", "ElasticON-NYL-Picheria-…"). Keys are "<source>:<parsed title>".
+ALIASES_PATH = os.path.join(ROOT, ".claude", "references", "reconcile-aliases.json")
 OCCASION_KINDS = ("attended", "researched")    # `researched` is plan B0; harmless to ask for before it exists
 RESEARCH_TIERS = ("web_verified", "email_signal")
 GAP_TYPES = ("no_row", "research_not_staged", "post_event_not_staged", "transcript_not_staged",
@@ -193,11 +196,25 @@ def classify(name: str) -> set:
 # ---------------------------------------------------------------------------------------------
 # inventories
 # ---------------------------------------------------------------------------------------------
-def local_items(root: str, inv: dict) -> list[dict]:
+def load_aliases(path: str = ALIASES_PATH) -> dict:
+    """{"<source>:<title>": notion page id}. Missing file = no aliases; a value that isn't a page id is ignored."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh).get("aliases") or {}
+    except (OSError, ValueError):
+        return {}
+    return {k: pid(v) for k, v in raw.items() if isinstance(k, str) and pid(v)}
+
+
+def local_items(root: str, inv: dict, aliases: dict | None = None) -> list[dict]:
     items = []
+    aliases = aliases or {}
 
     def add(source, title, date=None, nid=None, flags=(), folder=None, non_event=False):
-        items.append({"source": source, "title": safe(title), "date": date, "nid": pid(nid), "flags": set(flags),
+        alias = None if nid else pid(aliases.get(f"{source}:{title}"))
+        if alias:
+            inv["aliased"] = inv.get("aliased", 0) + 1
+        items.append({"source": source, "title": safe(title), "date": date, "nid": pid(nid) or alias, "flags": set(flags),
                       "folder": safe(folder) if folder else None, "non_event": non_event, "tokens": tokens(title)})
 
     ec = os.path.join(root, "Event Content")
@@ -318,7 +335,7 @@ def _place(m, title, date, rows, non_event=False) -> dict:
     return r
 
 
-def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
+def reconcile(root: str, prod: dict, today: str | None = None, aliases: dict | None = None) -> dict:
     today = today or dt.date.today().isoformat()
     inv = {k: 0 for k in ("folders", "folders_non_event", "folders_unparsed", "transcripts", "transcripts_unparsed",
                           "manifests", "manifests_unreadable", "briefs", "ledgers", "private_skipped")}
@@ -345,7 +362,7 @@ def reconcile(root: str, prod: dict, today: str | None = None) -> dict:
         r["research_doc_in_graph"] = True
         r["nids"] |= {it["nid"]} - {None}
         r["sources"].add("prod_doc")
-    for it in local_items(root, inv):
+    for it in local_items(root, inv, load_aliases() if aliases is None else aliases):
         r = _place(None if it["non_event"] else match(it, rows), it["title"], it["date"], rows, it["non_event"])
         r["flags"] |= it["flags"]
         r["nids"] |= {it["nid"]} - {None}
@@ -623,7 +640,17 @@ def selftest(ok=None) -> bool:
                 json.dump(body, fh)
         spine_client.req = _stub_req(prod, seen, handed)
         try:
-            res = reconcile(tmp, prod_inventory(), today="2026-11-11")
+            res = reconcile(tmp, prod_inventory(), today="2026-11-11", aliases={})
+            import copy
+            prod2 = copy.deepcopy(prod)
+            for e in prod2["event"]:
+                if e["id"] in ("e2", "e4"):
+                    e["notion_page_id"] = {"e2": "3ead3699-c2db-81dc-8c08-c18502592bee",
+                                           "e4": "3fbd3699-c2db-8188-853f-eb1390785c27"}[e["id"]]
+            spine_client.req = _stub_req(prod2, [], {})
+            res_al = reconcile(tmp, prod_inventory(), today="2026-11-11", aliases={
+                "transcript:ElasticON-S1-Picheria-SOC-Data-Pyramid": "3ead3699c2db81dc8c08c18502592bee",
+                "brief:revolt-2026-day-2": "3fbd3699-c2db-8188-853f-eb1390785c27"})
         finally:
             spine_client.req = real_req
     rows = res["rows"]
@@ -656,6 +683,15 @@ def selftest(ok=None) -> bool:
        len(by("GTM World Tour")) == 1 and gaps("GTM World Tour") == ["no_row", "transcript_not_staged"])
     ok("reconcile: two Deal Flow folders, one row", len(by("Deal Flow")) == 1 and len(by("Deal Flow")[0]["folders"]) == 2)
     ok("reconcile: brief slug with a trailing date joins its event", by("Deal Flow")[0]["has_post_event_brief"])
+    by_al = lambda frag: [r for r in res_al["rows"] if frag.lower() in r["title"].lower()]  # noqa: E731
+    ok("reconcile (YED-406): aliased session transcript joins its event row by page id, no no_row row",
+       not by_al("Picheria") and "Picheria" not in str([r["title"] for r in res_al["rows"]])
+       and by_al("Elastic{ON}")[0]["has_transcript"])
+    ok("reconcile (YED-406): aliased undated brief resolves the Day 2 tie, no ambiguous row",
+       not by_al("revolt-2026-day-2") and res_al["summary"]["gaps"]["ambiguous"] == 0
+       and by_al("— Day 2")[0]["has_post_event_brief"] and not by_al("Demo Day")[0]["has_post_event_brief"])
+    ok("reconcile (YED-406): alias file loader ignores bad ids and a missing file",
+       load_aliases("/nonexistent/aliases.json") == {})
     ok("reconcile: research file, 0 research claims -> research_not_staged (not merged into AI Builders)",
        gaps("AI Demos #11") == ["research_not_staged"] and not by("AI Builders")[0]["has_research_file"])
     ap_row = by("Durable State")[0]

@@ -201,7 +201,7 @@ def plan(header: dict, items: list[dict], event: str, event_date: str, notion_ev
                      "Complexity Band": it["complexity"],
                      "Architecture Summary": (it["why"] + (" " + it["body"] if it.get("body") else ""))[:1900]}
             if notion_event_url:
-                props["Events"] = json.dumps([notion_event_url])
+                props["Event"] = json.dumps([notion_event_url])
             ops.append({"key": f"project-idea:{run_state.slugify(it['title'])}", "op": "create",
                         "parent": {"data_source_id": PROJECT_IDEAS_DS},
                         "dedup": {"query": it["title"], "match_title": it["title"]},
