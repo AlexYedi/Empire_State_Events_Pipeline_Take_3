@@ -75,9 +75,18 @@ Before fan-out, load what the pipeline already knows about these entities so res
 
 ## Step 2 — Multi-agent research fan-out (this conversation)
 
-Once triage is approved, **dispatch all four specialists in parallel from this thread** via a single message containing four `Agent` tool calls. This runs in the parent thread so one place owns concurrency and the chain (CLAUDE.md invariant 6).
+Once triage is approved, **run Steps 2 and 2.5 as one workflow from this thread:** call the `Workflow` tool with `name: "event-research-fanout"` (`.claude/workflows/event-research-fanout.js`). The parent still owns the run (CLAUDE.md invariant 6): it launches the workflow after the triage gate and takes back the result. The workflow does what the hand-run fan-out below did, with three differences:
+- the dispatch shape is fixed in code, so item (1), the verbatim source, can't be dropped from a specialist prompt;
+- each specialist returns its Evidence Ledger as structured rows. Code renders them in the exact bullet form Step 4.2 parses, and drops inadmissible rows (web-verified without a URL, a bad date, a claim over 15 words), listing each one;
+- a thin return gets one deeper pass automatically, for that specialist only.
 
-The four parallel dispatches:
+**Args** (a JSON object, not a string): `event {name, date}`, `verbatim_source` (the Step 1 `VERBATIM SOURCE` block, unedited), `focus`, `triage_plan`, `prior_pack` (the Step 1.7 pack, `""` on a first-touch event), and `specialists.{company, person, topic, signal}`, each `{entities, prior}`. `entities` is that specialist's entity list with triage paths, scoped as in the list below; `""` means not dispatched. `prior` is its slice of the pack.
+
+**It returns** `scan_head` (show it at Step 3), `evidence_set` (hold it for Step 4.5, and write it at Step 4.2a), `specialist_returns` (the 4.2a fallback when the Evidence Set lost its ledger headings), and `audit` (who ran, retried, failed or stayed thin, ledger rows kept per specialist, and every dropped row). Show the `audit` lines to Alex with the Scan head. A specialist still thin after its retry, or failed, is a Verification Flag, not a silent gap.
+
+**Fallback:** if the Workflow tool isn't available in this session, or the workflow fails, run the hand-run fan-out below and Step 2.5 as written. The contracts are the same.
+
+The four parallel dispatches (what the workflow runs; the hand-run fallback sends them as one message with four `Agent` calls):
 
 1. **company-researcher** — every Company entity that needs research (NEW, REFRESH, or FRAME-ONLY: a SKIP whose record has no Value Frame, YED-233). Pass the entity list scoped to this specialist + their triage paths + Alex's stated focus.
 2. **person-researcher** — every Person entity that needs research (NEW or REFRESH). Skip the dispatch entirely if no people are named or all are SKIP.
@@ -93,6 +102,8 @@ For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block fr
 Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
 
 ## Step 2.5 — Synthesis (delegated to event-research-synthesizer)
+
+_The `event-research-fanout` workflow runs this step itself. The text below is the contract, and the hand-run fallback._
 
 Invoke the synthesizer subagent with all four specialist returns plus the triage plan and raw invite:
 
