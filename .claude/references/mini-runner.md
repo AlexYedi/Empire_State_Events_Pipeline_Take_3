@@ -17,7 +17,7 @@ loop started 2026-11-06, before the rename), and its id survived only because th
 | Machine | Mac mini (Mac18,5), hostname `esep-mini`, macOS 27, FileVault **on** |
 | Runner checkout | `~/Developer/Empire_State_Events_Pipeline_Take_3`, always on `main`, used only by launchd jobs. `run-job.sh` refuses to run on any other branch and fast-forwards `main` before each job, so launchd only runs merged code. It has its own `.venv` and its own copy of `.env` (Alex copies it) |
 | Why not `~/Documents` | macOS privacy protection (TCC) blocks launchd-started programs from `~/Documents`: the first launchd smoke failed with `zsh: can't open input file` (exit 127). `~/Developer` is not protected, so no binary needs Full Disk Access. Interactive sessions and Remote Control keep using `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3` |
-| Job runner | `ops/mini-runner/run-job.sh` (jobs: `reconcile`, `smoke`); one log per run in `~/Library/Logs/esep-runner/<job>-<UTC>.log` |
+| Job runner | `ops/mini-runner/run-job.sh` (jobs: `reconcile`, `smoke`, `sync`, `sweep`); one log per run in `~/Library/Logs/esep-runner/<job>-<UTC>.log` |
 | Remote access | LaunchAgent `com.esep.remote-control` keeps one `claude remote-control --spawn worktree` up, for phone/web access only. Not part of the scheduler; its environment id changes on restart, so never pin a routine to it |
 | Power | `pmset`: `sleep 0`, `disksleep 0`, `autorestart 1` (boots itself after a power cut, then waits at the FileVault screen) |
 | Python | uv-managed CPython 3.12 (`.venv`, no packages: the runner's scripts are stdlib-only). System python is 3.9: never use it |
@@ -37,6 +37,7 @@ Database reads go through `spine_client.py` only (invariant 1). REST paths need 
 | `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS under launchd 2026-11-11 19:26Z (runner checkout, `a0d47ed`) |
 | `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | installed 2026-11-11 on Alex's yes; first run 2026-11-12 05:00 ET (check: YED-399) |
 | `sync` | `com.esep.sync-inputs` | hourly, and once at load | YED-395; see "Laptop input sync" below |
+| `sweep` | `com.esep.daily-sweep` | 05:30 local (ET) daily | first scheduled job that runs a model (YED-384). `theme-sweep.sh`: `sweep_seed.py` → top 3 themes → `claude -p --agent theme-sweeper` (WebSearch + WebFetch only, `dontAsk`, no MCP) → `sweep_manifest.py`. Writes only `.claude/.state/sweeps/<date>/` (gitignored). Dry run on the laptop 2026-11-12: 1 theme, 43 turns, 13/13 items valid. Not installed until Alex approves a mini run |
 
 `StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
 when it wakes (missed runs coalesce into one).
@@ -75,9 +76,10 @@ Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
 2. Smoke: `launchctl bootout gui/$(id -u)/com.esep.runner-smoke 2>/dev/null; cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
    then `tail -5 "$(ls -t ~/Library/Logs/esep-runner/smoke-*.log | head -1)"` shows `SMOKE: ALL PASS`.
 3. Nightly reconcile (only after approving a report): `cp ops/mini-runner/com.esep.nightly-reconcile.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.nightly-reconcile.plist`
-4. Input sync (after the laptop setup above): `cp ops/mini-runner/com.esep.sync-inputs.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.sync-inputs.plist`
-5. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
-6. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
+4. Daily sweep (only after approving a direct run's output): `zsh ops/mini-runner/run-job.sh sweep`, read the newest `~/Library/Logs/esep-runner/sweep-*.log` and `.claude/.state/sweeps/<date>/`, then `cp ops/mini-runner/com.esep.daily-sweep.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.daily-sweep.plist`. Tune with `SWEEP_THEMES`, `SWEEP_CAP`, `SWEEP_BUDGET_USD` in the plist's environment if needed.
+5. Input sync (after the laptop setup above): `cp ops/mini-runner/com.esep.sync-inputs.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.sync-inputs.plist`
+6. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
+7. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
 
 LaunchAgents start only once the user is logged in. That is why the restart procedure below matters.
 
