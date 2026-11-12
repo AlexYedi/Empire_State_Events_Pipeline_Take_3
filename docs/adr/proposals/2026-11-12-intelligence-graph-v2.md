@@ -75,11 +75,12 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 7. **L4 synthesis agent** (on demand, cited, ACH, dated predictions), plus the retraction cascade and calibration reporting.
 8. **Evaluation per batch**, with the numbers published on the hub's In Flight page.
 
-## 7. Open decisions (Alex)
+## 7. Decisions (Alex, 2026-11-12)
 
-- Pilot first, then the ADR (recommended, 75%)?
-- Run MiniCheck locally on the Mac mini (open model, no API cost, new local infra)?
-- The v1 batch (1,153 claims) stays unstaged until the v2 head-to-head.
+- **Pilot first, then the ADR.** Approved. The ADR-15 draft waits for the pilot's κ and Wilson numbers.
+- **MiniCheck runs locally on the Mac mini** as one of the pilot's judges (open model, no API cost). Taken as approved with the pilot; it stays in only if its κ earns the seat.
+- **The v1 prose batch stays approved.** Alex approved the 932 v1 prose claims that passed both gates (95.5% faithful on a 200-row pooled sample). Claims are approved on traceability, not truth; truth is checked at use (YED-410). The v2 head-to-head still runs, and if v2 wins, its claims are staged alongside v1 and v1 rows it supersedes are marked `deprecated`, not deleted.
+- **The fact-check design (YED-410) merges into ADR-15.** Both drafts claimed migration 0023 and ADR-15; there is one of each.
 
 ## 8. Sources
 
