@@ -41,6 +41,7 @@ concurrency:
 
 jobs:
   signals:
+    environment: prod   # YED-341: prod secrets live only in the main-restricted prod environment
     runs-on: ubuntu-latest
     permissions:
       contents: read        # checkout only; issues:write is for the failure-alert step
