@@ -9,16 +9,24 @@ JOB="${1:-}"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export ENABLE_CLAUDEAI_MCP_SERVERS=false   # no claude.ai connectors in any job
 mkdir -p "$LOGDIR"
-LOG="$LOGDIR/${JOB:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).log"
+LOG="${RUNJOB_LOG:-$LOGDIR/${JOB:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).log}"   # a re-exec keeps the same log
 exec >>"$LOG" 2>&1
 echo "== $JOB start $(date -u +%FT%TZ) host=$(hostname)"
 
 cd "$REAL" || { echo "FAIL: no checkout at $REAL"; exit 2; }
 BR="$(git branch --show-current)"
-[[ "$BR" == "main" ]] || { echo "FAIL: checkout is on '$BR', not main; refusing to run"; exit 3; }
+[[ "$BR" == "main" ]] || { echo "FAIL: checkout is on '$BR', not main; refusing to run"; /usr/bin/python3 ops/mini-runner/alert.py job "$JOB" 3 "$LOG"; exit 3; }
+SELF="$REAL/ops/mini-runner/run-job.sh"
+SELF_SHA="$(shasum "$SELF" | awk '{print $1}')"
 git pull --ff-only -q origin main || echo "WARN: git pull failed; running on $(git log -1 --format=%h)"
+# zsh has already read this script into memory, so a pull that changes it would otherwise run the OLD version once
+# (2026-11-13: the first `sweep` run failed "unknown job" right after pulling the commit that added it). Re-exec once.
+if [[ -z "${RUNJOB_REEXEC:-}" && "$(shasum "$SELF" | awk '{print $1}')" != "$SELF_SHA" ]]; then
+  echo "run-job.sh changed in this pull; re-running on the new version"
+  RUNJOB_REEXEC=1 RUNJOB_LOG="$LOG" exec /bin/zsh "$SELF" "$JOB"
+fi
 echo "commit $(git log -1 --format='%h %s')"
-[[ -x .venv/bin/python ]] || uv venv -q --python 3.12 .venv || { echo "FAIL: venv bootstrap"; exit 4; }
+[[ -x .venv/bin/python ]] || uv venv -q --python 3.12 .venv || { echo "FAIL: venv bootstrap"; /usr/bin/python3 ops/mini-runner/alert.py job "$JOB" 4 "$LOG"; exit 4; }
 PY=.venv/bin/python
 
 # YED-395: the laptop holds the local inventories reconcile reads (untracked Event Content, event-transcripts,
@@ -89,4 +97,8 @@ End with one line per check (check | PASS/FAIL | evidence), then SMOKE: ALL PASS
     echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep)"; RC=64 ;;
 esac
 echo "== $JOB end $(date -u +%FT%TZ) exit=$RC"
+# Failure alert (Linear issue when LINEAR_API_KEY is in .env, plus a notification and ALERTS.txt; once per job per day),
+# and a login check after every model job. alert.py never changes the exit code.
+"$PY" ops/mini-runner/alert.py job "$JOB" "$RC" "$LOG"
+[[ "$JOB" == (sweep|smoke) ]] && "$PY" ops/mini-runner/alert.py login
 exit $RC

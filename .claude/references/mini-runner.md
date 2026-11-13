@@ -103,6 +103,18 @@ until it is unlocked.
 - If that does not work: unlock in person (keyboard or a monitor at the mini), or via Screen Sharing only once the OS has booted past FileVault.
 - After any restart: `launchctl print gui/$(id -u)/com.esep.nightly-reconcile | grep -E 'state|last exit code'` and the newest log in `~/Library/Logs/esep-runner/`.
 
+## Failure alerts and self-update
+
+- **Re-exec after pull.** `run-job.sh` pulls `main` before each job. If that pull changes `run-job.sh` itself, the job re-runs
+  once on the new version (same log). Without this, zsh runs the copy it already read: on 2026-11-13 the first `sweep` run
+  failed `unknown job` right after pulling the commit that added it.
+- **Alerts.** At the end of every job, `ops/mini-runner/alert.py` opens a Linear issue in EMPIRE-STATE when the job exits
+  non-zero (once per job per day; `sync` exit 255 = laptop asleep, never alerts), posts a macOS notification and appends to
+  `~/Library/Logs/esep-runner/ALERTS.txt`. After `sweep` and `smoke` it also checks `claude auth status` and alerts when the
+  mini's login expires within 5 days. Test with `ALERT_DRY_RUN=1`.
+- **Setup (Alex, once, on the mini):** add `LINEAR_API_KEY=<key>` to `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`.
+  launchd does not read `~/.zshrc`, so a key set there is invisible to the jobs. Without the key, alerts are local only.
+
 ## Adding a job
 
 Add a `case` to `run-job.sh` and a plist modelled on `com.esep.nightly-reconcile.plist`, in a PR. Prove it with a direct
