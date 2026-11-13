@@ -1,96 +1,125 @@
 # ADR-15 — Intelligence graph v2: layered derived knowledge, document-scoped support, an audited judge, and freshness by class
 
-**Status:** **Proposed 2026-11-13** (draft for the Fable adversarial review; YED-384). It becomes Accepted once migration 0023 passes its twin rehearsal and Alex has applied it to prod.
-**Governs:** what a claim is and when it counts as supported; how claims are extracted, judged, kept fresh and derived into relations, trends and insights; the tables migration 0023 adds; and how each layer is measured.
-**Inputs:** the plan `docs/adr/proposals/2026-11-12-intelligence-graph-v2.md` (§7 and §7b record Alex's decisions of 11-12 and 11-13), the judge pilot (`.claude/.state/judge-pilot-20261112/`, gitignored), the knowledge-graph research check (`.claude/.state/kg-research-20261113/report.md`) and YED-410 (use-time fact-check), which this ADR absorbs.
-**Builds on:** ADR-9 (PII boundary; extended here from fields to claims), ADR-10 (knowledge substrate: claims point at events, one producer path, one retrieval path) and ADR-13 (lens and slice layer). It reverses none of them.
+**Status:** **Proposed 2026-11-13** (revision 2, after the Fable adversarial review; YED-384). It becomes Accepted once migration 0023 passes its twin rehearsal and Alex has applied it to prod.
+**Governs:** what a claim is and when it counts as supported; how claims are extracted, judged and kept fresh; how relations, trends and insights are derived from them; what migration 0023 adds and what later migrations add; how each layer is measured.
+**Inputs:**
+- the plan `docs/adr/proposals/2026-11-12-intelligence-graph-v2.md` (§7 and §7b record Alex's decisions of 11-12 and 11-13)
+- the judge pilot (`.claude/.state/judge-pilot-20261112/`, gitignored)
+- the knowledge-graph research check (`.claude/.state/kg-research-20261113/report.md`)
+- YED-410 (use-time fact-check), which this ADR absorbs
+- the Fable adversarial review of revision 1 (findings B1–B3 and the should-fix items, all addressed below)
 
-> **Numbering:** ADR-14 is referenced by `theme-sweeper` (ADR-14 §2.2) but is not on `main`. Before this merges, confirm 15 is still free on `main` (README numbering note).
+**Builds on:** ADR-9 (the PII boundary, extended here from fields to claims), ADR-10 (the knowledge substrate: claims point at events; one producer path; one retrieval path) and ADR-13 (the lens and slice layer). It reverses none of them. Migration 0022 must be applied before 0023.
+
+> **Numbering:** `theme-sweeper` refers to ADR-14 (§2.2), which is not on `main`. Before this ADR merges, confirm that 15 is still free on `main` (see the README numbering note).
 
 ## Context
 
-The v1 prose extractor reached 0.98 precision by copying: every content word of a claim had to appear in its source paragraph. The claims were accurate and nearly useless ("X is CTO of Y"), because the gate measured only one thing. Most of the graph's value lies above single facts, in paraphrased assertions, relations, trends and synthesis, and each of those can be checked for accuracy as long as it records what it was derived from.
+v1 prose extraction reached 0.98 precision by copying. Every content word of a claim had to appear in its source paragraph. The claims were accurate and nearly useless ("X is CTO of Y"), because the gate measured only one thing. Most of the graph's value sits above single facts: paraphrased assertions, relations, trends and synthesis. Each of these can be checked for accuracy as long as it records what it was derived from.
 
-The judge pilot (11-12 to 11-13) answered three questions the plan left open:
+The judge pilot (11-12 to 11-13) answered three questions the plan had left open.
 
-1. **What "supported" means.** Alex first marked 99 of 100 v2 claims supported while the judges flagged 12. A document-level rerun showed that 11 of the 12 were supported by *other paragraphs of the same brief*: the harness showed judges one paragraph while the extractor read the whole document. The standard was fine; the harness was wrong.
-2. **Which judge.** No judge could be chosen from a set with one negative (every κ ≈ 0, against 99% raw agreement for an always-yes judge). Two balanced planted-error sets settled it: one written by Sonnet, one by fixed rules that no model authored.
+1. **What "supported" means.** In the first labelling round, Alex marked 99 of 100 v2 claims supported. The judges flagged 12. A document-level rerun showed that 11 of those 12 were supported by other paragraphs of the same brief: the harness had shown the judges one paragraph, while the extractor read the whole document. After a re-label under the strict, document-scoped standard, Alex marked all 100 supported.
+2. **Which judge.** No judge could be chosen from a set with one or zero negatives. Two balanced planted-error sets were built instead: one written by Sonnet, one by fixed rules.
 3. **Whether a second, cross-family checker adds anything.** It does not (decision 4).
 
 ## Decision
 
 | # | Decision | Why |
 |---|---|---|
-| 1 | **Layers.** L0 sources (immutable, reliability A–F per source); L1 assertions (paraphrased, typed, standalone claims with evidence spans); L1 entity attributes (titles and roles routed off the claim path); entity resolution (one node per real thing, merges logged and reversible); L2 relations (backed by ≥1 supported L1 claim; strength = independent sources); L3 analytics (volume-normalised, FDR-controlled, backtested); L4 insights (generated on demand, every premise cited); L5 products. Each layer has its own definition of correct and its own metric (plan §3). | Accuracy is a property of a statement against its evidence, so it can be measured after paraphrase and inference, layer by layer. |
-| 2 | **Supported = strict and document-scoped.** Every part of a claim must be stated somewhere in its source document (the same brief or transcript) or in the event's own title and date. Several paragraphs may contribute. A detail stated nowhere in the document, a relationship the document never states, a dropped hedge or a changed tense is unsupported. Omission is not a fault. | Matches how the extractor reads and how Alex labels. The paragraph-scoped version produced 11 false "unsupported" verdicts out of 12. |
-| 3 | **The extractor cites every evidence span.** Evidence is a list of `{para_idx, quote}`, one per paragraph used, together covering every element of the claim (`extract-v3-prompt.md`). The judge sees the claim, its cited spans and the event line. A quote that is not found verbatim in its paragraph fails the claim mechanically, before any judge. | All 4 of Claude's wrong flags on the real set came from a post-hoc span locator that missed a supporting paragraph (P006, P022, P034, P084). The writer of the claim is the one who knows which paragraphs it used. |
-| 4 | **One judge: Claude, audited against errors no model wrote.** Plan principle 7 is amended from "never judge your own output" to this. MiniCheck (7B and T5) is dropped. **Audit:** each month a fresh batch of rule-planted errors (swapped number, wrong entity, dropped hedge, added detail, tense change) plus their unaltered originals is judged and scored against the planted gold. The judge keeps its seat while the catch rate's Wilson 95% lower bound is ≥ 0.80 and κ ≥ 0.80 (provisional floors from the pilot). Below either, the judge is benched: claims stage as `needs_review` until a fix passes the audit. | Results below. A second checker earns its seat only by catching what the first misses; MiniCheck-7B caught 0 of Claude's 2 misses and raised false flags on correct claims from 4 to 7. The rule-planted set *is* the self-preference test, and Claude scored highest on it. A recurring audit measures the risk instead of buying a weaker instrument to cover it. |
-| 5 | **Gate on human labels, not judge rates.** L1 batches of n ≈ 100 are accepted when the Wilson 95% lower bound on faithfulness is ≥ 0.90, computed on Alex's labels or on judge labels corrected by prediction-powered inference (PPI). Raw judge rates are never the gate. | A judge with 97% agreement still has a bias PPI can correct; a raw judge rate cannot be audited. |
-| 6 | **Provenance on every derived row.** `claim_derivation` records child, parents, method, model, prompt hash, checker version and run (W3C PROV-O style). A retracted, invalidated or deprecated L1 claim flags every L2–L4 descendant `needs_review`, with the products that cited it. | The retraction cascade and method attribution both need the parent links; nothing else can rebuild them later. |
-| 7 | **Bitemporal claims; history is never overwritten.** `valid_from`, `valid_to`, `recorded_at` and `invalidated_by` on claims. A newer fact closes the older one's window. Contradictions are ranked (preferred / normal / deprecated) or marked `disputed`, never silently resolved. | Zep/Graphiti pattern; temporal questions are where graphs beat plain vector retrieval (research check). |
-| 8 | **Freshness by class, re-checked lazily, logged append-only.** A claim stays valid until shown otherwise. A classifier assigns `freshness_class` (historical: never re-check; fast-moving: 14–30 days; slow-moving: 90 days; opinion/prediction: scored as a forecast, not re-verified) with `freshness_conf` and `freshness_reason`; `none_fits` is allowed. Overdue claims are re-checked when next used (≤ 5 per query) and in one batch before the Monday brief. Every check appends a `claim_verification` row (confirmed / updated / contradicted / unverifiable, source, method, run); a check never edits the claim. "Last confirmed" is derived from the log. **This absorbs YED-410**: the log is the verdict write-back it asked for, retrieval surfaces the latest outcome, and the Monday brief's pre-publish batch is its missing verify step. | Approve on traceability, check truth at use (Alex, 11-12). Re-checking everything on a timer wastes calls on facts nobody uses. |
-| 9 | **Observability before tuning.** The Monday brief's graph-health section reports the share of borderline (confidence < 0.7) and `none_fits` freshness classifications, the edge-case log, and the latest judge-audit result. Classes, thresholds and audit floors change only when observed data shows the need. | Alex, 11-13: add or change only on observed, value-adding evidence. |
-| 10 | **Independent corroboration only.** `independent_source_group` collapses syndicated copies, rewrites of one press release and briefs quoting each other into one source. Edge strength counts groups, never mentions. Source reliability (A–F) and claim credibility (1–6) are graded separately (Admiralty). | Ten copies of one press release are one source. |
-| 11 | **Visibility travels with the claim.** Each row is public, private or off-the-record; derived rows inherit the most restrictive parent; L5 products show only what their audience may see. | Extends ADR-9 from fields to claims. |
-| 12 | **Insights are records with premises.** `insight` and `insight_claim` (role supports / counter / context, rank) hold L4 output, generated on demand from L1–L3 (LazyGraphRAG), with the derivation fields and a preferred / normal / deprecated rank. Every premise is cited; contrary evidence is weighed (ACH). Dated predictions are scored by Brier skill against a base-rate forecaster once enough resolve. | Claims stay atomic and decontextualized; the "so what" lives in its own record, so it can be retracted without touching the facts. |
-| 13 | **Retrieval is a router over a hybrid index.** Vector plus keyword search by default; one-hop entity expansion for multi-hop, comparison and temporal questions; map-reduce over the theme hierarchy for corpus-wide questions. A labelled web lane keeps graph and web citations separate and shows disagreements without resolving them; web facts enter the graph only through the normal pipeline. No precomputed community summaries. | Research check: hybrid beats either alone; graphs win on multi-hop and temporal questions and lose on lookups; community summaries are the weakest value for money. |
-| 14 | **Migration 0023 is additive only**, twin-rehearsed, applied by Alex (ADR-10 decision 5, `migration-playbook.md`). It adds: `layer` and visibility on claims; the bitemporal columns; `disputed`/`deprecated` claim ranks; `claim_derivation`; source reliability on documents/sources; `independent_source_group`; `freshness_class`/`freshness_conf`/`freshness_reason`; `claim_verification`; `entity_merge` (deferred from 0022); `insight` and `insight_claim`. Already in place and not rebuilt: `claim.asserted_at`, `claim_relation`, `entity_alias` (0022), provenance tiers, `documents.supersedes_id`. | Nothing in v2 needs a destructive change; v1 rows stay and are ranked, not deleted. |
+| 1 | **Layers.** <br>• L0 sources: immutable, graded A–F for reliability per source. <br>• L1 assertions: paraphrased, typed, standalone claims with evidence spans. <br>• L1 entity attributes: titles and roles, routed off the claim path. <br>• Entity resolution: one node per real thing. Every merge is human-approved, logged and reversible. <br>• L2 relations: backed by at least one supported L1 claim; strength counts independent sources. <br>• L3 analytics: volume-normalised, FDR-controlled, backtested. <br>• L4 insights: generated on demand, with every premise cited. <br>• L5 products. <br>Each layer has its own definition of correct and its own metric (plan §3). | Accuracy is a property of a statement measured against its evidence. It can be measured after paraphrase and inference, layer by layer. |
+| 2 | **"Supported" is strict and document-scoped.** Every part of a claim must be stated somewhere in its source document (the same brief or transcript), or in the event's own title and date. Several paragraphs may contribute. A claim is unsupported if it contains any of: <br>• a detail stated nowhere in the document <br>• a relationship the document never states <br>• a dropped hedge <br>• a changed tense <br>Leaving something out is not a fault. | This matches how the extractor reads and how Alex labels. The paragraph-scoped version produced 11 false "unsupported" verdicts out of 12. |
+| 3 | **The extractor cites every evidence span.** <br>• Evidence is a list of `{para_idx, quote}`: one entry per paragraph used, together covering every element of the claim. The first entry is the main paragraph. <br>• Each quote is at most **25 words**, the licensing guard from 0009 now applied per span. <br>• Stored in `claim.evidence jsonb`. <br>• `claim.quote` and `locator.para_idx` keep the first span, so existing readers and full-text search still work. <br>• `claim_key` stays `sha256(normalized claim_text)`, so staging stays idempotent. <br>• A quote not found verbatim in its paragraph fails the claim mechanically, before any judge. <br>• The judge sees the claim, every cited paragraph and the event line. | All 4 of Claude's wrong flags on the real set came from a post-hoc span locator that missed a supporting paragraph (P006, P022, P034, P084). Whoever writes the claim knows which paragraphs it used. |
+| 4 | **One judge, Claude, audited in two parts.** MiniCheck (7B and T5) is dropped. Plan principle 7 is amended (see the plan). <br><br>**(a) Competence floor, using planted errors.** <br>• Each audit plants about 150 rule-based errors, with at least 40 dropped hedges and 40 tense changes. <br>• The judge passes if the catch rate's Wilson 95% lower bound is at least 0.90 (143/150). <br>• A trip is confirmed on a second, fresh batch before the judge is benched. <br>• A false-alarm rate is computed on human-labelled supported claims; κ is not used. <br>• This audit cannot measure self-preference: by construction, most rule-planted errors are absent from the source text, so a string check catches them. It proves the judge is awake. <br><br>**(b) Self-preference and correlated error, using human labels.** <br>• Each month Alex blind-labels about 40 claims the judge passed, drawn from production. <br>• The sample oversamples multi-span, partnership, thesis and hedge-bearing claims, the claims where the extractor and judge most likely share a blind spot. <br>• The judge keeps its seat while the pooled 3-month false-pass rate has a Wilson 95% upper bound of at most 0.08. That needs about 120 labels with 2 or fewer false passes. <br>• These labels are also the PPI labels for decision 5, so they add little cost. <br><br>**When either part trips:** the judge is benched, and its claims stage as `needs_review` until a fix passes both parts on fresh data. <br>**When to re-audit:** monthly, and whenever the judge's model ID or prompt hash changes. | MiniCheck-7B caught 0 of Claude's 2 misses and raised wrong flags on correct claims from 4 to 7. Neither the rule-planted set nor MiniCheck tests the risk that matters: errors that Claude-the-extractor makes and Claude-the-judge tolerates, such as bridging inferences, adjacent facts asserted as a relationship, or attribution shifts. Only human labels on natural errors measure that (Panickssery et al., 2024). The pilot's measurement of judge recall on natural errors rests on n = 0, because all 100 real claims were supported. |
+| 5 | **Gate on human labels, not judge rates.** <br>• A batch is about 100 staged claims from one extractor version. <br>• It is accepted when the PPI-corrected faithfulness estimate's 95% lower bound is at least 0.90. <br>• That estimate combines the judge's labels on the batch with at least 40 human labels drawn from it (the decision 4b sample). <br>• Where every claim is human-labelled, the Wilson lower bound is used instead. <br>• A raw judge rate is never the gate. <br>• Coverage (claims per document and per 1,000 words) is reported beside every gate, with v1 on the same documents as the baseline. | A judge with 97% agreement still has a bias that PPI can correct; a raw judge rate cannot be audited. A precision-only gate rewards emitting fewer, safer claims, which is the v1 failure (Goodhart). |
+| 6 | **Provenance on every derived row.** `claim_derivation` records the child, its parents, the method, the model, the prompt hash, the checker version and the run (W3C PROV-O style). When an L1 claim is retracted or deprecated, every L2–L4 descendant is flagged `needs_review`, together with the products that cited it. This ships with L2 (build step 5), when the first derived rows exist. | The retraction cascade and method attribution both need the parent links. Building the table before any writer exists is YAGNI. |
+| 7 | **Leave `claim.status` alone. Add a rank and a review flag.** <br>• `status` keeps its CHECK: `candidate`, `approved`, `rejected`. <br>• 0023 adds `claim.rank` (`preferred`, `normal` or `deprecated`; default `normal`). <br>• 0023 adds `claim.review_flag` (null, `needs_review` or `disputed`). <br>• One view, `public.claim_current`, exposes status, rank, flag and the latest verification outcome. <br>• **Prerequisite:** before any non-default rank or flag is written, `match_claims` (0010/0011) and `mi.fact` (0016) are changed to read through `claim_current`. Then disputed claims are surfaced with their flag, deprecated claims leave the counts, and claims last checked as `contradicted` are dropped or flagged. <br>• Validity windows: `valid_from` and `valid_to` on claims. When a newer fact supersedes an older one, a `claim_relation` supersedes edge closes the older claim's `valid_to`. There is no separate `recorded_at` (it duplicates `created_at`) and no `invalidated_by` (it duplicates the supersedes edge). | Adding values to the status CHECK would break two live readers silently. Disputed claims would vanish from retrieval, and deprecated ones would still count in hub theme numbers. |
+| 8 | **Freshness by class, re-checked at use, logged append-only.** <br>• A claim stays valid until shown otherwise. <br>• `freshness_class` and its re-check interval: historical, never; fast-moving, 14–30 days; slow-moving, 90 days; opinion or prediction, scored as a forecast and never re-verified. `none_fits` is allowed. <br>• Each claim also stores `freshness_conf`, `freshness_reason` and `next_check_at`. <br>• **Retrieval only flags overdue claims.** The parent session runs the re-checks, at most 5 per product, after retrieval. This keeps web reads and spine writes out of the retrieval path (CLAUDE.md invariant 5; ADR-10 decision 4). <br>• The pre-brief batch covers only the claims the Monday brief cites. <br>• An `unverifiable` result backs off (next check at twice the interval). After 3 attempts the claim gets `review_flag = needs_review`. <br>• Every check appends a `claim_verification` row: confirmed, updated, contradicted or unverifiable, plus source, method and run. A check never edits the claim. "Last confirmed" comes from the log. <br>• **Absorbs YED-410:** the log is the verdict write-back; `claim_current` surfaces it to retrieval; the pre-brief batch is the Market Brief's verify step. <br>• **Classifier baseline:** a lookup on `claim_type` plus the extractor's `time_sensitive` flag. The classifier ships only if it beats the lookup on a labelled sample of about 50 claims. | Approve on traceability, check truth at use (Alex, 11-12). Re-checking everything on a timer wastes calls on facts nobody uses. Without backoff, the same unverifiable claims would take every query's 5 slots. |
+| 9 | **Observability before tuning.** The Monday brief's graph-health section reports: <br>• the share of borderline (confidence < 0.7) and `none_fits` freshness classes <br>• the edge-case log <br>• the backlog of overdue and `needs_review` claims <br>• the latest result of both judge audits <br>Classes, thresholds and audit floors change only when observed data shows the need. | Alex, 11-13: add or change only on observed, value-adding evidence. |
+| 10 | **Only independent sources corroborate.** `independent_source_group` collapses syndicated copies, rewrites of one press release, and briefs quoting each other into one source. Edge strength counts groups, never mentions. Source reliability (A–F) and claim credibility (1–6) are graded separately (Admiralty). Ships with L2 (build step 5). | Ten copies of one press release are one source. |
+| 11 | **Visibility travels with the claim.** <br>• 0023 adds `claim.visibility` with the vocabulary `documents.visibility` already uses (`private`, `public_ok`). A claim defaults to its document's value. <br>• Derived rows take the most restrictive parent's value. <br>• **Prerequisite:** the visibility filter goes into `match_claims` and the L5 renderers before any non-default value matters. <br>• New free-text columns (`freshness_reason`, `claim_verification` notes) get the `no_contact_pii_v1` CHECK, RLS and the revokes from 0022 items 7–8. <br>• The `spine_client` allowlist edits get human review (CLAUDE.md invariant 1). | Extends ADR-9 from fields to claims. A tag that no reader filters protects nothing. |
+| 12 | **Insights are records with premises.** `insight` and `insight_claim` hold L4 output. `insight_claim` has a role (supports, counter or context) and a rank. Insights are generated on demand from L1–L3 (LazyGraphRAG). Every premise is cited, and contrary evidence is weighed (ACH). Dated predictions are scored by Brier skill against a base-rate forecaster once enough have resolved. These tables ship with the L4 agent (build step 7). | Claims stay atomic and decontextualized. The "so what" lives in its own record, so it can be retracted without touching the facts. |
+| 13 | **Retrieval is a router over a hybrid index.** <br>• Default: vector plus keyword search. <br>• Multi-hop, comparison and temporal questions: one-hop entity expansion. <br>• Corpus-wide questions: map-reduce over the theme hierarchy. <br>• A labelled web lane keeps graph and web citations separate and shows disagreements without resolving them. Web facts enter the graph only through the normal pipeline. <br>• No precomputed community summaries. | From the research check: hybrid retrieval beats either method alone; graphs win on multi-hop and temporal questions and lose on lookups; community summaries give the weakest value for money. |
+| 14 | **Migration 0023 carries only what L1 and freshness need.** Additive only, rehearsed on the twin, applied by Alex (ADR-10 decision 5; `migration-playbook.md`). <br><br>**Columns on `claim`:** `evidence` (jsonb), `judge_verdict`, `judge_model`, `judge_prompt_hash`, `judged_at`, `rank`, `review_flag`, `valid_from`, `valid_to`, `freshness_class`, `freshness_conf`, `freshness_reason`, `next_check_at`, `visibility`. <br>**Tables:** `claim_verification`, and `judge_audit` (run date, part a or b, n, caught or false-pass count, bound, passed, judge model, prompt hash). <br>**View:** `claim_current`. <br><br>**Deferred to the migrations that ship their first writer:** <br>• `entity_merge`: entity resolution (step 5) <br>• `claim_derivation`, `independent_source_group` and source reliability: L2 (step 5) <br>• `insight` and `insight_claim`: L4 (step 7) <br>`layer` is dropped: L1 is the only layer stored on `claim`, and insights have their own table. <br><br>**Already in place, not rebuilt:** `claim.asserted_at`, `claim_relation`, `entity_alias` (0022), provenance tiers, `documents.supersedes_id`. | Nothing in v2 needs a destructive change. v1 rows stay and are ranked, never deleted. A table with no writer is unrehearsable surface area. |
 
 ### Judge pilot results (decision 4)
 
-Span-scoped input for every judge: the claim, all its cited paragraphs and the event line.
+Every judge got span-scoped input: the claim, all its cited paragraphs and the event line.
 
 | | Claude Fable | MiniCheck-7B | MiniCheck-T5 |
 |---|---|---|---|
 | Real claims (100; Alex: all supported): correct claims wrongly flagged | 4 | 5 | 8 |
-| Planted by Sonnet (80; 36 errors): κ, caught | +0.92, 35/36 | +0.87, 31/36 | +0.74, 29/36 |
-| Planted by rules (76; 38 errors): κ, caught | **+0.97, 37/38** | +0.71 | +0.71 |
+| Planted by Sonnet (80 items; 36 errors): κ, caught | +0.92, 35/36 | +0.87, 31/36 | +0.74, 29/36 |
+| Planted by rules (76 items; 38 errors): κ, caught | +0.97, 37/38 | +0.71 | +0.71 |
 | Dropped hedges caught (both planted sets) | 10/11 | 2/11 | 2/11 |
 | Errors Claude missed that MiniCheck caught | — | 0 of 2 | — |
 
-**Null baseline:** an always-yes judge scores κ 0 on both planted sets; on the real set it would flag nothing, and its "accuracy" there is 100% because the set has no negatives, which is why κ is not reported on it. **Caveat:** "MiniCheck never rescues Claude" rests on 2 chances. The monthly audit keeps that measurement running.
+**Null baselines:**
+- An always-yes judge scores κ 0 on both planted sets.
+- A number-presence string check catches 10/10 of the rule-planted swapped numbers with 0/38 false alarms. On those error classes the rule-planted set measures little beyond what a regex already does.
+- The judgment-bearing class is the dropped hedge. Claude caught 7/8 on the rule-planted set, Wilson lower bound ≈ 0.53.
+
+**What this does and does not show:** Claude is the strongest of the three, and MiniCheck adds nothing Claude lacks. The pilot does **not** measure Claude's recall on errors that occur naturally in production. Decision 4b exists to measure it.
 
 ## Evaluation contract
 
 | Measure | Layer | Gate or target | Null baseline |
 |---|---|---|---|
-| Faithfulness (Wilson LB, PPI-corrected) | L1 | ≥ 0.90 per n ≈ 100 batch | always-yes judge; v1 extractive output |
-| Judge audit (catch-rate LB, κ) | judge | ≥ 0.80 / ≥ 0.80 monthly | always-yes judge (κ 0) |
-| Span validity | L1 | 100% of quotes found verbatim | — (mechanical) |
-| Numeric fidelity | L1 | 100% exact | — (mechanical) |
-| Usefulness (0–3, blind) | L1 | v2 beats v1 with non-overlapping intervals | v1 on the same items (currently 32% vs 20% useful-3, intervals overlap: **not yet met**) |
-| Merge precision, B-cubed | entity resolution | precision first | no merging |
+| Faithfulness (PPI-corrected lower bound) | L1 | ≥ 0.90 per batch (decision 5) | always-yes judge; v1 extractive output |
+| Coverage (claims per document and per 1,000 words; Claimify element coverage on a labelled subset) | L1 | reported beside every faithfulness gate | v1 on the same documents |
+| Judge competence (planted catch-rate lower bound; false alarms on human-labelled positives) | judge | ≥ 0.90; confirmed on a second batch | the mechanical checks (span-verbatim and number-presence) |
+| Judge false-pass rate on production claims (human-labelled) | judge | pooled 3-month upper bound ≤ 0.08 | — (this is the human measurement) |
+| Span validity, numeric fidelity | L1 | 100% (mechanical) | — |
+| Usefulness (1–3, blind) | L1 | paired v2-minus-v1 difference on the **same documents**, 95% interval above 0 | v1 (current unpaired read: 32% vs 20% useful-3, not yet met) |
+| Merge precision **and** B-cubed recall | entity resolution | precision first; recall reported | no merging (perfect precision, zero recall) |
 | Independent-source count | L2 | reported per edge | raw mention count |
 | Trend validity | L3 | FDR-controlled, volume-normalised | "every rising theme keeps rising" |
-| Citation precision/recall (ALCE) | L4 | reported | — |
-| Brier skill score | L4 predictions | > 0 once enough resolve | base-rate forecaster |
+| Citation precision and recall (ALCE) | L4 | reported | — |
+| Brier skill score | L4 predictions | > 0 once enough have resolved | base-rate forecaster |
 | Temporal backtest | retrieval | graph+vector beats vector on temporal questions, judged in both orders | plain vector retrieval (runs **first**) |
-| Freshness classifier | ops | borderline and `none_fits` shares reported weekly | — |
+| Freshness classifier accuracy | ops | beats the lookup on about 50 labelled claims | the `claim_type` + `time_sensitive` lookup |
 
-Kept out: raw accuracy where no true negatives exist, ROUGE/BLEU, plain F1, and any judge score not validated against labels.
+Kept out: raw accuracy where there are no true negatives, ROUGE/BLEU, plain F1, and any judge score not validated against labels.
 
 ## Consequences
 
-- **Cost:** one Claude judge call per staged claim, plus a monthly audit of about 80 items. The Mac mini MiniCheck runner is not needed; its scripts stay in the pilot folder.
-- **Risk accepted:** same-family self-preference is measured monthly rather than structurally excluded. If the audit trips, the fallback order is (a) a judge prompt fix, (b) a different Claude model as judge, (c) a non-Claude extractor (re-pilot required).
-- **Extractor work:** v3 prompt with multi-span evidence; `pilot.py check()` must validate a list of spans instead of one `para_idx`.
-- **Retrieval work:** the router and the labelled web lane are new; the temporal backtest against plain vector retrieval runs before either ships.
-- **Ops:** the Monday brief gains a graph-health section and a pre-publish freshness batch.
+- **Cost:**
+  - One Claude judge call per staged claim.
+  - A monthly planted audit of about 300 items (the error set plus its originals).
+  - About 40 blind labels a month from Alex, roughly 15–20 minutes. These double as the PPI labels.
+  - The Mac mini MiniCheck runner is retired. Its scripts stay in the pilot folder.
+- **Accepted risk:** same-family self-preference is measured monthly, not excluded by structure. If an audit trips, try these in order:
+  1. Fix the judge prompt.
+  2. Use a different Claude model as the judge.
+  3. Move the extractor to a model outside the Claude family. This needs a new pilot.
+- **Extractor work:**
+  - The v3 prompt caps each span at 25 words.
+  - `pilot.py check-v3` validates multi-span evidence.
+  - The producer (`substrate.py stage-claims`) writes `evidence`, the judge fields and the first-span `quote`.
+- **Reader work, before any non-default value is written:** `match_claims` and `mi.fact` move to `claim_current`, and gain the visibility filter.
+- **Retrieval work:**
+  - The router and the labelled web lane are new.
+  - The temporal backtest against plain vector retrieval runs before either ships.
+- **Ops:** the Monday brief gets a graph-health section and a pre-brief freshness batch limited to the claims it cites.
 
 ## Rejected alternatives
 
 | Option | Why not |
 |---|---|
-| Keep principle 7 as written (MiniCheck-7B primary + a rule-based hedge check) | 7B catches 2/11 dropped hedges, the error class Alex's hedge rule exists for; the extra gate adds build and maintenance with lower quality. |
-| Claude primary + MiniCheck as a free second opinion | Zero rescues, +3 false flags on the real set: review theater. |
-| Move the extractor off Claude so Claude can judge without self-preference | Needs a new extractor pilot; the audit answers the same risk at a fraction of the cost. Kept as fallback (c). |
-| Paragraph-scoped support | 11 of 12 disputed verdicts were harness artifacts under it. |
-| Time-based re-verification of every claim | Spends calls on facts nobody uses; lazy re-check at use plus a pre-brief batch covers what ships. |
-| Precomputed GraphRAG community summaries | Weakest value for money in the research check; on-demand synthesis instead. |
+| Keep principle 7 as written: MiniCheck-7B as the main judge, plus a rule-based hedge check | 7B catches 2/11 dropped hedges, the error class Alex's hedge rule exists for. It also adds a second gate to build and maintain. |
+| Claude as the main judge, with MiniCheck as a free second opinion | Zero rescues and more false flags: review theater. |
+| Treat the rule-planted audit as the self-preference test | A string check already catches most rule-planted errors. Such an audit proves competence, not independence (Fable review B1). |
+| Add `disputed` and `deprecated` to the `claim.status` CHECK | That breaks `match_claims` and `mi.fact` silently (Fable review B3). |
+| Ship every v2 table in 0023 | Six tables would have no writer until build steps 5–7. |
+| Paragraph-scoped support | Under it, 11 of the 12 disputed verdicts were harness artifacts. |
+| Re-checking at query time, inside retrieval | It puts web reads and spine writes in the retrieval path. |
+| Timed re-verification of every claim | It spends calls on facts nobody uses. |
+| Precomputed GraphRAG community summaries | The weakest value for money in the research check. |
 
 ## Revisit triggers (provisional thresholds)
 
-- The judge audit trips either floor in any month.
-- The borderline share of freshness classifications exceeds 25% for two consecutive weeks, or `none_fits` exceeds 10%.
-- The temporal backtest shows no gain for graph+vector over plain vector retrieval: the graph layers above L1 are then reconsidered before more is built.
-- v2 fails to beat v1 on usefulness in the head-to-head: v1's extractive claims stay primary and v2 becomes the L4 premise layer only.
+- Either judge audit trips, confirmed on a second batch.
+- The borderline share of freshness classes stays above 25% for two weeks running, or `none_fits` exceeds 10%.
+- The temporal backtest shows no gain for graph+vector over plain vector retrieval. If so, reconsider the layers above L1 before building more.
+- v2 fails the paired usefulness test against v1. If so, v1's extractive claims stay primary and v2 becomes the L4 premise layer only.
+- The overdue backlog grows for four weeks running. The re-check budget is then too small for the claims in use.
