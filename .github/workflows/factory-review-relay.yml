@@ -1,0 +1,15 @@
+# Copy to .github/workflows/factory-review-relay.yml. Does nothing but signal that
+# a person reviewed. pull_request_review runs from the PR head and gets no
+# environment secrets, so it cannot re-decide anything itself. Bots are ignored:
+# the App's own approval fires this event, and following it would loop forever.
+name: factory-review-relay
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+permissions: {}
+jobs:
+  relay:
+    if: github.event.review.user.type != 'Bot'
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "review changed"
