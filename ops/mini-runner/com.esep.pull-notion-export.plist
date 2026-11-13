@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- YED-416: installed on the LAPTOP, not the mini. Daily read-only pull of the mini's Notion export
+     (.claude/.state/notion-export-live, refreshed 04:30 by com.esep.notion-export) into ~/Developer/esep-notion-export,
+     outside every git work tree and outside ~/Documents (TCC blocks launchd writes there). The mini is the only
+     Notion exporter; laptop tools read this mirror (e.g. prose_extract.py batch, via its briefs-dir flag).
+     rsync runs directly: no script, because launchd cannot open one under ~/Documents. Key ~/.ssh/esep_export_pull is
+     pinned on the mini to rrsync -ro of that one folder. Missed 05:00 runs (laptop asleep) run once on wake;
+     a failed run (mini unreachable) leaves the last mirror in place. Installed by Alex. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.esep.pull-notion-export</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/rsync</string>
+    <string>-a</string>
+    <string>--delete</string>
+    <string>--exclude=.DS_Store</string>
+    <string>-e</string>
+    <string>ssh -i /Users/sameoldexpressions/.ssh/esep_export_pull -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes</string>
+    <string>sameoldexpressions@alexs-mac-mini:</string>
+    <string>/Users/sameoldexpressions/Developer/esep-notion-export/</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>5</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-pull-notion-export.log</string>
+  <key>StandardErrorPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-pull-notion-export.log</string>
+</dict>
+</plist>

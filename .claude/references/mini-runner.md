@@ -40,6 +40,7 @@ Database reads go through `spine_client.py` only (invariant 1). REST paths need 
 | `sweep` | `com.esep.daily-sweep` | 05:30 local (ET) daily | first scheduled job that runs a model (YED-384). `theme-sweep.sh`: `sweep_seed.py` → top 3 themes → `claude -p --agent theme-sweeper` (WebSearch + WebFetch only, `dontAsk`, no MCP) → `sweep_manifest.py`. Writes only `.claude/.state/sweeps/<date>/` (gitignored). Dry run on the laptop 2026-11-12: 1 theme, 43 turns, 13/13 items valid. Not installed until Alex approves a mini run |
 | `export` | `com.esep.notion-export` | 04:30 local (ET) daily | Incremental Notion brief export (`notion_export.py`, read-only, no model) from the watermark cursor into `.claude/.state/notion-export-live/` (one folder per event, refreshed in place; not `.state/briefs/`, which reconcile reads). First run on a machine has no watermark and backfills once. Needs `NOTION_TOKEN` in the runner `.env` (exit 7 without it). A run where any page fails holds the cursor and exits 8, so the alert fires; held pages retry first next run |
 | `brief` | `com.esep.monday-brief` | Mondays 06:00 local (ET) | Monday Market Brief for the current ISO week (`date +%G-W%V`), after the 05:30 sweep. `market_brief.py`, GET-only spine reads, no model, no Notion, no spine writes. Reads the laptop mirror as `--root` and the last 14 days of **raw** sweep manifests (it re-validates them; the normalized `*.valid.json` is rejected by its strict schema). Writes `.claude/.state/market-briefs/market-brief-<week>.md`. Also runs the login check: a weekly early warning before sweeps fail |
+| (laptop) | `com.esep.pull-notion-export` | 05:00 local daily, and once at load | Laptop pulls the mini's `notion-export-live` read-only into `~/Developer/esep-notion-export`; see "Notion export to the laptop" below |
 
 `StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
 when it wakes (missed runs coalesce into one).
@@ -70,6 +71,34 @@ Laptop setup, once (Alex, **on the laptop**):
    `echo "restrict,command=\"$HOME/.local/bin/rrsync-esep -ro $HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3\" <contents of esep_sync.pub>" >> ~/.ssh/authorized_keys`
 To revoke: delete that line on the laptop.
 
+## Notion export to the laptop (YED-416)
+
+The reverse direction of the input sync. The mini is the **only** Notion exporter: `export` refreshes
+`.claude/.state/notion-export-live/` at 04:30 (one folder per event: `manifest.json`, `research_brief.md`,
+`post_event_brief.md`). The laptop **pulls** a read-only mirror of that folder daily at 05:00 into
+`~/Developer/esep-notion-export/`, and laptop tools read the mirror (for example `prose_extract.py batch --briefs-dir ~/Developer/esep-notion-export`).
+The laptop no longer exports, so it needs no Notion token.
+
+- Transport: `com.esep.pull-notion-export`, a **laptop** LaunchAgent that runs `/opt/homebrew/bin/rsync -a --delete` directly (no script:
+  launchd cannot open one under `~/Documents`). Key `~/.ssh/esep_export_pull` on the laptop, no passphrase, used for nothing else.
+- Mini side: that key is pinned in the mini's `~/.ssh/authorized_keys` to `restrict,command="<rrsync-esep> -ro <notion-export-live>"`, so it
+  can only **read** that one folder: no shell, no rest of the repo, no `.env`.
+- Why `~/Developer`: launchd jobs cannot write under `~/Documents` (TCC), and the mirror must stay outside every git work tree.
+- Missed 05:00 runs (laptop asleep) run once on wake. A failed run (mini off, off Tailscale) leaves the last mirror untouched.
+- Freshness: `ls -lt ~/Developer/esep-notion-export | head -3`. A mirror older than a day means the pull or the 04:30 export failed:
+  read `~/Library/Logs/esep-runner/launchd-pull-notion-export.log` (laptop), then the newest `export-*.log` (mini).
+- The mirror holds brief text: it never enters git (invariant 4). Off-the-record material is already redacted and flagged
+  (`skip_staging`) by the exporter.
+
+Setup, once:
+1. Mini (over `ssh esep-mini`): patched rrsync, same reason as the input sync:
+   `mkdir -p ~/.local/bin && sed 's#^RSYNC = .*#RSYNC = "/opt/homebrew/bin/rsync"#' /opt/homebrew/bin/rrsync > ~/.local/bin/rrsync-esep && chmod 755 ~/.local/bin/rrsync-esep`
+2. Laptop: `ssh-keygen -t ed25519 -N "" -C esep-export-pull -f ~/.ssh/esep_export_pull && mkdir -p ~/Developer/esep-notion-export ~/Library/Logs/esep-runner`
+3. Authorize it on the mini, restricted (run on the laptop):
+   `echo "restrict,command=\"/Users/sameoldexpressions/.local/bin/rrsync-esep -ro /Users/sameoldexpressions/Developer/Empire_State_Events_Pipeline_Take_3/.claude/.state/notion-export-live\" $(cat ~/.ssh/esep_export_pull.pub)" | ssh esep-mini 'cat >> ~/.ssh/authorized_keys'`
+4. Install on the laptop: step 9 below.
+To revoke: delete the `esep-export-pull` line from the mini's `~/.ssh/authorized_keys`.
+
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
 Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
@@ -83,7 +112,8 @@ Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
 6. Monday brief (after approving a direct run's output): `zsh ops/mini-runner/run-job.sh brief`, read `.claude/.state/market-briefs/market-brief-<week>.md`, then `cp ops/mini-runner/com.esep.monday-brief.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.monday-brief.plist`. `BRIEF_WEEK=2026-W47` in the environment overrides the week.
 7. Input sync (after the laptop setup above): `cp ops/mini-runner/com.esep.sync-inputs.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.sync-inputs.plist`
 8. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
-9. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
+9. Notion export pull, **on the laptop** (after its setup above, from the laptop checkout): `cp ops/mini-runner/com.esep.pull-notion-export.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.pull-notion-export.plist` (RunAtLoad pulls once immediately).
+10. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
 
 LaunchAgents start only once the user is logged in. That is why the restart procedure below matters.
 
