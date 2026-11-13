@@ -46,7 +46,6 @@ DEFAULT_QUEUE = os.path.join(ROOT, ".claude", ".state", "reconcile-queue.json")
 # title-match their event ("revolt-s2-airspeed", "ElasticON-NYL-Picheria-…"). Keys are "<source>:<parsed title>".
 ALIASES_PATH = os.path.join(ROOT, ".claude", "references", "reconcile-aliases.json")
 OCCASION_KINDS = ("attended", "researched")    # `researched` is plan B0; harmless to ask for before it exists
-RESEARCH_TIERS = ("web_verified", "email_signal")
 GAP_TYPES = ("no_row", "research_not_staged", "post_event_not_staged", "transcript_not_staged",
              "attended_no_local_source", "ambiguous", "transcript_date_mismatch")
 NY = zoneinfo.ZoneInfo("America/New_York")
@@ -330,7 +329,7 @@ def prod_inventory() -> dict:
     """GET only. Claims: the three columns needed to count, never claim_text / quote."""
     kinds = ",".join(OCCASION_KINDS)
     events = _get_all(f"/event?select=id,kind,title,event_date,source,notion_page_id&kind=in.({kinds})&order=id")
-    claims = _get_all("/claim?select=event_id,provenance_tier,nid:metadata->>notion_event_id&order=id")
+    claims = _get_all("/claim?select=event_id,lane,provenance_tier,nid:metadata->>notion_event_id&order=id")
     status, _ = spine_client.req("GET", "/documents?select=id&limit=1")        # check, don't assume
     docs = (_get_all("/documents?select=id,source_type,event_id,title,doc_date,nid:metadata->>notion_event_id"
                      "&source_type=in.(research_brief,post_event_brief)&order=id") if status < 400 else None)
@@ -399,7 +398,7 @@ def reconcile(root: str, prod: dict, today: str | None = None, aliases: dict | N
         if tier == "first_hand":
             if eid:
                 fh[eid] = fh.get(eid, 0) + 1
-        elif tier in RESEARCH_TIERS:
+        elif c.get("lane") == "research":                              # the stored lane, never a tier allowlist
             res_total += 1
             if eid:
                 res_linked += 1
@@ -761,7 +760,8 @@ def selftest(ok=None) -> bool:
     ok("reconcile: privacy — output passes the email + phone assertion", not _raises(lambda: _assert_clean(blob)))
     m = res["summary"]["metrics"]
     ok("reconcile: attended_first_hand counts prod attended rows", m["attended_first_hand"] == [2, 5])
-    ok("reconcile: research_claims_with_event", m["research_claims_with_event"] == [1, 7])
+    ok("reconcile: research_claims_with_event counts by lane: a research claim at any tier (reference) counts, "
+       "a lane-A web_verified claim does not", m["research_claims_with_event"] == [2, 8])
     ok("reconcile: report prints a baseline beside every gap and metric",
        all(("null: this run" in ln or "plan, 2026-11-10" in ln) for ln in render(res).splitlines()
            if any(ln.startswith(g) for g in GAP_TYPES) or any(ln.startswith(v) for v in METRIC_LABELS.values())))

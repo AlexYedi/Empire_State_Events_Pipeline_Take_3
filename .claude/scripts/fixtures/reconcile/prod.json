@@ -47,77 +47,104 @@
    "event_id": "e1",
    "provenance_tier": "first_hand",
    "nid": null,
-   "claim_text": "SECRET CLAIM TEXT alice@corp.com"
+   "claim_text": "SECRET CLAIM TEXT alice@corp.com",
+   "lane": "A"
   },
   {
    "event_id": "e1",
    "provenance_tier": "first_hand",
    "nid": null,
-   "claim_text": "SECRET CLAIM TEXT alice@corp.com"
+   "claim_text": "SECRET CLAIM TEXT alice@corp.com",
+   "lane": "A"
   },
   {
    "event_id": "e1",
    "provenance_tier": "web_verified",
    "nid": "cccccccccccccccccccccccccccccccc",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": "e4",
    "provenance_tier": "first_hand",
    "nid": null,
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "A"
   },
   {
    "event_id": "e4",
    "provenance_tier": "first_hand",
    "nid": null,
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "A"
   },
   {
    "event_id": "e4",
    "provenance_tier": "first_hand",
    "nid": null,
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "A"
   },
   {
    "event_id": null,
    "provenance_tier": "web_verified",
    "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "web_verified",
    "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "email_signal",
    "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "web_verified",
    "nid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "web_verified",
    "nid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "web_verified",
    "nid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-   "claim_text": "SECRET CLAIM TEXT"
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "research"
   },
   {
    "event_id": null,
    "provenance_tier": "notion_prior",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT",
+   "lane": "A"
+  },
+  {
+   "event_id": "e1",
+   "provenance_tier": "reference",
+   "lane": "research",
+   "nid": null,
+   "claim_text": "SECRET CLAIM TEXT"
+  },
+  {
+   "event_id": "e1",
+   "provenance_tier": "web_verified",
+   "lane": "A",
    "nid": null,
    "claim_text": "SECRET CLAIM TEXT"
   }
