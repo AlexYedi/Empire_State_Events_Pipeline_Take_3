@@ -63,6 +63,18 @@ except Exception as x:
 r = (e.get("result") or "").strip()
 if r.startswith("```"):
     r = r.split("\n", 1)[-1].rsplit("```", 1)[0]
+# The sweeper sometimes opens with a line of prose before the manifest (2026-11-13, YED-414). Hand the validator the
+# first top-level JSON object that has an "items" key; if none decodes, pass the text through and let it reject.
+if not r.startswith("{"):
+    dec, i = json.JSONDecoder(), r.find("{")
+    while i != -1:
+        try:
+            obj, _ = dec.raw_decode(r[i:])
+            if isinstance(obj, dict) and "items" in obj:
+                r = json.dumps(obj, ensure_ascii=False); print("   note: prose before the manifest was stripped"); break
+        except ValueError:
+            pass
+        i = r.find("{", i + 1)
 open(sys.argv[2], "w").write(r)
 print(f"   sweeper: {e.get('subtype')} · turns {e.get('num_turns')} · est ${e.get('total_cost_usd', 0):.2f} (list price) · result {len(r)} chars")
 PYEOF
