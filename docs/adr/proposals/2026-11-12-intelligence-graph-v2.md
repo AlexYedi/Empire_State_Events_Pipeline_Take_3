@@ -16,7 +16,7 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 4. **Only independent sources corroborate.** Syndicated copies, rewrites of one press release, or one brief quoting another count as **one** source.
 5. **Time is first-class.** Every assertion and relation is bitemporal: when it was true, and when we learned it (the Zep/Graphiti pattern). Superseded facts are invalidated, never overwritten.
 6. **Visibility travels with the claim.** Each row is public, private or off-the-record. Derived rows inherit the most restrictive visibility among their parents, and L5 products only show what their audience may see. This extends the ADR-9 PII boundary from fields to claims.
-7. **Never judge your own output.** The primary faithfulness checker comes from a different model family from the extractor. An LLM judge is a second opinion. Every judge is validated against Alex's labels.
+7. **The checker is audited against errors no model wrote.** *(Amended 2026-11-13; the original read "Never judge your own output": the primary checker had to come from a different model family from the extractor.)* The Claude judge is the one faithfulness checker. Its self-preference risk is measured, not assumed away: each month a fresh batch of rule-planted errors (no model authored them) is scored against gold labels, and the judge loses its seat if its catch rate's Wilson lower bound falls below 0.80 or κ falls below 0.80 (provisional floors, set from the pilot: at 37/38 the lower bound is 0.86, so two more misses trip it). Every judge is also validated against Alex's labels.
 8. **Every metric has a null baseline** (the house rule).
 
 ## 3. The layers
@@ -24,7 +24,7 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 | Layer | Holds | Correct means | Checked by |
 |---|---|---|---|
 | **L0 Sources** | Originals: Drive vault, briefs, transcripts, web pages, email-derived docs | Immutable; reliability grade A–F per source | sha256; source-reliability rating per source/domain, reviewed quarterly |
-| **L1 Assertions** | Paraphrased, typed, self-contained claims (launch, funding, metric, adoption, partnership, hire, thesis), each with its evidence span | **Claimify triplet**: entailment (the span supports the claim), element-level coverage, decontextualization (stands alone). Numbers, dates and names exactly match the source. Extraction is skipped when ambiguity can't be resolved. | Cross-family checker (candidate: Bespoke-MiniCheck-7B, local) plus an LLM second opinion; numeric-fidelity check; credibility grade 1–6 |
+| **L1 Assertions** | Paraphrased, typed, self-contained claims (launch, funding, metric, adoption, partnership, hire, thesis), each with its evidence span | **Claimify triplet**: entailment (the span supports the claim), element-level coverage, decontextualization (stands alone). Numbers, dates and names exactly match the source. Extraction is skipped when ambiguity can't be resolved. | Claude judge on the claim, its cited spans and the event line (principle 7 audit); numeric-fidelity check; credibility grade 1–6 |
 | **L1 entity attributes** | Titles, roles, descriptions, speaker slots | Matches source; bitemporal | Routed here from extraction instead of becoming claims |
 | **Entity resolution** | One node per real company, person or topic | Merge precision first | An explicit LLM clustering step before L2 (KGGen pattern); B-cubed and pairwise precision/recall; every merge is human-approved and reversible |
 | **L2 Relations** | Edges: competes, partners, uses, invests, hires-for, ships | Backed by ≥1 faithful L1 claim; strength = **independent** corroborations | Edge precision; independent-source count |
@@ -60,7 +60,7 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 
 ## 6. Build sequence
 
-1. **Judge pilot (decides principle 7 empirically).** Run the v2 extraction prompt on about 100 claims from the pilot briefs. The Claude judge and MiniCheck label them; Alex labels them blind (45–60 min). Report κ per judge and the Wilson lower bound. This also seeds the gold set.
+1. **Judge pilot (decides principle 7 empirically). Done 11-13; see §7b.** Run the v2 extraction prompt on about 100 claims from the pilot briefs. The Claude judge and MiniCheck label them; Alex labels them blind (45–60 min). Report κ per judge and the Wilson lower bound. This also seeds the gold set.
 2. **ADR-15** from this plan plus the pilot results; **Fable adversarial review**.
 3. **Migration 0023** (twin-rehearsed):
    - `layer` and visibility on claims
@@ -75,7 +75,7 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
    - `insight` and `insight_claim` (role ∈ supports / counter / context): the L4 record and its premises, with the derivation fields and a preferred / normal / deprecated rank
 
    Already in place, not to rebuild: `claim.asserted_at` (when said), `claim_relation` (contradicts / corroborates / supersedes / refines), `entity_alias` (0022), and claim provenance tiers.
-4. **Extractor v2 (L1)** in the Claimify style, with entity-attribute routing, the cross-family checker, the numeric-fidelity check and visibility inheritance. Head-to-head against v1 on usefulness and faithfulness, then stage the winner.
+4. **Extractor v2 (L1)** in the Claimify style, with entity-attribute routing, extractor-emitted evidence spans (every paragraph used), the Claude judge, the numeric-fidelity check and visibility inheritance. Head-to-head against v1 on usefulness and faithfulness, then stage the winner.
 5. **Entity-resolution clustering step**, then **L2 relations** with independent corroboration.
 6. **L3 trend engine** (normalised, time-respecting permutation, FDR, backtest), feeding the Monday Market Brief.
 7. **L4 synthesis agent** (on demand, cited, ACH, dated predictions), plus the retraction cascade and calibration reporting.
@@ -100,6 +100,16 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 
   The intervals overlap, so v2 has not yet *clearly* beaten v1 as §5 requires. Re-test on a larger, same-session sample during the extractor head-to-head. All 30 v1 claims were supported (extractive copying).
 - **Judge pilot outcome.** Alex marked 99 of 100 claims supported (Wilson 0.946–0.998), so no judge could be chosen from that set: with one negative, every κ was about 0, against 99% raw agreement for an always-yes baseline. The fix is a re-label of the 12 disputed claims plus 30 v1 baseline claims under the strict standard, then a seeded-error balanced set (dropped hedge, swapped number, wrong entity, added detail, tense change) to choose the judge. The judge harness now shows the event date (it was missing, which caused two false negatives).
+- **Judge choice: Claude only; MiniCheck dropped (Alex, 11-13).** Every judge saw the claim, all its cited paragraphs and the event line.
+
+  | | Claude Fable | MiniCheck-7B | MiniCheck-T5 |
+  |---|---|---|---|
+  | Real claims (100): correct claims wrongly flagged | 4 | 5 | 8 |
+  | Planted by Sonnet (80; 36 errors): κ, caught | +0.92, 35/36 | +0.87, 31/36 | +0.74, 29/36 |
+  | Planted by rules (76; 38 errors): κ, caught | +0.97, 37/38 | +0.71 | +0.71 |
+  | Dropped hedges caught (both planted sets) | 10/11 | 2/11 | 2/11 |
+
+  Null baseline: an always-yes judge scores κ 0 on both planted sets. A second checker earns its seat only by catching what the first misses. MiniCheck-7B caught **0 of the 2** errors Claude missed and raised wrongly flagged correct claims from 4 to 7 on the real set (0 to 3 on the rule-planted set). The rule-planted set is the self-preference test: no model wrote those errors, and Claude scored highest on it. Claude's 4 real-set flags all trace to the post-hoc span locator missing a supporting paragraph, so the extractor must emit its own spans (§6 step 4). Principle 7 is amended accordingly. The mini-runner MiniCheck setup stays in the pilot folder in case a stronger open checker appears. Caveat: "never rescues" rests on 2 chances; the monthly audit keeps measuring it.
 - **Freshness model.** A claim stays valid until shown otherwise. The re-check deadline depends on its freshness class:
 
   | Class | Re-check after |
