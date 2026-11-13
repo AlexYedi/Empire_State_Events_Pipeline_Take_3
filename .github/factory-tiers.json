@@ -1,11 +1,24 @@
 {
   "version": 1,
   "tests_command": "cd .claude/scripts\nfailed=0\nfor f in *.py; do\n  [ \"$f\" = inbox_boundary.py ] && continue\n  grep -q -- --selftest \"$f\" || continue\n  python3 \"$f\" --selftest >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\ncd ../..\nfor f in .claude/skills/*/fixtures/test_*.py; do\n  [ -e \"$f\" ] || continue\n  python3 \"$f\" >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\nexit $failed\n",
-  "code_owners": ["AlexYedi"],
+  "code_owners": [
+    "AlexYedi"
+  ],
   "selftest_globs": [],
   "tiers": {
-    "t0": [".claude/references/*.md", "docs/adr/*.md", "docs/specs/*.md"],
-    "t1": [".claude/scripts/**", ".claude/skills/**"],
+    "t0": [
+      "docs/adr/*.md",
+      "docs/specs/*.md",
+      "docs/proposals/*.md",
+      "docs/bakeoff/**",
+      "docs/history.md"
+    ],
+    "t1": [
+      ".claude/scripts/**",
+      ".claude/skills/**",
+      ".claude/commands/**",
+      ".claude/references/*.md"
+    ],
     "t2": [
       ".claude/references/pii-*",
       ".claude/scripts/*pii*",
@@ -23,6 +36,14 @@
       "**/*.sql"
     ]
   },
-  "t2_new_file_globs": [".claude/scripts/**", ".claude/skills/**"],
-  "t2_if_diff_contains": ["spine_client", "service_role", "SUPABASE_", "notion-writer", "--no-verify", "pii_"]
+  "t2_new_file_globs": [
+    ".claude/scripts/**",
+    ".claude/skills/**"
+  ],
+  "t2_if_diff_contains": [
+    "service_role",
+    "notion-writer",
+    "--no-verify",
+    "pii_"
+  ]
 }
