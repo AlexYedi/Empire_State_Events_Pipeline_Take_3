@@ -19,6 +19,12 @@ Gaps per row (the work queue the nightly job will drain later):
   transcript_not_staged     a local transcript, 0 first-hand claims
   attended_no_local_source  an attended row with 0 first-hand claims and nothing on disk to stage from (needs Notion)
   ambiguous                 an item that scored equally against 2+ rows; never merged, kept as its own row for Alex
+  transcript_date_mismatch  a transcript in an Event Content folder whose file date is more than a day BEFORE the
+                            folder's event date (YED-419): a recording can't predate its event, so the file is
+                            likely misfiled (YED-383: an April recording in the postponed 6/26 hackathon folder).
+                            That file is not counted as a transcript or as attendance evidence. Late files are
+                            normal (backfilled transcripts run 26-70 days after the event) and are never flagged.
+                            File dates are weak (a copy resets them), so this only raises a gap; it changes nothing.
 
 Privacy (ADR-9, invariant 4): output carries event titles, dates and counts only. Claim text is never selected
 (the claim GET names its columns), file CONTENTS are never read except the event title/date/id of a research
@@ -42,7 +48,7 @@ ALIASES_PATH = os.path.join(ROOT, ".claude", "references", "reconcile-aliases.js
 OCCASION_KINDS = ("attended", "researched")    # `researched` is plan B0; harmless to ask for before it exists
 RESEARCH_TIERS = ("web_verified", "email_signal")
 GAP_TYPES = ("no_row", "research_not_staged", "post_event_not_staged", "transcript_not_staged",
-             "attended_no_local_source", "ambiguous")
+             "attended_no_local_source", "ambiguous", "transcript_date_mismatch")
 NY = zoneinfo.ZoneInfo("America/New_York")
 # The null baseline (plan Part 2 §2.1, prod read 2026-11-10). Gap totals have no prior number: this run is their null.
 BASELINE_2026_11_10 = {"attended_first_hand": [30, 85], "attended_any_claim": [32, 85],
@@ -206,6 +212,16 @@ def load_aliases(path: str = ALIASES_PATH) -> dict:
     return {k: pid(v) for k, v in raw.items() if isinstance(k, str) and pid(v)}
 
 
+def _file_day(path: str) -> str | None:
+    """The New York day a file was first written: the earlier of mtime and (macOS) birthtime. Metadata only."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    ts = min(st.st_mtime, getattr(st, "st_birthtime", st.st_mtime))
+    return dt.datetime.fromtimestamp(ts, NY).date().isoformat()
+
+
 def local_items(root: str, inv: dict, aliases: dict | None = None) -> list[dict]:
     items = []
     aliases = aliases or {}
@@ -229,17 +245,23 @@ def local_items(root: str, inv: dict, aliases: dict | None = None) -> list[dict]
             continue
         inv["folders"] += 1
         flags = set()
+        ev_day = f"20{m.group(3)}-{m.group(1)}-{m.group(2)}"
         for dirpath, dirs, files in os.walk(path):
             dirs[:] = [x for x in dirs if not PRIVATE_RE.search(x) and not x.startswith(".")]
             if os.path.basename(dirpath).lower() == "journal" and any(
                     not PRIVATE_RE.search(f) and not f.startswith(".") for f in files):
                 flags.add("journal")
             for fn in files:
-                flags |= classify(fn)
+                c = classify(fn)
+                if "transcript" in c:                                  # YED-419: a recording can't predate its event
+                    day = _file_day(os.path.join(dirpath, fn))
+                    if day and day < _shift(ev_day, -1):
+                        c = (c - {"transcript"}) | {"transcript_date_mismatch"}
+                flags |= c
         title = m.group(4)
         non_event = bool(NON_EVENT_RE.search(title))
         inv["folders_non_event"] += non_event
-        add("folder", title, f"20{m.group(3)}-{m.group(1)}-{m.group(2)}", flags=flags, folder=name,
+        add("folder", title, ev_day, flags=flags, folder=name,
             non_event=non_event)
     et = os.path.join(root, "event-transcripts")
     for fn in sorted(os.listdir(et)) if os.path.isdir(et) else []:
@@ -396,6 +418,7 @@ def reconcile(root: str, prod: dict, today: str | None = None, aliases: dict | N
                "has_transcript": "transcript" in f,
                "has_post_event_brief": "post_event_brief" in f or "post_event_ledger" in f,
                "has_journal": "journal" in f,
+               "transcript_date_mismatch": "transcript_date_mismatch" in f,
                "post_event_doc_in_graph": r["post_event_doc_in_graph"],
                "first_hand_claims": fh.get(r["event_id"], 0),
                "folders": sorted(r["folders"]), "sources": sorted(r["sources"]),
@@ -415,6 +438,8 @@ def reconcile(root: str, prod: dict, today: str | None = None, aliases: dict | N
                 gaps.append("transcript_not_staged")
             if row["in_graph"] and row["first_hand_claims"] == 0 and not row["attendance_evidence_uploaded"]:
                 gaps.append("attended_no_local_source")
+            if row["transcript_date_mismatch"]:
+                gaps.append("transcript_date_mismatch")
         row["gap"] = gaps
         out.append(row)
     out.sort(key=lambda x: (x["event_date"] or "9999", x["title"]))
@@ -638,6 +663,15 @@ def selftest(ok=None) -> bool:
             os.makedirs(os.path.dirname(p), exist_ok=True)
             with open(p, "w", encoding="utf-8") as fh:
                 json.dump(body, fh)
+        # YED-419: one transcript written two months before its folder's event, one written a month after
+        for rel, day in (("Event Content/06 26 26 Predated Voice Hack/scale_transcript.md", "2026-04-28"),
+                         ("Event Content/06 20 26 Late Backfill Night/late Transcript.txt", "2026-07-25")):
+            p = os.path.join(tmp, rel)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "w"):
+                pass
+            t = dt.datetime.fromisoformat(f"{day}T12:00:00").replace(tzinfo=NY).timestamp()
+            os.utime(p, (t, t))
         spine_client.req = _stub_req(prod, seen, handed)
         try:
             res = reconcile(tmp, prod_inventory(), today="2026-11-11", aliases={})
@@ -711,6 +745,11 @@ def selftest(ok=None) -> bool:
        by("Upcoming Week")[0]["non_event"] and gaps("Upcoming Week") == [])
     ok("reconcile: *.PRIVATE.* files never count as evidence",
        by("Ghosts")[0]["has_transcript"] is False and gaps("Ghosts") == [])
+    ok("reconcile (YED-419): a transcript dated before its folder's event -> transcript_date_mismatch, not evidence",
+       gaps("Predated Voice Hack") == ["transcript_date_mismatch"] and not by("Predated Voice Hack")[0]["has_transcript"]
+       and not by("Predated Voice Hack")[0]["attendance_evidence_uploaded"])
+    ok("reconcile (YED-419): a transcript written a month after its event is a normal backfill, no mismatch",
+       by("Late Backfill")[0]["has_transcript"] and "transcript_date_mismatch" not in gaps("Late Backfill"))
     blob = json.dumps(res, default=sorted) + render(res)
     ok("reconcile: privacy — a private Event Content folder is never titled or walked",
        "Private Dinner" not in blob and res["inventory"]["private_skipped"] == 2)
