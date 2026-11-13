@@ -78,8 +78,15 @@ case "$JOB" in
 End with one line per check (check | PASS/FAIL | evidence), then SMOKE: ALL PASS or SMOKE: FAIL (<which>)."
     RC=$?
     ;;
+  sweep)
+    # YED-384: daily theme sweep, the first scheduled job that runs a model. Read-only: the theme-sweeper agent holds
+    # WebSearch + WebFetch only; theme-sweep.sh validates every manifest and writes only under .claude/.state/sweeps/.
+    sync_inputs && echo "pre-sweep sync OK" || echo "WARN: pre-sweep sync failed; using last mirror"
+    INPUTS_ROOT="$INPUTS" PY="$PY" zsh ops/mini-runner/theme-sweep.sh
+    RC=$?
+    ;;
   *)
-    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke)"; RC=64 ;;
+    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep)"; RC=64 ;;
 esac
 echo "== $JOB end $(date -u +%FT%TZ) exit=$RC"
 exit $RC
