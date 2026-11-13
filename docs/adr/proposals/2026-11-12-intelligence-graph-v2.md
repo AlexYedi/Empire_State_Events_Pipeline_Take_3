@@ -90,7 +90,15 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 
 ## 7b. Decisions (Alex, 2026-11-13)
 
-- **"Supported" uses the strict standard.** Every part of a claim is stated in its passage or in the event's own metadata (title, date). A detail that is probably true but not in the passage, an inference that joins neighbouring facts, a dropped hedge or a changed tense counts as unsupported. Omission is not a fault: the passage carries the context, and retrieval returns the passage, not only the claim (small-to-big).
+- **"Supported" uses the strict standard, scoped to the source document.** Every part of a claim must be stated somewhere in its source document (the same brief or transcript) or in the event's own metadata (title, date). Several paragraphs may contribute. A detail found nowhere in the document, a relationship the document never states, a dropped hedge or a changed tense counts as unsupported. Omission is not a fault. The extractor records **every** evidence span a claim uses, not one `para_idx`, and judges see the claim, its cited spans and the event line. *Amended the same day:* the first version scoped support to the single cited paragraph. Alex's re-label, plus a document-level rerun of the Claude judge, showed that 11 of the 12 disputed claims were supported by other paragraphs of the same brief; the 12th was not returned by the rerun. The disagreement came from the harness, not from the standard.
+- **Usefulness, v2 vs v1 (re-label, 11-13).**
+
+  | Version | Labelled | Useful 3 | Useful ≥ 2 |
+  |---|---|---|---|
+  | v2 | 100 (pilot) | 32% (Wilson ≈ 0.24–0.42) | 80% |
+  | v1 | 30 | 20% (≈ 0.10–0.37) | 80% |
+
+  The intervals overlap, so v2 has not yet *clearly* beaten v1 as §5 requires. Re-test on a larger, same-session sample during the extractor head-to-head. All 30 v1 claims were supported (extractive copying).
 - **Judge pilot outcome.** Alex marked 99 of 100 claims supported (Wilson 0.946–0.998), so no judge could be chosen from that set: with one negative, every κ was about 0, against 99% raw agreement for an always-yes baseline. The fix is a re-label of the 12 disputed claims plus 30 v1 baseline claims under the strict standard, then a seeded-error balanced set (dropped hedge, swapped number, wrong entity, added detail, tense change) to choose the judge. The judge harness now shows the event date (it was missing, which caused two false negatives).
 - **Freshness model.** A claim stays valid until shown otherwise. The re-check deadline depends on its freshness class:
 
