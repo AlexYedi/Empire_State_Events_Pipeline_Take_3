@@ -405,6 +405,21 @@ class Exporter:
                     out.append({"type": typ, "name": clean_text(name, hits), "notion_page_id": rid})
         return out
 
+    def person_ids(self) -> set:
+        """Person user ids. A personal access token may not list users (403 "Personal access tokens cannot list
+        users"), so fall back to the token's owner from /users/me: the one person whose comments count. Only the
+        id is kept. Any other 403 propagates (capability missing -> alex_commented = None)."""
+        try:
+            return {u["id"] for u in paged(self.nc, "GET", "/users") if u.get("type") == "person"}
+        except NotionError as e:
+            if e.status != 403:
+                raise
+            owner = ((self.nc.call("GET", "/users/me").get("bot") or {}).get("owner") or {})
+            uid = (owner.get("user") or {}).get("id") if owner.get("type") == "user" else None
+            if not uid:
+                raise
+            return {uid}
+
     def person_commented(self, page_id: str, blocks: list) -> tuple[bool | None, str]:
         """(Did a person user (the workspace has one: Alex) leave an open comment?, scan scope). Count-only: comment
         text is never kept. Page-level first, then up to COMMENT_BLOCK_CAP blocks. None = capability missing."""
@@ -417,7 +432,7 @@ class Exporter:
                 yield from ids(b.get("_children") or [])
         try:
             if self._persons is None:
-                self._persons = {u["id"] for u in paged(self.nc, "GET", "/users") if u.get("type") == "person"}
+                self._persons = self.person_ids()
             hit = lambda bid: any((c.get("created_by") or {}).get("id") in self._persons
                                   for c in paged(self.nc, "GET", f"/comments?block_id={bid}"))
             if hit(page_id):
@@ -431,7 +446,7 @@ class Exporter:
         except NotionError as e:
             if e.status == 403:
                 self._comments_ok = False
-                sys.stderr.write("notion_export: users/comments API 403 — the integration lacks a capability; "
+                sys.stderr.write("notion_export: users/comments API 403 — the token lacks a capability; "
                                  "acknowledged_signal.alex_commented = null\n")
                 return None, "unavailable"
             raise
@@ -817,6 +832,21 @@ def selftest() -> bool:
         a7 = json.load(open(os.path.join(out7, SUMMIT, "manifest.json")))["notion_export"]["briefs"]["post_event_brief"]
         ok("users 403 -> post-event brief still exported, alex_commented None", s7.get("post_event_brief") == 1
            and a7["acknowledged_signal"]["alex_commented"] is None and not any(k.startswith("error_") for k in s7))
+
+        # fix 10: a personal access token gets 403 on /users but /users/me names its owner -> comments still count
+        class PatToken(FakeNotion):
+            def call(self, method, path, body=None):
+                if path == "/users/me":
+                    return {"object": "user", "id": "u-pat-bot", "type": "bot",
+                            "bot": {"owner": {"type": "user", "user": {"object": "user", "id": "u-alex", "type": "person"}}}}
+                if path.startswith("/users"):
+                    raise NotionError(403, "Personal access tokens cannot list users.")
+                return super().call(method, path, body)
+        out10 = os.path.join(tmp, "b10")
+        s10 = main_run(PatToken(), "backfill", out10, None, "fake-db", os.path.join(tmp, "wm10.json"))
+        a10 = json.load(open(os.path.join(out10, SUMMIT, "manifest.json")))["notion_export"]["briefs"]["post_event_brief"]
+        ok("PAT: /users 403 -> owner from /users/me, alex_commented True", s10.get("post_event_brief") == 1
+           and a10["acknowledged_signal"]["alex_commented"] is True and not any(k.startswith("error_") for k in s10))
 
         # fix 9: comment scan = page first, then at most COMMENT_BLOCK_CAP blocks
         class Quiet(FakeNotion):
