@@ -69,6 +69,12 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
    - `claim_derivation` (child, parents, method, model, prompt hash, checker version, run)
    - source reliability on documents/sources
    - an `independent_source_group` key for corroboration
+   - freshness (§7b, 11-13): `freshness_class` (historical / fast-moving / slow-moving / opinion-prediction), `freshness_conf` and `freshness_reason` on claims; `none_fits` is allowed
+   - a `claim_verification` log (claim, checked_at, outcome ∈ confirmed / updated / contradicted / unverifiable, source document, method, run). "Last confirmed" is derived from it.
+   - an `entity_merge` log (merged-from, merged-into, decided by, evidence, reversible), deferred from 0022
+   - `insight` and `insight_claim` (role ∈ supports / counter / context): the L4 record and its premises, with the derivation fields and a preferred / normal / deprecated rank
+
+   Already in place, not to rebuild: `claim.asserted_at` (when said), `claim_relation` (contradicts / corroborates / supersedes / refines), `entity_alias` (0022), and claim provenance tiers.
 4. **Extractor v2 (L1)** in the Claimify style, with entity-attribute routing, the cross-family checker, the numeric-fidelity check and visibility inheritance. Head-to-head against v1 on usefulness and faithfulness, then stage the winner.
 5. **Entity-resolution clustering step**, then **L2 relations** with independent corroboration.
 6. **L3 trend engine** (normalised, time-respecting permutation, FDR, backtest), feeding the Monday Market Brief.
@@ -81,6 +87,31 @@ Most of the graph's value lies **above** the facts: paraphrased assertions, rela
 - **MiniCheck runs locally on the Mac mini** as one of the pilot's judges (open model, no API cost). Taken as approved with the pilot; it stays in only if its κ earns the seat.
 - **The v1 prose batch stays approved.** Alex approved the 932 v1 prose claims that passed both gates (95.5% faithful on a 200-row pooled sample). Claims are approved on traceability, not truth; truth is checked at use (YED-410). The v2 head-to-head still runs, and if v2 wins, its claims are staged alongside v1 and v1 rows it supersedes are marked `deprecated`, not deleted.
 - **The fact-check design (YED-410) merges into ADR-15.** Both drafts claimed migration 0023 and ADR-15; there is one of each.
+
+## 7b. Decisions (Alex, 2026-11-13)
+
+- **"Supported" uses the strict standard.** Every part of a claim is stated in its passage or in the event's own metadata (title, date). A detail that is probably true but not in the passage, an inference that joins neighbouring facts, a dropped hedge or a changed tense counts as unsupported. Omission is not a fault: the passage carries the context, and retrieval returns the passage, not only the claim (small-to-big).
+- **Judge pilot outcome.** Alex marked 99 of 100 claims supported (Wilson 0.946–0.998), so no judge could be chosen from that set: with one negative, every κ was about 0, against 99% raw agreement for an always-yes baseline. The fix is a re-label of the 12 disputed claims plus 30 v1 baseline claims under the strict standard, then a seeded-error balanced set (dropped hedge, swapped number, wrong entity, added detail, tense change) to choose the judge. The judge harness now shows the event date (it was missing, which caused two false negatives).
+- **Freshness model.** A claim stays valid until shown otherwise. The re-check deadline depends on its freshness class:
+
+  | Class | Re-check after |
+  |---|---|
+  | historical / one-off | never |
+  | fast-moving | 14–30 days |
+  | slow-moving | 90 days |
+  | opinion / prediction | not re-verified; scored as a forecast |
+
+  Overdue claims are re-checked when next used (capped at about 5 per query), and in one batch before the Monday brief. New contradicting or superseding facts are linked by the claim-relation adjudicator at ingest, without waiting for the deadline. A re-check never edits a claim; it logs an outcome.
+- **Observability on the classes.** The classifier emits class, confidence and reason. The Monday brief's graph-health section reports the share of borderline (confidence < 0.7) and none-fits claims, and an edge-case log is kept. Classes and thresholds change only when observed data shows the need.
+- **Research check (2026-11-13, `.claude/.state/kg-research-20261113/report.md`).** The research supports this plan:
+  - Graphs beat plain vector retrieval on multi-hop and temporal questions and lose on simple lookups.
+  - Hybrid retrieval (vector plus graph, contexts merged) beats either alone.
+  - Precomputed community summaries are the weakest value for money.
+
+  Additions for retrieval and evaluation:
+  - a router (vector plus keyword search by default; one-hop entity expansion for multi-hop, comparison and temporal questions; map-reduce over the theme hierarchy for corpus-wide questions)
+  - a labelled web lane (graph citations and web citations kept separate; disagreements shown, not resolved; write-back only through the normal pipeline)
+  - a monthly temporal backtest against plain vector retrieval, judged in both orders. This runs first, as the null baseline.
 
 ## 8. Sources
 
