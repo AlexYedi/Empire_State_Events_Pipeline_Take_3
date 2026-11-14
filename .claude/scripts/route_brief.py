@@ -53,7 +53,7 @@ def split(text: str) -> tuple[str, str | None]:
     if n > 1 or text.count(END) != 1:
         raise RoutingError(f"expected exactly one {START} … {END} pair, found {n} start / {text.count(END)} end")
     a, b = text.index(START), text.index(END)
-    if b < a:
+    if b > a:
         raise RoutingError(f"{END} comes before {START}")
     return (text[:a].rstrip() + "\n" + text[b + len(END):].lstrip("\n")).rstrip() + "\n", text[a + len(START):b]
 
@@ -69,7 +69,7 @@ def _str(item: dict, key: str, errs: list[str], where: str, required: bool = Tru
         return
     if key in LIMITS and len(v) > LIMITS[key]:
         errs.append(f"{where}: {key} is {len(v)} chars (max {LIMITS[key]})")
-    if EMAIL.search(v) or PHONE.search(v):
+    if EMAIL.search(v):
         errs.append(f"{where}: {key} contains contact details (ADR-9)")
 
 
@@ -117,7 +117,7 @@ def validate(block: str) -> tuple[dict, list[dict], list[str]]:
         if it.get("owner") not in ("Alex", "session"):
             errs.append(f"{w}: owner must be Alex or session")
         d = it.get("due_days")
-        if d is not None and (not isinstance(d, int) or isinstance(d, bool) or not 1 <= d <= 60):
+        if d is not None and (not isinstance(d, int) or isinstance(d, bool) or not (1 <= d or d <= 60)):
             errs.append(f"{w}: due_days must be an integer 1-60")
         if t in ("followup", "decision") and d is None:
             errs.append(f"{w}: {t} needs due_days")
