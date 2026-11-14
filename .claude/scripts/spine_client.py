@@ -9,8 +9,8 @@ ADR-9 tier 2 (the spine) holds professional-public identity only. Concretely:
   * a column may be SET only if it is in ALLOW[table]; ANY column may be NULLED (nulling is
     always safe — it is how the email migration runs through this same guard);
   * email / phone columns are forbidden on every table;
-  * every string value is scanned — recursively through dicts/lists (`metadata` jsonb included) —
-    for email and phone patterns;
+  * every string value AND every nested dict key is scanned — recursively through dicts/lists (`metadata`,
+    `evidence`, `locator` jsonb included) — for email and phone patterns;
   * rows sourced from the inbox (source starts with `inbox_miner`) carry a tier-0 backstop:
     `metadata.sender_domain` / `metadata.from_domain` must not match `inbox-denylist.md`.
 
@@ -91,19 +91,18 @@ ALLOW: dict[str, set[str]] = {
               "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
               "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
               "embedding_model", "metadata", "created_at", "reviewed_at",
-              # migration 0023 (ADR-15 d2/d4/d7/d8/d11; YED-384). rank + review_flag are open because 0024 moved
-              # the three readers onto claim_current (d7 prerequisite met). evidence + freshness_reason are scanned
-              # here AND by their no_contact_pii_v1 CHECKs.
+              # migration 0023 (ADR-15 d2/d4/d7/d8/d11; YED-384); writer: substrate.py stage-v2. 0024 moved
+              # match_claims_hybrid, entity_neighborhood and mi.fact onto claim_current, so a non-default rank /
+              # review_flag is read correctly (d7 prerequisite met). visibility is NOT yet filtered by any reader
+              # (match_claims_hybrid's filter_visibility defaults to null; no caller passes it), so 'public_ok'
+              # protects nothing until an L5 renderer does (d11). DB PII CHECKs exist on evidence and
+              # freshness_reason only; judge_model has none, so this guard's scan is its only PII check.
               "evidence", "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at", "rank", "review_flag",
               "valid_from", "valid_to", "freshness_class", "freshness_conf", "freshness_reason", "next_check_at",
               "visibility"},
-    # 0023: id and the now() timestamps (checked_at / labelled_at / created_at) and claim_label.labeler ('alex')
-    # are left to their DB defaults. note / source_url are the free-text columns; the PII scan covers them.
-    "claim_verification": {"claim_id", "outcome", "method", "source_url", "source_document_id", "checker_model",
-                           "run_id", "note"},
-    "claim_label": {"claim_id", "sample_run", "stratum", "inclusion_prob", "label", "useful", "note"},
-    "judge_audit": {"run_date", "part", "n", "hits", "bound", "threshold", "passed", "judge_model",
-                    "judge_prompt_hash", "batch", "confirms_audit_id"},
+    # claim_verification, claim_label and judge_audit (0023) are deliberately NOT allowlisted: no writer exists yet
+    # (ADR-15: a table with no writer is unrehearsable surface), and an open judge_audit would let the judge's own
+    # pipeline self-certify the audit stage-v2 gates on. Each opens with its first writer, reviewed then.
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -343,6 +342,18 @@ def _walk_masked(value, path: str, masked: str):
             yield from _walk_masked(v, f"{path}[{i}]", f"{masked}[{i}]")
 
 
+def _walk_keys(value, masked: str):
+    """Yield (masked parent path, key) for every dict KEY nested inside a column value (jsonb keys reach the DB as text
+    too). Top-level keys are column names, already held to ALLOW. Paths are masked: a refusal never echoes a key."""
+    if isinstance(value, dict):
+        for k, v in value.items():
+            yield masked, str(k)
+            yield from _walk_keys(v, f"{masked}.*")
+    elif isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            yield from _walk_keys(v, f"{masked}[{i}]")
+
+
 def _scan_pii(row: dict, table: str) -> None:
     global _OK_ROWS
     t0 = time.perf_counter()
@@ -360,6 +371,19 @@ def _scan_pii(row: dict, table: str) -> None:
                         f"{table}.{path} contains a phone number · ADR-9 tier 2: contact PII never enters the "
                         f"spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
                         text=s, span=m.span(), t0=t0)
+        for parent, k in _walk_keys(value, _label_col(table, col)):   # after the values: same first refusal as before
+            for m in EMAIL_RE.finditer(k):
+                if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
+                    _refuse("email", table, f"{parent}.<key>",
+                            f"{table}.{parent} has a dict key containing an email address · ADR-9 tier 2: contact PII "
+                            f"never enters the spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
+                            text=k, span=m.span(), t0=t0)
+            m = PHONE_RE.search(k)
+            if m:
+                _refuse("phone", table, f"{parent}.<key>",
+                        f"{table}.{parent} has a dict key containing a phone number · ADR-9 tier 2: contact PII never "
+                        f"enters the spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
+                        text=k, span=m.span(), t0=t0)
     if _COUNT_OK:                           # only rows req() is about to send count as writes
         try:
             _OK_ROWS += 1
@@ -587,8 +611,7 @@ def write(table: str, rows, prefer: str | None = "return=representation", *, pat
 _SCRIPT_WRITE_RE = re.compile(r"urlopen|requests\.(post|patch|put)|\bcurl\b|\bfetch\(|axios\.(post|patch|put)|https?\.request\(")
 _WRITE_TABLES = (r"(topic|event|company|person|event_entity|documents|doc_chunks|doc_claims|claim|"
                  r"claim_entity|claim_relation|document_entity|artifact_outcome|claim_usage|"
-                 r"company_segment_history|lane_run|lane_registry|entity_alias|sweep_query|"
-                 r"claim_verification|claim_label|judge_audit)")
+                 r"company_segment_history|lane_run|lane_registry|entity_alias|sweep_query)")
 _PROSE_CURL_RE = re.compile(r"\bcurl\b[^\n]*(-X\s*(POST|PATCH)|--data|-d\s)")
 _PROSE_VERB_RE = re.compile(r"`(POST|PATCH) /" + _WRITE_TABLES)
 
@@ -830,54 +853,27 @@ def selftest() -> bool:
         _by(PHONE_L, lambda: guard("claim", {**base_claim, "freshness_reason": "asked 555-123-4567"}, op="update")), True)
     add("claim.utility_score still refused beside the 0023 columns (ADR-10 d5 unchanged)",
         _by(COL_L, lambda: guard("claim", {**base_claim, **v2, "utility_score": 0.9})), True)
-    add("claim_verification clean row → pass",
-        lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web",
-                                             "source_url": "https://news.example.com/acme", "source_document_id": "d1",
-                                             "checker_model": "claude-fable-5-2", "run_id": "r1", "note": "same figure"}), False)
-    add("claim_verification.note carrying an email → refuse (email scan)",
-        _by(EMAIL_L, lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "updated", "method": "web",
-                                                          "note": "confirmed by press@acme.example.com"})), True)
-    add("claim_verification.note carrying a phone → refuse (phone scan)",
-        _by(PHONE_L, lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "unverifiable", "method": "human",
-                                                          "note": "rang +44 20 7946 0958"})), True)
-    add("claim_verification.source_url carrying an email → refuse (email scan)",
-        _by(EMAIL_L, lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web",
-                                                          "source_url": "mailto:jane.doe@acme.example.com"})), True)
-    add("claim_verification.checked_at set → refuse (not allowlisted: the DB stamps it; append-only log)",
-        _by(COL_L, lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web",
-                                                        "checked_at": "2020-01-01T00:00:00Z"})), True)
-    add("claim_verification unknown column → refuse (not allowlisted)",
-        _by(COL_L, lambda: guard("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web",
-                                                        "page_text": "..."})), True)
-    add("claim_label clean row → pass",
-        lambda: guard("claim_label", {"claim_id": "c1", "sample_run": "2026-12-4b", "stratum": "multi_span",
-                                      "inclusion_prob": 0.25, "label": "supported", "useful": 2, "note": "fine"}), False)
-    add("claim_label.note carrying an email → refuse (email scan)",
-        _by(EMAIL_L, lambda: guard("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest",
-                                                   "inclusion_prob": 1, "label": "unsupported",
-                                                   "note": "ask dana@acme.example.com"})), True)
-    add("claim_label.note carrying a phone → refuse (phone scan)",
-        _by(PHONE_L, lambda: guard("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest",
-                                                   "inclusion_prob": 1, "label": "unsupported",
-                                                   "note": "her cell 555.123.4567"})), True)
-    add("claim_label.labeler set → refuse (not allowlisted: DB default 'alex')",
-        _by(COL_L, lambda: guard("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest",
-                                                 "inclusion_prob": 1, "label": "supported", "labeler": "someone"})), True)
-    add("claim_label email column → refuse (forbidden contact-PII column)",
-        _by(PII_COL_L, lambda: guard("claim_label", {"claim_id": "c1", "sample_run": "r", "email": "x"})), True)
-    add("judge_audit clean row → pass",
-        lambda: guard("judge_audit", {"run_date": "2026-11-14", "part": "a", "n": 150, "hits": 145, "bound": 0.92,
-                                      "threshold": 0.9, "passed": True, "judge_model": "claude-fable-5-2",
-                                      "judge_prompt_hash": "b" * 64, "batch": "planted-rules-1",
-                                      "confirms_audit_id": None}), False)
-    add("judge_audit.batch carrying an email → refuse (email scan)",
-        _by(EMAIL_L, lambda: guard("judge_audit", {"run_date": "2026-11-14", "part": "b", "n": 40, "hits": 1,
-                                                   "batch": "from a.b@example.com"})), True)
-    add("judge_audit.created_at set → refuse (not allowlisted: DB default)",
-        _by(COL_L, lambda: guard("judge_audit", {"run_date": "2026-11-14", "part": "a", "n": 1, "hits": 1,
-                                                 "created_at": "2020-01-01T00:00:00Z"})), True)
-    add("prose scan catches `POST /claim_verification`",
-        lambda: None if _PROSE_VERB_RE.search("then `POST /claim_verification` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
+    NO_ALLOW_L = "no ADR-9 allowlist for this table"
+    for t, row in (("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web", "note": "ok"}),
+                   ("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest", "inclusion_prob": 1,
+                                    "label": "supported"}),
+                   ("judge_audit", {"run_date": "2026-11-14", "part": "a", "n": 150, "hits": 150, "bound": 0.99,
+                                    "threshold": 0.9, "passed": True, "judge_model": "m", "judge_prompt_hash": "a" * 64})):
+        add(f"{t} clean row → refuse (0023 table with no writer yet: fail-closed, no_allowlist)",
+            _by(NO_ALLOW_L, lambda t=t, row=row: guard(t, row)), True)
+    # dict KEYS are scanned too (review 2026-11-14): jsonb keys reach the DB as text, and the evidence/metadata
+    # CHECKs cover only some columns. Each case must be refused by the client's key scan alone.
+    KEY_L = "has a dict key containing"
+    add("claim.evidence span with an email as a dict KEY → refuse (client key scan)",
+        _by(KEY_L, lambda: guard("claim", {**base_claim, "evidence": [{"dana@acme-corp.com": "x", "para_idx": 1,
+                                                                        "quote": "q"}]})), True)
+    add("claim.metadata nested phone as a dict KEY → refuse (client key scan)",
+        _by(KEY_L, lambda: guard("claim", {**base_claim, "metadata": {"contacts": {"(555) 123-4567": "cell"}}})), True)
+    add("claim.locator / proposed_entities email key → refuse (client key scan)",
+        _by(KEY_L, lambda: guard("claim", {**base_claim, "proposed_entities": [{"jane.doe@example.org": 1}]})), True)
+    add("claim.metadata ordinary keys (as_of, time_sensitive, 2026-11-04) → pass",
+        lambda: guard("claim", {**base_claim, "metadata": {"as_of": "2024-08", "time_sensitive": False,
+                                                            "2026-11-04": {"run": 1}}}), False)
     add("_by: a refusal from the WRONG layer does not count (unknown table refused by no_allowlist, not the scan)",
         lambda: None if _by(EMAIL_L, lambda: guard("not_a_table", {"x": "a@b.co"}))() is None
         else (_ for _ in ()).throw(PIIViolation("x")), False)
