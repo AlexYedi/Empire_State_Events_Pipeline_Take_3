@@ -162,7 +162,8 @@ def fetch_companies() -> list[dict]:
 
 def local_rooms(root: str, mon: date, sun: date) -> list[dict]:
     """Folders and triage manifests dated mon..sun. Manifests give topics and companies (never people);
-    a folder is the display name when one matches a manifest on the same day."""
+    The display name is the event title: the manifest's when there is one, else the folder's title without its
+    "MM DD YY" prefix (the date is printed beside it already)."""
     folders, manifests = [], []
     ec = os.path.join(root, "Event Content")
     for name in sorted(os.listdir(ec)) if os.path.isdir(ec) else []:
@@ -200,8 +201,8 @@ def local_rooms(root: str, mon: date, sun: date) -> list[dict]:
                     and tk & sweep_seed._tokens(f["title"])), None)
         if hit:
             used.add(hit["name"])
-        rooms.append({**mf, "name": hit["name"] if hit else mf["title"], "folder": bool(hit)})
-    rooms += [{"name": f["name"], "title": f["title"], "date": f["date"], "topics": [], "companies": [],
+        rooms.append({**mf, "name": mf["title"], "folder": bool(hit)})
+    rooms += [{"name": f["title"], "title": f["title"], "date": f["date"], "topics": [], "companies": [],
                "ref": None, "folder": True} for f in folders if f["name"] not in used]
     return sorted(rooms, key=lambda r: (r["date"], r["name"]))
 
@@ -243,6 +244,28 @@ def fetch_usage(inv) -> dict:
     return {"total": total, "use_count_pos": len(used), "logged": len(logged)}
 
 
+def _base_name(name: str) -> str:
+    """norm_name with bracketed qualifiers removed: "Anthropic (Claude Code)" -> "anthropic"."""
+    return sweep_manifest.norm_name(re.sub(r"\([^)]*\)", " ", name))
+
+
+def known_names(companies) -> set[str]:
+    """The graph's company names, each as its full and its base form (qualifiers can sit on either side)."""
+    out = set()
+    for c in companies if isinstance(companies, list) else []:
+        if c.get("name"):
+            out |= {sweep_manifest.norm_name(c["name"]), _base_name(c["name"])} - {""}
+    return out
+
+
+def is_novel(name, known: set[str]) -> bool:
+    """Novel only if neither the full name nor its base form is a graph company. The validator's own `novel`
+    (full name only) stays as it is in the manifest; the brief re-labels its display copy."""
+    if not name:
+        return False
+    return sweep_manifest.norm_name(str(name)) not in known and (_base_name(str(name)) or "\0") not in known
+
+
 def load_sweeps(sweeps_dir: str | None, companies, mon: date, sun: date):
     """Validated, normalized manifests whose window overlaps the read week (last week included). Invalid ones are
     counted, never rendered. Each is validated against its own window and theme (there is no parent dispatch to
@@ -279,6 +302,12 @@ def load_sweeps(sweeps_dir: str | None, companies, mon: date, sun: date):
             continue
         # The validator quarantines bad items one by one (#327): count them, never show them.
         out["items_dropped"] += sum((norm.get("dropped") or {}).values())
+        if known:
+            names = known_names(companies)
+            for it in norm.get("items", []):
+                it["novel"] = is_novel(it.get("company"), names)
+            for e in norm.get("new_entities", []):
+                e["novel"] = is_novel(e.get("name"), names)
         out["valid"].append(norm)
     return out
 
@@ -798,9 +827,10 @@ def selftest() -> bool:
         ok("default week: Wed 2026-11-11 -> 2026-W47", default_week(date(2026, 11, 11)) == "2026-W47")
         ok("as_of: a Monday brief reads last week through Sunday", "Last week\" means 2026-W46." in text)
         # rooms
-        ok("rooms: folder name is the display name when a manifest matches",
-           "**11 17 26 Voice Agents Night**" in text)
-        ok("rooms: folder-only room listed", "**11 19 26 Robotics Demo Day**" in text)
+        ok("rooms: the manifest's event title is the display name when a folder matches it",
+           "**Voice Agents Night: Latency Talk**" in text and "11 17 26" not in text)
+        ok("rooms: folder-only room listed by its title, without the MM DD YY prefix",
+           "**Robotics Demo Day**" in text and "11 19 26" not in text)
         ok("rooms: out-of-week folder excluded", "Last Week Party" not in text and "Next Month" not in text)
         ok("rooms: content folder (Upcoming Week) excluded", "Upcoming Week" not in text)
         ok("rooms: PRIVATE folder and manifest never surface", "Secret" not in text and "Hidden Co" not in text)
@@ -831,6 +861,12 @@ def selftest() -> bool:
            and "1 item dropped by the validator" in text)
         ok("sweeps: the dropped item's text never reaches the brief", "dana@example.com" not in text
            and "contact dana" not in text)
+        kn = known_names([{"name": "Anthropic"}, {"name": "Cursor (Anysphere)"}, {"name": "AI Engineer (Software 3.0 Inc)"}])
+        ok("sweeps: a bracketed qualifier on either side still matches a graph company",
+           not is_novel("Anthropic (Claude Code)", kn) and not is_novel("Cursor", kn)
+           and not is_novel("AI Engineer (Code Summit)", kn) and is_novel("Google DeepMind", kn)
+           and is_novel("Google Chrome (GoogleChrome/modern-web-guidance)", kn) and not is_novel("", kn)
+           and is_novel("(arXiv authors)", kn))
         ok("sweeps: novelty recomputed against graph names", "- **NEW** Quillstack Labs" in text
            and "- Knownco Inc." in text)
         ok("sweeps: no headline, people or quote text", "Dana Example" not in text and "low-latency" not in text
