@@ -1,0 +1,296 @@
+# YED-384 / YED-428 — migration 0024 twin rehearsal evidence (twin ytfzzsxcxxbejnowmkmk only; prod never contacted)
+# Sections: (A) step 0, 0023 rehearsal --execute --leave-applied; (B) gate failures from earlier 0024 runs that led to
+# SQL fixes (excerpts); (C) the clean, final 0024 run: rehearse_0024.py --execute (ends rolled back to the 0023 state).
+
+## (A) python supabase/scripts/rehearse_0023.py --execute --leave-applied
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk  at 2026-11-14T13:17:26Z
+migration sha256: 99f2a87f5acf999898e8303c6aea8f60ae7646f7f677e62db7dcb0541fd25f95
+
+[0] preflight
+  twin server_version=17.6 (prod 17.6)
+  has.no_contact_pii_v1        true
+  has.entity_alias             true
+  has.sweep_query              true
+  has.documents                true
+  has.roles                    true
+  has.claims                   true
+  clean.no_new_columns         true
+  clean.no_new_checks          true
+  clean.no_new_relations       true
+  clean.no_new_funcs           true
+  clean.no_new_indexes         true
+  clean.no_rehearsal_rows      true
+  info.claim_rows              5731
+  info.claim_policies          0
+  migration PREFLIGHT block: {'prereq_0022': 'true', 'no_0023_columns': 'true', 'no_0023_tables': 'true', 'baseline_claim_rows': '5731', 'baseline_claim_by_status': 'approved=2160,candidate=3571'}
+  dashboard runbook files in sync with the migration
+
+[1] snapshot A (before)
+  claims by status: approved=2160,candidate=3571; 8 schema parts, 14 data values
+
+[1b] negative control — 0023's checks must FAIL before the fix; keep_* must pass
+  18 0023 checks on the un-migrated twin: 18 fail (must be all)
+  3 keep_ checks: 3 pass (must be all)
+
+[2] apply 0023
+  OK  0023_graph_v2_l1_freshness.sql
+
+[3] re-apply 0023 (must be a clean no-op)
+  OK  0023 second paste
+  OK  state identical after second paste
+
+[4] verify
+  info  info_claim_rows = 5731
+  info  info_claim_current_is_current = 5731
+  verify -> PASS (21/21)
+  dashboard VERIFY: 23 rows, non-info rows not 'true': none
+
+[4b] behaviour (twin only; every case rolled back)
+  PASS claim_vocab_checks (as service_role)
+  PASS judge_record (as service_role)
+  PASS valid_window (as service_role)
+  PASS evidence_shape (as service_role)
+  PASS claim_pii (as service_role)
+  PASS claim_verification (as service_role)
+  PASS claim_label (as service_role)
+  PASS judge_audit (as service_role)
+  PASS claim_current (as service_role)
+  PASS direct_delete_probe (as service_role)
+        direct DELETE on claim_verification removed 1 row(s) (the trigger guards UPDATE only)
+  PASS anon_refused (as anon)
+  PASS authenticated_refused (as authenticated)
+  OK  no state leaked from the behaviour cases
+
+[5] planted faults — verify must catch each, re-apply must restore
+  [5a] plant -> expect claim_new_checks
+  verify -> FAIL (20/21) :: failed ['claim_new_checks']
+  OK  fault caught by claim_new_checks
+  OK  0023 restore after 5a
+  verify -> PASS (21/21)
+  [5b] plant -> expect new_relations_no_api_grants
+  verify -> FAIL (20/21) :: failed ['new_relations_no_api_grants']
+  OK  fault caught by new_relations_no_api_grants
+  OK  0023 restore after 5b
+  verify -> PASS (21/21)
+  [5c] plant -> expect claim_verification_append_only_trigger
+  verify -> FAIL (20/21) :: failed ['claim_verification_append_only_trigger']
+  OK  fault caught by claim_verification_append_only_trigger
+  OK  0023 restore after 5c
+  verify -> PASS (21/21)
+  [5d] plant -> expect new_tables_rls_on_no_policies
+  verify -> FAIL (20/21) :: failed ['new_tables_rls_on_no_policies']
+  OK  fault caught by new_tables_rls_on_no_policies
+  OK  0023 restore after 5d
+  verify -> PASS (21/21)
+  [5e] plant -> expect evidence_fn_exec_service_role_only
+  verify -> FAIL (20/21) :: failed ['evidence_fn_exec_service_role_only']
+  OK  fault caught by evidence_fn_exec_service_role_only
+  OK  0023 restore after 5e
+  verify -> PASS (21/21)
+  [5f] plant -> expect claim_current_invoker
+  verify -> FAIL (20/21) :: failed ['claim_current_invoker']
+  OK  fault caught by claim_current_invoker
+  OK  0023 restore after 5f
+  verify -> PASS (21/21)
+  [5g] plant -> expect pii_checks_on_new_text
+  verify -> FAIL (19/21) :: failed ['claim_new_checks', 'pii_checks_on_new_text']
+  OK  fault caught by pii_checks_on_new_text
+  OK  0023 restore after 5g
+  verify -> PASS (21/21)
+  [5h] plant -> expect new_relations_no_api_grants
+  verify -> FAIL (20/21) :: failed ['new_relations_no_api_grants']
+  OK  fault caught by new_relations_no_api_grants
+  OK  0023 restore after 5h
+  verify -> PASS (21/21)
+  OK  restored state identical to the first apply
+
+[6] rollback
+  OK  ROLLBACK block
+
+[7] snapshot C must equal snapshot A
+  OK  schema fingerprint (8 parts, function bodies + ACLs + view definitions included) + 14 data values identical — ROLLBACK PROVEN
+
+[8] cleanup
+  OK  rehearsal-row delete (expect 0)
+  OK  claim rows 5731 (preflight 5731); rehearsal rows 0; no 0023 relations
+
+[9] re-apply for development (--leave-applied)
+  OK  0023
+  info  info_claim_rows = 5731
+  info  info_claim_current_is_current = 5731
+  verify -> PASS (21/21)
+
+0023 REHEARSAL: GREEN — safe for Alex to run supabase/scripts/0023_preflight_dashboard.sql, paste 0023 into prod (The-Prod-Brain) after 0022, then run supabase/scripts/0023_verify_dashboard.sql there.
+
+## (B1) run 1 (pre-fix harness): step 4b
+[4b] behaviour (twin only; every case rolled back)
+  DIFF res.mch.wide:
+       before=1156 rows:73cabc24310470645a9d2e0d8e1a5e7d
+       after =1156 rows:88d3dff69d5142007ceaaeb56401fd76
+GATE FAIL at step 4b — reader results changed at apply
+## -> diagnosis: same 1156 ids, identical dense_rank/keyword_rank/rrf_score per id; 6 positions differ, all exact ties on (rrf_score, asserted_at).
+##    Harness now gates res.mch.* in canonical order (score, asserted_at, id); raw order is info-only ord.mch.*.
+## -> manual ROLLBACK after run 1 showed entity_neighborhood ACL {postgres,service_role,=,anon,authenticated} vs snapshot A {=,postgres,anon,authenticated,service_role}: ROLLBACK fixed (revoke-all + ordered grant).
+
+## (B2) run 2 (--reset-first): step 5j
+  [5j] plant -> expect functions_invoker_search_path
+  verify -> PASS (14/14)
+GATE FAIL at step 5j — verify did not flag functions_invoker_search_path; the gate is not a gate
+## -> functions_invoker_search_path: bool_and skips NULL proconfig (fail-open). Fixed with IS NOT DISTINCT FROM.
+
+## (C) python supabase/scripts/rehearse_0024.py --execute
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk  at 2026-11-14T13:35:47Z
+migration sha256: 1b894316a4b79d141a5a654d3444a76551046e13066d8db680648b2587ab4f23
+
+[0] preflight
+  twin server_version=17.6 (prod 17.6)
+  has.claim_current              true
+  has.claim_rank                 true
+  has.claim_verification         true
+  has.mi_views                   true
+  has.roles                      true
+  has.claims                     true
+  has.embeddings                 true
+  has.topic_and_company_links    true
+  clean.no_is_retired            true
+  clean.old_mch_only             true
+  clean.en_reads_claim           true
+  clean.no_rehearsal_rows        true
+  info.claim_rows                5731
+  info.mi_fact_claim_rows        5731
+  info.mi_fact_rows              6042
+  info.live_claims               5731
+  info.embedded_claims           5731
+  migration PREFLIGHT block: {'prereq_0023': 'true', 'old_match_claims_shape': 'true', 'nothing_retired_yet': 'true', 'baseline_mi_fact_claim_rows': '5731', 'baseline_mi_fact_rows': '6042', 'baseline_live_claims': '5731'}
+  dashboard runbook files in sync with the migration
+
+[1] snapshot A (before; the 0023-applied state)
+  fp.claim_current_tail_cols                                     last_check_outcome,last_checked_at,is_current,is_overdue
+  fp.fn.entity_neighborhood(uuid[],timestamp with time zone,integer,integer,integer) acl={=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} secdef=false vol=s cfg=search_path=public args=cb9410a41f062cb37f265b7aa059d28b result=cd8a1292080b231b3e9a85d440b02023 body=74d1598c5f6c71e0368a97ef0449235a comment=d41d8cd98f00b204e9800998ecf8427e
+  fp.fn.match_claims_hybrid(vector,text,integer,integer,integer,uuid[],text[],text[]) acl={=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} secdef=false vol=s cfg=search_path=public args=501306c3f790f6dafebbe1a7a8bdd880 result=d453fcdc97252ac9b17ecc831658d37d body=5dbca7ca3af902dc61155ed655fd6c58 comment=d41d8cd98f00b204e9800998ecf8427e
+  fp.fn_signatures                                               entity_neighborhood(uuid[],timestamp with time zone,integer,integer,integer) ; match_claims_hybrid(vector,text,integer,integer,integer,uuid[],text[],text[])
+  fp.view.claim_current                                          opts=security_invoker=on acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres} def=a24e637b9626436faaa75a9bcd4f833d cols=56c9aea48fdc67875581f2bb46e4b0bb comment=8d24c206961ae37a7f742f19e107ee84
+  fp.view.mi.fact                                                opts=security_invoker=on acl=NULL def=4adfae6a0ae1d9f9e3de23dc49260b6e cols=1b4afe4b6a92d51e07cfe02700abb5ff comment=d41d8cd98f00b204e9800998ecf8427e
+  fp.view.mi.fact_company                                        opts=security_invoker=on acl=NULL def=d3e789ce9fbfc29352b849cc7e1b59e3 cols=a93aaf55257e5dee431bdb2061415c33 comment=d41d8cd98f00b204e9800998ecf8427e
+  fp.view.mi.fact_topic                                          opts=security_invoker=on acl=NULL def=8781d99df6be524fd39271f4a3cb1512 cols=46684a9a3a5fa72dc39cdb673f5b260e comment=d41d8cd98f00b204e9800998ecf8427e
+  ord.mch.approved_tier                                          de14c83ed5c9ad4db7bb47900d4cc530
+  ord.mch.entity_filter                                          e88b0d9ac63c0b5885109b37252a816f
+  ord.mch.named8                                                 23d356c86d0cb9277479fc78f6120cb2
+  ord.mch.positional8                                            23d356c86d0cb9277479fc78f6120cb2
+  ord.mch.retrieve_py                                            b2427f1492b06d58d5b8b6a6c87014c7
+  ord.mch.wide                                                   885a7ade8533e68b2b688edf170e542d
+  res.en.event_seed                                              59c/4e/1d:f4155053853458b61494163b072f5449
+  res.en.seed0                                                   120c/1e/2d:edbdfc7e27388cdac267b98af20deb98
+  res.en.seed0_all                                               234c/1e/2d:771e5de2ca0e1353cf6d41dc8ea8f95a
+  res.en.seed1                                                   120c/4e/4d:636df44f16c7e634b88eae5a2decc48d
+  res.en.seed2                                                   106c/6e/2d:c11f06d938c5b7fd09b3368b5726c33c
+  res.mch.approved_tier                                          8 rows:dbdfe4c47ab8504bda47aa016ead67a7
+  res.mch.entity_filter                                          100 rows:9d6dc3c8f6c1818229559f160d979309
+  res.mch.named8                                                 20 rows:bcb53ca6314e92d31e326f51a01ff3f9
+  res.mch.positional8                                            20 rows:bcb53ca6314e92d31e326f51a01ff3f9
+  res.mch.retrieve_py                                            30 rows:6cc5e58ae2272dee4ced6a38537aff1e
+  res.mch.wide                                                   1156 rows:949d80c53e165561f0ce99d817592e54
+  res.mi.fact                                                    6042 rows:468e4bf9c15c5972d4e52a8d9c4f6721
+  res.mi.fact_by_type                                            claim=5731,event=311
+  res.mi.fact_company                                            1789 rows:8861e92566209b75327b7a3f09d6ade1
+  res.mi.fact_topic                                              2257 rows:1419b6b7d0b9c142b3950a84dd860f13
+  8 schema parts, 8 reader fingerprints, 15 reader results, 18 data values
+
+[1b] negative control — 0024's checks must FAIL before the fix; keep_* must pass
+  9 0024 checks on the 0023-only twin: 9 fail (must be all)
+  5 keep_ checks: 5 pass (must be all)
+
+[2] apply 0024
+  OK  0024_readers_on_claim_current.sql
+
+[3] re-apply 0024 (must be a clean no-op, including function and view OIDs)
+  OK  0024 second paste
+  OK  state identical after second paste (6 OIDs unchanged: the function swap did not re-fire)
+
+[4] verify
+  info  info_mi_fact_claim_rows = 5731
+  info  info_mi_fact_rows = 6042
+  info  info_live_claims = 5731
+  verify -> PASS (14/14)
+  info_* rows equal the PREFLIGHT baseline_* rows: info_mi_fact_claim_rows=5731, info_mi_fact_rows=6042, info_live_claims=5731
+  dashboard VERIFY: 17 rows, non-info rows not 'true': none
+
+[4b] behaviour (twin only; every case rolled back)
+  info  ord.mch.wide: tie order moved (row set and values gated by res.mch.wide)
+  PASS reader results identical to snapshot A at apply (15 probes; old 8 named-arg and 8 positional-arg calls included)
+  PASS old_call_shapes (as service_role)
+  PASS retire_deprecated (as service_role)
+  PASS retire_contradicted (as service_role)
+  PASS retire_expired (as service_role)
+  PASS disputed_flagged (as service_role)
+  PASS overdue_passthrough (as service_role)
+  PASS filter_visibility (as service_role)
+  PASS rejected_by_filter_statuses (as service_role)
+  PASS anon_refused (as anon)
+  PASS authenticated_refused (as authenticated)
+  OK  no state leaked from the behaviour cases
+
+[5] planted faults — verify must catch each, re-apply must restore
+  [5a] plant -> expect functions_exec_service_role_only
+  verify -> FAIL (13/14) :: failed ['functions_exec_service_role_only']
+  OK  fault caught by functions_exec_service_role_only
+  OK  0024 restore after 5a
+  verify -> PASS (14/14)
+  [5b] plant -> expect mi_fact_reads_claim_current
+  verify -> FAIL (13/14) :: failed ['mi_fact_reads_claim_current']
+  OK  fault caught by mi_fact_reads_claim_current
+  OK  0024 restore after 5b
+  verify -> PASS (14/14)
+  [5c] plant -> expect keep_mi_fact_invoker
+  verify -> FAIL (13/14) :: failed ['keep_mi_fact_invoker']
+  OK  fault caught by keep_mi_fact_invoker
+  OK  0024 restore after 5c
+  verify -> PASS (14/14)
+  [5d] plant -> expect match_claims_new_shape_only
+  verify -> FAIL (13/14) :: failed ['match_claims_new_shape_only']
+  OK  fault caught by match_claims_new_shape_only
+  OK  0024 restore after 5d
+  verify -> PASS (14/14)
+  [5e] plant -> expect entity_neighborhood_reads_claim_current
+  verify -> FAIL (13/14) :: failed ['entity_neighborhood_reads_claim_current']
+  OK  fault caught by entity_neighborhood_reads_claim_current
+  OK  0024 restore after 5e
+  verify -> PASS (14/14)
+  [5f] plant -> expect keep_claim_current_invoker_no_api
+  verify -> FAIL (13/14) :: failed ['keep_claim_current_invoker_no_api']
+  OK  fault caught by keep_claim_current_invoker_no_api
+  OK  0024 restore after 5f
+  verify -> PASS (14/14)
+  [5g] plant -> expect functions_invoker_search_path
+  verify -> FAIL (13/14) :: failed ['functions_invoker_search_path']
+  OK  fault caught by functions_invoker_search_path
+  OK  0024 restore after 5g
+  verify -> PASS (14/14)
+  [5h] plant -> expect functions_exec_service_role_only
+  verify -> FAIL (13/14) :: failed ['functions_exec_service_role_only']
+  OK  fault caught by functions_exec_service_role_only
+  OK  0024 restore after 5h
+  verify -> PASS (14/14)
+  [5i] plant -> expect keep_mi_fact_claims_unchanged_at_apply
+  verify -> FAIL (13/14) :: failed ['keep_mi_fact_claims_unchanged_at_apply']
+  OK  fault caught by keep_mi_fact_claims_unchanged_at_apply
+  OK  0024 restore after 5i
+  verify -> PASS (14/14)
+  [5j] plant -> expect functions_invoker_search_path
+  verify -> FAIL (13/14) :: failed ['functions_invoker_search_path']
+  OK  fault caught by functions_invoker_search_path
+  OK  0024 restore after 5j
+  verify -> PASS (14/14)
+  OK  restored state identical to the first apply
+
+[6] rollback
+  OK  ROLLBACK block
+
+[7] snapshot C must equal snapshot A (the 0023-applied state)
+  OK  schema fingerprint (8 parts) + 8 reader fingerprints (claim_current definition, ACL, reloptions, comment included) + 15 reader results + 18 data values identical — ROLLBACK PROVEN
+
+[8] cleanup
+  OK  rehearsal-row delete (expect 0)
+  OK  claim rows 5731 (preflight 5731); rehearsal rows 0; 8-arg match_claims_hybrid only; claim_current without is_retired
+
+0024 REHEARSAL: GREEN — safe for Alex to run supabase/scripts/0024_preflight_dashboard.sql, paste 0024 into prod (The-Prod-Brain) after 0023, then run supabase/scripts/0024_verify_dashboard.sql there.
