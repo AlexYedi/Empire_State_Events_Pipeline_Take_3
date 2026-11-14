@@ -9,8 +9,12 @@
 /.claude/references/*.md
 /docs/adr/*.md
 /docs/specs/*.md
+/docs/proposals/*.md
+/docs/bakeoff/
+/docs/history.md
 /.claude/scripts/
 /.claude/skills/
+/.claude/commands/
 
 # T2 paths inside those folders go back to the owner. Keep these last.
 /.claude/references/pii-*           @AlexYedi
