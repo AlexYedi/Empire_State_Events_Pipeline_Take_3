@@ -6,7 +6,7 @@ One index for all four repos. Each spec lives **in the repo it builds in**, so a
 - **GTM**: the gtm-os signal layer and its hub (`gtm-os`, `gtm-os-hub`).
 - **Shared**: what both depend on. That's the MI graph and its one write path (`spine_client.py`), the PII and public-safety boundary, the `rooms.json` data contract, and the reference architecture. **Home: this repo**, where the graph's ADRs and write path live.
 
-Lane key: **F** = the factory can build it end to end. **F+C** = the factory builds the code; the live run or a private input stays with Claude Code plus Alex. **A** = Alex's decision.
+Lane key: **F** = the factory can build it end to end. **F+C** = the factory builds the code; the live run or a private input stays with Claude Code plus Alex. **A** = Alex's decision. **C** = a Claude Code session builds it end to end, and Alex merges.
 
 ## Empire
 | ID | Spec | Repo | Linear | Lane |
@@ -21,6 +21,8 @@ Lane key: **F** = the factory can build it end to end. **F+C** = the factory bui
 | E-08 | [Payload truncation check](empire/E-08-payload-truncation-check.md) | pipeline | see spec | F |
 | E-09 | [Job-search skills batch](empire/E-09-job-search-skills.md) | pipeline | YED-257 · YED-256 · YED-258 · YED-220 | F+C |
 | E-10 | [Hub themes + layer view](https://github.com/AlexYedi/empire-state-hub/blob/main/docs/specs/empire/E-10-hub-themes-and-layers.md) | hub | YED-178 · YED-126 | F |
+| E-11 | [Projects in flight (mission control tab)](https://github.com/AlexYedi/empire-state-hub/blob/main/docs/specs/empire/E-11-projects-in-flight.md) | hub | YED-361 | C (each session owns its project file) |
+| E-12 | Hub in the social colourway (no spec; token change in [hub #60](https://github.com/AlexYedi/empire-state-hub/pull/60), source `.claude/skills/content-patterns/carousel-base.css`) | hub | YED-361 | C |
 
 ## Shared
 | ID | Spec | Repo | Linear | Lane |
