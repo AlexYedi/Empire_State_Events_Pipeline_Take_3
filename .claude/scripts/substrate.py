@@ -21,7 +21,7 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   research_brief document; loud `usage: NOT LOGGED (<reason>)` on any failure, never a non-zero exit.
                   (YED-205) the pre-event write: roster entities + the research_brief document + one claim per
                   Evidence Ledger row (web-verified w/ URL -> web_verified; email-signal w/ public URL -> email_signal;
-                  everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
+                  inference -> model_inferred at low confidence (YED-379); everything else skipped + counted). NO event row — attendance is never inferred (ADR-10 D9); the
                   post-event ensure-event attaches these claims when the attended row appears.
                   Spec: docs/archive/notes/yed-205-spec-2026-09-27.md
   stage-prose     --checked b.llm.checked.json --manifest m.json [--brief research_brief.md] [--dry-run]
@@ -413,8 +413,11 @@ def _split_table_row(line: str) -> list[str]:
     return [c.strip().replace("\\|", "|") for c in cells[1:-1]]
 TIER_MAP = {"web-verified": "web_verified", "web_verified": "web_verified",
             "email-signal": "email_signal", "email_signal": "email_signal",
-            "notion-prior": "notion_prior", "notion_prior": "notion_prior"}
-RESEARCH_CONF = {"web_verified": 0.7, "email_signal": 0.5}
+            "notion-prior": "notion_prior", "notion_prior": "notion_prior",
+            "inference": "model_inferred", "model_inferred": "model_inferred"}
+# YED-379: inference is admitted as a labelled lead at the floor of the scale. retrieve.py already ranks the tier
+# lowest (PROV model_inferred .3), and migration 0009's CHECK already allows it, so no DDL or ranking change.
+RESEARCH_CONF = {"web_verified": 0.7, "email_signal": 0.5, "model_inferred": 0.3}
 
 
 def research_source_key(notion_event_id: str) -> str:
@@ -432,7 +435,9 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
     Decision 2 (spec): web-verified WITH a URL -> web_verified; email-signal WITH a public http(s) URL ->
     email_signal (a lead); email-signal without one is private correspondence -> skipped (relationship state is
     HubSpot's, ADR-9); notion-prior -> skipped (it came from the graph/Notion); a web-verified row missing its URL
-    -> skipped (the specialist contract makes the URL mandatory). Every skip is counted, never silent."""
+    -> skipped (the specialist contract makes the URL mandatory). YED-379: inference -> model_inferred, a labelled
+    low-confidence lead, URL optional; one whose source is a mailbox or whose text is correspondence -> skipped, by the
+    same test as email-signal (an inference drawn from private mail is still private). Every skip is counted."""
     out, skipped, entity = [], {}, None
 
     def skip(why: str):
@@ -492,6 +497,10 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
             continue
         if tier == "web_verified" and not url:
             skip("web_verified_missing_url")
+            continue
+        if tier == "model_inferred" and (MAILBOX_SOURCE_RE.search(fields.get("source") or "")
+                                         or CORRESPONDENCE_RE.search(text)):
+            skip("inference_private")
             continue
         if tier not in RESEARCH_CONF:
             skip("unknown_tier")
@@ -1590,7 +1599,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
         by_tier[it["tier"]] = by_tier.get(it["tier"], 0) + 1
     # the exact Step 4.2c line, so the command can paste it into the Step 6 summary unchanged
     print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
-          f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
+          f"{by_tier.get('email_signal', 0)} · inference {by_tier.get('model_inferred', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
           + "".join(f" · {k.removeprefix('about_')} {v}" for k, v in sorted(g.stats.c.get("claim_entity", {}).items())
                     if k.startswith("about_") and k != "about_unresolved_heading")
@@ -2724,6 +2733,18 @@ def _research_selftest(ok) -> None:
                              "- claim: Term Sheet reports a seed extension | tier: email-signal | source: Term Sheet | url: https://fortune.com/ts | date: 2026-09-02")
     ok("ledger: an email-signal row with a URL is STILL private when its text is correspondence or its source a mailbox",
        len(leak) == 1 and leak[0]["text"].endswith("seed extension") and why.get("email_signal_private") == 2)
+    inf, inf_why = parse_ledger("##### Evidence Ledger — Acme\n"
+                                "- claim: Acme invented diffusion models in 2025 | tier: inference | source: model knowledge | url: n/a | date: 2025-02\n"
+                                "- claim: Reported seed of $5M per a search snippet | tier: inference | source: techcrunch.com | url: https://techcrunch.com/x | date: 2025-11-06\n"
+                                "- claim: Likely renewing soon, per their mail | tier: inference | source: Gmail | url: n/a | date: 2026-01-01\n"
+                                "- claim: Their CEO replied that a pilot is close | tier: inference | source: analyst | url: n/a | date: 2026-01-01\n"
+                                "- claim: Some unlabelled row here | tier: guess | source: x | url: n/a | date: 2026-01-01")
+    ok("ledger (YED-379): inference lands as model_inferred at 0.3, with or without a URL",
+       len(inf) == 2 and all(i["tier"] == "model_inferred" and i["confidence"] == 0.3 for i in inf)
+       and inf[0]["url"] is None and inf[1]["url"] == "https://techcrunch.com/x")
+    ok("ledger (YED-379): an inference from a mailbox or about correspondence stays out",
+       inf_why.get("inference_private") == 2)
+    ok("ledger (YED-379): any other tier is still skipped + counted", inf_why.get("unknown_tier") == 1)
     ok("roster: same name in two types -> ROSTER_TIE (never guessed)",
        roster_match("Holly", [("company", "Holly", "c9"), ("topic", "Holly", "t9")]) is ROSTER_TIE)
     # ---- end to end on the fake graph --------------------------------------------------------------
