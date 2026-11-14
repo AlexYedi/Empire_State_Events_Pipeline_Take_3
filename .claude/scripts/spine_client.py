@@ -834,7 +834,7 @@ def selftest() -> bool:
     add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
         _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
                                                  "page_text": "..."})), True)
-    # 0023 (YED-384, ADR-15): the claim columns and the three new tables open their columns, never the PII boundary.
+    # 0023 (YED-384, ADR-15): the 14 claim columns open, never the PII boundary; the three writer-less tables stay shut.
     v2 = {"evidence": [{"para_idx": 3, "quote": "Acme raised a $6M seed in 2024"}], "judge_verdict": "supported",
           "judge_model": "claude-fable-5-2", "judge_prompt_hash": "a" * 64, "judged_at": "2026-11-14T12:00:00Z",
           "rank": "normal", "review_flag": "needs_review", "valid_from": "2026-02-03T00:00:00Z",
