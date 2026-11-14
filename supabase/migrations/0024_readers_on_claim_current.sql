@@ -2,7 +2,7 @@
 -- 0024 · Move the three live claim readers onto public.claim_current (ADR-15 decision 7 prerequisite)
 -- Linear: YED-428 (parent YED-384) · Design: docs/adr/ADR-15-intelligence-graph-v2.md decisions 7, 8, 11.
 --
--- NOT APPLIED. Twin rehearsal (supabase/scripts/rehearse_0024.py) + Alex dashboard apply required
+-- APPLIED to prod 2026-11-14 (Alex; evidence supabase/evidence/yed384_0024_prod_verify-20261114.md). Twin rehearsal (supabase/scripts/rehearse_0024.py) + Alex dashboard apply required
 -- (CLAUDE.md invariant 2).
 --
 -- ORDER: APPLY 0023 FIRST (applied to prod 2026-11-14). 0024 refuses to run without claim_current.
