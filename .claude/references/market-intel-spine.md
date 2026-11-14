@@ -87,3 +87,9 @@ set.** A violation is hard-fail (exit 2) and names *field · tier rule · fix*; 
 and `/rpc/` calls are unguarded. `spine_client.py --selftest` is the living acceptance test;
 `--check-writers` fails if any script defines another REST writer. Decision record: `docs/adr/ADR-9-pii-boundary.md`.
 `person.email` is null for every row and is never written again (2026-09-13).
+
+**Claim status changes go through substrate verbs only** (`approve-claims`, `reject-claims`; YED-417). Never set
+`claim.status` with a raw `req("PATCH", "/claim…")`. A model review's per-row verdicts are applied with
+`reject-claims --reasons-file`, which writes `rejected_reason`, `rejected_at` and `prior_status`, so the
+rejection keeps its reason and `--revert` can undo it. On 2026-11-12, inline PATCHes skipped those keys on 65
+rows, and YED-417 backfilled them.

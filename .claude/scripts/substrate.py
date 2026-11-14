@@ -48,8 +48,13 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   off-the-record manifest. --lane research (YED-407): Evidence Ledger rows only unless --include-prose.
                   Prints the batch's reviewed_at stamp (find or revert a batch by it).
   reject-claims   --ids-file ids.txt --reason "…" [--revert] [--dry-run]
+                  | --reasons-file reasons.json [--dry-run]
                   HUMAN-RUN (YED-407): status rejected (retrieval drops it), reason + prior status in metadata,
-                  nothing deleted; --revert restores the prior status.
+                  nothing deleted; --revert restores the prior status. --reasons-file (YED-417) takes per-row
+                  reasons as JSON {id: {"reason", "prior_status"?, "rejected_at"?}}: the way to apply a model
+                  review's verdicts. On a row already rejected without prior_status it only fills the canonical
+                  keys (status untouched), so --revert works on it afterwards. Claim status changes go through
+                  substrate verbs, never a raw PATCH.
   reconcile       --report | --queue [PATH] [--root DIR] [--baseline PRIOR.json]
                   (YED-384, plan B1) READ-ONLY completeness ledger: joins Event Content/ folders, event-transcripts/,
                   .claude/.state/{research,briefs,post-event}/ and prod (GETs only) by date + title; one row per event
@@ -1649,10 +1654,21 @@ def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool
     return stamp
 
 
-def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = False) -> int:
+def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = False,
+                  reasons: dict | None = None) -> int:
     """HUMAN-RUN. Mark claims rejected (retrieval drops them) with the reason and prior status in metadata; with
-    revert, restore the prior status and remove the keys. Nothing is deleted. Returns rows changed."""
-    if not revert and not (reason or "").strip():
+    revert, restore the prior status and remove the keys. Nothing is deleted. Returns rows changed.
+    reasons (YED-417): per-row {id: {"reason", "prior_status"?, "rejected_at"?}} instead of one reason. A row that is
+    already rejected but has no prior_status (rejected outside this verb) gets only the canonical keys filled, with
+    prior_status from the entry or metadata.model_review_harsh; its status is left alone."""
+    if reasons is not None:
+        if (reason or "").strip() or revert:
+            raise SystemExit("reject-claims: --reasons-file cannot be combined with --reason or --revert")
+        bad = [k for k, v in reasons.items() if not (isinstance(v, dict) and str(v.get("reason") or "").strip())]
+        if bad:
+            raise SystemExit(f"reject-claims: {len(bad)} entries in --reasons-file have no reason, e.g. {bad[0]}")
+        ids = list(reasons)
+    elif not revert and not (reason or "").strip():
         raise SystemExit("reject-claims: --reason is required")
     n = 0
     for cid in ids:
@@ -1671,13 +1687,23 @@ def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = Fal
             g.patch("claim", f"id=eq.{cid}", {"status": prior, "metadata": md})
             g.stats.bump("claim", "reverted")
         else:
+            e = (reasons or {}).get(cid) or {}
+            why = str(e.get("reason") or reason).strip()
             if r["status"] == "rejected":
-                g.stats.bump("claim", "already_rejected")
+                prior = e.get("prior_status") or (md.get("model_review_harsh") or {}).get("prior_status")
+                if reasons is None or "prior_status" in md or not prior:
+                    g.stats.bump("claim", "already_rejected")
+                    continue
+                at = e.get("rejected_at") or (md.get("model_review_harsh") or {}).get("applied_at") or _utc_stamp()
+                g.patch("claim", f"id=eq.{cid}", {"metadata": {**md, "prior_status": prior,
+                                                               "rejected_reason": why, "rejected_at": at}})
+                g.stats.bump("claim", "keys_filled")
+                n += 1
                 continue
             stamp = _utc_stamp()
             g.patch("claim", f"id=eq.{cid}", {"status": "rejected", "reviewed_at": stamp,
                                               "metadata": {**md, "prior_status": r["status"],
-                                                           "rejected_reason": reason.strip(), "rejected_at": stamp}})
+                                                           "rejected_reason": why, "rejected_at": stamp}})
             g.stats.bump("claim", "rejected")
         n += 1
     return n
@@ -2375,6 +2401,23 @@ def _review_verbs_selftest(ok) -> None:
        and not {"prior_status", "rejected_reason", "rejected_at"} & set(st["a-1"]["metadata"]))
     ok("reject --revert: a row rejected elsewhere (no prior_status) is left alone",
        reject_claims(fg, ["r-rej"], "", revert=True) == 0 and st["r-rej"]["status"] == "rejected")
+    # YED-417: per-row reasons; fill the canonical keys on a row rejected outside the verb, then revert it
+    st["r-rej"]["metadata"] = {"model_review_harsh": {"prior_status": "candidate", "applied_at": "2026-11-12T14:59:38Z"}}
+    n = reject_claims(fg, [], "", reasons={"r-rej": {"reason": "harsh review test 5"}, "a-1": {"reason": "test 2"}})
+    m1, m2 = st["r-rej"]["metadata"], st["a-1"]["metadata"]
+    ok("reject --reasons-file: per-row reason; outside-rejected row gets keys only, status kept",
+       n == 2 and st["r-rej"]["status"] == "rejected" and m1["prior_status"] == "candidate"
+       and m1["rejected_reason"] == "harsh review test 5" and m1["rejected_at"] == "2026-11-12T14:59:38Z"
+       and st["a-1"]["status"] == "rejected" and m2["rejected_reason"] == "test 2" and m2["prior_status"] == "approved")
+    ok("reject --reasons-file: idempotent, then --revert works on the filled row",
+       reject_claims(fg, [], "", reasons={"r-rej": {"reason": "again"}}) == 0
+       and reject_claims(fg, ["r-rej"], "", revert=True) == 1 and st["r-rej"]["status"] == "candidate")
+    for bad in ({"r-led": {"reason": " "}}, {"r-led": "test 1"}):
+        try:
+            reject_claims(fg, [], "", reasons=bad)
+            ok("reject --reasons-file: entry without a reason refused", False)
+        except SystemExit:
+            ok("reject --reasons-file: entry without a reason refused", st["r-led"]["status"] == "approved")
 
 
 def _docref_selftest(ok) -> None:
@@ -3372,6 +3415,9 @@ def main(argv: list[str]) -> int:
                          "default is Evidence Ledger rows only")
     ap.add_argument("--ids-file", metavar="IDS.txt|IDS.json",
                     help="(reject-claims) claim ids, one per line or a JSON list; HUMAN-RUN")
+    ap.add_argument("--reasons-file", metavar="REASONS.json",
+                    help="(reject-claims, YED-417) per-row reasons {id: {reason, prior_status?, rejected_at?}}; "
+                         "instead of --ids-file + --reason; HUMAN-RUN")
     ap.add_argument("--allow-otr-reviewed", action="store_true",
                     help="(stage-research/-claims/-prose, YED-391) stage a manifest marked notion_export.skip_staging "
                          "ONLY after Alex has reviewed its off-the-record redactions")
@@ -3446,11 +3492,20 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"verb": "backfill", "dry_run": a.dry_run, "created": stats.created(), "stats": stats.c}))
         return 0
     if a.verb == "reject-claims":                  # YED-407: HUMAN-RUN, no manifest; reversible with --revert
-        if not a.ids_file:
-            ap.error("reject-claims needs --ids-file")
-        raw = open(a.ids_file, encoding="utf-8").read()
-        ids = json.loads(raw) if raw.lstrip().startswith("[") else [x.strip() for x in raw.splitlines() if x.strip()]
-        n = reject_claims(g, ids, a.reason or "", revert=a.revert)
+        if a.reasons_file:
+            if a.ids_file:
+                ap.error("reject-claims: use --ids-file or --reasons-file, not both")
+            reasons = json.load(open(a.reasons_file, encoding="utf-8"))
+            if not isinstance(reasons, dict):
+                ap.error("reject-claims: --reasons-file must be a JSON object {id: {reason, ...}}")
+            ids = list(reasons)
+            n = reject_claims(g, ids, a.reason or "", revert=a.revert, reasons=reasons)
+        else:
+            if not a.ids_file:
+                ap.error("reject-claims needs --ids-file or --reasons-file")
+            raw = open(a.ids_file, encoding="utf-8").read()
+            ids = json.loads(raw) if raw.lstrip().startswith("[") else [x.strip() for x in raw.splitlines() if x.strip()]
+            n = reject_claims(g, ids, a.reason or "", revert=a.revert)
         print(("DRY-RUN " if a.dry_run else "") + f"reject-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
         print(stats.report())
         return 0
