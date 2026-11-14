@@ -2014,7 +2014,7 @@ def stage_v2(g: "Graph", judged: dict, manifest: dict, *, brief_md: str | None =
         sys.stderr.write("stage-v2: manifest.event.notion_page_id is required (it keys the claims)\n")
         return 5
     import claim_extract_v2 as cx                     # lazy: it imports this module
-    from prose_extract import prepass_doc, prose_claim_key
+    from prose_extract import prepass_doc
     skey = research_source_key(ev["notion_page_id"])
     rows_in = list(judged.get("accepted") or []) if isinstance(judged, dict) else []
     if not isinstance(judged, dict) or judged.get("schema") != cx.SCHEMA or judged.get("source_key") != skey \
@@ -2042,7 +2042,7 @@ def stage_v2(g: "Graph", judged: dict, manifest: dict, *, brief_md: str | None =
     for r in rows_in:                                  # judge records keyed by the row's own first span
         e0 = (r.get("evidence") or [None])[0] if isinstance(r.get("evidence"), list) else None
         if isinstance(e0, dict) and isinstance(e0.get("para_idx"), int) and isinstance(e0.get("quote"), str):
-            verdict_of.setdefault(prose_claim_key(e0["para_idx"], e0["quote"]), _judge_record(r.get("judge"), want))
+            verdict_of.setdefault(cx.v2_claim_key(e0["para_idx"], e0["quote"]), _judge_record(r.get("judge"), want))
     rechecked = cx.check(packet, {"claims": [cx.as_claim(r) for r in rows_in]}, model=model)
     for why_, n in sorted(rechecked["dropped"].items()):
         g.stats.bump("claim", f"recheck_dropped_{why_}", n)
@@ -2086,7 +2086,7 @@ def stage_v2(g: "Graph", judged: dict, manifest: dict, *, brief_md: str | None =
               "nothing written. A brief's ledger always beats its prose.")
         g.stats.bump("claim", "skipped_ledger_present", len(rows))
         return 0
-    v1_keys = {r["claim_key"] for r in existing if _is_prose(r)}     # same (para_idx, quote) key space as v1
+    v1_keys = {r["claim_key"] for r in existing if _is_prose(r)}     # belt and braces: v2 keys are namespaced
     keep = [i for i, r in enumerate(rows) if r["claim_key"] not in v1_keys]
     n_clash = len(rows) - len(keep)
     rows, ents = [rows[i] for i in keep], [ents[i] for i in keep]
@@ -3388,8 +3388,9 @@ def _v2_selftest(ok) -> None:
     ok("stage-v2: evidence = the spans; quote = first span; locator.para_idx = first span",
        all(c["quote"] == c["evidence"][0]["quote"] and c["locator"]["para_idx"] == c["evidence"][0]["para_idx"]
            for c in cl))
-    ok("stage-v2: claim_key = prose_claim_key(first para_idx, first quote)",
-       all(c["claim_key"] == cx.prose_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"]) for c in cl))
+    ok("stage-v2: claim_key = v2_claim_key(first para_idx, first quote), never v1's prose key",
+       all(c["claim_key"] == cx.v2_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"])
+           and c["claim_key"] != cx.prose_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"]) for c in cl))
     by_type = {c["claim_type"]: c for c in cl}
     ok("stage-v2: freshness v0 lookup (prediction -> opinion; time_sensitive -> fast_moving +30 d; company_fact ->"
        " slow_moving +90 d); reason lookup_v0; conf left null",
@@ -3475,8 +3476,18 @@ def _v2_selftest(ok) -> None:
     v2rows = [c for c in cg.t["claim"] if _is_v2(c)]
     ok("coexist: v1 prose present -> v2 still stages (prose is not a ledger), rc 0", rc == 0 and v2rows
        and "ledger present" not in out)
+    ok("coexist: v1 quoting the same span no longer collides (namespaced key): all 3 v2 rows staged, 0 held by v1",
+       "key held by v1 0" in out and len(v2rows) == 3)
+    hg = _FakeGraph()                                    # belt and braces: plant a prose row holding a v2 key
+    planted = next(r for r in judged["accepted"] if r["judge"]["verdict"] == "supported")["claim_key"]
+    hg.t["claim"].append({"id": "v1-planted", "source_key": skey, "claim_key": planted, "status": "candidate",
+                          "extractor": "claude", "metadata": {"extraction": "prose"}})
+    rc, hout = run(hg)
     ok("coexist: a v2 key already held by a v1 prose row is skipped + counted, the v1 row untouched",
-       "key held by v1 1" in out and len(v2rows) == 2)
+       rc == 0 and "key held by v1 1" in hout and len([c for c in hg.t["claim"] if _is_v2(c)]) == 2
+       and hg.t["claim"][0] == {"id": "v1-planted", "source_key": skey, "claim_key": planted, "status": "candidate",
+                                "extractor": "claude", "metadata": {"extraction": "prose"}}
+       and not any(e["claim_id"] == "v1-planted" for e in hg.t["claim_entity"]))
     ok("coexist: v2 never edits a v1 row or links an entity to one",
        [c for c in cg.t["claim"] if _is_prose(c)] == before
        and all(e["claim_id"] in {c["id"] for c in v2rows} for e in cg.t["claim_entity"][edges_before:]))

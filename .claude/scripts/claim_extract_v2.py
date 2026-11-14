@@ -14,7 +14,8 @@ Verbs:
           {para_idx, quote}, each quote <= 25 words and verbatim (whitespace aside) in its paragraph, every number
           in the claim present in a cited paragraph / as_of / the event line, no contact PII (raw + normalized), no
           URL or `@` in the text. attribution_unquoted ("X says" with no attribution in any cited quote) is a FLAG,
-          never a drop. claim_key = prose_extract.prose_claim_key(first para_idx, first quote).
+          never a drop. claim_key = v2_claim_key(first para_idx, first quote): v1's span key, namespaced
+          'claimify_v2|' so a v2 claim never lands on a v1 prose row that quotes the same span.
   judge   <packet> <checked.json> [--model claude-fable-5-2] [--batch 20] [--out judged.json]
           the ADR-15 d4 judge (references/claim-judge-v2-prompt.md), batched, span-scoped (claim + every cited
           paragraph + event line). Each row gets {verdict supported|unsupported|abstain, model, prompt_hash (sha256 of
@@ -35,7 +36,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from prose_extract import (DOSSIER_PREFIX, URL_OR_AT_RE, LLMError, has_pii, llm_cmd, parse_reply,  # noqa: E402
                            prepass, prepass_doc, prose_claim_key, ws, words)
-from substrate import research_source_key  # noqa: E402
+from substrate import claim_key, research_source_key  # noqa: E402
 
 SCHEMA = "claimify-v2/1"
 EXTRACTION = "claimify_v2"                      # claim.metadata.extraction for every v2 row
@@ -53,6 +54,12 @@ NUM = re.compile(r"\$?\d[\d,.]*\s*(?:%|[kKmMbB]n?\b|billion|million|thousand)?")
 ATTRIB = re.compile(r"\b(says|said|reports|reported|claims|claimed|according to|states|stated|announced)\b", re.I)
 ATTRIB_SRC = re.compile(r"\b(say|says|said|report|reports|reported|claim|claims|claimed|according|per|states|stated|"
                         r"told|announc\w*)\b|[\"\u201c]", re.I)
+
+
+def v2_claim_key(para_idx: int, quote: str) -> str:
+    """Keyed on (para_idx, first quote) like v1, so a rephrased re-extraction of the same span is the same row, but in
+    its own namespace: v1 and v2 quote the same spans (dry run 2026-11-14: 5 of 12 collided under the v1 key)."""
+    return claim_key(f"claimify_v2|{para_idx}|{ws(quote)}")
 
 
 def prompt_hash(path: str = JUDGE_PROMPT_PATH) -> str:
@@ -125,7 +132,7 @@ def check(packet: dict, claims_doc, *, model: str | None = None) -> dict:
             nums = [n.strip().rstrip(".,") for n in NUM.findall(c["text"]) if any(ch.isdigit() for ch in n)]
             if any(n and n not in src and n not in (c["as_of"] or "") for n in nums):
                 why = "number_not_in_source"
-        key = None if why else prose_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"])
+        key = None if why else v2_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"])
         if not why and key in seen:
             why = "duplicate_claim"
         if why:
@@ -343,8 +350,11 @@ def selftest() -> bool:
     d = r["dropped"]
     ok("check: the 4 good fixture claims are accepted", r["accepted_n"] == 4)
     good = next((a for t, a in acc.items() if "founded Acme Widgets in 2019" in t), None)
-    ok("check: claim_key = prose_claim_key(first para_idx, first quote)",
-       good and good["claim_key"] == prose_claim_key(good["evidence"][0]["para_idx"], good["evidence"][0]["quote"]))
+    ok("check: claim_key = v2_claim_key(first para_idx, first quote)",
+       good and good["claim_key"] == v2_claim_key(good["evidence"][0]["para_idx"], good["evidence"][0]["quote"]))
+    ok("v2_claim_key: differs from v1's prose_claim_key for the same (para_idx, quote); whitespace-stable",
+       v2_claim_key(0, "Dana Fixture founded Acme") != prose_claim_key(0, "Dana Fixture founded Acme")
+       and v2_claim_key(0, "Dana  Fixture founded Acme ") == v2_claim_key(0, "Dana Fixture founded Acme"))
     ok("check: roster entity resolved (type + name); off-roster subject kept and flagged",
        good and good["entity_type"] == "person" and good["entity_name"] == "Dana Fixture"
        and r["flags"]["entity_off_roster"] == 1)
