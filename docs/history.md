@@ -70,3 +70,12 @@ On 2026-09-28 four reviews found commits running about 2:1 meta vs product and a
 beat its do-nothing baseline. The reset removed the extra judge seats, quorum and trust ladder (YED-231), moved
 telemetry out of git (YED-229), pruned dead agents/commands/skills, and cut `CLAUDE.md` to a size ceiling Alex holds
 (≤1,800 words, ≤3 wired hooks, one-in-one-out). The pre-cut state is tagged `archive/pre-reset-2026-09-28`.
+
+## Tiered merging (2026-11-13 → 2026-11-14)
+
+The named failure: every merge to `main` needed admin bypass, 61 in a row, because the ruleset still required a
+retired `claude-review` check. The agent factory (YED-352) replaced it with tiered merging. T0 (docs and evidence)
+merges on green checks. T1 (scripts, skills, commands, references) adds a model review. T2 (gates, PII, spine
+writes, `.github/**` and anything unlisted) needs Alex's approval. The verdict is a check posted by a GitHub App
+whose key only `main` can reach, because a check from GitHub Actions can be faked by a PR's own workflow. Agent
+sessions open PRs as a separate account, so Alex can approve them; that account can't push workflow files.
