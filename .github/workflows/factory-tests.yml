@@ -1,4 +1,4 @@
-# Copy to .github/workflows/factory-tests.yml. Replace 5a9753e548abba91c504feef10967b795805a05b in both places.
+# Copy to .github/workflows/factory-tests.yml. Replace CORE_SHA in both places.
 # Runs PR code, so it is assumed hostile: no secrets are passed, and no
 # `secrets: inherit`, ever.
 name: factory-tests
@@ -10,6 +10,6 @@ permissions:
   contents: read
 jobs:
   factory-tests:
-    uses: AlexYedi/alex-factory/.github/workflows/tests.yml@5a9753e548abba91c504feef10967b795805a05b
+    uses: AlexYedi/alex-factory/.github/workflows/tests.yml@89ed598dc9914a982258ab7622a11c0e22080272
     with:
-      core_sha: 5a9753e548abba91c504feef10967b795805a05b
+      core_sha: 89ed598dc9914a982258ab7622a11c0e22080272

@@ -1,4 +1,4 @@
-# Copy to .github/workflows/factory-gate.yml. Replace 5a9753e548abba91c504feef10967b795805a05b in both places and
+# Copy to .github/workflows/factory-gate.yml. Replace CORE_SHA in both places and
 # alexyedi-factory. pull_request_target takes this file from the base branch, so a
 # PR cannot edit the gate that judges it.
 name: factory-gate
@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   factory-gate:
-    uses: AlexYedi/alex-factory/.github/workflows/gate.yml@5a9753e548abba91c504feef10967b795805a05b
+    uses: AlexYedi/alex-factory/.github/workflows/gate.yml@89ed598dc9914a982258ab7622a11c0e22080272
     with:
-      core_sha: 5a9753e548abba91c504feef10967b795805a05b
+      core_sha: 89ed598dc9914a982258ab7622a11c0e22080272
       app_slug: alexyedi-factory
     secrets: inherit
