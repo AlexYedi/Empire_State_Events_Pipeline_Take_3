@@ -1,0 +1,47 @@
+# Mirrors .github/factory-tiers.json. The last matching line wins; a pattern with no
+# owner means CODEOWNERS requires nobody, so the factory App's approval can count.
+# The gate enforces T2 itself (CODEOWNERS can't express "new file" or diff contents).
+
+# Default: everything needs the owner (matches the T2 default).
+*                                   @AlexYedi
+
+# T0 and T1 paths: unowned.
+/.claude/references/*.md
+/docs/adr/*.md
+/docs/specs/*.md
+/docs/proposals/*.md
+/docs/bakeoff/
+/docs/history.md
+/.claude/scripts/
+/.claude/skills/
+/.claude/commands/
+
+# T2 paths inside those folders go back to the owner. Keep these last.
+/.claude/references/pii-*           @AlexYedi
+/.claude/scripts/*pii*              @AlexYedi
+/.claude/scripts/*gate*             @AlexYedi
+/.claude/scripts/lint_*             @AlexYedi
+/.claude/scripts/check_*            @AlexYedi
+/.claude/scripts/spine_client.py    @AlexYedi
+/.claude/scripts/spine_write.py     @AlexYedi
+/.claude/scripts/*_write*.py        @AlexYedi
+/.claude/scripts/notion_*           @AlexYedi
+/.claude/scripts/inbox_boundary.py  @AlexYedi
+/.claude/scripts/output_checks.py   @AlexYedi
+/.claude/scripts/vault.py           @AlexYedi
+/supabase/                          @AlexYedi
+**/*.sql                            @AlexYedi
+**/.github/**                       @AlexYedi
+**/CODEOWNERS                       @AlexYedi
+**/CLAUDE.md                        @AlexYedi
+**/AGENTS.md                        @AlexYedi
+**/.claude/hooks/**                 @AlexYedi
+**/.claude/settings*.json           @AlexYedi
+**/.claude/agents/**                @AlexYedi
+**/.gitignore                       @AlexYedi
+**/.gitleaksignore                  @AlexYedi
+**/.gitattributes                   @AlexYedi
+**/.env*                            @AlexYedi
+**/.mcp.json                        @AlexYedi
+**/.husky/**                        @AlexYedi
+**/.githooks/**                     @AlexYedi

@@ -185,3 +185,14 @@ Event Content/10 30 26 Frontier Hackathon October/journal/
 Event Content/10 30 26 Frontier Hackathon October/obvious-specs/06-x-content.md
 Event Content/11 02 26 Can your agents actually ship?/*-carousel.html
 Event Content/11 02 26 Can your agents actually ship?/*-carousel.pdf
+
+# --- Lane 2 bake-off private inputs (YED-354): the 40-company watchlist comes from target-companies.md ---
+docs/bakeoff/**/companies.json
+docs/bakeoff/**/targets.json
+docs/bakeoff/**/all_items.json
+docs/bakeoff/**/items_*.json
+docs/bakeoff/**/labels_*.txt
+docs/bakeoff/**/batch_*.txt
+docs/bakeoff/**/result.json
+docs/bakeoff/**/clay_anchor_keys.json
+docs/bakeoff/akta/

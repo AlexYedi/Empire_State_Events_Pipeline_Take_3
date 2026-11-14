@@ -10,7 +10,10 @@ L = {}
 for f in sorted(glob.glob(D + "labels_*.txt")):
     for line in open(f):
         p = line.split()
-        if len(p) >= 3 and p[0].isdigit(): L[int(p[0])] = (p[1].upper(), p[2].upper())
+        if len(p) >= 3 and p[0].isdigit():
+            # labels_clay.txt also relabels 60 run-1 anchors (agreement check); run-1 labels win for run-1 items (YED-354)
+            if f.endswith("labels_clay.txt") and int(p[0]) in L: continue
+            L[int(p[0])] = (p[1].upper(), p[2].upper())
 missing = [k for k in IT if k not in L]
 print(f"items {len(IT)} labelled {len(L)} missing {len(missing)}")
 for k, (c, kd) in L.items():
