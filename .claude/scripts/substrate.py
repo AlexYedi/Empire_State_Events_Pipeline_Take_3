@@ -31,7 +31,13 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   --brief defaults to research_brief.md beside the manifest (the research_brief document row).
                   The checked file is re-judged against the brief (rebuilt packet + prose_extract.check) and rebuilt
                   from an allowlist; keyed (source_key, para_idx, quote); a different extraction needs --replace (exit 7).
-  YED-391: stage-research / stage-claims / stage-prose / ensure-document / ensure-event exit 6 on
+  stage-v2        --checked b.v2.judged.json --manifest m.json [--brief research_brief.md] [--dry-run] [--preview-out F]
+                  (YED-384, ADR-15) claim_extract_v2.py judged rows -> claim, with stage-prose's safety (re-check against
+                  the brief, allowlist rebuild, OTR, ledger beats prose, --replace / exit 7). Writes evidence, the judge
+                  record, freshness v0 (claim_type + time_sensitive lookup), valid_from, visibility (the brief
+                  document's). Judge unsupported -> not staged; abstain -> review_flag needs_review. Coexists with v1:
+                  never retires or links a prose row; a key already held by a prose row is skipped and counted.
+  YED-391: stage-research / stage-claims / stage-prose / stage-v2 / ensure-document / ensure-event exit 6 on
                   notion_export.skip_staging: true unless --allow-otr-reviewed (checked in main, before any other file).
   ensure-roles    --manifest r.json   (YED-149) {"roles": [Notion Roles rows, SQL shape], "company_aliases": {slug|name: Name}}
                   -> one `role_posted` event each +
@@ -1605,7 +1611,8 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
 # YED-391 — an off-the-record brief never stages. The Notion exporter sets notion_export.skip_staging when a brief
 # carries OTR flags; every stage verb refuses it unless Alex has reviewed the redactions by hand.
 OTR_EXIT = 6
-OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "ensure-document", "ensure-event", "approve-claims")
+OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "stage-v2", "ensure-document", "ensure-event",
+             "approve-claims")
 
 
 def otr_refusal(manifest: dict, verb: str, allow_otr_reviewed: bool) -> int | None:
@@ -1701,14 +1708,24 @@ def _is_prose(r: dict) -> bool:
     return (r.get("metadata") or {}).get("extraction") == "prose"
 
 
+EXTRACTIONS = ("prose", "claimify_v2")      # model extractions from the brief's prose; anything else is the ledger
+
+
+def _is_extracted(r: dict) -> bool:
+    """v1 prose OR v2 claimify rows. The ledger test uses this, so neither extraction reads the other as a ledger;
+    each verb's own retire/replace set stays its own extraction only (v1 and v2 coexist, YED-384)."""
+    return (r.get("metadata") or {}).get("extraction") in EXTRACTIONS
+
+
 def ledger_claim_count(g: "Graph", skey: str) -> int:
-    """Claims under a research source_key that are NOT prose (metadata.extraction != 'prose'): the Evidence Ledger's
-    rows. A brief's ledger always beats its prose, so one such row means stage-prose must not run.
+    """Claims under a research source_key that are NOT a model extraction (metadata.extraction not 'prose' or
+    'claimify_v2'): the Evidence Ledger's rows. A brief's ledger always beats its prose, so one such row means neither
+    stage-prose nor stage-v2 may run.
     LEDGER AFTER PROSE (open follow-up): if stage-research later stages a ledger for a source_key that already holds
     prose rows, both sets stand today. The safe fix is retiring the prose rows as 'superseded', but claim.status's
     CHECK (0009) admits only candidate|approved|rejected, so it waits on a migration widening that CHECK. Until then
     retrieval sees both, prose capped at 0.60 below ledger web_verified at 0.70."""
-    return sum(not _is_prose(r) for r in g.get(f"/claim?source_key=eq.{skey}&select=metadata"))
+    return sum(not _is_extracted(r) for r in g.get(f"/claim?source_key=eq.{skey}&select=metadata"))
 
 
 def researched_kind_allowed(g: "Graph") -> bool:
@@ -1792,6 +1809,41 @@ def _as_extractor_claim(r: dict) -> dict:
             "entity": ent, "entity_type": r.get("entity_type"), "claim_type": r.get("claim_type")}
 
 
+def _research_links(g: "Graph", ev: dict, manifest: dict, packet: dict, brief_md: str):
+    """The write half stage-prose and stage-v2 share, run only after every refusal check. Event linkage: an existing
+    row by Notion page id; else a 'researched' occasion (0022); else unlinked + reported. Then the roster entities and
+    the research_brief document (brief_ref from the rebuilt packet = manifest.notion_export, never the checked file).
+    Returns (event id | None, linkage text, [(type, name, id)], document id | None)."""
+    found = g.find_event(ev)
+    eid, linkage = (found["id"], f"matched ({found.get('kind')})") if found else (None, None)
+    if not found:
+        if researched_kind_allowed(g):
+            try:
+                eid = g.ensure_event({"event": {**ev, "kind": "researched"}, "entities": manifest.get("entities", [])})
+                linkage = "created researched"
+            except SystemExit as e:
+                if "23514" not in str(e):
+                    raise
+                linkage = "none — 'researched' kind refused (23514); staged unlinked"
+        else:
+            linkage = "none — migration 0022 not applied; staged unlinked"
+    roster = []
+    for e in manifest.get("entities", []):
+        t, iid = g.ensure_entity(e)
+        if iid:
+            roster.append((t, e["name"], iid))
+    brief_ref = packet.get("brief_ref")
+    doc_id = None
+    if brief_ref:
+        doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
+                                    "source_type": "research_brief", "body_text": redact_body(brief_md),
+                                    "doc_date": (ev.get("event_date") or "")[:10] or None,
+                                    "produced_by": "/event-deep-research",
+                                    "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
+                                                 "phase": "pre_event"}}, event_id=eid)
+    return eid, linkage, roster, doc_id
+
+
 def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | None = None,
                 allow_otr_reviewed: bool = False, replace: bool = False) -> int:
     """Rows from `prose_extract.py check` -> `claim` (lane research, status candidate, extractor claude).
@@ -1844,7 +1896,7 @@ def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | No
         sys.stderr.write(f"LOUD FAILURE: 0 rows survive the re-check against the brief ({judged['dropped']}).\n")
         return 3
     existing = g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key,status,metadata")   # before ANY write
-    n_ledger = sum(not _is_prose(r) for r in existing)
+    n_ledger = sum(not _is_extracted(r) for r in existing)
     if n_ledger:
         print(f"stage-prose: ledger present ({n_ledger} ledger claims under this event's research key) — skipped, "
               "nothing written. A brief's ledger always beats its prose.")
@@ -1857,34 +1909,7 @@ def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | No
         sys.stderr.write(f"stage-prose: {len(live)} prose claims from a DIFFERENT extraction are already staged for this "
                          "event — refusing. Pass --replace to retire them (status rejected, metadata.retired).\n")
         return PROSE_EXIT_REPLACE
-    # event linkage: an existing row by Notion page id; else a 'researched' occasion (0022); else unlinked + reported
-    found = g.find_event(ev)
-    eid, linkage = (found["id"], f"matched ({found.get('kind')})") if found else (None, None)
-    if not found:
-        if researched_kind_allowed(g):
-            try:
-                eid = g.ensure_event({"event": {**ev, "kind": "researched"}, "entities": manifest.get("entities", [])})
-                linkage = "created researched"
-            except SystemExit as e:
-                if "23514" not in str(e):
-                    raise
-                linkage = "none — 'researched' kind refused (23514); staged unlinked"
-        else:
-            linkage = "none — migration 0022 not applied; staged unlinked"
-    roster = []
-    for e in manifest.get("entities", []):
-        t, iid = g.ensure_entity(e)
-        if iid:
-            roster.append((t, e["name"], iid))
-    brief_ref = packet.get("brief_ref")                      # manifest.notion_export only, never the checked file
-    doc_id = None
-    if brief_ref:
-        doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
-                                    "source_type": "research_brief", "body_text": redact_body(brief_md),
-                                    "doc_date": (ev.get("event_date") or "")[:10] or None,
-                                    "produced_by": "/event-deep-research",
-                                    "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
-                                                 "phase": "pre_event"}}, event_id=eid)
+    eid, linkage, roster, doc_id = _research_links(g, ev, manifest, packet, brief_md)
     n_retired = n_revived = 0
     for r in prose:
         meta = dict(r.get("metadata") or {})
@@ -1932,6 +1957,213 @@ def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | No
         for r in out[:3]:
             print("  dry row: " + json.dumps({k: v for k, v in r.items() if k not in ("claim_text", "quote", "embedding")},
                                              ensure_ascii=False, sort_keys=True))
+    return 0
+
+
+# ---------------------------------------------------------------------------------------------
+# YED-384 / ADR-15 — stage-v2: claim_extract_v2.py judged output -> claim rows (graph v2 L1). stage-prose's safety, kept
+# whole: the file is re-checked against the brief and rebuilt from an allowlist. v2 COEXISTS with v1 prose: it never
+# retires, revives or links a prose row; the v1-vs-v2 usefulness test (ADR-15 evaluation contract) decides later.
+# ---------------------------------------------------------------------------------------------
+V2_RETIRED = "claimify_v2_replaced"
+
+
+def _is_v2(r: dict) -> bool:
+    return (r.get("metadata") or {}).get("extraction") == "claimify_v2"
+
+
+def _judge_record(j, want_hash: str) -> dict | None:
+    """The judge record a v2 row may carry, rebuilt from four validated fields. The prompt hash must be the CURRENT
+    template's: a file judged under another prompt is re-judged, never staged on an unverifiable record."""
+    import datetime as _dt
+    if not isinstance(j, dict):
+        return None
+    v, m, h, at = j.get("verdict"), j.get("model"), j.get("prompt_hash"), j.get("judged_at")
+    if v not in ("supported", "unsupported", "abstain") or h != want_hash or not isinstance(at, str) \
+            or not (isinstance(m, str) and re.fullmatch(r"[\w.:-]{1,64}", m)):
+        return None
+    try:
+        _dt.datetime.fromisoformat(at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return {"verdict": v, "model": m, "prompt_hash": h, "judged_at": at}
+
+
+def _doc_visibility(g: "Graph", doc_id: str | None) -> str:
+    """ADR-15 d11: a claim takes its document's visibility; no document (or a dry-run id) -> 'private'."""
+    if not doc_id or str(doc_id).startswith("dry:"):
+        return "private"
+    rows = g.get(f"/documents?id=eq.{doc_id}&select=visibility")
+    v = rows[0].get("visibility") if rows else None
+    return v if v in ("private", "public_ok") else "private"
+
+
+def stage_v2(g: "Graph", judged: dict, manifest: dict, *, brief_md: str | None = None, allow_otr_reviewed: bool = False,
+             replace: bool = False, now=None, preview_out: str | None = None) -> int:
+    """Rows from `claim_extract_v2.py judge` -> `claim` (lane research, candidate, extractor claude,
+    metadata.extraction claimify_v2). Judge 'unsupported' -> not staged (counted); 'abstain' -> review_flag
+    needs_review; a row with no valid judge record -> not staged. Exit codes as stage-prose: 0 success or ledger skip
+    · 2 refused file · 3 nothing survives · 5 no event page id · 6 off-the-record manifest · 7 a different v2
+    extraction already staged without --replace."""
+    import datetime as _dt
+    rc = otr_refusal(manifest, "stage-v2", allow_otr_reviewed)
+    if rc:
+        return rc
+    ev = manifest.get("event") or {}
+    if not ev.get("notion_page_id"):
+        sys.stderr.write("stage-v2: manifest.event.notion_page_id is required (it keys the claims)\n")
+        return 5
+    import claim_extract_v2 as cx                     # lazy: it imports this module
+    from prose_extract import prepass_doc, prose_claim_key
+    skey = research_source_key(ev["notion_page_id"])
+    rows_in = list(judged.get("accepted") or []) if isinstance(judged, dict) else []
+    if not isinstance(judged, dict) or judged.get("schema") != cx.SCHEMA or judged.get("source_key") != skey \
+            or any(not isinstance(r, dict) or r.get("source_key") != skey for r in rows_in):
+        sys.stderr.write("stage-v2: not a claim_extract_v2 file for this manifest's event — refusing.\n")
+        return PROSE_EXIT_REFUSED
+    if judged.get("extractor") != "claude" or any(r.get("extractor") != "claude" for r in rows_in):
+        sys.stderr.write("stage-v2: only claude extractions stage — refusing.\n")
+        return PROSE_EXIT_REFUSED
+    if not rows_in:
+        sys.stderr.write("LOUD FAILURE: 0 accepted rows in the judged file — nothing to stage.\n")
+        return 3
+    if not brief_md:
+        sys.stderr.write("stage-v2: the research brief is required to re-verify every span (research_brief.md beside "
+                         "the manifest, or --brief) — refusing.\n")
+        return PROSE_EXIT_REFUSED
+    packet, why = prepass_doc(brief_md, manifest)
+    if packet is None:
+        sys.stderr.write(f"stage-v2: the brief does not prepass ({why}) — refusing.\n")
+        return PROSE_EXIT_REFUSED
+    model = rows_in[0].get("extractor_model")
+    model = model if isinstance(model, str) and re.fullmatch(r"[\w.:-]{1,64}", model) else None
+    want = cx.prompt_hash()
+    verdict_of: dict[str, dict | None] = {}
+    for r in rows_in:                                  # judge records keyed by the row's own first span
+        e0 = (r.get("evidence") or [None])[0] if isinstance(r.get("evidence"), list) else None
+        if isinstance(e0, dict) and isinstance(e0.get("para_idx"), int) and isinstance(e0.get("quote"), str):
+            verdict_of.setdefault(prose_claim_key(e0["para_idx"], e0["quote"]), _judge_record(r.get("judge"), want))
+    rechecked = cx.check(packet, {"claims": [cx.as_claim(r) for r in rows_in]}, model=model)
+    for why_, n in sorted(rechecked["dropped"].items()):
+        g.stats.bump("claim", f"recheck_dropped_{why_}", n)
+    now = now or _dt.datetime.now(_dt.timezone.utc)
+    paras = {p["idx"]: p for p in packet["paragraphs"]}
+    rows, ents, held = [], [], {"unsupported": 0, "not_judged": 0}
+    for r in rechecked["accepted"]:
+        j = verdict_of.get(r["claim_key"])
+        if j is None or j["verdict"] == "unsupported":
+            held["not_judged" if j is None else "unsupported"] += 1
+            continue
+        p = paras[r["evidence"][0]["para_idx"]]
+        fclass, nxt = cx.freshness_v0(r["claim_type"], r["time_sensitive"], now)
+        meta = {"phase": "pre_event", "extraction": cx.EXTRACTION, "notion_event_id": pid_variants(ev["notion_page_id"])[0],
+                "brief_ref": packet.get("brief_ref"), "url": r["url"], "attribution_unquoted": r["attribution_unquoted"],
+                "as_of": r["as_of"], "time_sensitive": r["time_sensitive"]}
+        row = {"source_key": skey, "claim_key": r["claim_key"], "claim_text": r["text"], "claim_type": r["claim_type"],
+               "quote": r["evidence"][0]["quote"], "evidence": r["evidence"],
+               "locator": {"section": p["section"], "entity": r["entity_name"] or r["entity"], "heading": p["heading"],
+                           "para_idx": p["idx"], "url": r["url"]},
+               "provenance_tier": r["provenance_tier"], "confidence": min(float(r["confidence"]), PROSE_CONF_CAP),
+               "asserted_at": (ev.get("event_date") or "")[:10] or None, "status": "candidate", "lane": "research",
+               "extractor": "claude", "extractor_model": model,
+               "metadata": {k: v for k, v in meta.items() if v is not None},
+               "judge_verdict": j["verdict"], "judge_model": j["model"], "judge_prompt_hash": j["prompt_hash"],
+               "judged_at": j["judged_at"], "review_flag": "needs_review" if j["verdict"] == "abstain" else None,
+               "valid_from": cx.valid_from(r["as_of"]), "freshness_class": fclass, "freshness_reason": "lookup_v0",
+               "next_check_at": nxt}
+        rows.append({k: v for k, v in row.items() if v is not None})
+        ents.append((r["entity_type"], r["entity_name"]))
+    for k, n in held.items():
+        g.stats.bump("claim", f"held_{k}", n)
+    if not rows:
+        sys.stderr.write(f"LOUD FAILURE: 0 rows survive the re-check + judge (re-check dropped {rechecked['dropped']}, "
+                         f"held {held}).\n")
+        return 3
+    existing = g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key,status,metadata")   # before ANY write
+    n_ledger = sum(not _is_extracted(r) for r in existing)
+    if n_ledger:
+        print(f"stage-v2: ledger present ({n_ledger} ledger claims under this event's research key) — skipped, "
+              "nothing written. A brief's ledger always beats its prose.")
+        g.stats.bump("claim", "skipped_ledger_present", len(rows))
+        return 0
+    v1_keys = {r["claim_key"] for r in existing if _is_prose(r)}     # same (para_idx, quote) key space as v1
+    keep = [i for i, r in enumerate(rows) if r["claim_key"] not in v1_keys]
+    n_clash = len(rows) - len(keep)
+    rows, ents = [rows[i] for i in keep], [ents[i] for i in keep]
+    g.stats.bump("claim", "skipped_key_held_by_v1_prose", n_clash)
+    if not rows:
+        sys.stderr.write(f"LOUD FAILURE: every v2 row's key is already held by a v1 prose row ({n_clash}).\n")
+        return 3
+    mine = [r for r in existing if _is_v2(r)]
+    retired = lambda r: (r.get("metadata") or {}).get("retired") == V2_RETIRED   # noqa: E731
+    live, file_keys = {r["claim_key"] for r in mine if not retired(r)}, {r["claim_key"] for r in rows}
+    if live and live != file_keys and not replace:
+        sys.stderr.write(f"stage-v2: {len(live)} v2 claims from a DIFFERENT extraction are already staged for this "
+                         "event — refusing. Pass --replace to retire them (status rejected, metadata.retired).\n")
+        return PROSE_EXIT_REPLACE
+    eid, linkage, roster, doc_id = _research_links(g, ev, manifest, packet, brief_md)
+    vis = _doc_visibility(g, doc_id)
+    for r in rows:
+        r["visibility"] = vis
+    n_retired = n_revived = 0
+    for r in mine:                                     # v2 rows only: v1 prose is never touched here
+        meta = dict(r.get("metadata") or {})
+        if replace and r["claim_key"] not in file_keys and not retired(r) and r.get("status") == "candidate":
+            g.patch("claim", f"id=eq.{r['id']}", {"status": "rejected", "metadata": {**meta, "retired": V2_RETIRED}})
+            n_retired += 1
+        elif r["claim_key"] in file_keys and retired(r):
+            meta.pop("retired")
+            g.patch("claim", f"id=eq.{r['id']}", {"status": "candidate", "metadata": meta})
+            n_revived += 1
+    g.stats.bump("claim", "v2_retired", n_retired)
+    g.stats.bump("claim", "v2_revived", n_revived)
+    have = {r["claim_key"] for r in mine}
+    new = [r for r in rows if r["claim_key"] not in have]
+    g.stats.bump("claim", "matched", len(rows) - len(new))
+    out = []
+    for r, vec in zip(new, g.embed([r["claim_text"] for r in new]) if new else []):
+        row = {**r, "document_id": doc_id, "event_id": eid, "embedding": vec, "embedding_model": EMBED_MODEL}
+        out.append({k: v for k, v in row.items() if v is not None})
+    if out:
+        g.stats.bump("claim", "created", len(out))
+        g.post("claim", out, prefer="resolution=ignore-duplicates,return=minimal", on_conflict="source_key,claim_key")
+    if eid:
+        g.attach_research({"notion_page_id": ev["notion_page_id"]}, eid)
+    ids = {} if g.dry else {r["claim_key"]: r["id"] for r in
+                            g.get(f"/claim?source_key=eq.{skey}&select=id,claim_key,metadata") if _is_v2(r)}
+    by_name = {(t, norm_text(n)): iid for t, n, iid in roster}
+    links, unresolved = [], 0
+    for r, (t, name) in zip(rows, ents):
+        hit = by_name.get((t, norm_text(name))) if t and name else None
+        if not hit:
+            unresolved += 1
+            continue
+        if r["claim_key"] in ids:
+            links.append({"claim_id": ids[r["claim_key"]], "entity_type": t, "entity_id": hit, "role": "about"})
+    g.stats.bump("claim_entity", "about_unresolved", unresolved)
+    if links:
+        g.stats.bump("claim_entity", "linked (idempotent)", len(links))
+        g.post("claim_entity", links, prefer="resolution=ignore-duplicates,return=minimal",
+               on_conflict="claim_id,entity_type,entity_id,role")
+    flagged = sum(r.get("review_flag") == "needs_review" for r in rows)
+    fresh = {c: sum(r["freshness_class"] == c for r in rows) for c in ("historical", "fast_moving", "slow_moving", "opinion")}
+    print(f"stage-v2: {len(rows)} v2 claims (needs_review {flagged}) · judge unsupported {held['unsupported']} · not judged "
+          f"{held['not_judged']} · re-check dropped {sum(rechecked['dropped'].values())} {rechecked['dropped'] or ''} · "
+          f"key held by v1 {n_clash} · new {len(out)} · already staged {len(rows) - len(new)} · retired {n_retired} · "
+          f"freshness {fresh} · visibility {vis} · roster-unresolved {unresolved} · event row: {linkage}")
+    if g.dry:
+        for r in out[:3]:
+            print("  dry row: " + json.dumps({k: v for k, v in r.items() if k not in ("claim_text", "quote", "evidence",
+                                                                                      "embedding")},
+                                             ensure_ascii=False, sort_keys=True))
+    if preview_out:                                    # the exact rows (brief text included): git-ignored paths only
+        from notion_export import ensure_ignored
+        ensure_ignored(os.path.dirname(os.path.abspath(preview_out)))
+        with open(preview_out, "w", encoding="utf-8") as f:
+            json.dump({"new": [{k: v for k, v in r.items() if k != "embedding"} for r in out],
+                       "already_staged": len(rows) - len(new), "held": held, "key_held_by_v1": n_clash,
+                       "recheck_dropped": rechecked["dropped"]}, f, indent=1, ensure_ascii=False)
+        print(f"  preview: {len(out)} rows -> {preview_out}")
     return 0
 
 
@@ -3109,6 +3341,181 @@ def _prose_selftest(ok) -> None:
        and not any("Fictional" in ln or '"claim_text"' in ln or '"quote"' in ln for ln in dry_rows))
 
 
+def _v2_selftest(ok) -> None:
+    """YED-384 / ADR-15 stage-v2, offline on _FakeGraph: judge gating, the 0023 columns, re-check + allowlist rebuild,
+    refusals, ledger skip, coexistence with v1 prose (both directions), --replace, dry run + preview."""
+    import contextlib, copy, datetime as _dt, io, tempfile
+    import claim_extract_v2 as cx
+    from prose_extract import check as pcheck, prepass_doc
+    fix = os.path.join(HERE, "fixtures", "prose")
+    md = open(os.path.join(fix, "brief_ok", "research_brief.md"), encoding="utf-8").read()
+    man = json.load(open(os.path.join(fix, "brief_ok", "manifest.json"), encoding="utf-8"))
+    pk, _ = prepass_doc(md, man)
+    claims = json.load(open(os.path.join(HERE, "fixtures", "claim_v2", "claims_mixed.json"), encoding="utf-8"))
+    claims["claims"][2]["as_of"] = "2026-01-15"                     # one full date -> valid_from
+    checked = cx.check(pk, claims, model="sonnet")
+
+    def stub(prompt, model):                                        # Fictional Ventures claim -> no; last pid omitted
+        items = json.loads(prompt.split("<items>\n", 1)[1].rsplit("\n</items>", 1)[0])
+        return {"labels": [{"pid": it["pid"], "supported": "no" if "Fictional Ventures" in it["claim"] else "yes",
+                            "standalone": "yes", "useful": 2} for it in items[:-1]]}, "", ""
+    judged = cx.judge(pk, checked, model="claude-fable-5-2", llm=stub)
+    verdicts = [r["judge"]["verdict"] for r in judged["accepted"]]
+    n_stage = sum(v != "unsupported" for v in verdicts)
+    skey = research_source_key(man["event"]["notion_page_id"])
+    now = _dt.datetime(2026, 11, 14, 12, 0, tzinfo=_dt.timezone.utc)
+
+    def run(fg, chk=None, m=man, brief=md, **kw):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            rc = stage_v2(fg, copy.deepcopy(chk if chk is not None else judged), m, brief_md=brief, now=now, **kw)
+        return rc, out.getvalue()
+    fg = _FakeGraph()
+    rc, out = run(fg)
+    cl = fg.t["claim"]
+    ok("stage-v2: supported + abstain staged, unsupported held and counted, rc 0",
+       rc == 0 and verdicts.count("unsupported") == 1 and verdicts.count("abstain") == 1 and len(cl) == n_stage == 3
+       and "judge unsupported 1" in out)
+    ok("stage-v2: rows are lane research · candidate · extractor claude · extraction claimify_v2 · cap <= 0.60",
+       all(c["lane"] == "research" and c["status"] == "candidate" and c["extractor"] == "claude"
+           and c["metadata"]["extraction"] == "claimify_v2" and c["confidence"] <= 0.60 for c in cl))
+    ok("stage-v2: abstain -> review_flag needs_review; supported -> no flag; rank left to the DB default",
+       sorted(c.get("review_flag", "-") for c in cl) == ["-", "-", "needs_review"] and not any("rank" in c for c in cl))
+    ok("stage-v2: judge record complete on every row (verdict, model, sha256 of the template, judged_at)",
+       all(c["judge_verdict"] in ("supported", "abstain") and c["judge_model"] == "claude-fable-5-2"
+           and c["judge_prompt_hash"] == cx.prompt_hash() and re.fullmatch(r"[0-9a-f]{64}", c["judge_prompt_hash"])
+           and c["judged_at"] for c in cl))
+    ok("stage-v2: evidence = the spans; quote = first span; locator.para_idx = first span",
+       all(c["quote"] == c["evidence"][0]["quote"] and c["locator"]["para_idx"] == c["evidence"][0]["para_idx"]
+           for c in cl))
+    ok("stage-v2: claim_key = prose_claim_key(first para_idx, first quote)",
+       all(c["claim_key"] == cx.prose_claim_key(c["evidence"][0]["para_idx"], c["evidence"][0]["quote"]) for c in cl))
+    by_type = {c["claim_type"]: c for c in cl}
+    ok("stage-v2: freshness v0 lookup (prediction -> opinion; time_sensitive -> fast_moving +30 d; company_fact ->"
+       " slow_moving +90 d); reason lookup_v0; conf left null",
+       by_type["prediction"]["freshness_class"] == "opinion" and "next_check_at" not in by_type["prediction"]
+       and by_type["adoption"]["freshness_class"] == "fast_moving"
+       and by_type["adoption"]["next_check_at"] == "2026-12-14T12:00:00Z"
+       and by_type["company_fact"]["freshness_class"] == "slow_moving"
+       and all(c["freshness_reason"] == "lookup_v0" and "freshness_conf" not in c for c in cl))
+    ok("stage-v2: valid_from only from a full-date as_of", by_type["adoption"]["valid_from"] == "2026-01-15T00:00:00Z"
+       and "valid_from" not in by_type["company_fact"])
+    ok("stage-v2: metadata carries attribution_unquoted, as_of, time_sensitive", by_type["adoption"]["metadata"]
+       ["attribution_unquoted"] is True and by_type["adoption"]["metadata"]["as_of"] == "2026-01-15"
+       and by_type["company_fact"]["metadata"]["time_sensitive"] is False)
+    ok("stage-v2: visibility = the brief document's (new doc -> private)", all(c["visibility"] == "private" for c in cl)
+       and len(fg.t["documents"]) == 1 and all(c["document_id"] == fg.t["documents"][0]["id"] for c in cl))
+    ok("stage-v2: roster subjects linked about; an off-roster subject is kept and counted unresolved",
+       len(fg.t["claim_entity"]) == 2 and "roster-unresolved 1" in out)
+    rc2, out2 = run(fg)
+    ok("stage-v2: idempotent rerun -> 0 new rows, 0 new edges", rc2 == 0 and len(fg.t["claim"]) == 3
+       and len(fg.t["claim_entity"]) == 2 and "new 0" in out2)
+    pub = _FakeGraph()                                   # an existing public_ok brief document -> public_ok claims
+    pub.t["documents"].append({"id": "doc-pub", "external_ref": man["notion_export"]["briefs"]["research_brief"]["brief_ref"],
+                               "sha256": sha(redact_body(md)), "is_current": True, "version": 1, "visibility": "public_ok"})
+    run(pub)
+    ok("stage-v2: a public_ok brief document -> public_ok claims", pub.t["claim"]
+       and all(c["visibility"] == "public_ok" and c["document_id"] == "doc-pub" for c in pub.t["claim"]))
+    # allowlist rebuild + judge-record validation
+    bad = copy.deepcopy(judged)
+    r0 = next(r for r in bad["accepted"] if r["judge"]["verdict"] == "supported")
+    r0.update({"confidence": 0.99, "status": "approved", "rank": "preferred", "visibility": "public_ok", "claim_key": "x",
+               "review_flag": "disputed", "provenance_tier": "first_hand", "url": "https://evil.example.com"})
+    r1 = next(r for r in bad["accepted"] if r is not r0 and r["judge"]["verdict"] != "unsupported")
+    r1["judge"] = {**r1["judge"], "prompt_hash": "0" * 64}
+    tg = _FakeGraph()
+    rc, out = run(tg, chk=bad)
+    t0 = next(c for c in tg.t["claim"] if c["quote"] == r0["evidence"][0]["quote"])
+    ok("stage-v2: a tampered row is rebuilt from the brief + allowlist (status, rank, visibility, flag, tier, url, cap)",
+       t0["status"] == "candidate" and "rank" not in t0 and t0["visibility"] == "private" and "review_flag" not in t0
+       and t0["provenance_tier"] in ("web_verified", "reference") and t0["confidence"] <= 0.60
+       and t0["locator"]["url"] != "https://evil.example.com")
+    ok("stage-v2: a judge record under another prompt hash -> not staged, counted 'not judged'",
+       len(tg.t["claim"]) == 2 and "not judged 1" in out)
+    tm = copy.deepcopy(judged)
+    tm["accepted"][0]["evidence"][0]["quote"] = "Dana Fixture founded Globex in 1999"
+    xg = _FakeGraph()
+    rc, out = run(xg, chk=tm)
+    ok("stage-v2: a span no longer in the brief is dropped by the re-check, the rest staged",
+       rc == 0 and len(xg.t["claim"]) == 2 and "re-check dropped 1" in out)
+    tp = copy.deepcopy(judged)
+    tp["accepted"][0]["text"] += " Reach dana [at] example [dot] com"
+    pg = _FakeGraph()
+    rc, out = run(pg, chk=tp)
+    ok("stage-v2: obfuscated contact PII added to a judged row -> dropped by the re-check (never reaches the guard)",
+       rc == 0 and len(pg.t["claim"]) == 2 and "pii_contact_detail" in out)
+    # refusals: nothing written
+    v1 = pcheck(pk, json.load(open(os.path.join(fix, "claims_mixed.json"), encoding="utf-8")), extractor="claude",
+                model="sonnet")
+    for label, chk, kw, want in (
+            ("a v1 prose checked file", v1, {}, 2),
+            ("a file for another event", {**judged, "source_key": "someone-else"}, {}, 2),
+            ("a non-claude extractor", {**judged, "extractor": "splitter"}, {}, 2),
+            ("no brief to re-verify", judged, {"brief": None}, 2),
+            ("an off-the-record manifest", judged, {"m": {**man, "notion_export": {**man["notion_export"],
+                                                                                  "skip_staging": True}}}, OTR_EXIT),
+            ("no event page id", judged, {"m": {**man, "event": {**man["event"], "notion_page_id": None}}}, 5),
+            ("an all-unsupported file", {**judged, "accepted": [{**r, "judge": {**r["judge"], "verdict": "unsupported"}}
+                                                                for r in judged["accepted"]]}, {}, 3)):
+        rg = _FakeGraph()
+        rc, _ = run(rg, chk=chk, **kw)
+        ok(f"stage-v2: {label} -> rc {want}, nothing written", rc == want and not rg.t["claim"] and not rg.t["documents"])
+    lg = _FakeGraph()
+    lg.t["claim"].append({"id": "l1", "source_key": skey, "claim_key": "k", "extractor": "parse", "metadata": {}})
+    rc, out = run(lg)
+    ok("stage-v2: ledger present -> skipped, rc 0, nothing written", rc == 0 and "ledger present" in out
+       and len(lg.t["claim"]) == 1 and not lg.t["company"] and not lg.t["documents"])
+    # coexistence with v1 prose: v1 first, then v2, then v1 again (incl. --replace)
+    cg = _FakeGraph()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        stage_prose(cg, copy.deepcopy(v1), man, brief_md=md)
+    before = copy.deepcopy([c for c in cg.t["claim"] if _is_prose(c)])
+    edges_before = len(cg.t["claim_entity"])
+    rc, out = run(cg)
+    v2rows = [c for c in cg.t["claim"] if _is_v2(c)]
+    ok("coexist: v1 prose present -> v2 still stages (prose is not a ledger), rc 0", rc == 0 and v2rows
+       and "ledger present" not in out)
+    ok("coexist: a v2 key already held by a v1 prose row is skipped + counted, the v1 row untouched",
+       "key held by v1 1" in out and len(v2rows) == 2)
+    ok("coexist: v2 never edits a v1 row or links an entity to one",
+       [c for c in cg.t["claim"] if _is_prose(c)] == before
+       and all(e["claim_id"] in {c["id"] for c in v2rows} for e in cg.t["claim_entity"][edges_before:]))
+    out1 = io.StringIO()
+    fewer = copy.deepcopy(v1)
+    fewer["accepted"] = fewer["accepted"][1:]
+    with contextlib.redirect_stdout(out1), contextlib.redirect_stderr(out1):
+        rc_a = stage_prose(cg, copy.deepcopy(v1), man, brief_md=md)
+        rc_b = stage_prose(cg, fewer, man, brief_md=md, replace=True)
+    ok("coexist: v1 rerun with v2 rows present is not 'ledger present'; v1 --replace never retires a v2 row",
+       rc_a == 0 and rc_b == 0 and "ledger present" not in out1.getvalue()
+       and all(c["status"] == "candidate" and "retired" not in c["metadata"] for c in cg.t["claim"] if _is_v2(c)))
+    ok("coexist: ledger_claim_count counts neither extraction", ledger_claim_count(cg, skey) == 0)
+    # a DIFFERENT v2 extraction: refused without --replace; --replace retires v2 rows only
+    fewer2 = copy.deepcopy(judged)
+    fewer2["accepted"] = [r for r in fewer2["accepted"] if "founded Acme Widgets" not in r["text"]]
+    rc, out = run(fg, chk=fewer2)
+    ok("stage-v2: a second, different judged file -> rc 7 without --replace, nothing changed",
+       rc == 7 and all(c["status"] == "candidate" for c in fg.t["claim"]))
+    rc, out = run(fg, chk=fewer2, replace=True)
+    gone = [c for c in fg.t["claim"] if c["status"] == "rejected"]
+    ok("stage-v2 --replace: the dropped v2 row is retired (metadata.retired claimify_v2_replaced)",
+       rc == 0 and len(gone) == 1 and gone[0]["metadata"]["retired"] == V2_RETIRED and "retired 1" in out)
+    run(fg, replace=True)
+    ok("stage-v2 --replace back revives it", all(c["status"] == "candidate" for c in fg.t["claim"]))
+    # dry run + preview
+    dg = _dry_fake(_FakeGraph())
+    with tempfile.TemporaryDirectory() as td:
+        pv = os.path.join(td, "preview.json")
+        rc, out = run(dg, preview_out=pv)
+        prev = json.load(open(pv, encoding="utf-8"))
+    dry_rows = [ln for ln in out.splitlines() if ln.startswith("  dry row: ")]
+    ok("stage-v2 --dry-run: writes nothing; <= 3 printed rows carry no claim_text / quote / evidence",
+       rc == 0 and not dg.t["claim"] and 0 < len(dry_rows) <= 3
+       and not any(k in ln for ln in dry_rows for k in ('"claim_text"', '"quote"', '"evidence"', "Fictional")))
+    ok("stage-v2 --preview-out: the exact would-be rows, every one passing the spine guard",
+       len(prev["new"]) == 3 and all(guard("claim", r) for r in prev["new"]) and prev["held"]["unsupported"] == 1)
+
+
 def _link_research_selftest(ok) -> None:
     """YED-386 link-research, offline: create + attach, page-id match, held on a title pair, idempotent, dry-run."""
     p1, p2, p3 = "1" * 32, "2" * 32, "3" * 32
@@ -3336,6 +3743,7 @@ def selftest() -> bool:
     _usage_selftest(ok)
     _roles_selftest(ok)
     _prose_selftest(ok)          # YED-384 stage-prose
+    _v2_selftest(ok)             # YED-384 / ADR-15 stage-v2
     _otr_selftest(ok)            # YED-391
     _link_research_selftest(ok)  # YED-386 backfill
     from reconcile import selftest as _reconcile_selftest   # YED-384: offline fixture tree + stubbed req
@@ -3359,9 +3767,13 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
-                                     "stage-research", "ensure-roles", "stage-prose", "reject-claims",
+                                     "stage-research", "ensure-roles", "stage-prose", "stage-v2", "reject-claims",
                                      "link-research"])
-    ap.add_argument("--checked", metavar="BRIEF.llm.checked.json", help="(stage-prose) prose_extract.py check output")
+    ap.add_argument("--checked", metavar="BRIEF.llm.checked.json",
+                    help="(stage-prose) prose_extract.py check output · (stage-v2) claim_extract_v2.py judge output")
+    ap.add_argument("--preview-out", metavar="ROWS.json",
+                    help="(stage-v2) also write the exact rows it would create (brief text included) to this file; "
+                         "the path must be git-ignored or outside every repo. Pair with --dry-run to preview.")
     ap.add_argument("--replace", action="store_true",
                     help="(stage-prose) a different extraction is already staged: retire its candidate rows "
                          "(status rejected, metadata.retired) and stage this one")
@@ -3511,6 +3923,13 @@ def main(argv: list[str]) -> int:
         rc = stage_prose(g, json.load(open(a.checked, encoding="utf-8")), m,
                          brief_md=open(brief, encoding="utf-8").read() if os.path.exists(brief) else None,
                          allow_otr_reviewed=a.allow_otr_reviewed, replace=a.replace)
+    elif a.verb == "stage-v2":
+        if not a.checked:
+            ap.error("stage-v2 needs --checked (a claim_extract_v2.py judged file)")
+        brief = a.brief or os.path.join(os.path.dirname(os.path.abspath(a.manifest)), "research_brief.md")
+        rc = stage_v2(g, json.load(open(a.checked, encoding="utf-8")), m,
+                      brief_md=open(brief, encoding="utf-8").read() if os.path.exists(brief) else None,
+                      allow_otr_reviewed=a.allow_otr_reviewed, replace=a.replace, preview_out=a.preview_out)
     elif a.verb == "ensure-event":
         g.ensure_event(m)
     elif a.verb == "ensure-document":
