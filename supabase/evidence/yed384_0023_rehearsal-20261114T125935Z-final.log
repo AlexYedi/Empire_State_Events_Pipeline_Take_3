@@ -1,0 +1,112 @@
+TARGET twin: aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk  at 2026-11-14T12:57:44Z
+migration sha256: dcbf2a47ec8f535d088f8bc65fe7144d1fc502f3875d1f319f1592c080d6d1c9
+
+[0] preflight
+  twin server_version=17.6 (prod 17.6)
+  has.no_contact_pii_v1        true
+  has.entity_alias             true
+  has.sweep_query              true
+  has.documents                true
+  has.roles                    true
+  has.claims                   true
+  clean.no_new_columns         true
+  clean.no_new_checks          true
+  clean.no_new_relations       true
+  clean.no_new_funcs           true
+  clean.no_new_indexes         true
+  clean.no_rehearsal_rows      true
+  info.claim_rows              5731
+  info.claim_policies          0
+  migration PREFLIGHT block: {'prereq_0022': 'true', 'no_0023_columns': 'true', 'no_0023_tables': 'true', 'baseline_claim_rows': '5731', 'baseline_claim_by_status': 'approved=2160,candidate=3571'}
+  dashboard runbook files in sync with the migration
+
+[1] snapshot A (before)
+  claims by status: approved=2160,candidate=3571; 8 schema parts, 14 data values
+
+[1b] negative control — 0023's checks must FAIL before the fix; keep_* must pass
+  18 0023 checks on the un-migrated twin: 18 fail (must be all)
+  3 keep_ checks: 3 pass (must be all)
+
+[2] apply 0023
+  OK  0023_graph_v2_l1_freshness.sql
+
+[3] re-apply 0023 (must be a clean no-op)
+  OK  0023 second paste
+  OK  state identical after second paste
+
+[4] verify
+  info  info_claim_rows = 5731
+  info  info_claim_current_is_current = 5731
+  verify -> PASS (21/21)
+  dashboard VERIFY: 23 rows, non-info rows not 'true': none
+
+[4b] behaviour (twin only; every case rolled back)
+  PASS claim_vocab_checks (as service_role)
+  PASS judge_record (as service_role)
+  PASS valid_window (as service_role)
+  PASS evidence_shape (as service_role)
+  PASS claim_pii (as service_role)
+  PASS claim_verification (as service_role)
+  PASS claim_label (as service_role)
+  PASS judge_audit (as service_role)
+  PASS claim_current (as service_role)
+  PASS direct_delete_probe (as service_role)
+        direct DELETE on claim_verification removed 1 row(s) (the trigger guards UPDATE only)
+  PASS anon_refused (as anon)
+  PASS authenticated_refused (as authenticated)
+  OK  no state leaked from the behaviour cases
+
+[5] planted faults — verify must catch each, re-apply must restore
+  [5a] plant -> expect claim_new_checks
+  verify -> FAIL (20/21) :: failed ['claim_new_checks']
+  OK  fault caught by claim_new_checks
+  OK  0023 restore after 5a
+  verify -> PASS (21/21)
+  [5b] plant -> expect new_relations_no_api_grants
+  verify -> FAIL (20/21) :: failed ['new_relations_no_api_grants']
+  OK  fault caught by new_relations_no_api_grants
+  OK  0023 restore after 5b
+  verify -> PASS (21/21)
+  [5c] plant -> expect claim_verification_append_only_trigger
+  verify -> FAIL (20/21) :: failed ['claim_verification_append_only_trigger']
+  OK  fault caught by claim_verification_append_only_trigger
+  OK  0023 restore after 5c
+  verify -> PASS (21/21)
+  [5d] plant -> expect new_tables_rls_on_no_policies
+  verify -> FAIL (20/21) :: failed ['new_tables_rls_on_no_policies']
+  OK  fault caught by new_tables_rls_on_no_policies
+  OK  0023 restore after 5d
+  verify -> PASS (21/21)
+  [5e] plant -> expect evidence_fn_exec_service_role_only
+  verify -> FAIL (20/21) :: failed ['evidence_fn_exec_service_role_only']
+  OK  fault caught by evidence_fn_exec_service_role_only
+  OK  0023 restore after 5e
+  verify -> PASS (21/21)
+  [5f] plant -> expect claim_current_invoker
+  verify -> FAIL (20/21) :: failed ['claim_current_invoker']
+  OK  fault caught by claim_current_invoker
+  OK  0023 restore after 5f
+  verify -> PASS (21/21)
+  [5g] plant -> expect pii_checks_on_new_text
+  verify -> FAIL (19/21) :: failed ['claim_new_checks', 'pii_checks_on_new_text']
+  OK  fault caught by pii_checks_on_new_text
+  OK  0023 restore after 5g
+  verify -> PASS (21/21)
+  [5h] plant -> expect new_relations_no_api_grants
+  verify -> FAIL (20/21) :: failed ['new_relations_no_api_grants']
+  OK  fault caught by new_relations_no_api_grants
+  OK  0023 restore after 5h
+  verify -> PASS (21/21)
+  OK  restored state identical to the first apply
+
+[6] rollback
+  OK  ROLLBACK block
+
+[7] snapshot C must equal snapshot A
+  OK  schema fingerprint (8 parts, function bodies + ACLs + view definitions included) + 14 data values identical — ROLLBACK PROVEN
+
+[8] cleanup
+  OK  rehearsal-row delete (expect 0)
+  OK  claim rows 5731 (preflight 5731); rehearsal rows 0; no 0023 relations
+
+0023 REHEARSAL: GREEN — safe for Alex to run supabase/scripts/0023_preflight_dashboard.sql, paste 0023 into prod (The-Prod-Brain) after 0022, then run supabase/scripts/0023_verify_dashboard.sql there.
