@@ -2,7 +2,7 @@
 -- 0023 · Intelligence graph v2: L1 evidence, judge record, rank/flag, freshness, human labels
 -- Linear: YED-384 · Design: docs/adr/ADR-15-intelligence-graph-v2.md decisions 4, 5, 7, 8, 11, 14.
 --
--- NOT APPLIED. Twin rehearsal (supabase/scripts/rehearse_0023.py) + Alex dashboard apply required
+-- APPLIED to prod 2026-11-14 (Alex; evidence supabase/evidence/yed384_0023_prod_verify-20261114.md). Twin rehearsal (supabase/scripts/rehearse_0023.py) + Alex dashboard apply required
 -- (CLAUDE.md invariant 2). ADDITIVE ONLY: no column, row, constraint or index is dropped or renamed.
 --
 -- ORDER: APPLY 0022 FIRST. 0023 reuses public.no_contact_pii_v1(text) (0022 §8) for its PII CHECKs
