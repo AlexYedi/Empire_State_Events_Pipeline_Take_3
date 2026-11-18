@@ -75,7 +75,9 @@ load_claude_token() {
 # YED-411 step 2: one-way sync of private inputs, laptop -> mini. The laptop is the source; nothing is ever deleted.
 # Lands in PRIVATE (outside every git work tree), then installs into the runner checkout only where git ignores the
 # path and does not track it (refuses otherwise: exit 9, alert). The ~/Documents checkout is not writable by launchd
-# (TCC), so it reads PRIVATE through symlinks set up once by ops/mini-runner/link-private.sh.
+# (TCC), so it reads PRIVATE through links set up once by ops/mini-runner/link-private.sh: HARD links for files
+# (worktree creation copies regular files but skips symlinks), a symlink for the reviews directory. --inplace keeps
+# each file's inode, so the hard links stay live; a sync that replaced files would silently cut them.
 PRIVATE="${ESEP_PRIVATE:-$HOME/Developer/esep-private}"
 PRIVATE_FILES=(.claude/references/me-model.md .claude/references/target-companies.md
                .claude/references/inbox-denylist.md .claude/references/inbox-allowlist.md)
@@ -89,7 +91,7 @@ sync_private() {
   for p in $PRIVATE_FILES; do srcs+=(":$p"); done
   for p in $PRIVATE_DIRS; do srcs+=(":$p/"); done
   srcs[1]="$LAPTOP${srcs[1]}"
-  /opt/homebrew/bin/rsync -a --relative --exclude='.DS_Store' \
+  /opt/homebrew/bin/rsync -a --inplace --relative --exclude='.DS_Store' \
     -e "ssh -i $HOME/.ssh/esep_sync -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" \
     "${srcs[@]}" "$PRIVATE/"
   local rc=$?

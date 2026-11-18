@@ -109,7 +109,9 @@ The hourly `sync` job also pulls the private inputs from the laptop: `me-model.m
 - It installs into the runner checkout only where `git check-ignore` passes and `git ls-files` says untracked. Any other
   path is refused and the job exits 9, which alerts. A laptop that is asleep (255) is a skip, not a failure.
 - The `~/Documents` checkout (interactive and Remote Control sessions) can't be written by launchd (TCC), so it reads the
-  landing folder through symlinks. Run once over `ssh esep-mini`:
+  landing folder through links: **hard links for the four files** and a symlink for `reviews/`. Hard links, because new
+  Remote Control worktrees copy regular files from `.worktreeinclude` but skip symlinks (found 11/18: a symlinked me-model
+  reached no new session). The sync writes `--inplace`, so the shared file stays live; never change it to a replacing copy. Run once over `ssh esep-mini`:
   `zsh ~/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/link-private.sh`. The script applies the same
   refusal check, moves anything it replaces to `~/private-backups/<timestamp>/` (outside every repo), is safe to re-run,
   and fails if git then sees any change under `.claude/references` or `.claude/.state`.
