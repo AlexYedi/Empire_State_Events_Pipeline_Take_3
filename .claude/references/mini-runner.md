@@ -117,6 +117,32 @@ The hourly `sync` job also pulls the private inputs from the laptop: `me-model.m
   and fails if git then sees any change under `.claude/references` or `.claude/.state`.
 - Not covered yet: Claude memory (step 4) and worktree snapshots (step 3).
 
+## Claude memory, laptop -> mini (YED-411 step 4)
+
+Auto-memory is machine-local by design (code.claude.com/docs/en/memory); worktrees of one repo share one memory dir.
+Practice (11/18 research): config syncs through git, runtime state stays local, and durable knowledge is promoted
+deliberately rather than synced both ways. So:
+- The **laptop holds the master memory.** The hourly `sync` job mirrors it (`*.md` only) into
+  `~/Developer/esep-private/memory-laptop` with its own key, then `memory_sync.py` installs it into the mini's memory
+  dirs (the `~/Documents` and `~/Developer` repo slugs).
+- **Nothing the mini learns is lost.** Before installing, any note a mini session created or changed (and any new
+  `MEMORY.md` index line) is copied to `~/Developer/esep-private/memory-inbox/<date>/`. A mini-only note stays usable on the
+  mini, marked "(mini note, awaiting promotion)" in the index. **At the Friday review**, promote from the inbox: into the
+  laptop memory, into checked-in docs if it's public-safe and durable, or drop it. Notes from sessions started outside
+  the repo (`-Users-sameoldexpressions/memory`) are inbox-only.
+- An empty or failed laptop pull changes nothing. Exit 10 = memory step failed (alerts).
+- **Setup, once:** on the mini, `ssh-keygen -t ed25519 -N "" -C esep-memory -f ~/.ssh/esep_memory`. On the laptop, append
+  `restrict,command="$HOME/.local/bin/rrsync-esep -ro $HOME/.claude/projects/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/memory" <contents of esep_memory.pub>`
+  to `~/.ssh/authorized_keys`. That key can read that one folder and nothing else. Revoke: delete the line. With no key,
+  the step logs `SKIP`.
+
+## /freshen (start of any session)
+
+`/freshen` runs `ops/mini-runner/freshen.sh`. On the mini it runs `sync` now (inputs, private files, memory; about 10 s,
+serialized with the hourly run by a lock), copies the fresh private files into the session's worktree, fetches origin
+and prints one `FRESHEN:` line. On the laptop it does the worktree copy and fetch. It closes the up-to-an-hour gap between a
+laptop edit and the next hourly sync. Making it run automatically at session start is a hook change: it needs Alex's go.
+
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
 Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
