@@ -72,10 +72,46 @@ load_claude_token() {
 }
 [[ "$JOB" == (smoke|sweep|brief) ]] && load_claude_token
 
+# YED-411 step 2: one-way sync of private inputs, laptop -> mini. The laptop is the source; nothing is ever deleted.
+# Lands in PRIVATE (outside every git work tree), then installs into the runner checkout only where git ignores the
+# path and does not track it (refuses otherwise: exit 9, alert). The ~/Documents checkout is not writable by launchd
+# (TCC), so it reads PRIVATE through symlinks set up once by ops/mini-runner/link-private.sh.
+PRIVATE="${ESEP_PRIVATE:-$HOME/Developer/esep-private}"
+PRIVATE_FILES=(.claude/references/me-model.md .claude/references/target-companies.md
+               .claude/references/inbox-denylist.md .claude/references/inbox-allowlist.md)
+PRIVATE_DIRS=(.claude/.state/reviews)
+safe_private_path() {   # $1 repo, $2 relative path: 0 only if git ignores it AND does not track it
+  git -C "$1" check-ignore -q "$2" && ! git -C "$1" ls-files --error-unmatch "$2" >/dev/null 2>&1
+}
+sync_private() {
+  mkdir -p "$PRIVATE"
+  local srcs=() p
+  for p in $PRIVATE_FILES; do srcs+=(":$p"); done
+  for p in $PRIVATE_DIRS; do srcs+=(":$p/"); done
+  srcs[1]="$LAPTOP${srcs[1]}"
+  /opt/homebrew/bin/rsync -a --relative --exclude='.DS_Store' \
+    -e "ssh -i $HOME/.ssh/esep_sync -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" \
+    "${srcs[@]}" "$PRIVATE/"
+  local rc=$?
+  [[ $rc -eq 23 || $rc -eq 24 ]] && { echo "WARN: partial private sync rc=$rc"; rc=0; }
+  [[ $rc -ne 0 ]] && return $rc
+  date -u +%FT%TZ > "$PRIVATE/.synced-at"
+  local refused=0
+  for p in $PRIVATE_FILES $PRIVATE_DIRS; do
+    [[ -e "$PRIVATE/$p" ]] || continue
+    if ! safe_private_path "$REAL" "$p"; then echo "REFUSED: $p is tracked or not gitignored in the runner checkout"; refused=1; continue; fi
+    mkdir -p "$REAL/${p:h}"
+    if [[ -d "$PRIVATE/$p" ]]; then /opt/homebrew/bin/rsync -a "$PRIVATE/$p/" "$REAL/$p/"; else cp -p "$PRIVATE/$p" "$REAL/$p"; fi
+  done
+  echo "private sync $([[ $refused -eq 0 ]] && echo OK || echo 'with REFUSALS'): $(find "$PRIVATE" -type f ! -name .synced-at | wc -l | tr -d ' ') files, synced $(cat "$PRIVATE/.synced-at")"
+  [[ $refused -eq 0 ]] || return 9
+}
+
 case "$JOB" in
   sync)
     sync_inputs
     RC=$?
+    if [[ $RC -ne 255 ]]; then sync_private; PRC=$?; [[ $PRC -eq 255 ]] && PRC=0; [[ $RC -eq 0 && $PRC -ne 0 ]] && RC=$PRC; fi
     [[ $RC -eq 0 ]] && echo "sync OK: $(find "$INPUTS" -type f | wc -l | tr -d ' ') files in $INPUTS" \
                     || { [[ $RC -eq 255 ]] && echo "sync SKIP: laptop unreachable (asleep / off Tailscale); next hour retries" \
                                            || echo "sync FAIL rc=$RC: a real error, read this log"; }

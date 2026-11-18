@@ -99,6 +99,22 @@ Setup, once:
 4. Install on the laptop: step 9 below.
 To revoke: delete the `esep-export-pull` line from the mini's `~/.ssh/authorized_keys`.
 
+## Private inputs, laptop -> mini (YED-411 step 2)
+
+The hourly `sync` job also pulls the private inputs from the laptop: `me-model.md`, `target-companies.md`,
+`inbox-denylist.md`, `inbox-allowlist.md` and `.claude/.state/reviews/`. It uses the same restricted read-only key.
+- One way, laptop as source, **nothing is ever deleted** (no `--delete`): a same-named file is overwritten by the laptop's
+  copy, anything else on the mini stays. The landing folder is `~/Developer/esep-private`, outside every git work tree;
+  `.synced-at` holds the last good sync time.
+- It installs into the runner checkout only where `git check-ignore` passes and `git ls-files` says untracked. Any other
+  path is refused and the job exits 9, which alerts. A laptop that is asleep (255) is a skip, not a failure.
+- The `~/Documents` checkout (interactive and Remote Control sessions) can't be written by launchd (TCC), so it reads the
+  landing folder through symlinks. Run once over `ssh esep-mini`:
+  `zsh ~/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/link-private.sh`. The script applies the same
+  refusal check, moves anything it replaces to `~/private-backups/<timestamp>/` (outside every repo), is safe to re-run,
+  and fails if git then sees any change under `.claude/references` or `.claude/.state`.
+- Not covered yet: Claude memory (step 4) and worktree snapshots (step 3).
+
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
 Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
