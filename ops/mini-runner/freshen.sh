@@ -37,4 +37,9 @@ git -C "$TOP" fetch -q origin 2>/dev/null || note+=("git fetch failed")
 behind="$(git -C "$TOP" rev-list --count HEAD..origin/main 2>/dev/null || echo '?')"
 mm="$(stat -f %Sm -t %m/%d "$TOP/.claude/references/me-model.md" 2>/dev/null || echo MISSING)"
 [[ "$mm" == MISSING ]] && note+=("me-model MISSING in this checkout")
-echo "FRESHEN: host $(hostname -s) · synced $synced · me-model $mm · memory $mem notes · inbox $inbox · $(git -C "$TOP" branch --show-current) is $behind behind origin/main${note:+ · ${(j: · :)note}}"
+par="n/a"
+if [[ -f "$HOME/Developer/esep-private/parity.json" ]]; then
+  par="$(/usr/bin/python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); f=[x["check"] for x in r["results"] if x["status"]=="FAIL"]; print(("OK" if not f else "FAIL "+",".join(f))+" as of "+r["checked_at"][5:16].replace("T"," ")+"Z")' "$HOME/Developer/esep-private/parity.json" 2>/dev/null || echo unreadable)"
+  [[ "$par" == FAIL* ]] && note+=("PARITY $par: run the parity job and read its log")
+fi
+echo "FRESHEN: host $(hostname -s) · synced $synced · me-model $mm · memory $mem notes · inbox $inbox · parity $par · $(git -C "$TOP" branch --show-current) is $behind behind origin/main${note:+ · ${(j: · :)note}}"
