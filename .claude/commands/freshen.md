@@ -9,6 +9,7 @@ Run this before anything else in a session, especially a Remote Control session 
 1. Run `zsh ops/mini-runner/freshen.sh` with Bash (from the repo root of this checkout or worktree).
 2. Report its last line, the one starting `FRESHEN:`, verbatim.
 3. If that line contains `LAPTOP ASLEEP`, `REFUSED`, `MISSING`, `sync exit` or `fetch failed`, say so plainly before any other work and ask Alex whether to continue on the older copy.
-4. If the branch is behind `origin/main`, say how many commits, and pull (`git pull --ff-only`) only if this session's task needs current main.
+4. On the laptop, if the line says `MEMORY INBOX n`, run `/memory-inbox` next. It promotes the safe notes automatically and raises only the edge cases, so this costs about a minute and only when the inbox has something in it.
+5. If the branch is behind `origin/main`, say how many commits, and pull (`git pull --ff-only`) only if this session's task needs current main.
 
 It changes no tracked file: it syncs gitignored private inputs and Claude memory, and copies the private files into this worktree after checking each one is gitignored and untracked. Background: `.claude/references/mini-runner.md`, "Claude memory" and "/freshen".
