@@ -53,6 +53,25 @@ sync_inputs() {
   return $rc
 }
 
+# YED-441: model jobs authenticate with a long-lived token (`claude setup-token`) instead of the keychain login, which
+# launchd-started jobs lost on 11/13 and 11/17. Only CLAUDE_CODE_OAUTH_TOKEN (and its optional, non-secret
+# CLAUDE_TOKEN_EXPIRES date) is read from .env, for the jobs that call `claude` or check its login. The value is never
+# echoed or written to the log; without it the job falls back to the keychain login, as before.
+load_claude_token() {
+  local line k v
+  [[ -f .env ]] || { echo "auth: no .env; keychain login"; return 0; }
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    k="${line%%=*}"; v="${line#*=}"
+    v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+    case "$k" in
+      CLAUDE_CODE_OAUTH_TOKEN) [[ -n "$v" ]] && export CLAUDE_CODE_OAUTH_TOKEN="$v" ;;
+      CLAUDE_TOKEN_EXPIRES)    [[ -n "$v" ]] && export CLAUDE_TOKEN_EXPIRES="$v" ;;
+    esac
+  done < .env
+  [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]] && echo "auth: long-lived token from .env" || echo "auth: no CLAUDE_CODE_OAUTH_TOKEN in .env; keychain login"
+}
+[[ "$JOB" == (smoke|sweep|brief) ]] && load_claude_token
+
 case "$JOB" in
   sync)
     sync_inputs
