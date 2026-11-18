@@ -235,8 +235,14 @@ PYEOF
     RC=$?
     rm -rf "$SW"
     ;;
+  parity)
+    # YED-411 step 6: daily read-only laptop <-> mini parity check (parity_check.py has the rules). Compares and reports;
+    # never syncs or fixes. Exit 11 on any FAIL, which alerts. Writes esep-private/parity.json for /freshen.
+    "$PY" ops/mini-runner/parity_check.py
+    RC=$?
+    ;;
   *)
-    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep, export, brief)"; RC=64 ;;
+    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep, export, brief, parity)"; RC=64 ;;
 esac
 echo "== $JOB end $(date -u +%FT%TZ) exit=$RC"
 # Failure alert (Linear issue when LINEAR_API_KEY is in .env, plus a notification and ALERTS.txt; once per job per day),

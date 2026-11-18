@@ -136,6 +136,17 @@ deliberately rather than synced both ways. So:
   to `~/.ssh/authorized_keys`. That key can read that one folder and nothing else. Revoke: delete the line. With no key,
   the step logs `SKIP`.
 
+## Daily parity check (YED-411 step 6)
+
+`parity` job, `com.esep.parity-check`, 06:15 daily. Read-only: it compares and alerts, never syncs or fixes
+(`parity_check.py`). launchd cannot read `~/Documents` (TCC), so the hard links are checked by link count on the
+landing-folder side (1 = the `~/Documents` link broke). Checks: **sync-age** (last private sync < 2 h with the laptop
+reachable, < 36 h otherwise) · **hard-links** · **private** (laptop vs mini by checksum) · **memory** (notes by
+checksum, every laptop index line present) · **inbox** (nothing older than 8 days). It writes
+`esep-private/parity.json`, which `/freshen` shows. Exit 11 = a FAIL, which alerts. Proved 11/18 against planted faults:
+an unlinked file, a modified me-model and a missing memory note were each named.
+Install (Alex): `cp ops/mini-runner/com.esep.parity-check.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.parity-check.plist`
+
 ## /freshen (start of any session)
 
 `/freshen` runs `ops/mini-runner/freshen.sh`. On the mini it runs `sync` now (inputs, private files, memory; about 10 s,
