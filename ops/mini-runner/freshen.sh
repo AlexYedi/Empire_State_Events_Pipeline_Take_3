@@ -21,7 +21,11 @@ if [[ "$(hostname -s)" == esep-mini ]]; then
   mem="$(ls $HOME/.claude/projects/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/memory/*.md 2>/dev/null | wc -l | tr -d ' ')"
   inbox="$(find $HOME/Developer/esep-private/memory-inbox -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
 else
-  synced="n/a (not the mini)"; mem="$(ls $HOME/.claude/projects/*Empire-State-Events-Pipeline-Take-3/memory/*.md 2>/dev/null | wc -l | tr -d ' ')"; inbox="n/a"
+  synced="n/a (not the mini)"; mem="$(ls $HOME/.claude/projects/*Empire-State-Events-Pipeline-Take-3/memory/*.md 2>/dev/null | wc -l | tr -d ' ')"
+  # YED-447: the laptop owns the master memory, so it is where the mini's inbox gets promoted (/memory-inbox).
+  inbox="$(ssh -o BatchMode=yes -o ConnectTimeout=5 esep-mini 'find ~/Developer/esep-private/memory-inbox -name "*.md" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+  [[ -z "$inbox" ]] && inbox="unknown (mini unreachable)"
+  [[ "$inbox" == <-> && "$inbox" -gt 0 ]] && note+=("MEMORY INBOX $inbox: run /memory-inbox")
 fi
 # Any host: a worktree has no private files of its own (git worktree add / Remote Control copy them once, or not at
 # all). Copy the main checkout's current ones in, only where git ignores and does not track the path.
