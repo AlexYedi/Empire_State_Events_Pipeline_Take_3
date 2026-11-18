@@ -132,7 +132,7 @@ def cmd_archive(a):
             base = name.split("__", 1)[-1]
             for d in MINI_MEMS:
                 script.append(f"rm -f ~/{d}/{base}; [ -f ~/{d}/MEMORY.md ] && sed -i '' '/({base})/d' ~/{d}/MEMORY.md || true")
-    script.append(f"find ~/{INBOX} -type d -empty -delete; echo archived {len(a.rel)} item(s) as {a.action}")
+    script.append(f"find ~/{INBOX} -type d -empty -delete; echo 'archived {len(a.rel)} item(s) as {a.action}'")
     p = sh(["ssh", "-o", "BatchMode=yes", MINI, "; ".join(script)])
     print(p.stdout.strip() or p.stderr.strip()[-200:])
     return p.returncode

@@ -55,7 +55,11 @@ def main() -> int:
         print(f"memory sync SKIP: no {INDEX} in the laptop mirror (empty or failed pull); nothing changed")
         return 0
     today = a.inbox / date.today().isoformat()
-    seen = {h(p) for p in a.inbox.rglob("*.md")} if a.inbox.is_dir() else set()
+    # Dedupe against the live inbox, everything already handled (memory-inbox-done, a sibling of the inbox), and the
+    # laptop's notes themselves: a note that was promoted or archived must not bounce back every hour (bug found 11/18).
+    done = a.inbox.parent / (a.inbox.name + "-done")
+    seen = {h(p) for d in (a.inbox, done) if d.is_dir() for p in d.rglob("*.md")}
+    seen |= {h(p) for p in lap.values()}
     inboxed = 0
 
     def to_inbox(src: Path, label: str) -> None:
