@@ -109,11 +109,38 @@ sync_private() {
   [[ $refused -eq 0 ]] || return 9
 }
 
+# YED-411 step 4: one-way Claude memory, laptop -> mini (memory_sync.py has the rules). Uses its own key, which the
+# laptop pins to `rrsync -ro <laptop memory dir>`, so it can read that folder and nothing else. No key = skip, not failure.
+MEMSLUG="-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3"
+sync_memory() {
+  local key="$HOME/.ssh/esep_memory" mirror="$PRIVATE/memory-laptop"
+  [[ -f "$key" ]] || { echo "memory sync SKIP: no $key yet (setup: mini-runner.md, step 4)"; return 0; }
+  mkdir -p "$mirror"
+  /opt/homebrew/bin/rsync -a --delete --include='*.md' --exclude='*' \
+    -e "ssh -i $key -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" "$LAPTOP:./" "$mirror/"
+  local rc=$?
+  [[ $rc -ne 0 ]] && { echo "memory sync: pull rc=$rc; mini memory left as is"; return $rc; }
+  "$PY" ops/mini-runner/memory_sync.py --laptop "$mirror" \
+    --target "$HOME/.claude/projects/$MEMSLUG/memory" \
+    --target "$HOME/.claude/projects/-Users-sameoldexpressions-Developer-Empire-State-Events-Pipeline-Take-3/memory" \
+    --baseline "$PRIVATE/memory-baseline" --inbox "$PRIVATE/memory-inbox" \
+    --extra "$HOME/.claude/projects/-Users-sameoldexpressions/memory"
+}
+
 case "$JOB" in
   sync)
+    # One sync at a time: /freshen and the hourly launchd run can overlap. Wait up to 90 s; a lock older than
+    # 15 min is stale (a killed run) and is cleared.
+    LOCK="$PRIVATE/.sync.lock"; mkdir -p "$PRIVATE"
+    for _ in {1..30}; do mkdir "$LOCK" 2>/dev/null && break
+      [[ -n "$(find "$LOCK" -maxdepth 0 -mmin +15 2>/dev/null)" ]] && rmdir "$LOCK" 2>/dev/null; sleep 3; done
+    [[ -d "$LOCK" ]] && trap 'rmdir "$LOCK" 2>/dev/null' EXIT
     sync_inputs
     RC=$?
-    if [[ $RC -ne 255 ]]; then sync_private; PRC=$?; [[ $PRC -eq 255 ]] && PRC=0; [[ $RC -eq 0 && $PRC -ne 0 ]] && RC=$PRC; fi
+    if [[ $RC -ne 255 ]]; then
+      sync_private; PRC=$?; [[ $PRC -eq 255 ]] && PRC=0; [[ $RC -eq 0 && $PRC -ne 0 ]] && RC=$PRC
+      sync_memory;  MRC=$?; [[ $MRC -eq 255 ]] && MRC=0; [[ $RC -eq 0 && $MRC -ne 0 ]] && RC=10
+    fi
     [[ $RC -eq 0 ]] && echo "sync OK: $(find "$INPUTS" -type f | wc -l | tr -d ' ') files in $INPUTS" \
                     || { [[ $RC -eq 255 ]] && echo "sync SKIP: laptop unreachable (asleep / off Tailscale); next hour retries" \
                                            || echo "sync FAIL rc=$RC: a real error, read this log"; }
