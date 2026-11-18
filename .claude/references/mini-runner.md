@@ -149,6 +149,14 @@ until it is unlocked.
   Two test traps: a dry run still writes the once-per-day marker in `~/Library/Logs/esep-runner/.alerts/` (delete it after
   testing or a real failure that day is suppressed), and `claude auth status` over SSH reads "logged out" because an SSH
   session cannot reach the login keychain. Only the launchd run's login check is meaningful.
+- **Model-job auth (YED-441).** Jobs started by launchd lost the keychain login twice (11/13, 11/17), so `smoke`, `sweep`
+  and `brief` read a long-lived token from the runner `.env` instead. Setup (Alex, once a year, no trip to the mini needed):
+  `ssh esep-mini`, run `claude setup-token`, open the printed URL on the laptop and approve, then add to
+  `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`: `CLAUDE_CODE_OAUTH_TOKEN=<token>` and
+  `CLAUDE_TOKEN_EXPIRES=<YYYY-MM-DD>` (the expiry the command reports). `run-job.sh` reads only those two keys, never echoes
+  them, and logs `auth: long-lived token from .env`. With the token present, `alert.py login` skips the keychain check and
+  warns 14 days before `CLAUDE_TOKEN_EXPIRES`. Without it, everything falls back to the keychain login as before.
+  Verify: `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`, then the newest smoke log shows the auth line and `SMOKE: ALL PASS`.
 - **Setup (Alex, once, on the mini):** add `LINEAR_API_KEY=<key>` to `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`.
   launchd does not read `~/.zshrc`, so a key set there is invisible to the jobs. Without the key, alerts are local only.
 
