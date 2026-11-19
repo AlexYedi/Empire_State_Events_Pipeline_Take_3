@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The AI Effect on M&amp;A — carousel (Arc 1)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate + off-white, amber = business/GTM/deals) ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --mark:#D97706; --on-mark:#111418;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.m{color:var(--mark)}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+
+/* slide 1 */
+.s1 h1{font-size:128px;line-height:1.02;margin-top:40px}
+.stakes{margin-top:auto;margin-bottom:230px;font-family:var(--body);font-size:50px;line-height:1.2}
+.stakes .row{display:flex;align-items:baseline;gap:22px}
+.stakes .k{color:var(--muted);font-weight:500;width:380px;white-space:nowrap}
+.stakes .arr{color:var(--muted);width:54px}
+.stakes .v{font-weight:600}
+.stakes hr{border:0;height:2px;background:var(--mark);margin:34px 0;width:100%}
+.strip{position:absolute;left:96px;right:96px;bottom:128px;border-top:1px solid var(--rule);padding-top:22px;font-family:var(--mono);font-size:24px;letter-spacing:.02em;color:var(--muted)}
+
+/* slide 2 */
+.s2 h2{margin-top:0}
+.mirror{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;column-gap:56px}
+.mirror .hd{font-family:var(--body);font-weight:600;font-size:28px;letter-spacing:.02em;color:var(--muted);padding-bottom:22px}
+.mirror .c{font-family:var(--body);font-size:40px;line-height:1.16;padding:18px 0;border-top:2px solid var(--mark);min-height:110px;display:flex;align-items:center}
+.mirror .l{justify-content:flex-end;text-align:right}
+.mirror .r{justify-content:flex-start;text-align:left;font-weight:500}
+.mirror .hd.l{text-align:right}
+.bracket{margin-top:0;display:block}
+.bracket-label{font-family:var(--mono);font-size:28px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark);text-align:center;margin-top:10px}
+
+/* slide 3 */
+.s3 h2{margin-top:0;font-size:80px}
+.lanes{margin-top:44px;display:flex;flex-direction:column}
+.lane{display:grid;grid-template-columns:280px 112px 1fr;column-gap:18px;align-items:center;border-top:1px solid var(--rule);padding:30px 0}
+.lane:last-child{border-bottom:1px solid var(--rule)}
+.seat{font-family:var(--display);font-weight:600;font-size:50px;line-height:1}
+.conn{display:block}
+.lever{font-family:var(--body);font-weight:600;font-size:38px;line-height:1.16}
+.detail{font-family:var(--body);font-size:26px;line-height:1.35;color:var(--muted);margin-top:10px;font-weight:500}
+.ladder{display:flex;align-items:flex-end;gap:12px;margin-top:16px}
+.step{font-family:var(--mono);font-size:24px;color:var(--ink);border:2px solid var(--mark);border-radius:6px;padding:8px 12px;white-space:nowrap}
+.cap{font-family:var(--body);font-size:24px;line-height:1.3;color:var(--muted);margin-top:10px;font-weight:500}
+.unit{font-family:var(--mono);font-size:24px;color:var(--muted);padding-bottom:10px}
+.closer{margin-top:40px;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.15}
+
+/* slide 4 */
+.s4 h2{margin-top:0;font-size:100px;line-height:1.02}
+.fork{margin-top:80px;display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.opt{border:2px solid var(--rule);background:var(--panel);border-radius:10px;height:250px;display:flex;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:var(--display);font-weight:600;font-size:52px;line-height:1.08}
+.note{margin-top:34px;font-family:var(--body);font-size:28px;line-height:1.4;color:var(--muted);text-align:center}
+.ask{margin-top:auto;margin-bottom:150px;border:3px solid var(--mark);border-radius:10px;padding:44px 48px;font-family:var(--body);font-weight:600;font-size:54px;line-height:1.18}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 4 — Hook: same questions, different stakes
+     Alt text: Title card stating that the same AI questions show up in a vendor review and in an acquisition, where the cost of a bad answer is a lost deal or a lost multiple. -->
+<section class="slide s1">
+  <h1>Same AI questions. <span class="u">Different stakes.</span></h1>
+  <div class="stakes">
+    <div class="row"><span class="k">Vendor review</span><span class="arr">→</span><span class="v">lose the <span class="m">deal</span></span></div>
+    <hr>
+    <div class="row"><span class="k">Acquisition</span><span class="arr">→</span><span class="v">lose the <span class="m">multiple</span></span></div>
+  </div>
+  <div class="strip">The AI Effect on M&amp;A · NYTA · Civic Hall · Mon 11/16</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 4 →</span></div>
+</section>
+
+<!-- Slide 2 of 4 — Evidence: one questionnaire, two buyers
+     Alt text: Two-column table pairing five questions an enterprise buyer asks an AI vendor with the matching AI diligence items an acquirer checks in a target. -->
+<section class="slide s2">
+  <h2>One questionnaire, <span class="u">two buyers</span></h2>
+  <div class="mirror">
+    <div class="hd l">Enterprise buyer → AI vendor</div><div class="hd r">Acquirer → target</div>
+    <div class="c l">Which models, whose?</div><div class="c r">AI inventory and vendors</div>
+    <div class="c l">Can you use our data?</div><div class="c r">Training and customer-data rights</div>
+    <div class="c l">Who owns the outputs?</div><div class="c r">IP in AI-generated code</div>
+    <div class="c l">What if your provider changes?</div><div class="c r">Model and vendor dependence</div>
+    <div class="c l">Prove the outcome</div><div class="c r">Revenue from AI features</div>
+  </div>
+  <svg class="bracket" width="888" height="52" viewBox="0 0 888 52" aria-hidden="true">
+    <path d="M2 0 V22 Q2 30 10 30 H428 Q440 30 444 50 Q448 30 460 30 H878 Q886 30 886 22 V0" fill="none" stroke="#D97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="bracket-label">same evidence</div>
+  <div class="srcline">Source: Skadden via CLS Blue Sky Blog, 2026; CLS Blue Sky Blog, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 4 →</span></div>
+</section>
+
+<!-- Slide 3 of 4 — Mechanism: four seats, four price levers
+     Alt text: Four-lane diagram showing how the banker, accountant, lawyer and insurer each turn AI evidence into a price lever: the multiple, earnings adjustments, contract terms and insurance exclusions. -->
+<section class="slide s3">
+  <h2>Four seats, four <span class="u">price levers</span></h2>
+  <div class="lanes">
+    <div class="lane">
+      <div class="seat">Banker</div>
+      <svg class="conn" width="112" height="44" viewBox="0 0 112 44" aria-hidden="true"><line x1="0" y1="30" x2="54" y2="30" stroke="#9EA3A8" stroke-width="2"/><polygon points="72,38 82,24 92,38" fill="#D97706"/><line x1="60" y1="30" x2="106" y2="14" stroke="#D97706" stroke-width="5" stroke-linecap="round"/></svg>
+      <div>
+        <div class="lever">Multiple</div>
+        <div class="ladder">
+          <span class="step">3–5x</span><span class="step" style="margin-bottom:14px">4–6x</span><span class="step" style="margin-bottom:28px">6–9x</span><span class="step" style="margin-bottom:42px">10–20x</span><span class="unit">ARR</span>
+        </div>
+        <div class="cap">Corum’s four tiers · directional</div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="seat">Accountant</div>
+      <svg class="conn" width="112" height="44" viewBox="0 0 112 44" aria-hidden="true"><line x1="0" y1="30" x2="54" y2="30" stroke="#9EA3A8" stroke-width="2"/><polygon points="72,38 82,24 92,38" fill="#D97706"/><line x1="60" y1="30" x2="106" y2="14" stroke="#D97706" stroke-width="5" stroke-linecap="round"/></svg>
+      <div>
+        <div class="lever">Quality of earnings</div>
+        <div class="detail">Illustrative: at 8x, a $250K EBITDA adjustment = $2M of price</div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="seat">Lawyer</div>
+      <svg class="conn" width="112" height="44" viewBox="0 0 112 44" aria-hidden="true"><line x1="0" y1="30" x2="54" y2="30" stroke="#9EA3A8" stroke-width="2"/><polygon points="72,38 82,24 92,38" fill="#D97706"/><line x1="60" y1="30" x2="106" y2="14" stroke="#D97706" stroke-width="5" stroke-linecap="round"/></svg>
+      <div><div class="lever">Reps, indemnity, escrow</div></div>
+    </div>
+    <div class="lane">
+      <div class="seat">Insurer</div>
+      <svg class="conn" width="112" height="44" viewBox="0 0 112 44" aria-hidden="true"><line x1="0" y1="30" x2="54" y2="30" stroke="#9EA3A8" stroke-width="2"/><polygon points="72,38 82,24 92,38" fill="#D97706"/><line x1="60" y1="30" x2="106" y2="14" stroke="#D97706" stroke-width="5" stroke-linecap="round"/></svg>
+      <div><div class="lever">AI exclusions where the record is thin</div></div>
+    </div>
+  </div>
+  <div class="closer">Every lever reads the same evidence.</div>
+  <div class="srcline">Source: Corum Group, 2026 (advisor marketing); Fasken, 2026. $2M figure is illustrative arithmetic.</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 4 →</span></div>
+</section>
+
+<!-- Slide 4 of 4 — CTA: which gate moves price?
+     Alt text: Closing card asking whether AI diligence is its own workstream or a lens on existing ones, and which AI question has actually changed deal terms. -->
+<section class="slide s4">
+  <h2>Which gate <span class="u">moves price?</span></h2>
+  <div class="fork">
+    <div class="opt">Its own workstream</div>
+    <div class="opt">A lens on existing ones</div>
+  </div>
+  <div class="note">Fasken: more questions, faster, aren’t always better.</div>
+  <div class="ask">Which AI question has changed a deal’s terms?</div>
+  <div class="srcline">Source: Fasken, Sep 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 4</span></div>
+</section>
+
+</body>
+</html>

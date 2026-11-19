@@ -53,10 +53,94 @@ sync_inputs() {
   return $rc
 }
 
+# YED-441: model jobs authenticate with a long-lived token (`claude setup-token`) instead of the keychain login, which
+# launchd-started jobs lost on 11/13 and 11/17. Only CLAUDE_CODE_OAUTH_TOKEN (and its optional, non-secret
+# CLAUDE_TOKEN_EXPIRES date) is read from .env, for the jobs that call `claude` or check its login. The value is never
+# echoed or written to the log; without it the job falls back to the keychain login, as before.
+load_claude_token() {
+  local line k v
+  [[ -f .env ]] || { echo "auth: no .env; keychain login"; return 0; }
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    k="${line%%=*}"; v="${line#*=}"
+    v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+    case "$k" in
+      CLAUDE_CODE_OAUTH_TOKEN) [[ -n "$v" ]] && export CLAUDE_CODE_OAUTH_TOKEN="$v" ;;
+      CLAUDE_TOKEN_EXPIRES)    [[ -n "$v" ]] && export CLAUDE_TOKEN_EXPIRES="$v" ;;
+    esac
+  done < .env
+  [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]] && echo "auth: long-lived token from .env" || echo "auth: no CLAUDE_CODE_OAUTH_TOKEN in .env; keychain login"
+}
+[[ "$JOB" == (smoke|sweep|brief) ]] && load_claude_token
+
+# YED-411 step 2: one-way sync of private inputs, laptop -> mini. The laptop is the source; nothing is ever deleted.
+# Lands in PRIVATE (outside every git work tree), then installs into the runner checkout only where git ignores the
+# path and does not track it (refuses otherwise: exit 9, alert). The ~/Documents checkout is not writable by launchd
+# (TCC), so it reads PRIVATE through links set up once by ops/mini-runner/link-private.sh: HARD links for files
+# (worktree creation copies regular files but skips symlinks), a symlink for the reviews directory. --inplace keeps
+# each file's inode, so the hard links stay live; a sync that replaced files would silently cut them.
+PRIVATE="${ESEP_PRIVATE:-$HOME/Developer/esep-private}"
+PRIVATE_FILES=(.claude/references/me-model.md .claude/references/target-companies.md
+               .claude/references/inbox-denylist.md .claude/references/inbox-allowlist.md)
+PRIVATE_DIRS=(.claude/.state/reviews)
+safe_private_path() {   # $1 repo, $2 relative path: 0 only if git ignores it AND does not track it
+  git -C "$1" check-ignore -q "$2" && ! git -C "$1" ls-files --error-unmatch "$2" >/dev/null 2>&1
+}
+sync_private() {
+  mkdir -p "$PRIVATE"
+  local srcs=() p
+  for p in $PRIVATE_FILES; do srcs+=(":$p"); done
+  for p in $PRIVATE_DIRS; do srcs+=(":$p/"); done
+  srcs[1]="$LAPTOP${srcs[1]}"
+  /opt/homebrew/bin/rsync -a --inplace --relative --exclude='.DS_Store' \
+    -e "ssh -i $HOME/.ssh/esep_sync -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" \
+    "${srcs[@]}" "$PRIVATE/"
+  local rc=$?
+  [[ $rc -eq 23 || $rc -eq 24 ]] && { echo "WARN: partial private sync rc=$rc"; rc=0; }
+  [[ $rc -ne 0 ]] && return $rc
+  date -u +%FT%TZ > "$PRIVATE/.synced-at"
+  local refused=0
+  for p in $PRIVATE_FILES $PRIVATE_DIRS; do
+    [[ -e "$PRIVATE/$p" ]] || continue
+    if ! safe_private_path "$REAL" "$p"; then echo "REFUSED: $p is tracked or not gitignored in the runner checkout"; refused=1; continue; fi
+    mkdir -p "$REAL/${p:h}"
+    if [[ -d "$PRIVATE/$p" ]]; then /opt/homebrew/bin/rsync -a "$PRIVATE/$p/" "$REAL/$p/"; else cp -p "$PRIVATE/$p" "$REAL/$p"; fi
+  done
+  echo "private sync $([[ $refused -eq 0 ]] && echo OK || echo 'with REFUSALS'): $(find "$PRIVATE" -type f ! -name .synced-at | wc -l | tr -d ' ') files, synced $(cat "$PRIVATE/.synced-at")"
+  [[ $refused -eq 0 ]] || return 9
+}
+
+# YED-411 step 4: one-way Claude memory, laptop -> mini (memory_sync.py has the rules). Uses its own key, which the
+# laptop pins to `rrsync -ro <laptop memory dir>`, so it can read that folder and nothing else. No key = skip, not failure.
+MEMSLUG="-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3"
+sync_memory() {
+  local key="$HOME/.ssh/esep_memory" mirror="$PRIVATE/memory-laptop"
+  [[ -f "$key" ]] || { echo "memory sync SKIP: no $key yet (setup: mini-runner.md, step 4)"; return 0; }
+  mkdir -p "$mirror"
+  /opt/homebrew/bin/rsync -a --delete --include='*.md' --exclude='*' \
+    -e "ssh -i $key -o BatchMode=yes -o ConnectTimeout=10 -o IdentitiesOnly=yes" "$LAPTOP:./" "$mirror/"
+  local rc=$?
+  [[ $rc -ne 0 ]] && { echo "memory sync: pull rc=$rc; mini memory left as is"; return $rc; }
+  "$PY" ops/mini-runner/memory_sync.py --laptop "$mirror" \
+    --target "$HOME/.claude/projects/$MEMSLUG/memory" \
+    --target "$HOME/.claude/projects/-Users-sameoldexpressions-Developer-Empire-State-Events-Pipeline-Take-3/memory" \
+    --baseline "$PRIVATE/memory-baseline" --inbox "$PRIVATE/memory-inbox" \
+    --extra "$HOME/.claude/projects/-Users-sameoldexpressions/memory"
+}
+
 case "$JOB" in
   sync)
+    # One sync at a time: /freshen and the hourly launchd run can overlap. Wait up to 90 s; a lock older than
+    # 15 min is stale (a killed run) and is cleared.
+    LOCK="$PRIVATE/.sync.lock"; mkdir -p "$PRIVATE"
+    for _ in {1..30}; do mkdir "$LOCK" 2>/dev/null && break
+      [[ -n "$(find "$LOCK" -maxdepth 0 -mmin +15 2>/dev/null)" ]] && rmdir "$LOCK" 2>/dev/null; sleep 3; done
+    [[ -d "$LOCK" ]] && trap 'rmdir "$LOCK" 2>/dev/null' EXIT
     sync_inputs
     RC=$?
+    if [[ $RC -ne 255 ]]; then
+      sync_private; PRC=$?; [[ $PRC -eq 255 ]] && PRC=0; [[ $RC -eq 0 && $PRC -ne 0 ]] && RC=$PRC
+      sync_memory;  MRC=$?; [[ $MRC -eq 255 ]] && MRC=0; [[ $RC -eq 0 && $MRC -ne 0 ]] && RC=10
+    fi
     [[ $RC -eq 0 ]] && echo "sync OK: $(find "$INPUTS" -type f | wc -l | tr -d ' ') files in $INPUTS" \
                     || { [[ $RC -eq 255 ]] && echo "sync SKIP: laptop unreachable (asleep / off Tailscale); next hour retries" \
                                            || echo "sync FAIL rc=$RC: a real error, read this log"; }
@@ -151,8 +235,14 @@ PYEOF
     RC=$?
     rm -rf "$SW"
     ;;
+  parity)
+    # YED-411 step 6: daily read-only laptop <-> mini parity check (parity_check.py has the rules). Compares and reports;
+    # never syncs or fixes. Exit 11 on any FAIL, which alerts. Writes esep-private/parity.json for /freshen.
+    "$PY" ops/mini-runner/parity_check.py
+    RC=$?
+    ;;
   *)
-    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep, export, brief)"; RC=64 ;;
+    echo "FAIL: unknown job '$JOB' (known: sync, reconcile, smoke, sweep, export, brief, parity)"; RC=64 ;;
 esac
 echo "== $JOB end $(date -u +%FT%TZ) exit=$RC"
 # Failure alert (Linear issue when LINEAR_API_KEY is in .env, plus a notification and ALERTS.txt; once per job per day),

@@ -99,6 +99,61 @@ Setup, once:
 4. Install on the laptop: step 9 below.
 To revoke: delete the `esep-export-pull` line from the mini's `~/.ssh/authorized_keys`.
 
+## Private inputs, laptop -> mini (YED-411 step 2)
+
+The hourly `sync` job also pulls the private inputs from the laptop: `me-model.md`, `target-companies.md`,
+`inbox-denylist.md`, `inbox-allowlist.md` and `.claude/.state/reviews/`. It uses the same restricted read-only key.
+- One way, laptop as source, **nothing is ever deleted** (no `--delete`): a same-named file is overwritten by the laptop's
+  copy, anything else on the mini stays. The landing folder is `~/Developer/esep-private`, outside every git work tree;
+  `.synced-at` holds the last good sync time.
+- It installs into the runner checkout only where `git check-ignore` passes and `git ls-files` says untracked. Any other
+  path is refused and the job exits 9, which alerts. A laptop that is asleep (255) is a skip, not a failure.
+- The `~/Documents` checkout (interactive and Remote Control sessions) can't be written by launchd (TCC), so it reads the
+  landing folder through links: **hard links for the four files** and a symlink for `reviews/`. Hard links, because new
+  Remote Control worktrees copy regular files from `.worktreeinclude` but skip symlinks (found 11/18: a symlinked me-model
+  reached no new session). The sync writes `--inplace`, so the shared file stays live; never change it to a replacing copy. Run once over `ssh esep-mini`:
+  `zsh ~/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/link-private.sh`. The script applies the same
+  refusal check, moves anything it replaces to `~/private-backups/<timestamp>/` (outside every repo), is safe to re-run,
+  and fails if git then sees any change under `.claude/references` or `.claude/.state`.
+- Not covered yet: Claude memory (step 4) and worktree snapshots (step 3).
+
+## Claude memory, laptop -> mini (YED-411 step 4)
+
+Auto-memory is machine-local by design (code.claude.com/docs/en/memory); worktrees of one repo share one memory dir.
+Practice (11/18 research): config syncs through git, runtime state stays local, and durable knowledge is promoted
+deliberately rather than synced both ways. So:
+- The **laptop holds the master memory.** The hourly `sync` job mirrors it (`*.md` only) into
+  `~/Developer/esep-private/memory-laptop` with its own key, then `memory_sync.py` installs it into the mini's memory
+  dirs (the `~/Documents` and `~/Developer` repo slugs).
+- **Nothing the mini learns is lost.** Before installing, any note a mini session created or changed (and any new
+  `MEMORY.md` index line) is copied to `~/Developer/esep-private/memory-inbox/<date>/`. A mini-only note stays usable on the
+  mini, marked "(mini note, awaiting promotion)" in the index. **At the Friday review**, promote from the inbox: into the
+  laptop memory, into checked-in docs if it's public-safe and durable, or drop it. Notes from sessions started outside
+  the repo (`-Users-sameoldexpressions/memory`) are inbox-only.
+- An empty or failed laptop pull changes nothing. Exit 10 = memory step failed (alerts).
+- **Setup, once:** on the mini, `ssh-keygen -t ed25519 -N "" -C esep-memory -f ~/.ssh/esep_memory`. On the laptop, append
+  `restrict,command="$HOME/.local/bin/rrsync-esep -ro $HOME/.claude/projects/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/memory" <contents of esep_memory.pub>`
+  to `~/.ssh/authorized_keys`. That key can read that one folder and nothing else. Revoke: delete the line. With no key,
+  the step logs `SKIP`.
+
+## Daily parity check (YED-411 step 6)
+
+`parity` job, `com.esep.parity-check`, 06:15 daily. Read-only: it compares and alerts, never syncs or fixes
+(`parity_check.py`). launchd cannot read `~/Documents` (TCC), so the hard links are checked by link count on the
+landing-folder side (1 = the `~/Documents` link broke). Checks: **sync-age** (last private sync < 2 h with the laptop
+reachable, < 36 h otherwise) · **hard-links** · **private** (laptop vs mini by checksum) · **memory** (notes by
+checksum, every laptop index line present) · **inbox** (nothing older than 8 days). It writes
+`esep-private/parity.json`, which `/freshen` shows. Exit 11 = a FAIL, which alerts. Proved 11/18 against planted faults:
+an unlinked file, a modified me-model and a missing memory note were each named.
+Install (Alex): `cp ops/mini-runner/com.esep.parity-check.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.parity-check.plist`
+
+## /freshen (start of any session)
+
+`/freshen` runs `ops/mini-runner/freshen.sh`. On the mini it runs `sync` now (inputs, private files, memory; about 10 s,
+serialized with the hourly run by a lock), copies the fresh private files into the session's worktree, fetches origin
+and prints one `FRESHEN:` line. On the laptop it does the worktree copy and fetch. It closes the up-to-an-hour gap between a
+laptop edit and the next hourly sync. Making it run automatically at session start is a hook change: it needs Alex's go.
+
 ## Install (Alex runs these in Terminal.app; Claude may not install login items)
 
 Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
@@ -149,6 +204,14 @@ until it is unlocked.
   Two test traps: a dry run still writes the once-per-day marker in `~/Library/Logs/esep-runner/.alerts/` (delete it after
   testing or a real failure that day is suppressed), and `claude auth status` over SSH reads "logged out" because an SSH
   session cannot reach the login keychain. Only the launchd run's login check is meaningful.
+- **Model-job auth (YED-441).** Jobs started by launchd lost the keychain login twice (11/13, 11/17), so `smoke`, `sweep`
+  and `brief` read a long-lived token from the runner `.env` instead. Setup (Alex, once a year, no trip to the mini needed):
+  `ssh esep-mini`, run `claude setup-token`, open the printed URL on the laptop and approve, then add to
+  `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`: `CLAUDE_CODE_OAUTH_TOKEN=<token>` and
+  `CLAUDE_TOKEN_EXPIRES=<YYYY-MM-DD>` (the expiry the command reports). `run-job.sh` reads only those two keys, never echoes
+  them, and logs `auth: long-lived token from .env`. With the token present, `alert.py login` skips the keychain check and
+  warns 14 days before `CLAUDE_TOKEN_EXPIRES`. Without it, everything falls back to the keychain login as before.
+  Verify: `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`, then the newest smoke log shows the auth line and `SMOKE: ALL PASS`.
 - **Setup (Alex, once, on the mini):** add `LINEAR_API_KEY=<key>` to `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`.
   launchd does not read `~/.zshrc`, so a key set there is invisible to the jobs. Without the key, alerts are local only.
 

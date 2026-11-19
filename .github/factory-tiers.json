@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tests_command": "cd .claude/scripts\nfailed=0\nfor f in *.py; do\n  [ \"$f\" = inbox_boundary.py ] && continue\n  grep -q -- --selftest \"$f\" || continue\n  python3 \"$f\" --selftest >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\ncd ../..\nfor f in .claude/skills/*/fixtures/test_*.py; do\n  [ -e \"$f\" ] || continue\n  python3 \"$f\" >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\nexit $failed\n",
+  "tests_command": "cd .claude/scripts\nfailed=0\nfor f in *.py; do\n  [ \"$f\" = inbox_boundary.py ] && continue\n  grep -q -- --selftest \"$f\" || continue\n  python3 \"$f\" --selftest >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\nfor f in test_*.py; do\n  [ -e \"$f\" ] || continue\n  python3 \"$f\" >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\ncd ../..\nfor f in .claude/skills/*/fixtures/test_*.py; do\n  [ -e \"$f\" ] || continue\n  python3 \"$f\" >/dev/null 2>&1 && echo \"pass $f\" || { echo \"FAIL $f\"; failed=1; }\ndone\nexit $failed\n",
   "code_owners": [
     "AlexYedi"
   ],

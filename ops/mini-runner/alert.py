@@ -94,7 +94,28 @@ def job_alert(job, rc, log):
     notify(f"Mini runner: {job} failed (exit {rc})", body)
 
 
+TOKEN_WARN_DAYS = 14
+
+
 def login_alert():
+    # YED-441: with a long-lived token the keychain login no longer matters, and checking it would alert forever.
+    # Auth failures still surface as job failures. Warn before the token's recorded expiry, if one is recorded.
+    if os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        exp = os.environ.get("CLAUDE_TOKEN_EXPIRES", "")
+        try:
+            days = (date.fromisoformat(exp) - date.today()).days
+        except ValueError:
+            print("login check: long-lived token in use (no CLAUDE_TOKEN_EXPIRES recorded)")
+            return
+        if days > TOKEN_WARN_DAYS:
+            print(f"login check: long-lived token, expires {exp} ({days} days)")
+            return
+        if not once_today("login"):
+            return
+        notify(f"Mini runner: Claude token expires in {days} days ({exp})",
+               f"The long-lived Claude token on esep-mini expires {exp}. Run `claude setup-token` (over `ssh esep-mini` is "
+               "fine), replace CLAUDE_CODE_OAUTH_TOKEN and CLAUDE_TOKEN_EXPIRES in the runner .env, then kick the smoke job.")
+        return
     try:
         out = subprocess.run(["claude", "auth", "status"], capture_output=True, text=True, timeout=30).stdout
         st = json.loads(out)
@@ -112,8 +133,8 @@ def login_alert():
         return
     notify(f"Mini runner: Claude login {msg}",
            f"The Claude Code login on esep-mini {msg}. Scheduled model jobs (sweep, smoke) fail without it.\n\n"
-           "Fix: Screen Share into the mini, run `claude` in Terminal and log in (or `/login`), then "
-           "`claude auth status` to confirm the new expiry.")
+           "Durable fix (YED-441): `ssh esep-mini`, run `claude setup-token`, put the token in the runner .env as "
+           "CLAUDE_CODE_OAUTH_TOKEN (plus CLAUDE_TOKEN_EXPIRES=YYYY-MM-DD). Stopgap: Screen Share in, run `claude` and `/login`.")
 
 
 if __name__ == "__main__":
