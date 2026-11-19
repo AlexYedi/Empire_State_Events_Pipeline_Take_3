@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Who signs off on what "revenue" means?</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined. Palette per the visual brief:
+   ground #0F172A (dark slate), ink white, one topic accent emerald #059669 (data / infrastructure),
+   chart series #38BDF8 / #F59E0B on slide 4 only,
+   acid green #8FE83A only for the headline underline and the name mark. */
+:root{
+  --ground:#0F172A; --panel:#16203A; --rule:#26324A; --ink:#F8FAFC; --muted:#94A3B8;
+  --accent:#8FE83A; --mark:#059669;
+  --s1:#38BDF8; --s2:#F59E0B;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:120px;line-height:1.08}
+h2{font-size:72px;line-height:1.06}
+h2::after{content:"";display:block;width:96px;height:6px;background:var(--accent);margin-top:24px}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.src span{display:block}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+.em{color:var(--mark)}
+.u{border-bottom:12px solid var(--accent);padding-bottom:2px;white-space:nowrap}
+
+/* Slide 1: hook */
+.s1 h1{margin-top:150px}
+.strip{margin-top:80px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:22px 0;font-family:var(--mono);font-size:25px;line-height:1.6;color:var(--ink);white-space:nowrap}
+.host{margin-top:auto;font-family:var(--body);font-size:32px;line-height:1.4;color:var(--muted)}
+.host b{color:var(--ink);font-weight:600}
+
+/* Slide 2: invite vs source table */
+.s2{padding-bottom:200px}
+.tbl{margin-top:48px;display:grid;grid-template-columns:340px 1fr;column-gap:36px}
+.tbl .th{font-family:var(--mono);font-weight:700;font-size:24px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-bottom:14px;border-bottom:3px solid var(--rule)}
+.tbl .th.em{color:var(--mark);border-bottom-color:var(--mark)}
+.tbl .c{padding:24px 0;border-bottom:2px solid var(--rule);font-family:var(--body);font-size:28px;line-height:1.3}
+.tbl .inv{font-weight:600;color:var(--ink);display:flex;gap:14px}
+.tbl .inv i{font-style:normal;font-family:var(--mono);font-size:22px;color:var(--muted);padding-top:3px}
+.tbl .srcs{color:var(--ink)}
+.tbl .srcs .who{font-weight:600;color:var(--mark)}
+.tbl .srcs .aside{color:var(--muted)}
+.note{margin-top:auto;font-family:var(--display);font-style:italic;font-size:40px;line-height:1.2;color:var(--ink)}
+
+/* Slide 3: three bands */
+.stack{margin-top:56px;display:flex;flex-direction:column;gap:22px}
+.band{display:grid;grid-template-columns:250px 1fr;column-gap:32px;align-items:center;border:3px solid var(--rule);border-radius:12px;background:var(--panel);padding:30px 32px;min-height:196px}
+.band .lab{font-family:var(--body);font-size:28px;line-height:1.2;color:var(--muted)}
+.band .lab b{display:block;font-family:var(--mono);font-weight:700;font-size:40px;letter-spacing:.03em;color:var(--ink);margin-bottom:6px}
+.band .ann{font-family:var(--body);font-size:26px;line-height:1.32;color:var(--ink)}
+.band .ann b{font-weight:600}
+.band.exit{border:4px dashed var(--mark);background:transparent}
+.band.exit .lab b{color:var(--mark)}
+.pays{margin-top:6px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:18px 32px;font-family:var(--body);font-size:25px;line-height:1.3;color:var(--muted)}
+.pays b{font-family:var(--mono);font-weight:700;color:var(--ink);letter-spacing:.03em;margin-right:6px}
+
+/* Slide 4: paired bars */
+.legend{margin-top:36px;font-family:var(--body);font-size:28px;line-height:1.6;color:var(--ink)}
+.legend .li{display:block}
+.sw{display:inline-block;width:28px;height:28px;border-radius:4px;vertical-align:-5px;margin-right:14px}
+.sw.a{background:var(--s1)} .sw.b{background:var(--s2)}
+.chart{margin-top:34px;width:888px}
+.chart svg{display:block}
+.capn{margin-top:auto;font-family:var(--body);font-size:26px;line-height:1.35;color:var(--muted);border-top:2px solid var(--rule);padding-top:22px}
+.capn b{color:var(--ink);font-weight:600}
+
+/* Slide 5: CTA */
+.s5 h1{margin-top:110px;font-size:112px}
+.s5 h1::after{content:"";display:block;width:120px;height:8px;background:var(--accent);margin-top:34px}
+.q{margin-top:56px;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.25;color:var(--ink);text-wrap:balance}
+.ask{margin-top:auto;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:24px 0;font-family:var(--mono);font-size:30px;color:var(--ink)}
+.namebox{margin-top:44px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: A title card asking who in a company has the authority to define "revenue" for an AI agent, with the event name, venue and date. -->
+<section class="slide s1">
+  <h1><span class="u">Who signs off</span> on what “<span class="em">revenue</span>” means?</h1>
+  <div class="strip">The AI Briefing by Startup Grind · Civic Hall · Fri Nov 13.</div>
+  <div class="host">Hosted by <b>Joshua Ness</b>, Startup Grind NYC.</div>
+  <div class="foot"><span class="src"></span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: A four-row table comparing claims in the event invite with what each original source says: spend doubled rather than tripled, more than 80% outside IT, the portable-layer advice coming from a separate BCG essay, and three figures belonging to a vendor survey. -->
+<section class="slide s2">
+  <h2>The invite, read against its sources</h2>
+  <div class="tbl">
+    <div class="th">Invite says</div><div class="th em">Source says</div>
+
+    <div class="c inv"><i>1</i><span>Spend more than tripled, to 3.3%</span></div>
+    <div class="c srcs"><span class="who">BCG:</span> doubled in under a year, ~1.7% → 3.3% <span class="aside">(another BCG page implies ~1%)</span></div>
+
+    <div class="c inv"><i>2</i><span>2.8 points sit outside IT</span></div>
+    <div class="c srcs"><span class="who">BCG:</span> more than 80% of AI spend sits outside IT</div>
+
+    <div class="c inv"><i>3</i><span>Keep definitions in a layer you could move</span></div>
+    <div class="c srcs"><span class="who">Closest match:</span> BCG’s Aug lock-in essay (own the definitions, rent the tools). <span class="aside">The Index itself: two-thirds of future-built firms commit to one platform</span></div>
+
+    <div class="c inv"><i>4</i><span>8.4% <span style="font-weight:400;color:var(--muted)">(placed next to VentureBeat’s respondents)</span></span></div>
+    <div class="c srcs"><span class="who">The Modern Data Company</span> survey, n=540+, vendor-run <span class="aside">(as are the 61% and 16%)</span></div>
+  </div>
+  <div class="note">Most numbers check out. Some moved between sources.</div>
+  <div class="foot"><span class="src"><span>Sources: BCG press release 2026-09-30; BCG lock-in essay 2026-08-06; BCG Weekly Brief; IT Brief / Business Wire 2026-08-19/20; Startup Grind NYC Luma invite.</span><span>BCG: 1,330 execs, self-reported.</span></span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: A three-layer diagram that splits data-layer ownership into writing definitions, running them and leaving with them, with the live vendor signal for each and a separate strip for who pays. -->
+<section class="slide s3">
+  <h2>“Ownership” is three different claims</h2>
+  <div class="stack">
+    <div class="band">
+      <div class="lab"><b>WRITES</b>the definitions</div>
+      <div class="ann"><b>Snowflake Business Ontology:</b> serves only owner-approved definitions (announced Nov 3; public preview soon)</div>
+    </div>
+    <div class="band">
+      <div class="lab"><b>RUNS</b>them</div>
+      <div class="ann"><b>BCG Index:</b> two-thirds of future-built firms commit to one enterprise-wide platform</div>
+    </div>
+    <div class="band exit">
+      <div class="lab"><b>LEAVES</b>with them</div>
+      <div class="ann"><b>Apache Ossie</b>, the open standard for portable metrics: still incubating. No published case found of definitions moved out of a vendor.</div>
+    </div>
+    <div class="pays"><b>PAYS</b> for it: Atlassian enforces usage-based pricing from early December.</div>
+  </div>
+  <div class="foot"><span class="src"><span>Sources: Snowflake press release 2026-11-03; BCG Weekly Brief 2026-09-30; Apache Incubator (Ossie); diginomica 2026-11-06.</span><span>BCG: 1,330 execs, self-reported.</span></span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: Paired bars for three monthly survey waves showing teams with a semantic layer reporting AI context failures more often than teams without one, with a note that the link is correlational. -->
+<!-- Bar widths: percent x 8px on one zero-based 0-100 axis (800px). 50=400 · 21=168 · 78=624 · 37=296 · 88=704 · 60=480 -->
+<section class="slide s4">
+  <h2>Teams with a layer report more failures</h2>
+  <div class="legend">
+    <span class="li"><span class="sw a"></span>Running or building a layer</span>
+    <span class="li"><span class="sw b"></span>Evaluating or no plans</span>
+  </div>
+  <div class="chart">
+    <svg width="888" height="640" viewBox="0 0 888 640" aria-hidden="true">
+      <g stroke="#26324A" stroke-width="2">
+        <line x1="0" y1="0" x2="0" y2="590"/>
+        <line x1="400" y1="0" x2="400" y2="590" stroke-dasharray="6 8"/>
+        <line x1="800" y1="0" x2="800" y2="590" stroke-dasharray="6 8"/>
+      </g>
+      <g font-family="Menlo, SF Mono, monospace" font-size="24" fill="#94A3B8">
+        <text x="16" y="26"><tspan fill="#F8FAFC" font-weight="700">Jul</tspan>  recurring failures · n=101</text>
+        <text x="16" y="226"><tspan fill="#F8FAFC" font-weight="700">Aug</tspan>  any failure · n=130</text>
+        <text x="16" y="426"><tspan fill="#F8FAFC" font-weight="700">Oct</tspan>  any failure · n=100</text>
+      </g>
+      <g font-family="Avenir Next, Helvetica Neue, Helvetica, sans-serif" font-weight="700" font-size="38" fill="#0F172A" text-anchor="end">
+        <!-- Jul -->
+        <rect x="0" y="40" width="400" height="62" rx="6" fill="#38BDF8"/>
+        <text x="382" y="85">50%</text>
+        <rect x="0" y="110" width="168" height="62" rx="6" fill="#F59E0B"/>
+        <text x="150" y="155">21%</text>
+        <!-- Aug -->
+        <rect x="0" y="240" width="624" height="62" rx="6" fill="#38BDF8"/>
+        <text x="606" y="285">78%</text>
+        <rect x="0" y="310" width="296" height="62" rx="6" fill="#F59E0B"/>
+        <text x="278" y="355">37%</text>
+        <!-- Oct -->
+        <rect x="0" y="440" width="704" height="62" rx="6" fill="#38BDF8"/>
+        <text x="686" y="485">88%</text>
+        <rect x="0" y="510" width="480" height="62" rx="6" fill="#F59E0B"/>
+        <text x="462" y="555">60%</text>
+      </g>
+      <g font-family="Menlo, SF Mono, monospace" font-size="22" fill="#94A3B8">
+        <text x="0" y="626">0</text>
+        <text x="400" y="626" text-anchor="middle">50</text>
+        <text x="800" y="626" text-anchor="middle">100</text>
+      </g>
+    </svg>
+  </div>
+  <div class="capn"><b>VentureBeat: correlation, not cause.</b> A layer may simply detect more. Groups under 40 can swing ~15 pts.</div>
+  <div class="foot"><span class="src">Source: VentureBeat Pulse, Jul/Aug/Oct 2026 waves; self-selected reader panel.</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: A closing card asking whether data-layer ownership lives in the architecture, the org chart or the contract. -->
+<section class="slide s5">
+  <h1>Architecture, org chart, or <span class="em">contract?</span></h1>
+  <div class="q">When a company says it owns its data layer, which one is it, and which survives the first disagreement over ‘revenue’?</div>
+  <div class="ask">Bring one wrong answer your AI gave.</div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src"></span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>
