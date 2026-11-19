@@ -55,3 +55,5 @@ No secrets, keys, email addresses or phone numbers (invariant 1 applies in spiri
 At most two Claude sessions alive across all tracks; each session's first line names its track and milestone. The **drift number** (`metrics/drift`: P1 applications + warm touches in the trailing 7 days; baseline 0, target ≥8, under 5 = drifting) is updated at every Friday review.
 
 Source of the page: `.claude/.state/reviews/command-center.html` (private). The re-plan behind the tracks: `.claude/.state/reviews/replan-2026-11-18.md` (private).
+
+<!-- gate smoke test for YED-355 token-expiry alert; this PR is closed unmerged -->
