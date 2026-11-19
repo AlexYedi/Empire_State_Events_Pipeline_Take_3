@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """test_close_check.py — offline regression for close_check.py (YED-372). No network: the graph reader is a fake.
 
-Pins: PASS on a complete run, FAIL on zero claims, PASS when claims were skipped with a reason, Rooms file missing
-→ SKIPPED, unreachable graph → SKIPPED (never a crash), unthemed topics → FAIL unless covered by none_fits,
+Pins: PASS on a complete run, FAIL on zero claims, PASS when claims were skipped with a reason, no Rooms check
+(cut 2026-11-11, YED-374), unreachable graph → SKIPPED (never a crash), unthemed topics → FAIL unless covered by none_fits,
 the close-check step written back into run-state, and exit 0 always without --strict.
 
 Usage: python3 .claude/scripts/test_close_check.py [--selftest]
@@ -49,22 +49,11 @@ class FakeReader:
         return self.tops
 
 
-def hub(d, listed=True):
-    p = os.path.join(d, "hub", "src", "data")
-    os.makedirs(p)
-    rows = [{"slug": "2026-09-28-shortlist-september-founder-showcase"}]
-    if listed:
-        rows.append({"slug": "2026-11-04-fictional-builders-harnesses"})
-    with open(os.path.join(p, "rooms.curated.json"), "w") as f:
-        json.dump(rows, f)
-    return os.path.join(d, "hub")
-
-
 def complete(rs, sd, **over):
     for s in rs.STEP_IDS[:-1]:
         if s in over:
             continue
-        meta = {"themes_prop": "set"} if s == "notion-write" else None
+        meta = {"themes_prop": "set"} if s == "notion-write" else {"routing_rows": "5"} if s == "route" else None
         rs.mark(EVENT, s, "done", meta=meta, state_dir=sd)
     for s, (status, reason) in over.items():
         rs.mark(EVENT, s, status, reason=reason, state_dir=sd)
@@ -87,69 +76,74 @@ def run():
         return next(r["status"] for r in out["results"] if r["check"] == check)
 
     with tempfile.TemporaryDirectory() as d:
-        sd, h = os.path.join(d, "state"), hub(d)
+        sd = os.path.join(d, "state")
         complete(rs, sd)
-        out = cc.run(EVENT, NID, reader=FakeReader(), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
         ck("complete run → CLOSE-CHECK: PASS", out["verdict"] == "CLOSE-CHECK: PASS", out)
         ck("Themes prop is SELF-REPORTED", status(out, "themes-prop") == "SELF-REPORTED", out)
-        ck("routing rows SKIPPED until 3.8e exists", status(out, "routing-rows") == "SKIPPED", out)
-        ck("rooms matched by same day + shared title token", status(out, "rooms") == "PASS", out)
+        ck("routing rows SELF-REPORTED from the route step", status(out, "routing-rows") == "SELF-REPORTED", out)
+        ck("no rooms check any more (YED-374)", all(r["check"] != "rooms" for r in out["results"]), out)
         cs = rs.load(EVENT, sd)["steps"]["close-check"]
         ck("close-check step written to run-state with result", cs["status"] == "done" and cs["meta"]["result"] == "PASS")
         ck("resume point is none after a passing close-check", rs.resume_point(rs.load(EVENT, sd)) == "none")
 
-        out = cc.run(EVENT, NID, reader=FakeReader(claims=0), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(claims=0), state_dir=sd)
         ck("zero claims → FAIL naming claims", status(out, "claims") == "FAIL"
            and out["verdict"] == "CLOSE-CHECK: FAIL (1) — claims", out)
         ck("FAIL recorded in run-state meta", rs.load(EVENT, sd)["steps"]["close-check"]["meta"]
            == {"result": "FAIL 1", "items": "claims"})
 
-        out = cc.run(EVENT, NID, reader=FakeReader(event=False, claims=0), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(event=False, claims=0), state_dir=sd)
         ck("missing graph event row → FAIL graph-event, themes SKIPPED",
            status(out, "graph-event") == "FAIL" and status(out, "themes") == "SKIPPED", out)
 
         tops = [{"id": "t1", "name": "Agent identity", "cluster_id": None},
                 {"id": "t2", "name": "Harnesses", "cluster_id": "c1"}]
-        out = cc.run(EVENT, NID, reader=FakeReader(topics=tops), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(topics=tops), state_dir=sd)
         ck("unthemed topic → FAIL themes naming it", status(out, "themes") == "FAIL"
            and "Agent identity" in out["results"][2]["detail"], out)
         rs.mark(EVENT, "themes", "done", meta={"none_fits": "1"}, state_dir=sd)
-        out = cc.run(EVENT, NID, reader=FakeReader(topics=tops), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(topics=tops), state_dir=sd)
         ck("unthemed topic covered by none_fits → PASS", status(out, "themes") == "PASS", out)
 
     with tempfile.TemporaryDirectory() as d:
-        sd, h = os.path.join(d, "state"), hub(d)
+        sd = os.path.join(d, "state")
         complete(rs, sd, claims=("skipped", "walk-in, no transcript"))
-        out = cc.run(EVENT, NID, reader=FakeReader(claims=0), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(claims=0), state_dir=sd)
         ck("zero claims but claims skipped with reason → PASS", out["verdict"] == "CLOSE-CHECK: PASS"
            and status(out, "claims") == "SKIPPED", out)
 
-        out = cc.run(EVENT, NID, reader=FakeReader(), hub_dir=os.path.join(d, "nope"), state_dir=sd)
-        ck("rooms file missing → SKIPPED with reason", status(out, "rooms") == "SKIPPED"
-           and "not found" in out["results"][-2]["detail"], out)
-
-        out = cc.run(EVENT, NID, reader=FakeReader(boom="GET /event -> 401"), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(boom="GET /event -> 401"), state_dir=sd)
         ck("unreachable graph → graph checks SKIPPED, no crash",
            status(out, "graph-event") == "SKIPPED" and status(out, "themes") == "SKIPPED", out)
 
     with tempfile.TemporaryDirectory() as d:
-        sd, h = os.path.join(d, "state"), hub(d, listed=False)
+        sd = os.path.join(d, "state")
+        complete(rs, sd, route=("skipped", "walk-in: nothing routable"))
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
+        ck("route skipped with reason → routing-rows SKIPPED, run still PASS",
+           status(out, "routing-rows") == "SKIPPED" and out["verdict"] == "CLOSE-CHECK: PASS", out)
+        rs.mark(EVENT, "route", "done", state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
+        ck("route done without routing_rows → FAIL", status(out, "routing-rows") == "FAIL", out)
+
+    with tempfile.TemporaryDirectory() as d:
+        sd = os.path.join(d, "state")
         rs.mark(EVENT, "resolve", "done", state_dir=sd)
         rs.mark(EVENT, "notion-write", "done", state_dir=sd)
-        out = cc.run(EVENT, NID, reader=FakeReader(), hub_dir=h, state_dir=sd)
+        out = cc.run(EVENT, NID, reader=FakeReader(), state_dir=sd)
         ck("partial run: run-state gaps listed", status(out, "run-state") == "FAIL"
            and "graph-event(missing)" in out["results"][-1]["detail"], out)
         ck("Themes prop not reported → FAIL", status(out, "themes-prop") == "FAIL", out)
-        ck("event not in rooms → FAIL", status(out, "rooms") == "FAIL", out)
-        ck("verdict counts every FAIL", out["verdict"].startswith("CLOSE-CHECK: FAIL (3) — "), out)
+        ck("verdict counts every FAIL", out["verdict"].startswith("CLOSE-CHECK: FAIL (2) — "), out)
 
         # exit codes through main(): 0 always, 1 only with --strict on FAIL
         with mock.patch.object(cc, "GraphReader", lambda: FakeReader(claims=0)), \
                 mock.patch.object(rs, "STATE_DIR", sd), mock.patch("sys.stdout"):
-            ck("main exits 0 on FAIL without --strict", cc.main([EVENT, "--notion-event-id", NID, "--hub", h]) == 0)
+            ck("main exits 0 on FAIL without --strict", cc.main([EVENT, "--notion-event-id", NID]) == 0)
             ck("main exits 1 on FAIL with --strict",
-               cc.main([EVENT, "--notion-event-id", NID, "--hub", h, "--strict"]) == 1)
-            ck("--json exits 0", cc.main([EVENT, "--notion-event-id", NID, "--hub", h, "--json"]) == 0)
+               cc.main([EVENT, "--notion-event-id", NID, "--strict"]) == 1)
+            ck("--json exits 0", cc.main([EVENT, "--notion-event-id", NID, "--json"]) == 0)
 
     print(f"tests: {ok}/{n} pass")
     return 0 if ok == n else 1

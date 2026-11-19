@@ -106,9 +106,16 @@ def run():
         ck("failed replace leaves the old file intact", open(rs.path_for(EVENT, d)).read() == before)
         ck("failed replace cleans its temp file", [f for f in os.listdir(sdir) if f.endswith(".tmp")] == [])
 
+    with tempfile.TemporaryDirectory() as nd:
+        rs.mark("Fictional Night: Harnesses & Agent Identity", "resolve", "done", state_dir=nd)
+        ck("near match flags the same event typed without 'and'",
+           rs.near_matches("Fictional Night: Harnesses Agent Identity", nd) == ["fictional-night-harnesses-and-agent-identity"])
+        ck("exact slug is not a near match", rs.near_matches("Fictional Night: Harnesses & Agent Identity", nd) == [])
+        ck("a different event is not a near match", rs.near_matches("Fictional Demo Day: Voice Agents", nd) == [])
+
     ck("meta parses k=v (value may contain '=')", rs.parse_meta(["a=1", "b=x=y"]) == {"a": "1", "b": "x=y"})
     ck("canonical order covers 1 through 6.5", rs.STEP_IDS[0] == "resolve" and rs.STEP_IDS[-1] == "close-check"
-       and len(rs.STEP_IDS) == 17)
+       and len(rs.STEP_IDS) == 18 and rs.STEP_IDS.index("route") == rs.STEP_IDS.index("themes") + 1)
 
     with tempfile.TemporaryDirectory() as d:
         plugins = fake_plugins(os.path.join(d, "plugins"))

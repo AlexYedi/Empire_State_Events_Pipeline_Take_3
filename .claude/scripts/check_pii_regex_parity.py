@@ -23,6 +23,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SPINE = os.path.join(REPO, ".claude", "scripts", "spine_client.py")
 SQL = os.path.join(REPO, "docs", "adr", "proposals", "pii-db-check.sql")
+# Every DB site that carries the literals. 0022 (YED-384): public.no_contact_pii_v1() backs the CHECKs on
+# entity_alias.alias and sweep_query.template; it must match spine byte for byte like the person backstop.
+SQL_SITES = [SQL, os.path.join(REPO, "supabase", "migrations", "0022_graph_phase1_shared.sql")]
 
 
 def extract_spine(src: str) -> tuple[str, str]:
@@ -115,12 +118,17 @@ if __name__ == "__main__":
         sys.exit(selftest())
     with open(SPINE, encoding="utf-8") as f:
         spine_src = f.read()
-    with open(SQL, encoding="utf-8") as f:
-        sql_src = f.read()
-    drifts = run(spine_src, sql_src)
-    if drifts:
-        print("check_pii_regex_parity: pii-db-check.sql does not match spine_client.py")
-        for d in drifts:
-            print("  " + d)
-        sys.exit(1)
-    print("check_pii_regex_parity: shapes match spine_client.py (EMAIL exact; PHONE exact)")
+    failed = False
+    for site in SQL_SITES:
+        with open(site, encoding="utf-8") as f:
+            sql_src = f.read()
+        drifts = run(spine_src, sql_src)
+        rel = os.path.relpath(site, REPO)
+        if drifts:
+            failed = True
+            print(f"check_pii_regex_parity: {rel} does not match spine_client.py")
+            for d in drifts:
+                print("  " + d)
+        else:
+            print(f"check_pii_regex_parity: {rel} matches spine_client.py (EMAIL exact; PHONE exact)")
+    sys.exit(1 if failed else 0)

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- YED-384: daily theme sweep at 05:30 local (America/New_York), after the 05:00 reconcile. Runs a model (theme-sweeper,
+     web tools only) on the top 3 themes from sweep_seed.py; writes only validated manifests under .claude/.state/sweeps/.
+     If the mini is asleep at 05:30, launchd runs it once on wake. Installed by Alex only after he approves a dry run. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.esep.daily-sweep</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/sameoldexpressions/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/run-job.sh</string>
+    <string>sweep</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>30</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-daily-sweep.log</string>
+  <key>StandardErrorPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-daily-sweep.log</string>
+</dict>
+</plist>

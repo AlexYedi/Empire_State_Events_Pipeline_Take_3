@@ -42,9 +42,16 @@ Body-edit rules (content_updates):
 - Real newlines only (a literal backslash-n lands as a stray "n", gotcha m).
 People pages never get Email / Phone / Phone Number unless "alex_provided": true (ADR-9 tier 1).
 Post / connection-note / DM copy (Content Type linkedin_*) is plain paragraphs, never code fences (gotcha p).
+Property names must exist in the target database (YED-398), per the snapshot in
+.claude/references/notion-property-names.json: a name the database lacks, a read-only property, a bare date name
+(write date:<Name>:start) or a missing userDefined: prefix is refused. The target database comes from a create's
+parent, else the manifest keys of the updated page, else the op's own key prefix (person:, company:, topic:,
+event:, draft:, relink:, project-idea:, todo:, role:). An update whose database cannot be resolved is not
+name-checked; notion-writer still checks it against the live schema.
 
 Usage: notion_payload.py <payload.json>
 """
+import difflib
 import json
 import re
 import sys
@@ -122,8 +129,8 @@ def norm(pid):
     return str(pid).replace("-", "").lower()
 
 
-def load_manifest(path):
-    """Manifest entries keyed by normalized page id -> manifest key. Missing manifest = empty."""
+def read_manifest(path):
+    """The raw manifest dict. Missing or unreadable manifest = empty."""
     p = Path(path)
     if not p.is_absolute() and not p.exists():
         p = Path(__file__).resolve().parents[2] / p   # repo root
@@ -131,7 +138,99 @@ def load_manifest(path):
         m = json.load(open(p))
     except (OSError, ValueError):
         return {}
+    return m if isinstance(m, dict) else {}
+
+
+def load_manifest(path):
+    """Manifest entries keyed by normalized page id -> manifest key. Missing manifest = empty."""
+    m = read_manifest(path)
     return {norm(v["page_id"]): k for k, v in m.items() if isinstance(v, dict) and v.get("page_id")}
+
+
+# --- YED-398: property names checked against the live-schema snapshot ----------------------
+SCHEMA_FILE = Path(__file__).resolve().parents[1] / "references" / "notion-property-names.json"
+READ_ONLY_TYPES = {"created_time", "last_edited_time", "created_by", "last_edited_by", "formula", "rollup",
+                   "unique_id"}
+DATE_KEY_RE = re.compile(r"^date:(.+):(start|end|is_datetime)$")
+KEY_PREFIX_DS = {  # manifest / op key prefix -> data source (CLAUDE.md §3)
+    "person": PEOPLE_DS,
+    "company": "d5910dc3-8327-4b49-9294-fc9499709a98",
+    "topic": "d61ce9df-94b3-4637-aa09-d77e09ab3a74",
+    "event": "9dcbc999-b4ed-4a51-b48a-10aaf171f1ba",
+    "draft": DRAFTS_DS,
+    "relink": DRAFTS_DS,
+    "project-idea": "0956e6ed-8555-4d8f-8856-388966dedaab",
+    "todo": "1cd6d576-8a9e-4332-bb81-13a28b55f151",
+    "role": "3a174257-e90b-48be-b4bb-097ba5dc4231",
+}
+
+
+def load_schema(path=SCHEMA_FILE):
+    """{data_source_id: {property name: type}} from the snapshot, or None if it cannot be read."""
+    try:
+        snap = json.load(open(path))
+        return {ds: dict(v["properties"]) for ds, v in snap["data_sources"].items()}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def key_ds(key):
+    return KEY_PREFIX_DS.get(str(key).split(":", 1)[0]) if isinstance(key, str) and ":" in key else None
+
+
+def target_ds(o, page_keys):
+    """The data source an operation writes to, or None when it cannot be resolved offline."""
+    parent = o.get("parent")
+    if o.get("op") == "create":
+        return parent.get("data_source_id") if isinstance(parent, dict) else None
+    for k in page_keys.get(norm(o.get("page_id", "")), []):
+        if key_ds(k):
+            return key_ds(k)
+    return key_ds(o.get("key"))
+
+
+def manifest_page_keys(path):
+    """{normalized page id: [manifest keys]} for resolving which database an updated page lives in."""
+    out = {}
+    for k, v in read_manifest(path).items():
+        if isinstance(v, dict) and v.get("page_id"):
+            out.setdefault(norm(v["page_id"]), []).append(k)
+    return out
+
+
+def unchecked_ops(p):
+    """Keys of property-carrying updates whose database cannot be resolved offline (so not name-checked)."""
+    pk = manifest_page_keys(p["manifest"]) if isinstance(p.get("manifest"), str) else {}
+    return [str(o.get("key")) for o in p.get("operations") or []
+            if isinstance(o, dict) and o.get("op") == "update" and o.get("properties") and not target_ds(o, pk)]
+
+
+def property_name_problems(tag, o, ds, schema):
+    props = o.get("properties")
+    if not ds or not isinstance(props, dict) or ds not in schema:
+        return []
+    known, out = schema[ds], []
+    db = DATA_SOURCES.get(ds, ds)
+    for k in props:
+        m = DATE_KEY_RE.match(k)
+        if k in known:
+            if known[k] in READ_ONLY_TYPES:
+                out.append(f"{tag} property '{k}' is read-only in {db} ({known[k]}); Notion sets it")
+            elif known[k] == "date":
+                out.append(f"{tag} date property '{k}' must be written as 'date:{k}:start' (and :end / :is_datetime)")
+        elif m and known.get(m.group(1)) == "date":
+            continue
+        elif f"userDefined:{k}" in known:
+            out.append(f"{tag} property '{k}' must be written as 'userDefined:{k}' in {db}")
+        else:
+            near = difflib.get_close_matches(k, list(known), n=1)
+            if near and known[near[0]] in READ_ONLY_TYPES:
+                hint = f"; the close match '{near[0]}' is read-only ({known[near[0]]}), Notion sets it"
+            else:
+                hint = f"; did you mean '{near[0]}'?" if near else ""
+            out.append(f"{tag} property '{k}' does not exist in {db}{hint} (YED-398; if the database gained it, "
+                       f"notion-fetch the schema and add it to {SCHEMA_FILE.name})")
+    return out
 
 
 def last_heading(s):
@@ -224,6 +323,11 @@ def problems(p):
         allowed = []
     known = load_manifest(p.get("manifest", "")) if isinstance(p.get("manifest"), str) else {}
     known_ids = set(known) | {norm(a) for a in allowed}
+    page_keys = manifest_page_keys(p["manifest"]) if isinstance(p.get("manifest"), str) else {}
+    schema = load_schema()
+    if schema is None:
+        out.append(f"property-name snapshot {SCHEMA_FILE} is missing or unreadable (YED-398); cannot check names")
+        schema = {}
     keys = set()
     for i, o in enumerate(ops):
         tag = f"operations[{i}]"
@@ -281,6 +385,7 @@ def problems(p):
         if fs is not None and (not isinstance(fs, list) or not all(isinstance(s, str) for s in fs)):
             out.append(f"{tag} 'frozen_statuses' must be a list of status strings")
         out += body_problems(tag, o)
+        out += property_name_problems(tag, o, target_ds(o, page_keys), schema)
     return out
 
 
@@ -314,7 +419,7 @@ def selftest():
         op = {"key": "event:selftest", "op": "create",
               "parent": {"data_source_id": EV_DS},
               "dedup": {"query": "Selftest Event", "match_title": "Selftest Event"},
-              "properties": {"Name": {"title": [{"text": {"content": "Selftest Event"}}]}}}
+              "properties": {"Event Name": {"title": [{"text": {"content": "Selftest Event"}}]}}}
         op.update(o)
         if isinstance(op["properties"], dict):
             TRACKED_VALUES.extend(v for _, v in text_property_values(op["properties"]))
@@ -481,6 +586,44 @@ def selftest():
                                properties={"Current Events": {"rich_text": [
                                    {"text": {"content": complete_val}}]}})]), "cut mid-word"))
 
+    # YED-398: property names checked against the live-schema snapshot
+    IDEAS_DS = "0956e6ed-8555-4d8f-8856-388966dedaab"
+    idea = dict(parent={"data_source_id": IDEAS_DS}, key="project-idea:selftest",
+                dedup={"query": "Selftest Idea", "match_title": "Selftest Idea"})
+    ck("names: 'Events' on a Project Ideas create refused, with the 'Event' hint (the 11/11 bug)",
+       bool(hits(pay([create_op(properties={"Project Name": "Selftest Idea", "Events": "[]"}, **idea)]),
+                 "did you mean 'Event'?")))
+    ck("names: the live relation 'Event' on a Project Ideas create passes",
+       not hits(pay([create_op(properties={"Project Name": "Selftest Idea", "Event": "[]"}, **idea)]),
+                "YED-398"))
+    ck("names: a bare date property name refused (write date:<Name>:start)",
+       bool(hits(pay([create_op(properties={"Event Date": "2026-11-11"})]), "date:Event Date:start")))
+    ck("names: expanded date keys pass",
+       not hits(pay([create_op(properties={"date:Event Date:start": "2026-11-11",
+                                           "date:Event Date:is_datetime": 0})]), "YED-398"))
+    ck("names: a read-only property refused",
+       bool(hits(pay([create_op(properties={"Project Name": "Selftest Idea", "date:Created": "x"}, **idea)]),
+                 "is read-only")))
+    ck("names: Roles 'URL' without its userDefined: prefix refused",
+       bool(hits(pay([create_op(parent={"data_source_id": "3a174257-e90b-48be-b4bb-097ba5dc4231"},
+                                key="role:selftest", properties={"Role Title": "AE", "URL": "https://x.example"})]),
+                 "userDefined:URL")))
+    ck("names: an update resolved by its key prefix is checked",
+       bool(hits(pay([update_op(key="person:selftest:2026-11-11", properties={"Title": "x"})],
+                     allowed_page_ids=[good_uuid]), "does not exist in People")))
+    ck("names: an update whose database cannot be resolved is not name-checked",
+       not hits(pay([update_op(properties={"Anything": "x"})], allowed_page_ids=[good_uuid]), "YED-398"))
+    ck("names: a userDefined: prefix Notion does not use refused (People has a plain 'Name')",
+       bool(hits(pay([create_op(parent={"data_source_id": PEOPLE_DS}, key="person:selftest",
+                                properties={"userDefined:Name": "x"})]), "does not exist in People")))
+    ck("names: a near-miss of a read-only property says read-only, not did-you-mean",
+       bool(hits(pay([create_op(properties={"Project Name": "Selftest Idea", "Created": "x"}, **idea)]),
+                 "is read-only")))
+    ck("names: an unresolvable property update is reported as unchecked",
+       unchecked_ops(pay([update_op(properties={"Anything": "x"})])) == ["update:selftest"])
+    snap = load_schema()
+    ck("names: the snapshot covers all 8 known databases", snap is not None and set(snap) == set(DATA_SOURCES))
+
     # manifest-resolved people detection: an update to a page the manifest keys as person:*
     tmpdir = tempfile.mkdtemp(prefix="notion_payload_selftest_")
     try:
@@ -492,6 +635,10 @@ def selftest():
                 manifest=manifest_path)
         ck("PII: update to a manifest-keyed person page refused without alex_provided",
            bool(hits(p, "ADR-9 tier 1")))
+        p = pay([update_op(key="fix:jane-doe", page_id=person_uuid, properties={"Job Title": "x"})],
+                manifest=manifest_path)
+        ck("names: an update resolved through the page's manifest key is checked (YED-398)",
+           bool(hits(p, "does not exist in People")))
 
         # the one valid payload, end-to-end through main(): prints VALID and exits 0
         good = pay(
@@ -544,8 +691,11 @@ def main():
         print("INVALID:\n- " + "\n- ".join(errs))
         return 1
     ops = payload["operations"]
+    unchecked = unchecked_ops(payload)
+    note = (f" · property names NOT checked on {len(unchecked)} update(s) whose database could not be resolved "
+            f"({', '.join(unchecked)}); notion-writer checks them live") if unchecked else ""
     print(f"VALID: {len(ops)} operations ({sum(o['op'] == 'create' for o in ops)} create, "
-          f"{sum(o['op'] == 'update' for o in ops)} update) · manifest {payload['manifest']}")
+          f"{sum(o['op'] == 'update' for o in ops)} update) · manifest {payload['manifest']}{note}")
     return 0
 
 

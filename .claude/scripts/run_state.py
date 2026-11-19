@@ -32,7 +32,7 @@ BUILTIN_AGENTS = {"general-purpose", "Explore", "Plan", "statusline-setup"}
 STEPS = [
     ("resolve", "1"), ("transcript", "2"), ("anchor", "3"), ("condition", "3.5"), ("enrich", "3.6"),
     ("synthesize", "3.7"), ("notion-kg", "3.8a"), ("graph-event", "3.8b"), ("claims", "3.8c"),
-    ("themes", "3.8d"), ("steer", "3.9"), ("draft", "4"), ("output-check", "4.5"), ("notion-write", "5"),
+    ("themes", "3.8d"), ("route", "3.8e"), ("steer", "3.9"), ("draft", "4"), ("output-check", "4.5"), ("notion-write", "5"),
     ("hubspot", "5.5"), ("deep-dives", "5.6"), ("close-check", "6.5"),
 ]
 STEP_IDS = [s for s, _ in STEPS]
@@ -58,6 +58,29 @@ def now() -> str:
 
 def path_for(event: str, state_dir: str | None = None) -> str:
     return os.path.join(state_dir or STATE_DIR, slugify(event), "run-state.json")
+
+
+_NEAR_STOP = {"and", "the", "a", "of", "in", "on", "for", "with", "x", "nyc", "to", "at", "by"}
+
+
+def near_matches(event: str, state_dir: str | None = None, threshold: float = 0.6) -> list[str]:
+    """Existing run-state slugs that look like the same event typed differently (YED-373: Agentics 11/4 ended up
+    with `…-harnesses-agent-identity` and `…-harnesses-and-agent-identity`). Token Jaccard on the slug, minus
+    stopwords; the exact slug is not a near match. Detection only: it warns, never merges."""
+    me = slugify(event)
+    mine = {t for t in me.split("-") if t and t not in _NEAR_STOP}
+    try:
+        dirs = sorted(os.listdir(state_dir or STATE_DIR))
+    except OSError:
+        return []
+    out = []
+    for d in dirs:
+        if d == me or not os.path.isfile(os.path.join(state_dir or STATE_DIR, d, "run-state.json")):
+            continue
+        other = {t for t in d.split("-") if t and t not in _NEAR_STOP}
+        if mine and other and len(mine & other) / len(mine | other) >= threshold:
+            out.append(d)
+    return out
 
 
 def load(event: str, state_dir: str | None = None) -> dict | None:
@@ -230,6 +253,9 @@ def main(argv: list[str]) -> int:
         return 0
     if a.cmd == "show":
         print(render(a.event, load(a.event)))
+        for d in near_matches(a.event):
+            print(f"WARNING: run-state '{d}' looks like the same event under a different name. Use the Notion "
+                  "Event Name verbatim for the claim, run-state and close-check (YED-373).")
         return 0
     if a.cmd == "resume-point":
         print(resume_point(load(a.event)))

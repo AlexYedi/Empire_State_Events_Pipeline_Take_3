@@ -1,0 +1,29 @@
+{
+ "event": {
+  "notion_page_id": "00000000-fake",
+  "title": "Rising Theme Meetup",
+  "event_date": "2026-11-11"
+ },
+ "entities": [
+  {
+   "type": "topic",
+   "name": "Speech routing",
+   "notion_page_id": "fake"
+  },
+  {
+   "type": "company",
+   "name": "Fixtureco",
+   "website": "https://fixtureco.example.com",
+   "linkedin_url": "",
+   "notion_page_id": "fake"
+  },
+  {
+   "type": "person",
+   "name": "Pat Placeholder",
+   "title": "CTO",
+   "company": "Fixtureco",
+   "linkedin_url": "https://example.com/in/placeholder",
+   "notion_page_id": "fake"
+  }
+ ]
+}

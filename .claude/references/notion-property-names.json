@@ -1,0 +1,165 @@
+{
+ "_about": "Live Notion property names and types per data source, used by notion_payload.py to refuse a property the database does not have (YED-398). Captured from notion-fetch of each collection:// schema. Refresh: notion-fetch the data source and edit this file in the same PR as the Notion change. Keys are exactly as the Notion MCP takes them (userDefined: prefix where Notion uses one; date properties are written as date:<Name>:start|end|is_datetime).",
+ "captured": "2026-11-11",
+ "data_sources": {
+  "9dcbc999-b4ed-4a51-b48a-10aaf171f1ba": {
+   "name": "Events",
+   "properties": {
+    "Event Name": "title",
+    "Event Date": "date",
+    "Event Description": "text",
+    "Event Status": "select",
+    "Event Phase": "select",
+    "Location": "text",
+    "Google Calendar Event ID": "text",
+    "People": "relation",
+    "Companies": "relation",
+    "Topics": "relation",
+    "Content Drafts": "relation",
+    "Project Ideas": "relation",
+    "Platform": "select",
+    "Content Status": "select",
+    "Content Type": "select"
+   }
+  },
+  "4a1af67f-9141-4ba5-aa9d-88b07dcd5f86": {
+   "name": "People",
+   "properties": {
+    "Name": "title",
+    "Current Title": "text",
+    "Known POV / Bio": "text",
+    "LinkedIn URL": "url",
+    "Role Context": "multi_select",
+    "Company": "relation",
+    "Events": "relation",
+    "Content Drafts": "relation",
+    "Last Researched": "date",
+    "Notes": "text",
+    "Email": "email",
+    "Phone Number": "phone_number"
+   }
+  },
+  "d5910dc3-8327-4b49-9294-fc9499709a98": {
+   "name": "Companies",
+   "properties": {
+    "Company Name": "title",
+    "Description": "text",
+    "Website": "url",
+    "Industry / Space": "multi_select",
+    "Funding Stage": "select",
+    "Recent Funding ($)": "number",
+    "Recent Developments": "text",
+    "Last Researched": "date",
+    "People": "relation",
+    "Events": "relation"
+   }
+  },
+  "d61ce9df-94b3-4637-aa09-d77e09ab3a74": {
+   "name": "Topics",
+   "properties": {
+    "Topic": "title",
+    "Current Events": "text",
+    "Opportunities": "text",
+    "Challenges": "text",
+    "Use Cases & Practical Applications": "text",
+    "Top Questions": "text",
+    "Last Updated": "date",
+    "Events": "relation",
+    "People": "relation",
+    "Content Drafts": "relation",
+    "Project Ideas": "relation"
+   }
+  },
+  "6c24c9f5-66c9-4eed-a61d-3f9b87c3f775": {
+   "name": "Content Drafts",
+   "properties": {
+    "Title": "title",
+    "Content Type": "select",
+    "Content Status": "select",
+    "Platform": "select",
+    "Goal": "select",
+    "Themes": "multi_select",
+    "Event": "relation",
+    "People": "relation",
+    "Topics": "relation",
+    "Project Ideas": "relation",
+    "Event Date": "date",
+    "Event Description": "text",
+    "Event Phase": "select",
+    "Event Status": "select",
+    "Google Calendar Event ID": "text",
+    "Location": "text",
+    "Outcome": "select",
+    "Outcome Date": "date",
+    "Outcome Value": "text",
+    "Published URL": "url",
+    "Target": "text"
+   }
+  },
+  "0956e6ed-8555-4d8f-8856-388966dedaab": {
+   "name": "Project Ideas",
+   "properties": {
+    "Project Name": "title",
+    "Architecture Summary": "text",
+    "Complexity Band": "select",
+    "Composite Score": "number",
+    "Content Drafts": "relation",
+    "Content Moments": "number",
+    "Conversation Starter": "number",
+    "Creativity & Uniqueness": "number",
+    "Demonstrability": "number",
+    "Due": "date",
+    "Event": "relation",
+    "Horizon": "select",
+    "Linear": "url",
+    "Pillar": "select",
+    "Priority": "select",
+    "Proposal Type": "select",
+    "Relevance": "number",
+    "Stack Coverage %": "number",
+    "Status": "select",
+    "Tool Coverage": "number",
+    "Topics": "relation",
+    "date:Created": "created_time",
+    "date:Last Updated": "last_edited_time"
+   }
+  },
+  "3a174257-e90b-48be-b4bb-097ba5dc4231": {
+   "name": "Roles",
+   "properties": {
+    "Role Title": "title",
+    "Company": "text",
+    "Company URL": "url",
+    "Content Hash": "text",
+    "Date Found": "date",
+    "ICP Score": "number",
+    "ICP Tier": "select",
+    "Location": "text",
+    "Notes": "text",
+    "Posted Date": "date",
+    "Source": "select",
+    "Status": "select",
+    "Workplace": "select",
+    "userDefined:URL": "url"
+   }
+  },
+  "1cd6d576-8a9e-4332-bb81-13a28b55f151": {
+   "name": "To-dos",
+   "properties": {
+    "To-do": "title",
+    "Context": "text",
+    "Created": "created_time",
+    "Done on": "date",
+    "Due": "date",
+    "Horizon": "select",
+    "Linear": "url",
+    "Priority": "select",
+    "Seq": "number",
+    "Status": "select",
+    "Thread": "select",
+    "Who": "select",
+    "Why": "text"
+   }
+  }
+ }
+}

@@ -1,0 +1,222 @@
+# esep-mini: the always-on scheduled runner
+
+Decision YED-385 · build YED-347 / YED-334 · first consumer YED-384 (graph phase 1).
+Read on demand when a scheduled job misbehaves, the mini restarts, or a new nightly job is added.
+
+## Design (and why not routines)
+
+Scheduled jobs run from **launchd on the mini**, through `ops/mini-runner/run-job.sh <job>`, in the **real checkout**.
+Claude Code routines on a bridge environment were tried first and rejected on 2026-11-11: a bridge environment's id is
+minted per `claude remote-control` process, so every restart (reboot, crash, KeepAlive respawn, auto-update) gives a new id,
+and every routine is pinned to an id. Measured: two consecutive LaunchAgent starts gave `env_017oHa…` then `env_0144mE…`, and
+stopping a Terminal instance deleted `env_01LkCP…`. The earlier "laptop" environment `Mac:…:fc0e` was in fact this mini (a tmux
+loop started 2026-11-06, before the rename), and its id survived only because that process never restarted.
+
+| Piece | Value |
+|---|---|
+| Machine | Mac mini (Mac18,5), hostname `esep-mini`, macOS 27, FileVault **on** |
+| Runner checkout | `~/Developer/Empire_State_Events_Pipeline_Take_3`, always on `main`, used only by launchd jobs. `run-job.sh` refuses to run on any other branch and fast-forwards `main` before each job, so launchd only runs merged code. It has its own `.venv` and its own copy of `.env` (Alex copies it) |
+| Why not `~/Documents` | macOS privacy protection (TCC) blocks launchd-started programs from `~/Documents`: the first launchd smoke failed with `zsh: can't open input file` (exit 127). `~/Developer` is not protected, so no binary needs Full Disk Access. Interactive sessions and Remote Control keep using `~/Documents/GitHub/Empire_State_Events_Pipeline_Take_3` |
+| Job runner | `ops/mini-runner/run-job.sh` (jobs: `reconcile`, `smoke`, `sync`, `sweep`, `export`, `brief`); one log per run in `~/Library/Logs/esep-runner/<job>-<UTC>.log` |
+| Remote access | LaunchAgent `com.esep.remote-control` keeps one `claude remote-control --spawn worktree` up, for phone/web access only. Not part of the scheduler; its environment id changes on restart, so never pin a routine to it |
+| Power | `pmset`: `sleep 0`, `disksleep 0`, `autorestart 1` (boots itself after a power cut, then waits at the FileVault screen) |
+| Python | uv-managed CPython 3.12 (`.venv`, no packages: the runner's scripts are stdlib-only). System python is 3.9: never use it |
+
+Jobs:
+- **Deterministic jobs run as plain Python, with no LLM** (the reconcile, the Notion export and the Monday brief are each one fixed command; wrapping them in `claude -p` buys nothing and costs tokens. `/market-brief`'s only render step is `market_brief.py`; its "show Alex" step is interactive and has no headless equivalent).
+- **Judgment jobs** (theme sweeps) use `claude -p` with `--permission-mode dontAsk` (anything not allow-listed is denied, never prompted),
+  a narrow `--allowedTools` list, `--strict-mcp-config` and `ENABLE_CLAUDEAI_MCP_SERVERS=false` (no MCP / connectors), and `--no-session-persistence`.
+  The `smoke` job is the template.
+
+Database reads go through `spine_client.py` only (invariant 1). REST paths need a leading slash: `req('GET', '/lane_registry?...')`.
+
+## Jobs
+
+| Job | LaunchAgent | Schedule | State |
+|---|---|---|---|
+| `smoke` | `com.esep.runner-smoke` | none (fire with `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`) | ALL PASS under launchd 2026-11-11 19:26Z (runner checkout, `a0d47ed`) |
+| `reconcile` | `com.esep.nightly-reconcile` | 05:00 local (ET) daily | installed 2026-11-11 on Alex's yes; first run 2026-11-12 05:00 ET (check: YED-399) |
+| `sync` | `com.esep.sync-inputs` | hourly, and once at load | YED-395; see "Laptop input sync" below |
+| `sweep` | `com.esep.daily-sweep` | 05:30 local (ET) daily | first scheduled job that runs a model (YED-384). `theme-sweep.sh`: `sweep_seed.py` → top 3 themes → `claude -p --agent theme-sweeper` (WebSearch + WebFetch only, `dontAsk`, no MCP) → `sweep_manifest.py`. Writes only `.claude/.state/sweeps/<date>/` (gitignored). Dry run on the laptop 2026-11-12: 1 theme, 43 turns, 13/13 items valid. Not installed until Alex approves a mini run |
+| `export` | `com.esep.notion-export` | 04:30 local (ET) daily | Incremental Notion brief export (`notion_export.py`, read-only, no model) from the watermark cursor into `.claude/.state/notion-export-live/` (one folder per event, refreshed in place; not `.state/briefs/`, which reconcile reads). First run on a machine has no watermark and backfills once. Needs `NOTION_TOKEN` in the runner `.env` (exit 7 without it). A run where any page fails holds the cursor and exits 8, so the alert fires; held pages retry first next run |
+| `brief` | `com.esep.monday-brief` | Mondays 06:00 local (ET) | Monday Market Brief for the current ISO week (`date +%G-W%V`), after the 05:30 sweep. `market_brief.py`, GET-only spine reads, no model, no Notion, no spine writes. Reads the laptop mirror as `--root` and the last 14 days of **raw** sweep manifests (it re-validates them; the normalized `*.valid.json` is rejected by its strict schema). Writes `.claude/.state/market-briefs/market-brief-<week>.md`. Also runs the login check: a weekly early warning before sweeps fail |
+| (laptop) | `com.esep.pull-notion-export` | 05:00 local daily, and once at load | Laptop pulls the mini's `notion-export-live` read-only into `~/Developer/esep-notion-export`; see "Notion export to the laptop" below |
+
+`StartCalendarInterval` uses local time, so 05:00 ET holds across DST. If the mini was off at 05:00, launchd runs the job once
+when it wakes (missed runs coalesce into one).
+
+## Laptop input sync (YED-395)
+
+The local inventories reconcile reads (untracked `Event Content/` files, `event-transcripts/`,
+`.claude/.state/{research,briefs,post-event}`) are produced on the laptop. The mini **pulls** a read-only mirror of them
+every hour into `~/Developer/esep-inputs/`, which sits outside every git work tree, and `reconcile` reads that mirror
+(`--root`), after one best-effort fresh pull.
+
+- Transport: `rsync` over Tailscale to `alexs-macbook-pro-2`, using a dedicated key `~/.ssh/esep_sync` (no passphrase, used for nothing else).
+- Laptop side: that key is pinned in `~/.ssh/authorized_keys` to `restrict,command="/opt/homebrew/bin/rrsync -ro <checkout>"`, so it can
+  only **read** the repo checkout, with no shell, no port forwarding and no writes.
+- Why pull, not push: the laptop sleeps (a failed hour just retries), and a laptop-side launchd push would hit the same TCC block
+  on `~/Documents` that moved the mini's runner to `~/Developer`.
+- `--delete` only ever touches the mirror. `*.PRIVATE.*` files are never copied; reconcile skips them by name anyway.
+- The mirror holds private inputs. It never enters git (invariant 4), and the mini has FileVault on.
+
+Laptop setup, once (Alex, **on the laptop**):
+1. System Settings → General → Sharing → **Remote Login** on, then (i) → **Allow full disk access for remote users** on
+   (needed because the checkout is under `~/Documents`).
+2. `brew install rsync` (provides `rrsync`). Homebrew's `rrsync` hard-codes `RSYNC = '/usr/bin/rsync'` (Apple's openrsync, which
+   rejects `--confine-root`), so make a patched copy:
+   `mkdir -p ~/.local/bin && sed 's#^RSYNC = .*#RSYNC = "/opt/homebrew/bin/rsync"#' /opt/homebrew/bin/rrsync > ~/.local/bin/rrsync-esep && chmod 755 ~/.local/bin/rrsync-esep`
+   (re-run after a `brew upgrade rsync` if you want the newer rrsync; the old copy keeps working).
+3. Append the mini's public key with the restriction:
+   `echo "restrict,command=\"$HOME/.local/bin/rrsync-esep -ro $HOME/Documents/GitHub/Empire_State_Events_Pipeline_Take_3\" <contents of esep_sync.pub>" >> ~/.ssh/authorized_keys`
+To revoke: delete that line on the laptop.
+
+## Notion export to the laptop (YED-416)
+
+The reverse direction of the input sync. The mini is the **only** Notion exporter: `export` refreshes
+`.claude/.state/notion-export-live/` at 04:30 (one folder per event: `manifest.json`, `research_brief.md`,
+`post_event_brief.md`). The laptop **pulls** a read-only mirror of that folder daily at 05:00 into
+`~/Developer/esep-notion-export/`, and laptop tools read the mirror (for example `prose_extract.py batch --briefs-dir ~/Developer/esep-notion-export`).
+The laptop no longer exports, so it needs no Notion token.
+
+- Transport: `com.esep.pull-notion-export`, a **laptop** LaunchAgent that runs `/opt/homebrew/bin/rsync -a --delete` directly (no script:
+  launchd cannot open one under `~/Documents`). Key `~/.ssh/esep_export_pull` on the laptop, no passphrase, used for nothing else.
+- Mini side: that key is pinned in the mini's `~/.ssh/authorized_keys` to `restrict,command="<rrsync-esep> -ro <notion-export-live>"`, so it
+  can only **read** that one folder: no shell, no rest of the repo, no `.env`.
+- Why `~/Developer`: launchd jobs cannot write under `~/Documents` (TCC), and the mirror must stay outside every git work tree.
+- Missed 05:00 runs (laptop asleep) run once on wake. A failed run (mini off, off Tailscale) leaves the last mirror untouched.
+- Freshness: `ls -lt ~/Developer/esep-notion-export | head -3`. A mirror older than a day means the pull or the 04:30 export failed:
+  read `~/Library/Logs/esep-runner/launchd-pull-notion-export.log` (laptop), then the newest `export-*.log` (mini).
+- The mirror holds brief text: it never enters git (invariant 4). Off-the-record material is already redacted and flagged
+  (`skip_staging`) by the exporter.
+
+Setup, once:
+1. Mini (over `ssh esep-mini`): patched rrsync, same reason as the input sync:
+   `mkdir -p ~/.local/bin && sed 's#^RSYNC = .*#RSYNC = "/opt/homebrew/bin/rsync"#' /opt/homebrew/bin/rrsync > ~/.local/bin/rrsync-esep && chmod 755 ~/.local/bin/rrsync-esep`
+2. Laptop: `ssh-keygen -t ed25519 -N "" -C esep-export-pull -f ~/.ssh/esep_export_pull && mkdir -p ~/Developer/esep-notion-export ~/Library/Logs/esep-runner`
+3. Authorize it on the mini, restricted (run on the laptop):
+   `echo "restrict,command=\"/Users/sameoldexpressions/.local/bin/rrsync-esep -ro /Users/sameoldexpressions/Developer/Empire_State_Events_Pipeline_Take_3/.claude/.state/notion-export-live\" $(cat ~/.ssh/esep_export_pull.pub)" | ssh esep-mini 'cat >> ~/.ssh/authorized_keys'`
+4. Install on the laptop: step 9 below.
+To revoke: delete the `esep-export-pull` line from the mini's `~/.ssh/authorized_keys`.
+
+## Private inputs, laptop -> mini (YED-411 step 2)
+
+The hourly `sync` job also pulls the private inputs from the laptop: `me-model.md`, `target-companies.md`,
+`inbox-denylist.md`, `inbox-allowlist.md` and `.claude/.state/reviews/`. It uses the same restricted read-only key.
+- One way, laptop as source, **nothing is ever deleted** (no `--delete`): a same-named file is overwritten by the laptop's
+  copy, anything else on the mini stays. The landing folder is `~/Developer/esep-private`, outside every git work tree;
+  `.synced-at` holds the last good sync time.
+- It installs into the runner checkout only where `git check-ignore` passes and `git ls-files` says untracked. Any other
+  path is refused and the job exits 9, which alerts. A laptop that is asleep (255) is a skip, not a failure.
+- The `~/Documents` checkout (interactive and Remote Control sessions) can't be written by launchd (TCC), so it reads the
+  landing folder through links: **hard links for the four files** and a symlink for `reviews/`. Hard links, because new
+  Remote Control worktrees copy regular files from `.worktreeinclude` but skip symlinks (found 11/18: a symlinked me-model
+  reached no new session). The sync writes `--inplace`, so the shared file stays live; never change it to a replacing copy. Run once over `ssh esep-mini`:
+  `zsh ~/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/link-private.sh`. The script applies the same
+  refusal check, moves anything it replaces to `~/private-backups/<timestamp>/` (outside every repo), is safe to re-run,
+  and fails if git then sees any change under `.claude/references` or `.claude/.state`.
+- Not covered yet: Claude memory (step 4) and worktree snapshots (step 3).
+
+## Claude memory, laptop -> mini (YED-411 step 4)
+
+Auto-memory is machine-local by design (code.claude.com/docs/en/memory); worktrees of one repo share one memory dir.
+Practice (11/18 research): config syncs through git, runtime state stays local, and durable knowledge is promoted
+deliberately rather than synced both ways. So:
+- The **laptop holds the master memory.** The hourly `sync` job mirrors it (`*.md` only) into
+  `~/Developer/esep-private/memory-laptop` with its own key, then `memory_sync.py` installs it into the mini's memory
+  dirs (the `~/Documents` and `~/Developer` repo slugs).
+- **Nothing the mini learns is lost.** Before installing, any note a mini session created or changed (and any new
+  `MEMORY.md` index line) is copied to `~/Developer/esep-private/memory-inbox/<date>/`. A mini-only note stays usable on the
+  mini, marked "(mini note, awaiting promotion)" in the index. **At the Friday review**, promote from the inbox: into the
+  laptop memory, into checked-in docs if it's public-safe and durable, or drop it. Notes from sessions started outside
+  the repo (`-Users-sameoldexpressions/memory`) are inbox-only.
+- An empty or failed laptop pull changes nothing. Exit 10 = memory step failed (alerts).
+- **Setup, once:** on the mini, `ssh-keygen -t ed25519 -N "" -C esep-memory -f ~/.ssh/esep_memory`. On the laptop, append
+  `restrict,command="$HOME/.local/bin/rrsync-esep -ro $HOME/.claude/projects/-Users-sameoldexpressions-Documents-GitHub-Empire-State-Events-Pipeline-Take-3/memory" <contents of esep_memory.pub>`
+  to `~/.ssh/authorized_keys`. That key can read that one folder and nothing else. Revoke: delete the line. With no key,
+  the step logs `SKIP`.
+
+## Daily parity check (YED-411 step 6)
+
+`parity` job, `com.esep.parity-check`, 06:15 daily. Read-only: it compares and alerts, never syncs or fixes
+(`parity_check.py`). launchd cannot read `~/Documents` (TCC), so the hard links are checked by link count on the
+landing-folder side (1 = the `~/Documents` link broke). Checks: **sync-age** (last private sync < 2 h with the laptop
+reachable, < 36 h otherwise) · **hard-links** · **private** (laptop vs mini by checksum) · **memory** (notes by
+checksum, every laptop index line present) · **inbox** (nothing older than 8 days). It writes
+`esep-private/parity.json`, which `/freshen` shows. Exit 11 = a FAIL, which alerts. Proved 11/18 against planted faults:
+an unlinked file, a modified me-model and a missing memory note were each named.
+Install (Alex): `cp ops/mini-runner/com.esep.parity-check.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.parity-check.plist`
+
+## /freshen (start of any session)
+
+`/freshen` runs `ops/mini-runner/freshen.sh`. On the mini it runs `sync` now (inputs, private files, memory; about 10 s,
+serialized with the hourly run by a lock), copies the fresh private files into the session's worktree, fetches origin
+and prints one `FRESHEN:` line. On the laptop it does the worktree copy and fetch. It closes the up-to-an-hour gap between a
+laptop edit and the next hourly sync. Making it run automatically at session start is a hook change: it needs Alex's go.
+
+## Install (Alex runs these in Terminal.app; Claude may not install login items)
+
+Merge the PR first: the plists point at `run-job.sh` in the runner checkout.
+
+1. `cd ~/Developer/Empire_State_Events_Pipeline_Take_3 && git pull --ff-only` (one-time setup: `git clone` there, `uv venv --python 3.12 .venv`, copy `.env` in)
+2. Smoke: `launchctl bootout gui/$(id -u)/com.esep.runner-smoke 2>/dev/null; cp ops/mini-runner/com.esep.runner-smoke.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.runner-smoke.plist && launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`
+   then `tail -5 "$(ls -t ~/Library/Logs/esep-runner/smoke-*.log | head -1)"` shows `SMOKE: ALL PASS`.
+3. Nightly reconcile (only after approving a report): `cp ops/mini-runner/com.esep.nightly-reconcile.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.nightly-reconcile.plist`
+4. Daily sweep (only after approving a direct run's output): `zsh ops/mini-runner/run-job.sh sweep`, read the newest `~/Library/Logs/esep-runner/sweep-*.log` and `.claude/.state/sweeps/<date>/`, then `cp ops/mini-runner/com.esep.daily-sweep.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.daily-sweep.plist`. Tune with `SWEEP_THEMES`, `SWEEP_CAP`, `SWEEP_BUDGET_USD` in the plist's environment if needed.
+5. Notion export (after adding `NOTION_TOKEN=<integration token>` to the runner `.env`): `zsh ops/mini-runner/run-job.sh export` (first run = one backfill; read its stats JSON in the newest `export-*.log`), then `cp ops/mini-runner/com.esep.notion-export.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.notion-export.plist`.
+6. Monday brief (after approving a direct run's output): `zsh ops/mini-runner/run-job.sh brief`, read `.claude/.state/market-briefs/market-brief-<week>.md`, then `cp ops/mini-runner/com.esep.monday-brief.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.monday-brief.plist`. `BRIEF_WEEK=2026-W47` in the environment overrides the week.
+7. Input sync (after the laptop setup above): `cp ops/mini-runner/com.esep.sync-inputs.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.sync-inputs.plist`
+8. Remote access (already installed): `cp ops/mini-runner/com.esep.remote-control.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.remote-control.plist`
+9. Notion export pull, **on the laptop** (after its setup above, from the laptop checkout): `cp ops/mini-runner/com.esep.pull-notion-export.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.esep.pull-notion-export.plist` (RunAtLoad pulls once immediately).
+10. Check any of them: `launchctl print gui/$(id -u)/<label> | grep -E 'state|last exit code'`. Remove: `launchctl bootout gui/$(id -u)/<label>`.
+
+LaunchAgents start only once the user is logged in. That is why the restart procedure below matters.
+
+## Restart procedure (FileVault)
+
+**Planned restart (updates, maintenance): always**
+```
+sudo fdesetup authrestart
+```
+in a real Terminal (the `!` prefix has no TTY for sudo). It unlocks FileVault for the next boot only, so the mini comes back
+logged in and every LaunchAgent starts. `fdesetup supportsauthrestart` returns `true` on this machine. **Never** use a plain
+Restart from the Apple menu or `sudo shutdown -r`: the mini will sit at the FileVault unlock screen and every job silently
+stops until someone types the password.
+
+**Unplanned (power cut, crash):** `autorestart 1` boots the mini, but it stops at the FileVault pre-boot screen. Nothing runs
+until it is unlocked.
+- Remote unlock: Remote Login (SSH) is on. Recent macOS (26+) can accept an SSH login at the FileVault pre-boot screen and
+  unlock the disk from it. **Unverified on this mini**: test it once with a planned plain restart while on the same LAN
+  (`ssh sameoldexpressions@esep-mini.local`, enter the login password, then wait for the full boot). Tailscale and other
+  user-space VPNs are not up before unlock, so this works from the LAN only, not over the `100.x` address.
+- If that does not work: unlock in person (keyboard or a monitor at the mini), or via Screen Sharing only once the OS has booted past FileVault.
+- After any restart: `launchctl print gui/$(id -u)/com.esep.nightly-reconcile | grep -E 'state|last exit code'` and the newest log in `~/Library/Logs/esep-runner/`.
+
+## Failure alerts and self-update
+
+- **Re-exec after pull.** `run-job.sh` pulls `main` before each job. If that pull changes `run-job.sh` itself, the job re-runs
+  once on the new version (same log). Without this, zsh runs the copy it already read: on 2026-11-13 the first `sweep` run
+  failed `unknown job` right after pulling the commit that added it.
+- **Alerts.** At the end of every job, `ops/mini-runner/alert.py` opens a Linear issue in EMPIRE-STATE when the job exits
+  non-zero (once per job per day; `sync` exit 255 = laptop asleep, never alerts), posts a macOS notification and appends to
+  `~/Library/Logs/esep-runner/ALERTS.txt`. After `sweep`, `smoke` and `brief` it also checks `claude auth status` and alerts when the
+  mini's login expires within 5 days. Test with `ALERT_DRY_RUN=1`.
+  Two test traps: a dry run still writes the once-per-day marker in `~/Library/Logs/esep-runner/.alerts/` (delete it after
+  testing or a real failure that day is suppressed), and `claude auth status` over SSH reads "logged out" because an SSH
+  session cannot reach the login keychain. Only the launchd run's login check is meaningful.
+- **Model-job auth (YED-441).** Jobs started by launchd lost the keychain login twice (11/13, 11/17), so `smoke`, `sweep`
+  and `brief` read a long-lived token from the runner `.env` instead. Setup (Alex, once a year, no trip to the mini needed):
+  `ssh esep-mini`, run `claude setup-token`, open the printed URL on the laptop and approve, then add to
+  `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`: `CLAUDE_CODE_OAUTH_TOKEN=<token>` and
+  `CLAUDE_TOKEN_EXPIRES=<YYYY-MM-DD>` (the expiry the command reports). `run-job.sh` reads only those two keys, never echoes
+  them, and logs `auth: long-lived token from .env`. With the token present, `alert.py login` skips the keychain check and
+  warns 14 days before `CLAUDE_TOKEN_EXPIRES`. Without it, everything falls back to the keychain login as before.
+  Verify: `launchctl kickstart gui/$(id -u)/com.esep.runner-smoke`, then the newest smoke log shows the auth line and `SMOKE: ALL PASS`.
+- **Setup (Alex, once, on the mini):** add `LINEAR_API_KEY=<key>` to `~/Developer/Empire_State_Events_Pipeline_Take_3/.env`.
+  launchd does not read `~/.zshrc`, so a key set there is invisible to the jobs. Without the key, alerts are local only.
+
+## Adding a job
+
+Add a `case` to `run-job.sh` and a plist modelled on `com.esep.nightly-reconcile.plist`, in a PR. Prove it with a direct
+`run-job.sh <job>` run, then a launchd kickstart, show Alex the output, and install the schedule only on his yes. No job
+writes to the spine until its lane passes `spine_client.py --check-writers` and Alex approves the write path.
