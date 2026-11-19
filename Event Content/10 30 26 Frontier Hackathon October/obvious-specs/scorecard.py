@@ -11,14 +11,20 @@ from pathlib import Path
 
 START = "2026-10-30T13:00:00Z"  # 9:00 ET
 ME = "AlexYedi"
-REPOS = {"pipeline": "AlexYedi/Empire_State_Events_Pipeline_Take_3", "hub": "AlexYedi/empire-state-hub"}
+REPOS = {"pipeline": "AlexYedi/Empire_State_Events_Pipeline_Take_3", "hub": "AlexYedi/empire-state-hub",
+         "gtm-os": "AlexYedi/gtm-os", "gtm-os-hub": "AlexYedi/gtm-os-hub",
+         "warm-path": "AlexYedi/warm-path-finder"}
 BASELINE = "~6–7 merged PRs on an ordinary active day (74 + 13 merges, 9/27–10/27)"
 HERE = Path(__file__).parent
 
 # File-path → (spec, tier). First match wins, so the most specific patterns come first.
 RULES = [
+    (r"^\.obvious/", "setup / onboarding", "Setup"),
     (r"obvious-factory-notes|^AGENTS\.md$", "00 rules probe", "Probe"),
     (r"src/app/api/mcp|docs/mcp\.md", "05 Rooms MCP", "T4"),
+    (r"apps/dashboard", "GTM-5 dashboard", "T4"),
+    (r"x-content|intent/post|twitter", "06 X content", "T3"),
+    (r"retrieve\.py|interview-prep|mock-interview|role-radar|feed_|/feeds?/|tailor-resume|themes", "07 Linear backlog", "T2"),
     (r"long-read", "04 Long Reads", "T3"),
     (r"builds|content-performance|feed\.xml|notion_payload\.py", "03 mid builds", "T2"),
     (r"^\.claude/scripts/|^\.github/workflows/selftests", "02 pipeline tests", "T1"),
@@ -48,10 +54,11 @@ def collect():
         rows = gh("pr", "list", "-R", repo, "--state", "all", "--limit", "30", "--search", f"created:>={START[:10]}",
                   "--json", "number,title,author,createdAt,mergedAt,state,headRefName,files,commits,reviews,comments,body,statusCheckRollup,url")
         for p in rows:
-            if p["createdAt"] < START or p["headRefName"].startswith("alex/"):
+            if p["createdAt"] < START or not (p["headRefName"].startswith("obvious/") or "obvious" in p["author"]["login"]):
                 continue
             files = [f["path"] for f in p["files"]]
-            spec, tier = classify(files)
+            m = re.search(r"\b([ESG])-(\d{2})\b", p["title"])
+            spec, tier = (f"{m.group(1)}-{m.group(2)}", {"E": "Empire", "S": "Shared", "G": "GTM"}[m.group(1)]) if m else classify(files)
             my_commits = sum(1 for c in p["commits"] if any(a.get("login") == ME for a in c.get("authors", [])))
             my_reviews = sum(1 for r in p["reviews"] + p["comments"] if (r.get("author") or {}).get("login") == ME)
             checks = p.get("statusCheckRollup") or []
@@ -79,7 +86,7 @@ def render(prs):
          f"**Factory PRs: {len(prs)} opened · {len(merged)} merged.** Baseline: {BASELINE}.", ""]
 
     L += ["## Ladder", "", "| Tier | Spec | Opened | Merged | With tests | CI ran | Needed me |", "|---|---|---|---|---|---|---|"]
-    order = ["Probe", "T1", "T2", "T3", "T4", "?"]
+    order = ["Setup", "Probe", "Empire", "Shared", "GTM", "T1", "T2", "T3", "T4", "?"]
     groups = {}
     for p in prs:
         groups.setdefault((p["tier"], p["spec"]), []).append(p)
@@ -92,10 +99,10 @@ def render(prs):
     if not probe:
         L.append("No probe PRs yet.")
     for p in probe:
-        run = "run 2 (AGENTS.md)" if "AGENTS.md" in p["files"] else "run 1 (CLAUDE.md only)"
+        run = "probe"
         b = p["body"].lower()
-        L.append(f"- {run} · [#{p['n']}]({p['url']}) · one-in-one-out raised: "
-                 f"{'yes' if re.search(r'one-in-one-out|replac', b) else 'no'} · baseline attached: "
+        L.append(f"- {run} · [#{p['n']}]({p['url']}) · follow-up → Linear: "
+                 f"{'yes' if 'linear' in b else 'no'} · baseline attached: "
                  f"{'yes' if 'baseline' in b else 'no'} · cites CLAUDE.md: {'yes' if 'claude.md' in b else 'no'} · "
                  f"opened {minutes(START, p['created'])} min after 9:00")
 

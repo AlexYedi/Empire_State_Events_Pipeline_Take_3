@@ -1,0 +1,32 @@
+# Copy to .github/workflows/factory-gate-rerun.yml. workflow_run takes this file
+# from the default branch, so it is safe from the PR. It re-runs the decide job,
+# which reads reviews live, so the check name and source stay the same. Its only
+# input is a SHA, and anyone triggering it only gets a fresh evaluation.
+name: factory-gate-rerun
+on:
+  workflow_run:
+    workflows: [factory-review-relay]
+    types: [completed]
+permissions:
+  actions: write
+  checks: read
+jobs:
+  rerun:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Re-run the required check for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+          job="$(gh api -X GET "repos/$REPO/commits/$HEAD_SHA/check-runs" \
+            -f check_name='factory-gate / factory-gate' -f filter=latest --jq '.check_runs[0].id // empty')"
+          if [ -z "$job" ]; then
+            echo "no gate check on this commit"
+            exit 0
+          fi
+          gh api -X POST "repos/$REPO/actions/jobs/$job/rerun"

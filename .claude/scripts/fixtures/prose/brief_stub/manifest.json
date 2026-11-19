@@ -1,0 +1,15 @@
+{
+  "event": {"notion_page_id": "00000000-0000-4000-8000-00000000f1f1", "title": "Widget Night (fixture)", "event_date": "2026-01-15"},
+  "entities": [
+    {"type": "person", "name": "Dana Fixture", "notion_page_id": "00000000-0000-4000-8000-0000000000a1"},
+    {"type": "person", "name": "Omar Placeholder", "notion_page_id": "00000000-0000-4000-8000-0000000000a2"},
+    {"type": "company", "name": "Acme Widgets", "notion_page_id": "00000000-0000-4000-8000-0000000000b1"},
+    {"type": "company", "name": "Fictional Ventures", "notion_page_id": "00000000-0000-4000-8000-0000000000b2"},
+    {"type": "topic", "name": "Widget Pricing", "notion_page_id": "00000000-0000-4000-8000-0000000000c1"}
+  ],
+  "notion_export": {
+    "briefs": {"research_brief": {"page_id": "00000000-0000-4000-8000-00000000d0d0",
+                                  "brief_ref": "notion:00000000-0000-4000-8000-00000000d0d0",
+                                  "file": "research_brief.md"}}
+  }
+}
