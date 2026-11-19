@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- YED-384: Monday Market Brief at 06:00 local (America/New_York) on Mondays (Weekday 1), for the current ISO week,
+     after Monday's 05:30 sweep. Deterministic (market_brief.py, GET-only spine reads, no model); writes only
+     .claude/.state/market-briefs/market-brief-<week>.md (gitignored). No Notion publish, no spine writes.
+     If the mini is asleep at 06:00 Monday, launchd runs it once on wake. Installed by Alex only after he approves a direct run. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.esep.monday-brief</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/sameoldexpressions/Developer/Empire_State_Events_Pipeline_Take_3/ops/mini-runner/run-job.sh</string>
+    <string>brief</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-monday-brief.log</string>
+  <key>StandardErrorPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/launchd-monday-brief.log</string>
+</dict>
+</plist>

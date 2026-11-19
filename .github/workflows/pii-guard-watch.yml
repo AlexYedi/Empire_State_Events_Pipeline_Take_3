@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   watch:
+    environment: prod   # YED-341: prod secrets live only in the main-restricted prod environment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

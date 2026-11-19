@@ -31,7 +31,7 @@
 |---|---|---|---|
 | `notion-update-page` mangles `\n` into literal "n" and fuses blocks | MCP escaping | author with REAL newlines; `create-pages` is fine (`notion-write-gotchas.md` conv. m) | 2026-06-01 |
 | `old_str` must include `<span discussion-urls=…>` verbatim | comment anchors | copy the span from `notion-fetch` output | 2026-05-26 |
-| `notion-query-data-sources` (SQL) is plan-gated | Business + Notion AI plan | reads via `notion-search` + `notion-fetch` only | 2026-07 |
+| `notion-query-data-sources` single-data-source SQL WORKS on Alex's plan (6 queries, 2026-11-08: Companies, People, Topics, Events); but the allowance is SMALL: the 7th query the same hour failed `usage_limit_reached` ("resets within 60 minutes"), shared with rows mode; multi-data-source SQL and view/search filters stay Business-gated | plan tier (the 2026-07 "plan-gated" row was too broad) | budget ~6 SQL queries per hour: spend them on batch dedup (Step 1.5b), one query per database with `LIKE` filters, after `notion-fetch` on the data source for column names; select every column you will need in that one query; everything else goes through `notion-fetch` / `notion-search`; never retry a `usage_limit_reached` | 2026-07, corrected 2026-11-08 |
 | Notion has no native dedup | product | search before create (CLAUDE.md invariant 8) | 2026-04-09 |
 
 ## Supabase

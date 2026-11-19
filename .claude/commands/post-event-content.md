@@ -13,7 +13,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 
 **Output (v2 — YED-96):**
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
-- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`) · 3.8d: every unassigned topic on the event gets a theme, assigned in-session (`assign_clusters.py`). 3.8b/c/d are mandatory but **not enforced**: a skipped graph write will not fail the run. Report 3.8b/c/d status explicitly in the Step 6 summary.
+- **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`) · 3.8d: every unassigned topic on the event gets a theme, assigned in-session (`assign_clusters.py`). 3.8b/c/d are mandatory but **not enforced**: a skipped graph write will not fail the run. The Step 6.5 close-check counts it, so report 3.8b/c/d status explicitly in the Step 6 summary.
 - **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
 - **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
@@ -26,8 +26,28 @@ This command runs when:
 - Alex types `/post-event-content [event name]`
 - Alex says "post-event content for [event]" / "draft the post for last night's [event]" / "write up [event] from Supercut"
 - Alex says "run post-event-content speaker deep-dives for [event]" → Step 1.0 + Step 1 + Step 2 (read-only transcript intake), then Step 5.6 only
+- Alex says "lite debrief for [event]", or the backfill (YED-366) runs a room with no usable recording → **Lite debrief mode** below
 
 If the user invokes `content-correspondent` directly with raw pasted material, defer to that skill's existing path — this command adds Notion event-resolution + transcript intake + roster-grounded conditioning.
+
+## Lite debrief mode (YED-387)
+
+For a room that would otherwise get no debrief at all (no usable recording, or the backfill's second tier). A lite
+debrief is honest about being thin, and it can be upgraded to a full run later.
+
+- **Inputs:** Alex's recap (required, as in Step 3.7), plus the Supercut AI summary and chapters if a recording
+  exists (angle input only, never a quote source), plus any slide photos.
+- **Runs:** Step 1.0, Step 1, a lite synthesis, 3.8b (ensure-event), 3.8c (claims), 3.8d (themes), 3.8e (route) and
+  Step 6.5. Mark `resolve` with `--meta mode=lite`.
+- **Lite synthesis:** dispatch `post-event-synthesizer` in **lite mode**. It returns `## Quick Take`,
+  `## The Thesis`, `## Substantive Insights` (exactly three, each attributed as "per Alex's recap" or "per the
+  recording summary", paraphrase only, no quotes), `## People & Outreach State` (from the recap) and the routing
+  block. The headings match what `substrate.py stage-claims` reads, so claims still reach the graph. Write it as
+  the `post_event_brief` Content Draft with the title suffix `(lite)`.
+- **Skipped, with reason `lite mode`:** transcript, anchor, condition, enrich, notion-kg, steer, draft,
+  output-check, notion-write (posts), hubspot, deep-dives. No public copy comes out of a lite run.
+- **Upgrade:** when a transcript turns up, start a normal run with the same Notion `Event Name`. `run_state.py show`
+  lists what lite skipped; re-mark each step as it runs.
 
 ## Required inputs
 
@@ -37,19 +57,50 @@ If the user invokes `content-correspondent` directly with raw pasted material, d
 
 **Step 1.0 — CLAIM THE EVENT before anything else (YED-213, added 2026-09-24).** Git isolation does not isolate
 Notion: on 2026-09-20 two sessions ran this pipeline for the same event and only avoided duplicate pages because
-one happened to notice a Notion timestamp. Run this FIRST, before resolving the event:
+one happened to notice a Notion timestamp. Run this FIRST, before any write.
+
+**One event name (YED-373).** The claim, run-state and close-check each derive a slug from the event string, so a
+hand-typed variant splits one event into two records. First run Step 1's Notion search (read-only, safe before the
+claim) and use the Event's `Event Name` **verbatim** as `<event name>` everywhere below. `run_state.py show` warns
+when an existing run-state looks like the same event under another spelling; resume that one instead.
 
 ```bash
-python3 .claude/hooks/event-claim.py claim "<event name>" --note "<what you are running>"
+python3 .claude/hooks/event-claim.py claim "<event name>" \
+    --note "post-event; resume-point $(python3 .claude/scripts/run_state.py resume-point "<event name>")"
+python3 .claude/scripts/run_state.py show "<event name>"
 ```
 
 * **exit 0** — you own this event's Notion namespace (Event, People, Companies, Topics, Content Drafts) for the run.
+  If `show` lists a prior run, **resume at its resume point** (steps marked done or skipped are not re-run; re-read
+  their outputs instead). The claim note carries that point, so a second session that sees "held" also sees how far
+  the first one got.
 * **exit 3** — another session is already running it. **Go read-only for this event and report to Alex**, exactly as
   the reconciliation terminal does for git. Do not write. Takeover is deliberate and recorded:
   `--force "<why>"`. A crashed session's claim expires on its own after 4h.
 
 **Release when the run closes** (or if you abandon it): `python3 .claude/hooks/event-claim.py release "<event name>"`.
 `event-claim.py list` shows live claims across every session on this machine.
+
+**Run-state convention (YED-372).** Every step below ends with one line:
+`python3 .claude/scripts/run_state.py mark "<event name>" <step-id> --status done|skipped|failed [--reason "…"] [--duration-s N] [--meta k=v …]`.
+`skipped` and `failed` need a reason. Use the same event string as the claim, so both share one slug. The file lives at
+`.claude/.state/post-event/<slug>/run-state.json` (gitignored). It records progress and never blocks: Step 6.5 counts the gaps.
+Meta that Step 6.5 reads: `themes --meta none_fits=N`, `route --meta routing_rows=N` (Step 3.8e), `notion-write
+--meta themes_prop=set` (once the post draft's `Themes` is set).
+
+| id | step | id | step | id | step |
+|---|---|---|---|---|---|
+| `resolve` | 1 | `synthesize` | 3.7 | `draft` | 4 |
+| `transcript` | 2 | `notion-kg` | 3.8a | `output-check` | 4.5 |
+| `anchor` | 3 (incl. 3.4) | `graph-event` | 3.8b | `notion-write` | 5 |
+| `condition` | 3.5 | `claims` | 3.8c | `hubspot` | 5.5 |
+| `enrich` | 3.6 | `themes` | 3.8d | `deep-dives` | 5.6 |
+| | | `route` | 3.8e | `close-check` | 6.5 |
+| | | `steer` | 3.9 | | |
+
+**Agent preflight.** Before any Agent-tool dispatch in this command, run
+`python3 .claude/scripts/run_state.py preflight-agent <agent name>`. On exit 1, use the name from its hint. Plugin agents
+need the prefix (`alex:content-correspondent`), and the bare name failed the Agentics 11/4 run.
 
 ## Step 1 — Resolve the Notion Event row
 
@@ -180,7 +231,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 **Theme-assignment marker (YED-307):** when you create the brief's Content Draft page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧` on two lines. Step 3.8d's table goes there through a Step 5 `content_updates` op.
 
-**Who writes it:** dispatch the **`post-event-synthesizer`** agent (`model: opus` or `fable`; text-only) with local file paths for every input above (the parent fetches the pre-event brief from Notion and saves it to a file first). It returns a ≤300-word **review head**, then the brief in the schema below, then gaps. The parent writes it to Notion (via `notion-writer` once that step is wired, else inline): review head at the top, the full Quote Bank inside a toggle so the page stays reviewable. If Step 3.6 hasn't run yet, dispatch it once for pass 1 (Speaker Map + UNRESOLVED queue), run 3.6 on that queue, then pass 2 for the full brief.
+**Who writes it:** dispatch the **`post-event-synthesizer`** agent (`model: opus` or `fable`; text-only) with local file paths for every input above (the parent fetches the pre-event brief from Notion and saves it to a file first). It returns a ≤300-word **review head**, then the brief in the schema below, then gaps, then the **routing block** (Step 3.8e). Strip the block before writing the brief: `python3 .claude/scripts/route_brief.py strip <brief.md>`. The parent writes it to Notion (via `notion-writer` once that step is wired, else inline): review head at the top, the full Quote Bank inside a toggle so the page stays reviewable. If Step 3.6 hasn't run yet, dispatch it once for pass 1 (Speaker Map + UNRESOLVED queue), run 3.6 on that queue, then pass 2 for the full brief.
 
 **Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
 
@@ -228,7 +279,7 @@ After writing the brief, capture its URL and pass it to Step 4 (content-correspo
 
 ## Step 3.8 — Knowledge-graph write-back: Notion (3.8a) + the MI graph (3.8b · 3.8c · 3.8d)
 
-Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). ⚠️ **Nothing enforces 3.8b/3.8c:** a skipped graph write closes green. Run both sub-steps and state their outcome (or why one was skipped) in the Step 6 summary.
+Until 2026-09-18 this step wrote **Notion only**, despite its name — which is why 24 of 27 events after Aug 20 never reached the Supabase graph and no person was added after Aug 6 (`docs/archive/notes/yed-160-scope-2026-09-17.md`). It now has three sub-steps. **All three are mandatory** (ADR-10; YED-160). Nothing blocks on them, but the **Step 6.5 close-check counts them**: a missing graph event row, zero claims or unthemed topics print as FAIL unless run-state records the step `skipped` with a reason. Run every sub-step and mark its outcome.
 
 ### Step 3.8a — Notion People / Companies / Topics (unchanged)
 
@@ -287,6 +338,25 @@ The session that mints a topic assigns its theme, because it holds the transcrip
 
 After a theme birth or merge, refresh `.claude/references/topic-themes.json` (the SQL is in the file's `_comment`) before the next run.
 
+## Step 3.8e — Route the brief (YED-387)
+
+The brief is long by design; most of it used to have no reader. The synthesizer's routing block names what someone
+should act on and where it goes. Contract: `.claude/references/post-event-routing.md` (types, fields, rules).
+
+1. `python3 .claude/scripts/route_brief.py extract <brief.md>`. Exit 0 = valid. Exit 2 = invalid: re-ask the
+   synthesizer for the block, never hand-patch silently. Exit 3 = no block (a brief from before 3.8e): dispatch
+   `post-event-synthesizer` in **routing-only mode** with the brief, the recap and the contract.
+2. `python3 .claude/scripts/route_brief.py plan <brief.md> --event "<event>" --event-date YYYY-MM-DD
+   --notion-event-url <Event page URL>` writes `routing-plan.json`, the Project Ideas payload and the private
+   `stories.md` under `.claude/.state/post-event/<slug>/`.
+3. **Prove-first (until YED-387's gate is met):** show Alex the planned rows (type · title · destination · due) and
+   write only what he keeps.
+4. **Linear:** search before create for each planned issue; a match counts as routed. Create the rest as planned
+   (team, labels, due date, assignee).
+5. **Notion:** `python3 .claude/scripts/notion_payload.py <routing-notion-payload.json>` → VALID → `notion-writer`.
+6. `python3 .claude/scripts/run_state.py mark "<event>" route --status done --meta routing_rows=<created+matched>`,
+   or `--status skipped --reason "<why>"` when nothing was routable. The close-check counts it.
+
 ## Step 3.9 — Sharpen steer (steering-interview Touch 2) — the collaborative gate
 
 The `post_event_brief` (Step 3.7) now exists — it has surfaced the room's real tensions, competing
@@ -311,7 +381,7 @@ direction, folded around Step 3.6); this is the post-brief Sharpen touch.
 
 ## Step 4 — Invoke content-correspondent with structured input
 
-**How to invoke it:** either run the `content-correspondent` **skill** in this thread (Skill tool), or dispatch the **`alex:content-correspondent`** agent (Agent tool) with the structured input written to a file. There is no agent named plain `content-correspondent`: the agent ships in the `alex` plugin, and plugin agents always carry the plugin prefix, so the bare name fails with "Agent type not found". The skill and the agent share the name; only the agent needs the prefix.
+**How to invoke it:** either run the `content-correspondent` **skill** in this thread (Skill tool), or dispatch the **`alex:content-correspondent`** agent (Agent tool) with the structured input written to a file. There is no agent named plain `content-correspondent`: the agent ships in the `alex` plugin, and plugin agents always carry the plugin prefix, so the bare name fails with "Agent type not found". The skill and the agent share the name; only the agent needs the prefix. Before dispatching, run `python3 .claude/scripts/run_state.py preflight-agent alex:content-correspondent` (the Agent preflight rule in Step 1.0 applies to every dispatch here).
 
 Pass content-correspondent the following structured input (NOT a raw transcript paste):
 
@@ -445,14 +515,27 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
 5. **Failure:** no `post_event_brief` → stop and say so; no transcript → paraphrase-only, flagged; a Notion
    write fails → return that draft in chat.
 
+## Step 6.5 — Close-check (runs before the Step 6 summary; never blocks)
+
+```bash
+python3 .claude/scripts/close_check.py "<event name>" --notion-event-id <Notion Event page id>
+```
+
+Read-only: graph event row, claims > 0 (or `claims` skipped with a reason), every linked topic themed. The Notion-side `Themes` on the post draft is self-reported from run-state meta, and so are the routing rows
+(skipped until Step 3.8e exists). The run-state gaps print last. The script always exits 0 and records its own
+`close-check` step. On `CLOSE-CHECK: FAIL (n) — …`, **report the items and offer the fix for each** (re-run the step,
+or mark it skipped with the reason). Don't stop the run, and don't hide the line.
+
 ## Step 6 — Summary
 
 ```
 ✅ /post-event-content complete: [Event Name]
 
 Transcript source: [Supercut <public_id> — title / ElevenLabs file / manual paste]
-Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (not enforced — report it)
+Close-check (6.5): [PASS / FAIL n — items]
+Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (counted by the close-check)
 Theme assignment (3.8d): [N assigned · M none-fits / skipped: reason], followed by one line per topic: "topic → theme (confidence)" or "topic → none fits (reason)"
+Routing (3.8e): [N Linear issues (C created · M matched) · P Project Ideas rows · S stories (local) / skipped: reason]
 Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
 Drafts created: N  (notion-writer: created C · skipped S · failed F · manifest <path>)
   - Tier 1 comment: [Notion URL]
@@ -462,7 +545,6 @@ Drafts created: N  (notion-writer: created C · skipped S · failed F · manifes
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 Speaker deep-dives (Step 5.6): [N drafts / later / no]
-Room page: [added to empire-state-hub rooms.curated.json — run `pnpm gen:rooms` once the recap is published / already listed]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```

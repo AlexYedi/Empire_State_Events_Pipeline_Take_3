@@ -1,0 +1,11 @@
+{
+  "_comment": "YED-406. Reviewed aliases for reconcile.py: local file -> the event's Notion page id, for session-level or undated file names that can't title-match their event. Key = '<source>:<parsed title>' where source is transcript | brief | manifest | folder and the title is the file name as reconcile parses it (date prefix and extension removed). Add an entry only after checking the event in prod; a wrong alias silently attaches evidence to the wrong event.",
+  "aliases": {
+    "transcript:ElasticON-NYL-Picheria-SOC-Data-Pyramid": "3ead3699-c2db-81dc-8c08-c18502592bee",
+    "transcript:ElasticON-Vanguard-Reitnauer-Securing-Trillions": "3ead3699-c2db-81dc-8c08-c18502592bee",
+    "brief:elasticon-new-york": "3ead3699-c2db-81dc-8c08-c18502592bee",
+    "brief:revolt-s1-gilkey": "3fad3699-c2db-81c1-9c41-cd8f10b39178",
+    "brief:revolt-s2-airspeed": "3fad3699-c2db-81c1-9c41-cd8f10b39178",
+    "brief:revolt-2026-day-2": "3fbd3699-c2db-8188-853f-eb1390785c27"
+  }
+}
