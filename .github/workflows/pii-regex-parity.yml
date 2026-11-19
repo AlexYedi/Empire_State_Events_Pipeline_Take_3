@@ -10,6 +10,7 @@ on:
       - '.claude/scripts/spine_client.py'
       - '.claude/scripts/check_pii_regex_parity.py'
       - 'docs/adr/proposals/pii-db-check.sql'
+      - 'supabase/migrations/0022_graph_phase1_shared.sql'
       - '.github/workflows/pii-regex-parity.yml'
   push:
     branches: [main]
@@ -17,6 +18,7 @@ on:
       - '.claude/scripts/spine_client.py'
       - '.claude/scripts/check_pii_regex_parity.py'
       - 'docs/adr/proposals/pii-db-check.sql'
+      - 'supabase/migrations/0022_graph_phase1_shared.sql'
       - '.github/workflows/pii-regex-parity.yml'
 jobs:
   parity:
