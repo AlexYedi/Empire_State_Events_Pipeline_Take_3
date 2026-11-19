@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- YED-347: keeps `claude remote-control` running on esep-mini so scheduled routines on the
+     bridge environment can fire. Installed by Alex (not by Claude): see .claude/references/mini-runner.md -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.esep.remote-control</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sameoldexpressions/.local/bin/claude</string>
+    <string>remote-control</string>
+    <string>--spawn</string><string>worktree</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/sameoldexpressions/Documents/GitHub/Empire_State_Events_Pipeline_Take_3</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/Users/sameoldexpressions/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>/Users/sameoldexpressions</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/remote-control.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/sameoldexpressions/Library/Logs/esep-runner/remote-control.err.log</string>
+</dict>
+</plist>

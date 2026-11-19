@@ -1,0 +1,1030 @@
+{
+ "run": "lane0-phase4-person",
+ "at": "2026-11-05T20:22:06+00:00",
+ "rows_planned": 123,
+ "rows_written": 123,
+ "skipped": [
+  {
+   "claim_id": "09f05771-1719-4f17-b7a3-31d4218bfbb3",
+   "person_id": "823c229c-feaa-44bf-a7fa-b4818a46991c",
+   "role": "both",
+   "conf": 0.65
+  },
+  {
+   "claim_id": "28de7c3a-a230-4a2c-bae2-96914a332d89",
+   "person_id": "dfe20611-93f5-417c-a54f-ab990f8a417a",
+   "role": "about",
+   "conf": 0.55
+  },
+  {
+   "claim_id": "9326bbcd-622c-4c26-b818-5bfef64c3c8b",
+   "person_id": "57a96344-ed99-412f-a870-79ffee0b6143",
+   "role": "asserted_by",
+   "conf": 0.5
+  },
+  {
+   "claim_id": "9a9730f1-6242-4d47-8983-a8d19e22bb1c",
+   "person_id": "04f4720a-1fcd-490b-9686-b9ac634abfef",
+   "role": "about",
+   "conf": 0.65
+  },
+  {
+   "claim_id": "9e925bfe-f75b-4a38-931c-a7ae0b1077eb",
+   "person_id": "5b5a8641-3e5c-41c9-9a43-3e7d6726a67a",
+   "role": "about",
+   "conf": 0.6
+  },
+  {
+   "claim_id": "b9d2b949-7ecc-421c-a097-2d45f8c3bdf6",
+   "person_id": "bfd29f72-9018-4bd9-8980-5a03904e4b6c",
+   "role": "about",
+   "conf": 0.55
+  }
+ ],
+ "links": [
+  {
+   "claim_id": "00c9fa3f-1578-46ed-a0bd-3bb85c4c3331",
+   "person_id": "04f4720a-1fcd-490b-9686-b9ac634abfef",
+   "role": "asserted_by",
+   "conf": 0.7,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "052868d4-adf1-4025-a9db-08ccfb344ce4",
+   "person_id": "0fa49108-9e10-4e0a-b877-8126413d2938",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "06f0b651-a30a-45f6-a8a8-51e1d9c007f1",
+   "person_id": "c8d9f956-6ffd-4a25-ad7c-3e2aa1f1874f",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "06ff5ab5-e69d-43c5-8ba4-5d18297003ea",
+   "person_id": "18267f47-cb2f-4101-9c10-6e451babb930",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "082153df-f625-4934-a2aa-f98058ef904d",
+   "person_id": "4a5fb699-08fa-433f-bdc8-f4c0e388bb5a",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0acba4cc-9034-4995-bbbf-02e12534549e",
+   "person_id": "0fa49108-9e10-4e0a-b877-8126413d2938",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0b818062-8409-4b3c-9053-acc835f76a30",
+   "person_id": "8fa689d7-9790-4ae0-8252-f3fe57d449ed",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0b818062-8409-4b3c-9053-acc835f76a30",
+   "person_id": "0fa49108-9e10-4e0a-b877-8126413d2938",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0e082702-5619-470f-a35d-9cf6942d4eb3",
+   "person_id": "41e4b18a-388b-4e31-b87d-ce554fc8639c",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0e768a71-e100-4719-8168-de79f3dd817f",
+   "person_id": "becd7140-39b3-4dd8-b474-4cf5fcc20bba",
+   "role": "asserted_by",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "0fa44049-8236-4151-b1e4-ce64627e69c4",
+   "person_id": "b681de4a-34fc-465b-8aea-58f0da10b9e1",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "12639617-fcc5-4128-8524-7dd2020a4ac0",
+   "person_id": "7ae6fdb0-224a-42fa-81fc-7fdfc49aa969",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "14e55e92-51c1-4249-8c39-4a6e5677c354",
+   "person_id": "8c222845-9867-4e9e-a814-e3b9394366e4",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "1510b30b-c961-41d5-b19d-890cbb868b03",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "15a8b419-244c-4672-a0b0-a98d1fb69163",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "1b22afbb-dcdf-48da-a56c-b7dbd476d697",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "20596c45-a705-4580-980a-e8235b9e9556",
+   "person_id": "7a54816a-f873-424c-ae77-a7617eb9f1e9",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "20d1e2de-c6b9-4163-b8cd-808a31e3a4b9",
+   "person_id": "4ca89d5e-1cbb-4ec1-a9ed-362f5c326610",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "20d1e2de-c6b9-4163-b8cd-808a31e3a4b9",
+   "person_id": "4ca89d5e-1cbb-4ec1-a9ed-362f5c326610",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "25354e83-cf26-47cb-8cda-64e2ff9929b5",
+   "person_id": "aad9a5ff-9e26-466f-99d9-016a66076903",
+   "role": "asserted_by",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "2cb9ec22-da00-4b1e-9103-aabc43905f9b",
+   "person_id": "49c41658-9c89-4caa-8dce-e625d7a3f47d",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "308aaaf2-24e9-4312-a874-3a2e92a1d627",
+   "person_id": "ce8607a9-b418-4c00-9e57-05147fca61c7",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "310efc3d-0428-4abd-bc4d-54721adb2be6",
+   "person_id": "3c075f7c-a467-49fd-a5f4-2b3c1b1c2b3b",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "31d7f133-e197-4887-996f-13355552d8a7",
+   "person_id": "e5b496d5-1386-45cb-8201-de7e5cad2c26",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "3401a3fe-48f6-46d0-b14a-3a835ba0acc8",
+   "person_id": "37ade3a2-91c5-4ad6-9b3b-235baf538afc",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "34958ae8-46c6-49e8-ab5c-203728e45b81",
+   "person_id": "6d0f050c-4a13-47f1-aa99-922377e6236b",
+   "role": "about",
+   "conf": 0.75,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "34d22965-2977-4ef8-9155-1c1716b288fe",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "37b16042-d0f8-41a0-bbf3-b2e2233ab87e",
+   "person_id": "0fa49108-9e10-4e0a-b877-8126413d2938",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "39d684d2-e750-438b-8c25-1065e6694cd3",
+   "person_id": "c8a84f8e-5bcd-45ba-9f6b-320a2e94f9de",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "3bffd7e4-f61b-407f-9956-0787c964e1de",
+   "person_id": "4a5fb699-08fa-433f-bdc8-f4c0e388bb5a",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "3deda4f1-5344-418e-979d-c8bde19d609a",
+   "person_id": "93923498-8f0e-4a0c-bd68-0f5967a74d47",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "40256139-2e06-4e3f-aea5-7c4b50625d65",
+   "person_id": "85a31f62-ca51-419b-852f-c52c6e4b4f13",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "4209ca09-8bbd-4aa8-bd73-bfb446997f4c",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "42cbfcce-90b2-493b-8573-365b6a575dab",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "43c8b340-6730-407d-99bc-f34747200152",
+   "person_id": "133d6f40-5707-49b8-9eb4-f09f4ce3de0d",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "43c8b340-6730-407d-99bc-f34747200152",
+   "person_id": "93923498-8f0e-4a0c-bd68-0f5967a74d47",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "476d5568-6405-42c9-b544-070564385f6d",
+   "person_id": "49c41658-9c89-4caa-8dce-e625d7a3f47d",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "4c168447-0f0a-4485-91b4-0364d45e1030",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "5023347a-2313-4ff1-b8f1-025a0c2cf956",
+   "person_id": "75c9b87d-a9dc-484d-84e0-9ca4f2a5e07c",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "5194d671-f5d5-4a37-aa3e-bbd317d0db69",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "527c14da-7d52-48c2-af37-35c8ab6a9af1",
+   "person_id": "93923498-8f0e-4a0c-bd68-0f5967a74d47",
+   "role": "asserted_by",
+   "conf": 0.7,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "527c14da-7d52-48c2-af37-35c8ab6a9af1",
+   "person_id": "133d6f40-5707-49b8-9eb4-f09f4ce3de0d",
+   "role": "asserted_by",
+   "conf": 0.7,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "56c2d775-8ad8-4ea2-b3ab-c89ada359916",
+   "person_id": "d158f551-2308-405f-a9e5-d25fee26f0a0",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "575320e5-abe2-43ba-837c-f7b2165f4e9c",
+   "person_id": "c829384f-3ccb-4a93-9019-684ffba9aeda",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "5c770c12-7b71-4c48-95d7-6ddd483e2e7b",
+   "person_id": "4ca89d5e-1cbb-4ec1-a9ed-362f5c326610",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "635ac421-bd81-4adb-9297-50d22da6c3f1",
+   "person_id": "4a5fb699-08fa-433f-bdc8-f4c0e388bb5a",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "664482c3-a549-4013-8109-097d0eb89420",
+   "person_id": "c829384f-3ccb-4a93-9019-684ffba9aeda",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "68217250-da8e-49a4-9f23-269e50884988",
+   "person_id": "2976c50f-f392-4d19-9da3-37629297ad91",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "6c831a37-d4ce-4106-bd91-13aafaec72ba",
+   "person_id": "4d512d49-5230-4bfd-a9ef-38048d8bce1e",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "6faca020-57e3-45c1-846d-5859ef31674d",
+   "person_id": "d3f4e6e1-3abb-466b-8b21-e9c8b64ce3d3",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "73e9e841-b4d2-48aa-bc63-f4121e28777a",
+   "person_id": "4f702dd9-37d0-4eb6-999b-5d652be18b52",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "73e9e841-b4d2-48aa-bc63-f4121e28777a",
+   "person_id": "beba6626-ecc6-4f04-bd76-6b4850fc2d7e",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "7b04dbc1-7a8e-482a-9a75-a1853e003221",
+   "person_id": "18267f47-cb2f-4101-9c10-6e451babb930",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "7eba84cf-b539-4b27-84cb-4d9e79f9b5f9",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.9,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "825d544e-4992-49f1-9dfd-8012a404f5f5",
+   "person_id": "1e496840-42d2-406b-ac65-86756428fd7d",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "829d73d5-2a07-4142-a562-59379a17c3cf",
+   "person_id": "4e6397a2-412c-4019-b8a7-ea1bc5a965f6",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "84745c85-1b40-4329-98f0-495a27f5c2b3",
+   "person_id": "18267f47-cb2f-4101-9c10-6e451babb930",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "8b7fc291-41b1-42df-a261-8794c8c0ed4a",
+   "person_id": "ed4e9a53-e073-452b-9a18-20714c012f9c",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "8c0a1cf5-714e-40b5-8fc4-019ad43444fb",
+   "person_id": "e15ab6bb-2bf9-40e3-8ac2-20a2fc47123d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "90230323-3e9b-4719-b713-613a8caf245b",
+   "person_id": "4f702dd9-37d0-4eb6-999b-5d652be18b52",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "90287b86-267f-4198-b166-fdbb2f2bd1ab",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "910222db-0fa0-490c-bd7b-c249b5d5c49c",
+   "person_id": "49c41658-9c89-4caa-8dce-e625d7a3f47d",
+   "role": "about",
+   "conf": 0.7,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "9126c7da-d303-47c0-b3a4-7f53fca50c37",
+   "person_id": "6068db5e-1435-4bf7-ac4d-5428e694207e",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "9aefa0f5-7862-4380-a286-92cd6817e158",
+   "person_id": "4a5fb699-08fa-433f-bdc8-f4c0e388bb5a",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "9bf08279-d6e9-405a-8919-b3f5d0d689a1",
+   "person_id": "ad0265d1-7863-4139-918f-e23e591fbbf1",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "9c7c80e1-f434-431a-9ec2-3bef8e713394",
+   "person_id": "a95e240a-8ba4-492b-8ad8-2971b1adf040",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "9c835fa8-af58-4272-8ab7-84e793786042",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a17eaef1-5415-48e4-9609-dc134f26278b",
+   "person_id": "18267f47-cb2f-4101-9c10-6e451babb930",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a17eaef1-5415-48e4-9609-dc134f26278b",
+   "person_id": "e15ab6bb-2bf9-40e3-8ac2-20a2fc47123d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a17eaef1-5415-48e4-9609-dc134f26278b",
+   "person_id": "4a5fb699-08fa-433f-bdc8-f4c0e388bb5a",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a78a0889-c8cb-4da2-99f4-3b362599a1f3",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a78a0889-c8cb-4da2-99f4-3b362599a1f3",
+   "person_id": "8b3f9333-f452-42e1-97d8-79fee6b964fe",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "a826f47c-08e2-4b79-ab83-62da045b8200",
+   "person_id": "9909ef7f-5013-4771-8922-13165e65bb6b",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "ab6f00e5-c797-4bf6-9b74-c276849c2b41",
+   "person_id": "79c42265-0f0a-4321-b1f9-d413970f6fb5",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "aba97496-0c62-4d01-9125-4c83639ed91b",
+   "person_id": "9ec00661-8c8c-4395-9f26-6d9caf515cc6",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "aec9635f-47d6-43ee-9519-4836972aa74f",
+   "person_id": "d158f551-2308-405f-a9e5-d25fee26f0a0",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "afd81956-6d89-45e7-8fdd-107738c45104",
+   "person_id": "75c9b87d-a9dc-484d-84e0-9ca4f2a5e07c",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "b479e98f-86f5-427f-ad24-1e6430f90143",
+   "person_id": "e7adff0c-06e8-46ac-bbce-bdbe9850f0f7",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "b48b11c4-c205-4a4b-a081-21c9ec041e63",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "b5993367-6bda-4b0a-8e7e-53940bd6eca1",
+   "person_id": "b681de4a-34fc-465b-8aea-58f0da10b9e1",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "b5c30877-2b89-4df3-b9fa-296f7c3b1668",
+   "person_id": "dfe20611-93f5-417c-a54f-ab990f8a417a",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "b7104ff7-63c4-4138-aef0-5f1e3a93b683",
+   "person_id": "9b025f10-147b-49ae-9a8e-ac5e681b387c",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bb837fe9-dd73-4825-abe9-49260fa2db9c",
+   "person_id": "85a31f62-ca51-419b-852f-c52c6e4b4f13",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bbc36ac4-96e7-44c5-ba7f-c2799956b262",
+   "person_id": "73236436-00b5-41b7-9313-9ac5908fe11b",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bbc36ac4-96e7-44c5-ba7f-c2799956b262",
+   "person_id": "fbcb9bc4-8d36-4c7c-bde9-55e6145c692a",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bc719299-0c1d-4a65-88d3-965681ce19d9",
+   "person_id": "becd7140-39b3-4dd8-b474-4cf5fcc20bba",
+   "role": "asserted_by",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bcfacca7-30f8-4dc3-8a7a-83f753144463",
+   "person_id": "90186a39-437c-43ef-9c2c-58c70db79843",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "be3caf72-1ee0-405d-92da-132a10664571",
+   "person_id": "bfd29f72-9018-4bd9-8980-5a03904e4b6c",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "bfa0eee4-9598-4154-a433-e66f1b164f09",
+   "person_id": "c8a84f8e-5bcd-45ba-9f6b-320a2e94f9de",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c256b003-0f9c-4f85-b5cc-ad56459199f6",
+   "person_id": "102282ec-d0d1-410c-9fb6-f6679179fdcb",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c464d654-c264-4e42-9bf0-44969b649619",
+   "person_id": "54183061-afaf-45c4-ba98-ae8df6767c76",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c711444a-f80d-49a7-aca7-563310193767",
+   "person_id": "4ca89d5e-1cbb-4ec1-a9ed-362f5c326610",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c7baba26-2d8b-490a-b59a-e456055fc9e6",
+   "person_id": "fbcb9bc4-8d36-4c7c-bde9-55e6145c692a",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c93de19b-f315-4bc4-9af8-6a983d6827ba",
+   "person_id": "8b3f9333-f452-42e1-97d8-79fee6b964fe",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "c977c485-ddb8-4d32-8d54-1547258d2eb0",
+   "person_id": "7a54816a-f873-424c-ae77-a7617eb9f1e9",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "ccaa3073-343c-4963-8360-773e86daf881",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.95,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "ce98c5e6-721e-45d4-a30d-c4835285e22b",
+   "person_id": "37ade3a2-91c5-4ad6-9b3b-235baf538afc",
+   "role": "about",
+   "conf": 0.75,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d3d183e4-13b1-42ae-9700-f7b2098e3ab3",
+   "person_id": "dec15cdb-9b79-4720-b298-845ee7968174",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d3d183e4-13b1-42ae-9700-f7b2098e3ab3",
+   "person_id": "7ae6fdb0-224a-42fa-81fc-7fdfc49aa969",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d414fb6e-1237-4a43-8ba6-5f727a3d822d",
+   "person_id": "647b89d4-84e3-4963-93a2-7d8ae44a90c2",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d6bccb8f-5267-48b2-a515-e55e192f93a5",
+   "person_id": "d158f551-2308-405f-a9e5-d25fee26f0a0",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d6e4e4ed-feb7-4aff-bb91-43166fd4d2fa",
+   "person_id": "133d6f40-5707-49b8-9eb4-f09f4ce3de0d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d6fe1611-e8e3-4028-8aea-a834ea17aca4",
+   "person_id": "846fdf35-fe4a-4686-aff5-a1d12e667590",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d757e366-e76d-4be8-a885-c6e0285950e8",
+   "person_id": "85a31f62-ca51-419b-852f-c52c6e4b4f13",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d9521e82-a8f1-479b-a6ca-ddb686869572",
+   "person_id": "833c7943-e0da-448f-be98-92b48b91cd39",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d9521e82-a8f1-479b-a6ca-ddb686869572",
+   "person_id": "133d6f40-5707-49b8-9eb4-f09f4ce3de0d",
+   "role": "asserted_by",
+   "conf": 0.8,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "d9521e82-a8f1-479b-a6ca-ddb686869572",
+   "person_id": "93923498-8f0e-4a0c-bd68-0f5967a74d47",
+   "role": "asserted_by",
+   "conf": 0.85,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "ddf3c8ea-d641-425e-9cbf-ec2190be8158",
+   "person_id": "fbcb9bc4-8d36-4c7c-bde9-55e6145c692a",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e1ae74c3-6449-4672-af8b-d3308fd52172",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "about",
+   "conf": 0.7,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e1ae74c3-6449-4672-af8b-d3308fd52172",
+   "person_id": "fbbdfae6-3ad5-4a8c-8fc4-b05bf39b04b7",
+   "role": "asserted_by",
+   "conf": 0.7,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e2a2fd6f-489a-4803-8939-18ba716b359f",
+   "person_id": "499de341-998b-46ec-88c0-610a74afeb7d",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e2c74fb0-79e8-4915-b2e9-0529ebadd320",
+   "person_id": "ad0265d1-7863-4139-918f-e23e591fbbf1",
+   "role": "about",
+   "conf": 0.9,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e6691c03-0470-484c-906a-fb3f78fab62d",
+   "person_id": "90186a39-437c-43ef-9c2c-58c70db79843",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "e6d66ad3-710f-4d24-a3c0-44c0add3e02e",
+   "person_id": "ea6cc38d-6cb1-41f2-8ad8-1348fd63fb31",
+   "role": "about",
+   "conf": 0.8,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "ea91dec9-9c6d-4899-932e-6754f9114e79",
+   "person_id": "8fa689d7-9790-4ae0-8252-f3fe57d449ed",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "eda42f6d-ba75-4992-b464-c349d359bddb",
+   "person_id": "b681de4a-34fc-465b-8aea-58f0da10b9e1",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "edabdc68-90ac-4500-8d7b-ee4d9892823c",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "f1314665-4cd0-4787-af58-246b440f5e21",
+   "person_id": "2453693f-e97c-46e9-a101-9bd607034043",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "f3a12d0e-aaa6-4ad3-b8ca-c1fd8798a0be",
+   "person_id": "aad9a5ff-9e26-466f-99d9-016a66076903",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "f5176501-e70d-49fb-b53f-f71089af5758",
+   "person_id": "cb03a91d-d131-4ef7-90e1-3754e585fb71",
+   "role": "about",
+   "conf": 0.85,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "f89bec05-fd2e-4880-a371-7d29393f666f",
+   "person_id": "c829384f-3ccb-4a93-9019-684ffba9aeda",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "fa68d61b-7d07-4802-967c-a147050c2fb6",
+   "person_id": "610ec23b-7306-4d55-b1a2-016aa9b9ac8d",
+   "role": "about",
+   "conf": 0.95,
+   "lens": "research",
+   "tier": "roster-name+fable"
+  },
+  {
+   "claim_id": "fd9e2fa0-516a-4fa3-8c55-23b31563a910",
+   "person_id": "16496f8c-28f9-46fa-ab02-8e6e27eab88d",
+   "role": "asserted_by",
+   "conf": 0.7,
+   "lens": "attended",
+   "tier": "roster-name+fable"
+  }
+ ]
+}

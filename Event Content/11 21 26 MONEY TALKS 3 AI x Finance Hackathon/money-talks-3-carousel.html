@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Money Talks #3 AI x Finance Hackathon — carousel (Arc 1)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate + off-white, blue = agents/AI); same overrides as Agents & APIs v3 ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --mark:#3B82F6; --on-mark:#111418; --grey:#6B7280;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+.strip{position:absolute;left:96px;right:96px;border-top:1px solid var(--rule);padding-top:22px;font-family:var(--mono);font-size:20px;white-space:nowrap;letter-spacing:0;color:var(--muted)}
+h2{margin-top:0}
+
+/* slide 1 — hook */
+.s1 h1{font-size:150px;line-height:1.0;margin-top:40px}
+.tracks{margin-top:auto;margin-bottom:330px}
+.pills{display:flex;flex-wrap:wrap;gap:18px}
+.pills{flex-wrap:nowrap;gap:16px}
+.pill{border:3px solid var(--mark);border-radius:999px;padding:14px 22px;font-family:var(--body);font-weight:600;font-size:30px;line-height:1.1;color:var(--ink);white-space:nowrap}
+.s1 .note{margin-top:30px;font-family:var(--display);font-style:italic;font-size:38px;line-height:1.2;color:var(--ink)}
+.s1 .strip{bottom:190px}
+
+/* slide 2 — evidence */
+.tag{align-self:flex-end;font-family:var(--mono);font-size:21px;letter-spacing:.04em;color:var(--muted);border:1px solid var(--rule);border-radius:6px;padding:8px 14px;margin-top:-40px;margin-bottom:28px}
+.s2 h2{font-size:80px}
+.evi{margin-top:70px;display:grid;grid-template-columns:470px 1fr;column-gap:40px}
+.ladder{display:flex;flex-direction:column;gap:14px}
+.step{border-radius:10px;font-family:var(--body)}
+.step.t1{background:var(--mark);color:var(--on-mark);padding:24px 26px 26px}
+.step.t1 .lvl{font-family:var(--display);font-weight:700;font-size:56px;line-height:1}
+.step.t1 .risk{font-family:var(--mono);font-size:22px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-top:10px}
+.step.t1 .what{font-weight:700;font-size:32px;line-height:1.18;margin-top:18px}
+.step.t1 .what + .what{margin-top:8px}
+.step.lo{border:2px solid var(--grey);color:var(--muted);padding:16px 26px;font-weight:600;font-size:30px;line-height:1}
+.step.t2{margin-left:40px}.step.t3{margin-left:80px}.step.t4{margin-left:120px}
+.loops{display:flex;flex-direction:column;gap:22px;border-left:2px solid var(--rule);padding-left:40px}
+.loop .k{white-space:nowrap;font-family:var(--display);font-weight:600;font-size:34px;line-height:1.05;color:var(--ink)}
+.loop .v{font-family:var(--body);font-weight:500;font-size:30px;line-height:1.25;color:var(--muted);margin-top:12px}
+.loop svg{display:block;margin-top:18px}
+.loop + .loop{border-top:2px solid var(--rule);padding-top:22px}
+.s2 .note{margin-top:64px;font-family:var(--display);font-style:italic;font-size:33px;line-height:1.28;max-width:880px}
+.s2 .srcline{font-size:20px}
+
+/* slide 3 — mechanism */
+.s3 h2{font-size:80px}
+.matrix{margin-top:46px;display:grid;grid-template-columns:250px 1fr;column-gap:40px}
+.matrix .hd{font-family:var(--mono);font-size:21px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:16px;line-height:1.35}
+.matrix .trk{font-family:var(--display);font-weight:600;font-size:40px;line-height:1.05;color:var(--mark);padding:24px 0;border-top:3px solid var(--mark)}
+.matrix .c{font-family:var(--body);font-weight:500;font-size:36px;line-height:1.2;padding:24px 0;border-top:2px solid var(--rule);color:var(--muted)}
+.matrix .c b{color:var(--ink);font-weight:700;display:block;margin-bottom:6px}
+.ours{grid-column:2;font-family:var(--mono);font-size:21px;line-height:1.4;color:var(--muted);border-top:2px solid var(--rule);padding-top:16px}
+.s3 .srcline{font-size:20px}
+
+/* slide 4 — CTA */
+.s4 h2{font-size:92px}
+.split{margin-top:64px;display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.panel{background:var(--panel);border:2px solid var(--rule);border-radius:10px;padding:34px 34px 30px;height:520px;display:flex;flex-direction:column}
+.panel .k{font-family:var(--mono);font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark);line-height:1.35;min-height:60px}
+.panel ul{list-style:none;margin-top:26px}
+.panel li{text-wrap:balance;font-family:var(--body);font-weight:500;font-size:34px;line-height:1.2;padding:16px 0;border-top:1px solid var(--rule)}
+.s4 .closer{position:absolute;left:96px;right:96px;bottom:210px;font-family:var(--display);font-style:italic;font-weight:600;font-size:62px;line-height:1.22;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 4 — Hook: the rule on the event page
+     Alt text: Title card with the event's judging rule, "Judges see your traces," above the three hackathon track names. -->
+<section class="slide s1">
+  <h1>Judges see your <span class="u">traces.</span></h1>
+  <div class="tracks">
+    <div class="pills">
+      <span class="pill">Money Intelligence</span>
+      <span class="pill">Money Operations</span>
+      <span class="pill">Trust &amp; Risk</span>
+    </div>
+    <div class="note">Tracks are themes, not assignments.</div>
+  </div>
+  <div class="strip">Money Talks #3 · AI × Finance Hackathon · Block Convey · Sat 11/21 · NYC</div>
+  <div class="srcline">Source: Money Talks #3 event page (Luma), 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 4 →</span></div>
+</section>
+
+<!-- Slide 2 of 4 — Evidence: the regulator's lens, 17 days earlier
+     Alt text: Four-tier risk ladder with autonomous payment agents and real-time credit decisioning in the top tier, beside the difference between a person approving before an agent acts and a person monitoring it. -->
+<section class="slide s2">
+  <div class="tag">Illustrative tiers · examiner-facing · Nov 4, 2026</div>
+  <h2>Payment agents sit in <span class="u">Tier 1</span></h2>
+  <div class="evi">
+    <div class="ladder">
+      <div class="step t1">
+        <div class="lvl">Tier 1</div>
+        <div class="risk">highest risk</div>
+        <div class="what">autonomous payment agents</div>
+        <div class="what">real-time credit decisioning</div>
+      </div>
+      <div class="step lo t2">Tier 2</div>
+      <div class="step lo t3">Tier 3</div>
+      <div class="step lo t4">Tier 4</div>
+    </div>
+    <div class="loops">
+      <div class="loop">
+        <div class="k">Human-in-the-loop</div>
+        <div class="v">a person approves before the agent acts</div>
+      </div>
+      <div class="loop">
+        <div class="k">Human-on-the-loop</div>
+        <div class="v">a person watches and can step in</div>
+      </div>
+    </div>
+  </div>
+  <div class="note">A nominal approval step is not enough. Named controls: circuit breakers, rate limits, restricted permissions, suspend.</div>
+  <div class="srcline">Source: OCC supervisory framework for generative and agentic AI (Nov 4, 2026), as summarised by Ballard Spahr, Consumer Finance Monitor, Nov 6, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 4 →</span></div>
+</section>
+
+<!-- Slide 3 of 4 — Mechanism: three tracks, three kinds of proof
+     Alt text: Three-row table pairing each hackathon track with the kind of evidence that could show an agent works: benchmark accuracy, single-execution payments, and recorded controls. -->
+<section class="slide s3">
+  <h2>Three tracks, three <span class="u">kinds of proof</span></h2>
+  <div class="matrix">
+    <div class="hd">Track</div><div class="hd">What ‘proves it works’ could look like</div>
+    <div class="trk">Money Intelligence</div>
+    <div class="c"><b>Right answer, measured.</b>Public benchmarks exist: 537 expert questions over SEC filings.</div>
+    <div class="trk">Money Operations</div>
+    <div class="c"><b>Money moves once.</b>An idempotency key on every payment step, so a retry returns the first result instead of paying again.</div>
+    <div class="trk">Trust &amp; Risk</div>
+    <div class="c"><b>Control on the record.</b>A circuit breaker, a suspend switch, and a reviewer who can reject <span style="white-space:nowrap">mid-flow.</span></div>
+    <div class="ours">Our reading. The judges’ rubric is named at the opening workshop.</div>
+  </div>
+  <div class="srcline">Sources: Money Talks #3 event page (tracks), 2026; Vals AI Finance Agent Benchmark, 2025; OCC framework via Ballard Spahr, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 4 →</span></div>
+</section>
+
+<!-- Slide 4 of 4 — CTA: process or outcome
+     Alt text: Two side-by-side panels contrasting what an agent trace proves (process) with what the end state proves (correctness), under the question of which should win when both demos trace cleanly. -->
+<section class="slide s4">
+  <h2>Clean trace, wrong outcome?</h2>
+  <div class="split">
+    <div class="panel">
+      <div class="k">The trace proves process</div>
+      <ul>
+        <li>who approved what</li>
+        <li>what the AI saw</li>
+        <li>which tool, which arguments</li>
+        <li>what happened <span style="white-space:nowrap">on a ‘no’</span></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="k">The end state proves correctness</div>
+      <ul>
+        <li>the ledger balances</li>
+        <li>the payment went out once</li>
+        <li>the right record changed</li>
+      </ul>
+    </div>
+  </div>
+  <div class="closer">When two demos both trace clean, <span class="u">which one should win?</span></div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 4</span></div>
+</section>
+
+</body>
+</html>
