@@ -189,10 +189,11 @@ nothing here touches the comp-gate rules.
 > promoted to A only under the v2.1 #3 intangibles exemption: company quality, recent raise, pay,
 > enterprise AD seat, SDRs prospecting the account list. Reason written to Notes.)*
 >
-> **VERTICAL-TERRITORY REJECT: financial services, government, healthcare / life sciences (ruled 2026-09-28,
-> extended 2026-10-07 — Alex).** A role whose territory is **financial services** (banks, insurers, capital
+> **VERTICAL-TERRITORY REJECT: financial services, government, healthcare / life sciences, nonprofit / education (ruled 2026-09-28,
+> extended 2026-10-07 and 2026-11-18 — Alex).** A role whose territory is **financial services** (banks, insurers, capital
 > markets, FSI), **government / public sector** (federal, state & local, SLED, municipal, agencies) or
-> **healthcare / life sciences / pharma** is **`drop`**, however good
+> **healthcare / life sciences / pharma** or **nonprofit / education / ed-tech** (social-impact, education and nonprofit books,
+> e.g. Anthropic Scaled AM, Beneficial Deployments, dropped 2026-11-18) is **`drop`**, however good
 > the company or pay. Alex, verbatim: *"I do not have enough subject matter expertise to honestly compete
 > for those roles … those are specific customer types that people build a career around selling to."*
 > This is separate from the company-level vertical exclusion (e.g. legal AI): it applies to the

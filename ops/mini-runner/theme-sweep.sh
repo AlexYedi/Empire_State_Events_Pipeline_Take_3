@@ -27,22 +27,8 @@ fi
 "$PY" .claude/scripts/sweep_seed.py "${SEED_ARGS[@]}" || { echo "FAIL: sweep_seed"; exit 5; }
 
 # One input file per theme: the top N themes in seed order (velocity, then event, then gap), all their seed rows.
-"$PY" - "$OUT" "$N" "$CAP" <<'PYEOF' > "$OUT/plan.tsv" || { echo "FAIL: plan"; exit 6; }
-import json, re, sys
-out, n, cap = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-seeds = json.load(open(f"{out}/seeds.json"))
-themes = {}
-for r in seeds:
-    themes.setdefault(r["theme"], []).append(r)
-for theme, rows in list(themes.items())[:n]:
-    slug = re.sub(r"[^a-z0-9]+", "-", theme.lower()).strip("-")[:60]
-    w = rows[0]["window"]
-    inp = {"theme": theme, "theme_id": rows[0]["theme_id"], "query_id": None, "window": w,
-           "seed_queries": [{k: r[k] for k in ("kind", "query", "seed_ref")} for r in rows],
-           "known_entities": [], "cap": cap}
-    json.dump(inp, open(f"{out}/{slug}.input.json", "w"), indent=1)
-    print("\t".join([slug, rows[0]["theme_id"] or "null", w["from"], w["to"], theme]))
-PYEOF
+# Unthemed seeds (theme_id null by contract) each become their own group; see sweep_plan.py (YED-443).
+"$PY" .claude/scripts/sweep_plan.py "$OUT" "$N" "$CAP" > "$OUT/plan.tsv" || { echo "FAIL: plan"; exit 6; }
 
 FAILS=0; TOTAL=0
 while IFS=$'\t' read -r SLUG TID FROM TO THEME; do
