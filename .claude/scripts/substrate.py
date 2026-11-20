@@ -408,7 +408,8 @@ def _utcnow() -> str:
 # YED-205 — the pre-event write path: Evidence Ledger parsing (pure, covered by --selftest).
 # The research specialists (company-researcher / person-researcher / topic-landscape-analyst) each emit
 #   ##### Evidence Ledger — <Name>
-#   - claim: <≤15 words> | tier: web-verified | source: <site> | url: <URL> | date: <YYYY-MM-DD> | quote: <≤25 words, verbatim>
+#   - claim: <≤15 words> | tier: web-verified | source: <site> | url: <URL> | date: <YYYY-MM-DD>
+#     [ | quote: <≤25 words, verbatim from the page as fetched> | fetched: <ISO-8601 UTC> ]   (YED-451, 0026)
 # and the synthesizer passes those rows through verbatim in its Evidence Set. They ARE the claims.
 # ---------------------------------------------------------------------------------------------
 RESEARCH_SECTION = "evidence_ledger"
@@ -421,7 +422,7 @@ MAILBOX_SOURCE_RE = re.compile(r"\b(gmail|inbox|mailbox|e-?mail thread|correspon
 CORRESPONDENCE_RE = re.compile(r"\b(thread|replied|reply|emailed|e-?mailed|inbox|dm'?d|reached out|intro(?:duced)? (?:by|via)|"
                                r"last (?:reply|message|contact)|our (?:call|chat|conversation)|Alex)\b", re.I)
 LEDGER_ROW_RE = re.compile(r"^\s*[-*]\s*claim\s*:\s*(.+)$", re.I)
-LEDGER_FIELD_SPLIT = re.compile(r"\s*\|\s*(?=(?:tier|source|url|date|quote)\s*:)", re.I)
+LEDGER_FIELD_SPLIT = re.compile(r"\s*\|\s*(?=(?:tier|source|url|date|quote|fetched)\s*:)", re.I)
 # Table shape of the same ledger (accepted since 2026-09-27; the bullet shape stays the contract).
 TABLE_ROW_RE = re.compile(r"^\s*\|.*\|\s*$")
 TABLE_SEP_RE = re.compile(r"^\s*\|?(\s*:?-{2,}:?\s*\|)+\s*:?-{0,}:?\s*\|?\s*$")
@@ -446,6 +447,48 @@ def research_source_key(notion_event_id: str) -> str:
 def _public_url(u: str | None) -> str | None:
     u = (u or "").strip().strip("<>").strip()
     return u if re.match(r"^https?://[^\s/]+\.[^\s]+", u, re.I) else None
+
+
+QUOTE_MAX_WORDS = 25                                 # 0026 claim_source_quote_words; the 0009 licensing guard
+FETCHED_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*(Z|[+-]\d{2}:?\d{2})?)?$")
+# Proposal (c) on PR #363: a row that only reports the ABSENCE of support is meta-commentary, never a web-verified
+# fact -> skipped. A row that states a fact AND hedges it ("$355M Series C (ARR unverified)") keeps its fact but is
+# flagged metadata.self_hedged, so the judge and the reviewer see the specialist's own doubt (hedge -> fact is a
+# source-check fail). Measured 11/20 on 39 past Evidence Sets (4,561 web-verified rows): 0 skipped, 45 (0.99%) flagged.
+META_COMMENTARY_RE = re.compile(r"\b(not found|no (?:public )?(?:source|evidence|record)s?|could(?: not|n't) (?:confirm|verify|find))\b",
+                                re.I)
+SELF_HEDGE_RE = re.compile(r"\b(unverified|unconfirmed|not (?:publicly )?(?:disclosed|confirmed|verified|listed)|"
+                           r"single[- ](?:unverified )?source|identity (?:match )?(?:unconfirmed|uncertain))\b", re.I)
+
+
+def ledger_quote(tier: str | None, quote: str | None, fetched: str | None) -> tuple[str | None, str | None, str | None]:
+    """YED-451 step 2 (0026): (source_quote, source_quote_fetched_at, drop_reason). Pure.
+    A quote rides only on web_verified rows, must be non-blank, at most 25 words, paired with a parseable fetch time
+    (0026 claim_source_quote_paired), and must pass spine_client's own guard: a quote holding contact detail is
+    DROPPED here (the claim survives) so one bad quote can't hard-fail the whole stage-research batch. Every drop
+    returns a reason; the caller counts it."""
+    q = re.sub(r"\s+", " ", (quote or "").strip().strip('"\u201c\u201d')).strip()
+    if not q or q.lower() in ("n/a", "na", "none", "-"):
+        return None, None, None
+    if tier != "web_verified":
+        return None, None, "not_web_verified"
+    if len(q.split(" ")) > QUOTE_MAX_WORDS:
+        return None, None, "over_25_words"
+    m = FETCHED_RE.match((fetched or "").strip())
+    if not m:
+        return None, None, "fetched_missing_or_bad"
+    day, hms, tz = m.groups()
+    if not hms:
+        hms = "00:00:00"
+    elif hms.count(":") == 1:
+        hms += ":00"
+    tz = "Z" if not tz or tz == "Z" else (tz if ":" in tz else tz[:3] + ":" + tz[3:])
+    try:
+        guard("claim", {"source_key": "ledger-quote-check", "claim_key": "ledger-quote-check",
+                        "claim_text": "ledger quote check", "source_quote": q})
+    except PIIViolation:
+        return None, None, "contact_detail"
+    return q, f"{day}T{hms}{tz}", None
 
 
 def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
@@ -482,12 +525,13 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
             if cells[0].lower() == "claim":          # header row
                 continue
             claim_c, tier_c, source_c, url_c, date_c = cells[:5]
+            quote_c, fetched_c = (cells[5:7] + ["", ""])[:2]
             tm = TABLE_TIER_RE.match(tier_c)
             tier_tok = re.sub(r"[ _]", "-", tm.group(1).lower()) if tm else tier_c.lower()
             qual = tm.group(2).strip(" ()—–-") if tm else ""
             fields = {"claim": clean_md(claim_c), "tier": tier_tok,
                       "source": (f"{source_c} [{qual}]" if qual else source_c), "url": url_c, "date": date_c,
-                      "quote": cells[5] if len(cells) > 5 else ""}     # YED-467: optional 6th cell
+                      "quote": quote_c, "fetched": fetched_c}
         else:
             m = LEDGER_ROW_RE.match(line)
             if not m or not entity:
@@ -515,15 +559,20 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
         if tier == "web_verified" and not url:
             skip("web_verified_missing_url")
             continue
+        if tier == "web_verified" and META_COMMENTARY_RE.search(text):
+            skip("meta_commentary")
+            continue
         if tier not in RESEARCH_CONF:
             skip("unknown_tier")
             continue
         date = (fields.get("date") or "").strip()
         date = date[:10] if re.match(r"^\d{4}-\d{2}-\d{2}", date) else None
         full = f"{entity}: {text}"                   # stands alone in retrieval
+        quote, fetched, quote_drop = ledger_quote(tier, fields.get("quote"), fields.get("fetched"))
         out.append({"entity": entity, "text": full, "claim_key": claim_key(full), "tier": tier, "url": url,
                     "source": clean_md(fields.get("source") or "") or None, "date": date,
-                    "confidence": RESEARCH_CONF[tier], "quote": (fields.get("quote") or "").strip() or None})
+                    "confidence": RESEARCH_CONF[tier], "quote": quote, "fetched": fetched, "quote_drop": quote_drop,
+                    "self_hedged": bool(SELF_HEDGE_RE.search(text))})
     seen, uniq = set(), []
     for it in out:                                   # the same fact repeated across sections = one claim
         if it["claim_key"] in seen:
@@ -1554,7 +1603,6 @@ QUOTE_MATCH_HASH = hashlib.sha256(QUOTE_MATCH_SPEC.encode()).hexdigest()
 PAGE_HASH_1119 = "69ec0f7722fdca67198a5b8d9ccb8547d88002e10eac81bc00c9cb6e21e1301a"   # judge_prompt_v2.md sha256
 PAGE_JUDGES = {PAGE_HASH_1119: "source-page judge v2 (11/19, LLM)",
                QUOTE_MATCH_HASH: QUOTE_MATCH_MODEL}
-QUOTE_MAX_WORDS = 25
 QUOTE_MIN_WORDS = 4
 QUOTE_FETCH_CAP = 150             # distinct URLs per stage-research run; the rest are held 'fetch_budget'
 _QM_NEG = {"not", "no", "never", "without", "nor", "neither", "none", "didn", "doesn", "isn", "wasn", "aren", "weren",
@@ -1777,11 +1825,13 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
             "locator": {"section": RESEARCH_SECTION, "entity": it["entity"], "source": it["source"], "url": it["url"]},
             "document_id": doc_id, "event_id": eid, "provenance_tier": it["tier"], "confidence": it["confidence"],
             "asserted_at": it["date"] or fallback, "status": "candidate", "extractor": "parse", "lane": "research",
+            "source_quote": it.get("quote"), "source_quote_fetched_at": it.get("fetched"),   # 0026 (YED-451)
             "embedding": vec, "embedding_model": EMBED_MODEL,
             "metadata": {"phase": "pre_event", "url": it["url"],
                          "notion_event_id": pid_variants(ev["notion_page_id"])[0],
+                         **({"self_hedged": True} if it.get("self_hedged") else {}),
                          **({"quote_check": qmeta} if qmeta else {})},
-            **qcol,
+            **qcol,     # YED-467: a passing check's source_quote + fetch time override the researcher's
         }.items() if v is not None})
     if rows:
         g.stats.bump("claim", "created", len(rows))
@@ -1807,10 +1857,21 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     by_tier: dict[str, int] = {}
     for it in items:
         by_tier[it["tier"]] = by_tier.get(it["tier"], 0) + 1
+    web = [it for it in items if it["tier"] == "web_verified"]
+    quoted = sum(1 for it in web if it.get("quote"))
+    drops: dict[str, int] = {}
+    for it in items:
+        if it.get("quote_drop"):
+            drops[it["quote_drop"]] = drops.get(it["quote_drop"], 0) + 1
+    g.stats.bump("claim", "source_quote_kept", quoted)
+    g.stats.bump("claim", "self_hedged_flagged", sum(1 for it in items if it.get("self_hedged")))
+    for why, n in sorted(drops.items()):
+        g.stats.bump("claim", f"source_quote_dropped_{why}", n)
     # the exact Step 4.2c line, so the command can paste it into the Step 6 summary unchanged
     print(f"Graph: {len(items)} research claims (web {by_tier.get('web_verified', 0)} · email-lead "
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
+          f" · quotes {quoted}/{len(web)} web" + (f" (dropped {drops})" if drops else "")
           # YED-467: how many new web rows the quote-match passed (approvable) vs held, by reason
           + (f" · quote-match {qc_n.get('supported', 0)}/{sum(qc_n.values())} pass"
              + "".join(f" · held {k} {v}" for k, v in sorted(qc_n.items()) if k != "supported")
@@ -3161,9 +3222,9 @@ def _review_verbs_selftest(ok) -> None:
                    "Today, Acme — now serves 1,200 customers.") == (True, "supported"))
     qled = ("##### Evidence Ledger — Soxton.AI\n"
             f"- claim: Raised a $4M seed led by Primary in August | tier: web-verified | source: TC | "
-            f"url: https://tc.example/soxton | date: 2026-08-14 | quote: {qt}\n"
+            f"url: https://tc.example/soxton | date: 2026-08-14 | quote: {qt} | fetched: 2026-11-19T10:00:00Z\n"
             "- claim: Raised a $4M seed led by Accel | tier: web-verified | source: TC | url: https://tc.example/soxton "
-            f"| date: 2026-08-14 | quote: {qt}\n"
+            f"| date: 2026-08-14 | quote: {qt} | fetched: 2026-11-19T10:00:00Z\n"
             "- claim: Sells contract review to legal teams | tier: web-verified | source: site | "
             "url: https://soxton.example/ | date: 2026-09-01\n")
     items, _ = parse_ledger(qled)
@@ -3185,8 +3246,10 @@ def _review_verbs_selftest(ok) -> None:
        and good["judge_model"] == QUOTE_MATCH_MODEL and good["judge_prompt_hash"] == QUOTE_MATCH_HASH
        and good["source_quote"] == qt and good["source_quote_fetched_at"] == good["judged_at"]
        and good["status"] == "candidate")
-    ok("stage-research: a failed check writes NO verdict and no source_quote; the reason sits in metadata",
-       "judge_verdict" not in bad and "source_quote" not in bad
+    ok("stage-research: a failed check writes NO verdict (the researcher's quote + fetched still ride, #406); "
+       "a passing check's own fetch time overrides the researcher's; the reason sits in metadata",
+       "judge_verdict" not in bad and bad.get("source_quote_fetched_at") == "2026-11-19T10:00:00Z"
+       and good["source_quote_fetched_at"] != "2026-11-19T10:00:00Z"
        and bad["metadata"]["quote_check"]["result"] == "name_not_in_quote"
        and noq["metadata"]["quote_check"]["result"] == "no_quote"
        and qg.stats.c["quote_check"] == {"supported": 1, "name_not_in_quote": 1, "no_quote": 1})
@@ -3436,6 +3499,97 @@ MIXED_SAMPLE = """
 ### People at-a-glance
 | Rick Huang | Co-Founder | Pascal | https://www.linkedin.com/in/huangr/ | 2026-09-27 |
 """
+
+
+QUOTE_SAMPLE = """
+##### Evidence Ledger — Soxton.AI
+- claim: Raised a $4M seed led by Primary in August 2026 | tier: web-verified | source: TechCrunch | url: https://techcrunch.com/soxton-seed | date: 2026-08-14 | quote: Soxton.AI has raised a $4 million seed round led by Primary Venture Partners | fetched: 2026-11-19T21:06:06Z
+- claim: Sells AI contract review to mid-market legal teams | tier: web-verified | source: soxton.ai | url: https://soxton.ai/ | date: 2026-09-01 | quote: "Contract review for mid-market legal teams" | fetched: 2026-11-19
+- claim: Claims 40 percent faster contract turnaround | tier: web-verified | source: blog | url: https://soxton.ai/blog | date: 2026-07-01 | quote: one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three twenty-four twenty-five twenty-six | fetched: 2026-11-19
+- claim: Opened a New York office in 2026 | tier: web-verified | source: soxton.ai | url: https://soxton.ai/nyc | date: 2026-06-01 | quote: Our New York office is open
+- claim: Lists a press contact on its newsroom page | tier: web-verified | source: soxton.ai | url: https://soxton.ai/press | date: 2026-06-02 | quote: Press inquiries: dana@soxton.example.com | fetched: 2026-11-19
+- claim: Newsletter says Soxton is hiring a founding AE | tier: email-signal | source: Term Sheet | url: https://fortune.com/ts | date: 2026-09-26 | quote: Soxton is hiring | fetched: 2026-11-19
+- claim: Series A amount not found in public sources | tier: web-verified | source: search | url: https://soxton.ai/ | date: 2026-11-19
+- claim: Reported $20M Series A in talks; closing unconfirmed | tier: web-verified | source: The Information | url: https://theinformation.com/soxton | date: 2026-11-02
+- claim: Integrates with Ironclad and DocuSign | tier: web-verified | source: docs | url: https://soxton.ai/docs | date: 2026-10-01 | quote: Works with Ironclad | DocuSign today | fetched: 2026-11-19 14:05
+##### Evidence Ledger — Holly
+| claim | tier | source | url | date | quote | fetched |
+|---|---|---|---|---|---|---|
+| $2.2M pre-seed led by J2 Ventures | web-verified | BusinessWire | https://www.businesswire.com/holly | 2025-01-09 | Holly raised $2.2 million in pre-seed funding led by J2 Ventures | 2026-11-19T09:00:00+0100 |
+"""
+
+
+def _quote_selftest(ok) -> None:
+    """YED-451 step 2: the ledger carries a verbatim page quote + fetch time into claim.source_quote (0026).
+    The contact-detail case trips spine_client's guard on purpose, so telemetry is off for the run (a selftest
+    must not write refusal records) and restored after."""
+    import spine_client as _sc
+    prev = _sc._TELEMETRY_ON
+    _sc.telemetry(False)
+    try:
+        _quote_cases(ok)
+    finally:
+        _sc.telemetry(prev)
+
+
+def _quote_cases(ok) -> None:
+    items, skipped = parse_ledger(QUOTE_SAMPLE)
+    by = {i["text"].split(": ", 1)[1]: i for i in items}
+    seed = by["Raised a $4M seed led by Primary in August 2026"]
+    ok("quote: a valid quote + full ISO fetch time is kept verbatim",
+       seed["quote"] == "Soxton.AI has raised a $4 million seed round led by Primary Venture Partners"
+       and seed["fetched"] == "2026-11-19T21:06:06Z" and seed["quote_drop"] is None)
+    sells = by["Sells AI contract review to mid-market legal teams"]
+    ok("quote: surrounding quote marks stripped; a date-only fetch becomes midnight UTC",
+       sells["quote"] == "Contract review for mid-market legal teams" and sells["fetched"] == "2026-11-19T00:00:00Z")
+    ok("quote: over 25 words -> quote dropped, the claim survives",
+       by["Claims 40 percent faster contract turnaround"]["quote"] is None
+       and by["Claims 40 percent faster contract turnaround"]["quote_drop"] == "over_25_words")
+    ok("quote: no fetch time -> quote dropped (0026 paired CHECK), the claim survives",
+       by["Opened a New York office in 2026"]["quote"] is None
+       and by["Opened a New York office in 2026"]["quote_drop"] == "fetched_missing_or_bad")
+    ok("quote: contact detail in a quote -> dropped by spine_client's own guard, the claim survives",
+       by["Lists a press contact on its newsroom page"]["quote"] is None
+       and by["Lists a press contact on its newsroom page"]["quote_drop"] == "contact_detail")
+    ok("quote: never on a non-web-verified row",
+       by["Newsletter says Soxton is hiring a founding AE"]["quote"] is None
+       and by["Newsletter says Soxton is hiring a founding AE"]["quote_drop"] == "not_web_verified")
+    ok("ledger: a web-verified row reporting an ABSENCE ('not found') is meta-commentary, skipped + counted",
+       skipped.get("meta_commentary") == 1 and not any("not found" in i["text"] for i in items))
+    hedged = by["Reported $20M Series A in talks; closing unconfirmed"]
+    ok("ledger: a fact WITH a hedge is kept and flagged self_hedged, not skipped; plain rows are not flagged",
+       hedged["self_hedged"] is True and seed["self_hedged"] is False)
+    integ = by["Integrates with Ironclad and DocuSign"]
+    ok("quote: a pipe inside a quote does not split the row; 'YYYY-MM-DD HH:MM' fetch normalised",
+       integ["quote"] == "Works with Ironclad | DocuSign today" and integ["fetched"] == "2026-11-19T14:05:00Z")
+    holly = by["$2.2M pre-seed led by J2 Ventures"]
+    ok("quote (table): 7-column table rows carry quote + fetched; a +0100 offset is kept as +01:00",
+       holly["quote"].startswith("Holly raised $2.2 million") and holly["fetched"] == "2026-11-19T09:00:00+01:00")
+    ok("quote: the old 5-field bullet and table shapes still parse with no quote",
+       all(i["quote"] is None and i["quote_drop"] is None for i in parse_ledger(RESEARCH_SAMPLE)[0] + parse_ledger(TABLE_SAMPLE)[0]))
+    fg = _FakeGraph()
+    m = {"event": {"notion_page_id": "5bed3699c2db816a828ec6410801d5de", "title": "Quote test", "event_date": "2026-11-20"},
+         "entities": [{"type": "company", "name": "Soxton.AI", "website": "https://soxton.ai"}]}
+    rc = stage_research(fg, QUOTE_SAMPLE, m, brief_ref=None)
+    cl = fg.t["claim"]
+    withq = [c for c in cl if c.get("source_quote")]
+    ok("stage: a self-hedged claim carries metadata.self_hedged; others do not",
+       sum(1 for c in cl if (c.get("metadata") or {}).get("self_hedged")) == 1)
+    ok("stage: rc 0; exactly the 4 valid quotes land as source_quote + source_quote_fetched_at",
+       rc == 0 and len(withq) == 4 and all(c.get("source_quote_fetched_at") for c in withq))
+    ok("stage: 0026 pairing holds on every staged row (both set or neither)",
+       all(bool(c.get("source_quote")) == bool(c.get("source_quote_fetched_at")) for c in cl))
+    ok("stage: quote coverage + every drop reason counted in stats",
+       fg.stats.c["claim"].get("source_quote_kept") == 4
+       and fg.stats.c["claim"].get("source_quote_dropped_contact_detail") == 1
+       and fg.stats.c["claim"].get("source_quote_dropped_over_25_words") == 1)
+    refused = []
+    for c in withq:
+        try:
+            guard("claim", {k: c[k] for k in ("source_key", "claim_key", "claim_text", "source_quote", "source_quote_fetched_at")})
+        except PIIViolation as e:
+            refused.append(str(e)[:80])
+    ok("stage: every staged quote passes the real client guard (#400 allowlist)", not refused)
 
 
 def _roles_selftest(ok) -> None:
@@ -4513,6 +4667,7 @@ def selftest() -> bool:
     _norm_selftest(ok)
     # ---- the pre-event write path (YED-205) --------------------------------------------------------
     _research_selftest(ok)
+    _quote_selftest(ok)     # YED-451 step 2 (0026 source_quote)
     _linking_selftest(ok)
     _usage_selftest(ok)
     _roles_selftest(ok)

@@ -51,13 +51,13 @@ For each person that gets research:
 
 ```
 ##### Evidence Ledger — [Name]
-- claim: [≤15 words] | tier: web-verified | source: [publication/profile/talk] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
-- claim: [their stated thesis/POV] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
+- claim: [≤15 words] | tier: web-verified | source: [publication/profile/talk] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words, verbatim from that page] | fetched: [YYYY-MM-DDTHH:MM:SSZ]
+- claim: [their stated thesis/POV] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [verbatim span] | fetched: [ISO-8601 UTC]
 - claim: [carried from pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — grounded in a current web source this run. **URL required.**
-- `quote:` (**required on every `web-verified` row**, YED-467) — copy ≤25 words **verbatim** from the page at `url`, and pick the span that carries every figure, date and name in your claim. At staging, a script fetches the URL and checks that the quote is on the page and that the claim's figures and names are in the quote. A row that fails stays an unapproved candidate, which in practice means it never reaches the graph. So never paraphrase in `quote:`, and if no span on the page carries the claim, rewrite the claim to match the page or drop the row. Leave contact details (emails, phone numbers) out of quotes.
+- `quote` + `fetched` (YED-451, added 2026-11-20) — on every `web-verified` row, a **verbatim** span of at most 25 words copied from the page at `url` as you fetched it, that supports the claim, plus the fetch time in ISO-8601 UTC. Copy, never paraphrase or fix typos. Choose the span that carries every figure, date and name in your claim: at staging a script fetches `url` and the claim is approvable only if the quote is on the page and the claim's figures and names are in it (quote-match, YED-467). WebFetch returns a summary, so copy from text it quotes verbatim, never from its paraphrase; if you cannot get a verbatim span, leave `quote` out and the row stays an unapproved candidate. It lets the claim judge test the claim against the page and tell page drift from extraction error. If no span on the page supports the claim, it is not `web-verified`. Never ledger the absence of a fact ("funding not found") as `web-verified`; a fact you could only half-confirm keeps its hedge in the claim text ("closing unconfirmed").
 - `tier: notion-prior` — carried from the injected pack, NOT re-grounded. Informs the Deep Read only as flagged prior context, never as fact. Prefer to re-ground and promote to `web-verified`.
 - `tier: email-signal` — from Gmail; a relationship **lead**, never a public-facing fact. Keep private contents out.
 - **Common-knowledge background** needs no row. Reserve rows for the specific/recent/contestable.
