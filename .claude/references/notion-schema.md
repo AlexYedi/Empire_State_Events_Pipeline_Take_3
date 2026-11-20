@@ -116,6 +116,19 @@ substituting another value.
 - Fresh account (created April 5, 2026), full read/write on Contacts, Companies, Notes, Deals
 - HubSpot owner ID: 90413044
 
+**Pre-event record shape (YED-282, decided 2026-11-01).** During pre-event research, write every known speaker,
+presenter, host and sponsor named in the event source, and their companies. Never attendee lists.
+- Company: name, domain. Never set industry.
+- Contact: firstname, lastname, jobtitle, company, owner 90413044. Email only if it is published in the event
+  source. Associate the contact with its company. No credit spend (Apollo/Clay) to find emails without Alex's go.
+- Note on each contact: `PRE-EVENT · <event name> · <YYYY-MM-DD> · role: <speaker|presenter|host|sponsor> ·
+  attendance: <in person – not yet met | livestream – not met>`, plus 1–2 talking points from the brief.
+- Name + company is the only dedup key when there is no email: search before every create, and again
+  immediately before writing.
+
+**Post-event:** search first. Add a post-event Note to the existing contact before creating any new one, and
+create only the people Alex actually met (`/post-event-content` Step 5.5).
+
 ## Write order (moved from CLAUDE.md 2026-09-28)
 
 Relations are bidirectional: setting one side auto-populates the other. Relation fields need page URLs from
@@ -130,7 +143,8 @@ Notion
   4. Event (People / Companies / Topics relations ← steps 1–3)
   5. Content Draft (Event / People / Topics relations); Event.Content Drafts auto-populates
 
-HubSpot (post-event, gated, create-once; search name + company first)
+HubSpot (pre-event: named roles only · post-event: enhance + people met; selective, create-once,
+         inline confirmation table; search name + company first)
   1. Company records (standard fields)
   2. Contact records + association to the Company
   3. Note on each Contact (event name + role + talking points in the body)

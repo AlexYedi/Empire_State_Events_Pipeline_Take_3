@@ -1,0 +1,32 @@
+twin aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk; migration supabase/migrations/0025_pii_backstop_normalized.sql; verify statements: 3
+[0] preflight
+  prereq=true v2_present=false claims=5731 persons=506
+[1] snapshot A
+  cols=8ebc6ad34f5e constraints=f43ccd07fbfb triggers=40e85b27778e functions=02481efcd2c4 fn.assert_no_contact_pii=6b7dd66c16b8 fn.v2_present=false count.public.person=506 count.public.claim=5731 count.public.claim_verification=0 count.public.claim_label=0 count.public.entity_alias=0 count.public.sweep_query=0
+[1b] negative control: v2-only refusals are allowed without 0025
+  PASS person LRM email (want allowed)
+  PASS claim_text email (want allowed)
+[2] apply 0025
+  OK  apply
+[3] re-apply (idempotent)
+  OK  re-apply
+  PASS re-apply is a no-op
+[4] verify (staging/0025_verify.sql steps 1-3)
+  PASS step 1 behaviour: 41/41 rows ok
+  PASS step 2 catalog: 7/7 ok 
+  PASS step 3 existing rows: 10 sites, violating none
+[4b] behaviour (rolled back)
+  PASS person LRM email (want trigger)
+  PASS claim_text email (want check:claim_text_no_pii)
+  PASS clean claim_text update (want allowed)
+[4c] validate
+  PASS all 9 VALIDATE CONSTRAINT statements succeed (rolled back)
+[5] rollback
+  OK  staging/0025_rollback.sql
+[6] snapshot C == snapshot A
+  PASS ROLLBACK PROVEN
+[7] negative control: v2-only refusals are allowed without 0025
+  PASS person LRM email (want allowed)
+  PASS claim_text email (want allowed)
+
+REHEARSAL 0025: PASS

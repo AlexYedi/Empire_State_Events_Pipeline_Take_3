@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Same search for every team. So what wins?</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined; frame matches the 11/13 AI Briefing v2 carousel.
+   Palette per the visual brief: ground #0F172A (dark slate), ink #F8FAFC, one topic accent sky blue #38BDF8 (Tech/AI),
+   grey #64748B for non-highlighted data, acid green #8FE83A only for headline underlines and the name mark. */
+:root{
+  --ground:#0F172A; --panel:#16203A; --rule:#26324A; --ink:#F8FAFC; --muted:#94A3B8; --grey:#64748B;
+  --accent:#8FE83A; --mark:#38BDF8;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:120px;line-height:1.08}
+h2{font-size:72px;line-height:1.06}
+h2::after{content:"";display:block;width:96px;height:6px;background:var(--accent);margin-top:24px}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.src span{display:block}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+.em{color:var(--mark)}
+.u{border-bottom:12px solid var(--accent);padding-bottom:2px;white-space:nowrap}
+
+/* Slide 1: hook */
+.s1 h1{margin-top:150px}
+.strip{margin-top:80px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:24px 0;font-family:var(--mono);font-size:26px;line-height:1.6;color:var(--muted)}
+.strip b{display:block;font-family:var(--body);font-weight:600;font-size:34px;line-height:1.35;color:var(--ink);margin-bottom:6px}
+.strip span{display:block}
+.host{margin-top:auto;font-family:var(--body);font-weight:600;font-size:32px;line-height:1.4;color:var(--ink)}
+.host i{font-style:normal;color:var(--mark);padding:0 6px}
+
+/* Slide 2: bars on one zero-based axis */
+.legend{margin-top:40px;display:flex;gap:48px;font-family:var(--body);font-size:28px;color:var(--ink)}
+.sw{display:inline-block;width:28px;height:28px;border-radius:4px;vertical-align:-5px;margin-right:14px}
+.sw.g{background:var(--grey)} .sw.b{background:var(--mark)}
+.chart{margin-top:36px;width:888px}
+.chart svg{display:block}
+.capn{margin-top:auto;border-top:2px solid var(--rule);padding-top:22px;font-family:var(--body);font-size:28px;line-height:1.35;color:var(--ink)}
+.capn small{display:block;margin-top:10px;font-size:24px;color:var(--muted)}
+
+/* Slide 3: three-stat timeline */
+.tl{margin-top:96px;position:relative}
+.tl .axis{height:2px;background:var(--rule);margin:0 0 0 14px;position:relative}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);column-gap:36px}
+.stat{position:relative;padding-top:44px}
+.stat::before{content:"";position:absolute;top:-15px;left:0;width:28px;height:28px;border-radius:50%;background:var(--ground);border:4px solid var(--mark)}
+.stat .yr{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--ink);letter-spacing:.02em}
+.stat .who{display:block;font-family:var(--mono);font-size:22px;color:var(--muted);margin-top:6px;min-height:58px}
+.stat .pre{display:block;font-family:var(--body);font-size:28px;line-height:1.25;color:var(--ink);margin-top:34px;min-height:35px}
+.stat .num{display:block;font-family:var(--display);font-weight:600;font-size:86px;line-height:1;color:var(--mark);letter-spacing:-.02em;margin-top:6px;white-space:nowrap}
+.stat .post{display:block;font-family:var(--body);font-size:30px;line-height:1.3;color:var(--ink);margin-top:16px}
+.base{margin-top:96px;position:relative;border-top:3px dashed var(--grey);padding-top:16px;font-family:var(--mono);font-size:24px;color:var(--muted)}
+
+/* Slide 4: pipeline + check ladder */
+.pipe{margin-top:48px;display:grid;grid-template-columns:180px 40px 1fr 40px 230px;align-items:stretch}
+.box{border:3px solid var(--rule);border-radius:12px;background:var(--panel);padding:20px 20px;font-family:var(--body);font-weight:600;font-size:28px;line-height:1.2;color:var(--ink);display:flex;flex-direction:column;justify-content:center}
+.box small{display:block;margin-top:8px;font-weight:400;font-size:22px;line-height:1.3;color:var(--muted)}
+.box .cite{font-family:var(--mono);color:var(--mark)}
+.arr{display:flex;align-items:center;justify-content:center}
+.drop{height:56px;display:flex;justify-content:flex-end;padding-right:100px}
+.ladder{display:grid;grid-template-columns:1fr 230px;column-gap:24px;row-gap:16px}
+.rung{border:3px solid var(--rule);border-radius:12px;padding:18px 26px;display:flex;flex-direction:column;justify-content:center;min-height:140px}
+.rung b{font-family:var(--body);font-weight:600;font-size:40px;line-height:1.1;color:var(--ink);white-space:nowrap}
+.rung b i{font-style:normal;color:var(--muted);margin-right:12px}
+.rung span{display:block;margin-top:6px;font-family:var(--body);font-size:24px;line-height:1.3;color:var(--muted)}
+.rung.on{border-color:var(--mark);background:rgba(56,189,248,.08)}
+.rung.on b i{color:var(--mark)}
+.rung.on span{color:var(--ink)}
+.side{display:flex;align-items:center;gap:12px;font-family:var(--display);font-style:italic;font-size:30px;line-height:1.2;color:var(--ink)}
+.side svg{flex:none}
+.tracks{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);font-family:var(--mono);font-size:24px;line-height:1.45;color:var(--muted)}
+.tracks>span{padding:20px 18px;border-left:2px solid var(--rule)}
+.tracks>span:first-child{border-left:0;padding-left:0}
+.tracks b{display:block}
+.tracks b{color:var(--ink);font-weight:700}
+.tracks .hi{color:var(--mark)}
+
+/* Slide 5: CTA */
+.s5 h1{margin-top:110px;font-size:112px}
+.q{margin-top:64px;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.25;color:var(--ink);text-wrap:balance}
+.ask{margin-top:auto;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:22px 0;font-family:var(--mono);font-size:24px;line-height:1.55;color:var(--muted)}
+.ask span{display:block}
+.ask b{color:var(--ink);font-weight:700}
+.namebox{margin-top:44px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: A title card asking what separates hackathon teams when all of them build on the same search API. -->
+<section class="slide s1">
+  <h1>Same search for every team. <span class="u">So what wins?</span></h1>
+  <div class="strip">
+    <b>Ground Truth: The Live Agents Hackathon</b>
+    <span>a one-day build on the You.com API</span>
+    <span>Sat 11/14 · Downtown Brooklyn</span>
+  </div>
+  <div class="host">localhost:nyc<i>×</i>The Builder Series<i>×</i>You.com</div>
+  <div class="foot"><span class="src"></span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: A bar chart: a model with no search scores 33, and all search providers score between 69 and 80; Exa and Perplexity are at 80 and You.com at 74. -->
+<!-- One zero-based 0-100 axis, 8px per point (800px). 33=264 · 69=552 · 74=592 · 80=640 -->
+<section class="slide s2">
+  <h2>Search adds ~40 points. Providers differ by 11.</h2>
+  <div class="legend">
+    <span><span class="sw g"></span>No search</span>
+    <span><span class="sw b"></span>With search</span>
+  </div>
+  <div class="chart">
+    <svg width="888" height="560" viewBox="0 0 888 560" aria-hidden="true">
+      <!-- provider band column: 69 to 80 -->
+      <rect x="552" y="168" width="88" height="332" fill="#38BDF8" fill-opacity="0.14"/>
+      <g stroke="#26324A" stroke-width="2">
+        <line x1="0" y1="0" x2="0" y2="510"/>
+        <line x1="400" y1="0" x2="400" y2="510" stroke-dasharray="6 8"/>
+        <line x1="800" y1="0" x2="800" y2="510" stroke-dasharray="6 8"/>
+      </g>
+      <g stroke="#38BDF8" stroke-width="2" stroke-dasharray="4 6">
+        <line x1="552" y1="168" x2="552" y2="500"/>
+        <line x1="640" y1="168" x2="640" y2="500"/>
+      </g>
+      <!-- row 1: model only -->
+      <text x="0" y="28" font-family="Menlo, SF Mono, monospace" font-size="28" fill="#F8FAFC"><tspan font-weight="700">Model only:</tspan> <tspan fill="#94A3B8" font-weight="700">33</tspan></text>
+      <rect x="0" y="42" width="264" height="66" rx="6" fill="#64748B"/>
+            <!-- row 2: every search provider, floor to 69 then the 69-80 band -->
+      <text x="0" y="158" font-family="Menlo, SF Mono, monospace" font-size="28" fill="#F8FAFC"><tspan font-weight="700">Every search provider on the index:</tspan> <tspan fill="#38BDF8" font-weight="700">69–80</tspan></text>
+      <rect x="0" y="172" width="552" height="66" rx="6" fill="#38BDF8" fill-opacity="0.35"/>
+      <rect x="552" y="172" width="88" height="66" fill="#38BDF8"/>
+      <!-- markers inside the band -->
+      <g font-family="Avenir Next, Helvetica Neue, Helvetica, sans-serif" font-size="27" fill="#F8FAFC" text-anchor="end">
+        <circle cx="640" cy="300" r="11" fill="#38BDF8"/>
+        <text x="532" y="309">Exa (auto) <tspan font-weight="700">80</tspan></text>
+        <circle cx="640" cy="370" r="11" fill="#38BDF8"/>
+        <text x="532" y="379">Perplexity (medium) <tspan font-weight="700">80</tspan></text>
+        <circle cx="592" cy="440" r="11" fill="#38BDF8"/>
+        <text x="532" y="449">You.com (highlights) <tspan font-weight="700">74</tspan><tspan fill="#94A3B8"> · 20.2 s/task</tspan></text>
+      </g>
+      <g font-family="Menlo, SF Mono, monospace" font-size="22" fill="#94A3B8">
+        <text x="0" y="546">0</text>
+        <text x="400" y="546" text-anchor="middle">50</text>
+        <text x="800" y="546" text-anchor="middle">100</text>
+      </g>
+    </svg>
+  </div>
+  <div class="capn">Same fixed model for every provider; only the search changes.<small>Equal-weighted average of DeepSearchQA, BrowseComp and AA-Omniscience.</small></div>
+  <div class="foot"><span class="src">Source: Artificial Analysis Search API index, live leaderboard, 2026-10-19</span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: A timeline of three independent studies showing that AI search citations often fail to support the claims they are attached to. -->
+<section class="slide s3">
+  <h2>Three audits, one gap: links aren’t proof</h2>
+  <div class="tl">
+    <div class="axis"></div>
+    <div class="cols">
+      <div class="stat">
+        <span class="yr">2023</span>
+        <span class="who">Liu et al.</span>
+        <span class="pre"></span>
+        <span class="num">74.5%</span>
+        <span class="post">of citations supported their sentence</span>
+      </div>
+      <div class="stat">
+        <span class="yr">2025</span>
+        <span class="who">Tow Center / CJR</span>
+        <span class="pre">over</span>
+        <span class="num">60%</span>
+        <span class="post">of answers incorrect across 8 tools</span>
+      </div>
+      <div class="stat">
+        <span class="yr">2025</span>
+        <span class="who">DeepTRACE</span>
+        <span class="pre">citation accuracy</span>
+        <span class="num">40–80%</span>
+        <span class="post">across systems</span>
+      </div>
+    </div>
+  </div>
+  <div class="base">100% = every citation holds</div>
+  <div class="foot"><span class="src">Sources: Liu et al., arXiv 2304.09848, 2023; Tow Center for Digital Journalism / CJR, 2025; DeepTRACE, arXiv 2509.04499, 2025</span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: A diagram of how a search-grounded agent answers a question, followed by three checks a citation must pass: the link exists, the page says it, and the source is reliable. -->
+<section class="slide s4">
+  <h2>Where a receipt can fail</h2>
+  <div class="pipe">
+    <div class="box">Question</div>
+    <div class="arr"><svg width="34" height="24" viewBox="0 0 34 24"><path d="M2 12H28M20 4l8 8-8 8" fill="none" stroke="#94A3B8" stroke-width="3"/></svg></div>
+    <div class="box">Search API<small>ranked pages + excerpts + page age</small></div>
+    <div class="arr"><svg width="34" height="24" viewBox="0 0 34 24"><path d="M2 12H28M20 4l8 8-8 8" fill="none" stroke="#94A3B8" stroke-width="3"/></svg></div>
+    <div class="box">Model writes answer <span class="cite">[1][2]</span></div>
+  </div>
+  <div class="drop"><svg width="30" height="56" viewBox="0 0 30 56"><path d="M15 2V50M6 41l9 9 9-9" fill="none" stroke="#94A3B8" stroke-width="3"/></svg></div>
+  <div class="ladder">
+    <div class="rung"><b><i>①</i>Link exists</b><span>Cloudflare now requires a source link (Oct 2026)</span></div>
+    <div class="side"><svg width="34" height="24" viewBox="0 0 34 24"><path d="M32 12H6M14 4l-8 8 8 8" fill="none" stroke="#94A3B8" stroke-width="3"/></svg>a link-only receipt stops here</div>
+    <div class="rung on"><b><i>②</i>Page says it</b><span>exact quote found at the URL, at fetch time</span></div>
+    <div></div>
+    <div class="rung on"><b><i>③</i>Source worth trusting</b><span>judgment</span></div>
+    <div></div>
+  </div>
+  <div class="tracks"><span><b>Live Wire →</b>freshness</span><span><b>The Analyst →</b>depth</span><span><b>Receipts →</b><span class="hi">rungs ② and ③</span></span></div>
+  <div class="foot"><span class="src">Source: InfoQ on Cloudflare AI Gateway web search, 2026; Ground Truth invite (Luma), 2026</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: A closing card asking whether an AI agent checking its own citations counts as verification. -->
+<section class="slide s5">
+  <h1>Who checks the agent’s <span class="u em">receipts</span>?</h1>
+  <div class="q">When the agent that wrote the answer checks its own citations, is that verification, or a second claim?</div>
+  <div class="ask"><span><b>Ground Truth: The Live Agents Hackathon</b></span><span>Sat 11/14 · registration by host approval</span></div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src"></span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>

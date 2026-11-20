@@ -4,8 +4,8 @@
 Spec: docs/archive/notes/knowledge-substrate-architecture-2026-09-18.md §3.1–3.3, as amended by
 docs/archive/notes/knowledge-substrate-review-2026-09-18.md (findings 5 + 6). W1 ships ONE lens (`event`);
 the other lenses are six weights each and land once this one has proven out on a real brief (A/B).
-The A/B (YED-172) kept the legacy pre-event pull, so no command calls this today; it stays as ADR-10
-D4's one retrieval path (Amendment 1: the job-search lens), not removed without a successor ADR.
+Called by /event-deep-research Step 1.7a (event-research SKILL.md: `--lens event --seed …`) for the
+Prior-Context Pack's graph pull; it is ADR-10 D4's one retrieval path (Amendment 1: the job-search lens).
 
     .venv/bin/python .claude/scripts/retrieve.py --lens event --seed seed.json [--budget-tokens 6000]
                      [--out pack.md] [--json] [--log-usage event --usage-document <documents.uuid>]
