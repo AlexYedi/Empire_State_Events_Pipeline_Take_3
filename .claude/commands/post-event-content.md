@@ -96,7 +96,7 @@ Meta that Step 6.5 reads: `themes --meta none_fits=N`, `route --meta routing_row
 | `condition` | 3.5 | `claims` | 3.8c | `hubspot` | 5.5 |
 | `enrich` | 3.6 | `themes` | 3.8d | `deep-dives` | 5.6 |
 | | | `route` | 3.8e | `close-check` | 6.5 |
-| | | `steer` | 3.9 | | |
+| | | `steer` | 3.9 | `carousel-pr` | 5.7 |
 
 **Agent preflight.** Before any Agent-tool dispatch in this command, run
 `python3 .claude/scripts/run_state.py preflight-agent <agent name>`. On exit 1, use the name from its hint. Plugin agents
