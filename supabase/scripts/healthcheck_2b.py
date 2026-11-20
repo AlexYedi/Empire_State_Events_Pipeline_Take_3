@@ -74,7 +74,9 @@ LANE_RUN_COLUMNS = ("lane", "started_at", "items_seen", "items_written", "items_
 # lanes is judged on items_seen instead (a run that saw nothing is still the dead-lane signal).
 # lane_run has no column marking a dry-run row, so this set IS the marker: remove a lane the day
 # its producer writes for real (the check WARNs once any recent row shows items_written > 0).
-DRY_RUN_LANES = frozenset({"hiring_pulse"})
+# research_frontier: hf_frontier.py writes items_written=0 unless the EVENT_WRITES_LIVE repo variable is
+# "true"; it is unset (checked 2026-11-20, prod lane_run: written=[0,0], seen=[217,256]).
+DRY_RUN_LANES = frozenset({"hiring_pulse", "research_frontier"})
 FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "fixtures", "lane_run_freshness.json")
 
 # LIVE schema targets (post-swap)
@@ -620,9 +622,9 @@ def _selftest() -> int:
     f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [0, 0, 0])})
     ck("dry-run lane that SAW nothing 3 runs -> still fails (on items_seen)",
        f == ["lane hiring_pulse items_seen=0 for 3 consecutive runs"])
-    f, _ = run_lanes({"research_frontier": fresh}, {"research_frontier": ([0, 0, 0], [12, 9, 15])})
+    f, _ = run_lanes({"company_signals": fresh}, {"company_signals": ([0, 0, 0], [12, 9, 15])})
     ck("live lane, 3 zero-write runs -> still fails on items_written",
-       f == ["lane research_frontier items_written=0 for 3 consecutive runs"])
+       f == ["lane company_signals items_written=0 for 3 consecutive runs"])
     f, _ = run_lanes({"hiring_pulse": as_of - dt.timedelta(days=FAIL_DAYS + 6)},
                      {"hiring_pulse": ([0, 0, 0], [41, 40, 39])})
     ck("stale dry-run lane -> staleness still fails (DRY_RUN_LANES never mutes it)",
