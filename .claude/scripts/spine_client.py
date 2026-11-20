@@ -98,7 +98,7 @@ ALLOW: dict[str, set[str]] = {
               "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at",
               # 0026 (#391 follow-up): the source page's own words behind a claim. Free text: scanned in full,
               # never in DECLARED_IDS; the DB backs it with a no_contact_pii_v2 CHECK.
-              "source_quote"},
+              "source_quote", "source_quote_fetched_at"},  # 0026 CHECK claim_source_quote_paired: set together
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -957,6 +957,9 @@ def selftest() -> bool:
         lambda: guard("claim", {"source_quote": "call 555\u200e-123-0100"}, op="update"), True)
     add("claim.source_quote clean sentence → pass",
         lambda: guard("claim", {"source_quote": "We cut onboarding from 9 days to 2 (Q3 2026)."}, op="update"), False)
+    add("claim.source_quote + source_quote_fetched_at pair → pass (0026 paired CHECK)",
+        lambda: guard("claim", {"source_quote": "We cut onboarding from 9 days to 2.",
+                                "source_quote_fetched_at": "2026-11-20T18:45:00+00:00"}, op="update"), False)
     add("claim_relation clean row → pass",
         lambda: guard("claim_relation", {"from_claim_id": "a", "to_claim_id": "b", "relation": "contradicts"}), False)
     add("documents our-artifact row (no blob) → pass",
