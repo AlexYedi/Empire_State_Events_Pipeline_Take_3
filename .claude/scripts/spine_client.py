@@ -601,6 +601,11 @@ def _send(method: str, path: str, data, headers: dict, timeout: int, reuse: bool
     global _CONN
     host = f"{REF}.supabase.co"
     conn = _CONN if reuse else None
+    if conn is not None and conn.sock is None:
+        # YED-464: http.client sets sock=None when the server closed the kept-alive connection (Connection: close,
+        # idle timeout). Nothing has been sent on it, so drop it and open a fresh one below (connect -> NotSent).
+        _drop_conn()
+        conn = None
     if conn is None:
         conn = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
         try:
@@ -1143,6 +1148,13 @@ def selftest() -> bool:
                 if g["_CONN"] is not None or not made[0].closed:
                     raise PIIViolation("a failed shared connection was not dropped")
             _Conn.fail_request = None
+            # YED-464: the server closed the shared connection between calls (sock=None) -> reopen, never crash.
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            g["_CONN"].sock = None
+            stale, n = g["_CONN"], len(made)
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            if len(made) != n + 1 or not stale.closed or g["_CONN"] is stale or g["_CONN"].sock is None:
+                raise PIIViolation("a server-closed shared connection (sock=None) was not replaced")
             for err in (socket.gaierror(8, "nodename nor servname"), ssl.SSLError(1, "handshake"),
                         TimeoutError("timed out"), OSError(65, "no route")):
                 _Conn.fail_connect = err
@@ -1154,7 +1166,7 @@ def selftest() -> bool:
             _Conn.fail_connect = None
         finally:
             http.client.HTTPSConnection, g["_CONN"] = saved
-    add("_send lifecycle: one shared conn, non-retryable isolated + closed, dropped on error, any connect OSError -> NotSent",
+    add("_send lifecycle: one shared conn, non-retryable isolated + closed, dropped on error, server-closed conn reopened, any connect OSError -> NotSent",
         _send_lifecycle_case, False)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
