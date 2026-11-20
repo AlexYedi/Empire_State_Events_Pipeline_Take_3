@@ -96,13 +96,14 @@ returns trigger
 language plpgsql
 as $$
 declare
-  -- Verbatim spine_client.py EMAIL_RE.
-  email_re text := $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+  -- Verbatim spine_client.py EMAIL_RE (negated-delimiter form, YED-324 rework). Migration 0025 routes
+  -- this trigger through public.no_contact_pii_v2, which carries the same literals.
+  email_re text := $re$(?<![^\s@<>()\[\]{}\x22\x27,;:/\\])[^\s@<>()\[\]{}\x22\x27,;:/\\]+@[^\s@<>()\[\]{}\x22\x27,;:/\\]+\.(?:[A-Za-z]{2,}|[^\x01-\x7f]{2,})$re$;
   -- Verbatim spine_client.py PHONE_RE (PR #250 final form: A2's
   -- leading-country-code prefix before the +country group; second
   -- alternative is the E.164 compact form; third is YED-309's
   -- international-with-separators form).
-  phone_re text := $re$(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)$re$;
+  phone_re text := $re$(?<![\w.+-])(?:1[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])?(?:\+\d{1,3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?)?(?:\(\d{3}\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d{4}(?![\w])|(?<![\w.])\+\d{10,15}(?![\w])|(?<![\w.+-])\+(?=\d(?:(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\))?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d){6,14}(?![\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d))\d{1,3}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{1,8}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{1,8}){1,4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)|(?<![\w.+-])07\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{6}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)|(?<![\w.+-])0[1-9](?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{2}){4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)|[Ww][Aa]\.[Mm][Ee]/\+?\d{7,15}(?!\d)|(?<![\w])[Tt][Ee][Ll]:\+?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d){6,14}$re$;
 begin
   -- Free-text columns on person (per the spine allowlist: professional-public
   -- identity only). name is scanned too — it is a string someone typed.
@@ -230,7 +231,7 @@ $$;
 --      Suggested probe on the twin:
 --        select id from public.person
 --        where coalesce(bio,'') || coalesce(role_context,'')
---              ~ $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+--              ~ $re$(?<![^\s@<>()\[\]{}\x22\x27,;:/\\])[^\s@<>()\[\]{}\x22\x27,;:/\\]+@[^\s@<>()\[\]{}\x22\x27,;:/\\]+\.(?:[A-Za-z]{2,}|[^\x01-\x7f]{2,})$re$;
 --      Already verified against the live The-Prod-Brain during the PR #235
 --      review of YED-279: 0 existing person rows match either the email or
 --      the phone pattern — re-confirm on the twin at rehearsal time.

@@ -23,6 +23,9 @@
       "mcp__claude_ai_Gmail__delete_label",
       "mcp__claude_ai_Gmail__mark_message_spam",
       "mcp__claude_ai_Gmail__mark_thread_spam"
+    ],
+    "allow": [
+      "Bash(gh pr update-branch:*)"
     ]
   },
   "hooks": {

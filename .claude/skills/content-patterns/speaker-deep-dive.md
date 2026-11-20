@@ -1,6 +1,6 @@
 # Speaker Deep-Dive Pattern (evergreen, per presenter)
 
-The methodology for the optional final step of `/post-event-content` (Step 5.6). Ported from the
+The methodology for an optional step of `/post-event-content` (Step 5.6). Ported from the
 retired `/evergreen-deep-dive` command (archived in tag `archive/pre-reset-2026-09-28`); the command
 file holds the orchestration, this file holds what "good" looks like.
 

@@ -15,7 +15,7 @@ Takes the transcript of Alex's own recording of an attended event (pulled from *
 - **`post_event_brief`** (the data store) — the full enhanced brief (18 sections incl. the **learnings tier**: pro-tips · best-practices · pitfalls · hot-takes · anecdotes · enriched concept glossary, + whole-quote Quote Bank + content-derived Speaker Map). Written **both** as the canonical Content Draft **and** appended to the **Event page** (`## Post-Event Brief`, pre + post side-by-side). Synthesized Step 3.7 from the conditioned transcript + roster + pre-event brief + Step 3.6 enrichment; every downstream draft references it.
 - **Knowledge-graph write-back** (Step 3.8) — 3.8a: Notion People / Companies / Topics rows created/enriched (dedup-mandatory) and relinked to the Event · 3.8b: the event + roster + topics written to the MI graph (`substrate.py ensure-event`) · 3.8c: the brief's learnings staged as first-hand claims (`substrate.py stage-claims`) · 3.8d: every unassigned topic on the event gets a theme, assigned in-session (`assign_clusters.py`). 3.8b/c/d are mandatory but **not enforced**: a skipped graph write will not fail the run. The Step 6.5 close-check counts it, so report 3.8b/c/d status explicitly in the Step 6 summary.
 - **LinkedIn post(s) + visual carousel brief → Claude-design render** (Step 4; per `visual-briefs.md` `## Execution`). **Outreach is opt-in** — only for people Alex names; otherwise skipped.
-- **HubSpot CRM write (Step 5.5 — GATED, opt-in, post-event only).** Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
+- **HubSpot CRM write (Step 5.5 — GATED, opt-in).** Pre-event research already wrote the named speakers, hosts and sponsors (YED-282); this step enhances those records with a post-event Note and adds people Alex met. Selective (only people Alex actually engaged or is deliberately pursuing — not the whole roster), dedup-first, **create-once** (Notes for existing contacts, never field-merge), behind a confirmation gate. Default: skip. See `docs/archive/proposals/post-event-hubspot-step.md`.
 - All drafts in `needs_review`, Event Phase = `post_event`, linked to the Notion Event row.
 
 ---
@@ -96,7 +96,7 @@ Meta that Step 6.5 reads: `themes --meta none_fits=N`, `route --meta routing_row
 | `condition` | 3.5 | `claims` | 3.8c | `hubspot` | 5.5 |
 | `enrich` | 3.6 | `themes` | 3.8d | `deep-dives` | 5.6 |
 | | | `route` | 3.8e | `close-check` | 6.5 |
-| | | `steer` | 3.9 | | |
+| | | `steer` | 3.9 | `carousel-pr` | 5.7 |
 
 **Agent preflight.** Before any Agent-tool dispatch in this command, run
 `python3 .claude/scripts/run_state.py preflight-agent <agent name>`. On exit 1, use the name from its hint. Plugin agents
@@ -452,7 +452,7 @@ Once content-correspondent returns drafts and Step 4.5 has checked them, the par
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142
 
-**Spec + rationale:** `docs/archive/proposals/post-event-hubspot-step.md`. This is the **only** place the pipeline writes to HubSpot, and it runs **post-event only** — never pre-event. Pre-event, the person record lives in **Notion People** (the knowledge graph); HubSpot (the relationship / pipeline CRM) gets a contact only once there is a real reason. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot post-event, selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
+**Spec + rationale:** `docs/archive/proposals/post-event-hubspot-step.md`. Since YED-282 (2026-11-01), `/event-deep-research` writes the event's **named** speakers, presenters, hosts and sponsors to HubSpot pre-event (record shape in `notion-schema.md`). This step **enhances** those records: search first, and add a post-event Note to the existing contact before creating any new one. It creates only people Alex actually met or is deliberately pursuing. Governing rules: pipeline value philosophy (*relationships, not enrichment*), CLAUDE.md invariants **8** (dedup-search before create) and **9** (HubSpot selective, create-once), and the **HubSpot write order** in `.claude/references/notion-schema.md` (Company → Contact + association → Note).
 
 **Topology (hard rule):** all HubSpot writes happen **in the parent thread** — HubSpot writes stay in the parent by policy (CLAUDE.md invariant 5), and the confirmation table must render inline.
 
@@ -502,7 +502,7 @@ Roll the results into the Step 6 summary: created contacts/companies, Notes adde
 Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + transcript. Methodology:
 `.claude/skills/content-patterns/speaker-deep-dive.md` (read it in full before running).
 
-1. **Ask Alex:** "Speaker deep-dives for this event? [yes / later / no]". `no` or `later` → skip to Step 6
+1. **Ask Alex:** "Speaker deep-dives for this event? [yes / later / no]". `no` or `later` → skip to Step 5.7
    (note `later` in the summary). No default run.
 2. **Standalone on a past event** ("run post-event-content speaker deep-dives for <event>"): allowed for any
    event whose Notion page has a `post_event_brief` + a transcript. Run Step 1.0 (claim) and Step 1 (resolve)
@@ -514,6 +514,53 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
    Content Draft per speaker, `needs_review`, 3 hook variants, plain paragraphs. Nothing lands in a tracked path.
 5. **Failure:** no `post_event_brief` → stop and say so; no transcript → paraphrase-only, flagged; a Notion
    write fails → return that draft in chat.
+
+## Step 5.7 — Commit the carousel to a content branch + PR (YED-461)
+
+The rendered carousel exists only in the checkout that rendered it. `/freshen` syncs laptop → mini only, so git is
+the one way an output gets back (11/18: the Postgres Mistakes carousel sat on the mini until a manual PR, #388).
+`.gitignore` keeps `Event Content/**/post-event/*.html` and `*.pdf` and ignores everything else in that folder.
+Runs whenever Step 4 rendered a carousel; a lite run or a run with no render skips it (say so in the summary).
+Never push to `main`; merging is Alex's.
+
+1. **Work in a throwaway worktree, never the `main` checkout.** Cut it from `origin/main` and copy the finals in:
+   ```bash
+   EV="Event Content/<MM DD YY Event>"            # the event folder the render wrote to
+   BR="content/<YYYY-MM-DD>-<event-slug>-post-event"
+   WT="<scratchpad>/wt-${BR//\//-}"; ROOT="$(git rev-parse --show-toplevel)"
+   git fetch origin main && git worktree add -b "$BR" "$WT" origin/main
+   mkdir -p "$WT/$EV/post-event" && cp "$ROOT/$EV/post-event/"*.{html,pdf} "$WT/$EV/post-event/"
+   cd "$WT"
+   ```
+2. **Stage only the finals.** `git add "$EV/post-event/"*.html "$EV/post-event/"*.pdf`. Add the visual brief `.md`
+   only if `git check-ignore -q` says it is not ignored. Never `git add -f`, `-A` or `.`.
+3. **Prove nothing private is staged** (stop and unstage on any hit; never commit around it):
+   ```bash
+   git status --porcelain                                # review: only the event's post-event files
+   STAGED="$(git -c core.quotepath=off diff --cached --name-only)"   # unquoted paths, so the checks see real names
+   printf '%s\n' "$STAGED" | git check-ignore --no-index --stdin && echo "STOP: ignored path staged"
+   printf '%s\n' "$STAGED" | awk -v p="$EV/post-event/" 'index($0,p)!=1 || $0 !~ /\.(html|pdf|md)$/' | grep . && echo "STOP: path outside the finals"
+   printf '%s\n' "$STAGED" | grep -iE 'transcript|review|recap|\.env|\.state|\.(m4a|mp3|wav|vtt|srt|png|jpe?g)$' && echo "STOP: private-looking path"
+   ```
+   None of the three may print a STOP. The copy in the carousel is checked by Step 4.5 and Alex's PR review, not
+   here: this step proves which files ship, not what they say.
+4. **Commit and push the branch** (the session's attribution trailers apply):
+   `git commit -m "content(<MM/DD>): <Event> post-event carousel"` then
+   `[ "$BR" != main ] && git push -u origin "$BR"`.
+5. **Open the PR.** `gh` is often missing from the mini's non-interactive PATH:
+   ```bash
+   GH="$(command -v gh || echo /opt/homebrew/bin/gh)"
+   if [ -x "$GH" ]; then
+     "$GH" pr create --base main --head "$BR" --title "content(<MM/DD>): <Event> post-event carousel" \
+       --body "Rendered carousel finals for <Event> (<date>), committed from /post-event-content Step 5.7. Merge is Alex's."
+   else
+     echo "gh unavailable; open: https://github.com/AlexYedi/Empire_State_Events_Pipeline_Take_3/compare/main...$BR?expand=1"
+   fi
+   ```
+   If `gh` is missing or `pr create` fails, the pushed branch plus the compare URL is the handoff: the laptop opens
+   the PR.
+6. **Clean up:** `cd "$ROOT" && git worktree remove "$WT"` (the branch stays on origin). Carry the PR URL, or
+   `branch pushed: <BR>`, into the Step 6 summary.
 
 ## Step 6.5 — Close-check (runs before the Step 6 summary; never blocks)
 
@@ -545,6 +592,7 @@ Drafts created: N  (notion-writer: created C · skipped S · failed F · manifes
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 Speaker deep-dives (Step 5.6): [N drafts / later / no]
+Carousel PR (Step 5.7): [<PR url> / branch pushed: <name> / skipped: reason]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
