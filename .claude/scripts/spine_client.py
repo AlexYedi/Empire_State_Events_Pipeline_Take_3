@@ -90,7 +90,12 @@ ALLOW: dict[str, set[str]] = {
     "claim": {"id", "source_key", "claim_key", "claim_text", "claim_type", "quote", "locator",
               "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
               "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
-              "embedding_model", "metadata", "created_at", "reviewed_at"},
+              "embedding_model", "metadata", "created_at", "reviewed_at",
+              # YED-451 (GUARD-ADJACENT): the 0023 judge record, so the source-page judge's verdict can be written
+              # and the web_verified approval gate can read it. 0023's claim_judge_record_complete CHECK is
+              # all-or-nothing over these four, so judged_at opens with them. judge_model is free text: scanned.
+              # PR #363 opens the same four (plus ten more 0023 columns); whichever merges second drops the dupes.
+              "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at"},
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -878,6 +883,19 @@ def selftest() -> bool:
     add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
         _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
                                                  "page_text": "..."})), True)
+    # YED-451: the 0023 judge record on claim (verdict, model, prompt hash, judged_at) is writable; PII still is not.
+    add("claim judge record PATCH (supported, model, sha256, judged_at) → pass",
+        lambda: guard("claim", {"judge_verdict": "supported", "judge_model": "claude-opus-5-5",
+                                "judge_prompt_hash": "69ec0f7722fdca67198a5b8d9ccb8547d88002e10eac81bc00c9cb6e21e1301a",
+                                "judged_at": "2026-11-19T21:06:00Z"}, op="update"), False)
+    add("claim.judge_model carrying an email → refuse (email scan)",
+        _by(EMAIL_L, lambda: guard("claim", {"judge_verdict": "unsupported", "judge_model": "ops@judge.example.com",
+                                             "judge_prompt_hash": "0" * 64, "judged_at": "2026-11-19T21:06:00Z"},
+                                   op="update")), True)
+    add("claim.judge_verdict carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {"judge_verdict": "call 555-123-4567"}, op="update")), True)
+    add("claim.judge_audit_note (not a 0023 claim column) → refuse (not allowlisted)",
+        _by(COL_L, lambda: guard("claim", {"judge_verdict": "supported", "judge_audit_note": "x"}, op="update")), True)
     add("_by: a refusal from the WRONG layer does not count (unknown table refused by no_allowlist, not the scan)",
         lambda: None if _by(EMAIL_L, lambda: guard("not_a_table", {"x": "a@b.co"}))() is None
         else (_ for _ in ()).throw(PIIViolation("x")), False)
