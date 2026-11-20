@@ -1,5 +1,7 @@
 # Reviewed 2026-10-15 (YED-259): documentation placeholders (sk_live_... / <your-key>), not secrets.
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:27
 659aa357ea99705eead537fd0b3a3a835f284da7:gtm-os/apps/app/app/content/docs/api-keys.md:curl-auth-header:30
-# Reviewed 2026-11-20 (YED-429, PR #363): test-fixture label "source_key": "fixture-pilot-v4", not a secret.
+# Reviewed 2026-11-20 (YED-429, PR #363): pilot_v4.json line 5 is a test-fixture label, not a secret.
+# The 80db8e9 entry is this file's own first draft, whose comment quoted that label.
 b941423272bc583577a2807a7fc943ba728a2042:.claude/scripts/fixtures/claim_v2/pilot_v4.json:generic-api-key:5
+80db8e9d4074958445be275b2494549c954fc198:.gitleaksignore:generic-api-key:4
