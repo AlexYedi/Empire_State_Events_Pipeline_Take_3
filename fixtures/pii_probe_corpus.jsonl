@@ -149,6 +149,39 @@
 {"input": "CTO at Arlene.io", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "must allow: role at a domain-named company (live prose, 2026-11-20)"}
 {"input": "Blogs at miketoscano.com", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "must allow: role at a domain-named company (live prose, 2026-11-20)"}
 {"input": "an MCP server at mcp.stacksync.com", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "must allow: role at a domain-named company (live prose, 2026-11-20)"}
+{"input": "call 555-123-0100x12", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 glued extension x (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "+44 20 7946 0958x12", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 glued extension x, intl (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "call 555-123-0100ext12", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 glued extension ext (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "call 555-123-0100ext.12", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 glued extension ext. (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "Tel+44 20 7946 0958", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 label glued to +CC (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "Mob07700 900123", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G1 label glued to a UK mobile (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "+65 60000000", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G2 +CC and one 8-digit block (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "+33 639981234", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G2 +CC and one 9-digit block (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "5 5 5 1 2 3 0 1 0 0", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G3 single digits separated by single spaces (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "+4 4 2 0 7 9 4 6 0 9 5 8", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G3 spaced digits with a leading + (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "dana@example. com", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "out_of_contract", "clause": "YED-468 Python-only heuristic: G4 whitespace after the dot of an email (L3 keeps it as a documented out-of-contract gap)"}
+{"input": "Q3 2026: 1 2 3", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "1 2 3 4 5 6 7 8 9 10", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "Room 5 5 5", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "version 2. 0", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "Series A at 3x. com-like", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "Lead at You.com", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "2026-11-20T10:00:00Z", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "ISBN 978-0-306-40615-7", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "see https://x.com/a/status/1856212345678901234", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "ref 550e8400-e29b-41d4-a716-446655440000", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "+1 more", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "+30% YoY", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "$5M at 3x", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "x10", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "10x growth", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "1920x1080 render", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "email us at the booth. Come by", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "@handle. Next sentence", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "Follow @handle. Next sentence", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "+20 24 points", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "+12 500 users", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
+{"input": "+1 2345678", "field": "claim_text", "table": "claim", "expect_py": "allow", "expect_db": "allow", "clause": "YED-468 must allow: prose next to the G1-G4 folds"}
 {"input": "dana@example.c­om", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "refuse", "clause": "default_ignorable:email:U+00AD"}
 {"input": "dana@example.c͏om", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "refuse", "clause": "default_ignorable:email:U+034F"}
 {"input": "dana@example.c؀om", "field": "claim_text", "table": "claim", "expect_py": "refuse", "expect_db": "refuse", "clause": "default_ignorable:email:U+0600"}
