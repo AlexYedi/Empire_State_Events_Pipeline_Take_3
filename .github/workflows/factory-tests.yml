@@ -10,6 +10,6 @@ permissions:
   contents: read
 jobs:
   factory-tests:
-    uses: AlexYedi/alex-factory/.github/workflows/tests.yml@862a7f2367f92b3da4940bb74ae263d76a9ff9b1
+    uses: AlexYedi/alex-factory/.github/workflows/tests.yml@a8484809167322b84fab5819e3cda11b72fa7c66
     with:
-      core_sha: 862a7f2367f92b3da4940bb74ae263d76a9ff9b1
+      core_sha: a8484809167322b84fab5819e3cda11b72fa7c66
