@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   factory-gate:
-    uses: AlexYedi/alex-factory/.github/workflows/gate.yml@862a7f2367f92b3da4940bb74ae263d76a9ff9b1
+    uses: AlexYedi/alex-factory/.github/workflows/gate.yml@a8484809167322b84fab5819e3cda11b72fa7c66
     with:
-      core_sha: 862a7f2367f92b3da4940bb74ae263d76a9ff9b1
+      core_sha: a8484809167322b84fab5819e3cda11b72fa7c66
       app_slug: alexyedi-factory
     secrets: inherit
