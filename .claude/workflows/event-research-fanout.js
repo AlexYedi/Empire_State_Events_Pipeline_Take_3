@@ -64,8 +64,10 @@ const SPECIALIST_SCHEMA = {
           source: { type: 'string', description: 'Site or source name' },
           url: { type: 'string', description: 'Full URL. Mandatory for web-verified; empty string only for email-signal without a public URL, notion-prior or inference.' },
           date: { type: 'string', description: 'YYYY-MM-DD of the source' },
+          quote: { type: 'string', description: 'web-verified only: a VERBATIM span of at most 25 words copied from the page at url, as you fetched it, that supports the claim. Copy, never paraphrase. Empty string if you did not read the page this run or no span supports the claim (then reconsider the tier). Empty for every other tier.' },
+          fetched: { type: 'string', description: 'When you fetched the page the quote came from, ISO-8601 UTC (YYYY-MM-DDTHH:MM:SSZ). Empty when quote is empty.' },
         },
-        required: ['entity', 'claim', 'tier', 'source', 'url', 'date'],
+        required: ['entity', 'claim', 'tier', 'source', 'url', 'date', 'quote', 'fetched'],
       },
     },
     thin: { type: 'boolean', description: 'true if you could not find enough to cover your entities properly' },
@@ -99,27 +101,38 @@ function specialistPrompt(s, slice, deeper) {
     block('(6) Your slice of the Prior-Context Pack', slice.prior
       ? `${slice.prior}\n\nTreat KNOWN as starting context and STALE / UNVERIFIED as leads to refresh or verify with web search. Never restate UNVERIFIED as fact.`
       : ''),
-    'Return per your agent contract, through the StructuredOutput tool: the prose return in `report`, and the Evidence Ledger as structured rows in `ledger` (the parent renders them; do not also write a ledger table or bullets in `report`). Every web-verified row carries its full URL.',
+    'Return per your agent contract, through the StructuredOutput tool: the prose return in `report`, and the Evidence Ledger as structured rows in `ledger` (the parent renders them; do not also write a ledger table or bullets in `report`). Every web-verified row carries its full URL, plus `quote`: a verbatim span (at most 25 words) copied from that page as you fetched it, with `fetched` set to the fetch time in ISO-8601 UTC. If no span on the page supports the claim, it is not web-verified.',
     deeper ? `\nThis is a DEEPER second pass: your first return was thin (${deeper}). Go broader on sources (company blog, filings, press, podcasts, GitHub, conference talks) and cover every entity in your list.` : '',
   ].filter(Boolean).join('\n')
 }
 
 // Deterministic checks, in code: what counts as thin, and which ledger rows are admissible.
 function audit(slice, r) {
-  if (!r) return { thin: 'no return', admissible: [], dropped: [] }
-  const admissible = [], dropped = []
+  if (!r) return { thin: 'no return', admissible: [], dropped: [], quoteDropped: [] }
+  const admissible = [], dropped = [], quoteDropped = []
   for (const row of r.ledger || []) {
     const words = String(row.claim || '').trim().split(/\s+/).filter(Boolean).length
     if (row.tier === 'web-verified' && !/^https?:\/\//.test(row.url || '')) dropped.push({ row, why: 'web-verified without a URL' })
     else if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date || '')) dropped.push({ row, why: 'date not YYYY-MM-DD' })
     else if (words === 0 || words > 15) dropped.push({ row, why: `claim is ${words} words` })
-    else admissible.push(row)
+    else {
+      // YED-451 (0026): a bad quote costs the quote, never the claim. Step 4.2's parser re-checks (and runs the
+      // PII guard), so this is the cheap first pass: tier, length, pairing.
+      const q = String(row.quote || '').replace(/\s+/g, ' ').trim()
+      const qWords = q ? q.split(' ').length : 0
+      let why = ''
+      if (q && row.tier !== 'web-verified') why = 'quote on a non-web-verified row'
+      else if (qWords > 25) why = `quote is ${qWords} words`
+      else if (q && !/^\d{4}-\d{2}-\d{2}/.test(row.fetched || '')) why = 'quote without a fetched time'
+      if (why) quoteDropped.push({ row, why })
+      admissible.push(why ? { ...row, quote: '', fetched: '' } : row)
+    }
   }
   let thin = ''
   if (r.thin) thin = 'specialist flagged its own return as thin'
   else if (String(r.report || '').length < 1500) thin = `report is ${String(r.report || '').length} chars`
   else if (admissible.length === 0) thin = 'no admissible ledger rows'
-  return { thin, admissible, dropped }
+  return { thin, admissible, dropped, quoteDropped }
 }
 
 // Step 4.2's contract: `##### Evidence Ledger — <Entity Name>` then one bullet per row, exactly this shape.
@@ -133,7 +146,8 @@ function renderLedger(rows) {
   const one = v => String(v || '').replace(/\s+/g, ' ').trim()
   return [...byEntity.entries()].map(([entity, rs]) =>
     `##### Evidence Ledger — ${one(entity)}\n` +
-    rs.map(r => `- claim: ${one(r.claim)} | tier: ${r.tier} | source: ${one(r.source)} | url: ${one(r.url)} | date: ${r.date}`).join('\n')
+    rs.map(r => `- claim: ${one(r.claim)} | tier: ${r.tier} | source: ${one(r.source)} | url: ${one(r.url)} | date: ${r.date}` +
+      (one(r.quote) ? ` | quote: ${one(r.quote)} | fetched: ${one(r.fetched)}` : '')).join('\n')
   ).join('\n\n')
 }
 
@@ -202,6 +216,12 @@ return {
     retried: done.filter(x => x.retried).map(x => x.s.label),
     still_thin: done.filter(x => x.thin).map(x => `${x.s.label}: ${x.thin}`),
     ledger_rows: Object.fromEntries(done.map(x => [x.s.label, x.admissible.length])),
+    // YED-451: quote coverage on web-verified rows, per specialist (baseline before 11/20: 0 everywhere)
+    quotes: Object.fromEntries(done.map(x => {
+      const web = x.admissible.filter(r => r.tier === 'web-verified')
+      return [x.s.label, `${web.filter(r => String(r.quote || '').trim()).length}/${web.length}`]
+    })),
+    quote_dropped: done.flatMap(x => (x.quoteDropped || []).map(d => `${x.s.label} · ${d.row.entity} · ${d.why}: ${d.row.claim}`)),
     dropped,
   },
 }

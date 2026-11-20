@@ -56,12 +56,13 @@ For each company that gets research:
 
 ```
 ##### Evidence Ledger — [Company Name]
-- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD]
-- claim: [thesis/positioning claim] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words, verbatim from that page] | fetched: [YYYY-MM-DDTHH:MM:SSZ]
+- claim: [thesis/positioning claim] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [verbatim span] | fetched: [ISO-8601 UTC]
 - claim: [carried from the pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — you grounded it in a current web source this run. **URL required.**
+- `quote` + `fetched` (YED-451, added 2026-11-20) — on every `web-verified` row, a **verbatim** span of at most 25 words copied from the page at `url` as you fetched it, that supports the claim, plus the fetch time in ISO-8601 UTC. Copy, never paraphrase or fix typos. It lets the claim judge test the claim against the page and tell page drift from extraction error. If no span on the page supports the claim, it is not `web-verified`. Never ledger the absence of a fact ("funding not found") as `web-verified`; a fact you could only half-confirm keeps its hedge in the claim text ("closing unconfirmed").
 - `tier: notion-prior` — carried from the injected pack and NOT re-grounded this run. It may inform the Deep Read only as flagged prior context, never as fact (Rule 12). Prefer to re-ground it and promote it to `web-verified`.
 - `tier: email-signal` — surfaced from Gmail/newsletter; a **lead**, never corroboration. Treat as a pointer to a web-verified fact.
 - **Common-knowledge background** (what a container is, what a Series A means) does NOT need a ledger row — define-freely, cite-nothing. Reserve rows for the specific/recent/contestable.
