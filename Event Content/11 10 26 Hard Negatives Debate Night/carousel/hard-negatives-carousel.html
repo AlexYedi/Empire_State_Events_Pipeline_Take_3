@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Four sample takes. Random sides.</title>
+<style>
+/* carousel-base.css (house tokens), inlined. Palette per the visual brief:
+   ground #111418, ink #F2F2EE, one topic accent teal #14B8A6 (retrieval / infrastructure),
+   acid green #8FE83A only for the headline underline and the name mark. */
+:root{
+  --ground:#111418; --panel:#191D23; --rule:#2C323B; --ink:#F2F2EE; --muted:#A3A8B0;
+  --accent:#8FE83A; --mark:#14B8A6; --grey:#6B7280;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:120px;line-height:1.02}
+h2{font-size:76px;line-height:1.06}
+h2::after{content:"";display:block;width:96px;height:6px;background:var(--accent);margin-top:26px}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+.teal{color:var(--mark)}
+
+/* Slide 1: hook */
+.s1 h1{margin-top:40px}
+.s1 .u{border-bottom:12px solid var(--accent);padding-bottom:2px;white-space:nowrap}
+.takes{margin-top:84px;list-style:none}
+.takes li{font-family:var(--body);font-weight:600;font-size:48px;line-height:1.15;padding:26px 0;border-top:2px solid var(--rule)}
+.takes li:last-child{border-bottom:2px solid var(--rule)}
+.bx{display:inline-block;background:var(--mark);color:#111418;font-weight:700;border-radius:6px;padding:0 14px;line-height:1.2}
+.strip{margin-top:auto;font-family:var(--mono);font-size:26px;line-height:1.6;color:var(--muted)}
+.strip span{display:block}
+
+/* Slide 2: chart */
+.legend{margin-top:34px;font-family:var(--body);font-size:28px;line-height:1.55;color:var(--ink)}
+.legend .li{display:block}
+.sw{display:inline-block;vertical-align:middle;margin-right:14px}
+.sw.line{width:40px;height:6px;background:var(--ink);border-radius:3px}
+.sw.dot{width:26px;height:26px;border-radius:50%;background:var(--mark);margin-left:7px;margin-right:21px}
+.axis{margin-top:22px;font-family:var(--mono);font-size:22px;color:var(--muted);letter-spacing:.04em}
+.chart{margin-top:8px}
+.chart text{font-family:var(--body)}
+.anno{margin-top:22px;font-family:var(--body);font-weight:600;font-size:32px;line-height:1.3;padding-left:22px;border-left:6px solid var(--mark)}
+.concl{margin-top:auto;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.18;border-top:2px solid var(--rule);padding-top:24px}
+
+/* Slide 3: matrix */
+.mx{margin-top:36px;display:grid;grid-template-columns:180px 1fr 1fr;column-gap:28px}
+.mx .ch{font-family:var(--mono);font-weight:700;font-size:21px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding-bottom:16px;border-bottom:2px solid var(--ink)}
+.mx .rl{font-family:var(--body);font-weight:700;font-size:40px;line-height:1.1;color:var(--mark);padding:18px 0;border-bottom:2px solid var(--rule)}
+.mx .c{font-family:var(--body);font-size:38px;line-height:1.16;padding:18px 0;border-bottom:2px solid var(--rule)}
+.mx .c.ag{color:var(--muted)}
+.mfoot{margin-top:auto;font-family:var(--display);font-style:italic;font-size:42px;line-height:1.2;border-top:2px solid var(--rule);padding-top:24px}
+
+/* Slide 4: diagram */
+.dg{position:relative;width:888px;height:540px;margin-top:40px}
+.dg svg{position:absolute;inset:0}
+.qbox{position:absolute;left:184px;top:0;width:520px;border:3px solid var(--ink);border-radius:12px;padding:20px 26px;text-align:center;background:var(--ground)}
+.qbox .k{font-family:var(--mono);font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.qbox .t{font-family:var(--body);font-weight:600;font-size:34px;line-height:1.2;margin-top:6px}
+.card{position:absolute;top:300px;width:276px;height:180px;border-radius:12px;padding:18px 20px;background:var(--ground)}
+.card .tg{display:inline-block;font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:.06em;border-radius:4px;padding:5px 10px;white-space:nowrap}
+.card .p{font-family:var(--body);font-weight:600;font-size:32px;line-height:1.15;margin-top:14px}
+.card.pos{left:0;border:5px solid var(--mark)}
+.card.pos .tg{background:var(--mark);color:#111418}
+.card.hard{left:306px;border:3px solid var(--ink)}
+.card.hard .tg{background:var(--ink);color:#111418}
+.card.easy{left:612px;border:2px dashed var(--grey)}
+.card.easy .tg{background:var(--grey);color:#F2F2EE}
+.card.easy .p{color:var(--muted)}
+.cap{position:absolute;left:244px;top:496px;width:400px;font-family:var(--body);font-size:24px;line-height:1.25;color:var(--muted);text-align:center}
+.lesson{margin-top:34px;font-family:var(--body);font-size:32px;line-height:1.35}
+.trap{margin-top:30px;font-family:var(--body);font-weight:600;font-size:32px;line-height:1.3;padding:20px 24px;border-left:6px solid var(--mark);background:var(--panel);border-radius:0 8px 8px 0}
+.trap b{color:var(--mark)}
+.fnote{margin-top:auto;font-family:var(--body);font-size:24px;line-height:1.4;color:var(--muted)}
+
+/* Slide 5: also today */
+.ev{margin-top:72px;border-top:2px solid var(--rule)}
+.ev .r{display:grid;grid-template-columns:200px 1fr;column-gap:28px;padding:56px 0;border-bottom:2px solid var(--rule)}
+.ev .tm{font-family:var(--mono);font-weight:700;font-size:36px;line-height:1.3;color:var(--mark)}
+.ev .tx{font-family:var(--body);font-size:32px;line-height:1.4;color:var(--muted)}
+.ev .tx b{display:block;font-weight:700;font-size:44px;line-height:1.15;color:var(--ink);margin-bottom:14px}
+.ev .tx span{display:block}
+.namebox{margin-top:auto}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: Title card listing the four sample debate takes, with the absolute word in each (dead, is, banned, can't) highlighted. -->
+<section class="slide s1">
+  <h1>Four sample takes. <span class="u">Random sides.</span></h1>
+  <ul class="takes">
+    <li>RAG is <span class="bx">dead</span>.</li>
+    <li>AI <span class="bx">is</span> already sentient.</li>
+    <li>Open weights should be <span class="bx">banned</span>.</li>
+    <li>We should trust models we <span class="bx">can't</span> explain.</li>
+  </ul>
+  <div class="strip"><span>Hard Negatives · Qdrant x Agora</span><span>Tue 11/10, 7:00 PM debates · DCTV Firehouse</span></div>
+  <div class="foot"><span class="src">Source: Luma invite, 2026</span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: Chart showing a single whole-document vector finding the right essay 84% of the time at 256 tokens and 30% at 32K tokens, against 56% for 512-token chunks at 32K. -->
+<!-- Y scale: 0-100% over 440px, y = 470 - 4.4v. 84 -> 100.4 · 30 -> 338 · 56 -> 223.6. Only two measured points; no intermediate markers. -->
+<section class="slide s2">
+  <h2>Longer document, worse single vector</h2>
+  <div class="legend"><span class="li"><span class="sw line"></span>Off-white line = one vector per whole document</span><span class="li"><span class="sw dot"></span>Teal dot = 512-token chunks</span></div>
+  <div class="axis">Ranked the right essay first</div>
+  <svg class="chart" width="888" height="530" viewBox="0 0 888 530" role="img" aria-label="Line from 84% at 256 tokens to 30% at 32K tokens; teal dot at 56% for chunks at 32K">
+    <g stroke="#2C323B" stroke-width="2">
+      <line x1="110" y1="30" x2="888" y2="30"/>
+      <line x1="110" y1="250" x2="888" y2="250"/>
+    </g>
+    <line x1="110" y1="470" x2="888" y2="470" stroke="#A3A8B0" stroke-width="2"/>
+    <g font-size="24" fill="#A3A8B0" text-anchor="end">
+      <text x="92" y="38">100%</text><text x="92" y="258">50%</text><text x="92" y="478">0%</text>
+    </g>
+    <line x1="150" y1="100.4" x2="600" y2="338" stroke="#F2F2EE" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="150" cy="100.4" r="12" fill="#F2F2EE"/>
+    <circle cx="600" cy="338" r="12" fill="#F2F2EE"/>
+    <circle cx="600" cy="223.6" r="18" fill="#14B8A6"/>
+    <text x="150" y="70" font-size="44" font-weight="700" fill="#F2F2EE" text-anchor="middle">84%</text>
+    <text x="634" y="353" font-size="44" font-weight="700" fill="#F2F2EE">30%</text>
+    <text x="634" y="238" font-size="40" font-weight="700" fill="#14B8A6">Chunks: 56%</text>
+    <text x="340" y="268" font-size="24" fill="#A3A8B0" text-anchor="middle" transform="rotate(27.8 340 268)">2 measured points</text>
+    <g font-size="26" fill="#F2F2EE" text-anchor="middle">
+      <text x="150" y="512">256 tokens</text><text x="600" y="512">32K tokens</text>
+    </g>
+  </svg>
+  <div class="anno">Passkey: 99% across lengths, 100% at 32K. Detail search: chunks win.</div>
+  <div class="concl">Qdrant's conclusion: keep chunking.</div>
+  <div class="foot"><span class="src">Source: Qdrant, "RIP Chunking?", Oct 19, 2026 (vendor test, single team)</span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: Four-row matrix showing how each debate take reads differently when the FOR side or the AGAINST side defines its key word. -->
+<section class="slide s3">
+  <h2>Define the word, win the room</h2>
+  <div class="mx">
+    <div class="ch">&nbsp;</div><div class="ch">If FOR defines it</div><div class="ch">If AGAINST defines it</div>
+    <div class="rl">Dead</div><div class="c">not the default for a new build</div><div class="c ag">nobody retrieves anything</div>
+    <div class="rl">Is</div><div class="c">a credence we can't rule out</div><div class="c ag">a proven fact about today's models</div>
+    <div class="rl">Banned</div><div class="c">gated above a tested capability line</div><div class="c ag">every release, all sizes</div>
+    <div class="rl">Can't explain</div><div class="c">trust earned by measured performance</div><div class="c ag">trust for decisions someone can appeal</div>
+  </div>
+  <div class="mfoot">The side that names the threshold first makes the other defend the absolute.</div>
+  <div class="foot"><span class="src">Source: analysis of the invite's sample takes</span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: Diagram of a search query with a correct passage, a hard negative that looks similar but is wrong, and an easy negative, plus a note that many mined negatives turn out to be correct answers. -->
+<!-- Line weight encodes closeness to the query: positive 8px teal, hard negative 4px off-white, easy negative 2px dashed grey. Every card is also labelled. -->
+<section class="slide s4">
+  <h2>Looks right. Isn't.</h2>
+  <div class="dg">
+    <svg width="888" height="500" viewBox="0 0 888 500" aria-hidden="true">
+      <path d="M444 132 C444 210 138 220 138 300" fill="none" stroke="#14B8A6" stroke-width="8"/>
+      <path d="M444 132 L444 300" fill="none" stroke="#F2F2EE" stroke-width="4"/>
+      <path d="M444 132 C444 210 750 220 750 300" fill="none" stroke="#6B7280" stroke-width="2" stroke-dasharray="8 7"/>
+    </svg>
+    <div class="qbox"><div class="k">Query</div><div class="t">How do I reset my Agora token?</div></div>
+    <div class="card pos"><span class="tg">Positive</span><div class="p">Token reset steps</div></div>
+    <div class="card hard"><span class="tg">Hard negative</span><div class="p">Token pricing</div></div>
+    <div class="card easy"><span class="tg">Easy negative</span><div class="p">Office holiday schedule</div></div>
+    <div class="cap">close in wording, wrong answer</div>
+  </div>
+  <div class="lesson">Retrievers learn by contrast. Hard negatives teach the fine distinctions.</div>
+  <div class="trap"><b>The trap:</b> about 70% of top-k 'negatives' RocketQA mined on MS MARCO were really positives.</div>
+  <div class="fnote">The pun on the series name is our reading; Qdrant hasn't said so.</div>
+  <div class="foot"><span class="src">Sources: DPR, 2020; RocketQA, 2020 · example query illustrative</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: One other notable NYC event on November 10: a founder pitch night at Entrepreneurs Roundtable. -->
+<section class="slide s5">
+  <h2>Also notable today</h2>
+  <div class="ev">
+    <div class="r"><div class="tm">5:00 PM</div><div class="tx"><b>Entrepreneurs Roundtable #219 (ERA)</b><span>five founders pitch to Owen Davis, Contour Venture Partners</span><span>host Lou Abrams, First Citizens Innovation Banking</span></div></div>
+  </div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src">Source: ERA event invite, 2026</span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>

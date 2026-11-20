@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Who checks the agent's work?</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined. Palette per the visual brief:
+   ground #0F1420, ink white, one topic accent blue #5B8DEF (tech / agents, same token as the Oct 12 pair).
+   Blue marks the question, never an event. Acid green #8FE83A only for headline underlines and the name mark. */
+:root{
+  --ground:#0F1420; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:128px;line-height:1.08}
+h2{font-size:76px;line-height:1.06}
+h2::after{content:"";display:block;width:96px;height:6px;background:var(--accent);margin-top:26px}
+.u{border-bottom:12px solid var(--accent);padding-bottom:2px;white-space:nowrap}
+.q{color:var(--mark)}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+
+/* Slide 1: hook + equal-tick timeline */
+.s1 h1{margin-top:120px}
+.tl{margin-top:auto;margin-bottom:40px;position:relative;width:888px}
+.tl svg{display:block}
+.cols{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:22px}
+.cols .c{padding-right:14px}
+.cols .t{font-family:var(--mono);font-weight:700;font-size:34px;color:var(--ink)}
+.cols .e{margin-top:12px;font-family:var(--body);font-weight:600;font-size:28px;line-height:1.22;color:var(--ink)}
+
+/* Slide 2: who-said-it matrix */
+.mx{margin-top:54px;width:888px;border-collapse:collapse;table-layout:fixed}
+.mx th{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 18px 16px 0;border-bottom:2px solid var(--ink)}
+.mx th.who{color:var(--mark)}
+.mx td{height:148px;vertical-align:middle;padding:0 18px 0 0;border-bottom:2px solid var(--rule);font-family:var(--body);font-size:26px;line-height:1.28;color:var(--ink)}
+.mx td.ev{font-weight:700}
+.mx td.cl{font-family:var(--display);font-size:29px;line-height:1.22}
+.mx td.wh{color:var(--muted)}
+
+/* Slide 3: five-band stack */
+.stk{position:relative;width:888px;height:830px;margin-top:50px}
+.stk svg{position:absolute;inset:0}
+.band{position:absolute;left:0;width:720px;height:150px;border:2px solid var(--rule);background:var(--panel);border-radius:10px;display:flex;align-items:center;padding:0 30px}
+.band .ly{width:236px;flex:none}
+.band .ln{font-family:var(--display);font-weight:600;font-size:46px;line-height:1}
+.band .le{margin-top:12px;font-family:var(--mono);font-size:20px;color:var(--muted);white-space:nowrap}
+.band .bq{font-family:var(--body);font-weight:600;font-size:30px;line-height:1.25;text-wrap:balance}
+.out{position:absolute;left:744px;top:52px;font-family:var(--mono);font-weight:700;font-size:26px;color:var(--ink);white-space:nowrap}
+
+/* Slide 4: ownership map */
+.map{position:relative;width:888px;height:860px;margin-top:44px}
+.map svg{position:absolute;inset:0}
+.nd{position:absolute;height:104px;border:3px solid var(--ink);border-radius:12px;display:flex;flex-direction:column;justify-content:center;padding:0 20px;font-family:var(--body);font-weight:600;font-size:30px;line-height:1.15;background:var(--ground)}
+.nd small{display:block;margin-top:6px;font-family:var(--mono);font-weight:400;font-size:20px;color:var(--muted)}
+.nd.co{border-style:dashed;border-color:var(--muted)}
+.nd.pp{border-color:var(--muted)}
+.lb{position:absolute;font-family:var(--mono);font-weight:700;font-size:20px;color:var(--ink);text-align:center;width:240px}
+.solo{position:absolute;top:640px;width:430px;height:200px;border:3px solid var(--muted);border-radius:12px;padding:0 26px;display:flex;flex-direction:column;justify-content:center;gap:12px;font-family:var(--body);font-size:27px;line-height:1.25;color:var(--ink)}
+.solo b{font-weight:700}
+.solo .row{display:block}
+
+/* Slide 5: open question */
+.s5 h1{margin-top:140px}
+.five{margin-top:90px;padding:34px 0;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);font-family:var(--mono);font-weight:700;font-size:36px;color:var(--ink);white-space:nowrap}
+.ask{margin-top:56px;font-family:var(--body);font-size:40px;line-height:1.35;color:var(--muted);max-width:860px;text-wrap:balance}
+.namebox{margin-top:auto}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: Title card asking who checks an AI agent's work, over a timeline of five New York AI events on November 12 shown at equal size. -->
+<section class="slide s1">
+  <div class="eyebrow">Thu, Nov 12 · New York</div>
+  <h1><span class="u">Who checks</span> the agent's work<span class="q">?</span></h1>
+  <div class="tl">
+    <svg width="888" height="40" viewBox="0 0 888 40" aria-hidden="true">
+      <line x1="0" y1="20" x2="888" y2="20" stroke="#2A3550" stroke-width="3"/>
+      <g stroke="#F1F3F8" stroke-width="4">
+        <line x1="2" y1="4" x2="2" y2="36"/>
+        <line x1="179.6" y1="4" x2="179.6" y2="36"/>
+        <line x1="357.2" y1="4" x2="357.2" y2="36"/>
+        <line x1="534.8" y1="4" x2="534.8" y2="36"/>
+        <line x1="712.4" y1="4" x2="712.4" y2="36"/>
+      </g>
+    </svg>
+    <div class="cols">
+      <div class="c"><div class="t">12:00</div><div class="e">Metabase (online)</div></div>
+      <div class="c"><div class="t">5:00</div><div class="e">NY-MLR @ Intuit</div></div>
+      <div class="c"><div class="t">5:30</div><div class="e">Cool Machines by Ramp</div></div>
+      <div class="c"><div class="t">6:00</div><div class="e">World of Tavily</div></div>
+      <div class="c"><div class="t">6:30</div><div class="e">Temporal + MongoDB</div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="src"></span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: Table of five events, each with its headline claim and the party that made it; every claim comes from the company or authors it describes. -->
+<section class="slide s2">
+  <h2>Who's saying it? The makers.</h2>
+  <table class="mx">
+    <colgroup><col style="width:224px"><col style="width:364px"><col style="width:300px"></colgroup>
+    <thead><tr><th>Event</th><th>The claim</th><th class="who">Who said it</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">Metabase</td><td class="cl">"open source AI analytics you can verify"</td><td class="wh">Metabase</td></tr>
+      <tr><td class="ev">NY-MLR @ Intuit</td><td class="cl">masked diffusion "more performant than previously thought"</td><td class="wh">the MDLM authors, Schiff among them (2024)</td></tr>
+      <tr><td class="ev">Cool Machines</td><td class="cl">"74% of merged PRs"</td><td class="wh">Ramp (Oct 27)</td></tr>
+      <tr><td class="ev">World of Tavily</td><td class="cl">"building that stack together"</td><td class="wh">the invite. Nebius says it acquired Tavily.</td></tr>
+      <tr><td class="ev">Temporal + MongoDB</td><td class="cl">"guaranteed to execute to completion"</td><td class="wh">Temporal, in the invite</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span class="src">Sources: Metabase on Luma; Sahoo et al., arXiv 2406.07524, 2024; Ramp, 2026; Luma/Nebius, 2026; event invite, 2026.</span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: Five-layer stack diagram (model, run, source, analysis, review), each layer labelled with its event and its open verification question. -->
+<section class="slide s3">
+  <h2>Five layers, five checks</h2>
+  <div class="stk">
+    <svg width="888" height="830" viewBox="0 0 888 830" aria-hidden="true">
+      <defs>
+        <marker id="up" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9AA6BF"/></marker>
+      </defs>
+      <!-- flow runs bottom (model) to top (output) -->
+      <line x1="780" y1="810" x2="780" y2="112" stroke="#9AA6BF" stroke-width="3" marker-end="url(#up)"/>
+    </svg>
+    <div class="out">Output →</div>
+    <div class="band" style="top:0"><div class="ly"><div class="ln">Review</div><div class="le">Cool Machines</div></div><div class="bq">What does a reviewer look at<span class="q">?</span></div></div>
+    <div class="band" style="top:170px"><div class="ly"><div class="ln">Analysis</div><div class="le">Metabase</div></div><div class="bq">Who verifies the reading<span class="q">?</span></div></div>
+    <div class="band" style="top:340px"><div class="ly"><div class="ln">Source</div><div class="le">World of Tavily</div></div><div class="bq">Who checks the grounding<span class="q">?</span></div></div>
+    <div class="band" style="top:510px"><div class="ly"><div class="ln">Run</div><div class="le">Temporal + MongoDB</div></div><div class="bq">Who owns state after a failure<span class="q">?</span></div></div>
+    <div class="band" style="top:680px"><div class="ly"><div class="ln">Model</div><div class="le">NY-MLR @ Intuit</div></div><div class="bq">Can it take a word back<span class="q">?</span></div></div>
+  </div>
+  <div class="foot"><span class="src">Source: event invites and company posts, Nov 2026.</span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: Map of relationships among the hosts and speakers: Nebius owns Tavily, MongoDB invests in Temporal, Ramp's founders seeded Crosby; NY-MLR is independent and Metabase is open source. -->
+<section class="slide s4">
+  <h2>The checkers have relationships</h2>
+  <div class="map">
+    <svg width="888" height="860" viewBox="0 0 888 860" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5B8DEF"/></marker>
+      </defs>
+      <g stroke="#5B8DEF" stroke-width="4" fill="none" marker-end="url(#ah)">
+        <line x1="290" y1="52" x2="526" y2="52"/>
+        <line x1="290" y1="216" x2="526" y2="216"/>
+        <line x1="290" y1="380" x2="526" y2="380"/>
+      </g>
+      <line x1="0" y1="604" x2="888" y2="604" stroke="#2A3550" stroke-width="2"/>
+    </svg>
+    <!-- row 1 -->
+    <div class="nd" style="left:0;top:0;width:280px">Nebius</div>
+    <div class="lb" style="left:288px;top:6px">acquired</div>
+    <div class="nd" style="left:536px;top:0;width:150px">Tavily</div>
+    <div class="nd co" style="left:700px;top:0;width:188px;padding:0 16px">LangChain<small>co-host</small></div>
+    <!-- row 2 -->
+    <div class="nd" style="left:0;top:164px;width:280px">MongoDB</div>
+    <div class="lb" style="left:288px;top:170px">Ventures portfolio</div>
+    <div class="nd" style="left:536px;top:164px;width:352px">Temporal</div>
+    <!-- row 3 -->
+    <div class="nd" style="left:0;top:328px;width:280px">Founders of Ramp</div>
+    <div class="lb" style="left:288px;top:334px">seed investors</div>
+    <div class="nd" style="left:536px;top:328px;width:352px">Crosby</div>
+    <!-- row 3b: person -->
+    <div class="nd pp" style="left:536px;top:460px;width:352px">John Sarihan<small>ex-Ramp, Crosby CTO</small></div>
+    <!-- standalone, same size -->
+    <div class="solo" style="left:0"><span class="row"><b>NY-MLR:</b> independent, volunteer-run</span><span class="row"><b>Intuit:</b> partner and host</span></div>
+    <div class="solo" style="left:458px"><span class="row"><b>Metabase:</b> open source</span></div>
+  </div>
+  <div class="foot"><span class="src">Sources: Nebius blog, 2026-05-20; MongoDB Ventures page, read 2026-11-01; Crosby launch post, 2025-06-17; Sequoia, 2025; nymlr.com, 2026; Metabase on Luma.</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: Closing card asking which of five verification layers fails first, with an invitation to share what you hope Thursday's events answer. -->
+<section class="slide s5">
+  <h1>Which check <span class="u">gives first</span><span class="q">?</span></h1>
+  <div class="five">Model. Analysis. Reviewer. Source. Run.</div>
+  <div class="ask">If you're deep into any of these, what do you want answered on Thursday?</div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src"></span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>

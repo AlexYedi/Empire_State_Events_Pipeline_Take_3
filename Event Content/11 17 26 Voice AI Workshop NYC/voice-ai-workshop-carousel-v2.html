@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agora × Google DeepMind Gemini Voice AI Workshop — carousel (Arc 1 + also-notable)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this week's shared overrides (same as agents-and-apis v3): slate + off-white, cobalt = AI ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --mark:#3B82F6; --on-mark:#111418; --second:#6B7280;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.m{color:var(--mark)}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+.strip{position:absolute;left:96px;right:96px;border-top:1px solid var(--rule);padding-top:22px;font-family:var(--mono);font-size:21px;line-height:1.5;letter-spacing:.02em;color:var(--muted)}
+.closer{position:absolute;left:96px;right:96px;font-family:var(--display);font-style:italic;font-size:44px;line-height:1.15}
+h2{margin-top:0}
+.k{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* slide 1 — split frame */
+.s1 h1{font-size:124px;line-height:1.04;margin-top:10px}
+.s1 .split{margin-top:72px;display:grid;grid-template-columns:330px 1fr;gap:32px}
+.s1 .pan{background:var(--panel);border:2px solid var(--rule);border-radius:12px;padding:34px 34px 38px;display:flex;flex-direction:column}
+.chip{align-self:flex-start;border:2px solid var(--ink);border-radius:999px;padding:6px 24px;font-family:var(--body);font-weight:600;font-size:30px;line-height:1.2;margin-top:14px}
+.chip:first-of-type{margin-top:28px}
+.talks{margin-top:auto;font-family:var(--display);font-weight:600;font-size:46px;line-height:1.1}
+.s1 .arrow{display:block;margin:16px 0 14px 40px}
+.row{display:flex;align-items:center;gap:22px;font-family:var(--body);font-weight:500;font-size:32px;line-height:1.2;padding:19px 0;border-top:2px solid var(--rule)}
+.row:first-of-type{margin-top:22px;border-top:none}
+.box{flex:none;width:40px;height:40px;border:4px solid var(--mark);border-radius:6px}
+.s1 .strip{bottom:190px}
+
+/* slide 2 — two lanes + toggle */
+.s2 h2{font-size:76px}
+.net{margin-top:36px;border:2px dashed var(--muted);border-radius:14px;padding:22px 26px 26px;position:relative}
+.net .nl{font-family:var(--mono);font-size:22px;letter-spacing:.06em;color:var(--muted)}
+.lane{margin-top:22px}
+.lane + .lane{margin-top:24px;padding-top:22px;border-top:1px solid var(--rule)}
+.lane .ln{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--mark);font-weight:700}
+.flow{margin-top:14px;display:flex;align-items:center;gap:8px}
+.who{font-family:var(--mono);font-weight:700;font-size:24px;color:var(--ink);flex:none}
+.arr{flex:none;display:block}
+.node{border:2px solid var(--ink);border-radius:10px;padding:10px 14px;font-family:var(--body);font-weight:700;font-size:24px;line-height:1.15;text-align:center}
+.node .sm{display:block;font-weight:500;font-size:22px;color:var(--muted);margin-top:4px}
+.node.stt,.node.tts{width:178px}
+.node.live{flex:1;background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.node.live .sm{color:var(--on-mark)}
+.tag{margin-top:10px;font-family:var(--body);font-style:normal;font-weight:500;font-size:24px;color:var(--muted);text-align:center}
+.toggle{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;border:3px solid var(--mark);border-radius:999px;overflow:hidden}
+.tq{margin-top:26px;font-family:var(--display);font-weight:600;font-size:40px;line-height:1.1}
+.pos{padding:16px 30px;text-align:center;font-family:var(--body);font-weight:500;font-size:26px;line-height:1.25}
+.pos + .pos{border-left:3px solid var(--mark)}
+.pos b{display:block;font-family:var(--mono);font-weight:700;font-size:26px;color:var(--mark)}
+.s2 .closer{bottom:210px;font-size:36px}
+.s2 .srcline{font-size:20px}
+
+/* slide 3 — to-scale bars */
+.s3 h2{font-size:86px}
+.legend{margin-top:52px;display:flex;flex-direction:column;gap:12px;font-family:var(--mono);font-size:24px;color:var(--ink)}
+.legend span{display:flex;align-items:center;gap:14px}
+.sw{width:26px;height:26px;border-radius:4px;flex:none}
+.sw.b{background:var(--mark)} .sw.g{background:var(--second)}
+.bars{margin-top:50px}
+.bar-row{margin-bottom:40px}
+.bar-lab{font-family:var(--body);font-weight:600;font-size:34px;line-height:1.2;margin-bottom:14px}
+.barline{display:flex;align-items:center;gap:22px}
+.bar{height:112px;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 28px;font-family:var(--body);font-weight:700;font-size:46px;flex:none}
+.bar.out{width:888px;background:var(--mark);color:var(--on-mark)}
+.bar.in{width:222px;background:var(--second)}
+.inlab{font-family:var(--body);font-weight:700;font-size:46px;color:var(--ink)}
+.s3 .ann{margin-top:4px;font-family:var(--body);font-size:30px;line-height:1.35;color:var(--muted);max-width:860px}
+.s3 .closer{bottom:240px}
+
+/* slide 4 — vertical timeline */
+.s4 h2{font-size:84px}
+.tl{margin-top:58px;display:grid;grid-template-columns:250px 30px 56px 1fr;position:relative}
+.brk{grid-column:1/3;grid-row:1/4;display:flex;align-items:center;justify-content:flex-end;margin:20px 0 66px;position:relative}
+.brk span{font-family:var(--display);font-style:italic;font-weight:600;font-size:34px;line-height:1.15;text-align:right}
+.brk::after{content:"";position:absolute;right:0;top:0;bottom:0;width:22px;border:3px solid var(--ink);border-left:none;border-radius:0 10px 10px 0}
+.brk span{padding-right:22px}
+.spine{grid-column:3;grid-row:1/6;justify-self:center;width:4px;background:var(--rule);margin:22px 0 64px}
+.dot{grid-column:3;justify-self:center;width:26px;height:26px;border-radius:50%;background:var(--mark);margin-top:9px;position:relative;z-index:1}
+.ev{grid-column:4;padding-bottom:30px}
+.ev .d{font-family:var(--mono);font-size:26px;color:var(--mark);line-height:1.3;letter-spacing:.02em}
+.ev .t{font-family:var(--body);font-weight:600;font-size:40px;line-height:1.15;margin-top:2px}
+.callout{margin-top:14px;display:inline-block;border:3px solid var(--mark);border-radius:10px;padding:10px 20px;font-family:var(--body);font-weight:500;font-size:28px;line-height:1.25}
+.s4 .closer{bottom:196px;font-size:40px}
+
+/* slide 5 — also notable */
+.s5 h2{font-size:104px;line-height:1.02;margin-top:20px}
+.ev5{margin-top:110px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:44px 0 52px}
+.ev5 .time{font-family:var(--mono);font-weight:700;font-size:44px;line-height:1.15;color:var(--mark);margin-bottom:22px}
+.ev5 .ttl{font-family:var(--display);font-weight:600;font-size:64px;line-height:1.08;text-wrap:balance}
+.ev5 .ven{margin-top:20px;font-family:var(--mono);font-size:24px;letter-spacing:.06em;color:var(--muted)}
+.ev5 .desc{margin-top:26px;font-family:var(--body);font-weight:500;font-size:36px;line-height:1.3;max-width:860px}
+.s5 .closer{position:static;margin-top:72px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 — Hook: the demo vs the list behind it
+     Alt text: Split card contrasting a voice agent that talks after minutes of setup with four production checks it still has to pass: barge-in, latency under load, the phone line, and cost per completed call. -->
+<section class="slide s1">
+  <h1>It talks in minutes.<br><span class="u">Then what?</span></h1>
+  <div class="split">
+    <div class="pan">
+      <span class="k">In minutes</span>
+      <span class="chip">prompt</span>
+      <span class="chip">voice</span>
+      <span class="chip">model</span>
+      <svg class="arrow" width="30" height="48" viewBox="0 0 30 48" aria-hidden="true"><line x1="15" y1="2" x2="15" y2="34" stroke="#9EA3A8" stroke-width="3"/><polygon points="15,46 5,32 25,32" fill="#9EA3A8"/></svg>
+      <span class="talks" style="margin-top:0">it talks ✓</span>
+    </div>
+    <div class="pan">
+      <span class="k">In production</span>
+      <div class="row"><span class="box"></span>barge-in</div>
+      <div class="row"><span class="box"></span>latency under load</div>
+      <div class="row"><span class="box"></span>the phone line</div>
+      <div class="row"><span class="box"></span>cost per completed call</div>
+    </div>
+  </div>
+  <div class="strip">Agora × Google DeepMind · Gemini Voice AI Workshop<br>Tue 11/17 · 5:30 PM</div>
+  <div class="srcline">Source: event page, Luma, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 — Mechanism: two builds, one switch
+     Alt text: Diagram of two ways to build a voice agent on Agora: a three-step cascade using Gemini 3.5 Transcribe, or a single Gemini Live model, with a toggle showing that either Gemini or Agora can own turn detection. -->
+<section class="slide s2">
+  <h2>Two builds. <span class="u">One switch</span> for interruptions.</h2>
+  <div class="net">
+    <span class="nl">Agora network carries the audio</span>
+    <div class="lane">
+      <span class="ln">Cascade</span>
+      <div class="flow">
+        <span class="who">CALLER</span>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <div class="node stt">SPEECH-TO-TEXT<span class="sm">Gemini 3.5 Transcribe</span></div>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <div class="node llm">LLM</div>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <div class="node tts">TEXT-TO-SPEECH</div>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <span class="who">CALLER</span>
+      </div>
+      <div class="tag">text checkpoint: readable before it speaks</div>
+    </div>
+    <div class="lane">
+      <span class="ln">Native audio</span>
+      <div class="flow">
+        <span class="who">CALLER</span>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <div class="node live">GEMINI LIVE<span class="sm">hears + speaks</span></div>
+        <svg class="arr" width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><line x1="0" y1="10" x2="18" y2="10" stroke="#9EA3A8" stroke-width="3"/><polygon points="29,10 17,2 17,18" fill="#9EA3A8"/></svg>
+        <span class="who">CALLER</span>
+      </div>
+      <div class="tag">fewer hops, one vendor’s model</div>
+    </div>
+  </div>
+  <div class="tq">Who decides you’re talking?</div>
+  <div class="toggle" style="margin-top:16px">
+    <div class="pos"><b>server_vad</b>= Gemini decides</div>
+    <div class="pos"><b>agora_vad</b>= Agora decides</div>
+  </div>
+  <div class="closer">Whoever owns turn detection owns how interruptions feel.</div>
+  <div class="srcline">Source: Agora docs (Gemini Live config); Agora blog (Gemini 3.5 Transcribe), 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 — Evidence: where the meter runs
+     Alt text: Bar chart showing Gemini 3.8 Live audio output listed at 12 dollars per million tokens, about 1.8 cents a minute, against audio input at 3 dollars, about half a cent a minute. -->
+<section class="slide s3">
+  <h2>Talking costs <span class="u">4x listening</span>, per token</h2>
+  <div class="legend">
+    <span><i class="sw b"></i>Blue = audio the model speaks (output)</span>
+    <span><i class="sw g"></i>Grey = audio it hears (input)</span>
+  </div>
+  <div class="bars">
+    <div class="bar-row">
+      <div class="bar-lab">$12.00 per 1M audio tokens</div>
+      <div class="barline"><div class="bar out">≈ $0.018/min</div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-lab">$3.00 per 1M</div>
+      <div class="barline"><div class="bar in"></div><span class="inlab">≈ $0.005/min</span></div>
+    </div>
+  </div>
+  <div class="ann">Model cost only. Transport, turn detection and the phone line come on top.</div>
+  <div class="closer">Compare per completed call, not per minute.</div>
+  <div class="srcline">Source: Google AI Studio pricing page, Gemini 3.8 Live paid tier, as listed Nov 14, 2026 (check for other tiers)</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 — Counterpoint: the model ships on Google's clock
+     Alt text: Timeline of Google's Live API from public preview in April 2025 to the Gemini 3.8 Live release in September 2026, then the Gemini 2.5 deprecations in November, with Agora's tutorial marked at the 3.1 preview. -->
+<section class="slide s4">
+  <h2>Your model runs on <span class="u">Google’s clock</span></h2>
+  <div class="tl">
+    <div class="brk"><span>17 months,<br>preview to GA</span></div>
+    <div class="spine"></div>
+    <div class="dot" style="grid-row:1"></div>
+    <div class="ev" style="grid-row:1"><div class="d">Apr 9, 2025</div><div class="t">Live API public preview</div></div>
+    <div class="dot" style="grid-row:2"></div>
+    <div class="ev" style="grid-row:2"><div class="d">Mar 26, 2026</div><div class="t">3.1 Flash Live Preview</div><div class="callout">Agora’s Gemini tutorial is built here</div></div>
+    <div class="dot" style="grid-row:3"></div>
+    <div class="ev" style="grid-row:3"><div class="d">Sep 15, 2026</div><div class="t">3.8 Live GA</div></div>
+    <div class="dot" style="grid-row:4"></div>
+    <div class="ev" style="grid-row:4"><div class="d">Nov 2, 2026</div><div class="t">2.5 Flash/Pro deprecated</div></div>
+    <div class="dot" style="grid-row:5"></div>
+    <div class="ev" style="grid-row:5;padding-bottom:0"><div class="d">Dec 1, 2026</div><div class="t">traffic rerouted</div></div>
+  </div>
+  <div class="closer">The demo runs on the current model. Production inherits the migration schedule.</div>
+  <div class="srcline">Source: Google AI Studio changelog; Agora blog, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 — Also notable today
+     Alt text: One other notable NYC event on November 17: a Stacksync and Supabase evening of fireside chats about running AI agents on production systems. -->
+<section class="slide s5">
+  <h2><span class="u">Also notable</span> today</h2>
+  <div class="ev5">
+    <div class="time">6:00 PM</div>
+    <div>
+      <div class="ttl">Stacksync × Supabase: AI That Does the Work</div>
+      <div class="ven">The Michelangelo Hotel</div>
+      <div class="desc">fireside chats on running AI agents on production systems, with Orderful and ReDocs</div>
+    </div>
+  </div>
+  <div class="closer">Same production question, database side.</div>
+  <div class="srcline">Source: Stacksync event page, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>
