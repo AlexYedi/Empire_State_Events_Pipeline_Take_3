@@ -242,6 +242,13 @@ def selftest() -> bool:
               "+12 500 users", "+1 2345678", "+1 1,000,000 users", "+10 1234567% lift", "Phone 15 launch",
               "mobile 5G", "ISBN 978-0-306-40615-7"):
         ok(f"no pii {s!r} (YED-468)", not has_pii(s))
+    # YED-468 boundaries (mutation pass over the new folds): 1-digit extension, 1-digit / 3-digit country code with a
+    # 9 / 7-digit block (the 10-digit floor exactly), a 2-letter TLD in either case; and, allowed, a % tail, a run
+    # that starts mid-token, a run whose first digit follows another digit group
+    for s in ("call 555-123-0100x1", "+7 495000000", "+354 1234567", "dana@example. io", "DANA@EXAMPLE. IO"):
+        ok(f"has_pii {s!r} (YED-468 bound)", has_pii(s))
+    for s in ("+12 34567890% lift", "cells A1 2 3 4 5 6 7 8 9 0", "rank 12 3 4 5 6 7 8 9 0 1 2"):
+        ok(f"no pii {s!r} (YED-468 bound)", not has_pii(s))
     ok("YED-468 G2: +CC + one block folds to E.164 compact, and PHONE_RE's 10-digit floor decides",
        "+6560000000" in heuristics("+65 60000000") and not PHONE_RE.search(heuristics("+1 2345678")))
     ok("YED-468 G4: SPACED_DOT still needs whitespace BEFORE the dot (a handle is not a mailbox)",
