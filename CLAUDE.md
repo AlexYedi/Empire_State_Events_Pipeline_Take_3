@@ -23,7 +23,7 @@ An AI-native pipeline that turns Alex's event attendance into research, networki
 Google Calendar ─► /check-new-events ─► /event-deep-research
    (4 specialists ∥ + knowledge-conditioning → synthesizer → Deep Read renderer)
    ─► Notion (Events · People · Companies · Topics · Content Drafts) + HubSpot
-   ─► pre-event-content (posts ×3 variants · connection notes A/B · questions · carousel PDF)
+   ─► pre-event-content (day posts ×4 variants A–D · connection notes A/B · questions · carousel PDF)
    ─► attend (Supercut records) ─► /post-event-content ─► content-correspondent ─► Notion ─► HubSpot (gated)
 Job-search loop: /scan-roles · role-radar · Notion Roles DB · me-model.md · /interview-prep
 Passive store: Supabase MI graph (post-event claims + roles) via spine_client.py
@@ -61,9 +61,9 @@ These protect irreversible external effects. They do not get waived.
 4. **Public repos, private inputs.** Both repos are public by design. `.env`, `me-model.md`, `target-companies.md`, inbox lists and other people's confidences never enter git; redact off-the-record material in the transcript and every derived file before commit. Never rewrite history to fix a leak without Alex.
 5. **Writes stay single-threaded, away from untrusted text (policy).** Every write runs in the parent, except Notion writes by the one `notion-writer` (after its sandbox test), which executes a parent-written, schema-checked payload. No agent that reads untrusted text holds write tools.
 6. **Fan-out runs from the parent (policy).** Every agent declares a minimal `tools:` line; a trust boundary earns an agent file, a way of thinking is a skill.
-7. **Prove an agent edit with a dispatch before relying on it.** Project agents hot-reload; plugin agents refresh on plugin update.
+7. **Prove an agent edit with a dispatch before relying on it.** Project agents load at session start, so prove a new or edited agent from a fresh session (e.g. headless `claude -p` in the PR's checkout); plugin agents refresh on plugin update. An empty `tools:` line means no tools, not inherited ones.
 8. **Search before create** in Notion and HubSpot (name + company; email is HubSpot's key). Notion has no native dedup.
-9. **HubSpot writes are post-event, selective, create-once**, with an inline confirmation table.
+9. **HubSpot writes are selective and create-once**, with an inline confirmation table. Pre-event: named speakers, presenters, hosts and sponsors, plus their companies (YED-282). Post-event: enhance those records with a Note, and add people met.
 
 ## 5. Working rules
 
@@ -81,6 +81,8 @@ These protect irreversible external effects. They do not get waived.
 
 **Automation defaults.** MCP calls to vendors Alex already pays for (Notion, HubSpot, Linear, Canva, Supercut) are automated inside workflows; steps that need his judgment (a contact landing in CRM, copy going public, strategy) stay manual; don't burn Claude tokens on redundant inference or oversized contexts. **Autonomy levels.** Research and analysis auto-fire and stop at their gates (triage plan, brief). Drafts go to Notion `needs_review`; nothing publishes without Alex; an unapproved format, series or framework ships one pilot draft, then pauses. Publishing, CRM writes and credit spend (HubSpot, Apollo, Clay) wait for his go. "Proceed without prompting" runs the queue at these levels and never skips a gate; raising a level needs ≥95% completion on the dispatch record. Unsure → the more cautious level.
 
+**Every push updates its track** (`command-center.md`). A session that advances a track updates its private Command Center page (where we are, actions, log) before it stops. Anything it needs from Alex goes in as one Inbox card, with a recommendation.
+
 **Parked thoughts and to-dos** go to Linear in the same turn: anything owed after today, by Alex or a later session, gets an issue with owner, due date, and why/context in the body. No free-floating "revisit later."
 
 ## 6. Content
@@ -88,7 +90,7 @@ These protect irreversible external effects. They do not get waived.
 Voice, structure and anti-patterns live in `content-style-guide.md` and `content-anti-patterns.md` (living documents, updated through `update-voice-and-style`). Connection notes follow `outreach-templates.md`; shared shapes (two-thesis synthesis, visual briefs, goal tagging, founder showcase) live in `.claude/skills/content-patterns/`. Steer before generating (`steering-interview`), generate, comment in Notion, mine the comments back into the guides.
 
 Pipeline contracts that are not voice rules:
-- Every post ships **3 inline variants**; connection notes ship **2** (A talk-anchored, B adjacent-work-anchored; 200-char cap; only ship a variant with a real anchor). Ship all variants to Notion `needs_review`; never pre-select.
+- **Pre-event day posts ship 4 variants, A–D**: A and B are different takes, C and D are built on different stats. The Going event is the main post, and the day's Pending events follow under "Additional notable events today:". Write a day's post only after research is done for every Going and Pending event that day. Other posts ship **3 inline variants**; connection notes ship **2** (A talk-anchored, B adjacent-work-anchored; 200-char cap; only ship a variant with a real anchor). Ship all variants to Notion `needs_review`; never pre-select.
 - **Notion first.** Drafts and variants go to Content Drafts as plain paragraphs (never code blocks); the local event folder holds inputs and rendered finals (carousel HTML/PDF) only.
 - Every post ships with a **3–5 slide visual brief** that adds information (`visual-briefs.md`); Claude-authored HTML/SVG → headless Chrome → 4:5 PDF. Gemini for pictorial imagery. Gamma is for presentation creation only, never for content PDFs or carousels.
 - **`output-evaluator` source-checks every firm- or person-level claim and quote** before copy leaves `needs_review` (the old Rule 12); unsourced → verify, soften or cut.
