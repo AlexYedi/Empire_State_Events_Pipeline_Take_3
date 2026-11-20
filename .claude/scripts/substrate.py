@@ -1579,8 +1579,195 @@ def log_research_usage(g: Graph, sidecar: str, doc_id: str | None, ev: dict) -> 
         return f"usage: NOT LOGGED ({type(e).__name__}: {str(e)[:160]})"
 
 
+# ---------------------------------------------------------------------------------------------
+# YED-467 — quote-match-v1: the stage-time TRACEABILITY check behind the YED-451 approval gate (no LLM, 0 tokens).
+# Policy: claims are approved on traceability, fact-checked at use time (output-evaluator). A ledger row carries a
+# verbatim `quote:` (<= 25 words) from its cited page; at stage-research plain Python fetches the page and passes the
+# row only if (1) the quote is on the page and (2) every figure and proper noun in the claim's assertion is in the
+# quote. Pass -> judge_verdict 'supported' (judge_model quote-match-v1) + source_quote/fetched_at (0026). Anything
+# else -> NO verdict: the row stays candidate, the reason in metadata.quote_check. A failed string match is not proof
+# the page lacks the detail, so it never writes 'unsupported'. Calibration vs the 11/19 LLM page judge (300 rows,
+# figure/name screen, 2026-11-20): passes 71% of LLM-supported and 29% of LLM-unsupported, ~11% unsupported among
+# passes vs the 23% do-nothing baseline; figures and run notes on YED-467 (claim text never enters git).
+# Only NEW rows are checked: rows staged before YED-467 carry no quote, so there is nothing to re-check them with.
+# ---------------------------------------------------------------------------------------------
+QUOTE_MATCH_MODEL = "quote-match-v1"
+QUOTE_MATCH_SPEC = ("quote-match-v1: 4<=quote<=25 words; NFKC+casefold, non-alphanumerics->space, collapse; quote "
+                    "substring of page; claim assertion figures (digit runs) and capitalised tokens (not sentence-"
+                    "initial, not stopwords, not a unit glued to a figure) all in quote; >=half of the assertion's "
+                    "content-word stems (4+ letters, 5-char stem) in quote; negation present in both or neither; "
+                    "quote passes the spine PII scan; pass->supported, else no verdict")
+QUOTE_MATCH_HASH = hashlib.sha256(QUOTE_MATCH_SPEC.encode()).hexdigest()
+# The judge_verdict the gate trusts is a PAGE check's, keyed by judge_prompt_hash. PR #363's claimify_v2 judge writes
+# the same column but checks the BRIEF, not the cited page, so its verdict does not open the web_verified gate.
+PAGE_HASH_1119 = "69ec0f7722fdca67198a5b8d9ccb8547d88002e10eac81bc00c9cb6e21e1301a"   # judge_prompt_v2.md sha256
+PAGE_JUDGES = {PAGE_HASH_1119: "source-page judge v2 (11/19, LLM)",
+               QUOTE_MATCH_HASH: QUOTE_MATCH_MODEL}
+QUOTE_MIN_WORDS = 4
+QUOTE_FETCH_CAP = 150             # distinct URLs per stage-research run; the rest are held 'fetch_budget'
+_QM_NEG = {"not", "no", "never", "without", "nor", "neither", "none", "didn", "doesn", "isn", "wasn", "aren", "weren",
+           "won", "hasn", "hadn", "haven", "cannot", "can't", "didn't", "doesn't", "isn't", "wasn't", "won't"}
+_QM_CONTENT_STOP = {"that", "this", "with", "from", "than", "they", "their", "have", "been", "were", "will", "into",
+                    "about", "also", "over", "more", "most", "such", "which", "what", "when", "where", "while",
+                    "its", "says", "said", "per"}
+_QM_STOP = {"The", "A", "An", "And", "Or", "But", "In", "On", "At", "Of", "For", "To", "By", "With", "From", "As",
+            "Its", "It", "Their", "This", "That", "These", "Those", "His", "Her", "They", "We", "Our", "Is", "Was",
+            "Has", "Had", "Will", "New", "Per", "Over", "Up", "Into", "After", "Before", "About"}
+FETCH_MAX_BYTES = 3_000_000
+
+
+def _qm_norm(t: str) -> str:
+    import unicodedata
+    t = unicodedata.normalize("NFKC", t or "").casefold()
+    return " " + re.sub(r"[\W_]+", " ", t, flags=re.U).strip() + " "
+
+
+def _qm_figures(t: str) -> set[str]:
+    """Digit runs with separators dropped: '$1,200' -> '1200', '6.5%' -> '6.5', '2024' -> '2024'."""
+    return {re.sub(r"[,\s]", "", m).rstrip(".") for m in re.findall(r"\d[\d,]*(?:\.\d+)?", t or "")}
+
+
+def _qm_nouns(assertion: str) -> set[str]:
+    toks = re.findall(r"(?<![\w$€£])[A-Za-z][\w&.'’-]*", assertion or "")   # not a unit glued to a figure ("$4M")
+    out = set()
+    for i, w in enumerate(toks):
+        w = w.strip(".'’-")
+        if not w or not w[0].isupper() or w in _QM_STOP:
+            continue
+        if i == 0 and not (len(w) > 1 and (w.isupper() or any(c.isupper() for c in w[1:]))):
+            continue                                  # a sentence-initial capital is not a name ("Raised …")
+        out.add(w)
+    return out
+
+
+def _qm_stems(t: str) -> set[str]:
+    return {w[:5] for w in _qm_norm(t).split() if len(w) >= 4 and w.isalpha() and w not in _QM_CONTENT_STOP}
+
+
+def _qm_negated(t: str) -> bool:
+    words = set(_qm_norm(t).split()) | set(re.findall(r"[a-z]+n't", (t or "").lower()))
+    return bool(words & _QM_NEG) or " n t " in _qm_norm(t)
+
+
+def quote_check(claim_text: str, quote: str | None, page_text: str | None, *,
+                entity: str | None = None) -> tuple[bool, str]:
+    """(passed, reason). Pure: no network. claim_text is '<entity>: <assertion>'; pass entity to split it exactly
+    (an entity name may itself contain a colon). The entity label is not checked; the assertion is."""
+    q_ = (quote or "").strip().strip('"“”')
+    if not q_:
+        return False, "no_quote"
+    if len(q_.split()) > QUOTE_MAX_WORDS:
+        return False, "quote_too_long"
+    if len(q_.split()) < QUOTE_MIN_WORDS:
+        return False, "quote_too_short"
+    if page_text is None:
+        return False, "fetch_failed"
+    nq, npage = _qm_norm(q_), _qm_norm(page_text)
+    if not nq.strip() or nq not in npage:
+        return False, "quote_not_on_page"
+    if entity and claim_text.startswith(entity + ": "):
+        assertion = claim_text[len(entity) + 2:]
+    else:
+        assertion = claim_text.split(":", 1)[1] if ":" in claim_text else claim_text
+    qfig = _qm_figures(q_)
+    if any(f not in qfig for f in _qm_figures(assertion)):
+        return False, "figure_not_in_quote"
+    if any(_qm_norm(n) not in nq for n in _qm_nouns(assertion)):
+        return False, "name_not_in_quote"
+    cs, qs = _qm_stems(assertion), _qm_stems(q_)
+    if not cs or 2 * len(cs & qs) < len(cs):           # the quote must be ABOUT the claim, not just any page span
+        return False, "low_overlap"
+    if _qm_negated(assertion) != _qm_negated(q_):
+        return False, "negation_mismatch"
+    return True, "supported"
+
+
+def _html_to_text(raw: str) -> str:
+    raw = re.sub(r"(?is)<(script|style|noscript|svg)[^>]*>.*?</\1>", " ", raw)
+    return html.unescape(re.sub(r"(?s)<[^>]+>", " ", raw))
+
+
+def _public_http_url(url: str) -> bool:
+    """http(s) to a public address only. The URL comes from an agent that read untrusted web text, so file://,
+    loopback, private, link-local and reserved targets (SSRF) are refused, every redirect hop included."""
+    import ipaddress, socket, urllib.parse
+    try:
+        u = urllib.parse.urlsplit(url)
+        if u.scheme not in ("http", "https") or not u.hostname:
+            return False
+        for info in socket.getaddrinfo(u.hostname, u.port or (443 if u.scheme == "https" else 80)):
+            ip = ipaddress.ip_address(info[4][0].split("%")[0])
+            if not ip.is_global or ip.is_multicast:
+                return False
+        return True
+    except Exception:
+        return False
+
+
+def fetch_page(url: str, timeout: int = 15) -> str | None:
+    """GET a cited public http(s) page as plain text, or None (refused target, any error, non-text body, oversize).
+    Read-only; the text is data: nothing interprets it beyond quote_check's string match. Never raises."""
+    import urllib.request
+
+    class _Safe(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            if not _public_http_url(newurl):
+                raise urllib.error.URLError("redirect to a non-public target refused")
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    if not _public_http_url(url):
+        return None
+    try:
+        import urllib.error
+        opener = urllib.request.build_opener(_Safe)
+        rq = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (research-citation-check)",
+                                                  "Accept": "text/html,text/plain;q=0.9,*/*;q=0.1"})
+        with opener.open(rq, timeout=timeout) as r:
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            if ctype and not any(t in ctype for t in ("text/", "html", "xml", "json")):
+                return None
+            body = r.read(FETCH_MAX_BYTES + 1)
+        if len(body) > FETCH_MAX_BYTES:
+            return None
+        return _html_to_text(body.decode("utf-8", "replace"))
+    except Exception:
+        return None
+
+
+def quote_check_rows(items: list[dict], fetch=None) -> dict[str, dict]:
+    """claim_key -> the 0023/0026 columns + 'quote_check' (for metadata) per web_verified ledger item. One fetch per
+    distinct URL; an item without a quote is never fetched."""
+    fetch = fetch or fetch_page
+    pages: dict[str, tuple[str | None, str]] = {}      # url -> (text, fetched-at stamp taken AFTER the GET)
+    out = {}
+    for it in items:
+        if it.get("tier") != "web_verified":
+            continue
+        quote = (it.get("quote") or "").strip().strip('"“”')
+        url = it["url"]
+        if quote and url not in pages and len(pages) >= QUOTE_FETCH_CAP:
+            ok_, why, fetched = False, "fetch_budget", None
+        else:
+            if quote and url not in pages:
+                text = fetch(url)
+                pages[url] = (text, _utc_stamp())
+            page, fetched = pages.get(url, (None, None)) if quote else (None, None)
+            ok_, why = quote_check(it["text"], quote, page, entity=it.get("entity"))
+        if ok_:
+            try:                                        # a contact on the page holds this row, never the batch
+                guard("claim", {"source_quote": quote}, op="update")
+            except PIIViolation:
+                ok_, why = False, "quote_has_contact"
+        now = _utc_stamp()
+        cols: dict = {"quote_check": {"result": why, "model": QUOTE_MATCH_MODEL, "at": now}}
+        if ok_:
+            cols.update({"source_quote": quote, "source_quote_fetched_at": fetched, "judge_verdict": "supported",
+                         "judge_model": QUOTE_MATCH_MODEL, "judge_prompt_hash": QUOTE_MATCH_HASH, "judged_at": now})
+        out[it["claim_key"]] = cols
+    return out
+
+
 def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, usage_from: str | None = None,
-                   allow_otr_reviewed: bool = False) -> int:
+                   allow_otr_reviewed: bool = False, fetch=None, quote_check_on: bool = True) -> int:
     """YED-205 — the pre-event write. Spec: docs/archive/notes/yed-205-spec-2026-09-27.md.
     Roster entities -> the research_brief document -> one claim per admitted Evidence Ledger row, linked
     claim_entity(about) to its heading's entity (roster-scoped). No event row is created (ADR-10 D9); if one
@@ -1626,8 +1813,13 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     new = [it for it in items if it["claim_key"] not in have]
     g.stats.bump("claim", "matched", len(items) - len(new))
     fallback = (ev.get("event_date") or "")[:10] or None
+    qc = quote_check_rows(new, fetch) if quote_check_on else {}     # YED-467: one GET per cited URL, before any write
+    for c in qc.values():
+        g.stats.bump("quote_check", c["quote_check"]["result"])
     rows = []
     for it, vec in zip(new, g.embed([it["text"] for it in new]) if new else []):
+        qcol = dict(qc.get(it["claim_key"]) or {})
+        qmeta = qcol.pop("quote_check", None)
         rows.append({k: v for k, v in {
             "source_key": skey, "claim_key": it["claim_key"], "claim_text": it["text"], "claim_type": "fact",
             "locator": {"section": RESEARCH_SECTION, "entity": it["entity"], "source": it["source"], "url": it["url"]},
@@ -1637,7 +1829,9 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
             "embedding": vec, "embedding_model": EMBED_MODEL,
             "metadata": {"phase": "pre_event", "url": it["url"],
                          "notion_event_id": pid_variants(ev["notion_page_id"])[0],
-                         **({"self_hedged": True} if it.get("self_hedged") else {})},
+                         **({"self_hedged": True} if it.get("self_hedged") else {}),
+                         **({"quote_check": qmeta} if qmeta else {})},
+            **qcol,     # YED-467: a passing check's source_quote + fetch time override the researcher's
         }.items() if v is not None})
     if rows:
         g.stats.bump("claim", "created", len(rows))
@@ -1678,6 +1872,10 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
           f"{by_tier.get('email_signal', 0)}) · skipped {sum(skipped.values())} {skipped or ''} · unlinked headings "
           f"{', '.join(sorted(unresolved)) or 'none'} · event row: {'attached' if eid else 'none (pre-event)'}"
           f" · quotes {quoted}/{len(web)} web" + (f" (dropped {drops})" if drops else "")
+          # YED-467: how many new web rows the quote-match passed (approvable) vs held, by reason
+          + (f" · quote-match {qc_n.get('supported', 0)}/{sum(qc_n.values())} pass"
+             + "".join(f" · held {k} {v}" for k, v in sorted(qc_n.items()) if k != "supported")
+             if (qc_n := g.stats.c.get("quote_check", {})) else "")
           + "".join(f" · {k.removeprefix('about_')} {v}" for k, v in sorted(g.stats.c.get("claim_entity", {}).items())
                     if k.startswith("about_") and k != "about_unresolved_heading")
           # the one out-of-roster write, named so Alex can review each one (YED-264 review)
@@ -1712,12 +1910,18 @@ def _utc_stamp() -> str:
 
 
 def judge_hold(r: dict) -> str | None:
-    """YED-451 approval gate: a web_verified claim is approved only with the source-page judge's verdict 'supported'
-    (claim.judge_verdict, 0023). Returns the hold reason (a stats key) or None. Other tiers are not gated here."""
+    """YED-451 approval gate: a web_verified claim is approved only with a PAGE check's verdict 'supported'
+    (claim.judge_verdict, and judge_prompt_hash in PAGE_JUDGES): the 11/19 LLM page judge or quote-match-v1 (YED-467).
+    Returns the hold reason (a stats key) or None. Other tiers are not gated here."""
     if r.get("provenance_tier") != "web_verified":
         return None
     v = r.get("judge_verdict")
-    return None if v == "supported" else ("held_judge_unjudged" if v is None else f"held_judge_{v}")
+    if v is None:
+        return "held_judge_unjudged"
+    if v != "supported":
+        return f"held_judge_{v}"
+    # YED-467: only a PAGE check opens the gate (PAGE_JUDGES); a brief-only verdict in the same column does not.
+    return None if r.get("judge_prompt_hash") in PAGE_JUDGES else "held_judge_not_page"
 
 
 def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool = False) -> str:
@@ -1725,12 +1929,12 @@ def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool
     lane 'research' = the pre-event brief: Evidence Ledger rows (extractor 'parse', URL-backed) by default, v1 prose
     extractions (metadata.extraction 'prose') only with include_prose; v2 (claimify_v2) rows are never approved here.
     Any row with a non-null review_flag is held in every lane. YED-451: on both lanes a web_verified row also needs
-    judge_verdict='supported' (judge_hold); until a stage-time judge writes verdicts, new web_verified rows stay
-    candidate (verify-first) and are counted as held_judge_unjudged. Returns the reviewed_at stamp shared by the
+    judge_verdict='supported' from a page check (judge_hold); stage-research's quote-match-v1 (YED-467) writes it
+    for rows whose quote matches, the rest stay candidate (verify-first), counted by hold reason. Returns the reviewed_at stamp shared by the
     batch, so a batch can be found (and reverted) by it."""
     skey = (research_source_key if lane == "research" else source_key_for_event)(ev["notion_page_id"])
     rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate"
-                 "&select=id,metadata,extractor,review_flag,provenance_tier,judge_verdict")
+                 "&select=id,metadata,extractor,review_flag,provenance_tier,judge_verdict,judge_prompt_hash")
     ids, held_dnp, held_prose, held_flag = [], 0, 0, 0
     for r in rows:
         md = r.get("metadata") or {}
@@ -1866,7 +2070,7 @@ def approve_claim_ids(g: "Graph", ids: list[str], *, include_prose: bool = False
     never email_signal, never prose (extractor 'claude') unless include_prose; rejected/approved rows are untouched.
     Returns the batch's reviewed_at stamp (find or revert the batch by it)."""
     ids = list(dict.fromkeys(ids))
-    rows = _rows_by_id(g, ids, "id,status,provenance_tier,extractor,metadata,judge_verdict,review_flag")
+    rows = _rows_by_id(g, ids, "id,status,provenance_tier,extractor,metadata,judge_verdict,judge_prompt_hash,review_flag")
     ok_ids = []
     for cid in ids:
         r = rows.get(cid)
@@ -2899,12 +3103,12 @@ def _review_verbs_selftest(ok) -> None:
         {"id": "d-rej", "status": "rejected", "reviewed_at": None, "extractor": "parse",
          "provenance_tier": "web_verified", "metadata": {"prior_status": "approved"}},
         {"id": "p-ok", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified",
-         "judge_verdict": "supported", "metadata": {}},
+         "judge_verdict": "supported", "judge_prompt_hash": PAGE_HASH_1119, "metadata": {}},
         {"id": "p-email", "status": "candidate", "extractor": "parse", "provenance_tier": "email_signal", "metadata": {}},
         {"id": "p-dnp", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified",
          "metadata": {"do_not_publish": True}},
         {"id": "p-prose", "status": "candidate", "extractor": "claude", "provenance_tier": "web_verified",
-         "judge_verdict": "supported", "metadata": {}},
+         "judge_verdict": "supported", "judge_prompt_hash": PAGE_HASH_1119, "metadata": {}},
         {"id": "p-unlisted", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified", "metadata": {}},
         {"id": "p-flag", "status": "candidate", "extractor": "claimify_v2", "provenance_tier": "web_verified",
          "judge_verdict": "supported", "review_flag": "needs_review", "metadata": {}},
@@ -2952,7 +3156,8 @@ def _review_verbs_selftest(ok) -> None:
     gg = _FakeGraph()
     gg.t["claim"] = [
         {"id": f"g-{v or 'none'}", "source_key": rk, "status": "candidate", "extractor": "parse",
-         "provenance_tier": "web_verified", "judge_verdict": v, "metadata": {}}
+         "provenance_tier": "web_verified", "judge_verdict": v, "judge_prompt_hash": v and PAGE_HASH_1119,
+         "metadata": {}}
         for v in ("supported", "unsupported", "abstain", None)] + [
         {"id": "g-fh", "source_key": rk, "status": "candidate", "extractor": "parse", "provenance_tier": "first_hand",
          "judge_verdict": None, "metadata": {}}]
@@ -2967,9 +3172,97 @@ def _review_verbs_selftest(ok) -> None:
        gs["g-supported"]["status"] == "approved" and gs["g-fh"]["status"] == "approved"
        and all(gs[i]["status"] == "candidate" for i in ("g-unsupported", "g-abstain", "g-none")))
     ok("judge gate: judge_hold is None only for supported web_verified or a non-web tier",
-       judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported"}) is None
+       judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported",
+                   "judge_prompt_hash": PAGE_HASH_1119}) is None
        and judge_hold({"provenance_tier": "email_signal"}) is None
        and judge_hold({"provenance_tier": "web_verified"}) == "held_judge_unjudged")
+    # YED-467: only a PAGE check opens the gate. A brief-judge verdict (claimify_v2, #363) in the same column is held.
+    ok("judge gate: 'supported' from a brief-only judge (unknown prompt hash) -> held_judge_not_page",
+       judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported", "judge_prompt_hash": "b" * 64})
+       == "held_judge_not_page"
+       and judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported"}) == "held_judge_not_page"
+       and judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported",
+                       "judge_prompt_hash": QUOTE_MATCH_HASH}) is None)
+    page = ("<html><head><script>var q='Soxton raised $9M';</script></head><body><p>Soxton.AI has raised a "
+            "$4 million seed round led by Primary Venture Partners, the company said in August.</p></body></html>")
+    ctext = "Soxton.AI: Raised a $4M seed led by Primary in August 2026"
+    qt = "Soxton.AI has raised a $4 million seed round led by Primary Venture Partners, the company said in August"
+    ok("quote_check: verbatim quote on the page with every figure and name -> supported",
+       quote_check("Soxton.AI: Raised a $4M seed led by Primary in August", qt, _html_to_text(page))
+       == (True, "supported"))
+    ok("quote_check: a figure in the claim but not in the quote (2026) -> figure_not_in_quote",
+       quote_check(ctext, qt, _html_to_text(page)) == (False, "figure_not_in_quote"))
+    ok("quote_check: a name in the claim but not in the quote -> name_not_in_quote",
+       quote_check("Soxton.AI: Raised a $4M seed led by Accel", qt, _html_to_text(page)) == (False, "name_not_in_quote"))
+    ok("quote_check: a quote that is not on the page (script text does not count) -> quote_not_on_page",
+       quote_check("Soxton.AI: Raised $9M", "var q Soxton raised $9M", _html_to_text(page))
+       == (False, "quote_not_on_page"))
+    ok("quote_check: no quote / >25 words / fetch failed -> each named, never supported",
+       quote_check(ctext, "", "x")[1] == "no_quote" and quote_check(ctext, "w " * 26, "x")[1] == "quote_too_long"
+       and quote_check(ctext, qt, None)[1] == "fetch_failed")
+    hostile = "Acme Corp announced new office plans today. Acme did not raise funding this year. the end."
+    ok("quote_check (review D2): an unrelated quote, a 1-word quote and a negation flip are all held",
+       quote_check("Acme: Did not raise funding", "Acme Corp announced new office plans today", hostile)[1]
+       == "low_overlap"
+       and quote_check("Acme: Acme dominates the market", "the", hostile)[1] == "quote_too_short"
+       and quote_check("Acme: Raised new funding this year", "Acme did not raise funding this year", hostile)[1]
+       == "negation_mismatch"
+       and quote_check("Acme: Did not raise funding this year", "Acme did not raise funding this year", hostile)
+       == (True, "supported"))
+    ok("quote_check (review D6): entity names with a colon are split exactly",
+       quote_check("Foo: The Company: raised 9 rounds", "The Company raised 9 funding rounds so far",
+                   "The Company raised 9 funding rounds so far", entity="Foo: The Company") == (True, "supported"))
+    ok("fetch_page (review D1): file://, loopback, private and link-local targets are refused before any GET",
+       all(fetch_page(u) is None for u in ("file:///etc/hosts", "http://127.0.0.1/", "http://localhost:8080/x",
+                                            "http://10.0.0.5/", "http://169.254.169.254/latest/meta-data/",
+                                            "http://[::1]/", "ftp://example.com/x"))
+       and not _public_http_url("http://192.168.1.1/"))
+    ok("quote_check: punctuation, case and curly quotes are normalised",
+       quote_check("Acme: Serves 1,200 customers", "“ACME now serves 1,200 customers.”",
+                   "Today, Acme — now serves 1,200 customers.") == (True, "supported"))
+    qled = ("##### Evidence Ledger — Soxton.AI\n"
+            f"- claim: Raised a $4M seed led by Primary in August | tier: web-verified | source: TC | "
+            f"url: https://tc.example/soxton | date: 2026-08-14 | quote: {qt} | fetched: 2026-11-19T10:00:00Z\n"
+            "- claim: Raised a $4M seed led by Accel | tier: web-verified | source: TC | url: https://tc.example/soxton "
+            f"| date: 2026-08-14 | quote: {qt} | fetched: 2026-11-19T10:00:00Z\n"
+            "- claim: Sells contract review to legal teams | tier: web-verified | source: site | "
+            "url: https://soxton.example/ | date: 2026-09-01\n")
+    items, _ = parse_ledger(qled)
+    ok("parse_ledger: the `quote:` field is parsed and is not part of the claim text",
+       items[0]["quote"] == qt and "quote" not in items[0]["text"] and items[2]["quote"] is None)
+    calls = []
+    qg = _FakeGraph()
+    qpid = "4eed3699c2db816a828ec6410801d5de"
+    rc = stage_research(qg, qled, {"event": {"notion_page_id": qpid, "title": "Q", "event_date": "2026-11-21"},
+                                   "entities": []}, brief_ref=None,
+                        fetch=lambda u: calls.append(u) or _html_to_text(page))
+    rows = {r["claim_text"].split(": ", 1)[1][:20]: r for r in qg.t["claim"]}
+    good, bad, noq = rows["Raised a $4M seed le"], rows["Raised a $4M seed le"], rows["Sells contract revie"]
+    good = next(r for r in qg.t["claim"] if r["claim_text"].endswith("in August"))
+    bad = next(r for r in qg.t["claim"] if r["claim_text"].endswith("Accel"))
+    ok("stage-research: quote-match pass writes the judge record + source_quote; one GET per URL; no-quote rows "
+       "are never fetched",
+       rc == 0 and calls == ["https://tc.example/soxton"] and good["judge_verdict"] == "supported"
+       and good["judge_model"] == QUOTE_MATCH_MODEL and good["judge_prompt_hash"] == QUOTE_MATCH_HASH
+       and good["source_quote"] == qt and good["source_quote_fetched_at"] == good["judged_at"]
+       and good["status"] == "candidate")
+    ok("stage-research: a failed check writes NO verdict (the researcher's quote + fetched still ride, #406); "
+       "a passing check's own fetch time overrides the researcher's; the reason sits in metadata",
+       "judge_verdict" not in bad and bad.get("source_quote_fetched_at") == "2026-11-19T10:00:00Z"
+       and good["source_quote_fetched_at"] != "2026-11-19T10:00:00Z"
+       and bad["metadata"]["quote_check"]["result"] == "name_not_in_quote"
+       and noq["metadata"]["quote_check"]["result"] == "no_quote"
+       and qg.stats.c["quote_check"] == {"supported": 1, "name_not_in_quote": 1, "no_quote": 1})
+    for r in (good, bad, noq):
+        guard("claim", r)                            # the real spine_client guard admits every staged row
+    approve_claims(qg, {"notion_page_id": qpid}, lane="research")
+    ok("stage-research -> approve-claims --lane research: only the quote-matched row is approved",
+       good["status"] == "approved" and bad["status"] == "candidate" and noq["status"] == "candidate")
+    qg2 = _FakeGraph()
+    stage_research(qg2, qled, {"event": {"notion_page_id": qpid, "title": "Q"}, "entities": []}, brief_ref=None,
+                   fetch=lambda u: (_ for _ in ()).throw(AssertionError("fetched")), quote_check_on=False)
+    ok("stage-research --no-quote-check: no fetch, no verdict, rows held unjudged",
+       all("judge_verdict" not in r and "quote_check" not in r["metadata"] for r in qg2.t["claim"]))
     import tempfile
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
         json.dump({"note": "x", "ids": [{"id": "a", "prior_status": "approved"}, {"id": "b"}]}, fh)
@@ -4413,6 +4706,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--replace", action="store_true",
                     help="(stage-prose) a different extraction is already staged: retire its candidate rows "
                          "(status rejected, metadata.retired) and stage this one")
+    ap.add_argument("--no-quote-check", action="store_true",
+                    help="(stage-research) skip the YED-467 page fetch + quote-match: rows stage unjudged (held)")
     ap.add_argument("--lane", choices=["A", "research"], default="A",
                     help="(approve-claims, YED-407) A = post-event brief claims; research = pre-event brief claims")
     ap.add_argument("--include-prose", action="store_true",
@@ -4583,7 +4878,8 @@ def main(argv: list[str]) -> int:
         if not a.evidence:
             ap.error("stage-research needs --evidence")
         rc = stage_research(g, open(a.evidence, encoding="utf-8").read(), m, brief_ref=a.brief_ref,
-                            usage_from=a.usage_from, allow_otr_reviewed=a.allow_otr_reviewed)
+                            usage_from=a.usage_from, allow_otr_reviewed=a.allow_otr_reviewed,
+                            quote_check_on=not a.no_quote_check)
     elif a.verb == "stage-prose":
         if not a.checked:
             ap.error("stage-prose needs --checked")
