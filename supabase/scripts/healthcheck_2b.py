@@ -23,7 +23,8 @@ Five layers, all read-only:
      a FLAG, >= 14 is a FAIL — matching the contract pinned in 0016); an ACTIVE lane in
      lane_registry with no ledger rows FAILs outright (inactive lanes are not alarmed — 0016's
      contract; a producer's migration flips active = true); and §3.3 rule 4's coverage check flags a
-     lane whose latest 2 runs wrote nothing (items_written=0), failing at 3. Until 0016 exists
+     lane whose latest 2 runs wrote nothing (items_written=0), failing at 3 (a DRY_RUN_LANES lane is
+     judged on items_seen instead — its writes are 0 by design, YED-423). Until 0016 exists
      these halves SKIP (non-fatal). Beside them, the role_posted stall check FAILs when
      public.event has no role_posted row in the last 14 days (the L10 lesson: 183 role_posted
      rows, none since 2026-09-23, nothing alerted) and SKIPs when the table has no role_posted
@@ -68,6 +69,14 @@ FLAG_DAYS, FAIL_DAYS = 7, 14
 ROLE_POSTED = "role_posted"
 # Migration 0016 owns the lane_run DDL; the fixture pins the column shape this layer expects.
 LANE_RUN_COLUMNS = ("lane", "started_at", "items_seen", "items_written", "items_refused", "credits_spent")
+# YED-423: lanes whose event writes are dry-run BY DESIGN. Their lane_run rows record
+# items_written=0 on every run, so rule 4 could never pass on items_written; coverage for these
+# lanes is judged on items_seen instead (a run that saw nothing is still the dead-lane signal).
+# lane_run has no column marking a dry-run row, so this set IS the marker: remove a lane the day
+# its producer writes for real (the check WARNs once any recent row shows items_written > 0).
+# research_frontier: hf_frontier.py writes items_written=0 unless the EVENT_WRITES_LIVE repo variable is
+# "true"; it is unset (checked 2026-11-20, prod lane_run: written=[0,0], seen=[217,256]).
+DRY_RUN_LANES = frozenset({"hiring_pulse", "research_frontier"})
 FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "fixtures", "lane_run_freshness.json")
 
 # LIVE schema targets (post-swap)
@@ -219,6 +228,16 @@ def read_sql_output(as_of_str):
     return trend, pairs
 
 
+def kind_isolation_sql(as_of_str):
+    """YED-423: scoped to the LATEST snapshot. topic_trend keeps every nightly snapshot, and a
+    snapshot computed before events were relabelled away from 'attended' legitimately exceeds
+    today's support — only the current snapshot must agree with the current event kinds."""
+    return (f"select count(*) from {TT} tt where tt.window_type='all_time' and tt.as_of_date='{as_of_str}' "
+            f"and tt.event_count > (select count(distinct e.id) from {EE} ee join {EV} e on e.id=ee.event_id "
+            f"join {TOPIC} t on t.id=ee.entity_id where ee.entity_type='topic' and ee.role='tagged_topic' "
+            "and e.kind='attended' and t.cluster_id=tt.subject_id);")
+
+
 def invariants(as_of_str):
     checks = {
         "pair canonical order (a<b, no self-pair)":
@@ -234,10 +253,8 @@ def invariants(as_of_str):
             f"select count(*) from {TT} tt where tt.window_type='all_time' and not exists "
             f"(select 1 from {EE} ee join {EV} e on e.id=ee.event_id join {TOPIC} t on t.id=ee.entity_id "
             "where ee.entity_type='topic' and ee.role='tagged_topic' and e.kind='attended' and t.cluster_id=tt.subject_id);",
-        "kind isolation: no trend row exceeds its attended-event support":
-            f"select count(*) from {TT} tt where tt.window_type='all_time' and tt.event_count > "
-            f"(select count(distinct e.id) from {EE} ee join {EV} e on e.id=ee.event_id join {TOPIC} t on t.id=ee.entity_id "
-            "where ee.entity_type='topic' and ee.role='tagged_topic' and e.kind='attended' and t.cluster_id=tt.subject_id);",
+        "kind isolation: no trend row (latest snapshot) exceeds its attended-event support":
+            kind_isolation_sql(as_of_str),
         "intersection_score == cooc + 2*bridge + 2*novelty":
             f"select count(*) from {TPM} where intersection_score <> "
             "cooccurrence_event_count + 2*bridge_person_count + (case when is_new_pair then 2 else 0 end);",
@@ -289,6 +306,12 @@ def classify_coverage(items_written):
     return "ok" if zeros < 2 else "flag" if zeros == 2 else "fail"
 
 
+def coverage_series(lane, written, seen):
+    """Pure (YED-423): the newest-first series rule 4 judges — items_seen for a DRY_RUN_LANES lane
+    (its items_written is 0 by design), items_written for every live lane."""
+    return (seen, "items_seen") if lane in DRY_RUN_LANES else (written, "items_written")
+
+
 def never_ran(registered, last_runs):
     """Pure: registered lanes with no ledger rows (the 'never ran -> FAIL' signal). None registry -> []."""
     return sorted(set(registered or []) - set(last_runs or {}))
@@ -314,13 +337,17 @@ def _pg_int_array(s):
     return [int(w) for w in (s or "{}").strip().strip("{}").split(",") if w != ""]
 
 
-def lane_zero_write_runs() -> dict[str, list[int]]:
-    """Newest-first items_written for each lane's last 3 lane_run rows (empty pre-0016)."""
+LANE_RECENT_RUNS_SQL = """select lane, array_agg(items_written order by rn), array_agg(items_seen order by rn) from (
+        select lane, items_written, items_seen, row_number() over (partition by lane order by started_at desc) rn
+        from public.lane_run) t where rn <= 3 group by lane;"""
+
+
+def lane_recent_runs() -> dict[str, tuple[list[int], list[int]]]:
+    """Newest-first (items_written, items_seen) for each lane's last 3 lane_run rows (empty pre-0016).
+    rn = 1 is the newest row, so the arrays aggregate `order by rn` (ascending = newest first)."""
     if not q("select to_regclass('public.lane_run') is not null;")[0][0] == "t":
         return {}
-    return {lane: _pg_int_array(ws) for lane, ws in q("""select lane, array_agg(items_written order by rn desc) from (
-        select lane, items_written, row_number() over (partition by lane order by started_at desc) rn
-        from public.lane_run) t where rn <= 3 group by lane;""")}
+    return {lane: (_pg_int_array(ws), _pg_int_array(ss)) for lane, ws, ss in q(LANE_RECENT_RUNS_SQL)}
 
 
 def lane_run_last_runs() -> dict[str, dt.date] | None:
@@ -354,21 +381,27 @@ def lane_freshness(today) -> list[str]:
         if registry is None:
             print("  [SKIP] lane_run ledger exists but is empty (no lane has run yet)")
         return fails
-    zero_runs = lane_zero_write_runs()
+    recent = lane_recent_runs()
     for lane in sorted(last_runs):
         status = classify_freshness(last_runs[lane], today)
-        cov = classify_coverage(zero_runs.get(lane, []))
-        cov_note = (f"; coverage {cov}: last {len(zero_runs.get(lane, []))} run(s), "
-                    f"items_written={zero_runs.get(lane, [])}" if zero_runs.get(lane) is not None else "")
+        written, seen = recent.get(lane, ([], []))
+        series, metric = coverage_series(lane, written, seen)
+        cov = classify_coverage(series)
+        dry = " (dry-run lane)" if lane in DRY_RUN_LANES else ""
+        cov_note = (f"; coverage{dry} {cov}: last {len(series)} run(s), {metric}={series}"
+                    if lane in recent else "")
         stale = "?" if last_runs[lane] is None else str((today - last_runs[lane]).days)
         print(f"  [{'FAIL' if status == 'fail' else 'WARN' if status == 'flag' else 'PASS'}] "
               f"lane {lane}: last run {last_runs[lane] or 'never'} ({stale}d stale{cov_note})")
         if status == "fail":
             fails.append(f"lane {lane} silent >={FAIL_DAYS}d")
         if cov == "fail":
-            fails.append(f"lane {lane} items_written=0 for 3 consecutive runs")
+            fails.append(f"lane {lane} {metric}=0 for 3 consecutive runs")
         elif cov == "flag":
-            print(f"  [WARN] lane {lane}: items_written=0 for 2 consecutive runs (flag, non-fatal)")
+            print(f"  [WARN] lane {lane}: {metric}=0 for 2 consecutive runs (flag, non-fatal)")
+        if dry and any(written):
+            print(f"  [WARN] lane {lane}: in DRY_RUN_LANES but now writes (items_written={written}) — "
+                  "remove it so coverage judges items_written again")
     return fails
 
 
@@ -566,6 +599,65 @@ def _selftest() -> int:
     # Coverage edges: consecutive NEWEST-first zero-write runs — 1 ok, 2 flag, 3 fail, none ok.
     for hist, want in (((5, 5, 5), "ok"), ((0, 5, 5), "ok"), ((0, 0, 5), "flag"), ((0, 0, 0), "fail"), ((), "ok")):
         ck(f"coverage {list(hist)} -> {want}", classify_coverage(list(hist)) == want)
+
+    # YED-423 (1): coverage on dry-run lanes. Drive lane_freshness end to end with its DB readers
+    # stubbed, so the wiring (series pick, fail text, staleness independence) is what's tested.
+    import contextlib
+    import io
+    g = globals()
+    saved = {k: g[k] for k in ("lane_run_last_runs", "registered_lanes", "lane_recent_runs")}
+
+    def run_lanes(last, recent):
+        g["lane_run_last_runs"], g["registered_lanes"] = (lambda: last), (lambda: sorted(last))
+        g["lane_recent_runs"] = lambda: recent
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as buf:
+                return lane_freshness(as_of), buf.getvalue()
+        finally:
+            g.update(saved)
+
+    fresh = as_of - dt.timedelta(days=1)
+    f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [41, 40, 39])})
+    ck("dry-run lane, 3 zero-write runs, items_seen > 0 -> coverage passes", f == [])
+    f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [0, 0, 0])})
+    ck("dry-run lane that SAW nothing 3 runs -> still fails (on items_seen)",
+       f == ["lane hiring_pulse items_seen=0 for 3 consecutive runs"])
+    f, _ = run_lanes({"company_signals": fresh}, {"company_signals": ([0, 0, 0], [12, 9, 15])})
+    ck("live lane, 3 zero-write runs -> still fails on items_written",
+       f == ["lane company_signals items_written=0 for 3 consecutive runs"])
+    f, _ = run_lanes({"hiring_pulse": as_of - dt.timedelta(days=FAIL_DAYS + 6)},
+                     {"hiring_pulse": ([0, 0, 0], [41, 40, 39])})
+    ck("stale dry-run lane -> staleness still fails (DRY_RUN_LANES never mutes it)",
+       f == [f"lane hiring_pulse silent >={FAIL_DAYS}d"])
+    _, out = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([3, 0, 0], [41, 40, 39])})
+    ck("dry-run lane that starts writing -> WARN to remove it from DRY_RUN_LANES",
+       "remove it so coverage judges items_written" in out)
+    ck("lane_recent_runs aggregates newest-first (rn ascending; rn=1 is the newest row)",
+       LANE_RECENT_RUNS_SQL.count("order by rn)") == 2 and "order by rn desc" not in LANE_RECENT_RUNS_SQL)
+
+    # YED-423 (2): kind isolation runs the REAL SQL string against sqlite with public +
+    # topic_intelligence attached as schemas. Cluster c1 has 2 attended events today (e3 was
+    # relabelled 'researched' after the 11-13 snapshot, which counted 3).
+    import sqlite3
+    db = sqlite3.connect(":memory:")
+    for schema in ("public", "topic_intelligence"):
+        db.execute(f"attach database ':memory:' as {schema}")
+    db.executescript("""
+        create table public.event (id text, kind text);
+        create table public.event_entity (event_id text, entity_id text, entity_type text, role text);
+        create table public.topic (id text, cluster_id text);
+        create table topic_intelligence.topic_trend (subject_id text, window_type text, as_of_date text, event_count int);
+        insert into public.event values ('e1','attended'), ('e2','attended'), ('e3','researched');
+        insert into public.topic values ('t1','c1');
+        insert into public.event_entity values ('e1','t1','topic','tagged_topic'),
+            ('e2','t1','topic','tagged_topic'), ('e3','t1','topic','tagged_topic');
+        insert into topic_intelligence.topic_trend values ('c1','all_time','2026-11-13',3),
+            ('c1','all_time','2026-11-19',2);""")
+    kis = lambda d: db.execute(kind_isolation_sql(d)).fetchone()[0]  # noqa: E731
+    ck("kind isolation: the 11-13 snapshot does exceed today's support (the old false FAIL)", kis("2026-11-13") == 1)
+    ck("kind isolation: old-snapshot violations ignored when the latest snapshot is clean", kis("2026-11-19") == 0)
+    db.execute("insert into topic_intelligence.topic_trend values ('c1','all_time','2026-11-20',3)")
+    ck("kind isolation: a violation in the latest snapshot still fails", kis("2026-11-20") == 1)
 
     print(f"healthcheck_2b --selftest: {ok}/{n} passed")
     return 0 if ok == n else 1
