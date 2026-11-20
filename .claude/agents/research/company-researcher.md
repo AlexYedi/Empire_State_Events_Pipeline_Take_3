@@ -56,12 +56,13 @@ For each company that gets research:
 
 ```
 ##### Evidence Ledger — [Company Name]
-- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD]
-- claim: [thesis/positioning claim] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [≤15 words] | tier: web-verified | source: [publication/site] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
+- claim: [thesis/positioning claim] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
 - claim: [carried from the pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — you grounded it in a current web source this run. **URL required.**
+- `quote:` (**required on every `web-verified` row**, YED-467) — copy ≤25 words **verbatim** from the page at `url`, and pick the span that carries every figure, date and name in your claim. At staging, a script fetches the URL and checks that the quote is on the page and that the claim's figures and names are in the quote. A row that fails stays an unapproved candidate, which in practice means it never reaches the graph. So never paraphrase in `quote:`, and if no span on the page carries the claim, rewrite the claim to match the page or drop the row. Leave contact details (emails, phone numbers) out of quotes.
 - `tier: notion-prior` — carried from the injected pack and NOT re-grounded this run. It may inform the Deep Read only as flagged prior context, never as fact (Rule 12). Prefer to re-ground it and promote it to `web-verified`.
 - `tier: email-signal` — surfaced from Gmail/newsletter; a **lead**, never corroboration. Treat as a pointer to a web-verified fact.
 - **Common-knowledge background** (what a container is, what a Series A means) does NOT need a ledger row — define-freely, cite-nothing. Reserve rows for the specific/recent/contestable.

@@ -45,12 +45,13 @@ You receive a list of Topic entities with:
 
 ```
 ##### Evidence Ledger — [Topic Name]
-- claim: [≤15 words — milestone/metric/launch] | tier: web-verified | source: [publication/paper] | url: [full URL] | date: [YYYY-MM-DD]
-- claim: [a named side of the live debate] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [≤15 words — milestone/metric/launch] | tier: web-verified | source: [publication/paper] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
+- claim: [a named side of the live debate] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words copied verbatim from that page]
 - claim: [carried from pack, not re-grounded] | tier: notion-prior | source: [prior trend note] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — grounded in a current web source this run. **URL required.**
+- `quote:` (**required on every `web-verified` row**, YED-467) — copy ≤25 words **verbatim** from the page at `url`, and pick the span that carries every figure, date and name in your claim. At staging, a script fetches the URL and checks that the quote is on the page and that the claim's figures and names are in the quote. A row that fails stays an unapproved candidate, which in practice means it never reaches the graph. So never paraphrase in `quote:`, and if no span on the page carries the claim, rewrite the claim to match the page or drop the row. Leave contact details (emails, phone numbers) out of quotes.
 - `tier: notion-prior` — carried from the injected pack, NOT re-grounded (most prior Current Events will be STALE by design). Informs the Deep Read only as flagged prior context, never as fact. Prefer to re-ground and promote.
 - `tier: email-signal` — from a newsletter; a **lead** only (one syndicated PR item is still one source), never corroboration.
 - **Common-knowledge background** (what RAG is, what a transformer is) needs no row — define freely, cite nothing. Reserve rows for the specific/recent/contestable.
