@@ -6,10 +6,21 @@ is the `factory-gate` workflow, which runs the shared core from `AlexYedi/alex-f
 | Tier | What it covers | Who approves |
 |---|---|---|
 | T0 | Text in `docs/adr/*.md`, `docs/specs/*.md`, `docs/proposals/*.md`, `docs/bakeoff/**`, `docs/history.md` | Nobody: merges once checks pass |
-| T1 | `.claude/scripts/**`, `.claude/skills/**`, `.claude/commands/**`, `.claude/references/*.md` | A model review, then the factory App |
+| T1 | `.claude/scripts/**`, `.claude/skills/**`, `.claude/commands/**`, `.claude/references/*.md` | A model review; merges once it passes |
 | T2 | Everything else, and any guard, gate, PII, writer, spine, SQL or `.github` change | Alex |
 
+The merge decision is the `factory-verdict` check, posted by the factory App. No approval count
+is required, so a code owner's "Request changes" blocks a PR of any tier until that owner approves.
+
 Rules for agents opening PRs:
+
+- Work in a session started with `empire-agent`, so commits and PRs come from `alexyedi-agent` and
+  Alex can approve them. GitHub never lets an author approve their own PR.
+- The agent account can't push `.github/workflows/**`, by design. For a workflow change, ask Alex to
+  push it; the PR can still be opened as the agent.
+- When a PR falls behind `main`, run `gh pr update-branch <n>`. An unchanged diff keeps its approval.
+- `factory-tests` runs every `--selftest` script, every `.claude/scripts/test_*.py` and every
+  skill fixture. Run the ones you touched before pushing.
 
 - Keep a PR to one tier when you can. A mixed PR takes the highest tier it touches.
 - A new script or skill is T2 even inside a T1 folder. Land it first, then iterate at T1.

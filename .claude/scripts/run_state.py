@@ -33,7 +33,7 @@ STEPS = [
     ("resolve", "1"), ("transcript", "2"), ("anchor", "3"), ("condition", "3.5"), ("enrich", "3.6"),
     ("synthesize", "3.7"), ("notion-kg", "3.8a"), ("graph-event", "3.8b"), ("claims", "3.8c"),
     ("themes", "3.8d"), ("route", "3.8e"), ("steer", "3.9"), ("draft", "4"), ("output-check", "4.5"), ("notion-write", "5"),
-    ("hubspot", "5.5"), ("deep-dives", "5.6"), ("close-check", "6.5"),
+    ("hubspot", "5.5"), ("deep-dives", "5.6"), ("carousel-pr", "5.7"), ("close-check", "6.5"),
 ]
 STEP_IDS = [s for s, _ in STEPS]
 STEP_NUM = dict(STEPS)
