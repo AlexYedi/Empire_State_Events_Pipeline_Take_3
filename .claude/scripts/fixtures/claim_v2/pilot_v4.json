@@ -1,0 +1,122 @@
+{
+ "_note": "Composite packet: 6 paragraphs from 3 public-source research briefs (judge pilot v4 set W003, W082, W109), original para_idx kept. Real v4 extractor output, unchanged. PII-scanned (pii_normalize) before commit.",
+ "packet": {
+  "schema": "prose-packet/1",
+  "source_key": "fixture-pilot-v4",
+  "event": {
+   "notion_page_id": "00000000-0000-4000-8000-0000000f0f0f",
+   "title": "Pilot v4 composite (fixture)",
+   "event_date": "2026-04-13"
+  },
+  "roster": [],
+  "paragraphs": [
+   {
+    "idx": 0,
+    "section": "Topics",
+    "heading": "Agentic Marketing",
+    "text": "Gartner's January 15, 2026 \"60/17\" benchmark established the event's thesis: 60% of brands will use agentic AI for 1:1 by 2028 vs. 17% deployed today. A 45-day cluster of agent-discoverability launches followed (Mar 24–Apr 29, 2026): Braze BrazeAI Operator + Agent Console (Apr 23), Microsoft+Publicis platform (Apr 8), Klaviyo Composer (Mar 24), HubSpot AEO (Apr 14), Adobe+Semrush GEO/ASO reframe (Apr 28). HBR \"Redesigning Your Marketing Organization for the Agentic Age\" (May 8, 2026): siloed org is the constraint; fix = machine-readable \"brand code\" + specialized agents; marketers become systems thinkers. McKinsey: less than 10% of CMOs have end-to-end agentic workflows generating measurable value despite 90% testing; agentic could accelerate campaign creation 10-15x, power 2/3 of marketing activities. Gartner counter: 40%+ agentic AI projects canceled by end 2027; ~130 vendors genuinely agentic; 1/3 of companies harm CX deploying AI prematurely in 2026.",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   },
+   {
+    "idx": 14,
+    "section": "Companies",
+    "heading": null,
+    "text": "RevGenius (host) — founded 2020; 40K→60K (self-reported); launched an 'AI-led GTM' channel Aug 2026. Headwind: thin per-member monetization.",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   },
+   {
+    "idx": 33,
+    "section": "Topic Foundations: What You Need to Know Before Reading the Brief",
+    "heading": "QKD & PQC — The Two Approaches to Quantum-Safe Security",
+    "text": "NIST finalized three standards (August 2024):",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   },
+   {
+    "idx": 34,
+    "section": "Topic Foundations: What You Need to Know Before Reading the Brief",
+    "heading": "QKD & PQC — The Two Approaches to Quantum-Safe Security",
+    "text": "FIPS 203 (ML-KEM): Module-Lattice-based Key Encapsulation Mechanism — for key exchange. \"Lattice-based\" means the math involves geometric structures in high-dimensional space that are hard for any computer to reverse",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   },
+   {
+    "idx": 35,
+    "section": "Topic Foundations: What You Need to Know Before Reading the Brief",
+    "heading": "QKD & PQC — The Two Approaches to Quantum-Safe Security",
+    "text": "FIPS 204 (ML-DSA): Module-Lattice-based Digital Signature Algorithm — for proving a message came from who it claims and wasn't tampered with",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   },
+   {
+    "idx": 36,
+    "section": "Topic Foundations: What You Need to Know Before Reading the Brief",
+    "heading": "QKD & PQC — The Two Approaches to Quantum-Safe Security",
+    "text": "FIPS 205 (SLH-DSA): Stateless Hash-Based Digital Signature Algorithm — backup standard using different math, so if one approach is broken, the other likely holds",
+    "urls": [],
+    "entity_hint": null,
+    "entity_type_hint": null
+   }
+  ]
+ },
+ "claims": [
+  {
+   "text": "NIST finalized three post-quantum cryptography standards in August 2024: FIPS 203 (ML-KEM), FIPS 204 (ML-DSA) and FIPS 205 (SLH-DSA).",
+   "evidence": [
+    {
+     "para_idx": 33,
+     "quote": "NIST finalized three standards (August 2024):"
+    },
+    {
+     "para_idx": 34,
+     "quote": "FIPS 203 (ML-KEM)"
+    },
+    {
+     "para_idx": 35,
+     "quote": "FIPS 204 (ML-DSA)"
+    },
+    {
+     "para_idx": 36,
+     "quote": "FIPS 205 (SLH-DSA)"
+    }
+   ],
+   "entity": "NIST",
+   "claim_type": "company_fact",
+   "as_of": "2024-08",
+   "time_sensitive": false
+  },
+  {
+   "text": "McKinsey says less than 10% of CMOs have end-to-end agentic workflows generating measurable value, despite 90% testing.",
+   "evidence": [
+    {
+     "para_idx": 0,
+     "quote": "McKinsey: less than 10% of CMOs have end-to-end agentic workflows generating measurable value despite 90% testing"
+    }
+   ],
+   "entity": "Agentic Marketing",
+   "claim_type": "metric",
+   "as_of": null,
+   "time_sensitive": true
+  },
+  {
+   "text": "RevGenius's community grew from 40K to 60K, self-reported.",
+   "evidence": [
+    {
+     "para_idx": 14,
+     "quote": "40K→60K (self-reported)"
+    }
+   ],
+   "entity": "RevGenius",
+   "claim_type": "metric",
+   "as_of": null,
+   "time_sensitive": true
+  }
+ ]
+}
