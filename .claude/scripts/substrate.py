@@ -1647,10 +1647,12 @@ def judge_hold(r: dict) -> str | None:
 
 
 def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool = False) -> str:
-    """Inherited approval for one event's candidate claims. lane 'A' = the post-event brief (unchanged behaviour);
+    """Inherited approval for one event's candidate claims. lane 'A' = the post-event brief;
     lane 'research' = the pre-event brief: Evidence Ledger rows (extractor 'parse', URL-backed) by default, prose
     extractions (extractor 'claude') only with include_prose. Returns the reviewed_at stamp shared by the batch, so a
-    batch can be found (and reverted) by it."""
+    batch can be found (and reverted) by it. YED-451: on both lanes a web_verified row also needs
+    judge_verdict='supported' (judge_hold); until a stage-time judge writes verdicts, new web_verified rows stay
+    candidate (verify-first) and are counted as held_judge_unjudged."""
     skey = (research_source_key if lane == "research" else source_key_for_event)(ev["notion_page_id"])
     rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate"
                  "&select=id,metadata,extractor,provenance_tier,judge_verdict")

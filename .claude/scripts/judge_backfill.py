@@ -17,9 +17,9 @@ Verdict mapping (the 11/19 run's labels -> the 0023 vocabulary):
 Write path: substrate.Graph.patch -> spine_client guard (ADR-9). This file holds no socket code and no REST paths.
 Safety:
   * Dry run by default; --apply is needed to write.
-  * Idempotent: a row that already has a judge_verdict is skipped unless --overwrite. A later judge is never clobbered.
-  * Refuses a judge model that is not given, or a prompt hash that is not 64 hex characters. If the prompt file sits
-    next to the hash file, the hash must match its sha256.
+  * Idempotent: a row with any part of a judge record is skipped unless --overwrite. A later judge is never clobbered.
+  * Refuses a judge model that is not given, a prompt hash that is not 64 hex characters, a hash file whose named
+    prompt file is missing or differs from it, and a judged_at that is not ISO, all before any write.
   * Claim ids not found on prod are counted and reported, never created.
 
 Usage (from the repo root):
@@ -45,6 +45,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 VERDICT_MAP = {"SUPPORTED": "supported", "UNSUPPORTED": "unsupported", "MISATTRIBUTED": "unsupported",
                "UNREADABLE": "abstain"}
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+JUDGE_COLS = ("judge_verdict", "judge_model", "judge_prompt_hash", "judged_at")
 CHUNK = 50
 
 
@@ -69,10 +70,14 @@ def load_hash(hash_file: str) -> str:
     h = line[0].lower() if line else ""
     if not HEX64.match(h):
         raise SystemExit(f"judge_backfill: {hash_file} does not hold a 64-hex sha256")
-    if len(line) > 1:
-        prompt = os.path.join(os.path.dirname(hash_file), line[1])
-        if os.path.exists(prompt) and hashlib.sha256(open(prompt, "rb").read()).hexdigest() != h:
-            raise SystemExit(f"judge_backfill: sha256({line[1]}) != {hash_file}; the prompt changed since the run")
+    if len(line) < 2:
+        raise SystemExit(f"judge_backfill: {hash_file} names no prompt file; the hash cannot be re-verified")
+    name = line[1].lstrip("*")                                   # sha256sum binary-mode marker
+    prompt = os.path.join(os.path.dirname(hash_file), name)
+    if not os.path.exists(prompt):
+        raise SystemExit(f"judge_backfill: prompt file {name} is missing beside {hash_file}; refusing an unverified hash")
+    if hashlib.sha256(open(prompt, "rb").read()).hexdigest() != h:
+        raise SystemExit(f"judge_backfill: sha256({name}) != {hash_file}; the prompt changed since the run")
     return h
 
 
@@ -83,16 +88,20 @@ def backfill(g, verdicts: dict[str, str], *, model: str, prompt_hash: str, judge
         raise SystemExit("judge_backfill: --judge-model is required (no default: it must be the model that judged)")
     if not HEX64.match(prompt_hash or ""):
         raise SystemExit("judge_backfill: prompt hash must be 64 lowercase hex characters")
+    try:                                                         # fail before any write, not mid-run at the DB
+        dt.datetime.fromisoformat(judged_at.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        raise SystemExit(f"judge_backfill: --judged-at {judged_at!r} is not an ISO timestamp") from None
     import substrate
     c = collections.Counter()
     ids = list(verdicts)
-    current = substrate._rows_by_id(g, ids, "id,judge_verdict")          # read before any write
+    current = substrate._rows_by_id(g, ids, "id,judge_verdict,judge_model,judge_prompt_hash,judged_at")  # pre-write
     todo: dict[str, list[str]] = collections.defaultdict(list)
     for cid in ids:
         r = current.get(cid)
         if r is None:
             c["not_found"] += 1
-        elif r.get("judge_verdict") is not None and not overwrite:
+        elif any(r.get(k) is not None for k in JUDGE_COLS) and not overwrite:   # any part of the record = judged
             c["already_judged"] += 1
         else:
             todo[verdicts[cid]].append(cid)
@@ -106,7 +115,8 @@ def backfill(g, verdicts: dict[str, str], *, model: str, prompt_hash: str, judge
 
 
 def _default_judged_at(state_path: str) -> str:
-    """When the judge run's merged state was last written (UTC), as the judged_at for the whole batch."""
+    """Fallback judged_at: when the run's merged state was last written (UTC). This is the file's mtime, so it is
+    printed as such; pass --judged-at to record the run's own time instead."""
     t = dt.datetime.fromtimestamp(os.path.getmtime(state_path), tz=dt.timezone.utc)
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -144,6 +154,28 @@ def selftest() -> bool:
             ok(f"refuses {label}", False)
         except SystemExit:
             ok(f"refuses {label}", True)
+    try:
+        backfill(fg, {"a": "supported"}, model="m", prompt_hash=h, judged_at="yesterday")
+        ok("refuses a non-ISO judged_at before any write", False)
+    except SystemExit:
+        ok("refuses a non-ISO judged_at before any write", True)
+    fg.t["claim"].append({"id": "half", "status": "approved", "metadata": {}, "judge_verdict": None,
+                          "judge_model": "m-0"})
+    c2 = backfill(fg, {"half": "supported"}, model="m-1", prompt_hash=h, judged_at="2026-11-19T21:06:00Z")
+    ok("any part of an existing judge record counts as judged (skipped)",
+       c2["already_judged"] == 1 and fg.t["claim"][-1]["judge_verdict"] is None)
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        hf = os.path.join(td, "p.sha256")
+        open(hf, "w").write(h + "  p.md\n")
+        try:
+            load_hash(hf)
+            ok("refuses a hash whose named prompt file is missing", False)
+        except SystemExit:
+            ok("refuses a hash whose named prompt file is missing", True)
+        open(os.path.join(td, "p.md"), "w").write("x")
+        open(hf, "w").write(hashlib.sha256(b"x").hexdigest() + " *p.md\n")
+        ok("accepts a matching hash, sha256sum binary marker included", load_hash(hf) == hashlib.sha256(b"x").hexdigest())
     ok("label mapping: MISATTRIBUTED -> unsupported, UNREADABLE -> abstain",
        VERDICT_MAP["MISATTRIBUTED"] == "unsupported" and VERDICT_MAP["UNREADABLE"] == "abstain")
     try:
@@ -174,6 +206,8 @@ def main(argv=None) -> int:
     verdicts = load_verdicts(a.state)
     h = load_hash(a.hash_file)
     judged_at = a.judged_at or _default_judged_at(a.state)
+    if not a.judged_at:
+        print(f"judged_at not given: using the state file's mtime {judged_at} (pass --judged-at to override)")
     g = substrate.Graph(not a.apply, substrate.Stats())
     c = backfill(g, verdicts, model=a.judge_model, prompt_hash=h, judged_at=judged_at, overwrite=a.overwrite)
     tag = "" if a.apply else "DRY-RUN "
