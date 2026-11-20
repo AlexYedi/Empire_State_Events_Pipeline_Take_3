@@ -107,8 +107,9 @@ FOR EACH EVENT (set the table — tight):
   - **Learn-More Set: 3–5 curated resources** (papers, company announcements, speaker writing, publications on the topics/tech/companies/people) → first comment; mandatory every post; **≤1,250 chars per comment** (Learn-More first, sources as a reply; see `content-style-guide.md` → The Learn-More Set)
 
 EVENTS PENDING (if any):
-  - Brief mention of events Alex has applied to / hoping to attend
-  - Same table-setting treatment, lighter touch
+  - At least one line for EVERY Pending event (applied / waiting on approval). Tag the event
+    team where you can: tagging Pending events here has gotten Alex approved for them (2026-11-09).
+  - Same table-setting treatment, lighter touch. Never state exact attendance.
 
 CTA:
   "If you can't make it or aren't in the NYC area but have a question you wish you could
@@ -118,15 +119,15 @@ CTA:
 
 **Scope discipline (added 2026-05-30):**
 - **This week only.** Events outside the coming week (e.g., the following week) do NOT belong in this roundup — drop them or hold for the next one.
-- **Only events Alex is actually attending.** Attendance changes; if Alex has dropped an event, it comes out. (This is exactly what the `steering-interview` Q3/Q4 captures before generation.)
+- **Going and Pending events only.** Going events lead; every Pending event still gets at least one line (2026-11-09). An event Alex has dropped comes out. (This is exactly what the `steering-interview` Q3/Q4 captures before generation.)
 
-**Generate 3 variants** with different hooks/framing angles (different through-line framings — NOT different takes). Present as inline options. *(3 for every post, roundup included: ruled 2026-09-11, confirmed "3 everywhere" by Alex 2026-09-19. Connection notes stay at 2, A/B, because they are anchored to two signal types, not framings.)*
+**Generate 3 variants** with different hooks/framing angles (different through-line framings — NOT different takes). Present as inline options. *(The roundup stays at 3: ruled 2026-09-11, "3 everywhere" 2026-09-19. Day posts moved to 4, A–D, on 2026-11-09 (Step 3). Connection notes stay at 2, A/B, because they are anchored to two signal types, not framings.)*
 
 ### Quality Checks
 - At least 2, no more than 3 data points per event synopsis
 - **Each synopsis SETS THE TABLE — states the topic + state-of-union + a field tension, takes no side, and ends without an editorial kicker** (the highest-priority check for this format)
 - **Decentered self — the events/field are the subject, not Alex; no "I/me" that reads as a brag** (scan every first-person word and cut the ones that center Alex)
-- **Scope correct — only this week, only events Alex is attending**
+- **Scope correct — only this week; Going events lead, every Pending event has at least one line**
 - Each synopsis passes the "So What?" test *without* needing a hot take to get there
 - 2-5 relevant hashtags at the end
 - Emoji used sparingly as structural markers
@@ -134,10 +135,18 @@ CTA:
 
 ---
 
-## Step 3: Generate Pre-Event LinkedIn Post
+## Step 3: Generate the Pre-Event Day Post
 
-**When:** Per-event post, typically a few days before the event.
+**When:** One post per day that has events, typically a few days ahead (Alex, 2026-11-09, "going forward for every event"). Order for a week: the Upcoming Week post first, then the day posts.
 **Length:** Whatever the argument needs, up to the 3,000 cap.
+
+**Day shape (2026-11-09):**
+- **The Going event is the main post.** Everything in the structure below is about it.
+- **That day's Pending events** go at the end, under the exact line `Additional notable events today:`, one or two lines each.
+- **A day with no Going event** (nothing confirmed): every event gets equal billing, with some analysis of each. Alternatively, find a through-line that promotes them all.
+- Never state exact attendance (radar framing).
+
+**Sequencing gate: check before drafting.** A day post synthesizes the Going and the Pending events, and the two calendars are researched in separate sessions. Do not start a day's post until research is finished for **every** Going and Pending event that day: each has a completed brief on its Notion Event page. If one is still running, stop and report which one. Do not draft around the gap.
 
 > **This post is the FIRST HALF of a deliberate two-part arc (rule added 2026-09-11 — canonical: `content-style-guide.md` → "The pre→post arc").** Structure it **macro → micro → implications**:
 > 1. **Table-set the topic** — its current state, the trends, the recent developments.
@@ -171,16 +180,22 @@ CTA — "If you're deep into [topic], what are you most looking forward to learn
       or hearing about?"
 ```
 
-**Generate 3 variants** with different hook formulas (per message-architecture):
-- **Variant A:** Question hook — opens with a sharp question only an insider would ask
-- **Variant B:** Contrarian OR stat hook — opens with a take that pushes against the consensus, OR a specific data point from the brief
-- **Variant C:** Character variant (voice v2, 2026-09-28) — same facts as A/B, but a cold open with a joke or a confession in Alex's voice. If no steer or dictation supplied the personality line, write the rest and leave `[PERSONALITY LINE NEEDED: <what kind of line, where>]` in place; never invent a confession.
+**Generate 4 variants, A–D** (Alex, 2026-11-09; replaces the 3-variant contract for day posts):
+- **Variant A: take 1.** One angle on the Going event's question, using a hook formula from message-architecture (question, contrarian or story).
+- **Variant B: take 2.** A genuinely different angle, not a reworded A.
+- **Variant C: stat 1.** Built on one stat or set of stats from the brief, which carries the hook and the insight.
+- **Variant D: stat 2.** Built on a different stat or set of stats from C.
 
-Present as inline options; ship all three to Notion, never pre-select.
+**Voice v2 (2026-09-28) still applies.** At least one variant cold-opens with a joke or a confession in Alex's voice. If no steer or dictation supplied that line, write the rest and leave `[PERSONALITY LINE NEEDED: <what kind of line, where>]` in place. Never invent a confession.
+
+Every variant carries the same `Additional notable events today:` tail. Present them as inline options, and ship all four to Notion. Never pre-select.
 
 **Walk-in line (under the variants):** one ≤25-word phone-clip script Alex can say on camera walking into the room — the question he's walking in with, in plain speech. Ships in the same Notion page body under the variants; it is a script, not a post.
 
 ### Quality Checks
+- **Sequencing gate passed:** research was complete for every Going and Pending event that day before drafting
+- **Day shape:** the Going event is the main post, and the Pending events sit under `Additional notable events today:`
+- **4 variants, A–D:** A and B are different takes; C and D are built on different stats
 - Exactly 2-3 data points from the research brief, with sources available if Alex wants to reference
 - **Learn-More Set: 3–5 curated resources → first comment/carousel** (mandatory every post; **≤1,250 chars per comment**, sources as a reply; separate from the in-body data points — see `content-style-guide.md` → The Learn-More Set)
 - One clear insight or question that passes the expert-pause test
@@ -198,6 +213,10 @@ Present as inline options; ship all three to Notion, never pre-select.
 For each LinkedIn post (Upcoming Week and/or Pre-Event), generate a single
 **3-5 slide carousel brief** that tells the post's thesis through different
 perspectives.
+
+**Day-post carousels (2026-11-09):** every slide is about the Going event,
+except the **last slide**, which highlights the day's other notable events
+(the Pending ones). On a day with no Going event, give each event equal space.
 
 This step is **not optional**. Every LinkedIn post deliverable ships with its
 carousel brief embedded in the same Notion page body. DMs and prepared questions
@@ -586,16 +605,16 @@ Page body: the approved post variant + **the Step 3b carousel brief appended und
 
 **Pre-Event LinkedIn post:**
 ```
-"Title": "[Event Name] — Pre-Event Post"
+"Title": "[Going Event Name] — Pre-Event Post ([Day, MM-DD])"
 "Content Type": "linkedin_post_pre"
 "Event Phase": "pre_event"
 "Content Status": "needs_review"
 "Platform": "linkedin"
-"Event": [relation to event page]
+"Event": [relation to the Going event page, plus each Pending event page that day]
 "People": [relation to people mentioned]
 "Topics": [relation to topics covered]
 ```
-Page body: all three post variants + the Step 3 walk-in line + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
+Page body: all four post variants (A–D, each with its `Additional notable events today:` tail) + the Step 3 walk-in line + **the Step 3b carousel brief appended under a `## Visual Brief — N-slide carousel` H2** (one 3-5 slide carousel using one of the four arcs from `visual-briefs.md`). Arc selection per Step 3b.2 — match the post's argument structure to the right arc (data-anchored → Arc 1; multi-speaker panel → Arc 4; change-over-time → Arc 3).
 
 **Speaker/Host Connection Request Notes (one page per person):**
 ```
@@ -664,7 +683,7 @@ Page body: the compiled question list from Step 5
 
 ### Generated
 - The Upcoming Week: [Yes/No] ([X] events covered) + carousel brief ([N] slides, Arc [name])
-- Pre-Event Post: 3 variants + carousel brief ([N] slides, Arc [name])
+- Pre-Event Day Post: 4 variants (A/B takes, C/D stats) + carousel brief ([N] slides, Arc [name]); Pending events listed: [count]
 - X drafts (E-05): single post 3 variants + thread (4–7 posts) 3 variants, Platform = X; `output_checks.py x` findings: [count]. If the live DB lacks the `x` Platform option, flag it here.
 - Speaker/Host Connection Notes: [count] people, [count] A-variants, [count] B-variants, [count] B-variants skipped (no adjacent-work signal), [count] flagged "needs more research" (avg rubric score: [X]/100; avg char count: [N]/200)
 - Prepared Questions: [count] questions compiled
