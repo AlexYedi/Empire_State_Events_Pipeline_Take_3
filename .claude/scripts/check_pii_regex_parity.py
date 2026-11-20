@@ -23,9 +23,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SPINE = os.path.join(REPO, ".claude", "scripts", "spine_client.py")
 SQL = os.path.join(REPO, "docs", "adr", "proposals", "pii-db-check.sql")
-# Every DB site that carries the literals. 0022 (YED-384): public.no_contact_pii_v1() backs the CHECKs on
-# entity_alias.alias and sweep_query.template; it must match spine byte for byte like the person backstop.
-SQL_SITES = [SQL, os.path.join(REPO, "supabase", "migrations", "0022_graph_phase1_shared.sql")]
+# Every DB site that carries the CURRENT literals. 0025 (YED-392/324) carries the Unicode-aware EMAIL_RE twice:
+# in public.no_contact_pii_v2() (claim.claim_text / claim.quote CHECKs) and in the re-issued
+# public.assert_no_contact_pii() (person trigger). 0022's no_contact_pii_v1() is VERSIONED (never replaced), so
+# it keeps the pre-0025 ASCII email shape by design and is no longer a parity site; v1's CHECKs move to v2 in a
+# follow-up once v2 has run clean.
+SQL_SITES = [SQL, os.path.join(REPO, "supabase", "migrations", "0025_pii_backstop_normalized.sql")]
 
 
 def extract_spine(src: str) -> tuple[str, str]:
@@ -52,12 +55,15 @@ def extract_sql(src: str) -> tuple[str, str]:
 def run(spine_src: str, sql_src: str) -> list[str]:
     """Return a list of drift descriptions; empty list means parity."""
     spine_email, spine_phone = extract_spine(spine_src)
-    sql_email, sql_phone = extract_sql(sql_src)
+    extract_sql(sql_src)   # fails loud when a site has no literals at all
+    # Every literal in the file, not only the first: a site may define more than one function (0025 does).
     drifts = []
-    if sql_email != spine_email:
-        drifts.append("EMAIL shape drifted:\n  spine: %s\n  sql:   %s" % (spine_email, sql_email))
-    if sql_phone != spine_phone:
-        drifts.append("PHONE shape drifted:\n  spine: %s\n  sql:   %s" % (spine_phone, sql_phone))
+    for sql_email in re.findall(r"^\s*email_re text := \$re\$(.+?)\$re\$;", sql_src, re.M):
+        if sql_email != spine_email:
+            drifts.append("EMAIL shape drifted:\n  spine: %s\n  sql:   %s" % (spine_email, sql_email))
+    for sql_phone in re.findall(r"^\s*phone_re text := \$re\$(.+?)\$re\$;", sql_src, re.M):
+        if sql_phone != spine_phone:
+            drifts.append("PHONE shape drifted:\n  spine: %s\n  sql:   %s" % (spine_phone, sql_phone))
     return drifts
 
 
@@ -108,6 +114,13 @@ def selftest() -> int:
     drifted_email = sql_src.replace(r"[A-Z]+", r"[A-Z]+?")
     drifts = run(spine_src, drifted_email)
     ck("email drift detected", len(drifts) == 1 and drifts[0].startswith("EMAIL"))
+
+    # A site with two functions (0025): a drift in the SECOND literal must not hide behind a matching first.
+    two_sites = sql_src + drifted_email
+    drifts = run(spine_src, two_sites)
+    ck("drift in a second email_re literal is detected", len(drifts) == 1 and drifts[0].startswith("EMAIL"))
+    drifts = run(spine_src, sql_src + sql_src)
+    ck("two matching literal pairs: parity", drifts == [])
 
     print(f"\n{ok}/{n} passed")
     return 0 if ok == n else 1

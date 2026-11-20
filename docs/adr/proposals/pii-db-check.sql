@@ -96,8 +96,8 @@ returns trigger
 language plpgsql
 as $$
 declare
-  -- Verbatim spine_client.py EMAIL_RE.
-  email_re text := $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+  -- Verbatim spine_client.py EMAIL_RE (Unicode-aware since YED-324; applied by migration 0025).
+  email_re text := $re$(?<![\w/])[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF._%+-]+@[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+(?:\.[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+)*\.[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]{2,}(?![\w])$re$;
   -- Verbatim spine_client.py PHONE_RE (PR #250 final form: A2's
   -- leading-country-code prefix before the +country group; second
   -- alternative is the E.164 compact form; third is YED-309's
@@ -230,7 +230,7 @@ $$;
 --      Suggested probe on the twin:
 --        select id from public.person
 --        where coalesce(bio,'') || coalesce(role_context,'')
---              ~ $re$(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])$re$;
+--              ~ $re$(?<![\w/])[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF._%+-]+@[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+(?:\.[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+)*\.[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]{2,}(?![\w])$re$;
 --      Already verified against the live The-Prod-Brain during the PR #235
 --      review of YED-279: 0 existing person rows match either the email or
 --      the phone pattern — re-confirm on the twin at rehearsal time.
