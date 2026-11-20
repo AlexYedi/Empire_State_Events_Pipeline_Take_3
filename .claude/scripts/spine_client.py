@@ -823,6 +823,18 @@ def selftest() -> bool:
     for k in ("wa_id", "phone_id", "cell_ref", "contact_url", "urlish", "tweet_id"):
         add(f"claim.metadata.{k} = 5551230100 → refuse (undeclared or wrong shape: scanned)",
             lambda k=k: guard("claim", {"claim_text": "x", "metadata": {k: "5551230100"}}), True)
+    # YED-299: the declared uuid shape is exact. An id one character off in any group is NOT exempt, so a 10+ digit
+    # run inside it still refuses (each case kills one group-length mutant of ID_SHAPES['uuid']).
+    _g = ["abcdef12", "abcd", "abcd", "abcd", "555123010099"]
+    _bad_ids = []
+    for gi, (short, long_) in enumerate((("abcdef1", "abcdef123"), ("abc", "abcde"), ("abc", "abcde"), ("abc", "abcde"),
+                                         ("55512301009", "5551230100999"))):
+        for grp in (short, long_):
+            _bad_ids.append("-".join(grp if j == gi else x for j, x in enumerate(_g)))
+    _bad_ids += ["5551230100" + "abcdef" * 3 + "abc", "5551230100" + "abcdef" * 3 + "abcde"]     # 31 / 33 hex
+    for bid in _bad_ids:
+        add(f"claim.metadata.event_id malformed uuid {bid!r} → refuse (YED-299: shape is exact)",
+            lambda bid=bid: guard("claim", {"claim_text": "x", "metadata": {"event_id": bid}}), True)
     add("claim.metadata.post_ids[0] bare digits → refuse (undeclared)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["5551230100"]}}), True)
     add("claim.metadata integer 5551230100 → refuse (10+ digit integers are scanned)",
@@ -907,6 +919,33 @@ def selftest() -> bool:
               "due 2023-10-15 ok", "call 5551234 ext 2", "order 555123456789012345 ok", "at 40.7128, -74.0060",
               "5551234567"):
         add(f"PHONE_RE regression {s!r} → no match", lambda s=s: _phone(s), False)
+    # YED-299 layer 1 (mutation pass 2026-11-20): each case kills a mutant that survived the cases above.
+    # Docs: docs/evidence/yed-299-mutation-2026-11-20.md. Lower/upper digit bounds and the "a number never starts or
+    # ends inside a longer digit run" look-arounds, each per alternative (PHONE_RE alone, no backstop).
+    for s in ("tel:5550100", "wa.me/5550100", "+5550100123", "+1 20 7946", "+7 495 000 00 00", "+1555-123-0100",
+              "+44 20 7 9 4 6"):
+        add(f"PHONE_RE bound {s!r} → match (YED-299)", lambda s=s: _phone(s), True)
+    for s in ("delta +123456789 users", "+44 20 79", "wa.me/555010", "tel:555010", "555-123-01005",
+              "+1555010012345678", "1+15550100123", "1+44 20 7946 0958", "+44 20 7946 0958 1234", "107700 900123",
+              "07700 9001234", "106 39 98 12 34", "06 39 98 12 345", "wa.me/5550100123456789", "1tel:5550100"):
+        add(f"PHONE_RE bound {s!r} → no match (YED-299)", lambda s=s: _phone(s), False)
+    for v in ("dana@example.р", "dana@users.noreply.github.com"):
+        add(f"claim.claim_text {v!r} → allow (YED-299: 1-char non-ASCII TLD; GitHub noreply allowlist)", _ct(v), False)
+    add("claim.metadata integer 1000000000 (exactly 10 digits) → refuse (YED-299: 10**9 is scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 1000000000}}), True)
+    add("claim.metadata.seen_at epoch ms integer → allow (YED-299: declared *_at, 13-digit epoch)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"seen_at": 1763510400123}}), False)
+    add("domain_denylisted('') → False (YED-299)",
+        lambda: (_ for _ in ()).throw(PIIViolation("empty host denylisted")) if domain_denylisted("", deny) else None, False)
+
+    def _redos_case():
+        """EMAIL_RE's and WORD_FORM's run-start look-behinds are ReDoS guards: without them 20k chars took 0.7s / 1.9s
+        (quadratic). The match set is identical either way, so only time can pin them."""
+        t0 = time.perf_counter()
+        guard("claim", {"claim_text": "a" * 50000})
+        if time.perf_counter() - t0 > 1.0:
+            raise PIIViolation(f"guard took {time.perf_counter() - t0:.1f}s on a 50k-char run (ReDoS)")
+    add("guard on a 50k-char letter run finishes under 1s (YED-299: ReDoS look-behinds)", _redos_case, False)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     # YED-304 W1: cluster assignment columns on topic
@@ -1024,6 +1063,9 @@ def selftest() -> bool:
     add("entity_alias email column → refuse (forbidden contact-PII column)",
         _by(PII_COL_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane",
                                                       "email": "x"})), True)
+    for col in ("email", "e_mail", "phone", "phone_number", "mobile", "telephone"):   # literal: not FORBIDDEN_COLUMNS
+        add(f"person.{col} → refuse by the forbidden-column layer itself (YED-299)",
+            _by(PII_COL_L, lambda col=col: guard("person", {"name": "A", col: "x"})), True)
     add("sweep_query clean row → pass",
         lambda: guard("sweep_query", {"kind": "room_topic", "theme_id": "t1", "template": "agent evals 28d news",
                                       "seed_event_id": "e1", "iso_week": "2026-W46", "items_returned": 12,
