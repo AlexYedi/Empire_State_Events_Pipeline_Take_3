@@ -55,6 +55,12 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   review's verdicts. On a row already rejected without prior_status it only fills the canonical
                   keys (status untouched), so --revert works on it afterwards. Claim status changes go through
                   substrate verbs, never a raw PATCH.
+  demote-claims   --ids-file ids.txt --reason "…" [--revert] [--dry-run]
+                  (YED-455) approved -> candidate by id (readers go verify-first); prior status, prior reviewed_at,
+                  reason and stamp kept under metadata.demoted_*; idempotent; --revert restores them exactly.
+  approve-claims  --ids-file ids.txt [--include-prose] [--dry-run]
+                  (YED-455) approve ONLY the listed ids that are candidate; never do_not_publish, never email_signal,
+                  never prose unless --include-prose. No manifest; prints the batch's reviewed_at stamp.
   reconcile       --report | --queue [PATH] [--root DIR] [--baseline PRIOR.json]
                   (YED-384, plan B1) READ-ONLY completeness ledger: joins Event Content/ folders, event-transcripts/,
                   .claude/.state/{research,briefs,post-event}/ and prod (GETs only) by date + title; one row per event
@@ -1709,6 +1715,93 @@ def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = Fal
     return n
 
 
+# YED-455 — ID-scoped review verbs for the claim judge (g1119-t1). Same write path (Graph.patch -> spine_client guard).
+DEMOTE_KEYS = ("demoted_prior_status", "demoted_prior_reviewed_at", "demoted_reason", "demoted_at")
+
+
+def _rows_by_id(g: "Graph", ids: list[str], select: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for i in range(0, len(ids), 80):
+        for r in g.get(f"/claim?id=in.({','.join(ids[i:i + 80])})&select={select}"):
+            out[r["id"]] = r
+    return out
+
+
+def demote_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = False) -> int:
+    """Move approved claims back to candidate (readers treat candidate as verify-first). Keeps the prior status,
+    prior reviewed_at, a reason and a stamp in metadata under demoted_* keys (separate from reject-claims' keys, so
+    the two verbs never undo each other). Idempotent; only approved rows move. With revert, restores rows this verb
+    demoted that are still candidate and removes the keys. Nothing is deleted. Returns rows changed."""
+    if not revert and not (reason or "").strip():
+        raise SystemExit("demote-claims: --reason is required")
+    ids = list(dict.fromkeys(ids))
+    rows = _rows_by_id(g, ids, "id,status,reviewed_at,metadata")
+    stamp, n = _utc_stamp(), 0
+    for cid in ids:
+        r = rows.get(cid)
+        if not r:
+            g.stats.bump("claim", "not_found")
+            continue
+        md = dict(r.get("metadata") or {})
+        if revert:
+            if r["status"] != "candidate" or "demoted_prior_status" not in md:
+                g.stats.bump("claim", "revert_skipped")
+                continue
+            prior, prior_rev = md.pop("demoted_prior_status"), md.pop("demoted_prior_reviewed_at", None)
+            for k in DEMOTE_KEYS:
+                md.pop(k, None)
+            g.patch("claim", f"id=eq.{cid}", {"status": prior, "reviewed_at": prior_rev, "metadata": md})
+            g.stats.bump("claim", "reverted")
+        else:
+            if r["status"] != "approved":
+                g.stats.bump("claim", "already_demoted" if "demoted_prior_status" in md else f"skipped_{r['status']}")
+                continue
+            g.patch("claim", f"id=eq.{cid}", {"status": "candidate", "reviewed_at": None,
+                                              "metadata": {**md, "demoted_prior_status": "approved",
+                                                           "demoted_prior_reviewed_at": r.get("reviewed_at"),
+                                                           "demoted_reason": reason.strip(), "demoted_at": stamp}})
+            g.stats.bump("claim", "demoted")
+        n += 1
+    return n
+
+
+def approve_claim_ids(g: "Graph", ids: list[str], *, include_prose: bool = False) -> str:
+    """approve-claims --ids-file: approve ONLY the listed claims that are currently candidate. Never do_not_publish,
+    never email_signal, never prose (extractor 'claude') unless include_prose; rejected/approved rows are untouched.
+    Returns the batch's reviewed_at stamp (find or revert the batch by it)."""
+    ids = list(dict.fromkeys(ids))
+    rows = _rows_by_id(g, ids, "id,status,provenance_tier,extractor,metadata")
+    ok_ids = []
+    for cid in ids:
+        r = rows.get(cid)
+        if not r:
+            g.stats.bump("claim", "not_found")
+        elif r["status"] != "candidate":
+            g.stats.bump("claim", f"skipped_{r['status']}")
+        elif (r.get("metadata") or {}).get("do_not_publish"):
+            g.stats.bump("claim", "held_do_not_publish")
+        elif r.get("provenance_tier") == "email_signal":
+            g.stats.bump("claim", "held_email_signal")
+        elif r.get("extractor") != "parse" and not include_prose:
+            g.stats.bump("claim", "held_prose")
+        else:
+            ok_ids.append(cid)
+    stamp = _utc_stamp()
+    for i in range(0, len(ok_ids), 50):
+        g.patch("claim", f"id=in.({','.join(ok_ids[i:i + 50])})", {"status": "approved", "reviewed_at": stamp})
+    g.stats.bump("claim", "approved", len(ok_ids))
+    return stamp
+
+
+def _read_ids(path: str) -> list[str]:
+    raw = open(path, encoding="utf-8").read()
+    if raw.lstrip().startswith(("[", "{")):
+        d = json.loads(raw)
+        d = d.get("ids", d) if isinstance(d, dict) else d          # also takes the judge's {"ids": [{"id": …}]} export
+        return [x["id"] if isinstance(x, dict) else x for x in d]
+    return [x.strip() for x in raw.splitlines() if x.strip()]
+
+
 # ---------------------------------------------------------------------------------------------
 # YED-384 — stage-prose: prose_extract.py `check` output -> claim rows. Design: prose-extraction design note 2026-11-11.
 # Same write path as stage-research (Graph.post -> spine_client guard). The cage (containment, roster, cap) already ran
@@ -2418,6 +2511,65 @@ def _review_verbs_selftest(ok) -> None:
             ok("reject --reasons-file: entry without a reason refused", False)
         except SystemExit:
             ok("reject --reasons-file: entry without a reason refused", st["r-led"]["status"] == "approved")
+
+    # YED-455: demote-claims (+ revert round trip) and approve-claims --ids-file, offline on a fresh _FakeGraph
+    fg = _FakeGraph()
+    fg.t["claim"] = [
+        {"id": "d-1", "status": "approved", "reviewed_at": "2026-11-12T03:00:00Z", "extractor": "parse",
+         "provenance_tier": "web_verified", "metadata": {"keep": 1}},
+        {"id": "d-2", "status": "approved", "reviewed_at": "2026-11-12T03:00:00Z", "extractor": "parse",
+         "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "d-cand", "status": "candidate", "reviewed_at": None, "extractor": "parse",
+         "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "d-rej", "status": "rejected", "reviewed_at": None, "extractor": "parse",
+         "provenance_tier": "web_verified", "metadata": {"prior_status": "approved"}},
+        {"id": "p-ok", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "p-email", "status": "candidate", "extractor": "parse", "provenance_tier": "email_signal", "metadata": {}},
+        {"id": "p-dnp", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified",
+         "metadata": {"do_not_publish": True}},
+        {"id": "p-prose", "status": "candidate", "extractor": "claude", "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "p-unlisted", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified", "metadata": {}},
+    ]
+    st = {c["id"]: c for c in fg.t["claim"]}
+    n = demote_claims(fg, ["d-1", "d-2", "d-cand", "d-rej", "missing", "d-1"], "judge: unsupported (g1119-t1)")
+    md = st["d-1"]["metadata"]
+    ok("demote: approved -> candidate, prior status + reviewed_at + reason kept, other metadata intact",
+       n == 2 and st["d-1"]["status"] == "candidate" and st["d-1"]["reviewed_at"] is None
+       and md["demoted_prior_status"] == "approved" and md["demoted_prior_reviewed_at"] == "2026-11-12T03:00:00Z"
+       and md["demoted_reason"] == "judge: unsupported (g1119-t1)" and md["keep"] == 1)
+    ok("demote: candidate / rejected / missing rows untouched",
+       st["d-cand"]["status"] == "candidate" and "demoted_at" not in st["d-cand"]["metadata"]
+       and st["d-rej"]["status"] == "rejected" and fg.stats.c["claim"]["not_found"] == 1)
+    ok("demote: idempotent (second run changes 0, reason unchanged)",
+       demote_claims(fg, ["d-1", "d-2"], "again") == 0 and st["d-1"]["metadata"]["demoted_reason"].startswith("judge"))
+    try:
+        demote_claims(fg, ["d-cand"], " ")
+        ok("demote: empty reason refused", False)
+    except SystemExit:
+        ok("demote: empty reason refused", True)
+    ok("demote --revert: candidate rows without demoted_* keys are left alone",
+       demote_claims(fg, ["d-cand", "d-rej"], "", revert=True) == 0 and st["d-rej"]["status"] == "rejected")
+    ok("demote --revert round trip: status, reviewed_at and metadata restored exactly",
+       demote_claims(fg, ["d-1", "d-2"], "", revert=True) == 2 and st["d-1"]["status"] == "approved"
+       and st["d-1"]["reviewed_at"] == "2026-11-12T03:00:00Z" and st["d-1"]["metadata"] == {"keep": 1}
+       and st["d-2"]["metadata"] == {})
+    ok("demote --revert: idempotent", demote_claims(fg, ["d-1"], "", revert=True) == 0)
+    stamp = approve_claim_ids(fg, ["p-ok", "p-email", "p-dnp", "p-prose", "d-rej", "d-1", "nope"])
+    ok("approve --ids-file: only the listed candidate is approved, stamped",
+       st["p-ok"]["status"] == "approved" and st["p-ok"]["reviewed_at"] == stamp)
+    ok("approve --ids-file: email_signal, do_not_publish, prose held; rejected untouched; unlisted untouched",
+       st["p-email"]["status"] == "candidate" and st["p-dnp"]["status"] == "candidate"
+       and st["p-prose"]["status"] == "candidate" and st["d-rej"]["status"] == "rejected"
+       and st["p-unlisted"]["status"] == "candidate")
+    approve_claim_ids(fg, ["p-prose", "p-email"], include_prose=True)
+    ok("approve --ids-file --include-prose: prose approved, email_signal still held",
+       st["p-prose"]["status"] == "approved" and st["p-email"]["status"] == "candidate")
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
+        json.dump({"note": "x", "ids": [{"id": "a", "prior_status": "approved"}, {"id": "b"}]}, fh)
+    ok("ids file: judge export {ids:[{id}]}, JSON list and one-per-line all read",
+       _read_ids(fh.name) == ["a", "b"])
+    os.unlink(fh.name)
 
 
 def _docref_selftest(ok) -> None:
@@ -3403,7 +3555,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("verb", choices=["ensure-entity", "ensure-event", "ensure-document", "stage-claims",
                                      "backfill", "backfill-questions", "preview-claims", "approve-claims", "merge",
                                      "stage-research", "ensure-roles", "stage-prose", "reject-claims",
-                                     "link-research"])
+                                     "demote-claims", "link-research"])
     ap.add_argument("--checked", metavar="BRIEF.llm.checked.json", help="(stage-prose) prose_extract.py check output")
     ap.add_argument("--replace", action="store_true",
                     help="(stage-prose) a different extraction is already staged: retire its candidate rows "
@@ -3414,7 +3566,8 @@ def main(argv: list[str]) -> int:
                     help="(approve-claims --lane research) also approve prose extractions (extractor claude); "
                          "default is Evidence Ledger rows only")
     ap.add_argument("--ids-file", metavar="IDS.txt|IDS.json",
-                    help="(reject-claims) claim ids, one per line or a JSON list; HUMAN-RUN")
+                    help="(reject-claims / demote-claims / approve-claims) claim ids: one per line, a JSON list, or "
+                         "the judge's {\"ids\": [{\"id\": …}]} export")
     ap.add_argument("--reasons-file", metavar="REASONS.json",
                     help="(reject-claims, YED-417) per-row reasons {id: {reason, prior_status?, rejected_at?}}; "
                          "instead of --ids-file + --reason; HUMAN-RUN")
@@ -3503,11 +3656,30 @@ def main(argv: list[str]) -> int:
         else:
             if not a.ids_file:
                 ap.error("reject-claims needs --ids-file or --reasons-file")
-            raw = open(a.ids_file, encoding="utf-8").read()
-            ids = json.loads(raw) if raw.lstrip().startswith("[") else [x.strip() for x in raw.splitlines() if x.strip()]
+            ids = _read_ids(a.ids_file)
             n = reject_claims(g, ids, a.reason or "", revert=a.revert)
         print(("DRY-RUN " if a.dry_run else "") + f"reject-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
         print(stats.report())
+        return 0
+    if a.verb == "demote-claims":                  # YED-455: approved -> candidate by id; reversible with --revert
+        if not a.ids_file:
+            ap.error("demote-claims needs --ids-file")
+        ids = _read_ids(a.ids_file)
+        n = demote_claims(g, ids, a.reason or "", revert=a.revert)
+        print(("DRY-RUN " if a.dry_run else "") + f"demote-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": a.verb, "dry_run": a.dry_run, "revert": a.revert, "changed": n, "stats": stats.c}))
+        return 0
+    if a.verb == "approve-claims" and a.ids_file:  # YED-455: ID-scoped approval, no manifest
+        if a.manifest:
+            ap.error("approve-claims takes --manifest OR --ids-file, not both")
+        ids = _read_ids(a.ids_file)
+        stamp = approve_claim_ids(g, ids, include_prose=a.include_prose)
+        print(("DRY-RUN " if a.dry_run else "") + f"approve-claims --ids-file: {len(ids)} listed · reviewed_at={stamp}")
+        print(stats.report())
+        if a.json:
+            print(json.dumps({"verb": a.verb, "dry_run": a.dry_run, "stamp": stamp, "stats": stats.c}))
         return 0
     if a.verb == "link-research":                  # YED-386: no manifest; reads the graph's unlinked research briefs
         r = link_research(g)
