@@ -114,6 +114,29 @@ WORD_FORM = re.compile(r"(?<![a-z0-9._%+-])([a-z0-9._%+-]+)\s+at\s+([a-z0-9-]+)\
 DASHES = {c: '-' for c in range(0x110000) if unicodedata.category(chr(c)) == 'Pd' or c == 0x2212}
 SPACED_AT = re.compile(r"\s{0,3}@\s{0,3}")
 SPACED_DOT = re.compile(r"(?<=\w)\s{1,3}\.\s{0,3}(?=\w)")              # 'fakeco . test' -> 'fakeco.test'
+# YED-468 (gaps G1-G4 of docs/evidence/yed-299-mutation-2026-11-20.md). Python-only shape folds; the DB CHECK keeps
+# them as a documented out-of-contract gap. Each fold only rewrites the copy so EMAIL_RE / PHONE_RE / the bare-digit
+# rule can see a contact that its spacing or a glued token hid; none of them is a detector on its own.
+# G1: an extension glued to the last digit group ('0100x12', '0958ext.12') is dropped, and a label glued to the
+# first digit ('Tel+44 ...', 'Mob07700 ...') gets a space, so each alternative's end / start look-around holds.
+# `10x growth` / `x10` are untouched (no digit on both sides); `1920x1080` folds to `1920 `, which is not a phone.
+EXT_GLUED = re.compile(r"(?<=\d)(?:x|ext\.?|extn\.?)\s?\d{1,6}(?!\d)", re.I)
+LABEL_GLUED = re.compile(r"\b(tel|telephone|phone|ph|mob|mobile|cell|fax|call|whatsapp)\.?(?=\+?\d)", re.I)
+# G2: `+CC` then ONE block of 7-12 digits ('+65 60000000') is joined to E.164 compact ('+6560000000'), and
+# PHONE_RE's own `\+\d{10,15}` alternative decides. So the floor is the shared one: 10+ digits in total, i.e. a
+# 7-9 digit block after a 1-3 digit code. `+12 500 users` (3 digits), `+20 24 points` (two short groups), `+1 more`
+# and `+30% YoY` never reach it; a decimal or thousands tail (`+12 3456789.5`, `+1 1234567,8`) or a % is excluded.
+CC_ONE_BLOCK = re.compile(r"(?<![\w.+-])\+([1-9]\d{0,2})[\s.-](\d{7,12})(?![\w%]|[.,]\d)")
+# G3: 10+ single digits separated by single spaces ('5 5 5 1 2 3 0 1 0 0', with or without a leading '+') are
+# joined, so the bare-digit rule or E.164 compact sees them. A run must stop at a digit that is not followed by
+# ' <digit>', so `1 2 3 ... 9 10` (a counted list ending on a two-digit number) never matches; `(?<!\d )` is the
+# ReDoS guard (one start per run). Under 10 digits (`Q3 2026: 1 2 3`, `Room 5 5 5`) is never touched.
+SPACED_DIGITS = re.compile(r"(?<![\w.,])(?<!\d )\+?\d(?: \d){9,}(?!\w| \d)")
+# G4: whitespace AFTER the dot of a glued `local@domain. tld` ('dana@example. com'). It runs before SPACED_AT and
+# needs a non-delimiter directly before '@', so `@handle. Next sentence` / `Follow @handle. next` (a handle, not a
+# mailbox) never fold; the TLD is all lower or all upper case, so `x@y. Next` stays prose. SPACED_DOT itself still
+# needs whitespace BEFORE the dot: widening it would fold `Follow@handle.Next` (pinned by the selftest).
+GLUED_EMAIL_DOT = re.compile(r"([^\s@<>()\[\]{}\x22\x27,;:/\\]@[\w-]+(?:\.[\w-]+)*)\.\s{1,3}([a-z]{2,24}|[A-Z]{2,24})(?![\w@])")
 BARE_DIGITS = re.compile(r"(?<!\d)\d{10,}(?!\d)")
 # Spans where a long digit run is an identifier, not a phone: URLs with or without a scheme, uuids, Notion's
 # undashed 32-hex ids.
@@ -129,6 +152,10 @@ def heuristics(s: str) -> str:
     t = AT_SPELLING_RE.sub("@", t).translate(DASHES)
     t = DOT_FORM.sub(".", AT_FORM.sub("@", t))
     t = WORD_FORM.sub(r"\1@\2.\3", t)
+    t = LABEL_GLUED.sub(r"\1 ", EXT_GLUED.sub(" ", t))                  # YED-468 G1
+    t = CC_ONE_BLOCK.sub(r"+\1\2", t)                                    # YED-468 G2
+    t = SPACED_DIGITS.sub(lambda m: m.group(0).replace(" ", ""), t)      # YED-468 G3
+    t = GLUED_EMAIL_DOT.sub(r"\1.\2", t)                                 # YED-468 G4 (before SPACED_AT)
     return SPACED_DOT.sub(".", SPACED_AT.sub("@", t))
 
 
@@ -201,6 +228,24 @@ def selftest() -> bool:
               "order 123456789 shipped", "see https://fakeco.test?ref=12345678901", "fakeco.io/p/12345678901",
               "ref 550e8400-e29b-41d4-a716-446655440000"):
         ok(f"no pii {s!r}", not has_pii(s))
+    # YED-468: gaps G1-G4 closed in the full copy (Python-only; the shared PHONE_RE / EMAIL_RE are unchanged)
+    for s in ("call 555-123-0100x12", "+44 20 7946 0958x12", "call 555-123-0100ext12", "call 555-123-0100ext.12",
+              "+44 20 7946 0958EXT 12", "Tel+44 20 7946 0958", "Tel.+44 20 7946 0958", "Mob07700 900123",
+              "Phone555-123-0100", "+65 60000000", "+33 639981234", "+65.60000000", "5 5 5 1 2 3 0 1 0 0",
+              "+4 4 2 0 7 9 4 6 0 9 5 8", "dana@example. com", "DANA@EXAMPLE. COM", "dana@mail.example.  co."):
+        ok(f"has_pii {s!r} (YED-468)", has_pii(s))
+        ok(f"redact {s!r} leaves nothing (YED-468)", not has_pii(redact(s)[0]) and redact(s)[1] >= 1)
+    for s in ("Q3 2026: 1 2 3", "scores 1 2 3 4 5 6 7 8 9", "1 2 3 4 5 6 7 8 9 10", "Room 5 5 5", "version 2. 0",
+              "Series A at 3x. com-like", "Lead at You.com", "2026-11-20T10:00:00Z", "at 10:00:00 sharp", "+1 more",
+              "+30% YoY", "$5M at 3x", "x10", "10x growth", "1920x1080 render", "email us at the booth. Come by",
+              "@handle. Next sentence", "Follow @handle. next sentence", "Follow@handle. Next", "+20 24 points",
+              "+12 500 users", "+1 2345678", "+1 1,000,000 users", "+10 1234567% lift", "Phone 15 launch",
+              "mobile 5G", "ISBN 978-0-306-40615-7"):
+        ok(f"no pii {s!r} (YED-468)", not has_pii(s))
+    ok("YED-468 G2: +CC + one block folds to E.164 compact, and PHONE_RE's 10-digit floor decides",
+       "+6560000000" in heuristics("+65 60000000") and not PHONE_RE.search(heuristics("+1 2345678")))
+    ok("YED-468 G4: SPACED_DOT still needs whitespace BEFORE the dot (a handle is not a mailbox)",
+       heuristics("Follow @handle. Next") == "Follow@handle. Next")
     ok("canon strips LRM, NFKC folds ＠, UTS-46 dot folds", canon("a\u200E＠b。com") == "a@b.com")
     ok("YED-318: jsonb escapes \\n \\t \\r read as whitespace in the L3 form",
        all(PHONE_RE.search(l3_form('{"note": "call' + e + '555-123-0100"}')) for e in ("\\n", "\\t", "\\r"))

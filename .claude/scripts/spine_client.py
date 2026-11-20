@@ -938,6 +938,21 @@ def selftest() -> bool:
         add(f"PHONE_RE bound {s!r} → no match (YED-299)", lambda s=s: _phone(s), False)
     for v in ("dana@example.р", "dana@users.noreply.github.com"):
         add(f"claim.claim_text {v!r} → allow (YED-299: 1-char non-ASCII TLD; GitHub noreply allowlist)", _ct(v), False)
+    # YED-468: gaps G1-G4 are closed by Python-only folds in pii_normalize.heuristics. The shared PHONE_RE stays out
+    # of it on purpose (the DB CHECK keeps G2 as a documented out-of-contract gap), so G2 is pinned at both layers:
+    # the regex alone does NOT match (kills mutants #38 / #40, which widen the shared regex) and guard() refuses.
+    for s in ("+65 60000000", "+33 639981234", "+49.98272 "):
+        add(f"PHONE_RE {s!r} → no match (YED-468: G2 stays out of the shared regex)", lambda s=s: _phone(s), False)
+    for v in ("call 555-123-0100x12", "+44 20 7946 0958x12", "Tel+44 20 7946 0958", "Mob07700 900123",
+              "call 555-123-0100ext.12", "+65 60000000", "+33 639981234", "5 5 5 1 2 3 0 1 0 0", "dana@example. com"):
+        add(f"claim.claim_text {v!r} → refuse (YED-468 G1-G4)", _ct(v), True)
+    # Must-allow prose. `Follow @handle. Next sentence` kills mutant #186 (SPACED_DOT folding with no space before
+    # the dot would turn it into `Follow@handle.Next`).
+    for v in ("Q3 2026: 1 2 3", "Room 5 5 5", "version 2. 0", "Series A at 3x. com-like", "Lead at You.com",
+              "+1 more", "+30% YoY", "$5M at 3x", "x10", "10x growth", "+20 24 points", "+12 500 users",
+              "email us at the booth. Come by", "@handle. Next sentence", "Follow @handle. Next sentence",
+              "2026-11-20T10:00:00Z", "ISBN 978-0-306-40615-7"):
+        add(f"claim.claim_text {v!r} → allow (YED-468: prose)", _ct(v), False)
     add("claim.metadata integer 1000000000 (exactly 10 digits) → refuse (YED-299: 10**9 is scanned)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 1000000000}}), True)
     add("claim.metadata.seen_at epoch ms integer → allow (YED-299: declared *_at, 13-digit epoch)",
