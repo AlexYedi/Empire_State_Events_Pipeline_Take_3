@@ -186,12 +186,20 @@ def selftest() -> bool:
               "jane%40fakeco.test", "ja\u200Bne@fake\u200Bco.test", "jane @ fakeco . test", "ｊane@fakeco.test",
               "212-555-0100", "212–555–0100", "212‑555‑0100", "2125550100", "+44 20 7946 0958",
               "dana@exa\u200Emple.com", "call 555\u200E-123-0100", "dana\u2063@example.com", "nguyễn@example.com",
-              "dana[@]example[.]com", "danaⓐexample.com", "dana&commat;example.com"):
+              "dana[@]example[.]com", "danaⓐexample.com", "dana&commat;example.com",
+              # YED-299 mutation pass (docs/evidence/yed-299-mutation-2026-11-20.md): one per surviving mutant
+              "dana<at>example.com", "dana at example dot io", "dana @example.com", "dana@example .com",
+              "ref 5551230100999 now", "ring x.y/5551230100", "a..b.test/5551230100", "cost $   5551230100"):
         ok(f"has_pii {s!r}", has_pii(s))
         ok(f"redact {s!r} leaves nothing", not has_pii(redact(s)[0]) and redact(s)[1] >= 1)
     for s in ("raised $5M in 2026, 3x growth", "https://fakeco.test/p/12345678901", "see aaaaaaaa000000000000000000000001",
               "Q3 2026: 1,200,000 users", "end. Next sentence", "meet at noon", "the team at openai.com",
-              "ISBN 9780134685991", "linkedin.com/in/x-1234567890", "Pets dot com", "x.com/a/status/1856212345678901234"):
+              "ISBN 9780134685991", "linkedin.com/in/x-1234567890", "Pets dot com", "x.com/a/status/1856212345678901234",
+              # YED-299: a checksum whose odd-digit sum is not 0 mod 10, a hex id opening on 10 digits, the 2-space
+              # currency window, a 9-digit run, a query-string URL, a 2-letter TLD path, a dashed uuid's 12-digit tail
+              "ISBN 9780306406157", "notion id 1234567890abcdef1234567890abcdef", "cost $  5551230100",
+              "order 123456789 shipped", "see https://fakeco.test?ref=12345678901", "fakeco.io/p/12345678901",
+              "ref 550e8400-e29b-41d4-a716-446655440000"):
         ok(f"no pii {s!r}", not has_pii(s))
     ok("canon strips LRM, NFKC folds ＠, UTS-46 dot folds", canon("a\u200E＠b。com") == "a@b.com")
     ok("YED-318: jsonb escapes \\n \\t \\r read as whitespace in the L3 form",

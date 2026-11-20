@@ -510,10 +510,17 @@ def guard(table: str, row: dict, *, op: str = "insert") -> dict:
     _scan_pii(row, table)
     src = str(row.get("source") or "")
     if src.startswith("inbox_miner"):
+        # YED-324 item 2: a missing denylist used to load as empty sets, so every inbox row passed tier 0 unchecked.
+        if not os.path.exists(DENYLIST_PATH):
+            _refuse("inbox_denylist_missing", table, _label_col(table, "source"),
+                    f"{table}: an inbox_miner row needs .claude/references/inbox-denylist.md, which is missing · "
+                    f"ADR-9 tier 0 fails closed · fix: restore the denylist (gitignored: copy or symlink it from "
+                    f"the main checkout), then re-run")
+        deny = load_denylist(DENYLIST_PATH)
         meta = row.get("metadata") or {}
         for key in ("sender_domain", "from_domain", "domain"):
             host = meta.get(key) if isinstance(meta, dict) else None
-            if host and domain_denylisted(str(host)):
+            if host and domain_denylisted(str(host), deny):
                 _refuse("inbox_denylist", table, f"metadata.{key}",
                         f"{table}.metadata.{key}={host!r} is on inbox-denylist.md · ADR-9 tier 0: never "
                         f"enters · fix: the scan should have skipped this thread (YED-161)")
@@ -607,30 +614,50 @@ def _send(method: str, path: str, data, headers: dict, timeout: int, reuse: bool
     HTTPSConnection."""
     global _CONN
     host = f"{REF}.supabase.co"
-    conn = _CONN if reuse else None
-    if conn is None:
-        conn = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
+
+    def _open():
+        c = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
         try:
-            conn.connect()
+            c.connect()
         except OSError as e:     # ANY connect failure — SYN stall, DNS (gaierror), TLS handshake, no route — sent nothing
-            conn.close()
+            c.close()
             raise NotSent(f"connect failed before sending: {type(e).__name__}: {e}") from e
-        if reuse:
-            _CONN = conn
-    conn.sock.settimeout(timeout)
-    try:
-        conn.request(method, "/rest/v1" + path, body=data, headers=headers)
-        resp = conn.getresponse()
+        return c
+
+    def _exchange(c):
+        c.sock.settimeout(timeout)
+        c.request(method, "/rest/v1" + path, body=data, headers=headers)
+        resp = c.getresponse()
         return resp.status, resp.read().decode()
+
+    if not reuse:
+        conn = _open()
+        try:
+            return _exchange(conn)
+        finally:
+            conn.close()
+    # YED-464: http.client sets sock to None when the server ends a keep-alive (Connection: close, idle reap), and
+    # `conn.sock.settimeout` then raised AttributeError, which req() does not retry. Nothing has been sent on a
+    # socketless connection, so it is reopened for any method.
+    if _CONN is not None and getattr(_CONN, "sock", None) is None:
+        _drop_conn()
+    reused = _CONN is not None
+    if not reused:
+        _CONN = _open()
+    try:
+        return _exchange(_CONN)
+    except Exception as e:
+        _drop_conn()
+        # A reused socket the peer already closed fails as a ConnectionError. Bytes may have left, so only a GET is
+        # reopened and re-sent here, once; PATCH / upsert fall back to req()'s retry policy, unchanged.
+        if not (reused and method == "GET" and isinstance(e, ConnectionError)):
+            raise
+    _CONN = _open()
+    try:
+        return _exchange(_CONN)
     except Exception:
-        if reuse:
-            _drop_conn()
-        else:
-            conn.close()
+        _drop_conn()
         raise
-    finally:
-        if not reuse:
-            conn.close()
 
 
 def _retryable(method: str, path: str, prefer: str | None) -> bool:
@@ -803,6 +830,18 @@ def selftest() -> bool:
     for k in ("wa_id", "phone_id", "cell_ref", "contact_url", "urlish", "tweet_id"):
         add(f"claim.metadata.{k} = 5551230100 → refuse (undeclared or wrong shape: scanned)",
             lambda k=k: guard("claim", {"claim_text": "x", "metadata": {k: "5551230100"}}), True)
+    # YED-299: the declared uuid shape is exact. An id one character off in any group is NOT exempt, so a 10+ digit
+    # run inside it still refuses (each case kills one group-length mutant of ID_SHAPES['uuid']).
+    _g = ["abcdef12", "abcd", "abcd", "abcd", "555123010099"]
+    _bad_ids = []
+    for gi, (short, long_) in enumerate((("abcdef1", "abcdef123"), ("abc", "abcde"), ("abc", "abcde"), ("abc", "abcde"),
+                                         ("55512301009", "5551230100999"))):
+        for grp in (short, long_):
+            _bad_ids.append("-".join(grp if j == gi else x for j, x in enumerate(_g)))
+    _bad_ids += ["5551230100" + "abcdef" * 3 + "abc", "5551230100" + "abcdef" * 3 + "abcde"]     # 31 / 33 hex
+    for bid in _bad_ids:
+        add(f"claim.metadata.event_id malformed uuid {bid!r} → refuse (YED-299: shape is exact)",
+            lambda bid=bid: guard("claim", {"claim_text": "x", "metadata": {"event_id": bid}}), True)
     add("claim.metadata.post_ids[0] bare digits → refuse (undeclared)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["5551230100"]}}), True)
     add("claim.metadata integer 5551230100 → refuse (10+ digit integers are scanned)",
@@ -887,6 +926,33 @@ def selftest() -> bool:
               "due 2023-10-15 ok", "call 5551234 ext 2", "order 555123456789012345 ok", "at 40.7128, -74.0060",
               "5551234567"):
         add(f"PHONE_RE regression {s!r} → no match", lambda s=s: _phone(s), False)
+    # YED-299 layer 1 (mutation pass 2026-11-20): each case kills a mutant that survived the cases above.
+    # Docs: docs/evidence/yed-299-mutation-2026-11-20.md. Lower/upper digit bounds and the "a number never starts or
+    # ends inside a longer digit run" look-arounds, each per alternative (PHONE_RE alone, no backstop).
+    for s in ("tel:5550100", "wa.me/5550100", "+5550100123", "+1 20 7946", "+7 495 000 00 00", "+1555-123-0100",
+              "+44 20 7 9 4 6"):
+        add(f"PHONE_RE bound {s!r} → match (YED-299)", lambda s=s: _phone(s), True)
+    for s in ("delta +123456789 users", "+44 20 79", "wa.me/555010", "tel:555010", "555-123-01005",
+              "+1555010012345678", "1+15550100123", "1+44 20 7946 0958", "+44 20 7946 0958 1234", "107700 900123",
+              "07700 9001234", "106 39 98 12 34", "06 39 98 12 345", "wa.me/5550100123456789", "1tel:5550100"):
+        add(f"PHONE_RE bound {s!r} → no match (YED-299)", lambda s=s: _phone(s), False)
+    for v in ("dana@example.р", "dana@users.noreply.github.com"):
+        add(f"claim.claim_text {v!r} → allow (YED-299: 1-char non-ASCII TLD; GitHub noreply allowlist)", _ct(v), False)
+    add("claim.metadata integer 1000000000 (exactly 10 digits) → refuse (YED-299: 10**9 is scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 1000000000}}), True)
+    add("claim.metadata.seen_at epoch ms integer → allow (YED-299: declared *_at, 13-digit epoch)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"seen_at": 1763510400123}}), False)
+    add("domain_denylisted('') → False (YED-299)",
+        lambda: (_ for _ in ()).throw(PIIViolation("empty host denylisted")) if domain_denylisted("", deny) else None, False)
+
+    def _redos_case():
+        """EMAIL_RE's and WORD_FORM's run-start look-behinds are ReDoS guards: without them 20k chars took 0.7s / 1.9s
+        (quadratic). The match set is identical either way, so only time can pin them."""
+        t0 = time.perf_counter()
+        guard("claim", {"claim_text": "a" * 50000})
+        if time.perf_counter() - t0 > 1.0:
+            raise PIIViolation(f"guard took {time.perf_counter() - t0:.1f}s on a 50k-char run (ReDoS)")
+    add("guard on a 50k-char letter run finishes under 1s (YED-299: ReDoS look-behinds)", _redos_case, False)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     # YED-304 W1: cluster assignment columns on topic
@@ -1004,6 +1070,9 @@ def selftest() -> bool:
     add("entity_alias email column → refuse (forbidden contact-PII column)",
         _by(PII_COL_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane",
                                                       "email": "x"})), True)
+    for col in ("email", "e_mail", "phone", "phone_number", "mobile", "telephone"):   # literal: not FORBIDDEN_COLUMNS
+        add(f"person.{col} → refuse by the forbidden-column layer itself (YED-299)",
+            _by(PII_COL_L, lambda col=col: guard("person", {"name": "A", col: "x"})), True)
     add("sweep_query clean row → pass",
         lambda: guard("sweep_query", {"kind": "room_topic", "theme_id": "t1", "template": "agent evals 28d news",
                                       "seed_event_id": "e1", "iso_week": "2026-W46", "items_returned": 12,
@@ -1202,6 +1271,109 @@ def selftest() -> bool:
             http.client.HTTPSConnection, g["_CONN"] = saved
     add("_send lifecycle: one shared conn, non-retryable isolated + closed, dropped on error, any connect OSError -> NotSent",
         _send_lifecycle_case, False)
+
+    def _send_reopen_case():
+        """YED-464: a reused keep-alive whose sock is None (server closed it) is reopened for any method; a reused
+        socket that dies mid-request is reopened and re-sent once for GET only, never for PATCH / upsert."""
+        g, made = globals(), []
+
+        class _R:
+            status = 200
+            def read(self): return b"[]"
+
+        class _Sock:
+            def settimeout(self, t): pass
+
+        class _Conn:
+            stale = 0                        # how many upcoming request() calls fail as a peer-closed socket
+            def __init__(self, host, port, timeout=None):
+                self.closed, self.sock, self.sent = False, None, 0
+                made.append(self)
+            def connect(self): self.sock = _Sock()
+            def request(self, *a, **k):
+                self.sent += 1
+                if _Conn.stale:
+                    _Conn.stale -= 1
+                    raise http.client.RemoteDisconnected("Remote end closed connection without response")
+            def getresponse(self): return _R()
+            def close(self): self.closed, self.sock = True, None
+
+        saved = (http.client.HTTPSConnection, g["_CONN"])
+        http.client.HTTPSConnection, g["_CONN"] = _Conn, None
+        try:
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            for method in ("GET", "PATCH", "POST"):          # server sent Connection: close -> http.client nulls sock
+                g["_CONN"].sock = None
+                n = len(made)
+                if _send(method, "/x", b"{}", {}, 30, reuse=True) != (200, "[]") or len(made) != n + 1:
+                    _fail(f"{method} on a socketless keep-alive was not reopened")
+                if not made[n - 1].closed or g["_CONN"] is not made[-1]:
+                    _fail("the socketless connection was not dropped and replaced")
+            _Conn.stale = 1                                  # peer closed the socket we still hold
+            n = len(made)
+            if _send("GET", "/x", None, {}, 30, reuse=True) != (200, "[]") or len(made) != n + 1:
+                _fail("GET on a dead reused socket was not reopened once and re-sent")
+            for method in ("PATCH", "POST"):
+                _Conn.stale, n = 1, len(made)
+                try:
+                    _send(method, "/x", b"{}", {}, 30, reuse=True)
+                    _fail(f"{method} on a dead reused socket was re-sent inside _send")
+                except http.client.RemoteDisconnected:
+                    if g["_CONN"] is not None or len(made) != n:
+                        _fail(f"{method}: dead socket not dropped, or a new one opened")
+                _send("GET", "/x", None, {}, 30, reuse=True)  # fresh conn for the next probe
+            _Conn.stale, n, before = 2, len(made), made[-1].sent   # the re-sent GET fails too: raise, no third try
+            try:
+                _send("GET", "/x", None, {}, 30, reuse=True)
+                _fail("a GET failing twice did not raise")
+            except http.client.RemoteDisconnected:
+                if len(made) != n + 1 or made[n - 1].sent - before + made[n].sent != 2 or g["_CONN"] is not None:
+                    _fail("GET was re-sent more than once, or the dead conn was kept")
+            _Conn.stale, n = 1, len(made)                     # a FRESH connection that dies is never re-sent inline
+            try:
+                _send("GET", "/x", None, {}, 30, reuse=True)
+                _fail("a fresh connection's failure was retried inside _send")
+            except http.client.RemoteDisconnected:
+                if len(made) != n + 1:
+                    _fail("fresh-connection failure opened a second connection")
+        finally:
+            _Conn.stale = 0
+            http.client.HTTPSConnection, g["_CONN"] = saved
+    add("_send YED-464: socketless keep-alive reopened (any method); dead reused socket re-sent once for GET only",
+        _send_reopen_case, False)
+
+    def _denylist_missing_case(present: bool, row: dict):
+        """Points DENYLIST_PATH at a temp file (written when `present`); never touches the real denylist."""
+        d = tempfile.mkdtemp(prefix="spine_denylist_")
+        p = os.path.join(d, "inbox-denylist.md")
+        if present:
+            with open(p, "w", encoding="utf-8") as f:
+                f.write("# Inbox denylist\n\n**Status: v1 ACCEPTED**\n\n## Denylisted domains\n\n- `bank.example`\n")
+
+        def run():
+            saved_path = g["DENYLIST_PATH"]
+            g["DENYLIST_PATH"] = p
+            try:
+                guard("event", row)
+            except PIIViolation as e:
+                if not present and str(row.get("source", "")).startswith("inbox_miner") \
+                        and "inbox-denylist.md, which is missing" not in str(e):
+                    return                   # refused by another layer -> reported as a failure
+                raise
+            finally:
+                g["DENYLIST_PATH"] = saved_path
+        return run
+    _inbox = {"title": "t", "kind": "market", "source": "inbox_miner:market", "metadata": {"sender_domain": "veris.ai"}}
+    add("YED-324: denylist MISSING + inbox_miner row → refuse (inbox_denylist_missing, fails closed)",
+        _denylist_missing_case(False, _inbox), True)
+    add("YED-324: denylist MISSING + inbox_miner row with no metadata → refuse",
+        _denylist_missing_case(False, {"title": "t", "kind": "market", "source": "inbox_miner"}), True)
+    add("YED-324: denylist MISSING + non-inbox row → pass (only inbox rows depend on the denylist)",
+        _denylist_missing_case(False, {"title": "t", "kind": "market", "source": "akta"}), False)
+    add("YED-324: denylist present + inbox row from a clean domain → pass",
+        _denylist_missing_case(True, _inbox), False)
+    add("YED-324: denylist present + inbox row from a denylisted subdomain → refuse",
+        _denylist_missing_case(True, {**_inbox, "metadata": {"sender_domain": "alerts.bank.example"}}), True)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 
