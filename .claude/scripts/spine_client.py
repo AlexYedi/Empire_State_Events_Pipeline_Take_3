@@ -120,17 +120,30 @@ FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "tele
 # 2–5 digit groups split by space/dot/dash. The lookahead counts 7–15 digits across the whole
 # separated run (so `+3 4 5` and `+12.50` pass); the tail guard refuses a stop before another
 # `sep+digit`, so over-long dotted runs (`+1.2.3.4.5.6.7`) pass too. A leading `+` stays mandatory:
-# separator-less 10-digit numbers remain OUT (A3, YED-183). Carried byte-for-byte by the DB backstop
-# (pii-db-check.sql / migration 0017) — check_pii_regex_parity.py enforces it.
-# YED-324: Unicode-aware. The letter ranges (Latin-ext, Greek, Cyrillic, Hebrew/Arabic, Indic, kana, CJK,
-# Hangul) are written as \uXXXX escapes, which Python re and Postgres ARE both read, so the DB backstop carries
-# this literal byte for byte. The TLD takes the same letters, so `иван@пример.рф` matches; digits-only TLDs still don't.
-EMAIL_RE = re.compile(r"(?<![\w/])[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF._%+-]+@[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+(?:\.[A-Za-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF-]+)*\.[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u052F\u0590-\u06FF\u0900-\u0DFF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]{2,}(?![\w])")
+# separator-less 10-digit numbers remain OUT of the shared regex (A3, YED-183); the Python-only bare-digit rule
+# (pii_normalize._bare_digit_spans) covers them in L1/L2. Carried byte-for-byte by the DB backstop (migration 0025
+# public.no_contact_pii_v2; pii-db-check.sql), and check_pii_regex_parity.py enforces it.
+# YED-392 rework: the separator class is [\s.\-‐-―−·・/] (Unicode hyphens and dashes, minus, middle dots, slash)
+# so no upstream dash list is needed; the paren and middle separators are optional, as in (555)123-0100 and
+# 555-1230100; new alternatives cover the UK mobile 07700 900123, the FR 06 12 34 56 78, wa.me/<digits> and tel:.
+#
+# EMAIL_RE (YED-324 rework): a negated-delimiter form, so every script's local part and IDN domain matches without
+# enumerating scripts: Vietnamese, Armenian, Thai and Cyrillic all match; `sold 10@3.50`, `x.com/@handle` and
+# `a@b.c1` do not. The TLD is 2+ ASCII letters or 2+ non-ASCII characters. Quotes are written \x22 \x27 so the
+# literal stays one r"..." string for the parity checker; Python re and Postgres ARE read the same escapes, and
+# `\s` inside a bracket is legal in both. The leading lookbehind (start at a delimiter or the string start) does
+# not change WHICH strings match: a match inside a run of non-delimiters extends back to the run's start. It
+# stops Python re from retrying every position of a long run: without it, 100k chars of 'a' took 17.7s (ReDoS).
+EMAIL_RE = re.compile(r"(?<![^\s@<>()\[\]{}\x22\x27,;:/\\])[^\s@<>()\[\]{}\x22\x27,;:/\\]+@[^\s@<>()\[\]{}\x22\x27,;:/\\]+\.(?:[A-Za-z]{2,}|[^\x01-\x7f]{2,})")
 PHONE_RE = re.compile(
-    r"(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"   # 555-123-4567 / 1-555-123-4567
+    r"(?<![\w.+-])(?:1[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])?(?:\+\d{1,3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?)?(?:\(\d{3}\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d{4}(?![\w])"   # 555-123-4567, (555)123-0100, 555-1230100
     r"|(?<![\w.])\+\d{10,15}(?![\w])"                                                          # +15551234567 — E.164 compact
-    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))"                    # +44 20 7946 0958 — intl, YED-309
-    r"\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)"      # ...incl. +44 (0)20 7946 0958
+    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\))?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d){6,14}(?![\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d))"   # +44 20 7946 0958 — intl, YED-309
+    r"\d{1,3}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{1,8}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{1,8}){1,4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # ...incl. +44 (0)20 7946 0958
+    r"|(?<![\w.+-])07\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{6}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # UK mobile 07700 900123
+    r"|(?<![\w.+-])0[1-9](?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{2}){4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # FR 06 12 34 56 78
+    r"|[Ww][Aa]\.[Mm][Ee]/\+?\d{7,15}(?!\d)"                                                    # wa.me/15551230100
+    r"|(?<![\w])[Tt][Ee][Ll]:\+?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d){6,14}"   # tel:+1-555-123-0100 (parens balanced: pii_guard_watch counts them)
 )
 # Bot / no-reply addresses are not personal data (git trailers surface them in generated artifacts).
 EMAIL_ALLOWLIST_RE = re.compile(r"^(?:noreply|no-reply|donotreply)@|@users\.noreply\.github\.com$", re.I)
@@ -313,12 +326,27 @@ def domain_denylisted(host: str, deny: tuple[set[str], list[str]] | None = None)
 # ---------------------------------------------------------------------------
 # The guard
 # ---------------------------------------------------------------------------
-def _walk(value, path=""):
-    """Yield (path, string) for every string inside a nested dict/list/scalar."""
+def _scanned_scalar(value):
+    """The string a non-dict, non-list value is scanned as: strings as-is, integers of 10+ digits as their digits
+    (a phone stored as a JSON number), everything else None."""
     if isinstance(value, str):
-        yield path, value
+        return value
+    if isinstance(value, int) and not isinstance(value, bool) and abs(value) >= 10 ** 9:
+        return str(value)
+    return None
+
+
+def _walk(value, path=""):
+    """Yield (path, string) for every string inside a nested dict/list/scalar: string values, 10+ digit integers,
+    and nested dict keys (a contact can be a key). A key yields at `<path>.<key>` so its text never lands in a
+    refusal message."""
+    s = _scanned_scalar(value)
+    if s is not None:
+        yield path, s
     elif isinstance(value, dict):
         for k, v in value.items():
+            if path:
+                yield f"{path}.<key>", str(k)
             yield from _walk(v, f"{path}.{k}" if path else str(k))
     elif isinstance(value, (list, tuple)):
         for i, v in enumerate(value):
@@ -328,39 +356,77 @@ def _walk(value, path=""):
 def _walk_masked(value, path: str, masked: str):
     """_walk with a telemetry-safe twin path: same traversal and the same `path` as _walk(row) yields,
     plus `masked`, where every dict key below the top-level column is `*` and list indices are kept."""
-    if isinstance(value, str):
-        yield path, masked, value
+    s = _scanned_scalar(value)
+    if s is not None:
+        yield path, masked, s
     elif isinstance(value, dict):
         for k, v in value.items():
+            yield f"{path}.<key>", f"{masked}.*", str(k)
             yield from _walk_masked(v, f"{path}.{k}", f"{masked}.*")
     elif isinstance(value, (list, tuple)):
         for i, v in enumerate(value):
             yield from _walk_masked(v, f"{path}[{i}]", f"{masked}[{i}]")
 
 
-# YED-392: the normalized second layer. A value is ALSO read the way a renderer or a human would decode it
-# (pii_normalize.normalize: HTML entities, percent-encoding, NFKC so full-width ＠ becomes @, zero-width chars,
-# Unicode dashes, `[at]` / `(dot)` / `x at y dot z`, spaced `a @ b . c`), and the same EMAIL_RE / PHONE_RE run on
-# that copy. Bare 10+ digit runs outside URLs and ids also refuse, except in id / key / url / ref / hash /
-# timestamp fields, where a long digit run is an identifier. The exempt names were set by a read-only shadow scan
-# of every live claim / event / person / company / topic / documents row (2026-11-18): without `key` and `sha256`
-# the rule refused 3,040 real rows (claim.source_key, claim.claim_key, event.metadata.ats_key, documents.sha256);
-# with them, 0. pii_normalize imports EMAIL_RE / PHONE_RE from this module, so it is imported lazily here (a
-# top-level import would be circular). An import failure raises: fail closed.
-_ID_FIELD_RE = re.compile(r"(?:^|_)(?:id|ids|key|keys|ref|refs|url|urls|uri|hash|sha\d*|ts|timestamp|epoch|at)$|url",
-                          re.I)
+# YED-392 (reworked): the normalized second layer. Two contracts, each tested alone against
+# fixtures/pii_probe_corpus.jsonl (check_pii_corpus.py):
+#   L3 form (shared with the DB, migration 0025 no_contact_pii_v2): pii_normalize.l3_form = default-ignorables
+#     stripped, NFKC, UTS-46 dots, the closed set of '@' spellings. EMAIL_RE / PHONE_RE run on it.
+#   Full form (Python only): pii_normalize.normalize = L3 plus general entity / percent decoding and the
+#     obfuscation word forms. EMAIL_RE / PHONE_RE run on it, and a bare 10+ digit run outside URLs / ids refuses.
+# The bare-digit rule skips a field ONLY when (table, path) is declared in DECLARED_IDS AND the value fully matches
+# the declared shape: a declared sha256 holding 5551230100 still refuses, and an undeclared wa_id / phone_id /
+# cell_ref / *url* is scanned like prose. Seeded from the 2026-11-18 read-only shadow scan (claim.source_key,
+# claim.claim_key, event.metadata.ats_key, documents.sha256 refused 3,040 real rows without an exemption) plus the
+# id and timestamp columns. Paths drop list indices; `*` in a path is fnmatch (it spans dots). Declarations only
+# ever relax the Python-only bare-digit rule; EMAIL_RE / PHONE_RE still run on every declared field.
+ID_SHAPES = {
+    "uuid": re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32}"),
+    "sha256": re.compile(r"[0-9a-f]{64}"),
+    # Unix seconds or ms between 2001-09-09 and 2033-05-18: a leading 1, which no NANP area code has.
+    "epoch": re.compile(r"1\d{9}(?:\d{3})?"),
+    "url": re.compile(r"https?://[^\s<>\x22\x27]+"),
+    # role-radar's natural key {ats_vendor}:{ats_job_id} (substrate.role_manifest enforces the vendor list).
+    "ats_key": re.compile(r"(?:greenhouse|ashby|lever|workable):[A-Za-z0-9-]{1,64}"),
+}
+DECLARED_IDS = {
+    ("claim", "source_key"): "sha256",
+    ("claim", "claim_key"): "sha256",
+    ("claim", "judge_prompt_hash"): "sha256",          # YED-451 (#391) judge record
+    ("doc_claims", "claim_key"): "sha256",
+    ("doc_claims", "document_sha256"): "sha256",
+    ("documents", "sha256"): "sha256",
+    ("event", "metadata.ats_key"): "ats_key",
+    ("*", "id"): "uuid",
+    ("*", "*_id"): "uuid",
+    ("*", "url"): "url",
+    ("*", "*_url"): "url",
+    ("*", "*_at"): "epoch",
+    ("*", "*_ts"): "epoch",
+    ("*", "*.ts"): "epoch",
+}
 
 
-def _is_id_field(path: str) -> bool:
-    """True when the innermost key of `path` names an identifier, URL or timestamp (list indices ignored)."""
-    leaf = re.sub(r"\[\d+\]", "", path).rsplit(".", 1)[-1]
-    return bool(_ID_FIELD_RE.search(leaf))
+def _declared_id(table: str, path: str, s: str) -> bool:
+    """True when (table, path) is declared AND s has a declared shape for it."""
+    p = re.sub(r"\[\d+\]", "", path)
+    return any(t in (table, "*") and fnmatch.fnmatchcase(p, pat) and ID_SHAPES[shape].fullmatch(s)
+               for (t, pat), shape in DECLARED_IDS.items())
 
 
 def _scan_normalized(table: str, path: str, masked: str, s: str, t0) -> None:
-    import pii_normalize                    # lazy: see above; sys.path already holds this directory
-    n = pii_normalize.normalize(s)
-    if n != s:                              # the raw layer already read an unchanged copy
+    # pii_normalize imports EMAIL_RE / PHONE_RE from this module, so it is imported lazily (a top-level import is
+    # circular). Any import failure refuses as PIIViolation, so it fails closed AND reaches telemetry.
+    try:
+        import pii_normalize                # sys.path already holds this directory
+    except Exception:
+        _refuse("normalizer_unavailable", table, masked,
+                f"{table}.{path}: the normalized PII layer (pii_normalize) failed to import · ADR-9 fails closed · "
+                f"fix: restore .claude/scripts/pii_normalize.py", t0=t0)
+    n = s
+    for n in (pii_normalize.l3_form(s), pii_normalize.normalize(s)):
+        if n == s:                          # the raw layer already read an unchanged copy
+            continue
         for m in EMAIL_RE.finditer(n):
             if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
                 _refuse("email_normalized", table, masked,
@@ -373,12 +439,12 @@ def _scan_normalized(table: str, path: str, masked: str, s: str, t0) -> None:
                     f"{table}.{path} contains an obfuscated phone number (it decodes to one) · ADR-9 tier 2: "
                     f"contact PII never enters the spine · fix: drop it from the producer",
                     text=n, span=m.span(), t0=t0)
-    if not _is_id_field(path):
+    if not _declared_id(table, path, s):    # n is now the full Python copy
         spans = pii_normalize._bare_digit_spans(n)
         if spans:
             _refuse("bare_digits", table, masked,
                     f"{table}.{path} contains a bare 10+ digit run outside a URL or id (a separator-less phone "
-                    f"number) · ADR-9 tier 2 · fix: drop it, or carry identifiers in an *_id / *_url field",
+                    f"number) · ADR-9 tier 2 · fix: drop it, or declare the identifier in spine_client.DECLARED_IDS",
                     text=n, span=spans[0], t0=t0)
 
 
@@ -706,18 +772,65 @@ def selftest() -> bool:
               "id aaaaaaaa000000000000000000000001", "2026-11-04 12:30:45", "Cyrillic name Иван Петров, CEO",
               "x.com/@handle and https://x.com/@handle", "build 1-2-3", "noreply@github.com", "Москва, 2026"):
         add(f"claim.claim_text {v!r} → allow", _ct(v), False)
-    add("claim.metadata.tweet_id bare digits → allow (id field)",
-        lambda: guard("claim", {"claim_text": "x", "metadata": {"tweet_id": "1856212345678901234"}}), False)
-    add("claim.metadata.post_ids[0] bare digits → allow (id list)",
-        lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["1856212345678901234"]}}), False)
-    add("claim.metadata.source_url bare digits → allow (url field)",
-        lambda: guard("claim", {"claim_text": "x", "metadata": {"source_url": "fakeco.test/p/12345678901"}}), False)
-    add("claim.claim_key / source_key digit runs → allow (key fields; shadow scan 2026-11-18)",
-        lambda: guard("claim", {"claim_text": "x", "claim_key": "c:1856212345678901234", "source_key": "s/18562123456"}), False)
-    add("documents-style metadata.sha256 digits → allow (hash field)",
-        lambda: guard("claim", {"claim_text": "x", "metadata": {"sha256": "0123456789012345678901234567890123456789"}}), False)
-    add("claim.metadata.fetched_ts epoch → allow (timestamp field)",
+    # DECLARED_IDS: a field skips the bare-digit rule only when declared AND shaped as declared (YED-392 rework).
+    _sha = "0123456789012345678901234567890123456789012345678901234567890abc"
+    add("claim.source_key / claim_key sha256 with digit runs → allow (declared sha256)",
+        lambda: guard("claim", {"claim_text": "x", "claim_key": _sha, "source_key": _sha}), False)
+    add("claim.judge_prompt_hash sha256 with a 10+ digit run → allow (declared sha256, #391 judge record)",
+        lambda: guard("claim", {"judge_prompt_hash": _sha}, op="update"), False)
+    add("documents.sha256 with digit runs → allow (declared sha256)",
+        lambda: guard("documents", {"title": "t", "sha256": _sha}), False)
+    add("event.metadata.ats_key greenhouse:4012345678 → allow (declared ats_key)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ats_key": "greenhouse:4012345678"}}), False)
+    add("claim.metadata.fetched_ts epoch → allow (declared *_ts epoch)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"fetched_ts": "1763510400"}}), False)
+    add("claim.metadata.source_url scheme-less URL with digits → allow (URL span)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"source_url": "fakeco.test/p/12345678901"}}), False)
+    add("declared sha256 holding 5551230100 → refuse (shape mismatch: no exemption)",
+        lambda: guard("claim", {"claim_text": "x", "source_key": "5551230100"}), True)
+    add("declared epoch holding 5551230100 → refuse (no epoch starts with 5)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"fetched_ts": "5551230100"}}), True)
+    for k in ("wa_id", "phone_id", "cell_ref", "contact_url", "urlish", "tweet_id"):
+        add(f"claim.metadata.{k} = 5551230100 → refuse (undeclared or wrong shape: scanned)",
+            lambda k=k: guard("claim", {"claim_text": "x", "metadata": {k: "5551230100"}}), True)
+    add("claim.metadata.post_ids[0] bare digits → refuse (undeclared)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["5551230100"]}}), True)
+    add("claim.metadata integer 5551230100 → refuse (10+ digit integers are scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 5551230100}}), True)
+    add("claim.metadata small integers → allow", lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 123456789}}), False)
+    add("claim.metadata email as a dict key → refuse (keys are scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"dana@example.com": True}}), True)
+    add("claim.metadata nested bare-digit key → refuse",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"a": {"5551230100": 1}}}), True)
+    for v in ("dana@exa\u200emple.com", "call 555\u200e-123-0100", "dana\u2063@example.com", "dana\u034f@example.com",
+              "dana@example\ufe0f.com", "dana\U000e0041@example.com", "nguy\u1ec5n@example.com", "\u0540\u0561\u0575@example.com",
+              "\u0e2a\u0e21@example.co.th", "dana@example\u3002com", "dana[@]example.com", "dana&#X0040;example.com",
+              "dana&commat example.com", "(555)123-0100", "555-1230100", "555\u00b7123\u00b70100", "+44 20 7946 0958",
+              "07700 900123", "06 12 34 56 78", "wa.me/15551230100", "tel:+15551230100"):
+        add(f"claim.claim_text {v!r} → refuse (YED-392 review probes)", _ct(v), True)
+    for v in ("the team at OpenAI", "the team at openai.com", "Lead at You.com", "CTO at Arlene.io",
+              "Blogs at miketoscano.com", "an MCP server at mcp.stacksync.com", "Pets dot com", "ISBN 9780134685991",
+              "linkedin.com/in/x-1234567890", "x.com/a/status/1856212345678901234", "sold 10@3.50", "a@b.c1",
+              "Nguy\u1ec5n V\u0103n An, CEO", "\u0e2a\u0e21\u0e0a\u0e32\u0e22 \u0e43\u0e08\u0e14\u0e35", "raised $12000000000"):
+        add(f"claim.claim_text {v!r} → allow", _ct(v), False)
+
+    def _no_normalizer():
+        saved = sys.modules.get("pii_normalize")
+        sys.modules["pii_normalize"] = None          # makes `import pii_normalize` raise ImportError
+        _clear()
+        try:
+            guard("claim", {"claim_text": "clean"})
+        except PIIViolation:
+            if [r.get("rule") for r in _read_tel()] != ["normalizer_unavailable"]:
+                _fail("no normalizer_unavailable telemetry record")
+            raise
+        finally:
+            if saved is None:
+                sys.modules.pop("pii_normalize", None)
+            else:
+                sys.modules["pii_normalize"] = saved
+    add("pii_normalize import failure → PIIViolation rule normalizer_unavailable (fails closed, reaches telemetry)",
+        _no_normalizer, True)
     add("claim.metadata.tweet_id obfuscated email → refuse (id fields skip only the bare-digit rule)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"tweet_id": "dana [at] example [dot] com"}}), True)
     add("event.metadata nested phone → refuse",
@@ -814,8 +927,10 @@ def selftest() -> bool:
     add("person clean row (linkedin ok) → pass",
         lambda: guard("person", {"name": "Ritiz Tambi", "title": "CEO", "linkedin_url": "https://linkedin.com/in/ritiz", "bio": "Founder; talked about agent simulation."}), False)
     add("PATCH nulling email → pass (nulling always allowed)", lambda: guard("person", {"email": None}, op="update"), False)
-    add("metadata unix timestamp 1757700000 → pass (no phone false-positive)",
-        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ts": "1757700000", "id": 1757700000}}), False)
+    add("metadata unix timestamp 1757700000 → pass (declared *.ts / *_at epoch, string and integer)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ts": "1757700000", "seen_at": 1757700000}}), False)
+    add("metadata integer id 1757700000 → refuse (YED-392: 10+ digit integers are scanned; ids are uuids)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"id": 1757700000}}), True)
     add("url with /@handle → pass (not an email)",
         lambda: guard("event", {"title": "t", "kind": "market", "url": "https://x.com/@ritiz_tambi/status/1"}), False)
     add("noreply bot address → pass (allowlisted)",
@@ -1055,7 +1170,7 @@ def selftest() -> bool:
     def _splitter_case():
         live = split_alternatives(PHONE_RE.pattern)
         fx = split_alternatives(_FIXTURE_3ALT)
-        if "|".join(live) != PHONE_RE.pattern or len(live) not in (2, 3):
+        if "|".join(live) != PHONE_RE.pattern or len(live) < 3:
             _fail(f"live split drifted ({len(live)} parts)")
         if "|".join(fx) != _FIXTURE_3ALT or len(fx) != 3:
             _fail(f"fixture split drifted ({len(fx)} parts)")
@@ -1079,7 +1194,8 @@ def selftest() -> bool:
         if twin != list(_walk(row)):
             _fail("the masked walk's paths differ from _walk: refusal messages would change")
         masked = [mk for col, v in row.items() for _, mk, _ in _walk_masked(v, str(col), _label_col("person", col))]
-        if masked != ["bio", "metadata.*.*[0]", "metadata.*.*[1].*", "metadata.*", "name"]:
+        if masked != ["bio", "metadata.*", "metadata.*.*", "metadata.*.*[0]", "metadata.*.*[1].*", "metadata.*.*[1].*",
+                      "metadata.*", "metadata.*", "name"]:
             _fail(f"masked paths {masked}")
     add("telemetry: masked walk yields _walk's exact paths (messages unchanged) and masks every nested key",
         _walk_parity_case, False)
