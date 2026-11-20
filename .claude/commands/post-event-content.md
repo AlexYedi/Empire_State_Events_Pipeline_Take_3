@@ -502,7 +502,7 @@ Roll the results into the Step 6 summary: created contacts/companies, Notes adde
 Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + transcript. Methodology:
 `.claude/skills/content-patterns/speaker-deep-dive.md` (read it in full before running).
 
-1. **Ask Alex:** "Speaker deep-dives for this event? [yes / later / no]". `no` or `later` → skip to Step 6
+1. **Ask Alex:** "Speaker deep-dives for this event? [yes / later / no]". `no` or `later` → skip to Step 5.7
    (note `later` in the summary). No default run.
 2. **Standalone on a past event** ("run post-event-content speaker deep-dives for <event>"): allowed for any
    event whose Notion page has a `post_event_brief` + a transcript. Run Step 1.0 (claim) and Step 1 (resolve)
@@ -514,6 +514,53 @@ Evergreen, one-per-presenter teardown posts built from the `post_event_brief` + 
    Content Draft per speaker, `needs_review`, 3 hook variants, plain paragraphs. Nothing lands in a tracked path.
 5. **Failure:** no `post_event_brief` → stop and say so; no transcript → paraphrase-only, flagged; a Notion
    write fails → return that draft in chat.
+
+## Step 5.7 — Commit the carousel to a content branch + PR (YED-461)
+
+The rendered carousel exists only in the checkout that rendered it. `/freshen` syncs laptop → mini only, so git is
+the one way an output gets back (11/18: the Postgres Mistakes carousel sat on the mini until a manual PR, #388).
+`.gitignore` keeps `Event Content/**/post-event/*.html` and `*.pdf` and ignores everything else in that folder.
+Runs whenever Step 4 rendered a carousel; a lite run or a run with no render skips it (say so in the summary).
+Never push to `main`; merging is Alex's.
+
+1. **Work in a throwaway worktree, never the `main` checkout.** Cut it from `origin/main` and copy the finals in:
+   ```bash
+   EV="Event Content/<MM DD YY Event>"            # the event folder the render wrote to
+   BR="content/<YYYY-MM-DD>-<event-slug>-post-event"
+   WT="<scratchpad>/wt-${BR//\//-}"; ROOT="$(git rev-parse --show-toplevel)"
+   git fetch origin main && git worktree add -b "$BR" "$WT" origin/main
+   mkdir -p "$WT/$EV/post-event" && cp "$ROOT/$EV/post-event/"*.{html,pdf} "$WT/$EV/post-event/"
+   cd "$WT"
+   ```
+2. **Stage only the finals.** `git add "$EV/post-event/"*.html "$EV/post-event/"*.pdf`. Add the visual brief `.md`
+   only if `git check-ignore -q` says it is not ignored. Never `git add -f`, `-A` or `.`.
+3. **Prove nothing private is staged** (stop and unstage on any hit; never commit around it):
+   ```bash
+   git status --porcelain                                # review: only the event's post-event files
+   STAGED="$(git -c core.quotepath=off diff --cached --name-only)"   # unquoted paths, so the checks see real names
+   printf '%s\n' "$STAGED" | git check-ignore --no-index --stdin && echo "STOP: ignored path staged"
+   printf '%s\n' "$STAGED" | awk -v p="$EV/post-event/" 'index($0,p)!=1 || $0 !~ /\.(html|pdf|md)$/' | grep . && echo "STOP: path outside the finals"
+   printf '%s\n' "$STAGED" | grep -iE 'transcript|review|recap|\.env|\.state|\.(m4a|mp3|wav|vtt|srt|png|jpe?g)$' && echo "STOP: private-looking path"
+   ```
+   None of the three may print a STOP. The copy in the carousel is checked by Step 4.5 and Alex's PR review, not
+   here: this step proves which files ship, not what they say.
+4. **Commit and push the branch** (the session's attribution trailers apply):
+   `git commit -m "content(<MM/DD>): <Event> post-event carousel"` then
+   `[ "$BR" != main ] && git push -u origin "$BR"`.
+5. **Open the PR.** `gh` is often missing from the mini's non-interactive PATH:
+   ```bash
+   GH="$(command -v gh || echo /opt/homebrew/bin/gh)"
+   if [ -x "$GH" ]; then
+     "$GH" pr create --base main --head "$BR" --title "content(<MM/DD>): <Event> post-event carousel" \
+       --body "Rendered carousel finals for <Event> (<date>), committed from /post-event-content Step 5.7. Merge is Alex's."
+   else
+     echo "gh unavailable; open: https://github.com/AlexYedi/Empire_State_Events_Pipeline_Take_3/compare/main...$BR?expand=1"
+   fi
+   ```
+   If `gh` is missing or `pr create` fails, the pushed branch plus the compare URL is the handoff: the laptop opens
+   the PR.
+6. **Clean up:** `cd "$ROOT" && git worktree remove "$WT"` (the branch stays on origin). Carry the PR URL, or
+   `branch pushed: <BR>`, into the Step 6 summary.
 
 ## Step 6.5 — Close-check (runs before the Step 6 summary; never blocks)
 
@@ -545,6 +592,7 @@ Drafts created: N  (notion-writer: created C · skipped S · failed F · manifes
 
 HubSpot (Step 5.5): [N contacts created / M Notes added / K skipped]  — or "skipped — no contact cleared the bar"
 Speaker deep-dives (Step 5.6): [N drafts / later / no]
+Carousel PR (Step 5.7): [<PR url> / branch pushed: <name> / skipped: reason]
 
 All drafts in needs_review. Edit in Notion → mark approved when ready to ship.
 ```
