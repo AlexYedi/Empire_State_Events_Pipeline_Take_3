@@ -1,4 +1,4 @@
--- 0027_verify.sql: probes for supabase/migrations/0027_retire_pre2b_and_tighten_topic_reads.sql (YED-298).
+-- 0027_verify.sql: probes for supabase/migrations/0027_retire_pre2b.sql (YED-298).
 -- Read-only. Two statements; rehearse_0027.py runs step 0 at gate 0 and step 1 at gate 4.
 --
 -- 0. BEFORE apply (read-only; prod via the dashboard, and the twin via the harness): exact row count and a row-level

@@ -53,7 +53,7 @@ PROD_SECRET_KEYS = {"MARKET_INTEL_SUPABASE_DB_PASSWORD", "SUPABASE_API_KEY", "MI
                     "PGSERVICE", "PGPASSFILE"}
 
 PG_DUMP = os.environ.get("PG_DUMP_BIN", "/opt/homebrew/opt/libpq/bin/pg_dump")
-MIGRATION = os.path.join(SUPA, "migrations", "0027_retire_pre2b_and_tighten_topic_reads.sql")
+MIGRATION = os.path.join(SUPA, "migrations", "0027_retire_pre2b.sql")
 VERIFY = os.path.join(SUPA, "staging", "0027_verify.sql")
 EXPORT_DEFAULT = "/private/tmp/claude-501/pre2b_export/pre2b_export.sql"
 PRE2B_TABLES = ["company", "event", "event_entity", "ingestion_run", "person", "topic",
