@@ -2,6 +2,9 @@
 -- YED-392 + YED-324 (reworked 2026-11-20, approved plan): the DB PII backstop reads the CANONICAL form of text, and
 -- every free-text site that had a v1 check, plus claim_text / quote and the person trigger, goes through it.
 -- =============================================================================
+-- !!! DO NOT APPLY THE 9b2505e VERSION of this file (the #383 squash). It was superseded in place by this
+-- !!! rework (fix/yed-392-guard-contracts) before it was ever applied; prod has only no_contact_pii_v1.
+-- =============================================================================
 -- NOT APPLIED. Twin rehearsal + Alex dashboard apply required (invariant 2). DDL is never applied by a session.
 --
 -- LAYER CONTRACTS (each layer is tested against its own contract, alone: fixtures/pii_probe_corpus.jsonl,

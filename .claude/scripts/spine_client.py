@@ -392,6 +392,7 @@ ID_SHAPES = {
 DECLARED_IDS = {
     ("claim", "source_key"): "sha256",
     ("claim", "claim_key"): "sha256",
+    ("claim", "judge_prompt_hash"): "sha256",          # YED-451 (#391) judge record
     ("doc_claims", "claim_key"): "sha256",
     ("doc_claims", "document_sha256"): "sha256",
     ("documents", "sha256"): "sha256",
@@ -775,6 +776,8 @@ def selftest() -> bool:
     _sha = "0123456789012345678901234567890123456789012345678901234567890abc"
     add("claim.source_key / claim_key sha256 with digit runs → allow (declared sha256)",
         lambda: guard("claim", {"claim_text": "x", "claim_key": _sha, "source_key": _sha}), False)
+    add("claim.judge_prompt_hash sha256 with a 10+ digit run → allow (declared sha256, #391 judge record)",
+        lambda: guard("claim", {"judge_prompt_hash": _sha}, op="update"), False)
     add("documents.sha256 with digit runs → allow (declared sha256)",
         lambda: guard("documents", {"title": "t", "sha256": _sha}), False)
     add("event.metadata.ats_key greenhouse:4012345678 → allow (declared ats_key)",
