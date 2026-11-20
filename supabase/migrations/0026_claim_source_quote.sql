@@ -2,8 +2,8 @@
 -- 0026 · claim.source_quote + claim.source_quote_fetched_at: a verbatim span from the cited page, per ledger row
 -- Linear: YED-451 (parent YED-384) · Evidence: the 11/19 claim judge (g1119-t1) and its root-cause comment on PR #363.
 --
--- PROPOSED. NOT APPLIED. DDL is applied by Alex from the dashboard after a twin rehearsal (CLAUDE.md invariant 2).
--- Numbered 0026 because PR #383 holds 0025 (pii_backstop_normalized). Renumber if that changes.
+-- NOT APPLIED. DDL is applied by Alex from the dashboard after a twin rehearsal (CLAUDE.md invariant 2):
+--   python3 supabase/scripts/rehearse_0026.py --execute. Requires 0025 (no_contact_pii_v2) applied first.
 --
 -- WHY (root cause):
 --   * The 11/19 judge found 23.0% of decisive verdicts on approved claims unsupported (1,175 of 5,113).
@@ -24,14 +24,16 @@
 --
 -- WHAT (one transaction, idempotent: add column if not exists; constraints guarded by name):
 --   1. claim.source_quote text: at most 25 words (the 0009 licensing guard, now enforced in the DB), never blank,
---      and passing public.no_contact_pii_v1 (0022), the same PII CHECK 0023 put on evidence and freshness_reason.
+--      and passing public.no_contact_pii_v2 (0025), the same PII CHECK 0025 put on claim_text and quote.
+--      Added NOT VALID then VALIDATEd in the same transaction (house pattern from 0025; the column is all NULL at
+--      apply, so VALIDATE is a trivial scan). no_contact_pii_v2 is versioned: never CREATE OR REPLACE it.
 --   2. claim.source_quote_fetched_at timestamptz, set if and only if source_quote is set.
 --   3. NOT included: a CHECK requiring source_quote on new web_verified parse rows. That waits until the
 --      ledger contract and parse_ledger emit the quote. Otherwise stage-research would fail on every brief.
 --      It is sketched as PHASE 2 below and added NOT VALID, so it would bind new rows only.
 --
 -- AFTER APPLY (separate PRs, in order):
---   1. spine_client ALLOW["claim"] += source_quote, source_quote_fetched_at. GUARD-ADJACENT: Alex reviews.
+--   1. spine_client ALLOW["claim"] += source_quote (PR #400, free text, fully scanned). GUARD-ADJACENT: Alex reviews.
 --      source_quote is free text, so the client-side PII scan covers it too (two layers).
 --   2. Ledger contract + specialists + parse_ledger: emit `quote` (<= 25 words, verbatim) and `fetched` per
 --      web_verified row. Meta-commentary rows ("not found", "unverified") are never web_verified (proposal (c)).
@@ -52,13 +54,13 @@ do $do$
 declare
   c record;
 begin
-  if to_regprocedure('public.no_contact_pii_v1(text)') is null then
-    raise exception '0026: public.no_contact_pii_v1(text) missing; apply 0022 first';
+  if to_regprocedure('public.no_contact_pii_v2(text)') is null then
+    raise exception '0026: public.no_contact_pii_v2(text) missing; apply 0025 first';
   end if;
   for c in
     select * from (values
       ('claim_source_quote_words',  'check (source_quote is null or (btrim(source_quote) <> '''' and array_length(regexp_split_to_array(btrim(source_quote), ''\s+''), 1) <= 25))'),
-      ('claim_source_quote_no_pii', 'check (public.no_contact_pii_v1(source_quote))'),
+      ('claim_source_quote_no_pii', 'check (public.no_contact_pii_v2(source_quote)) not valid'),
       ('claim_source_quote_paired', 'check ((source_quote is null) = (source_quote_fetched_at is null))')
     ) as t(name, def)
   loop
@@ -68,6 +70,8 @@ begin
   end loop;
 end
 $do$;
+
+alter table public.claim validate constraint claim_source_quote_no_pii;
 
 comment on column public.claim.source_quote is
   '0026 (YED-451): verbatim span (<= 25 words) from the page at locator url, as fetched by the researcher. Evidence for the source-page judge. Not the speaker quote (that is claim.quote).';
@@ -91,6 +95,8 @@ commit;
 --   and table_name = 'claim' and column_name in ('source_quote', 'source_quote_fetched_at'))::text
 -- union all select 'checks_present', (select count(*) = 3 from pg_constraint where conrelid = 'public.claim'::regclass
 --   and conname in ('claim_source_quote_words', 'claim_source_quote_no_pii', 'claim_source_quote_paired'))::text
+-- union all select 'no_pii_validated_v2', (select convalidated and pg_get_constraintdef(oid) like '%no_contact_pii_v2(source_quote)%'
+--   from pg_constraint where conrelid = 'public.claim'::regclass and conname = 'claim_source_quote_no_pii')::text
 -- union all select 'all_null_at_apply', (select count(*) = 0 from public.claim
 --   where source_quote is not null or source_quote_fetched_at is not null)::text
 -- union all select 'phase2_not_added', (not exists (select 1 from pg_constraint where conrelid = 'public.claim'::regclass
