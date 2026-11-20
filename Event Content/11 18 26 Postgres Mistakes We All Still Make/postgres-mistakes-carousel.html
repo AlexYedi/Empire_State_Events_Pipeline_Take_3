@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Postgres Mistakes that we all still make — carousel (Arc 1 + also-notable)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.sub{font-family:var(--body);font-size:34px;line-height:1.35;color:var(--muted);margin-top:40px;max-width:840px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:720px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this week's shared overrides (slate + off-white); emerald = data / infrastructure ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --mark:#059669; --on-mark:#111418; --second:#6B7280;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.m{color:var(--mark)}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+.strip{position:absolute;left:96px;right:96px;border-top:1px solid var(--rule);padding-top:22px;font-family:var(--mono);font-size:21px;line-height:1.5;letter-spacing:.02em;color:var(--muted)}
+.closer{position:absolute;left:96px;right:96px;font-family:var(--display);font-style:italic;font-size:44px;line-height:1.15}
+h2{margin-top:0}
+.k{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+code{font-family:var(--mono);font-weight:700}
+
+/* slide 1 — one idle session, every table */
+.s1 h1{font-size:118px;line-height:1.04;margin-top:10px}
+.term{align-self:center;margin-top:76px;display:flex;align-items:center;gap:26px;background:var(--panel);border:2px solid var(--rule);border-radius:12px;padding:22px 34px;font-family:var(--mono);font-size:44px;font-weight:700;color:var(--ink)}
+.term .dim{color:var(--muted);font-weight:400}
+.s1 .fan{display:block;margin:0 auto}
+.blocked{margin-top:18px;text-align:center;font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.s1 .strip{bottom:190px}
+
+/* slide 2 — the chain */
+.s2 h2{font-size:84px}
+.chain{margin-top:34px;display:flex;flex-direction:column}
+.b{border:2px solid var(--ink);border-radius:10px;padding:12px 22px;font-family:var(--body);font-weight:600;font-size:38px;line-height:1.15}
+.b.root{background:var(--mark);border-color:var(--mark);color:var(--on-mark);font-weight:700}
+.b.br{border-style:dashed;border-color:var(--muted);font-weight:500}
+.r1,.r5{display:flex;align-items:center;gap:6px}
+.r1 .b:first-child{flex:1.25}
+.r1 .b:last-child{flex:1}
+.r5 .b{flex:1;align-self:stretch;display:flex;align-items:center}
+.harr{flex:none;display:block}
+.varr{display:block}
+.varr.c{margin:0 auto}
+.varr.right{margin-left:auto;margin-right:180px}
+.varr.left{margin-left:180px}
+.s2 .closer{bottom:206px;font-size:34px;line-height:1.2}
+.s2 .srcline{font-size:20px}
+
+/* slide 3 — split frame */
+.s3 h2{font-size:84px}
+.pair{margin-top:46px;display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.pan{background:var(--panel);border:2px solid var(--rule);border-radius:12px;padding:30px 34px 34px;display:flex;flex-direction:column;height:650px}
+.num{display:flex;align-items:baseline;gap:20px}
+.num .n{font-family:var(--display);font-weight:600;font-size:132px;line-height:.95;color:var(--mark)}
+.num .lab{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.def{margin-top:20px;font-family:var(--body);font-weight:500;font-size:28px;line-height:1.3;color:var(--ink)}
+.def code{font-size:25px;font-weight:400;color:var(--ink)}
+.lg{margin-top:26px;display:flex;gap:22px;font-family:var(--mono);font-size:22px;color:var(--muted)}
+.lg span{display:flex;align-items:center;gap:10px}
+.sw{width:22px;height:22px;border-radius:3px;flex:none}
+.sw.d{background:var(--mark)} .sw.t{border:2px solid var(--muted)}
+.mb{margin-top:20px}
+.mb .bl{font-family:var(--body);font-weight:600;font-size:25px;line-height:1.25;margin-bottom:8px}
+.tbar{height:30px;border:2px solid var(--muted);border-radius:4px;position:relative}
+.tbar i{position:absolute;left:0;top:0;bottom:0;width:20%;background:var(--mark)}
+.claim{margin-top:30px;font-family:var(--display);font-style:italic;font-weight:600;font-size:38px;line-height:1.15}
+.fix{margin-top:auto;padding-top:18px;border-top:2px solid var(--rule);font-family:var(--body);font-weight:500;font-size:27px;line-height:1.3}
+.fix b{font-family:var(--mono);font-weight:700;color:var(--mark)}
+.read{position:absolute;left:96px;right:96px;bottom:222px;display:flex;align-items:baseline;gap:22px}
+.read .k{flex:none}
+.read .t{font-family:var(--display);font-style:italic;font-size:42px;line-height:1.15}
+
+/* slide 4 — checklist */
+.s4 h2{font-size:84px}
+.cols{margin-top:56px;display:grid;grid-template-columns:1fr 340px;column-gap:52px}
+.cols .hd{font-family:var(--mono);font-weight:700;font-size:24px;letter-spacing:.14em;text-transform:uppercase;padding-bottom:18px}
+.cols .hd.y{color:var(--mark)} .cols .hd.n{color:var(--muted)}
+.it{display:flex;gap:20px;align-items:flex-start;padding:26px 0;border-top:2px solid var(--rule);font-family:var(--body);font-weight:500;font-size:32px;line-height:1.24}
+.it svg,.it .ob{flex:none;margin-top:2px}
+.ob{width:38px;height:38px;border:3px solid var(--ink);border-radius:6px}
+.it b{font-weight:700}
+.it code{font-size:27px}
+.s4 .strip{bottom:200px;font-size:24px;line-height:1.45;padding-top:20px}
+
+/* slide 5 — also notable */
+.s5 h2{font-size:104px;line-height:1.02;margin-top:20px}
+.ev5{margin-top:90px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:42px 0 46px}
+.ev5 .time{font-family:var(--mono);font-weight:700;font-size:44px;line-height:1.15;color:var(--mark);margin-bottom:20px}
+.ev5 .ttl{font-family:var(--display);font-weight:600;font-size:68px;line-height:1.08}
+.ev5 .ven{margin-top:18px;font-family:var(--mono);font-size:24px;letter-spacing:.06em;color:var(--muted)}
+.terms{margin-top:36px}
+.terms .k{display:block;margin-bottom:14px}
+.cells{display:grid;grid-template-columns:auto auto 1fr;border:2px solid var(--rule);border-radius:10px}
+.cell{padding:18px 24px;font-family:var(--body);font-weight:600;font-size:30px;line-height:1.2;display:flex;align-items:center}
+.cell + .cell{border-left:2px solid var(--rule)}
+.cell.big{font-family:var(--display);font-size:52px}
+.when{margin-top:22px;font-family:var(--mono);font-size:26px;line-height:1.4;color:var(--ink)}
+.s5 .closer{position:static;margin-top:64px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 — Hook: one idle session, every table
+     Alt text: Title card showing one open transaction left waiting and five tables whose cleanup is blocked by it. -->
+<section class="slide s1">
+  <h1>One idle session. <span class="u">Every table</span>’s cleanup stalls.</h1>
+  <div class="term">
+    <span>BEGIN; <span class="dim">…</span> (waiting)</span>
+    <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="none" stroke="#059669" stroke-width="5"/><line x1="28" y1="28" x2="28" y2="13" stroke="#059669" stroke-width="5" stroke-linecap="round"/><line x1="28" y1="28" x2="39" y2="34" stroke="#059669" stroke-width="5" stroke-linecap="round"/></svg>
+  </div>
+  <svg class="fan" width="888" height="230" viewBox="0 0 888 230" aria-hidden="true">
+    <g stroke="#6B7280" stroke-width="3" fill="none">
+      <path d="M444 0 V40 Q444 52 432 52 H82 Q70 52 70 64 V96"/>
+      <path d="M444 40 Q444 52 456 52 H806 Q818 52 818 64 V96"/>
+      <path d="M257 52 Q257 52 257 64 V96"/>
+      <path d="M444 40 V96"/>
+      <path d="M631 52 V96"/>
+    </g>
+    <g id="tbl">
+      <g transform="translate(10,104)"><rect x="0" y="0" width="120" height="96" rx="6" fill="none" stroke="#6B7280" stroke-width="3"/><rect x="0" y="0" width="120" height="24" rx="6" fill="#6B7280"/><line x1="0" y1="48" x2="120" y2="48" stroke="#6B7280" stroke-width="2"/><line x1="0" y1="72" x2="120" y2="72" stroke="#6B7280" stroke-width="2"/><line x1="44" y1="24" x2="44" y2="96" stroke="#6B7280" stroke-width="2"/><line x1="-10" y1="108" x2="130" y2="-12" stroke="#F2F2EE" stroke-width="5" stroke-linecap="round"/></g>
+      <g transform="translate(197,104)"><rect x="0" y="0" width="120" height="96" rx="6" fill="none" stroke="#6B7280" stroke-width="3"/><rect x="0" y="0" width="120" height="24" rx="6" fill="#6B7280"/><line x1="0" y1="48" x2="120" y2="48" stroke="#6B7280" stroke-width="2"/><line x1="0" y1="72" x2="120" y2="72" stroke="#6B7280" stroke-width="2"/><line x1="44" y1="24" x2="44" y2="96" stroke="#6B7280" stroke-width="2"/><line x1="-10" y1="108" x2="130" y2="-12" stroke="#F2F2EE" stroke-width="5" stroke-linecap="round"/></g>
+      <g transform="translate(384,104)"><rect x="0" y="0" width="120" height="96" rx="6" fill="none" stroke="#6B7280" stroke-width="3"/><rect x="0" y="0" width="120" height="24" rx="6" fill="#6B7280"/><line x1="0" y1="48" x2="120" y2="48" stroke="#6B7280" stroke-width="2"/><line x1="0" y1="72" x2="120" y2="72" stroke="#6B7280" stroke-width="2"/><line x1="44" y1="24" x2="44" y2="96" stroke="#6B7280" stroke-width="2"/><line x1="-10" y1="108" x2="130" y2="-12" stroke="#F2F2EE" stroke-width="5" stroke-linecap="round"/></g>
+      <g transform="translate(571,104)"><rect x="0" y="0" width="120" height="96" rx="6" fill="none" stroke="#6B7280" stroke-width="3"/><rect x="0" y="0" width="120" height="24" rx="6" fill="#6B7280"/><line x1="0" y1="48" x2="120" y2="48" stroke="#6B7280" stroke-width="2"/><line x1="0" y1="72" x2="120" y2="72" stroke="#6B7280" stroke-width="2"/><line x1="44" y1="24" x2="44" y2="96" stroke="#6B7280" stroke-width="2"/><line x1="-10" y1="108" x2="130" y2="-12" stroke="#F2F2EE" stroke-width="5" stroke-linecap="round"/></g>
+      <g transform="translate(758,104)"><rect x="0" y="0" width="120" height="96" rx="6" fill="none" stroke="#6B7280" stroke-width="3"/><rect x="0" y="0" width="120" height="24" rx="6" fill="#6B7280"/><line x1="0" y1="48" x2="120" y2="48" stroke="#6B7280" stroke-width="2"/><line x1="0" y1="72" x2="120" y2="72" stroke="#6B7280" stroke-width="2"/><line x1="44" y1="24" x2="44" y2="96" stroke="#6B7280" stroke-width="2"/><line x1="-10" y1="108" x2="130" y2="-12" stroke="#F2F2EE" stroke-width="5" stroke-linecap="round"/></g>
+    </g>
+  </svg>
+  <div class="blocked">cleanup blocked</div>
+  <div class="strip">The Postgres Mistakes that we all still make<br>Postgres NYC · Wed 11/18</div>
+  <div class="srcline">Source: PostgreSQL docs, client connection defaults, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 — Mechanism: the chain from BEGIN to bloat
+     Alt text: Diagram tracing how Postgres row versioning, the xmin horizon and an idle transaction lead to database-wide bloat, with a branch showing the held connection feeding a connection storm. -->
+<section class="slide s2">
+  <h2>Three mistakes, <span class="u">one root</span></h2>
+  <div class="chain">
+    <div class="r1">
+      <div class="b"><code>UPDATE</code> writes a new row copy</div>
+      <svg class="harr" width="40" height="22" viewBox="0 0 40 22" aria-hidden="true"><line x1="2" y1="11" x2="26" y2="11" stroke="#9EA3A8" stroke-width="3"/><polygon points="38,11 25,3 25,19" fill="#9EA3A8"/></svg>
+      <div class="b">Old copy = dead row</div>
+    </div>
+    <svg class="varr right" width="24" height="34" viewBox="0 0 24 34" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22" stroke="#9EA3A8" stroke-width="3"/><polygon points="12,33 4,20 20,20" fill="#9EA3A8"/></svg>
+    <div class="b">Vacuum may only remove rows no open transaction can see</div>
+    <svg class="varr c" width="24" height="34" viewBox="0 0 24 34" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22" stroke="#9EA3A8" stroke-width="3"/><polygon points="12,33 4,20 20,20" fill="#9EA3A8"/></svg>
+    <div class="b root">Oldest open transaction sets the line (xmin horizon)</div>
+    <svg class="varr c" width="24" height="34" viewBox="0 0 24 34" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22" stroke="#9EA3A8" stroke-width="3"/><polygon points="12,33 4,20 20,20" fill="#9EA3A8"/></svg>
+    <div class="b">Idle transaction pins the line → bloat database-wide</div>
+    <svg class="varr left" width="24" height="34" viewBox="0 0 24 34" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22" stroke="#9EA3A8" stroke-width="3" stroke-dasharray="5 4"/><polygon points="12,33 4,20 20,20" fill="#9EA3A8"/></svg>
+    <div class="r5">
+      <div class="b br">Still holds a real connection, even behind a pooler</div>
+      <svg class="harr" width="40" height="22" viewBox="0 0 40 22" aria-hidden="true"><line x1="2" y1="11" x2="26" y2="11" stroke="#9EA3A8" stroke-width="3" stroke-dasharray="5 4"/><polygon points="38,11 25,3 25,19" fill="#9EA3A8"/></svg>
+      <div class="b br">Deploy or failover: every client reconnects at once → connection storm</div>
+    </div>
+  </div>
+  <div class="closer">Bloat · idle in transaction · connection storms: the abstract’s three, as one chain.</div>
+  <div class="srcline">Source: PostgreSQL docs, 2026; Decagon engineering blog, 2026 (pooling note, vendor post)</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 — Evidence: the 20% and the 0
+     Alt text: Two-panel card contrasting autovacuum's 20% default threshold, a tuning problem, with the idle-transaction timeout's default of 0, a code problem that no tuning fixes. -->
+<section class="slide s3">
+  <h2>Tuning problem, or <span class="u">code problem?</span></h2>
+  <div class="pair">
+    <div class="pan">
+      <div class="num"><span class="n">20%</span><span class="lab">tuning</span></div>
+      <div class="def">Default share of dead rows before autovacuum starts.</div>
+      <div class="lg"><span><i class="sw d"></i>dead rows</span><span><i class="sw t"></i>table</span></div>
+      <div class="mb"><div class="bl">10,000-row table → ~2,000 dead rows</div><div class="tbar"><i></i></div></div>
+      <div class="mb"><div class="bl">500M-row table → ~100M dead rows</div><div class="tbar"><i></i></div></div>
+      <div class="fix"><b>Fix:</b> per-table scale factor.</div>
+    </div>
+    <div class="pan">
+      <div class="num"><span class="n">0</span><span class="lab">code</span></div>
+      <div class="def">Default <code>idle_in_transaction_<wbr>session_timeout</code> (off).</div>
+      <div class="claim">One open transaction blocks cleanup on every table.</div>
+      <div class="fix"><b>Fix:</b> close the transaction, or set the timeout per role.</div>
+    </div>
+  </div>
+  <div class="read"><span class="k">Our read</span><span class="t">Check the horizon before you touch the knobs.</span></div>
+  <div class="srcline">Source: PostgreSQL docs (client connection defaults; autovacuum settings), 2026. Row counts are arithmetic.</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 — Counterpoint: what PG19 (planned) does and doesn't touch
+     Alt text: Two-column checklist of what PostgreSQL 19's planned release aims at (online bloat cleanup, parallel index vacuuming, autovacuum scoring) and what the draft does not address (a stuck horizon, an unclosed transaction). -->
+<section class="slide s4">
+  <h2>PG19, planned: <span class="u">what it touches</span></h2>
+  <div class="cols">
+    <div>
+      <div class="hd y">Aims at</div>
+      <div class="it"><svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><path d="M5 20 L15 30 L33 8" fill="none" stroke="#059669" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>REPACK CONCURRENTLY:</b> reclaim bloat without locking the table</span></div>
+      <div class="it"><svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><path d="M5 20 L15 30 L33 8" fill="none" stroke="#059669" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Parallel index vacuuming in autovacuum</span></div>
+      <div class="it"><svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><path d="M5 20 L15 30 L33 8" fill="none" stroke="#059669" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><code>pg_stat_autovacuum_scores</code>: why autovacuum picked that table</span></div>
+    </div>
+    <div>
+      <div class="hd n">Not in the draft</div>
+      <div class="it"><i class="ob"></i><span>Releasing a stuck xmin horizon</span></div>
+      <div class="it"><i class="ob"></i><span>Closing a forgotten transaction</span></div>
+    </div>
+  </div>
+  <div class="strip">GA planned Thu 11/19 · draft still ‘holding for quote’ · open bugs listed in parallel autovacuum and REPACK CONCURRENTLY</div>
+  <div class="srcline">Source: PostgreSQL 19 draft release announcement; PostgreSQL 19 Open Items wiki, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 — Also notable today
+     Alt text: One other notable NYC event on November 18: an investor panel on Anthropic's IPO, whose terms are set at $70 to $78 per share but not yet priced. -->
+<section class="slide s5">
+  <h2><span class="u">Also notable</span> today</h2>
+  <div class="ev5">
+    <div class="time">6:10 PM</div>
+    <div class="ttl">Ahead of Anthropic’s IPO</div>
+    <div class="ven">EchoHer × Lair East Labs × Pillsbury</div>
+    <div class="terms">
+      <span class="k">Terms set, not priced:</span>
+      <div class="cells">
+        <div class="cell big">$70–78</div>
+        <div class="cell">ticker ANT</div>
+        <div class="cell">up to ~$1.4T fully diluted at the range top</div>
+      </div>
+    </div>
+    <div class="when">Pricing reportedly 11/18 · trading reportedly 11/19</div>
+  </div>
+  <div class="closer">Private marks meet a public price.</div>
+  <div class="srcline">Source: CNBC, Nov 10 2026; Luma event page, 2026</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>

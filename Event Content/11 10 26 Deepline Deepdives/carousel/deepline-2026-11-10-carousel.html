@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What does watching a whole TAM cost?</title>
+<style>
+/* carousel-base.css (house tokens, YED-259), inlined. Palette per the visual brief:
+   ground #111418, ink #F2F2EE, one topic accent amber #D97706 (business / GTM),
+   acid green #8FE83A only for the headline underline and the name mark. */
+:root{
+  --ground:#111418; --panel:#191D23; --rule:#2C323B; --ink:#F2F2EE; --muted:#A3A8B0;
+  --accent:#8FE83A; --mark:#D97706;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:96px 96px 170px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:128px;line-height:1.02}
+h2{font-size:76px;line-height:1.06}
+h2::after{content:"";display:block;width:96px;height:6px;background:var(--accent);margin-top:26px}
+.foot{position:absolute;left:96px;right:96px;bottom:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:30px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.src{max-width:820px;line-height:1.4}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted);white-space:nowrap}
+.amber{color:var(--mark)}
+.hatch{background:repeating-linear-gradient(135deg,var(--mark) 0 14px,#7A4304 14px 22px)}
+
+/* Slide 1: hook */
+.s1 h1{margin-top:150px}
+.s1 .u{border-bottom:12px solid var(--accent);padding-bottom:2px}
+.strip{margin-top:64px;border-top:2px solid var(--rule);border-bottom:2px solid var(--rule);padding:22px 0;font-family:var(--mono);font-size:25px;line-height:1.5;color:var(--ink)}
+.agenda{margin-top:auto;font-family:var(--body);font-size:32px;line-height:1.35;color:var(--muted);max-width:820px}
+.agenda b{display:block;font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--mark);margin-bottom:10px}
+
+/* Slide 2: bar chart */
+.legend{margin-top:30px;font-family:var(--body);font-size:26px;line-height:1.5;color:var(--ink)}
+.sw{display:inline-block;width:26px;height:26px;border-radius:4px;vertical-align:-4px;margin-right:12px}
+.sw.ow{background:var(--ink)}
+.axis{margin-top:14px;font-family:var(--mono);font-size:21px;color:var(--muted);letter-spacing:.04em}
+.bars{margin-top:26px}
+.row{margin-bottom:22px}
+.row .lab{font-family:var(--body);font-weight:600;font-size:40px;line-height:1.1}
+.row .lab small{font-weight:400;font-size:26px;color:var(--muted);margin-left:14px}
+.row .track{display:flex;align-items:center;gap:18px;margin-top:8px}
+.row .fill{height:44px;border-radius:5px;background:var(--ink);flex:none}
+.row .val{font-family:var(--body);font-weight:700;font-size:34px;white-space:nowrap}
+.row .val span{font-weight:400;color:var(--muted)}
+.pill{font-family:var(--mono);font-weight:700;font-size:21px;letter-spacing:.1em;text-transform:uppercase;color:#111418;background:var(--mark);border-radius:4px;padding:5px 10px;white-space:nowrap}
+
+/* Slide 3: flow */
+.flow{position:relative;width:888px;height:720px;margin-top:40px}
+.flow svg{position:absolute;inset:0}
+.box{position:absolute;width:248px;height:176px;border:3px solid var(--ink);border-radius:12px;padding:20px 22px;background:var(--ground)}
+.box .t{font-family:var(--body);font-weight:700;font-size:34px;line-height:1.1}
+.box .d{font-family:var(--body);font-size:24px;line-height:1.25;color:var(--muted);margin-top:10px}
+.box.hot{border-color:var(--mark)}
+.box.dash{border:3px dashed var(--muted)}
+.box.dash .d{color:var(--ink);margin-top:0;font-size:25px}
+.tag{position:absolute;font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.06em;color:#111418;background:var(--mark);border-radius:4px;padding:6px 12px;white-space:nowrap}
+.call{position:absolute;width:248px;font-family:var(--body);font-weight:600;font-size:28px;line-height:1.2;padding-left:18px;border-left:6px solid}
+.call.a{color:var(--mark);border-color:var(--mark)}
+.call.g{color:var(--muted);border-color:var(--muted)}
+.fn{margin-top:18px;font-family:var(--body);font-size:26px;line-height:1.4;color:var(--muted);border-top:2px solid var(--rule);padding-top:18px}
+
+/* Slide 4: plan ladder */
+.ladder{margin-top:44px}
+.step{margin-bottom:30px}
+.step .hd{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--body);font-weight:700;font-size:36px}
+.step .hd .p{font-weight:600}
+.step .bar{display:flex;align-items:center;gap:18px;margin-top:10px}
+.step .fill{height:52px;border-radius:5px;background:var(--ink);flex:none;display:flex;align-items:center;padding-left:18px;font-family:var(--body);font-weight:700;font-size:28px;color:#111418;white-space:nowrap}
+.step .fill.ent{background:var(--mark);width:888px}
+.step .out{font-family:var(--body);font-weight:600;font-size:28px;color:var(--ink)}
+.step .dt{margin-top:10px;font-family:var(--body);font-size:26px;line-height:1.3;color:var(--muted)}
+.step.e .hd{color:var(--mark)}
+.q{margin-top:auto;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.18;color:var(--ink);border-top:2px solid var(--rule);padding-top:26px}
+
+/* Slide 5: also today */
+.ev{margin-top:56px;border-top:2px solid var(--rule)}
+.ev .r{display:grid;grid-template-columns:200px 1fr;column-gap:28px;padding:34px 0;border-bottom:2px solid var(--rule)}
+.ev .tm{font-family:var(--mono);font-weight:700;font-size:32px;line-height:1.3;color:var(--mark)}
+.ev .tx{font-family:var(--body);font-size:30px;line-height:1.38;color:var(--muted)}
+.ev .tx b{display:block;font-weight:700;font-size:36px;line-height:1.2;color:var(--ink);margin-bottom:8px}
+.namebox{margin-top:auto}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 alt text: Title card asking what it costs to watch a whole TAM, with the Deepline Deepdives session details. -->
+<section class="slide s1">
+  <h1>What does watching a <span class="u">whole TAM</span> cost?</h1>
+  <div class="strip">Deepline Deepdives · hosted by Jai Toor · Tue 11/10, 12:00 PM ET · free, online</div>
+  <div class="agenda"><b>Agenda</b>free people search · Monitors · self-improving plays</div>
+  <div class="foot"><span class="src">Source: Deepline invite and Luma page, 2026</span><span class="page">1/5</span></div>
+</section>
+
+<!-- Slide 2 alt text: Bar chart of Deepline Monitor prices per finding, from 0.75 credits for a social post to 7.5 for a new company, with contact job changes shown separately as a flat 3.5 credits per contact every 30 days. -->
+<!-- Bar widths: credits x 80px, zero-based. 0.75 = 60 · 1.25 = 100 · 1.75 = 140 · 3.5 = 280 · 5 = 400 · 7.5 = 600 -->
+<section class="slide s2">
+  <h2>Most signals bill per finding. One doesn't.</h2>
+  <div class="legend"><span class="sw ow"></span>Off-white = charged per finding · <span class="sw hatch"></span>Amber hatched = flat per contact, every 30 days</div>
+  <div class="axis">Credits ($ at $0.10 per credit)</div>
+  <div class="bars">
+    <div class="row"><div class="lab">Company social post</div><div class="track"><div class="fill" style="width:60px"></div><div class="val">0.75 <span>($0.075)</span></div></div></div>
+    <div class="row"><div class="lab">Job opening</div><div class="track"><div class="fill" style="width:100px"></div><div class="val">1.25 <span>($0.125)</span></div></div></div>
+    <div class="row"><div class="lab">New hire</div><div class="track"><div class="fill" style="width:140px"></div><div class="val">1.75 <span>($0.175)</span></div></div></div>
+    <div class="row"><div class="lab amber">Contact job change<small>per tracked contact per 30 days</small></div><div class="track"><div class="fill hatch" style="width:280px"></div><div class="val">3.5 <span>($0.35)</span></div><span class="pill">flat fee</span></div></div>
+    <div class="row"><div class="lab">Funding round</div><div class="track"><div class="fill" style="width:400px"></div><div class="val">5 <span>($0.50)</span></div></div></div>
+    <div class="row"><div class="lab">New company</div><div class="track"><div class="fill" style="width:600px"></div><div class="val">7.5 <span>($0.75)</span></div></div></div>
+  </div>
+  <div class="foot"><span class="src">Source: Deepline Monitors docs, retrieved 2026-11-09</span><span class="page">2/5</span></div>
+</section>
+
+<!-- Slide 3 alt text: Flow from a Monitor to a finding, a database row, a Play and a rep, showing that charges happen at the finding and that filters cut cost only at the Monitor. -->
+<section class="slide s3">
+  <h2>Filter at the Monitor, not the Play</h2>
+  <div class="flow">
+    <svg width="888" height="720" viewBox="0 0 888 720" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#F2F2EE"/></marker>
+      </defs>
+      <!-- row 1: Monitor -> Finding -> Database row -->
+      <line x1="252" y1="148" x2="314" y2="148" stroke="#F2F2EE" stroke-width="3" marker-end="url(#ah)"/>
+      <line x1="572" y1="148" x2="634" y2="148" stroke="#F2F2EE" stroke-width="3" marker-end="url(#ah)"/>
+      <!-- Database row -> Play (elbow to row 2) -->
+      <path d="M764 240 V352 H124 V412" fill="none" stroke="#F2F2EE" stroke-width="3" marker-end="url(#ah)"/>
+      <!-- row 2: Play -> Rep -> dashed -->
+      <line x1="252" y1="504" x2="314" y2="504" stroke="#F2F2EE" stroke-width="3" marker-end="url(#ah)"/>
+      <line x1="572" y1="504" x2="634" y2="504" stroke="#A3A8B0" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#ah)"/>
+    </svg>
+    <div class="box hot" style="left:0;top:60px"><div class="t">Monitor</div><div class="d">one company, contact or market × one signal</div></div>
+    <div class="tag" style="left:320px;top:6px">$ charged here</div>
+    <div class="box hot" style="left:320px;top:60px"><div class="t">Finding</div></div>
+    <div class="box" style="left:640px;top:60px"><div class="t">Database row</div></div>
+    <div class="call a" style="left:0;top:256px">Filters here cut charges.</div>
+    <div class="box" style="left:0;top:416px"><div class="t">Play</div><div class="d">workflow in code</div></div>
+    <div class="box" style="left:320px;top:416px"><div class="t">Rep / action</div></div>
+    <div class="box dash" style="left:640px;top:416px"><div class="d">Self-improving? Feedback signal and approver: not yet public.</div></div>
+    <div class="call g" style="left:0;top:614px">Filters here don't.</div>
+  </div>
+  <div class="fn">Stopping a Play doesn't stop its Monitor. A stopped or out-of-credit Monitor doesn't replay what it missed.</div>
+  <div class="foot"><span class="src">Source: Deepline Monitors and Plays docs, retrieved 2026-11-09</span><span class="page">3/5</span></div>
+</section>
+
+<!-- Slide 4 alt text: Plan ladder showing Deepline's monitored-account limits rising from 15 to 500, with full-TAM monitoring only on custom-priced Enterprise. -->
+<!-- Bar widths: accounts x 1.2px, zero-based (500 = 600px, 15 = 18px). Enterprise has no published number, drawn full-width in amber. -->
+<section class="slide s4">
+  <h2>‘Entire TAM’ is an Enterprise line item</h2>
+  <div class="ladder">
+    <div class="step"><div class="hd"><span>Pay-as-you-go</span><span class="p">$0</span></div>
+      <div class="bar"><div class="fill" style="width:18px;padding:0"></div><span class="out">15 monitored accounts (combined with scheduled plays)</span></div>
+      <div class="dt">5,000 free people searches a month</div></div>
+    <div class="step"><div class="hd"><span>Growth</span><span class="p">$395/mo</span></div>
+      <div class="bar"><div class="fill" style="width:600px">up to 500 accounts</div></div>
+      <div class="dt">200,000 searches</div></div>
+    <div class="step"><div class="hd"><span>Team</span><span class="p">$995/mo</span></div>
+      <div class="bar"><div class="fill" style="width:600px">up to 500 accounts</div></div>
+      <div class="dt">500,000 searches · unlimited email enrichment</div></div>
+    <div class="step e"><div class="hd"><span>Enterprise</span><span class="p">custom price</span></div>
+      <div class="bar"><div class="fill ent">full-TAM monitoring and custom signals</div></div></div>
+  </div>
+  <div class="q">Whole list or tiered slice: what earns an alert?</div>
+  <div class="foot"><span class="src">Source: Deepline pricing page, as of 2026-11-09</span><span class="page">4/5</span></div>
+</section>
+
+<!-- Slide 5 alt text: List of three other notable NYC events on November 10: a recruiter Q&A, a founder pitch night and an AI debate night. -->
+<section class="slide s5">
+  <h2>Also notable today</h2>
+  <div class="ev">
+    <div class="r"><div class="tm">12:00 PM</div><div class="tx"><b>Get Hired in Tech: Live Q&amp;A</b>online · with recruiter Julian Simon-Parson (Aura Recruit) · 3percentclub</div></div>
+    <div class="r"><div class="tm">5:00 PM</div><div class="tx"><b>Entrepreneurs Roundtable #219 (ERA)</b>Owen Davis, Contour Venture Partners · host Lou Abrams, First Citizens Innovation Banking</div></div>
+    <div class="r"><div class="tm">6:30 PM</div><div class="tx"><b>Hard Negatives debate night</b>Qdrant, Agora, Hermes · the room votes live</div></div>
+  </div>
+  <div class="namebox"><span class="name">Alex Yedi</span></div>
+  <div class="foot"><span class="src">Source: event invites, 2026</span><span class="page">5/5</span></div>
+</section>
+
+</body>
+</html>

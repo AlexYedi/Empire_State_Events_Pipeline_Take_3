@@ -90,7 +90,15 @@ ALLOW: dict[str, set[str]] = {
     "claim": {"id", "source_key", "claim_key", "claim_text", "claim_type", "quote", "locator",
               "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
               "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
-              "embedding_model", "metadata", "created_at", "reviewed_at"},
+              "embedding_model", "metadata", "created_at", "reviewed_at",
+              # YED-451 (GUARD-ADJACENT): the 0023 judge record, so the source-page judge's verdict can be written
+              # and the web_verified approval gate can read it. 0023's claim_judge_record_complete CHECK is
+              # all-or-nothing over these four, so judged_at opens with them. judge_model is free text: scanned.
+              # PR #363 opens the same four (plus ten more 0023 columns); whichever merges second drops the dupes.
+              "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at",
+              # 0026 (#391 follow-up): the source page's own words behind a claim. Free text: scanned in full,
+              # never in DECLARED_IDS; the DB backs it with a no_contact_pii_v2 CHECK.
+              "source_quote", "source_quote_fetched_at"},  # 0026 CHECK claim_source_quote_paired: set together
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -115,14 +123,30 @@ FORBIDDEN_COLUMNS = {"email", "e_mail", "phone", "phone_number", "mobile", "tele
 # 2–5 digit groups split by space/dot/dash. The lookahead counts 7–15 digits across the whole
 # separated run (so `+3 4 5` and `+12.50` pass); the tail guard refuses a stop before another
 # `sep+digit`, so over-long dotted runs (`+1.2.3.4.5.6.7`) pass too. A leading `+` stays mandatory:
-# separator-less 10-digit numbers remain OUT (A3, YED-183). Carried byte-for-byte by the DB backstop
-# (pii-db-check.sql / migration 0017) — check_pii_regex_parity.py enforces it.
-EMAIL_RE = re.compile(r"(?<![\w/])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w])")
+# separator-less 10-digit numbers remain OUT of the shared regex (A3, YED-183); the Python-only bare-digit rule
+# (pii_normalize._bare_digit_spans) covers them in L1/L2. Carried byte-for-byte by the DB backstop (migration 0025
+# public.no_contact_pii_v2; pii-db-check.sql), and check_pii_regex_parity.py enforces it.
+# YED-392 rework: the separator class is [\s.\-‐-―−·・/] (Unicode hyphens and dashes, minus, middle dots, slash)
+# so no upstream dash list is needed; the paren and middle separators are optional, as in (555)123-0100 and
+# 555-1230100; new alternatives cover the UK mobile 07700 900123, the FR 06 12 34 56 78, wa.me/<digits> and tel:.
+#
+# EMAIL_RE (YED-324 rework): a negated-delimiter form, so every script's local part and IDN domain matches without
+# enumerating scripts: Vietnamese, Armenian, Thai and Cyrillic all match; `sold 10@3.50`, `x.com/@handle` and
+# `a@b.c1` do not. The TLD is 2+ ASCII letters or 2+ non-ASCII characters. Quotes are written \x22 \x27 so the
+# literal stays one r"..." string for the parity checker; Python re and Postgres ARE read the same escapes, and
+# `\s` inside a bracket is legal in both. The leading lookbehind (start at a delimiter or the string start) does
+# not change WHICH strings match: a match inside a run of non-delimiters extends back to the run's start. It
+# stops Python re from retrying every position of a long run: without it, 100k chars of 'a' took 17.7s (ReDoS).
+EMAIL_RE = re.compile(r"(?<![^\s@<>()\[\]{}\x22\x27,;:/\\])[^\s@<>()\[\]{}\x22\x27,;:/\\]+@[^\s@<>()\[\]{}\x22\x27,;:/\\]+\.(?:[A-Za-z]{2,}|[^\x01-\x7f]{2,})")
 PHONE_RE = re.compile(
-    r"(?<![\w.+-])(?:1[\s.-])?(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}(?![\w])"   # 555-123-4567 / 1-555-123-4567
+    r"(?<![\w.+-])(?:1[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])?(?:\+\d{1,3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?)?(?:\(\d{3}\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d{4}(?![\w])"   # 555-123-4567, (555)123-0100, 555-1230100
     r"|(?<![\w.])\+\d{10,15}(?![\w])"                                                          # +15551234567 — E.164 compact
-    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.-]?\(0\))?[\s.-]?\d){6,14}(?![\s.-]?\d))"                    # +44 20 7946 0958 — intl, YED-309
-    r"\d{1,3}(?:[\s.-]?\(0\)[\s.-]?|[\s.-])\d{1,8}(?:[\s.-]\d{1,8}){1,4}(?![\w]|[\s.-]\d)"      # ...incl. +44 (0)20 7946 0958
+    r"|(?<![\w.+-])\+(?=\d(?:(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\))?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d){6,14}(?![\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\d))"   # +44 20 7946 0958 — intl, YED-309
+    r"\d{1,3}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?\(0\)[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]?|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/])\d{1,8}(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{1,8}){1,4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # ...incl. +44 (0)20 7946 0958
+    r"|(?<![\w.+-])07\d{3}[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{6}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # UK mobile 07700 900123
+    r"|(?<![\w.+-])0[1-9](?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d{2}){4}(?![\w]|[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/]\d)"   # FR 06 12 34 56 78
+    r"|[Ww][Aa]\.[Mm][Ee]/\+?\d{7,15}(?!\d)"                                                    # wa.me/15551230100
+    r"|(?<![\w])[Tt][Ee][Ll]:\+?[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d(?:[\s.\-\u2010-\u2015\u2212\u00B7\u30FB/()]{0,2}\d){6,14}"   # tel:+1-555-123-0100 (parens balanced: pii_guard_watch counts them)
 )
 # Bot / no-reply addresses are not personal data (git trailers surface them in generated artifacts).
 EMAIL_ALLOWLIST_RE = re.compile(r"^(?:noreply|no-reply|donotreply)@|@users\.noreply\.github\.com$", re.I)
@@ -305,12 +329,27 @@ def domain_denylisted(host: str, deny: tuple[set[str], list[str]] | None = None)
 # ---------------------------------------------------------------------------
 # The guard
 # ---------------------------------------------------------------------------
-def _walk(value, path=""):
-    """Yield (path, string) for every string inside a nested dict/list/scalar."""
+def _scanned_scalar(value):
+    """The string a non-dict, non-list value is scanned as: strings as-is, integers of 10+ digits as their digits
+    (a phone stored as a JSON number), everything else None."""
     if isinstance(value, str):
-        yield path, value
+        return value
+    if isinstance(value, int) and not isinstance(value, bool) and abs(value) >= 10 ** 9:
+        return str(value)
+    return None
+
+
+def _walk(value, path=""):
+    """Yield (path, string) for every string inside a nested dict/list/scalar: string values, 10+ digit integers,
+    and nested dict keys (a contact can be a key). A key yields at `<path>.<key>` so its text never lands in a
+    refusal message."""
+    s = _scanned_scalar(value)
+    if s is not None:
+        yield path, s
     elif isinstance(value, dict):
         for k, v in value.items():
+            if path:
+                yield f"{path}.<key>", str(k)
             yield from _walk(v, f"{path}.{k}" if path else str(k))
     elif isinstance(value, (list, tuple)):
         for i, v in enumerate(value):
@@ -320,14 +359,96 @@ def _walk(value, path=""):
 def _walk_masked(value, path: str, masked: str):
     """_walk with a telemetry-safe twin path: same traversal and the same `path` as _walk(row) yields,
     plus `masked`, where every dict key below the top-level column is `*` and list indices are kept."""
-    if isinstance(value, str):
-        yield path, masked, value
+    s = _scanned_scalar(value)
+    if s is not None:
+        yield path, masked, s
     elif isinstance(value, dict):
         for k, v in value.items():
+            yield f"{path}.<key>", f"{masked}.*", str(k)
             yield from _walk_masked(v, f"{path}.{k}", f"{masked}.*")
     elif isinstance(value, (list, tuple)):
         for i, v in enumerate(value):
             yield from _walk_masked(v, f"{path}[{i}]", f"{masked}[{i}]")
+
+
+# YED-392 (reworked): the normalized second layer. Two contracts, each tested alone against
+# fixtures/pii_probe_corpus.jsonl (check_pii_corpus.py):
+#   L3 form (shared with the DB, migration 0025 no_contact_pii_v2): pii_normalize.l3_form = default-ignorables
+#     stripped, NFKC, UTS-46 dots, the closed set of '@' spellings. EMAIL_RE / PHONE_RE run on it.
+#   Full form (Python only): pii_normalize.normalize = L3 plus general entity / percent decoding and the
+#     obfuscation word forms. EMAIL_RE / PHONE_RE run on it, and a bare 10+ digit run outside URLs / ids refuses.
+# The bare-digit rule skips a field ONLY when (table, path) is declared in DECLARED_IDS AND the value fully matches
+# the declared shape: a declared sha256 holding 5551230100 still refuses, and an undeclared wa_id / phone_id /
+# cell_ref / *url* is scanned like prose. Seeded from the 2026-11-18 read-only shadow scan (claim.source_key,
+# claim.claim_key, event.metadata.ats_key, documents.sha256 refused 3,040 real rows without an exemption) plus the
+# id and timestamp columns. Paths drop list indices; `*` in a path is fnmatch (it spans dots). Declarations only
+# ever relax the Python-only bare-digit rule; EMAIL_RE / PHONE_RE still run on every declared field.
+ID_SHAPES = {
+    "uuid": re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32}"),
+    "sha256": re.compile(r"[0-9a-f]{64}"),
+    # Unix seconds or ms between 2001-09-09 and 2033-05-18: a leading 1, which no NANP area code has.
+    "epoch": re.compile(r"1\d{9}(?:\d{3})?"),
+    "url": re.compile(r"https?://[^\s<>\x22\x27]+"),
+    # role-radar's natural key {ats_vendor}:{ats_job_id} (substrate.role_manifest enforces the vendor list).
+    "ats_key": re.compile(r"(?:greenhouse|ashby|lever|workable):[A-Za-z0-9-]{1,64}"),
+}
+DECLARED_IDS = {
+    ("claim", "source_key"): "sha256",
+    ("claim", "claim_key"): "sha256",
+    ("claim", "judge_prompt_hash"): "sha256",          # YED-451 (#391) judge record
+    ("doc_claims", "claim_key"): "sha256",
+    ("doc_claims", "document_sha256"): "sha256",
+    ("documents", "sha256"): "sha256",
+    ("event", "metadata.ats_key"): "ats_key",
+    ("*", "id"): "uuid",
+    ("*", "*_id"): "uuid",
+    ("*", "url"): "url",
+    ("*", "*_url"): "url",
+    ("*", "*_at"): "epoch",
+    ("*", "*_ts"): "epoch",
+    ("*", "*.ts"): "epoch",
+}
+
+
+def _declared_id(table: str, path: str, s: str) -> bool:
+    """True when (table, path) is declared AND s has a declared shape for it."""
+    p = re.sub(r"\[\d+\]", "", path)
+    return any(t in (table, "*") and fnmatch.fnmatchcase(p, pat) and ID_SHAPES[shape].fullmatch(s)
+               for (t, pat), shape in DECLARED_IDS.items())
+
+
+def _scan_normalized(table: str, path: str, masked: str, s: str, t0) -> None:
+    # pii_normalize imports EMAIL_RE / PHONE_RE from this module, so it is imported lazily (a top-level import is
+    # circular). Any import failure refuses as PIIViolation, so it fails closed AND reaches telemetry.
+    try:
+        import pii_normalize                # sys.path already holds this directory
+    except Exception:
+        _refuse("normalizer_unavailable", table, masked,
+                f"{table}.{path}: the normalized PII layer (pii_normalize) failed to import · ADR-9 fails closed · "
+                f"fix: restore .claude/scripts/pii_normalize.py", t0=t0)
+    n = s
+    for n in (pii_normalize.l3_form(s), pii_normalize.normalize(s)):
+        if n == s:                          # the raw layer already read an unchanged copy
+            continue
+        for m in EMAIL_RE.finditer(n):
+            if not EMAIL_ALLOWLIST_RE.search(m.group(0)):
+                _refuse("email_normalized", table, masked,
+                        f"{table}.{path} contains an obfuscated email address (it decodes to one) · ADR-9 tier 2: "
+                        f"contact PII never enters the spine · fix: drop it from the producer",
+                        text=n, span=m.span(), t0=t0)
+        m = PHONE_RE.search(n)
+        if m:
+            _refuse("phone_normalized", table, masked,
+                    f"{table}.{path} contains an obfuscated phone number (it decodes to one) · ADR-9 tier 2: "
+                    f"contact PII never enters the spine · fix: drop it from the producer",
+                    text=n, span=m.span(), t0=t0)
+    if not _declared_id(table, path, s):    # n is now the full Python copy
+        spans = pii_normalize._bare_digit_spans(n)
+        if spans:
+            _refuse("bare_digits", table, masked,
+                    f"{table}.{path} contains a bare 10+ digit run outside a URL or id (a separator-less phone "
+                    f"number) · ADR-9 tier 2 · fix: drop it, or declare the identifier in spine_client.DECLARED_IDS",
+                    text=n, span=spans[0], t0=t0)
 
 
 def _scan_pii(row: dict, table: str) -> None:
@@ -347,6 +468,7 @@ def _scan_pii(row: dict, table: str) -> None:
                         f"{table}.{path} contains a phone number · ADR-9 tier 2: contact PII never enters the "
                         f"spine · fix: drop it from the producer (contact detail belongs in HubSpot)",
                         text=s, span=m.span(), t0=t0)
+            _scan_normalized(table, path, masked, s, t0)
     if _COUNT_OK:                           # only rows req() is about to send count as writes
         try:
             _OK_ROWS += 1
@@ -634,6 +756,86 @@ def selftest() -> bool:
     add("person.phone set → refuse", lambda: guard("person", {"name": "A", "phone": "555-123-4567"}), True)
     add("person.bio containing email → refuse",
         lambda: guard("person", {"name": "A", "bio": "reach me at jane@example.com"}), True)
+    # YED-392 / YED-324: obfuscated and non-ASCII contacts (the normalized layer + Unicode-aware EMAIL_RE).
+    # Fictional addresses (example.com / .test / пример.рф) and reserved 555-01xx numbers only.
+    def _ct(v, **extra):
+        return lambda: guard("claim", {"claim_text": v, **extra})
+    for v in ("reach dana [at] example [dot] com", "dana (at) example (dot) com", "DANA AT EXAMPLE DOT COM",
+              "dana ＠ example.com", "dana＠example.com", "dana&#64;example.com", "dana%40example.com",
+              "da\u200bna@exa\u200bmple.com", "иван@пример.рф", "ivan@пример.рф", "иван.петров@example.com",
+              "call 555‑123‑0100", "call 555–123–0100", "call 555—123—0100", "call 555−123−0100",
+              "call ５５５-１２３-０１００", "call 5551230100", "call +1 555 123 0100", "ref 15551230100 now"):
+        add(f"claim.claim_text {v!r} → refuse", _ct(v), True)
+    add("claim.metadata nested [at]/[dot] email → refuse",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"note": "jo [at] fakeco [dot] test"}}), True)
+    add("claim.metadata bare 10 digits in a prose key → refuse",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"note": "ring 2125550100"}}), True)
+    for v in ("raised $5M in 2026, 3x growth", "Q3 2026: 1,200,000 users", "see https://x.com/a/status/1856212345678901234",
+              "https://fakeco.test/p/12345678901", "end. Next sentence", "meet at noon", "ARR grew 40% to $120M",
+              "id aaaaaaaa000000000000000000000001", "2026-11-04 12:30:45", "Cyrillic name Иван Петров, CEO",
+              "x.com/@handle and https://x.com/@handle", "build 1-2-3", "noreply@github.com", "Москва, 2026"):
+        add(f"claim.claim_text {v!r} → allow", _ct(v), False)
+    # DECLARED_IDS: a field skips the bare-digit rule only when declared AND shaped as declared (YED-392 rework).
+    _sha = "0123456789012345678901234567890123456789012345678901234567890abc"
+    add("claim.source_key / claim_key sha256 with digit runs → allow (declared sha256)",
+        lambda: guard("claim", {"claim_text": "x", "claim_key": _sha, "source_key": _sha}), False)
+    add("claim.judge_prompt_hash sha256 with a 10+ digit run → allow (declared sha256, #391 judge record)",
+        lambda: guard("claim", {"judge_prompt_hash": _sha}, op="update"), False)
+    add("documents.sha256 with digit runs → allow (declared sha256)",
+        lambda: guard("documents", {"title": "t", "sha256": _sha}), False)
+    add("event.metadata.ats_key greenhouse:4012345678 → allow (declared ats_key)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ats_key": "greenhouse:4012345678"}}), False)
+    add("claim.metadata.fetched_ts epoch → allow (declared *_ts epoch)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"fetched_ts": "1763510400"}}), False)
+    add("claim.metadata.source_url scheme-less URL with digits → allow (URL span)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"source_url": "fakeco.test/p/12345678901"}}), False)
+    add("declared sha256 holding 5551230100 → refuse (shape mismatch: no exemption)",
+        lambda: guard("claim", {"claim_text": "x", "source_key": "5551230100"}), True)
+    add("declared epoch holding 5551230100 → refuse (no epoch starts with 5)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"fetched_ts": "5551230100"}}), True)
+    for k in ("wa_id", "phone_id", "cell_ref", "contact_url", "urlish", "tweet_id"):
+        add(f"claim.metadata.{k} = 5551230100 → refuse (undeclared or wrong shape: scanned)",
+            lambda k=k: guard("claim", {"claim_text": "x", "metadata": {k: "5551230100"}}), True)
+    add("claim.metadata.post_ids[0] bare digits → refuse (undeclared)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["5551230100"]}}), True)
+    add("claim.metadata integer 5551230100 → refuse (10+ digit integers are scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 5551230100}}), True)
+    add("claim.metadata small integers → allow", lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 123456789}}), False)
+    add("claim.metadata email as a dict key → refuse (keys are scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"dana@example.com": True}}), True)
+    add("claim.metadata nested bare-digit key → refuse",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"a": {"5551230100": 1}}}), True)
+    for v in ("dana@exa\u200emple.com", "call 555\u200e-123-0100", "dana\u2063@example.com", "dana\u034f@example.com",
+              "dana@example\ufe0f.com", "dana\U000e0041@example.com", "nguy\u1ec5n@example.com", "\u0540\u0561\u0575@example.com",
+              "\u0e2a\u0e21@example.co.th", "dana@example\u3002com", "dana[@]example.com", "dana&#X0040;example.com",
+              "dana&commat example.com", "(555)123-0100", "555-1230100", "555\u00b7123\u00b70100", "+44 20 7946 0958",
+              "07700 900123", "06 12 34 56 78", "wa.me/15551230100", "tel:+15551230100"):
+        add(f"claim.claim_text {v!r} → refuse (YED-392 review probes)", _ct(v), True)
+    for v in ("the team at OpenAI", "the team at openai.com", "Lead at You.com", "CTO at Arlene.io",
+              "Blogs at miketoscano.com", "an MCP server at mcp.stacksync.com", "Pets dot com", "ISBN 9780134685991",
+              "linkedin.com/in/x-1234567890", "x.com/a/status/1856212345678901234", "sold 10@3.50", "a@b.c1",
+              "Nguy\u1ec5n V\u0103n An, CEO", "\u0e2a\u0e21\u0e0a\u0e32\u0e22 \u0e43\u0e08\u0e14\u0e35", "raised $12000000000"):
+        add(f"claim.claim_text {v!r} → allow", _ct(v), False)
+
+    def _no_normalizer():
+        saved = sys.modules.get("pii_normalize")
+        sys.modules["pii_normalize"] = None          # makes `import pii_normalize` raise ImportError
+        _clear()
+        try:
+            guard("claim", {"claim_text": "clean"})
+        except PIIViolation:
+            if [r.get("rule") for r in _read_tel()] != ["normalizer_unavailable"]:
+                _fail("no normalizer_unavailable telemetry record")
+            raise
+        finally:
+            if saved is None:
+                sys.modules.pop("pii_normalize", None)
+            else:
+                sys.modules["pii_normalize"] = saved
+    add("pii_normalize import failure → PIIViolation rule normalizer_unavailable (fails closed, reaches telemetry)",
+        _no_normalizer, True)
+    add("claim.metadata.tweet_id obfuscated email → refuse (id fields skip only the bare-digit rule)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"tweet_id": "dana [at] example [dot] com"}}), True)
     add("event.metadata nested phone → refuse",
         lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"contact": {"cell": "+1 (555) 123-4567"}}}), True)
     add("event.metadata E.164 compact phone → refuse",
@@ -728,8 +930,10 @@ def selftest() -> bool:
     add("person clean row (linkedin ok) → pass",
         lambda: guard("person", {"name": "Ritiz Tambi", "title": "CEO", "linkedin_url": "https://linkedin.com/in/ritiz", "bio": "Founder; talked about agent simulation."}), False)
     add("PATCH nulling email → pass (nulling always allowed)", lambda: guard("person", {"email": None}, op="update"), False)
-    add("metadata unix timestamp 1757700000 → pass (no phone false-positive)",
-        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ts": "1757700000", "id": 1757700000}}), False)
+    add("metadata unix timestamp 1757700000 → pass (declared *.ts / *_at epoch, string and integer)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"ts": "1757700000", "seen_at": 1757700000}}), False)
+    add("metadata integer id 1757700000 → refuse (YED-392: 10+ digit integers are scanned; ids are uuids)",
+        lambda: guard("event", {"title": "t", "kind": "market", "metadata": {"id": 1757700000}}), True)
     add("url with /@handle → pass (not an email)",
         lambda: guard("event", {"title": "t", "kind": "market", "url": "https://x.com/@ritiz_tambi/status/1"}), False)
     add("noreply bot address → pass (allowlisted)",
@@ -747,6 +951,15 @@ def selftest() -> bool:
     add("claim.quote carrying a speaker's email → refuse",
         lambda: guard("claim", {"source_key": "s", "claim_key": "k", "claim_text": "x",
                                 "quote": "ping me at ryan@example.com"}), True)
+    add("claim.source_quote carrying an email → refuse (0026 column is free text, fully scanned)",
+        lambda: guard("claim", {"source_quote": "write to dana@example.com for the deck"}, op="update"), True)
+    add("claim.source_quote with an LRM-split phone → refuse",
+        lambda: guard("claim", {"source_quote": "call 555\u200e-123-0100"}, op="update"), True)
+    add("claim.source_quote clean sentence → pass",
+        lambda: guard("claim", {"source_quote": "We cut onboarding from 9 days to 2 (Q3 2026)."}, op="update"), False)
+    add("claim.source_quote + source_quote_fetched_at pair → pass (0026 paired CHECK)",
+        lambda: guard("claim", {"source_quote": "We cut onboarding from 9 days to 2.",
+                                "source_quote_fetched_at": "2026-11-20T18:45:00+00:00"}, op="update"), False)
     add("claim_relation clean row → pass",
         lambda: guard("claim_relation", {"from_claim_id": "a", "to_claim_id": "b", "relation": "contradicts"}), False)
     add("documents our-artifact row (no blob) → pass",
@@ -797,6 +1010,19 @@ def selftest() -> bool:
     add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
         _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
                                                  "page_text": "..."})), True)
+    # YED-451: the 0023 judge record on claim (verdict, model, prompt hash, judged_at) is writable; PII still is not.
+    add("claim judge record PATCH (supported, model, sha256, judged_at) → pass",
+        lambda: guard("claim", {"judge_verdict": "supported", "judge_model": "claude-opus-5-5",
+                                "judge_prompt_hash": "69ec0f7722fdca67198a5b8d9ccb8547d88002e10eac81bc00c9cb6e21e1301a",
+                                "judged_at": "2026-11-19T21:06:00Z"}, op="update"), False)
+    add("claim.judge_model carrying an email → refuse (email scan)",
+        _by(EMAIL_L, lambda: guard("claim", {"judge_verdict": "unsupported", "judge_model": "ops@judge.example.com",
+                                             "judge_prompt_hash": "0" * 64, "judged_at": "2026-11-19T21:06:00Z"},
+                                   op="update")), True)
+    add("claim.judge_verdict carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {"judge_verdict": "call 555-123-4567"}, op="update")), True)
+    add("claim.judge_audit_note (not a 0023 claim column) → refuse (not allowlisted)",
+        _by(COL_L, lambda: guard("claim", {"judge_verdict": "supported", "judge_audit_note": "x"}, op="update")), True)
     add("_by: a refusal from the WRONG layer does not count (unknown table refused by no_allowlist, not the scan)",
         lambda: None if _by(EMAIL_L, lambda: guard("not_a_table", {"x": "a@b.co"}))() is None
         else (_ for _ in ()).throw(PIIViolation("x")), False)
@@ -956,7 +1182,7 @@ def selftest() -> bool:
     def _splitter_case():
         live = split_alternatives(PHONE_RE.pattern)
         fx = split_alternatives(_FIXTURE_3ALT)
-        if "|".join(live) != PHONE_RE.pattern or len(live) not in (2, 3):
+        if "|".join(live) != PHONE_RE.pattern or len(live) < 3:
             _fail(f"live split drifted ({len(live)} parts)")
         if "|".join(fx) != _FIXTURE_3ALT or len(fx) != 3:
             _fail(f"fixture split drifted ({len(fx)} parts)")
@@ -980,7 +1206,8 @@ def selftest() -> bool:
         if twin != list(_walk(row)):
             _fail("the masked walk's paths differ from _walk: refusal messages would change")
         masked = [mk for col, v in row.items() for _, mk, _ in _walk_masked(v, str(col), _label_col("person", col))]
-        if masked != ["bio", "metadata.*.*[0]", "metadata.*.*[1].*", "metadata.*", "name"]:
+        if masked != ["bio", "metadata.*", "metadata.*.*", "metadata.*.*[0]", "metadata.*.*[1].*", "metadata.*.*[1].*",
+                      "metadata.*", "metadata.*", "name"]:
             _fail(f"masked paths {masked}")
     add("telemetry: masked walk yields _walk's exact paths (messages unchanged) and masks every nested key",
         _walk_parity_case, False)
