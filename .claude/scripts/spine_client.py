@@ -9,8 +9,8 @@ ADR-9 tier 2 (the spine) holds professional-public identity only. Concretely:
   * a column may be SET only if it is in ALLOW[table]; ANY column may be NULLED (nulling is
     always safe — it is how the email migration runs through this same guard);
   * email / phone columns are forbidden on every table;
-  * every string value is scanned — recursively through dicts/lists (`metadata` jsonb included) —
-    for email and phone patterns;
+  * every string value AND every nested dict key is scanned — recursively through dicts/lists (`metadata`,
+    `evidence`, `locator` jsonb included) — for email and phone patterns;
   * rows sourced from the inbox (source starts with `inbox_miner`) carry a tier-0 backstop:
     `metadata.sender_domain` / `metadata.from_domain` must not match `inbox-denylist.md`.
 
@@ -91,14 +91,21 @@ ALLOW: dict[str, set[str]] = {
               "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
               "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
               "embedding_model", "metadata", "created_at", "reviewed_at",
-              # YED-451 (GUARD-ADJACENT): the 0023 judge record, so the source-page judge's verdict can be written
-              # and the web_verified approval gate can read it. 0023's claim_judge_record_complete CHECK is
-              # all-or-nothing over these four, so judged_at opens with them. judge_model is free text: scanned.
-              # PR #363 opens the same four (plus ten more 0023 columns); whichever merges second drops the dupes.
-              "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at",
+              # migration 0023 (ADR-15 d2/d4/d7/d8/d11; YED-384); writer: substrate.py stage-v2. 0024 moved
+              # match_claims_hybrid, entity_neighborhood and mi.fact onto claim_current, so a non-default rank /
+              # review_flag is read correctly (d7 prerequisite met). visibility is NOT yet filtered by any reader
+              # (match_claims_hybrid's filter_visibility defaults to null; no caller passes it), so 'public_ok'
+              # protects nothing until an L5 renderer does (d11). DB PII CHECKs exist on evidence and
+              # freshness_reason only; judge_model has none, so this guard's scan is its only PII check.
+              "evidence", "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at", "rank", "review_flag",
+              "valid_from", "valid_to", "freshness_class", "freshness_conf", "freshness_reason", "next_check_at",
+              "visibility",
               # 0026 (#391 follow-up): the source page's own words behind a claim. Free text: scanned in full,
               # never in DECLARED_IDS; the DB backs it with a no_contact_pii_v2 CHECK.
               "source_quote", "source_quote_fetched_at"},  # 0026 CHECK claim_source_quote_paired: set together
+    # claim_verification, claim_label and judge_audit (0023) are deliberately NOT allowlisted: no writer exists yet
+    # (ADR-15: a table with no writer is unrehearsable surface), and an open judge_audit would let the judge's own
+    # pipeline self-certify the audit stage-v2 gates on. Each opens with its first writer, reviewed then.
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -1010,6 +1017,45 @@ def selftest() -> bool:
     add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
         _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
                                                  "page_text": "..."})), True)
+    # 0023 (YED-384, ADR-15): the 14 claim columns open, never the PII boundary; the three writer-less tables stay shut.
+    v2 = {"evidence": [{"para_idx": 3, "quote": "Acme raised a $6M seed in 2024"}], "judge_verdict": "supported",
+          "judge_model": "claude-fable-5-2", "judge_prompt_hash": "a" * 64, "judged_at": "2026-11-14T12:00:00Z",
+          "rank": "normal", "review_flag": "needs_review", "valid_from": "2026-02-03T00:00:00Z",
+          "valid_to": "2026-12-31T00:00:00Z", "freshness_class": "fast_moving", "freshness_conf": 0.7,
+          "freshness_reason": "lookup_v0", "next_check_at": "2026-12-14T12:00:00Z", "visibility": "private"}
+    base_claim = {"source_key": "s", "claim_key": "k", "claim_text": "Acme raised a $6M seed round in 2024."}
+    for col, val in v2.items():
+        add(f"claim.{col} (0023) → pass", lambda col=col, val=val: guard("claim", {**base_claim, col: val}), False)
+    add("claim v2 row with all 14 0023 columns → pass", lambda: guard("claim", {**base_claim, **v2}), False)
+    add("claim.evidence quote carrying an email → refuse (email scan, nested list)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "evidence": [
+            {"para_idx": 1, "quote": "Acme Widgets"}, {"para_idx": 2, "quote": "write to dana.fixture@acme.example.com"}]})), True)
+    add("claim.evidence quote carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "evidence": [{"para_idx": 1, "quote": "call (555) 123-4567"}]})), True)
+    add("claim.freshness_reason carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "freshness_reason": "asked 555-123-4567"}, op="update")), True)
+    add("claim.utility_score still refused beside the 0023 columns (ADR-10 d5 unchanged)",
+        _by(COL_L, lambda: guard("claim", {**base_claim, **v2, "utility_score": 0.9})), True)
+    NO_ALLOW_L = "no ADR-9 allowlist for this table"
+    for t, row in (("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web", "note": "ok"}),
+                   ("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest", "inclusion_prob": 1,
+                                    "label": "supported"}),
+                   ("judge_audit", {"run_date": "2026-11-14", "part": "a", "n": 150, "hits": 150, "bound": 0.99,
+                                    "threshold": 0.9, "passed": True, "judge_model": "m", "judge_prompt_hash": "a" * 64})):
+        add(f"{t} clean row → refuse (0023 table with no writer yet: fail-closed, no_allowlist)",
+            _by(NO_ALLOW_L, lambda t=t, row=row: guard(t, row)), True)
+    # dict KEYS are scanned too (review 2026-11-14; since #396 inside _walk_masked, which yields every nested key at
+    # <path>.<key>): jsonb keys reach the DB as text. Each case must be refused by the email / phone scan.
+    add("claim.evidence span with an email as a dict KEY → refuse (key scan)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "evidence": [{"dana@acme-corp.com": "x", "para_idx": 1,
+                                                                        "quote": "q"}]})), True)
+    add("claim.metadata nested phone as a dict KEY → refuse (key scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "metadata": {"contacts": {"(555) 123-4567": "cell"}}})), True)
+    add("claim.locator / proposed_entities email key → refuse (key scan)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "proposed_entities": [{"jane.doe@example.org": 1}]})), True)
+    add("claim.metadata ordinary keys (as_of, time_sensitive, 2026-11-04) → pass",
+        lambda: guard("claim", {**base_claim, "metadata": {"as_of": "2024-08", "time_sensitive": False,
+                                                            "2026-11-04": {"run": 1}}}), False)
     # YED-451: the 0023 judge record on claim (verdict, model, prompt hash, judged_at) is writable; PII still is not.
     add("claim judge record PATCH (supported, model, sha256, judged_at) → pass",
         lambda: guard("claim", {"judge_verdict": "supported", "judge_model": "claude-opus-5-5",
