@@ -806,9 +806,10 @@ def selftest() -> bool:
               "dana@example\ufe0f.com", "dana\U000e0041@example.com", "nguy\u1ec5n@example.com", "\u0540\u0561\u0575@example.com",
               "\u0e2a\u0e21@example.co.th", "dana@example\u3002com", "dana[@]example.com", "dana&#X0040;example.com",
               "dana&commat example.com", "(555)123-0100", "555-1230100", "555\u00b7123\u00b70100", "+44 20 7946 0958",
-              "07700 900123", "06 12 34 56 78", "wa.me/15551230100", "tel:+15551230100", "dana at example.com"):
+              "07700 900123", "06 12 34 56 78", "wa.me/15551230100", "tel:+15551230100"):
         add(f"claim.claim_text {v!r} → refuse (YED-392 review probes)", _ct(v), True)
-    for v in ("the team at OpenAI", "the team at openai.com", "Pets dot com", "ISBN 9780134685991",
+    for v in ("the team at OpenAI", "the team at openai.com", "Lead at You.com", "CTO at Arlene.io",
+              "Blogs at miketoscano.com", "an MCP server at mcp.stacksync.com", "Pets dot com", "ISBN 9780134685991",
               "linkedin.com/in/x-1234567890", "x.com/a/status/1856212345678901234", "sold 10@3.50", "a@b.c1",
               "Nguy\u1ec5n V\u0103n An, CEO", "\u0e2a\u0e21\u0e0a\u0e32\u0e22 \u0e43\u0e08\u0e14\u0e35", "raised $12000000000"):
         add(f"claim.claim_text {v!r} → allow", _ct(v), False)

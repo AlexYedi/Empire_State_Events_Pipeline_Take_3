@@ -106,15 +106,9 @@ DOT_FORM = re.compile(r"\s{0,3}(?:[\[\(\{<]\s{0,3}(?:dot|\.)\s{0,3}[\]\)\}>])\s{
 # Every run-start below is a negative lookbehind over the run's own class, not \b: \b fires at every position
 # inside `a.a.a…` / `1-1-1…`, and each start rescans the run (quadratic on a 100k-char value).
 WORD_FORM = re.compile(r"(?<![a-z0-9._%+-])([a-z0-9._%+-]+)\s+at\s+([a-z0-9-]+)\s+dot\s+([a-z]{2,})\b", re.I)
-# `dana at example.com`. Prose puts a domain after "at" too ("launched at techcrunch.com"), so the word before
-# "at" must not be one of the common prose heads below, and a domain followed by a path is a link, not a mailbox.
-WORD_AT = re.compile(r"(?<![a-z0-9._%+-])([a-z0-9][a-z0-9._%+-]*)\s+at\s+((?:[a-z0-9-]+\.)+[a-z]{2,})\b(?![/\w]|\.\w)", re.I)
-_PROSE_HEADS = frozenset(
-    "is are was were be been being am it this that these those there here who which we they you he she i me us "
-    "him her them team teams staff people folks someone everyone anyone launched announced presented published "
-    "posted shared spoke speaking speaks talk talks talked live lives available found work works worked working "
-    "based located hosted held open opened booth demo demos read more look looking see seen visit visiting "
-    "apply applied join joined online us engineers engineer role roles jobs job hiring".split())
+# No `x at domain.tld` rule (removed 2026-11-20): a shadow scan of 11,839 live rows found 17 hits, all prose
+# ("Lead at You.com", "CTO at Arlene.io", "Blogs at miketoscano.com"). A company named for its domain reads
+# the same as a mailbox here, so this is an accepted gap; `x at y dot z` (WORD_FORM) stays.
 # Unicode dash punctuation (category Pd, generated) plus U+2212 MINUS, folded to '-' in the full copy only:
 # PHONE_RE already takes them as separators, and notion_export's private-title check reads 'Off-the-record'.
 DASHES = {c: '-' for c in range(0x110000) if unicodedata.category(chr(c)) == 'Pd' or c == 0x2212}
@@ -128,17 +122,13 @@ PROTECTED = re.compile(r"https?://[^\s<>\]\)]+|(?<![a-z0-9.-])(?:[a-z0-9-]+\.)+[
 _CURRENCY = "$€£¥₹"
 
 
-def _word_at(m: re.Match) -> str:
-    return m.group(0) if m.group(1).lower() in _PROSE_HEADS else f"{m.group(1)}@{m.group(2)}"
-
-
 def heuristics(s: str) -> str:
     """The full Python copy (Python-only): L3's steps plus general decoding and the obfuscation word forms."""
     t = canon(AT_GLYPH.sub("@", s or ""))                               # ⓐ before NFKC turns it into 'a'
     t = canon(urllib.parse.unquote(html.unescape(t)))                   # a decoded &#xFF20; needs NFKC again
     t = AT_SPELLING_RE.sub("@", t).translate(DASHES)
     t = DOT_FORM.sub(".", AT_FORM.sub("@", t))
-    t = WORD_AT.sub(_word_at, WORD_FORM.sub(r"\1@\2.\3", t))
+    t = WORD_FORM.sub(r"\1@\2.\3", t)
     return SPACED_DOT.sub(".", SPACED_AT.sub("@", t))
 
 
@@ -196,7 +186,7 @@ def selftest() -> bool:
               "jane%40fakeco.test", "ja\u200Bne@fake\u200Bco.test", "jane @ fakeco . test", "ｊane@fakeco.test",
               "212-555-0100", "212–555–0100", "212‑555‑0100", "2125550100", "+44 20 7946 0958",
               "dana@exa\u200Emple.com", "call 555\u200E-123-0100", "dana\u2063@example.com", "nguyễn@example.com",
-              "dana at example.com", "dana[@]example[.]com", "danaⓐexample.com", "dana&commat;example.com"):
+              "dana[@]example[.]com", "danaⓐexample.com", "dana&commat;example.com"):
         ok(f"has_pii {s!r}", has_pii(s))
         ok(f"redact {s!r} leaves nothing", not has_pii(redact(s)[0]) and redact(s)[1] >= 1)
     for s in ("raised $5M in 2026, 3x growth", "https://fakeco.test/p/12345678901", "see aaaaaaaa000000000000000000000001",
