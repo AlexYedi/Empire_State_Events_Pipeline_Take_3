@@ -115,7 +115,7 @@ def run():
 
     ck("meta parses k=v (value may contain '=')", rs.parse_meta(["a=1", "b=x=y"]) == {"a": "1", "b": "x=y"})
     ck("canonical order covers 1 through 6.5", rs.STEP_IDS[0] == "resolve" and rs.STEP_IDS[-1] == "close-check"
-       and len(rs.STEP_IDS) == 18 and rs.STEP_IDS.index("route") == rs.STEP_IDS.index("themes") + 1)
+       and len(rs.STEP_IDS) == 19 and rs.STEP_IDS.index("carousel-pr") == rs.STEP_IDS.index("deep-dives") + 1 and rs.STEP_IDS.index("route") == rs.STEP_IDS.index("themes") + 1)
 
     with tempfile.TemporaryDirectory() as d:
         plugins = fake_plugins(os.path.join(d, "plugins"))
