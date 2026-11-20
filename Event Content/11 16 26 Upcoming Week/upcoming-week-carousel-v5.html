@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Upcoming Week, 11/16 to 11/22 — carousel (Arc 4: One Question, Multiple Perspectives)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this week's shared overrides (same as postgres-mistakes v3 / voice-ai v2): slate + off-white ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --on-mark:#111418;
+  --price:#F59E0B; --run:#10B981; --act:#3B82F6; --bar:#CBD5E1;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+
+/* ================= slides 1 + 5: matched typography cards (editorial, no topic accent) ================= */
+.type h1{line-height:1.02;margin-top:0}
+.s1{justify-content:center;padding-bottom:170px}
+.s1 h1{font-size:152px;line-height:1.0}
+.s1 h1 span{display:block}
+.s1 .rule{height:2px;background:var(--rule);margin:70px 0 44px}
+.s1 .when{font-family:var(--mono);font-weight:700;font-size:26px;letter-spacing:.1em;color:var(--muted)}
+.s1 .q{margin-top:22px;font-family:var(--display);font-style:italic;font-size:50px;line-height:1.18;color:var(--ink);max-width:880px;text-wrap:balance}
+
+/* ================= slides 2-4: the shared lens frame ================= */
+.lensf{--mark:var(--price);padding-top:92px}
+.lensf.run{--mark:var(--run)}
+.lensf.act{--mark:var(--act)}
+.lens{font-family:var(--mono);font-weight:700;font-size:26px;letter-spacing:.16em;color:var(--mark)}
+.lensf h2{font-size:72px;line-height:1.06;margin-top:18px}
+.stage{margin-top:40px;position:relative}
+.callout{position:absolute;right:96px;bottom:416px;width:520px;border:3px solid var(--mark);border-radius:12px;padding:18px 24px 20px;background:var(--panel)}
+.callout .cl{display:block;font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--mark);margin-bottom:8px}
+.callout .ct{font-family:var(--body);font-weight:500;font-size:26px;line-height:1.3}
+.chips{position:absolute;left:96px;right:96px;bottom:252px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:12px;border:2px solid var(--rule);border-radius:999px;padding:5px 18px 5px 14px;font-family:var(--mono);font-size:20px;line-height:1.3;color:var(--ink);white-space:nowrap}
+.chip i{flex:none;width:12px;height:12px;border-radius:50%;background:var(--mark)}
+
+/* slide 2 — bars to scale */
+.legend{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:24px;color:var(--ink)}
+.sw{flex:none;width:26px;height:26px;border-radius:4px;background:var(--price)}
+.bars{margin-top:30px}
+.brow{margin-bottom:22px}
+.bar{height:68px;border-radius:6px;background:var(--bar);color:var(--on-mark);display:flex;align-items:center;padding:0 24px;gap:12px;font-family:var(--body)}
+.bar .ab{font-weight:500;font-size:28px}
+.bar .v{font-weight:700;font-size:42px;letter-spacing:-.01em}
+.bar.hi{background:var(--price)}
+.basis{margin-top:8px;font-family:var(--body);font-weight:500;font-size:26px;line-height:1.28;color:var(--ink)}
+.basis.mut{color:var(--muted)}
+.ann{margin-top:2px;font-family:var(--display);font-style:italic;font-size:30px;line-height:1.25;color:var(--ink);max-width:400px}
+
+/* slide 3 — causal chain */
+.feed{display:flex;align-items:flex-start;gap:0}
+.box{border:2px solid var(--ink);border-radius:10px;background:var(--panel);font-family:var(--body);font-weight:600;font-size:30px;line-height:1.15;padding:16px 16px;color:var(--ink)}
+.box.storm{border-style:dashed;border-color:var(--muted);align-self:flex-start;white-space:nowrap}
+.s3 .stage{display:flex;flex-direction:column}
+.feedarrow{display:flex;align-items:center;gap:16px;margin-left:110px;height:70px}
+.feedarrow span{font-family:var(--mono);font-size:24px;color:var(--run)}
+.chain{display:flex;align-items:stretch}
+.chain .box{display:flex;align-items:center}
+.chain .harr{flex:none;align-self:center;display:block}
+.b1{width:262px}.b2{width:206px}.b3{width:212px}.b4{width:124px;justify-content:center}
+.pg19{position:relative;margin-top:12px;height:120px}
+.pg19 svg{position:absolute;right:0;top:0}
+.pg19 .pl{position:absolute;right:0;top:44px;width:888px;text-align:right;font-family:var(--body);font-weight:500;font-size:26px;line-height:1.3;color:var(--ink)}
+.pg19 .pl b{color:var(--run);font-weight:700}
+
+/* slide 4 — control-point map */
+.map{position:relative;width:888px;height:416px;margin-top:34px}
+.map svg.wires{position:absolute;left:0;top:0}
+.node{position:absolute;border:2px solid var(--ink);border-radius:10px;background:var(--panel);font-family:var(--body);color:var(--ink)}
+.agent{left:0;top:165px;width:120px;height:86px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px}
+.cp{left:164px;width:318px;height:88px;padding:9px 18px}
+.cp .t,.tg .t{display:block;font-weight:600;font-size:34px;line-height:1.12}
+.cp .e{display:block;font-weight:500;font-size:24px;line-height:1.25;color:var(--muted);margin-top:2px}
+.tg{left:630px;width:258px;height:122px;padding:9px 16px}
+.tg .q{display:block;font-weight:500;font-size:24px;line-height:1.2;color:var(--muted);margin-top:4px}
+.dl{position:absolute;width:124px;text-align:center;font-family:var(--body);font-weight:500;font-size:24px;line-height:1.05;color:var(--act)}
+
+/* ================= slide 5: the week map ================= */
+.s5 h1{font-size:110px;line-height:1.02}
+.week{margin-top:46px;position:relative}
+.days{display:grid;grid-template-columns:repeat(7,1fr);font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.1em;color:var(--muted);text-align:center;border-bottom:2px solid var(--rule);padding-bottom:12px}
+.days .off{opacity:.45}
+.grid{position:relative;height:520px}
+.grid .gl{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed #3A414B}
+.rm{position:absolute;display:flex;align-items:center;gap:14px;height:44px;font-family:var(--body);font-weight:500;font-size:27px;color:var(--ink);white-space:nowrap}
+.rm .dot{flex:none;width:22px;height:22px;border-radius:50%;background:var(--c)}
+.rm .d{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--muted)}
+.rm .l{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.08em;color:var(--c)}
+.rm.left{flex-direction:row-reverse}
+.rm > span{background:var(--ground);padding:2px 8px;margin:0 -8px}
+.rm .dot{box-shadow:0 0 0 6px var(--ground)}
+.rm.price{--c:var(--price)} .rm.run{--c:var(--run)} .rm.act{--c:var(--act)}
+.s5 .cta{margin-top:30px;font-family:var(--display);font-style:italic;font-size:46px;line-height:1.18;color:var(--ink);max-width:880px}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 — the question that runs through all seven rooms (Arc 4: One Question, Multiple Perspectives)
+     Alt text: A title card reading "Price it. Run it. Let it act." above a line saying seven NYC rooms between November 16 and 21 share one question about what AI is worth. -->
+<section class="slide type s1">
+  <h1><span>Price it.</span> <span>Run it.</span> <span>Let it act.</span></h1>
+  <div class="rule"></div>
+  <p class="when">Seven NYC rooms, Mon 11/16 to Sat 11/21.</p>
+  <p class="q">One question underneath: what is AI worth once someone has to price it, run it or sign for it?</p>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 — PRICE IT: one IPO, three valuations, depending on the basis (rooms: Mon M&A, Wed Anthropic IPO panel)
+     Alt text: A bar chart showing Anthropic's IPO valued at about $1.0T, $1.2T or $1.4T depending on what is counted, with the $1.4T fully diluted figure highlighted, plus a note that two 2026 tech M&A trackers report very different numbers because they measure different scopes. -->
+<section class="slide lensf price s2">
+  <div class="lens">PRICE IT</div>
+  <h2>One IPO, <span class="u">three valuations</span></h2>
+  <div class="stage">
+    <div class="legend"><i class="sw"></i>highlighted = the number most headlines use</div>
+    <div class="bars">
+      <div class="brow">
+        <div class="bar" style="width:634px"><span class="ab">about</span><span class="v">$1.0T</span></div>
+        <div class="basis mut">excludes options and restricted stock</div>
+      </div>
+      <div class="brow">
+        <div class="bar" style="width:761px"><span class="ab">about</span><span class="v">$1.2T</span></div>
+        <div class="basis mut">range midpoint, excludes $111B convertible debt (Renaissance Capital)</div>
+      </div>
+      <div class="brow">
+        <div class="bar hi" style="width:888px"><span class="ab">about</span><span class="v">$1.4T</span></div>
+        <div class="basis">fully diluted, top of the $70–78 range</div>
+      </div>
+    </div>
+    <p class="ann">Terms set, not priced, as of 11/16. Pricing reportedly expected 11/18.</p>
+  </div>
+  <div class="callout"><span class="cl">Also on the radar</span><p class="ct">Tech M&amp;A, 2026: <b>AGC −60%</b> over 4 months · <b>Solganick 1,359 deals</b> in Q1. Different scopes.</p></div>
+  <div class="chips">
+    <span class="chip"><i></i>MON 11/16 · AI’s Effect on M&amp;A · NYTA</span>
+    <span class="chip"><i></i>WED 11/18 · Anthropic IPO panel · EchoHer, Lair East Labs, Pillsbury</span>
+  </div>
+  <div class="srcline">Sources: CNBC (11/10/2026); Renaissance Capital; outlet reports compiled 11/16/2026; AGC; Solganick. Range set, not priced.</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 — RUN IT: how the three Postgres mistakes feed each other (rooms: Tue Voice AI workshop, Wed Postgres NYC)
+     Alt text: A diagram showing idle transactions pinning Postgres's vacuum horizon so dead rows pile up into bloat, with connection storms feeding more open sessions into the chain and a note that PostgreSQL 19 is planned to add tools aimed at the bloat end, plus a callout comparing Gemini Live audio output and input cost per minute. -->
+<section class="slide lensf run s3">
+  <div class="lens">RUN IT</div>
+  <h2>How three Postgres mistakes <span class="u">feed each other</span></h2>
+  <div class="stage">
+    <div class="box storm">Connection storms</div>
+    <div class="feedarrow">
+      <svg width="24" height="86" viewBox="0 0 24 86" aria-hidden="true"><line x1="12" y1="0" x2="12" y2="70" stroke="#10B981" stroke-width="4"/><polygon points="12,86 1,66 23,66" fill="#10B981"/></svg>
+      <span>more open sessions</span>
+    </div>
+    <div class="chain">
+      <div class="box b1">Idle-in-transaction</div>
+      <svg class="harr" width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><line x1="0" y1="12" x2="14" y2="12" stroke="#10B981" stroke-width="4"/><polygon points="28,12 12,2 12,22" fill="#10B981"/></svg>
+      <div class="box b2">Pins the vacuum horizon</div>
+      <svg class="harr" width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><line x1="0" y1="12" x2="14" y2="12" stroke="#10B981" stroke-width="4"/><polygon points="28,12 12,2 12,22" fill="#10B981"/></svg>
+      <div class="box b3">Dead rows can’t be cleaned</div>
+      <svg class="harr" width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><line x1="0" y1="12" x2="14" y2="12" stroke="#10B981" stroke-width="4"/><polygon points="28,12 12,2 12,22" fill="#10B981"/></svg>
+      <div class="box b4">Bloat</div>
+    </div>
+    <div class="pg19">
+      <svg width="124" height="40" viewBox="0 0 124 40" aria-hidden="true"><polyline points="2,2 2,14 122,14 122,2" fill="none" stroke="#10B981" stroke-width="3"/><line x1="62" y1="14" x2="62" y2="40" stroke="#10B981" stroke-width="3"/></svg>
+      <p class="pl"><b>PostgreSQL 19 (planned 11/19):</b><br> REPACK CONCURRENTLY + parallel autovacuum target this end</p>
+    </div>
+  </div>
+  <div class="callout"><span class="cl">Also on the radar</span><p class="ct">Voice: Gemini Live audio about <b>$0.018/min out</b> vs <b>$0.005/min in</b> (Google pricing page).</p></div>
+  <div class="chips">
+    <span class="chip"><i></i>TUE 11/17 · Voice AI Workshop · Agora x Google DeepMind</span>
+    <span class="chip"><i></i>WED 11/18 · Postgres Mistakes We All Still Make · Postgres NYC</span>
+  </div>
+  <div class="srcline">Sources: talk abstract (Postgres NYC, 11/18); PostgreSQL draft release announcement (planned, not GA); Google Gemini API pricing page, fetched 11/14/2026.</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 — LET IT ACT: where an agent's action can be checked (rooms: Tue Stacksync x Supabase, Thu Agents & APIs, Sat Money Talks #3)
+     Alt text: A diagram tracing an agent's action through four possible checkpoints (gateway, runtime, docs and SDKs, system of record) to three kinds of writes (a CRM field, a signature and a payment), each marked with an open question about human approval, with no checkpoint marked as the answer. -->
+<section class="slide lensf act s4">
+  <div class="lens">LET IT ACT</div>
+  <h2>Where does the agent’s action <span class="u">get checked?</span></h2>
+  <div class="map">
+    <svg class="wires" width="888" height="416" viewBox="0 0 888 416" aria-hidden="true">
+      <g stroke="#3B82F6" stroke-width="3" fill="none">
+        <line x1="120" y1="208" x2="142" y2="208"/><line x1="142" y1="44" x2="142" y2="355"/>
+        <line x1="142" y1="44" x2="152" y2="44"/><line x1="142" y1="142" x2="152" y2="142"/><line x1="142" y1="240" x2="152" y2="240"/><line x1="142" y1="355" x2="152" y2="355"/>
+        <line x1="482" y1="44" x2="494" y2="44"/><line x1="482" y1="142" x2="494" y2="142"/><line x1="482" y1="240" x2="494" y2="240"/><line x1="482" y1="355" x2="494" y2="355"/>
+        <line x1="494" y1="44" x2="494" y2="355"/>
+        <line x1="494" y1="61" x2="616" y2="61"/><line x1="494" y1="208" x2="616" y2="208"/><line x1="494" y1="355" x2="616" y2="355"/>
+      </g>
+      <g fill="#3B82F6">
+        <polygon points="164,44 150,37 150,51"/><polygon points="164,142 150,135 150,149"/><polygon points="164,240 150,233 150,247"/><polygon points="164,355 150,348 150,362"/>
+        <polygon points="630,61 614,53 614,69"/><polygon points="630,208 614,200 614,216"/><polygon points="630,355 614,347 614,363"/>
+      </g>
+      <g fill="#111418" stroke="#3B82F6" stroke-width="3">
+        <polygon points="562,47 576,61 562,75 548,61"/><polygon points="562,194 576,208 562,222 548,208"/><polygon points="562,341 576,355 562,369 548,355"/>
+      </g>
+    </svg>
+    <div class="node agent">Agent</div>
+    <div class="node cp" style="top:0"><span class="t">Gateway</span> <span class="e">(Fabric Gateway)</span></div>
+    <div class="node cp" style="top:98px"><span class="t">Runtime</span> <span class="e">(Astropods)</span></div>
+    <div class="node cp" style="top:196px"><span class="t">Docs and SDKs</span> <span class="e">(Fern)</span></div>
+    <div class="node cp" style="top:294px;height:122px"><span class="t">System of record</span> <span class="e">(CRM / Postgres, Docusign)</span></div>
+    <div class="dl" style="left:500px;top:-10px">human approval?</div>
+    <div class="dl" style="left:500px;top:137px">human approval?</div>
+    <div class="dl" style="left:500px;top:284px">human approval?</div>
+    <div class="node tg" style="top:0"><span class="t">CRM field</span> <span class="q">which write wins: agent or human?</span></div>
+    <div class="node tg" style="top:147px"><span class="t">Signature</span> <span class="q">where does human approval sit?</span></div>
+    <div class="node tg" style="top:294px"><span class="t">Payment</span> <span class="q">what must the trace keep?</span></div>
+  </div>
+  <div class="callout"><span class="cl">Also on the radar</span><p class="ct">Supabase: <b>about 70%</b> of new databases created by agents (company figure; 60%+ in June).</p></div>
+  <div class="chips">
+    <span class="chip"><i></i>TUE 11/17 · Stacksync x Supabase</span>
+    <span class="chip"><i></i>THU 11/19 · Agents &amp; APIs NYC · Postman</span>
+    <span class="chip"><i></i>SAT 11/21 · Money Talks #3 · Block Convey</span>
+  </div>
+  <div class="srcline">Sources: Postman product pages (Fabric Gateway, Fern, Astropods); Stacksync and Supabase event page; Money Talks #3 Luma page; Supabase company figures, 2026.</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 — synthesis: the week as one map, and where a reader's question goes
+     Alt text: A week timeline from Monday to Saturday placing the seven NYC events under three labels (price, run and act), with an invitation for readers outside NYC to send a question for any room. -->
+<section class="slide type s5">
+  <h1>Which room gets your question?</h1>
+  <div class="week">
+    <div class="days"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span class="off">FRI</span><span>SAT</span><span class="off">SUN</span></div>
+    <div class="grid">
+      <i class="gl" style="left:63px"></i><i class="gl" style="left:190px"></i><i class="gl" style="left:317px"></i><i class="gl" style="left:444px"></i><i class="gl" style="left:571px"></i><i class="gl" style="left:698px"></i><i class="gl" style="left:825px"></i>
+      <div class="rm price" style="left:52px;top:26px"><i class="dot"></i><span><span class="d">MON</span> <span class="l">PRICE</span> · M&amp;A (NYTA)</span></div>
+      <div class="rm run" style="left:179px;top:98px"><i class="dot"></i><span><span class="d">TUE</span> <span class="l">RUN</span> · Voice AI (Agora x Google DeepMind)</span></div>
+      <div class="rm act" style="left:179px;top:170px"><i class="dot"></i><span><span class="d">TUE</span> <span class="l">ACT</span> · Stacksync x Supabase</span></div>
+      <div class="rm run" style="left:306px;top:242px"><i class="dot"></i><span><span class="d">WED</span> <span class="l">RUN</span> · Postgres NYC</span></div>
+      <div class="rm price" style="left:306px;top:314px"><i class="dot"></i><span><span class="d">WED</span> <span class="l">PRICE</span> · Anthropic IPO panel</span></div>
+      <div class="rm act left" style="right:433px;top:386px"><i class="dot"></i><span><span class="d">THU</span> <span class="l">ACT</span> · Agents &amp; APIs (Postman)</span></div>
+      <div class="rm act left" style="right:179px;top:458px"><i class="dot"></i><span><span class="d">SAT</span> <span class="l">ACT</span> · Money Talks #3 (Block Convey)</span></div>
+    </div>
+  </div>
+  <p class="cta">Not in NYC? Send the question. If I’m in that room, I’ll ask it.</p>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>

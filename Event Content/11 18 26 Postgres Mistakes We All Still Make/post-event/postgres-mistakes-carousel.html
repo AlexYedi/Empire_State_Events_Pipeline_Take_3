@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Postgres Mistakes That We All Still Make — post-event carousel (Arc 1)</title>
+<style>
+/* ---- carousel-base.css (house tokens, YED-259) ---- */
+:root{
+  --ground:#0E1320; --panel:#161D2E; --rule:#2A3550; --ink:#F1F3F8; --muted:#9AA6BF;
+  --accent:#8FE83A; --accent-deep:#1E40AF; --mark:#5B8DEF;
+  --display:"Iowan Old Style","Palatino","Georgia",serif;
+  --body:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+  --mono:Menlo,"SF Mono",monospace;
+  color-scheme:dark;
+}
+@page{size:1080px 1350px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ground);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1080px;height:1350px;background:var(--ground);color:var(--ink);position:relative;padding:110px 96px 96px;display:flex;flex-direction:column;overflow:hidden}
+.slide:not(:last-child){break-after:page}
+.eyebrow{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:132px;line-height:1.0;margin-top:44px}
+h2{font-size:82px;line-height:1.04;margin-top:28px}
+.foot{position:absolute;left:96px;right:96px;bottom:64px;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:20px;color:var(--muted)}
+.name{font-family:var(--body);font-weight:600;font-size:24px;color:var(--ink);border-bottom:4px solid var(--accent);padding-bottom:4px}
+.page{font-family:var(--mono);font-size:22px;color:var(--muted)}
+
+/* ---- this carousel: brief palette (slate + off-white, emerald = data/infrastructure) ---- */
+:root{
+  --ground:#111418; --panel:#181C22; --rule:#2B3038; --ink:#F2F2EE; --muted:#9EA3A8;
+  --mark:#059669; --on-mark:#111418;
+}
+.u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:7px;text-underline-offset:14px;text-decoration-skip-ink:none}
+.srcline{position:absolute;left:96px;right:96px;bottom:126px;font-family:var(--mono);font-size:21px;line-height:1.45;color:var(--muted)}
+.mono{font-family:var(--mono)}
+h2{margin-top:0}
+
+/* slide 1 — log-scale bars */
+.s1 h1{font-size:104px;line-height:1.04;margin-top:32px}
+.key{margin-top:44px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:24px;color:var(--muted);letter-spacing:.04em}
+.chart{position:relative;margin-top:22px;height:476px}
+.grid{position:absolute;top:0;bottom:44px;width:0;border-left:2px dashed var(--rule)}
+.tick{position:absolute;bottom:0;transform:translateX(-50%);font-family:var(--mono);font-size:24px;color:var(--muted)}
+.row{position:absolute;left:0;right:0}
+.row .lab{font-family:var(--body);font-weight:600;font-size:32px;line-height:1.1;margin-bottom:12px}
+.row .bar{height:76px;border-radius:6px;display:flex;align-items:center}
+.bar.out{border:4px solid var(--ink);background:var(--ground)}
+.bar.fill{background:var(--mark);justify-content:flex-end;padding-right:26px}
+.val{font-family:var(--body);font-weight:700;font-size:42px;letter-spacing:-.01em;white-space:nowrap}
+.val small{font-size:28px;font-weight:600}
+.row .valout{position:absolute;bottom:14px}
+.bar.fill .val{color:var(--on-mark)}
+.s1 .note{margin-top:22px;font-family:var(--display);font-style:italic;font-size:34px;color:var(--ink)}
+
+/* slide 2 — five into one */
+.s2 h2{font-size:84px;margin-top:0}
+.conv{position:relative;margin-top:56px;height:700px}
+.conv svg{position:absolute;inset:0}
+.mist{position:absolute;left:0;width:536px;height:122px;border:2px solid var(--ink);border-radius:10px;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
+.mist .t{font-family:var(--body);font-weight:700;font-size:30px;line-height:1.1}
+.mist .p{font-family:var(--body);font-weight:500;font-size:25px;line-height:1.2;color:var(--muted);margin-top:6px}
+.sym{position:absolute;left:628px;width:260px;top:254px;height:150px;background:var(--mark);color:var(--on-mark);border-radius:10px;display:flex;align-items:center;padding:0 22px;font-family:var(--body);font-weight:700;font-size:36px;line-height:1.08}
+.fix{position:absolute;left:628px;width:260px;top:446px}
+.fix .no{font-family:var(--body);font-weight:500;font-size:26px;line-height:1.3;color:var(--muted);text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:var(--ink)}
+.fix .no .mono{font-size:24px}
+.fix .yes{margin-top:26px;font-family:var(--display);font-weight:600;font-size:46px;text-decoration:underline;text-decoration-color:var(--mark);text-decoration-thickness:6px;text-underline-offset:10px}
+
+/* slide 3 — pool twice */
+.s3 h2{font-size:96px}
+.flow{position:relative;margin-top:96px;height:640px}
+.flow svg{position:absolute;inset:0}
+.num{position:absolute;font-family:var(--body);font-weight:700;color:var(--ink);transform:translate(-50%,-50%);white-space:nowrap}
+.gl{position:absolute;width:270px;transform:translateX(-50%);top:446px}
+.gl .t{font-family:var(--body);font-weight:700;font-size:28px;line-height:1.15}
+.gl .p{font-family:var(--body);font-weight:500;font-size:24px;line-height:1.25;color:var(--muted);margin-top:8px}
+.rot{position:absolute;top:0;left:270px;width:360px;text-align:center;font-family:var(--mono);font-size:24px;color:var(--muted);letter-spacing:.04em}
+.ten{position:absolute;top:58px;transform:translateX(-50%);font-family:var(--display);font-style:italic;font-weight:600;font-size:40px;color:var(--mark)}
+.ceil{position:absolute;left:96px;right:96px;bottom:206px;border-left:8px solid var(--mark);padding:6px 0 6px 28px;font-family:var(--display);font-size:40px;line-height:1.2}
+.ceil .mono{font-size:34px}
+
+/* slide 4 — before / after */
+.s4 h2{font-size:92px}
+.split{margin-top:70px;display:grid;grid-template-columns:1fr 1fr;column-gap:48px}
+.col .hd{font-family:var(--mono);font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-bottom:18px;border-bottom:2px solid var(--rule);margin-bottom:26px}
+.col.after .hd{color:var(--mark);border-bottom-color:var(--mark)}
+.steps{position:relative;padding-left:34px}
+.txbar{position:absolute;left:0;width:10px;background:var(--mark);border-radius:5px}
+.st{font-family:var(--mono);font-size:27px;line-height:1.2;padding:16px 0 16px 0}
+.st .sub{display:block;font-size:24px;color:var(--muted);margin-top:4px}
+.st.api{border:3px solid var(--ink);border-radius:10px;padding:16px 20px;margin:8px 0}
+.st.ext{border:3px solid var(--ink);border-radius:10px;padding:16px 20px;margin:0 0 26px -34px}
+.st.ext .sub{font-size:24px}
+.lbl{font-family:var(--display);font-style:italic;font-size:30px;line-height:1.2;margin:10px 0 0 34px}
+.s4 .note{position:absolute;left:96px;right:96px;bottom:212px;border-top:2px solid var(--rule);padding-top:26px;font-family:var(--body);font-weight:500;font-size:30px;line-height:1.3}
+
+/* slide 5 — checklist */
+.s5 h2{font-size:84px}
+.checks{margin-top:46px;display:flex;flex-direction:column}
+.ck{display:grid;grid-template-columns:72px 1fr;column-gap:20px;padding:20px 0;border-top:2px solid var(--rule)}
+.ck .n{font-family:var(--display);font-weight:600;font-size:52px;line-height:1;color:var(--mark)}
+.ck .t{font-family:var(--body);font-weight:700;font-size:32px;line-height:1.15}
+.ck .p{font-family:var(--body);font-weight:500;font-size:24px;line-height:1.3;color:var(--muted);margin-top:6px}
+.ck .p .mono{color:var(--ink);font-size:23px}
+.ask{margin-top:30px;font-family:var(--display);font-style:italic;font-weight:600;font-size:60px;line-height:1.05}
+</style>
+</head>
+<body>
+
+<!-- Slide 1 of 5 — Hook / evidence: three ways to run the same queries
+Alt text: Bar chart of one select-only workload run three ways: 1,415 queries per second with a new connection per query, about 31,000 through PgBouncer, and 215,000 on 20 pooled connections. -->
+<section class="slide s1">
+  <div class="eyebrow">Postgres NYC · Scott Mead</div>
+  <h1><span class="u">Same queries.</span> Three connection setups.</h1>
+  <div class="key"><span>Queries per second</span><span>log scale</span></div>
+  <div class="chart">
+    <!-- log10 axis from 100 to 300,000 across 888px -->
+    <div class="grid" style="left:255px"></div><div class="tick" style="left:255px">1k</div>
+    <div class="grid" style="left:511px"></div><div class="tick" style="left:511px">10k</div>
+    <div class="grid" style="left:766px"></div><div class="tick" style="left:766px">100k</div>
+    <div class="row" style="top:0">
+      <div class="lab">New connection per query</div>
+      <div class="bar out" style="width:294px"></div>
+      <div class="val valout" style="left:318px">1,415 <small>/ sec</small></div>
+    </div>
+    <div class="row" style="top:156px">
+      <div class="lab">Through PgBouncer</div>
+      <div class="bar out" style="width:636px"></div>
+      <div class="val valout" style="left:660px">~31,000 <small>/ sec</small></div>
+    </div>
+    <div class="row" style="top:312px">
+      <div class="lab">Pooled, 20 connections</div>
+      <div class="bar fill" style="width:851px"><span class="val">215,000 <small>/ sec</small></span></div>
+    </div>
+  </div>
+  <div class="note">pgbench, select-only, one laptop.</div>
+  <div class="srcline">Source: Scott Mead (Databricks), Postgres NYC, Nov 18 · pgbench on his laptop</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">1 / 5 →</span></div>
+</section>
+
+<!-- Slide 2 of 5 — Mechanism: five mistakes, one symptom
+Alt text: Diagram showing five Postgres mistakes, each with its mechanism, all leading to more connections, with "bigger box" crossed out and "efficiency" marked as the fix. -->
+<section class="slide s2">
+  <h2>Five mistakes. <span class="u">One symptom.</span></h2>
+  <div class="conv">
+    <svg width="888" height="700" viewBox="0 0 888 700" aria-hidden="true">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#059669"/></marker></defs>
+      <g fill="none" stroke="#059669" stroke-width="3">
+        <path d="M536,61 C584,61 580,290 620,300" marker-end="url(#ah)"/>
+        <path d="M536,206 C580,206 584,310 620,315" marker-end="url(#ah)"/>
+        <path d="M536,351 L620,331" marker-end="url(#ah)"/>
+        <path d="M536,496 C580,496 584,350 620,346" marker-end="url(#ah)"/>
+        <path d="M536,641 C584,641 580,370 620,361" marker-end="url(#ah)"/>
+      </g>
+    </svg>
+    <div class="mist" style="top:0"><div class="t">Connect per query</div><div class="p">fork + auth every time</div></div>
+    <div class="mist" style="top:145px"><div class="t">Growing JSON rows</div><div class="p">bloat → slower reads</div></div>
+    <div class="mist" style="top:290px"><div class="t">API call inside a transaction</div><div class="p">idle in transaction</div></div>
+    <div class="mist" style="top:435px"><div class="t">Daily DELETE purge</div><div class="p">dead rows + held session</div></div>
+    <div class="mist" style="top:578px"><div class="t">Unused indexes</div><div class="p">write cost, HOT off</div></div>
+    <div class="sym">More connections.</div>
+    <div class="fix">
+      <div class="no">Bigger box / higher <span class="mono">max_connections</span></div>
+      <div class="yes">Efficiency</div>
+    </div>
+  </div>
+  <div class="srcline">Source: Scott Mead (Databricks), Postgres NYC, Nov 18</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">2 / 5 →</span></div>
+</section>
+
+<!-- Slide 3 of 5 — Architecture: pool twice
+Alt text: Flow diagram of two-tier pooling, where 50,000 users narrow to about 5,000 connections through per-container app pools and about 500 through PgBouncer before reaching Postgres. -->
+<section class="slide s3">
+  <h2>Pool <span class="u">twice</span>, not once</h2>
+  <div class="flow">
+    <svg width="888" height="640" viewBox="0 0 888 640" aria-hidden="true">
+      <!-- narrowing band: users -> app pools -> PgBouncer -> Postgres -->
+      <path d="M0,120 L270,120 L270,200 L450,200 L450,248 L630,248 L630,264 L740,264 L740,276 L630,276 L630,292 L450,292 L450,340 L270,340 L270,420 L0,420 Z" fill="#181C22" stroke="#F2F2EE" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- gates -->
+      <rect x="262" y="104" width="16" height="332" rx="4" fill="#059669"/>
+      <rect x="622" y="232" width="16" height="76" rx="4" fill="#059669"/>
+      <!-- Postgres cylinder -->
+      <g stroke="#F2F2EE" stroke-width="3" fill="#181C22">
+        <path d="M770,218 L770,322 A50,16 0 0 0 870,322 L870,218"/>
+        <ellipse cx="820" cy="218" rx="50" ry="16"/>
+      </g>
+      <!-- rule-of-thumb bracket -->
+      <path d="M270,46 L270,34 L630,34 L630,46" fill="none" stroke="#9EA3A8" stroke-width="2"/>
+    </svg>
+    <div class="rot">Scott's rule of thumb</div>
+    <div class="ten" style="left:270px">÷10</div>
+    <div class="ten" style="left:630px">÷10</div>
+    <div class="num" style="left:135px;top:270px;font-size:52px;line-height:1.05;text-align:center">50,000<br><span style="font-size:32px;font-weight:600">users</span></div>
+    <div class="num" style="left:360px;top:270px;font-size:44px">~5,000</div>
+    <div class="num" style="left:540px;top:216px;font-size:36px">~500</div>
+    <div class="num" style="left:820px;top:376px;font-size:28px;font-weight:600">Postgres</div>
+    <div class="gl" style="left:270px"><div class="t">App pools, one per container</div><div class="p">some teams run 2 connections per pod</div></div>
+    <div class="gl" style="left:630px"><div class="t">PgBouncer, transaction mode</div><div class="p">run N behind a load balancer</div></div>
+  </div>
+  <div class="ceil">Scott's ceiling: never more than 1,500 <span class="mono">max_connections</span>.</div>
+  <div class="srcline">Source: Scott Mead (Databricks), Postgres NYC, Nov 18 · heuristic, not a benchmark</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">3 / 5 →</span></div>
+</section>
+
+<!-- Slide 4 of 5 — Before → after: the transaction path
+Alt text: Two-column comparison of a payment flow: before, the external API call sits inside the database transaction; after, the call happens first and the transaction holds only SQL statements. -->
+<section class="slide s4">
+  <h2>Only SQL in <span class="u">the transaction</span></h2>
+  <div class="split">
+    <div class="col before">
+      <div class="hd">Before</div>
+      <div class="steps">
+        <div class="txbar" style="top:8px;bottom:8px"></div>
+        <div class="st">BEGIN</div>
+        <div class="st">SELECT … FOR UPDATE</div>
+        <div class="st api">Call payment API<span class="sub">(50 ms → 200 ms)</span></div>
+        <div class="st">UPDATE</div>
+        <div class="st">COMMIT</div>
+      </div>
+      <div class="lbl">every connection waits here; vacuum can't clean</div>
+    </div>
+    <div class="col after">
+      <div class="hd">After</div>
+      <div class="steps">
+        <div class="st ext">Call payment API<span class="sub">(with idempotency key)</span></div>
+        <div style="position:relative">
+          <div class="txbar" style="left:-34px;top:8px;bottom:8px"></div>
+          <div class="st">BEGIN</div>
+          <div class="st">UPDATEs</div>
+          <div class="st">COMMIT</div>
+        </div>
+      </div>
+      <div class="lbl">slow API, idle database</div>
+    </div>
+  </div>
+  <div class="note">A 30 s timeout at 300 commits/s still lets 9,000 rows accumulate.</div>
+  <div class="srcline">Source: Scott Mead (Databricks), Postgres NYC, Nov 18 · teaching example</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">4 / 5 →</span></div>
+</section>
+
+<!-- Slide 5 of 5 — CTA: five checks for this week
+Alt text: Checklist of five Postgres checks from the talk: connection rate, vacuum-log horizon warnings, idle-in-transaction sessions, unused indexes with a stats-reset check, and HOT update ratios. -->
+<section class="slide s5">
+  <h2>Five checks before <span class="u">a bigger box</span></h2>
+  <div class="checks">
+    <div class="ck"><div class="n">1</div><div><div class="t">Connections per second</div><div class="p"><span class="mono">pg_stat_database.sessions</span> (PG14+)</div></div></div>
+    <div class="ck"><div class="n">2</div><div><div class="t">Vacuum logs</div><div class="p"><span class="mono">dead but not yet removable</span> = someone holds the horizon</div></div></div>
+    <div class="ck"><div class="n">3</div><div><div class="t">Idle in transaction</div><div class="p">5+ sessions at 5+ seconds = fix tonight</div></div></div>
+    <div class="ck"><div class="n">4</div><div><div class="t">Unused indexes</div><div class="p"><span class="mono">pg_stat_user_indexes</span>, <span class="mono">idx_scan = 0</span>, skip PK/unique, check the last stats reset</div></div></div>
+    <div class="ck"><div class="n">5</div><div><div class="t">HOT vs non-HOT updates</div><div class="p"><span class="mono">pg_stat_user_tables</span></div></div></div>
+  </div>
+  <div class="ask">Which one did yours fail?</div>
+  <div class="srcline">Source: Scott Mead (Databricks), Postgres NYC, Nov 18</div>
+  <div class="foot"><span class="name">Alex Yedi</span><span class="page">5 / 5</span></div>
+</section>
+
+</body>
+</html>
