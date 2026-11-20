@@ -54,7 +54,8 @@ Verbs (W1 four + the S1b-lite `merge`; record-usage / record-outcome stay out of
                   reasons as JSON {id: {"reason", "prior_status"?, "rejected_at"?}}: the way to apply a model
                   review's verdicts. On a row already rejected without prior_status it only fills the canonical
                   keys (status untouched), so --revert works on it afterwards. Claim status changes go through
-                  substrate verbs, never a raw PATCH.
+                  substrate verbs, never a raw PATCH. YED-437: stage-prose --replace writes the same keys when it
+                  retires prose (plus metadata.retired); --revert skips those rows unless --include-retired.
   demote-claims   --ids-file ids.txt --reason "…" [--revert] [--dry-run]
                   (YED-455) approved -> candidate by id (readers go verify-first); prior status, prior reviewed_at,
                   reason and stamp kept under metadata.demoted_*; idempotent; --revert restores them exactly.
@@ -1676,13 +1677,27 @@ def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool
     return stamp
 
 
+REJECT_KEYS = ("prior_status", "rejected_reason", "rejected_at")
+
+
+def rejection_patch(prior_status: str, reason: str, md: dict, stamp: str | None = None) -> dict:
+    """The one canonical rejection write (YED-437): status rejected, reviewed_at, and the reject-claims keys
+    (prior_status, rejected_reason, rejected_at) merged into the row's metadata. reject-claims and stage-prose's
+    --replace retire path both build their PATCH body here, so there is one way to mark a rejection."""
+    stamp = stamp or _utc_stamp()
+    return {"status": "rejected", "reviewed_at": stamp,
+            "metadata": {**md, "prior_status": prior_status, "rejected_reason": reason, "rejected_at": stamp}}
+
+
 def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = False,
-                  reasons: dict | None = None) -> int:
+                  reasons: dict | None = None, include_retired: bool = False) -> int:
     """HUMAN-RUN. Mark claims rejected (retrieval drops them) with the reason and prior status in metadata; with
     revert, restore the prior status and remove the keys. Nothing is deleted. Returns rows changed.
     reasons (YED-417): per-row {id: {"reason", "prior_status"?, "rejected_at"?}} instead of one reason. A row that is
     already rejected but has no prior_status (rejected outside this verb) gets only the canonical keys filled, with
-    prior_status from the entry or metadata.model_review_harsh; its status is left alone."""
+    prior_status from the entry or metadata.model_review_harsh; its status is left alone.
+    YED-437: revert skips rows stage-prose --replace retired (metadata.retired) unless include_retired — un-retiring
+    superseded prose is stage-prose --replace's job (it revives a row when its extraction comes back)."""
     if reasons is not None:
         if (reason or "").strip() or revert:
             raise SystemExit("reject-claims: --reasons-file cannot be combined with --reason or --revert")
@@ -1703,8 +1718,11 @@ def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = Fal
             if r["status"] != "rejected" or "prior_status" not in md:
                 g.stats.bump("claim", "revert_skipped")
                 continue
+            if md.get("retired") == PROSE_RETIRED and not include_retired:
+                g.stats.bump("claim", "revert_skipped_retired")
+                continue
             prior = md.pop("prior_status")
-            for k in ("rejected_reason", "rejected_at"):
+            for k in ("rejected_reason", "rejected_at", "retired"):
                 md.pop(k, None)
             g.patch("claim", f"id=eq.{cid}", {"status": prior, "metadata": md})
             g.stats.bump("claim", "reverted")
@@ -1722,10 +1740,7 @@ def reject_claims(g: "Graph", ids: list[str], reason: str, *, revert: bool = Fal
                 g.stats.bump("claim", "keys_filled")
                 n += 1
                 continue
-            stamp = _utc_stamp()
-            g.patch("claim", f"id=eq.{cid}", {"status": "rejected", "reviewed_at": stamp,
-                                              "metadata": {**md, "prior_status": r["status"],
-                                                           "rejected_reason": why, "rejected_at": stamp}})
+            g.patch("claim", f"id=eq.{cid}", rejection_patch(r["status"], why, md))
             g.stats.bump("claim", "rejected")
         n += 1
     return n
@@ -1829,6 +1844,7 @@ PROSE_CONF_CAP = 0.60
 PROSE_EXIT_REFUSED = 2      # the checked file cannot be trusted as given: other event, splitter, no brief to re-verify
 PROSE_EXIT_REPLACE = 7      # prose already staged from a DIFFERENT extraction and --replace not passed
 PROSE_RETIRED = "prose_replaced"
+PROSE_RETIRE_REASON = "stage-prose --replace: superseded by a newer prose extraction"
 # The only columns a prose claim row may carry; everything else in the checked file is ignored (review #330 item 4).
 PROSE_COLUMNS = ("source_key", "claim_key", "claim_text", "claim_type", "quote", "locator", "provenance_tier",
                  "confidence", "asserted_at", "extractor_model")
@@ -2026,10 +2042,12 @@ def stage_prose(g: "Graph", checked: dict, manifest: dict, *, brief_md: str | No
     for r in prose:
         meta = dict(r.get("metadata") or {})
         if replace and r["claim_key"] not in file_keys and not retired(r) and r.get("status") == "candidate":
-            g.patch("claim", f"id=eq.{r['id']}", {"status": "rejected", "metadata": {**meta, "retired": PROSE_RETIRED}})
+            g.patch("claim", f"id=eq.{r['id']}",       # YED-437: the canonical reject keys, plus metadata.retired
+                    rejection_patch(r["status"], PROSE_RETIRE_REASON, {**meta, "retired": PROSE_RETIRED}))
             n_retired += 1
         elif r["claim_key"] in file_keys and retired(r):     # a replace back to an earlier extraction
-            meta.pop("retired")
+            for k in ("retired",) + REJECT_KEYS:
+                meta.pop(k, None)
             g.patch("claim", f"id=eq.{r['id']}", {"status": "candidate", "metadata": meta})
             n_revived += 1
     g.stats.bump("claim", "prose_retired", n_retired)
@@ -3299,9 +3317,23 @@ def _prose_selftest(ok) -> None:
     gone = [c for c in fg.t["claim"] if c["status"] == "rejected"]
     ok("stage-prose --replace: the dropped row is retired (status rejected, metadata.retired), others kept",
        rc == 0 and len(gone) == 1 and gone[0]["metadata"]["retired"] == "prose_replaced" and "retired 1" in out)
+    gm = gone[0]["metadata"]
+    ok("stage-prose --replace (YED-437): retire writes reject-claims' canonical keys + reviewed_at, other metadata kept",
+       gm["prior_status"] == "candidate" and gm["rejected_reason"] == PROSE_RETIRE_REASON
+       and gm["rejected_at"] == gone[0]["reviewed_at"] and gm.get("extraction") == "prose")
+    ok("reject-claims --revert (YED-437): a retired row is skipped by default, still rejected and retired",
+       reject_claims(fg, [gone[0]["id"]], "", revert=True) == 0 and gone[0]["status"] == "rejected"
+       and gone[0]["metadata"]["retired"] == "prose_replaced" and "prior_status" in gone[0]["metadata"])
     run(fg, replace=True)
-    ok("stage-prose --replace back to the earlier extraction revives the retired row",
-       all(c["status"] == "candidate" and "retired" not in c["metadata"] for c in fg.t["claim"]))
+    ok("stage-prose --replace back to the earlier extraction revives the retired row, canonical keys removed",
+       all(c["status"] == "candidate" and not ({"retired"} | set(REJECT_KEYS)) & set(c["metadata"])
+           for c in fg.t["claim"]))
+    run(fg, chk=fewer, replace=True)
+    gone = [c for c in fg.t["claim"] if c["status"] == "rejected"]
+    ok("reject-claims --revert --include-retired (YED-437): un-retires on purpose, keys and metadata.retired removed",
+       len(gone) == 1 and reject_claims(fg, [gone[0]["id"]], "", revert=True, include_retired=True) == 1
+       and gone[0]["status"] == "candidate" and not ({"retired"} | set(REJECT_KEYS)) & set(gone[0]["metadata"]))
+    run(fg, replace=True)   # leave the fixture as the later checks expect (the full extraction live)
     # ledger beats prose, keyed on metadata.extraction (not the extractor column)
     lg = _FakeGraph()
     lg.t["claim"].append({"id": "l1", "source_key": skey, "claim_key": "k", "extractor": "claude",
@@ -3619,6 +3651,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--ids-file", metavar="IDS.txt|IDS.json",
                     help="(reject-claims / demote-claims / approve-claims) claim ids: one per line, a JSON list, or "
                          "the judge's {\"ids\": [{\"id\": …}]} export")
+    ap.add_argument("--include-retired", action="store_true",
+                    help="(reject-claims --revert, YED-437) also revert rows stage-prose --replace retired "
+                         "(metadata.retired); default skips them so superseded prose stays retired")
     ap.add_argument("--reasons-file", metavar="REASONS.json",
                     help="(reject-claims, YED-417) per-row reasons {id: {reason, prior_status?, rejected_at?}}; "
                          "instead of --ids-file + --reason; HUMAN-RUN")
@@ -3708,7 +3743,7 @@ def main(argv: list[str]) -> int:
             if not a.ids_file:
                 ap.error("reject-claims needs --ids-file or --reasons-file")
             ids = _read_ids(a.ids_file)
-            n = reject_claims(g, ids, a.reason or "", revert=a.revert)
+            n = reject_claims(g, ids, a.reason or "", revert=a.revert, include_retired=a.include_retired)
         print(("DRY-RUN " if a.dry_run else "") + f"reject-claims{' --revert' if a.revert else ''}: {n} of {len(ids)}")
         print(stats.report())
         return 0
