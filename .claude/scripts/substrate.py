@@ -1330,7 +1330,9 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
             "source_key": skey, "claim_key": it["claim_key"], "claim_text": it["text"], "claim_type": it["claim_type"],
             "locator": {"section": it["section"], "speaker": it["speaker"]}, "document_id": doc_id, "event_id": eid,
             "provenance_tier": it["tier"], "confidence": it["confidence"], "asserted_at": when,
-            "status": "approved" if (approve and not it["do_not_publish"]) else "candidate",
+            # YED-451: a new row carries no judge verdict, so web_verified is born candidate even with --approve
+            "status": "approved" if (approve and not it["do_not_publish"]
+                                     and not judge_hold({"provenance_tier": it["tier"]})) else "candidate",
             "extractor": "parse", "extractor_model": None, "lane": "A",
             "embedding": vec, "embedding_model": EMBED_MODEL,
             "metadata": {"do_not_publish": True} if it["do_not_publish"] else {},
@@ -1635,19 +1637,31 @@ def _utc_stamp() -> str:
     return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def judge_hold(r: dict) -> str | None:
+    """YED-451 approval gate: a web_verified claim is approved only with the source-page judge's verdict 'supported'
+    (claim.judge_verdict, 0023). Returns the hold reason (a stats key) or None. Other tiers are not gated here."""
+    if r.get("provenance_tier") != "web_verified":
+        return None
+    v = r.get("judge_verdict")
+    return None if v == "supported" else ("held_judge_unjudged" if v is None else f"held_judge_{v}")
+
+
 def approve_claims(g: "Graph", ev: dict, *, lane: str = "A", include_prose: bool = False) -> str:
     """Inherited approval for one event's candidate claims. lane 'A' = the post-event brief (unchanged behaviour);
     lane 'research' = the pre-event brief: Evidence Ledger rows (extractor 'parse', URL-backed) by default, prose
     extractions (extractor 'claude') only with include_prose. Returns the reviewed_at stamp shared by the batch, so a
     batch can be found (and reverted) by it."""
     skey = (research_source_key if lane == "research" else source_key_for_event)(ev["notion_page_id"])
-    rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate&select=id,metadata,extractor")
+    rows = g.get(f"/claim?source_key=eq.{skey}&status=eq.candidate"
+                 "&select=id,metadata,extractor,provenance_tier,judge_verdict")
     ids, held_dnp, held_prose = [], 0, 0
     for r in rows:
         if (r.get("metadata") or {}).get("do_not_publish"):
             held_dnp += 1
         elif lane == "research" and r.get("extractor") != "parse" and not include_prose:
             held_prose += 1
+        elif hold := judge_hold(r):
+            g.stats.bump("claim", hold)
         else:
             ids.append(r["id"])
     stamp = _utc_stamp()
@@ -1770,7 +1784,7 @@ def approve_claim_ids(g: "Graph", ids: list[str], *, include_prose: bool = False
     never email_signal, never prose (extractor 'claude') unless include_prose; rejected/approved rows are untouched.
     Returns the batch's reviewed_at stamp (find or revert the batch by it)."""
     ids = list(dict.fromkeys(ids))
-    rows = _rows_by_id(g, ids, "id,status,provenance_tier,extractor,metadata")
+    rows = _rows_by_id(g, ids, "id,status,provenance_tier,extractor,metadata,judge_verdict")
     ok_ids = []
     for cid in ids:
         r = rows.get(cid)
@@ -1784,6 +1798,8 @@ def approve_claim_ids(g: "Graph", ids: list[str], *, include_prose: bool = False
             g.stats.bump("claim", "held_email_signal")
         elif r.get("extractor") != "parse" and not include_prose:
             g.stats.bump("claim", "held_prose")
+        elif hold := judge_hold(r):
+            g.stats.bump("claim", hold)
         else:
             ok_ids.append(cid)
     stamp = _utc_stamp()
@@ -2523,11 +2539,13 @@ def _review_verbs_selftest(ok) -> None:
          "provenance_tier": "web_verified", "metadata": {}},
         {"id": "d-rej", "status": "rejected", "reviewed_at": None, "extractor": "parse",
          "provenance_tier": "web_verified", "metadata": {"prior_status": "approved"}},
-        {"id": "p-ok", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "p-ok", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified",
+         "judge_verdict": "supported", "metadata": {}},
         {"id": "p-email", "status": "candidate", "extractor": "parse", "provenance_tier": "email_signal", "metadata": {}},
         {"id": "p-dnp", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified",
          "metadata": {"do_not_publish": True}},
-        {"id": "p-prose", "status": "candidate", "extractor": "claude", "provenance_tier": "web_verified", "metadata": {}},
+        {"id": "p-prose", "status": "candidate", "extractor": "claude", "provenance_tier": "web_verified",
+         "judge_verdict": "supported", "metadata": {}},
         {"id": "p-unlisted", "status": "candidate", "extractor": "parse", "provenance_tier": "web_verified", "metadata": {}},
     ]
     st = {c["id"]: c for c in fg.t["claim"]}
@@ -2564,6 +2582,30 @@ def _review_verbs_selftest(ok) -> None:
     approve_claim_ids(fg, ["p-prose", "p-email"], include_prose=True)
     ok("approve --ids-file --include-prose: prose approved, email_signal still held",
        st["p-prose"]["status"] == "approved" and st["p-email"]["status"] == "candidate")
+    # YED-451: web_verified needs judge_verdict 'supported' on BOTH approval paths; other tiers are not gated here.
+    pid = "3ded3699c2db816a828ec6410801d5de"
+    rk = research_source_key(pid)
+    gg = _FakeGraph()
+    gg.t["claim"] = [
+        {"id": f"g-{v or 'none'}", "source_key": rk, "status": "candidate", "extractor": "parse",
+         "provenance_tier": "web_verified", "judge_verdict": v, "metadata": {}}
+        for v in ("supported", "unsupported", "abstain", None)] + [
+        {"id": "g-fh", "source_key": rk, "status": "candidate", "extractor": "parse", "provenance_tier": "first_hand",
+         "judge_verdict": None, "metadata": {}}]
+    gs = {c["id"]: c for c in gg.t["claim"]}
+    approve_claim_ids(gg, ["g-unsupported", "g-abstain", "g-none"])
+    ok("judge gate --ids-file: web_verified unsupported / abstain / unjudged all held, each counted",
+       all(gs[i]["status"] == "candidate" for i in ("g-unsupported", "g-abstain", "g-none"))
+       and all(gg.stats.c["claim"].get(k) == 1 for k in
+               ("held_judge_unsupported", "held_judge_abstain", "held_judge_unjudged")))
+    approve_claims(gg, {"notion_page_id": pid}, lane="research")
+    ok("judge gate manifest lane: only supported web_verified (and the ungated first_hand row) approved",
+       gs["g-supported"]["status"] == "approved" and gs["g-fh"]["status"] == "approved"
+       and all(gs[i]["status"] == "candidate" for i in ("g-unsupported", "g-abstain", "g-none")))
+    ok("judge gate: judge_hold is None only for supported web_verified or a non-web tier",
+       judge_hold({"provenance_tier": "web_verified", "judge_verdict": "supported"}) is None
+       and judge_hold({"provenance_tier": "email_signal"}) is None
+       and judge_hold({"provenance_tier": "web_verified"}) == "held_judge_unjudged")
     import tempfile
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
         json.dump({"note": "x", "ids": [{"id": "a", "prior_status": "approved"}, {"id": "b"}]}, fh)
@@ -3052,6 +3094,13 @@ def _linking_selftest(ok) -> None:
        len([l for l in fg.t["claim_entity"] if l["entity_id"] == "off-arist"]) == 3 and sc.get("company_global_exact") == 1)
     ok("tie (showcase): 'North' ties North.Cloud + North Labs -> unlinked, company_roster_tie, global North untouched",
        not any(l["entity_id"] == "off-north" for l in fg.t["claim_entity"]) and sc.get("company_roster_tie") == 1)
+    ag = _FakeGraph()
+    ag.ensure_event(em)
+    stage_claims(ag, SHOWCASE_SAMPLE, em, brief_ref=None, approve=True)
+    web = [c for c in ag.t["claim"] if c["provenance_tier"] == "web_verified"]
+    rest = [c for c in ag.t["claim"] if c["provenance_tier"] != "web_verified" and not c["metadata"].get("do_not_publish")]
+    ok("judge gate (YED-451): stage-claims --approve leaves web_verified rows candidate, approves the rest",
+       web and all(c["status"] == "candidate" for c in web) and rest and all(c["status"] == "approved" for c in rest))
     sp = _FakeGraph()
     sm = {"event": {"notion_page_id": pid, "title": "Speaker fixture", "kind": "attended", "event_date": "2026-09-16"},
           "entities": [{"type": "person", "name": "Ryan Booz", "role": "speaker"},
