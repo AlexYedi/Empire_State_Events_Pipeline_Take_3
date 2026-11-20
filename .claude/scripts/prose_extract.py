@@ -8,9 +8,10 @@ stage-prose` is the writer (pilot iter2 cleared the floor: precision 1.00 vs the
 Verbs:
   prepass  <brief_dir> [--out packet.json]
            research_brief.md + manifest.json -> a packet: knowledge sections only (Topics / Primer / Landscape /
-           Topic Foundations / People / Companies; playbook headings and mostly-imperative paragraphs dropped),
-           numbered paragraphs, roster-matched entity headings, URLs per paragraph with `[n]` footnotes resolved
-           through Endnotes. Briefs under 300 words exit 3 (stub).
+           Topic Foundations / People / Companies / Stat card / Evidence set; the first H1 is the document title, not
+           a section; playbook headings and mostly-imperative paragraphs dropped), numbered paragraphs, roster-matched
+           entity headings, URLs per paragraph with `[n]` footnotes resolved through Endnotes. Briefs under 300 words
+           exit 3 (stub); briefs that keep no paragraph exit 3 (no_knowledge_sections, with the dropped counts).
   splitter <packet> [--out claims.json]
            the NULL BASELINE: every sentence of every kept paragraph is one claim (quote = its first 25 words). Same
            output schema as the LLM extractor, so `check` scores both identically.
@@ -59,7 +60,7 @@ CLAIM_TYPES = {"fact", "statistic", "thesis", "prediction", "question"}
 # A level-1..3 heading naming one of these opens a section. Playbook and exclusion win over keep ('People' never
 # rescues 'Verification Flags'; 'Topic' never rescues 'Topic pitches'). Synthesis and Alex's playbook are not world
 # facts (design §1). Pilot 1 (2026-11-11): 16 of 18 extractor failures were advice/questions from playbook sections.
-KEEP_RE = re.compile(r"\b(topics?|topic foundations|primer|landscape|people|companies)\b")
+KEEP_RE = re.compile(r"\b(topics?|topic foundations|primer|landscape|people|companies|stat card|evidence set)\b")
 # Matched on heading WORDS with parentheticals removed: '(contested questions inside each)' and '(opener for the
 # hosts)' qualify a factual section, they do not make it a playbook.
 PLAYBOOK_RE = re.compile(r"\b(questions?|conversation kits?|pitch(?:es)?|talking points?|hooks?|angles?|asks?|"
@@ -212,13 +213,16 @@ def prepass_doc(md: str, manifest: dict) -> tuple[dict | None, str]:
     groups: list[tuple[tuple, list[str]]] = []          # consecutive lines sharing (kind, section, heading)
     dropped = {"playbook_section": 0, "excluded_section": 0, "outside_known_section": 0, "tiny_or_url_only": 0,
                "imperative": 0}
+    title_seen = False                                 # the first H1 is the document title, never a section (YED-394)
     for line in redact_body(md).splitlines():          # the same confidentiality rules as stage-research
         h = HEADING_RE.match(line)
         if h:
             lvl, title = len(h.group(1)), clean_md(h.group(2))
             while stack and stack[-1][0] >= lvl:
                 stack.pop()
-            stack.append((lvl, title, classify(title) if lvl <= 3 else None))
+            is_title = lvl == 1 and not title_seen
+            title_seen = title_seen or lvl == 1
+            stack.append((lvl, title, classify(title) if lvl <= 3 and not is_title else None))
             groups.append(((None, None, None), []))     # a heading always ends the paragraph above it
             continue
         known = [i for i, s in enumerate(stack) if s[2]]
@@ -246,6 +250,8 @@ def prepass_doc(md: str, manifest: dict) -> tuple[dict | None, str]:
             paragraphs.append({"idx": len(paragraphs), "section": section, "entity_hint": hit[1] if hit else None,
                                "entity_type_hint": hit[0] if hit else None, "heading": heading, "text": text,
                                "urls": para_urls(raw, notes)})
+    if not paragraphs:                                 # a zero is never silent: name it, with what was dropped
+        return None, f"no_knowledge_sections (dropped {dropped})"
     return {"schema": "prose-packet/1", "source_key": research_source_key(ev["notion_page_id"]),
             "brief_ref": rb.get("brief_ref"),
             "event": {"notion_page_id": ev["notion_page_id"], "title": ev.get("title"),
@@ -732,6 +738,27 @@ def selftest() -> bool:
        and not any("---" in p["text"] for p in paras))
     stub, swhy = prepass(os.path.join(FIX, "brief_stub"))
     ok("prepass: brief under 300 words is skipped", stub is None and swhy.startswith("stub_under_300"))
+    # YED-394: a kit-genre brief (H1 title naming a playbook; facts under Stat card / Evidence set)
+    kit, kwhy = prepass(os.path.join(FIX, "brief_kit"))
+    kblob = " ".join(p["text"] for p in (kit or {}).get("paragraphs", []))
+    ok("prepass: the first H1 is the document title, not a section ('Conversation Kit' title does not swallow the brief)",
+       kit is not None and kwhy == "ok" and kit["paragraphs"])
+    ok("prepass: Stat card and Evidence set sections kept",
+       kblob.count("STATCARD_SENTINEL") == 4 and kblob.count("EVIDENCE_SENTINEL") == 3)
+    ok("prepass: Evidence set URLs attached to their own paragraph",
+       any("EVIDENCE_SENTINEL The fictional trade index" in p["text"] and p["urls"] == ["https://trade.example.com/index"]
+           for p in (kit or {}).get("paragraphs", [])))
+    ok("prepass: kit playbook, unknown and excluded sections still dropped",
+       not any(s in kblob for s in ("KIT_SENTINEL", "PITCH_SENTINEL", "QUICKTAKE_SENTINEL", "ROOM_SENTINEL",
+                                    "DONOTSAY_SENTINEL", "PROVENANCE_SENTINEL")))
+    kmd = open(os.path.join(FIX, "brief_kit", "research_brief.md"), encoding="utf-8").read()
+    kman = json.load(open(os.path.join(FIX, "brief_kit", "manifest.json"), encoding="utf-8"))
+    later, _ = prepass_doc(kmd + "\n# Companies\nAcme Widgets opened a second plant in Ohio in 2025.\n", kman)
+    ok("prepass: a later H1 still opens a section (multi-H1 briefs keep their sections)",
+       later is not None and any(p["text"].startswith("Acme Widgets opened") for p in later["paragraphs"]))
+    zero, zwhy = prepass_doc(kmd.replace("## Stat card", "## Side notes").replace("## Evidence set", "## Loose ends"), kman)
+    ok("prepass: zero kept paragraphs is a named skip, never a silent empty packet",
+       zero is None and zwhy.startswith("no_knowledge_sections") and "playbook_section" in zwhy)
 
     # splitter output must clear its own gate, and its quotes are verbatim by construction
     sp = splitter(pk)
@@ -835,6 +862,16 @@ def selftest() -> bool:
         with redirect_stderr(io.StringIO()):
             rc3 = main(["prepass", os.path.join(FIX, "brief_stub"), "--out", os.path.join(td, "s.json")])
         ok("cli: stub exits 3 and writes nothing", rc3 == 3 and not os.path.exists(os.path.join(td, "s.json")))
+        zd = os.path.join(td, "zero")
+        os.makedirs(zd)
+        json.dump(kman, open(os.path.join(zd, "manifest.json"), "w", encoding="utf-8"))
+        with open(os.path.join(zd, "research_brief.md"), "w", encoding="utf-8") as f:
+            f.write(kmd.replace("## Stat card", "## Side notes").replace("## Evidence set", "## Loose ends"))
+        err = io.StringIO()
+        with redirect_stderr(err):
+            rc4 = main(["prepass", zd, "--out", os.path.join(td, "z.json")])
+        ok("cli: zero-paragraph brief exits 3, names the reason, writes nothing",
+           rc4 == 3 and "no_knowledge_sections" in err.getvalue() and not os.path.exists(os.path.join(td, "z.json")))
     _batch_selftest(ok)
     # YED-407 selfcheck: removes rows only, fail-closed, counts drops, sample carries heading context
     spk = {"source_key": "sk", "paragraphs": [{"idx": 0, "section": "Companies", "heading": "Ramp", "entity_hint": "Ramp",
