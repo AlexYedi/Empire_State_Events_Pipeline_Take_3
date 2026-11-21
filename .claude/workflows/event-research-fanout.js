@@ -173,7 +173,7 @@ const results = await parallel(active.map(s => async () => {
     if (r2 && (!r || a2.admissible.length >= a.admissible.length)) { r = r2; a = a2 }
   }
   if (!r) return { s, failed: true, retried }
-  return { s, retried, thin: a.thin, report: r.report, admissible: a.admissible, dropped: a.dropped }
+  return { s, retried, thin: a.thin, report: r.report, admissible: a.admissible, dropped: a.dropped, quoteDropped: a.quoteDropped }
 }))
 
 const done = results.filter(Boolean).filter(x => !x.failed)

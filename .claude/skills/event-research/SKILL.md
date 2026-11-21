@@ -847,7 +847,12 @@ NOT render — fix Step 4 first. Never render into a page that doesn't exist yet
 
 From the synthesizer's `## Evidence Set` (organized by render section, URL-carrying) plus event
 meta, build the per-section evidence slices `field-guide-renderer` expects
-(`.claude/agents/content/field-guide-renderer.md`). Pass each renderer call:
+(`.claude/agents/content/field-guide-renderer.md`) with
+`python3 .claude/scripts/deep_read_slices.py --evidence <slug>.evidence.md --out-dir <scratch>/<slug>.slices`
+(YED-476). It cuts on the `### <Section>` headings and appends a code-built **source index** (every URL-carrying
+Evidence Ledger row) to The Frame's slice: the synthesizer writes The Frame as a URL-less pointer summary, and
+without the index every Frame endnote came back "URL not in pack" (0/22 → 35/35 with the index, A/B 2026-11-21).
+A missing section heading prints a WARNING and that slice falls back to the whole set. Pass each renderer call:
 - **Mode:** `render-section: <section>`
 - **Event meta:** name, date, location, Alex's stated focus/goals, and how novice he is on this material.
 - **The evidence slice for that section** — the URL-tagged rows from the Evidence Set, tiers intact.
