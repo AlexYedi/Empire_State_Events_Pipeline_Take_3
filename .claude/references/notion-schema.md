@@ -13,7 +13,15 @@ database gains, renames or drops a property, `notion-fetch` its schema and updat
 - **Events** (9 props): Event Name (title), Event Date (date), Location (text), Event Description (text),
   Event Status (select: intake/researched/content_drafted/attended/post_complete),
   Google Calendar Event ID (text — added 2026-05-21 for `/post-event-content` Granola join key),
+  Off the record (checkbox — added 2026-11-20, YED-389; see the note below),
   relations to People/Companies/Topics/Content Drafts
+  Note: **Off the record** (checkbox, on Events AND Content Drafts). Tick it only when Alex explicitly calls the
+  event or draft off the record: "There is no off the record unless I explicitly call it out" (Alex, 2026-11-21,
+  YED-389). It is the ONLY off-the-record signal `notion_export.py` reads. Titles and bodies are not scanned, so
+  "Private dinner", "OTR" or "this is off the record" in the text no longer marks anything. Export behaviour: a
+  ticked Event is not exported (counted `skipped_otr_checkbox`). A ticked Content Draft is exported, its brief entry
+  carries `otr_checkbox: true` and the manifest gets `notion_export.skip_staging: true`, so the substrate stage
+  verbs refuse it. A missing property (an older page, or a DB without the column) means NOT off the record.
   Note: Event Description stores the raw pasted invite text. No Calendar Source property —
   the pipeline generates value for events Alex attends AND events he doesn't (content + outreach
   aren't gated by physical attendance).
@@ -51,6 +59,7 @@ database gains, renames or drops a property, `notion-fetch` its schema and updat
   field-media and non-text posts, per `visual-briefs.md` 1/1/1 options; docs-first: `notion-fetch` the live
   DB and add or confirm the property/values before the first write that sets it, then add it to
   `notion-property-names.json` or `notion_payload.py` refuses it),
+  Off the record (checkbox — added 2026-11-20, YED-389; meaning and export behaviour in the Events note above),
   relations to Event/People/Topics/Project Ideas
   Note: Goal + Target are the **assigned-goal** (set at creation); Outcome/Outcome Value/Outcome Date are the
   **realized outcome** (set post-publish by `/tag-outcome`). Together = the acted-on-value north-star.
