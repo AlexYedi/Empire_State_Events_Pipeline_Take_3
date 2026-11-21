@@ -1,5 +1,7 @@
 -- 0028_verify.sql: probes for supabase/migrations/0028_signal_views_owner_rights.sql (YED-311).
--- Read-only. Two statements; rehearse_0028.py runs step 0 at gates 0 and 4, and step 1 at gate 4.
+-- Read-only. Three statements; rehearse_0028.py runs step 0 at gates 0 and 4, step 1 at gate 4, and step 2 as anon
+-- and as authenticated (begin; set local role ...; step 2; rollback) at gates 1 and 4.
+-- PROD ORDER (see the migration header): paste 0027 -> 0027_verify step 1 -> paste 0028 -> this file's step 1.
 --
 -- 0. BEFORE and AFTER apply (read-only; prod via the dashboard, the twin via the harness): row count and md5 of each
 --    view's full output, ordered by every column. Run as postgres, this is what the views return to their owner;
@@ -16,6 +18,9 @@ union all select 'views_security_invoker_on', count(*)::text, ''
    and relname in ('v_topic_movement', 'v_topic_intersections') and 'security_invoker=on' = any (coalesce(reloptions, '{}'))
 union all select 'anon_policies', count(*)::text, ''
   from pg_policies where schemaname = 'topic_intelligence' and policyname in ('tc_anon_read', 'tt_anon_read', 'tpm_anon_read')
+union all select 'anon_auth_ti_usage', count(*)::text, ''
+  from pg_namespace n, aclexplode(n.nspacl) a where n.nspname = 'topic_intelligence' and a.privilege_type = 'USAGE'
+   and a.grantee in ('anon'::regrole, 'authenticated'::regrole)
 order by 1;
 
 -- 1. AFTER apply: every row ok = true.
@@ -61,5 +66,34 @@ union all select 'v_topic_intersections_columns_pinned',
   (select string_agg(attname, ',' order by attnum) from pg_attribute
     where attrelid = 'signal_read.v_topic_intersections'::regclass and attnum > 0 and not attisdropped)
   = 'theme_a,theme_b,window_type,as_of_date,cooccurrence_event_count,bridge_person_count,is_new_pair,intersection_score'
+union all select 'anon_authenticated_no_ti_schema_usage',
+  not has_schema_privilege('anon', 'topic_intelligence', 'usage')
+  and not has_schema_privilege('authenticated', 'topic_intelligence', 'usage')
+union all select 'anon_authenticated_signal_read_usage_kept',
+  has_schema_privilege('anon', 'signal_read', 'usage') and has_schema_privilege('authenticated', 'signal_read', 'usage')
+union all select 'service_role_ti_schema_usage_kept', has_schema_privilege('service_role', 'topic_intelligence', 'usage')
 union all select 'v_topic_movement_rows', (select count(*) from signal_read.v_topic_movement) > 0
-union all select 'v_topic_intersections_rows', (select count(*) from signal_read.v_topic_intersections) > 0;
+union all select 'v_topic_intersections_rows', (select count(*) from signal_read.v_topic_intersections) > 0
+union all select 'k5_v_topic_movement',
+  not exists (select 1 from signal_read.v_topic_movement where event_count < 5 or distinct_speaker_count < 5)
+union all select 'k5_v_topic_intersections',
+  not exists (select 1 from signal_read.v_topic_intersections where cooccurrence_event_count < 5 or bridge_person_count < 5);
+
+-- 2. AS ANON (and authenticated), on the twin harness only: rehearse_0028.py wraps this in
+--    `begin; set local role anon; ...; rollback;`. Do not run it on prod (as postgres in the dashboard it would only
+--    repeat step 1). Every row ok = true: the views return rows to the caller, k>=5 holds in what the caller sees,
+--    and the caller holds neither USAGE on topic_intelligence nor SELECT on the 3 base tables (resolved by oid from
+--    pg_class, so the statement itself never needs the schema).
+select 'as_' || current_user || '_v_topic_movement_rows' as check_name,
+  (select count(*) from signal_read.v_topic_movement) > 0 as ok
+union all select 'as_' || current_user || '_v_topic_intersections_rows',
+  (select count(*) from signal_read.v_topic_intersections) > 0
+union all select 'as_' || current_user || '_k5_v_topic_movement',
+  not exists (select 1 from signal_read.v_topic_movement where event_count < 5 or distinct_speaker_count < 5)
+union all select 'as_' || current_user || '_k5_v_topic_intersections',
+  not exists (select 1 from signal_read.v_topic_intersections where cooccurrence_event_count < 5 or bridge_person_count < 5)
+union all select 'as_' || current_user || '_no_ti_schema_usage', not has_schema_privilege('topic_intelligence', 'usage')
+union all select 'as_' || current_user || '_no_base_select',
+  not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+              where n.nspname = 'topic_intelligence' and c.relname in ('topic_cluster', 'topic_trend', 'topic_pair_metric')
+                and has_any_column_privilege(c.oid, 'select'));
