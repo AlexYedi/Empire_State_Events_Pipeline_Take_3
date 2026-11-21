@@ -175,8 +175,8 @@ Before conditioning, classify the event format from the transcript + event name:
   carousel** (not a single-thesis room report) **+ a focus-driven first comment** (one verified
   reference link per company — careers pages if hiring, launch/blog/feature pages if product, etc.);
   the contact-extraction pass captures **founders + explicitly called-out teammates in the crowd**
-  → CRM + an **Apollo enrichment CSV**. Enforce the showcase sensitivities: **confidential "stays in
-  the room" funding is never published**, and **garbled transcript names are web-verified before any
+  → CRM + an **Apollo enrichment CSV**. Enforce the showcase sensitivities: **funding a founder discloses
+  on stage is on the record; only the Notion "Off the record" checkbox keeps it out** (YED-389), and **garbled transcript names are web-verified before any
   public/CRM use** (fan out one `company-researcher` per company).
 - **Standard** (talk / panel / roundtable / demo) — proceed with the normal flow below.
 
@@ -583,7 +583,7 @@ Close-check (6.5): [PASS / FAIL n — items]
 Graph write-back (3.8b/3.8c): [ensure-event ok / claims staged N / skipped: reason]  (counted by the close-check)
 Theme assignment (3.8d): [N assigned · M none-fits / skipped: reason], followed by one line per topic: "topic → theme (confidence)" or "topic → none fits (reason)"
 Routing (3.8e): [N Linear issues (C created · M matched) · P Project Ideas rows · S stories (local) / skipped: reason]
-Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-record finding]
+Output check (4.5): [PASS / FAIL n — name any PARAPHRASE-AS-QUOTE, MISATTRIBUTED or off-the-record (Notion checkbox) finding]
 Drafts created: N  (notion-writer: created C · skipped S · failed F · manifest <path>)
   - Tier 1 comment: [Notion URL]
   - Tier 2 post + visual brief: [Notion URL]
