@@ -15,29 +15,41 @@ Gates (all must pass, in order):
   1a negative ctl  before apply, anon and authenticated CAN read all 3 base tables (else the revoke proves nothing)
   1b guard probes  (rolled back) the migration's PART 1 must REFUSE when (i) another anon-readable view reads a base
                    table, (ii) an anon-executable caller-rights function names one, (iii) the state is mixed
-                   (one policy missing); and pass on the clean twin
+                   (one policy missing), (iv) anon holds another privilege in topic_intelligence (the schema USAGE
+                   revoke would break it); and pass on the clean twin
+  1c REST before   as anon over PostgREST with the twin's publishable key: the 3 base tables ARE readable (the live
+                   exposure, reproduced) and both views return rows; full URL printed per probe
   2  apply 0028    the migration file verbatim
   3  re-apply      second paste is a NOTICE no-op (fingerprint unchanged)
-  4  verify        staging/0028_verify.sql step 1: every row ok = t; step 0 view rows equal gate 0
+  4  verify        staging/0028_verify.sql step 1: every row ok = t; step 0 view rows equal gate 0;
+                   step 2 as anon and as authenticated (begin; set local role; rollback): every row ok = t
   4b roles         anon + authenticated: each view IDENTICAL to snapshot A (count + md5); base tables denied 42501.
                    service_role: base-table reads unchanged; view reads printed before/after (0002 never granted
                    them to service_role)
+  4c REST after    base tables refused (401/403) or empty; each view returns the same count + md5 as gate 1c
   5  rollback      the ROLLBACK-BEGIN..ROLLBACK-END block from the migration header, verbatim
-  6  snapshot C    must EQUAL snapshot A, role reads included: ROLLBACK PROVEN only if so
+  6  snapshot C    must EQUAL snapshot A, role reads included: ROLLBACK PROVEN only if so; REST probes equal 1c
   (--leave-applied re-applies 0028 + verify at the end.)
 
 Usage:
   python3 supabase/scripts/rehearse_0028.py                   # dry run, no connection
   python3 supabase/scripts/rehearse_0028.py --preflight-only
-  python3 supabase/scripts/rehearse_0028.py --execute         # full gate, ends rolled back
+  TWIN_PUBLISHABLE_KEY=sb_publishable_... python3 supabase/scripts/rehearse_0028.py --execute   # full gate, ends rolled back
+
+The twin's publishable key (public by design; from the Supabase MCP `get_publishable_keys` on the twin) comes from
+TWIN_PUBLISHABLE_KEY or --publishable-key, never from the repo. The REST base is pinned to the twin ref.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUPA = os.path.dirname(HERE)
@@ -54,6 +66,7 @@ PROD_SECRET_KEYS = {"MARKET_INTEL_SUPABASE_DB_PASSWORD", "SUPABASE_API_KEY", "MI
                     "MI_SUPABASE_ANON_KEY", "MI_DB_DSN", "DATABASE_URL", "PGHOST", "PGUSER",
                     "PGSERVICE", "PGPASSFILE"}
 
+TWIN_REST = f"https://{TWIN_REF}.supabase.co/rest/v1"
 MIGRATION = os.path.join(SUPA, "migrations", "0028_signal_views_owner_rights.sql")
 VERIFY = os.path.join(SUPA, "staging", "0028_verify.sql")
 VIEWS = ["signal_read.v_topic_movement", "signal_read.v_topic_intersections"]
@@ -109,6 +122,7 @@ select 'views_invoker_on', (select count(*) from pg_class where oid in ('signal_
        'signal_read.v_topic_intersections'::regclass) and 'security_invoker=on' = any (coalesce(reloptions, '{}')))::text;
 select 'anon_policies', (select count(*) from pg_policies where schemaname = 'topic_intelligence'
        and policyname in ('tc_anon_read', 'tt_anon_read', 'tpm_anon_read'))::text;
+select 'anon_ti_usage', has_schema_privilege('anon', 'topic_intelligence', 'usage')::text;
 """
 
 # guard probes: each plants one condition, runs PART 1, and must see it refused; always rolled back
@@ -119,6 +133,7 @@ PROBE_FN = ("create function public.rehearse_0028_probe() returns bigint languag
             "$f$ begin return (select count(*) from topic_intelligence.topic_trend); end $f$; "
             "grant execute on function public.rehearse_0028_probe() to anon")
 PROBE_MIXED = "drop policy tt_anon_read on topic_intelligence.topic_trend"
+PROBE_OTHER_PRIV = "grant select on topic_intelligence.topics to anon"
 
 
 def load_env(path: str) -> dict:
@@ -286,11 +301,90 @@ def print_diff(d: dict) -> None:
         print(f"  DIFF {k}:\n       before={x}\n       after ={y}")
 
 
+def verify_step2(role: str, info: bool = False) -> bool:
+    """staging/0028_verify.sql step 2 run AS `role` inside a rolled-back transaction."""
+    p = psql(["-q", "-tA", "-F", "\t"],
+             stdin=f"begin;\nset local role {role};\n{verify_statements()[2]};\nrollback;\n", check=False)
+    if p.returncode != 0:
+        print(f"  FAIL step 2 as {role}: {p.stderr.strip()[-200:]}")
+        return False
+    out = [r.split("\t") for r in p.stdout.splitlines() if "\t" in r]
+    for r in out:
+        print(f"    {'ok ' if r[-1] == 't' else 'BAD'} {r[0]}")
+    bad = [r[0] for r in out if r[-1] != "t"]
+    verdict = "INFO" if info else ("PASS" if out and not bad else "FAIL")
+    print(f"  {verdict} step 2 as {role}: {len(out) - len(bad)}/{len(out)} ok")
+    return bool(out) and not bad
+
+
+REST_TARGETS = [("signal_read", "v_topic_movement"), ("signal_read", "v_topic_intersections"),
+                ("topic_intelligence", "topic_cluster"), ("topic_intelligence", "topic_trend"),
+                ("topic_intelligence", "topic_pair_metric")]
+
+
+def publishable_key(arg: str | None) -> str:
+    key = arg or os.environ.get("TWIN_PUBLISHABLE_KEY") or ""
+    if not key:
+        sys.exit("TWIN_PUBLISHABLE_KEY (or --publishable-key) not set: take it from the twin's get_publishable_keys.")
+    prod_keys = {ENV.get(k) or os.environ.get(k) for k in ("SUPABASE_ANON_KEY", "MI_SUPABASE_ANON_KEY")} - {None, ""}
+    if key in prod_keys or PROD_REF in key:
+        sys.exit("REFUSED: that publishable key is prod's. The REST probes run against the twin only.")
+    if key.startswith("sb_secret_") or '"service_role"' in key:
+        sys.exit("REFUSED: a secret key; the REST probes must run as anon.")
+    return key
+
+
+def rest_probe(key: str, schema: str, rel: str) -> dict:
+    """GET <twin>/rest/v1/<rel>?select=* as anon (publishable key). Returns status, exact total from
+    Content-Range, and an md5 of the body rows (sorted canonical JSON) for the views."""
+    url = f"{TWIN_REST}/{rel}?select=*"
+    if TWIN_REF not in url or PROD_REF in url or not url.split("?")[0].endswith("/" + rel):
+        sys.exit(f"REFUSED: bad REST probe URL {url}")
+    req = urllib.request.Request(url, headers={"apikey": key, "Accept-Profile": schema, "Prefer": "count=exact",
+                                               "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            status, body, cr = r.status, r.read(), r.headers.get("Content-Range", "")
+    except urllib.error.HTTPError as e:
+        status, body, cr = e.code, e.read(), e.headers.get("Content-Range", "")
+    total = cr.rsplit("/", 1)[-1] if "/" in cr else "?"
+    res = {"url": url, "profile": schema, "status": status, "total": total, "md5": ""}
+    try:
+        data = json.loads(body or b"null")
+    except ValueError:
+        data = None
+    if status in (200, 206) and isinstance(data, list):
+        res["md5"] = hashlib.md5("|".join(sorted(json.dumps(x, sort_keys=True) for x in data)).encode()).hexdigest()
+        res["returned"] = len(data)
+    else:
+        res["error"] = (data.get("code", "") + " " + data.get("message", ""))[:90] if isinstance(data, dict) else ""
+    return res
+
+
+def rest_probes(key: str) -> dict:
+    out = {}
+    for schema, rel in REST_TARGETS:
+        r = rest_probe(key, schema, rel)
+        out[f"{schema}.{rel}"] = r
+        print(f"    GET {r['url']}  [Accept-Profile: {schema}] -> HTTP {r['status']} total={r['total']}"
+              + (f" returned={r['returned']} md5={r['md5'][:12]}" if 'returned' in r else f" {r.get('error', '')}"))
+    return out
+
+
+def rest_readable(r: dict) -> bool:
+    return r["status"] in (200, 206) and r["total"].isdigit() and int(r["total"]) > 0
+
+
+def rest_sig(r: dict) -> tuple:
+    return (r["status"], r["total"], r["md5"])
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--execute", action="store_true")
     ap.add_argument("--preflight-only", action="store_true")
     ap.add_argument("--leave-applied", action="store_true")
+    ap.add_argument("--publishable-key", default=None, help="twin publishable key (else TWIN_PUBLISHABLE_KEY)")
     a = ap.parse_args()
     for f in (MIGRATION, VERIFY):
         if not os.path.exists(f):
@@ -299,8 +393,8 @@ def main() -> int:
     print(f"twin {TWIN_HOST} as {TWIN_USER}; migration {os.path.relpath(MIGRATION, REPO)}; "
           f"verify statements: {len(verify_statements())}; PART 1 block: {len(part1_block())} chars; "
           f"rollback block: {len(rollback_block().splitlines())} lines")
-    if len(verify_statements()) != 2:
-        sys.exit("verify file must hold exactly 2 statements (step 0, step 1)")
+    if len(verify_statements()) != 3:
+        sys.exit("verify file must hold exactly 3 statements (step 0, step 1, step 2)")
     if not (a.execute or a.preflight_only):
         print("dry run: no connection. Use --preflight-only or --execute.")
         return 0
@@ -308,7 +402,7 @@ def main() -> int:
     print("[0] preflight")
     pf = kv(PREFLIGHT_SQL)
     print("  " + " ".join(f"{k}={v}" for k, v in pf.items()))
-    if pf.get("views_invoker_on") != "2" or pf.get("anon_policies") != "3":
+    if pf.get("views_invoker_on") != "2" or pf.get("anon_policies") != "3" or pf.get("anon_ti_usage") != "true":
         print("  FAIL twin is not in the PRE state (2 security_invoker views, 3 anon policies). Roll it back first.")
         return 1
     print("  staging/0028_verify.sql step 0 (run the same on prod before and after the paste):")
@@ -317,6 +411,7 @@ def main() -> int:
         print("PREFLIGHT OK")
         return 0
 
+    key = publishable_key(a.publishable_key)
     ok = True
     print("[1] snapshot A")
     A = snapshot()
@@ -335,13 +430,38 @@ def main() -> int:
     print(f"  {'PASS' if view_ok else 'FAIL'} anon/authenticated read non-empty views before apply")
     if not (nc_ok and view_ok):
         return 1
+    print("  step 2 as anon before apply (INFO: the no-access rows are expected BAD here):")
+    verify_step2("anon", info=True)
 
     print("[1b] guard probes (rolled back)")
     ok &= guard_probe(None, "clean twin passes", None)
     ok &= guard_probe(PROBE_VIEW, "other anon-readable view on a base table refused", "other views readable")
     ok &= guard_probe(PROBE_FN, "anon-executable caller-rights function refused", "caller-rights functions")
     ok &= guard_probe(PROBE_MIXED, "mixed state (one policy missing) refused", "mixed state")
+    ok &= guard_probe(PROBE_OTHER_PRIV, "other anon privilege in topic_intelligence refused", "hold other privileges")
     if not ok:
+        return 1
+
+    print(f"[1c] REST as anon before apply ({TWIN_REST}, twin publishable key)")
+    rest_a = rest_probes(key)
+    base = [t for t in rest_a if t.startswith("topic_intelligence.")]
+    base_open = all(rest_readable(rest_a[t]) for t in base)
+    # Prod exposes topic_intelligence in its PostgREST "exposed schemas"; the twin may not (a dashboard setting, not
+    # DDL; this harness does not change it). Then PostgREST answers 406 PGRST106 before it ever reaches Postgres, the
+    # REST base-table negative control cannot be reproduced here, and the DB-layer proof (gates 1a + 4b: `set role
+    # anon`, which is what PostgREST does per request) carries it. Reported as N/A, never as PASS.
+    base_not_exposed = all(rest_a[t]["status"] == 406 and "PGRST106" in rest_a[t].get("error", "") for t in base)
+    views_open = all(rest_readable(rest_a[t]) for t in rest_a if t.startswith("signal_read."))
+    if base_open:
+        print("  PASS base tables readable by anon over REST before apply (exposure reproduced)")
+    elif base_not_exposed:
+        print("  N/A  base tables over REST: the twin does not expose schema topic_intelligence to PostgREST "
+              "(406 PGRST106), unlike prod; the base-table negative control rests on gate 1a (DB layer)")
+    else:
+        print("  FAIL base tables neither readable nor 'schema not exposed' over REST before apply")
+    print(f"  {'PASS' if views_open else 'FAIL'} views return rows to anon over REST before apply")
+    if not ((base_open or base_not_exposed) and views_open):
+        print("  STOP: the REST negative control does not hold on the twin, so the after-probe would prove nothing.")
         return 1
 
     print("[2] apply 0028")
@@ -369,6 +489,8 @@ def main() -> int:
     print(f"  {'PASS' if same_views else 'FAIL'} step 0 view rows (count + md5, as owner) equal gate 0")
     ok &= same_views
 
+    for role in ("anon", "authenticated"):
+        ok &= verify_step2(role)
     print("[4b] role reads after apply")
     reads_b = role_reads()
     print_reads(reads_b)
@@ -393,6 +515,25 @@ def main() -> int:
         print(f"  INFO {k}: before={reads_a[k]} after={reads_b[k]}"
               f" ({'unchanged' if reads_a[k] == reads_b[k] else 'CHANGED'})")
 
+    print("[4c] REST as anon after apply")
+    rest_b = rest_probes(key)
+    for t, r in rest_b.items():
+        if t.startswith("topic_intelligence.") and base_not_exposed:
+            same = r["status"] == 406
+            print(f"  {'N/A ' if same else 'FAIL'} {t} HTTP {r['status']} (schema still not exposed on the twin; "
+                  "the DB-layer refusal is gate 4b)")
+            ok &= same
+        elif t.startswith("topic_intelligence."):
+            shut = r["status"] in (401, 403) or (r["status"] in (200, 206) and r["total"] == "0")
+            print(f"  {'PASS' if shut else 'FAIL'} {t} refused or empty (HTTP {r['status']} total={r['total']}; "
+                  f"was HTTP {rest_a[t]['status']} total={rest_a[t]['total']})")
+            ok &= shut
+        else:
+            same = rest_sig(r) == rest_sig(rest_a[t])
+            print(f"  {'PASS' if same else 'FAIL'} {t} same as before: total {rest_a[t]['total']} -> {r['total']}, "
+                  f"md5 {rest_a[t]['md5'][:12]} -> {r['md5'][:12]}")
+            ok &= same
+
     print("[5] rollback (header block, verbatim)")
     good, _ = run_sql(rollback_block(), "rollback", is_file=False)
     if not good:
@@ -407,10 +548,16 @@ def main() -> int:
     print_diff(d)
     ok &= not d
     pf = kv(PREFLIGHT_SQL)
-    back = pf.get("views_invoker_on") == "2" and pf.get("anon_policies") == "3"
+    back = pf.get("views_invoker_on") == "2" and pf.get("anon_policies") == "3" and pf.get("anon_ti_usage") == "true"
     print(f"  {'PASS ROLLBACK PROVEN' if ok and back else 'FAIL'}: twin back in PRE state "
           + " ".join(f"{k}={v}" for k, v in pf.items()))
     ok &= back
+    print("[6b] REST as anon after rollback == gate 1c")
+    rest_c = rest_probes(key)
+    d = {t: (rest_sig(rest_a[t]), rest_sig(rest_c[t])) for t in rest_a if rest_sig(rest_a[t]) != rest_sig(rest_c[t])}
+    print(f"  {'PASS' if not d else 'FAIL'} REST probes equal gate 1c ({len(rest_a)} targets)")
+    print_diff(d)
+    ok &= not d
 
     if a.leave_applied and ok:
         print("[7] leave applied")
