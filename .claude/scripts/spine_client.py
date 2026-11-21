@@ -9,8 +9,8 @@ ADR-9 tier 2 (the spine) holds professional-public identity only. Concretely:
   * a column may be SET only if it is in ALLOW[table]; ANY column may be NULLED (nulling is
     always safe — it is how the email migration runs through this same guard);
   * email / phone columns are forbidden on every table;
-  * every string value is scanned — recursively through dicts/lists (`metadata` jsonb included) —
-    for email and phone patterns;
+  * every string value AND every nested dict key is scanned — recursively through dicts/lists (`metadata`,
+    `evidence`, `locator` jsonb included) — for email and phone patterns;
   * rows sourced from the inbox (source starts with `inbox_miner`) carry a tier-0 backstop:
     `metadata.sender_domain` / `metadata.from_domain` must not match `inbox-denylist.md`.
 
@@ -91,14 +91,21 @@ ALLOW: dict[str, set[str]] = {
               "proposed_entities", "document_id", "event_id", "provenance_tier", "confidence",
               "asserted_at", "status", "extractor", "extractor_model", "lane", "embedding",
               "embedding_model", "metadata", "created_at", "reviewed_at",
-              # YED-451 (GUARD-ADJACENT): the 0023 judge record, so the source-page judge's verdict can be written
-              # and the web_verified approval gate can read it. 0023's claim_judge_record_complete CHECK is
-              # all-or-nothing over these four, so judged_at opens with them. judge_model is free text: scanned.
-              # PR #363 opens the same four (plus ten more 0023 columns); whichever merges second drops the dupes.
-              "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at",
+              # migration 0023 (ADR-15 d2/d4/d7/d8/d11; YED-384); writer: substrate.py stage-v2. 0024 moved
+              # match_claims_hybrid, entity_neighborhood and mi.fact onto claim_current, so a non-default rank /
+              # review_flag is read correctly (d7 prerequisite met). visibility is NOT yet filtered by any reader
+              # (match_claims_hybrid's filter_visibility defaults to null; no caller passes it), so 'public_ok'
+              # protects nothing until an L5 renderer does (d11). DB PII CHECKs exist on evidence and
+              # freshness_reason only; judge_model has none, so this guard's scan is its only PII check.
+              "evidence", "judge_verdict", "judge_model", "judge_prompt_hash", "judged_at", "rank", "review_flag",
+              "valid_from", "valid_to", "freshness_class", "freshness_conf", "freshness_reason", "next_check_at",
+              "visibility",
               # 0026 (#391 follow-up): the source page's own words behind a claim. Free text: scanned in full,
               # never in DECLARED_IDS; the DB backs it with a no_contact_pii_v2 CHECK.
               "source_quote", "source_quote_fetched_at"},  # 0026 CHECK claim_source_quote_paired: set together
+    # claim_verification, claim_label and judge_audit (0023) are deliberately NOT allowlisted: no writer exists yet
+    # (ADR-15: a table with no writer is unrehearsable surface), and an open judge_audit would let the judge's own
+    # pipeline self-certify the audit stage-v2 gates on. Each opens with its first writer, reviewed then.
     "claim_entity": {"claim_id", "entity_type", "entity_id", "role", "created_at"},
     "claim_relation": {"id", "from_claim_id", "to_claim_id", "relation", "method", "confidence", "created_at"},
     "document_entity": {"document_id", "entity_type", "entity_id", "role", "created_at"},
@@ -503,10 +510,17 @@ def guard(table: str, row: dict, *, op: str = "insert") -> dict:
     _scan_pii(row, table)
     src = str(row.get("source") or "")
     if src.startswith("inbox_miner"):
+        # YED-324 item 2: a missing denylist used to load as empty sets, so every inbox row passed tier 0 unchecked.
+        if not os.path.exists(DENYLIST_PATH):
+            _refuse("inbox_denylist_missing", table, _label_col(table, "source"),
+                    f"{table}: an inbox_miner row needs .claude/references/inbox-denylist.md, which is missing · "
+                    f"ADR-9 tier 0 fails closed · fix: restore the denylist (gitignored: copy or symlink it from "
+                    f"the main checkout), then re-run")
+        deny = load_denylist(DENYLIST_PATH)
         meta = row.get("metadata") or {}
         for key in ("sender_domain", "from_domain", "domain"):
             host = meta.get(key) if isinstance(meta, dict) else None
-            if host and domain_denylisted(str(host)):
+            if host and domain_denylisted(str(host), deny):
                 _refuse("inbox_denylist", table, f"metadata.{key}",
                         f"{table}.metadata.{key}={host!r} is on inbox-denylist.md · ADR-9 tier 0: never "
                         f"enters · fix: the scan should have skipped this thread (YED-161)")
@@ -600,30 +614,50 @@ def _send(method: str, path: str, data, headers: dict, timeout: int, reuse: bool
     HTTPSConnection."""
     global _CONN
     host = f"{REF}.supabase.co"
-    conn = _CONN if reuse else None
-    if conn is None:
-        conn = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
+
+    def _open():
+        c = http.client.HTTPSConnection(host, 443, timeout=min(timeout, CONNECT_TIMEOUT))
         try:
-            conn.connect()
+            c.connect()
         except OSError as e:     # ANY connect failure — SYN stall, DNS (gaierror), TLS handshake, no route — sent nothing
-            conn.close()
+            c.close()
             raise NotSent(f"connect failed before sending: {type(e).__name__}: {e}") from e
-        if reuse:
-            _CONN = conn
-    conn.sock.settimeout(timeout)
-    try:
-        conn.request(method, "/rest/v1" + path, body=data, headers=headers)
-        resp = conn.getresponse()
+        return c
+
+    def _exchange(c):
+        c.sock.settimeout(timeout)
+        c.request(method, "/rest/v1" + path, body=data, headers=headers)
+        resp = c.getresponse()
         return resp.status, resp.read().decode()
+
+    if not reuse:
+        conn = _open()
+        try:
+            return _exchange(conn)
+        finally:
+            conn.close()
+    # YED-464: http.client sets sock to None when the server ends a keep-alive (Connection: close, idle reap), and
+    # `conn.sock.settimeout` then raised AttributeError, which req() does not retry. Nothing has been sent on a
+    # socketless connection, so it is reopened for any method.
+    if _CONN is not None and getattr(_CONN, "sock", None) is None:
+        _drop_conn()
+    reused = _CONN is not None
+    if not reused:
+        _CONN = _open()
+    try:
+        return _exchange(_CONN)
+    except Exception as e:
+        _drop_conn()
+        # A reused socket the peer already closed fails as a ConnectionError. Bytes may have left, so only a GET is
+        # reopened and re-sent here, once; PATCH / upsert fall back to req()'s retry policy, unchanged.
+        if not (reused and method == "GET" and isinstance(e, ConnectionError)):
+            raise
+    _CONN = _open()
+    try:
+        return _exchange(_CONN)
     except Exception:
-        if reuse:
-            _drop_conn()
-        else:
-            conn.close()
+        _drop_conn()
         raise
-    finally:
-        if not reuse:
-            conn.close()
 
 
 def _retryable(method: str, path: str, prefer: str | None) -> bool:
@@ -796,6 +830,18 @@ def selftest() -> bool:
     for k in ("wa_id", "phone_id", "cell_ref", "contact_url", "urlish", "tweet_id"):
         add(f"claim.metadata.{k} = 5551230100 → refuse (undeclared or wrong shape: scanned)",
             lambda k=k: guard("claim", {"claim_text": "x", "metadata": {k: "5551230100"}}), True)
+    # YED-299: the declared uuid shape is exact. An id one character off in any group is NOT exempt, so a 10+ digit
+    # run inside it still refuses (each case kills one group-length mutant of ID_SHAPES['uuid']).
+    _g = ["abcdef12", "abcd", "abcd", "abcd", "555123010099"]
+    _bad_ids = []
+    for gi, (short, long_) in enumerate((("abcdef1", "abcdef123"), ("abc", "abcde"), ("abc", "abcde"), ("abc", "abcde"),
+                                         ("55512301009", "5551230100999"))):
+        for grp in (short, long_):
+            _bad_ids.append("-".join(grp if j == gi else x for j, x in enumerate(_g)))
+    _bad_ids += ["5551230100" + "abcdef" * 3 + "abc", "5551230100" + "abcdef" * 3 + "abcde"]     # 31 / 33 hex
+    for bid in _bad_ids:
+        add(f"claim.metadata.event_id malformed uuid {bid!r} → refuse (YED-299: shape is exact)",
+            lambda bid=bid: guard("claim", {"claim_text": "x", "metadata": {"event_id": bid}}), True)
     add("claim.metadata.post_ids[0] bare digits → refuse (undeclared)",
         lambda: guard("claim", {"claim_text": "x", "metadata": {"post_ids": ["5551230100"]}}), True)
     add("claim.metadata integer 5551230100 → refuse (10+ digit integers are scanned)",
@@ -880,6 +926,48 @@ def selftest() -> bool:
               "due 2023-10-15 ok", "call 5551234 ext 2", "order 555123456789012345 ok", "at 40.7128, -74.0060",
               "5551234567"):
         add(f"PHONE_RE regression {s!r} → no match", lambda s=s: _phone(s), False)
+    # YED-299 layer 1 (mutation pass 2026-11-20): each case kills a mutant that survived the cases above.
+    # Docs: docs/evidence/yed-299-mutation-2026-11-20.md. Lower/upper digit bounds and the "a number never starts or
+    # ends inside a longer digit run" look-arounds, each per alternative (PHONE_RE alone, no backstop).
+    for s in ("tel:5550100", "wa.me/5550100", "+5550100123", "+1 20 7946", "+7 495 000 00 00", "+1555-123-0100",
+              "+44 20 7 9 4 6"):
+        add(f"PHONE_RE bound {s!r} → match (YED-299)", lambda s=s: _phone(s), True)
+    for s in ("delta +123456789 users", "+44 20 79", "wa.me/555010", "tel:555010", "555-123-01005",
+              "+1555010012345678", "1+15550100123", "1+44 20 7946 0958", "+44 20 7946 0958 1234", "107700 900123",
+              "07700 9001234", "106 39 98 12 34", "06 39 98 12 345", "wa.me/5550100123456789", "1tel:5550100"):
+        add(f"PHONE_RE bound {s!r} → no match (YED-299)", lambda s=s: _phone(s), False)
+    for v in ("dana@example.р", "dana@users.noreply.github.com"):
+        add(f"claim.claim_text {v!r} → allow (YED-299: 1-char non-ASCII TLD; GitHub noreply allowlist)", _ct(v), False)
+    # YED-468: gaps G1-G4 are closed by Python-only folds in pii_normalize.heuristics. The shared PHONE_RE stays out
+    # of it on purpose (the DB CHECK keeps G2 as a documented out-of-contract gap), so G2 is pinned at both layers:
+    # the regex alone does NOT match (kills mutants #38 / #40, which widen the shared regex) and guard() refuses.
+    for s in ("+65 60000000", "+33 639981234", "+49.98272 "):
+        add(f"PHONE_RE {s!r} → no match (YED-468: G2 stays out of the shared regex)", lambda s=s: _phone(s), False)
+    for v in ("call 555-123-0100x12", "+44 20 7946 0958x12", "Tel+44 20 7946 0958", "Mob07700 900123",
+              "call 555-123-0100ext.12", "+65 60000000", "+33 639981234", "5 5 5 1 2 3 0 1 0 0", "dana@example. com"):
+        add(f"claim.claim_text {v!r} → refuse (YED-468 G1-G4)", _ct(v), True)
+    # Must-allow prose. `Follow @handle. Next sentence` kills mutant #186 (SPACED_DOT folding with no space before
+    # the dot would turn it into `Follow@handle.Next`).
+    for v in ("Q3 2026: 1 2 3", "Room 5 5 5", "version 2. 0", "Series A at 3x. com-like", "Lead at You.com",
+              "+1 more", "+30% YoY", "$5M at 3x", "x10", "10x growth", "+20 24 points", "+12 500 users",
+              "email us at the booth. Come by", "@handle. Next sentence", "Follow @handle. Next sentence",
+              "2026-11-20T10:00:00Z", "ISBN 978-0-306-40615-7"):
+        add(f"claim.claim_text {v!r} → allow (YED-468: prose)", _ct(v), False)
+    add("claim.metadata integer 1000000000 (exactly 10 digits) → refuse (YED-299: 10**9 is scanned)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"n": 1000000000}}), True)
+    add("claim.metadata.seen_at epoch ms integer → allow (YED-299: declared *_at, 13-digit epoch)",
+        lambda: guard("claim", {"claim_text": "x", "metadata": {"seen_at": 1763510400123}}), False)
+    add("domain_denylisted('') → False (YED-299)",
+        lambda: (_ for _ in ()).throw(PIIViolation("empty host denylisted")) if domain_denylisted("", deny) else None, False)
+
+    def _redos_case():
+        """EMAIL_RE's and WORD_FORM's run-start look-behinds are ReDoS guards: without them 20k chars took 0.7s / 1.9s
+        (quadratic). The match set is identical either way, so only time can pin them."""
+        t0 = time.perf_counter()
+        guard("claim", {"claim_text": "a" * 50000})
+        if time.perf_counter() - t0 > 1.0:
+            raise PIIViolation(f"guard took {time.perf_counter() - t0:.1f}s on a 50k-char run (ReDoS)")
+    add("guard on a 50k-char letter run finishes under 1s (YED-299: ReDoS look-behinds)", _redos_case, False)
     add("unknown table → refuse (fail-closed)", lambda: guard("secrets", {"x": 1}), True)
     add("non-allowlisted column set → refuse", lambda: guard("topic", {"name": "t", "owner_ssn": "1"}), True)
     # YED-304 W1: cluster assignment columns on topic
@@ -997,6 +1085,9 @@ def selftest() -> bool:
     add("entity_alias email column → refuse (forbidden contact-PII column)",
         _by(PII_COL_L, lambda: guard("entity_alias", {"entity_type": "person", "entity_id": "p1", "alias": "Jane",
                                                       "email": "x"})), True)
+    for col in ("email", "e_mail", "phone", "phone_number", "mobile", "telephone"):   # literal: not FORBIDDEN_COLUMNS
+        add(f"person.{col} → refuse by the forbidden-column layer itself (YED-299)",
+            _by(PII_COL_L, lambda col=col: guard("person", {"name": "A", col: "x"})), True)
     add("sweep_query clean row → pass",
         lambda: guard("sweep_query", {"kind": "room_topic", "theme_id": "t1", "template": "agent evals 28d news",
                                       "seed_event_id": "e1", "iso_week": "2026-W46", "items_returned": 12,
@@ -1010,6 +1101,45 @@ def selftest() -> bool:
     add("sweep_query page-text column → refuse (not allowlisted: template is the parent's query, never page text)",
         _by(COL_L, lambda: guard("sweep_query", {"kind": "gap", "template": "x", "iso_week": "2026-W46",
                                                  "page_text": "..."})), True)
+    # 0023 (YED-384, ADR-15): the 14 claim columns open, never the PII boundary; the three writer-less tables stay shut.
+    v2 = {"evidence": [{"para_idx": 3, "quote": "Acme raised a $6M seed in 2024"}], "judge_verdict": "supported",
+          "judge_model": "claude-fable-5-2", "judge_prompt_hash": "a" * 64, "judged_at": "2026-11-14T12:00:00Z",
+          "rank": "normal", "review_flag": "needs_review", "valid_from": "2026-02-03T00:00:00Z",
+          "valid_to": "2026-12-31T00:00:00Z", "freshness_class": "fast_moving", "freshness_conf": 0.7,
+          "freshness_reason": "lookup_v0", "next_check_at": "2026-12-14T12:00:00Z", "visibility": "private"}
+    base_claim = {"source_key": "s", "claim_key": "k", "claim_text": "Acme raised a $6M seed round in 2024."}
+    for col, val in v2.items():
+        add(f"claim.{col} (0023) → pass", lambda col=col, val=val: guard("claim", {**base_claim, col: val}), False)
+    add("claim v2 row with all 14 0023 columns → pass", lambda: guard("claim", {**base_claim, **v2}), False)
+    add("claim.evidence quote carrying an email → refuse (email scan, nested list)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "evidence": [
+            {"para_idx": 1, "quote": "Acme Widgets"}, {"para_idx": 2, "quote": "write to dana.fixture@acme.example.com"}]})), True)
+    add("claim.evidence quote carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "evidence": [{"para_idx": 1, "quote": "call (555) 123-4567"}]})), True)
+    add("claim.freshness_reason carrying a phone → refuse (phone scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "freshness_reason": "asked 555-123-4567"}, op="update")), True)
+    add("claim.utility_score still refused beside the 0023 columns (ADR-10 d5 unchanged)",
+        _by(COL_L, lambda: guard("claim", {**base_claim, **v2, "utility_score": 0.9})), True)
+    NO_ALLOW_L = "no ADR-9 allowlist for this table"
+    for t, row in (("claim_verification", {"claim_id": "c1", "outcome": "confirmed", "method": "web", "note": "ok"}),
+                   ("claim_label", {"claim_id": "c1", "sample_run": "r", "stratum": "rest", "inclusion_prob": 1,
+                                    "label": "supported"}),
+                   ("judge_audit", {"run_date": "2026-11-14", "part": "a", "n": 150, "hits": 150, "bound": 0.99,
+                                    "threshold": 0.9, "passed": True, "judge_model": "m", "judge_prompt_hash": "a" * 64})):
+        add(f"{t} clean row → refuse (0023 table with no writer yet: fail-closed, no_allowlist)",
+            _by(NO_ALLOW_L, lambda t=t, row=row: guard(t, row)), True)
+    # dict KEYS are scanned too (review 2026-11-14; since #396 inside _walk_masked, which yields every nested key at
+    # <path>.<key>): jsonb keys reach the DB as text. Each case must be refused by the email / phone scan.
+    add("claim.evidence span with an email as a dict KEY → refuse (key scan)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "evidence": [{"dana@acme-corp.com": "x", "para_idx": 1,
+                                                                        "quote": "q"}]})), True)
+    add("claim.metadata nested phone as a dict KEY → refuse (key scan)",
+        _by(PHONE_L, lambda: guard("claim", {**base_claim, "metadata": {"contacts": {"(555) 123-4567": "cell"}}})), True)
+    add("claim.locator / proposed_entities email key → refuse (key scan)",
+        _by(EMAIL_L, lambda: guard("claim", {**base_claim, "proposed_entities": [{"jane.doe@example.org": 1}]})), True)
+    add("claim.metadata ordinary keys (as_of, time_sensitive, 2026-11-04) → pass",
+        lambda: guard("claim", {**base_claim, "metadata": {"as_of": "2024-08", "time_sensitive": False,
+                                                            "2026-11-04": {"run": 1}}}), False)
     # YED-451: the 0023 judge record on claim (verdict, model, prompt hash, judged_at) is writable; PII still is not.
     add("claim judge record PATCH (supported, model, sha256, judged_at) → pass",
         lambda: guard("claim", {"judge_verdict": "supported", "judge_model": "claude-opus-5-5",
@@ -1156,6 +1286,109 @@ def selftest() -> bool:
             http.client.HTTPSConnection, g["_CONN"] = saved
     add("_send lifecycle: one shared conn, non-retryable isolated + closed, dropped on error, any connect OSError -> NotSent",
         _send_lifecycle_case, False)
+
+    def _send_reopen_case():
+        """YED-464: a reused keep-alive whose sock is None (server closed it) is reopened for any method; a reused
+        socket that dies mid-request is reopened and re-sent once for GET only, never for PATCH / upsert."""
+        g, made = globals(), []
+
+        class _R:
+            status = 200
+            def read(self): return b"[]"
+
+        class _Sock:
+            def settimeout(self, t): pass
+
+        class _Conn:
+            stale = 0                        # how many upcoming request() calls fail as a peer-closed socket
+            def __init__(self, host, port, timeout=None):
+                self.closed, self.sock, self.sent = False, None, 0
+                made.append(self)
+            def connect(self): self.sock = _Sock()
+            def request(self, *a, **k):
+                self.sent += 1
+                if _Conn.stale:
+                    _Conn.stale -= 1
+                    raise http.client.RemoteDisconnected("Remote end closed connection without response")
+            def getresponse(self): return _R()
+            def close(self): self.closed, self.sock = True, None
+
+        saved = (http.client.HTTPSConnection, g["_CONN"])
+        http.client.HTTPSConnection, g["_CONN"] = _Conn, None
+        try:
+            _send("GET", "/x", None, {}, 30, reuse=True)
+            for method in ("GET", "PATCH", "POST"):          # server sent Connection: close -> http.client nulls sock
+                g["_CONN"].sock = None
+                n = len(made)
+                if _send(method, "/x", b"{}", {}, 30, reuse=True) != (200, "[]") or len(made) != n + 1:
+                    _fail(f"{method} on a socketless keep-alive was not reopened")
+                if not made[n - 1].closed or g["_CONN"] is not made[-1]:
+                    _fail("the socketless connection was not dropped and replaced")
+            _Conn.stale = 1                                  # peer closed the socket we still hold
+            n = len(made)
+            if _send("GET", "/x", None, {}, 30, reuse=True) != (200, "[]") or len(made) != n + 1:
+                _fail("GET on a dead reused socket was not reopened once and re-sent")
+            for method in ("PATCH", "POST"):
+                _Conn.stale, n = 1, len(made)
+                try:
+                    _send(method, "/x", b"{}", {}, 30, reuse=True)
+                    _fail(f"{method} on a dead reused socket was re-sent inside _send")
+                except http.client.RemoteDisconnected:
+                    if g["_CONN"] is not None or len(made) != n:
+                        _fail(f"{method}: dead socket not dropped, or a new one opened")
+                _send("GET", "/x", None, {}, 30, reuse=True)  # fresh conn for the next probe
+            _Conn.stale, n, before = 2, len(made), made[-1].sent   # the re-sent GET fails too: raise, no third try
+            try:
+                _send("GET", "/x", None, {}, 30, reuse=True)
+                _fail("a GET failing twice did not raise")
+            except http.client.RemoteDisconnected:
+                if len(made) != n + 1 or made[n - 1].sent - before + made[n].sent != 2 or g["_CONN"] is not None:
+                    _fail("GET was re-sent more than once, or the dead conn was kept")
+            _Conn.stale, n = 1, len(made)                     # a FRESH connection that dies is never re-sent inline
+            try:
+                _send("GET", "/x", None, {}, 30, reuse=True)
+                _fail("a fresh connection's failure was retried inside _send")
+            except http.client.RemoteDisconnected:
+                if len(made) != n + 1:
+                    _fail("fresh-connection failure opened a second connection")
+        finally:
+            _Conn.stale = 0
+            http.client.HTTPSConnection, g["_CONN"] = saved
+    add("_send YED-464: socketless keep-alive reopened (any method); dead reused socket re-sent once for GET only",
+        _send_reopen_case, False)
+
+    def _denylist_missing_case(present: bool, row: dict):
+        """Points DENYLIST_PATH at a temp file (written when `present`); never touches the real denylist."""
+        d = tempfile.mkdtemp(prefix="spine_denylist_")
+        p = os.path.join(d, "inbox-denylist.md")
+        if present:
+            with open(p, "w", encoding="utf-8") as f:
+                f.write("# Inbox denylist\n\n**Status: v1 ACCEPTED**\n\n## Denylisted domains\n\n- `bank.example`\n")
+
+        def run():
+            saved_path = g["DENYLIST_PATH"]
+            g["DENYLIST_PATH"] = p
+            try:
+                guard("event", row)
+            except PIIViolation as e:
+                if not present and str(row.get("source", "")).startswith("inbox_miner") \
+                        and "inbox-denylist.md, which is missing" not in str(e):
+                    return                   # refused by another layer -> reported as a failure
+                raise
+            finally:
+                g["DENYLIST_PATH"] = saved_path
+        return run
+    _inbox = {"title": "t", "kind": "market", "source": "inbox_miner:market", "metadata": {"sender_domain": "veris.ai"}}
+    add("YED-324: denylist MISSING + inbox_miner row → refuse (inbox_denylist_missing, fails closed)",
+        _denylist_missing_case(False, _inbox), True)
+    add("YED-324: denylist MISSING + inbox_miner row with no metadata → refuse",
+        _denylist_missing_case(False, {"title": "t", "kind": "market", "source": "inbox_miner"}), True)
+    add("YED-324: denylist MISSING + non-inbox row → pass (only inbox rows depend on the denylist)",
+        _denylist_missing_case(False, {"title": "t", "kind": "market", "source": "akta"}), False)
+    add("YED-324: denylist present + inbox row from a clean domain → pass",
+        _denylist_missing_case(True, _inbox), False)
+    add("YED-324: denylist present + inbox row from a denylisted subdomain → refuse",
+        _denylist_missing_case(True, {**_inbox, "metadata": {"sender_domain": "alerts.bank.example"}}), True)
     add("prose scan catches `POST /doc_claims`",
         lambda: None if _PROSE_VERB_RE.search("then `POST /doc_claims` with") else (_ for _ in ()).throw(PIIViolation("miss")), False)
 

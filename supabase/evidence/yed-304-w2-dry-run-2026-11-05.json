@@ -1,0 +1,46 @@
+{
+  "generated_utc": "2026-11-05T23:31:44Z",
+  "mode": "dry-run",
+  "source": "twin db.ytfzzsxcxxbejnowmkmk.supabase.co (public.topic; 12 tombstones excluded)",
+  "model": "BAAI/bge-small-en-v1.5",
+  "k": 3,
+  "auto_threshold": 0.85,
+  "caveats": [
+    "name-only embeddings",
+    "attended_linked is a changing snapshot (W4)",
+    "validation measures agreement with the LLM bootstrap taxonomy"
+  ],
+  "counts": {
+    "topics": 293,
+    "assigned": 292,
+    "unassigned": 1,
+    "unassigned_attended_linked": 0,
+    "auto_assign": 0,
+    "review_queue": 1
+  },
+  "auto_assign": [],
+  "review_queue": [
+    {
+      "topic_id": "7f2b2df5-600d-40da-86dc-3e47ba979858",
+      "name": "AI Personas & Digital Minds",
+      "confidence": 0.5315,
+      "top1_similarity": 0.7986,
+      "attended_linked": false,
+      "candidates": [
+        {
+          "cluster_id": "4de47137-ebc9-471d-b80d-2689a412fc4c",
+          "cluster_name": "cluster 4de47137",
+          "vote_share": 0.6656,
+          "best_similarity": 0.797
+        },
+        {
+          "cluster_id": "6febfa3b-e85a-4c24-8f41-94e52afafa32",
+          "cluster_name": "cluster 6febfa3b",
+          "vote_share": 0.3344,
+          "best_similarity": 0.7986
+        }
+      ],
+      "option_none_fits": "none-fits / new theme (Alex decides; written as `human`)"
+    }
+  ]
+}

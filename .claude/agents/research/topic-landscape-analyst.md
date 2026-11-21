@@ -45,12 +45,13 @@ You receive a list of Topic entities with:
 
 ```
 ##### Evidence Ledger — [Topic Name]
-- claim: [≤15 words — milestone/metric/launch] | tier: web-verified | source: [publication/paper] | url: [full URL] | date: [YYYY-MM-DD]
-- claim: [a named side of the live debate] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [≤15 words — milestone/metric/launch] | tier: web-verified | source: [publication/paper] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words, verbatim from that page] | fetched: [YYYY-MM-DDTHH:MM:SSZ]
+- claim: [a named side of the live debate] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [verbatim span] | fetched: [ISO-8601 UTC]
 - claim: [carried from pack, not re-grounded] | tier: notion-prior | source: [prior trend note] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — grounded in a current web source this run. **URL required.**
+- `quote` + `fetched` (YED-451, added 2026-11-20) — on every `web-verified` row, a **verbatim** span of at most 25 words copied from the page at `url` as you fetched it, that supports the claim, plus the fetch time in ISO-8601 UTC. Copy, never paraphrase or fix typos. Choose the span that carries every figure, date and name in your claim: at staging a script fetches `url` and the claim is approvable only if the quote is on the page and the claim's figures and names are in it (quote-match, YED-467). WebFetch returns a summary, so copy from text it quotes verbatim, never from its paraphrase; if you cannot get a verbatim span, leave `quote` out and the row stays an unapproved candidate. It lets the claim judge test the claim against the page and tell page drift from extraction error. If no span on the page supports the claim, it is not `web-verified`. Never ledger the absence of a fact ("funding not found") as `web-verified`; a fact you could only half-confirm keeps its hedge in the claim text ("closing unconfirmed").
 - `tier: notion-prior` — carried from the injected pack, NOT re-grounded (most prior Current Events will be STALE by design). Informs the Deep Read only as flagged prior context, never as fact. Prefer to re-ground and promote.
 - `tier: email-signal` — from a newsletter; a **lead** only (one syndicated PR item is still one source), never corroboration.
 - **Common-knowledge background** (what RAG is, what a transformer is) needs no row — define freely, cite nothing. Reserve rows for the specific/recent/contestable.
