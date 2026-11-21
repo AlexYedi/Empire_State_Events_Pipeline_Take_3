@@ -57,7 +57,8 @@ The first line is the header. `recap` is true only when Alex's recap was among t
    section. Never route general knowledge.
 2. **No recap, no people.** Without Alex's recap, write `"recap": false` and route no `followup` (same rule as
    the brief: validated 2026-10-15).
-3. **Off the record stays out.** Nothing excluded under Rule 4 of the agent may appear in any field.
+3. **Off the record stays out.** Nothing from an input whose Notion "Off the record" checkbox is ticked (Rule 4
+   of the agent) may appear in any field. Spoken phrases in a transcript exclude nothing.
 4. **At most 12 items.** Prefer fewer, sharper ones. Merge near-duplicates. Aim for 3–8 on a normal night.
 5. **No contact details.** No email addresses, phone numbers or private handles in any field (ADR-9).
 6. **Content angles are one item each** with `type: content-backlog`. The planner groups them into one issue.
