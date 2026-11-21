@@ -88,8 +88,8 @@ The laptop no longer exports, so it needs no Notion token.
 - Missed 05:00 runs (laptop asleep) run once on wake. A failed run (mini off, off Tailscale) leaves the last mirror untouched.
 - Freshness: `ls -lt ~/Developer/esep-notion-export | head -3`. A mirror older than a day means the pull or the 04:30 export failed:
   read `~/Library/Logs/esep-runner/launchd-pull-notion-export.log` (laptop), then the newest `export-*.log` (mini).
-- The mirror holds brief text: it never enters git (invariant 4). Off-the-record material is already redacted and flagged
-  (`skip_staging`) by the exporter.
+- The mirror holds brief text: it never enters git (invariant 4). Off the record = the Notion "Off the record" checkbox
+  only (YED-389): a ticked Event is not exported; a ticked brief is exported and flagged (`skip_staging`).
 
 Setup, once:
 1. Mini (over `ssh esep-mini`): patched rrsync, same reason as the input sync:

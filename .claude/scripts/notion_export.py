@@ -24,10 +24,11 @@ Privacy (each layer is tested alone):
     by pii_normalize (raw + normalized copy) BEFORE any markdown is added; a hit replaces that unit with its redacted
     normalized plain text. Then the whole rendered body and manifest are scanned again; if that second scan still finds
     a contact the page FAILS CLOSED (nothing written, counted error_pii_scan, retried next run);
-  * pages whose title reads private / off-record / OTR / confidential / Chatham House / not for publication / *.PRIVATE
-    are skipped ("private equity" / "private markets" are not privacy markers);
-  * bodies are scanned for off-the-record markers: counts land in `otr_flags` and `skip_staging: true` is set, for the
-    stage verbs to refuse. A title regex is a stopgap: the real convention should be a Notion checkbox.
+  * off the record is ONLY the Notion checkbox property "Off the record" (YED-389: "there is no off the record unless I
+    explicitly call it out"). No title or body word scan. A ticked Event is skipped whole (counted
+    skipped_otr_checkbox). A ticked Content Draft still exports, but its brief entry carries `otr_checkbox: true` and the
+    manifest gets `skip_staging: true`, for the stage verbs to refuse. A missing property (an older page, or a DB
+    without the column) reads as NOT off the record. `otr_checkbox` (bool) replaces the old `otr_flags` (counts);
   * comment TEXT is never read into output, only whether a person user commented.
 
 Comment-check cost: page-level comments first (1 request), then at most COMMENT_BLOCK_CAP (100) blocks, 1 request each,
@@ -56,18 +57,7 @@ MIN_INTERVAL = 0.34                      # ~3 requests/s, Notion's documented av
 RETRY_AFTER_CAP = 60.0
 COMMENT_BLOCK_CAP = 100
 PII_PROP_TYPES = ("email", "phone_number")
-PRIVATE_RE = re.compile(
-    r"\.PRIVATE\b|\bprivate\b(?!\s+(?:equity|markets?)\b)|off[\s-]*the[\s-]*record|\boff[\s-]+record\b|\bOTR\b"
-    r"|\bconfidential\b|chatham\s+house|not\s+for\s+publication", re.I)
-OTR_MARKERS = {
-    "off_the_record": re.compile(r"off[\s-]*the[\s-]*record|\boff[\s-]+record\b", re.I),
-    "otr": re.compile(r"\bOTR\b"),
-    "chatham_house": re.compile(r"chatham\s+house", re.I),
-    "not_for_publication": re.compile(r"not\s+for\s+publication", re.I),
-    "confidential": re.compile(r"\bconfidential(?:ity)?\b", re.I),
-    "stays_in_the_room": re.compile(r"stays?\s+in\s+the\s+room", re.I),
-    "no_entry_sign": re.compile("⛔"),
-}
+OTR_PROP = "Off the record"             # checkbox on the Events + Content Drafts DBs (added 2026-11-20)
 ENTITY_PROPS = (("People", "person"), ("Companies", "company"), ("Topics", "topic"))
 NO_CHILD_FETCH = ("child_page", "child_database")   # separate pages, not part of this body
 MD_MARKS = re.compile(r"[*`~]")
@@ -196,13 +186,14 @@ def prop_date(page: dict, name: str) -> str | None:
     return ((v.get("date") or {}).get("start") or "")[:10] or None if v.get("type") == "date" else None
 
 
-def is_private(title: str) -> bool:
-    return bool(PRIVATE_RE.search(pii_normalize.normalize(title or "")))
+def prop_checkbox(page: dict, name: str) -> bool:
+    """True only for a checkbox property that is ticked; missing or another type reads False."""
+    v = public_props(page).get(name) or {}
+    return v.get("type") == "checkbox" and v.get("checkbox") is True
 
 
-def otr_flags(md: str) -> dict:
-    n = pii_normalize.normalize(md)
-    return {k: c for k, rx in OTR_MARKERS.items() if (c := len(rx.findall(n)))}
+def is_otr(page: dict | None) -> bool:
+    return bool(page) and prop_checkbox(page, OTR_PROP)
 
 
 def rich_md(rich: list, hits: list) -> str:
@@ -475,14 +466,11 @@ class Exporter:
 
     def export_one(self, d: dict) -> None:
         ctype, dtitle = prop_select(d, "Content Type"), prop_title(d)
-        if is_private(dtitle):
-            self.bump("skipped_private")
-            return
         ev_ids = self.relation_ids(d, "Event")
         event = self.page(ev_ids[0]) if ev_ids else None
         etitle = prop_title(event) if event else dtitle
-        if is_private(etitle):
-            self.bump("skipped_private")
+        if is_otr(event):
+            self.bump("skipped_otr_checkbox")
             return
         edate = (prop_date(event, "Event Date") if event else None) or prop_date(d, "Event Date")
         key = ev_ids[0] if ev_ids else d["id"]
@@ -505,8 +493,7 @@ class Exporter:
             entry["also_in_notion"] = dedup(prev["also_in_notion"], drop=(d["id"],))
         blocks = self.children(d["id"])
         body = to_markdown(dtitle, blocks, hits)
-        flags = otr_flags(body)
-        entry["otr_flags"] = flags
+        entry["otr_checkbox"] = is_otr(d)
         if ctype == "post_event_brief":
             seen, scope = self.person_commented(d["id"], blocks)
             entry["acknowledged_signal"] = {"content_status": entry["content_status"], "alex_commented": seen,
@@ -522,17 +509,15 @@ class Exporter:
                                "event_status": prop_select(event, "Event Status") if event else None,
                                "event_last_edited_time": (event or {}).get("last_edited_time"),
                                "exported_at": now_iso(),
-                               "skip_staging": any(b.get("otr_flags") for b in briefs.values()),
+                               "skip_staging": any(b.get("otr_checkbox") is True for b in briefs.values()),
                                "briefs": briefs}}
         if not ev_ids:
             m["notion_export"]["no_event_relation"] = True   # stage-research exits 5 on this manifest, by design
         post_scan(body, json.dumps(m, ensure_ascii=False))   # raises FailClosed: nothing below runs
         if not ev_ids:
             self.bump("no_event_relation")
-        if flags:
-            self.bump("otr_flagged")
-            for k, c in flags.items():
-                self.bump(f"otr_{k}", c)
+        if entry["otr_checkbox"]:
+            self.bump("otr_checkbox")
         self.bump("redactions", hits[0])
         self._write(path, m, f"{ctype}.md", body)
         self.bump(ctype)
@@ -632,6 +617,7 @@ class FakeNotion:
 
 EV = "eeeeeeee-0000-0000-0000-000000000001"
 P1, P2, P5, P7 = (f"aaaaaaaa-0000-0000-0000-00000000000{i}" for i in (1, 2, 5, 7))
+P10 = "aaaaaaaa-0000-0000-0000-000000000010"
 SUMMIT = "2026-10-02-fake-summit-agents-edition"
 
 
@@ -647,14 +633,13 @@ def selftest() -> bool:
     page = {"properties": {"T": {"type": "title", "title": []}, "E": {"type": "email", "email": "x@y.test"},
                            "P": {"type": "phone_number", "phone_number": "212-555-0100"}}}
     ok("public_props drops email + phone_number properties", list(public_props(page)) == ["T"])
-    ok("private: off-record / OTR / confidential / Chatham House / not for publication / *.PRIVATE", all(map(is_private, (
-        "Off-record founder dinner", "notes.PRIVATE", "Private dinner", "off the record AMA", "OTR: roundtable",
-        "Confidential briefing", "Chatham House session", "offtherecord chat", "Not for publication — notes",
-        "Off–the–record supper"))))
-    ok("private: 'private equity' / 'private markets' / ordinary titles pass", not any(map(is_private, (
-        "Privacy engineering meetup", "Research brief — X", "Private equity in AI", "Private markets summit"))))
-    ok("otr_flags: counts markers in a body", otr_flags("x. This is off the record. OTR again. ⛔ note") ==
-       {"off_the_record": 1, "otr": 1, "no_entry_sign": 1} and otr_flags("plain body") == {})
+    def cb(v, typ="checkbox"):
+        return {"properties": {"T": {"type": "title", "title": [{"plain_text": "Private dinner — off the record AMA"}]},
+                               OTR_PROP: {"type": typ, typ: v}}}
+    ok("otr checkbox: only a ticked 'Off the record' checkbox is OTR", is_otr(cb(True)) and not is_otr(cb(False)))
+    ok("otr checkbox: missing property / no page / non-checkbox type is NOT OTR (title words ignored)",
+       not is_otr({"properties": cb(True)["properties"] | {OTR_PROP: {}}}) and not is_otr({"properties": {}})
+       and not is_otr(None) and not is_otr(cb("yes", "rich_text")))
     ok("after(): strict, ISO with Z", after("2026-11-05T10:00:00.000Z", "2026-11-05T09:59:00.000Z")
        and not after("2026-11-05T10:00:00.000Z", "2026-11-05T10:00:00.000Z") and after("2026-01-01T00:00:00Z", None))
     ok("watermark backs off one minute", watermark_start("2026-11-11T10:00:30.000Z") == "2026-11-11T09:59:00.000Z")
@@ -725,11 +710,30 @@ def selftest() -> bool:
         fake = FakeNotion()
         stats = main_run(fake, "backfill", out, None, "fake-db", wm)
         dirs = sorted(os.listdir(out))
-        ok("backfill: one folder per event; private / OTR / Chatham / off-type drafts skipped; 'private equity' kept",
+        ok("backfill: one folder per event; ticked Event skipped; unticked 'Private dinner' / 'off the record AMA' "
+           "titles EXPORTED (YED-389 behaviour change)",
            dirs == ["2026-09-01-private-equity-in-ai-research-brief", "2026-09-01-research-brief-second-fake-meetup",
-                    SUMMIT] and stats.get("skipped_private") == 4)
-        ok("stats: 3 research, 1 post-event, 1 duplicate kept older", stats.get("research_brief") == 3
-           and stats.get("post_event_brief") == 1 and stats.get("duplicates_kept_older") == 1)
+                    "2026-09-05-research-brief-private-dinner", "2026-09-06-off-the-record-ama",
+                    "2026-09-07-research-brief-ticked-draft", SUMMIT]
+           and stats.get("skipped_otr_checkbox") == 1 and "skipped_private" not in stats
+           and f"GET /blocks/{P10}/children" not in fake.calls)
+        ok("stats: 6 research, 1 post-event, 1 duplicate kept older, 1 ticked draft", stats.get("research_brief") == 6
+           and stats.get("post_event_brief") == 1 and stats.get("duplicates_kept_older") == 1
+           and stats.get("otr_checkbox") == 1)
+
+        def man(d):
+            return json.load(open(os.path.join(out, d, "manifest.json"), encoding="utf-8"))["notion_export"]
+        pd, ama, td = (man(d) for d in ("2026-09-05-research-brief-private-dinner", "2026-09-06-off-the-record-ama",
+                                        "2026-09-07-research-brief-ticked-draft"))
+        ok("otr: unticked draft whose body says 'this is off the record' -> exported, NOT skip_staging",
+           "this is off the record" in open(os.path.join(out, "2026-09-05-research-brief-private-dinner",
+                                                         "research_brief.md"), encoding="utf-8").read()
+           and pd["skip_staging"] is False and pd["briefs"]["research_brief"]["otr_checkbox"] is False)
+        ok("otr: missing property -> NOT off the record", ama["skip_staging"] is False
+           and ama["briefs"]["research_brief"]["otr_checkbox"] is False)
+        ok("otr: ticked Content Draft -> otr_checkbox true + skip_staging", td["skip_staging"] is True
+           and td["briefs"]["research_brief"]["otr_checkbox"] is True
+           and not any("otr_flags" in b for m_ in (pd, ama, td) for b in m_["briefs"].values()))
         ev = os.path.join(out, SUMMIT)
         rb = open(os.path.join(ev, "research_brief.md"), encoding="utf-8").read()
         pb = open(os.path.join(ev, "post_event_brief.md"), encoding="utf-8").read()
@@ -759,8 +763,9 @@ def selftest() -> bool:
            b["research_brief"]["content_status"] == "needs_review"
            and b["post_event_brief"]["last_edited_time"] == "2026-11-05T10:00:00.000Z"
            and b["post_event_brief"]["brief_ref"] == f"notion:{P2}" and m["notion_export"]["event_status"] == "attended")
-        ok("otr: post-event body marker -> otr_flags + skip_staging", b["post_event_brief"]["otr_flags"] ==
-           {"off_the_record": 1} and b["research_brief"]["otr_flags"] == {} and m["notion_export"]["skip_staging"] is True)
+        ok("otr: post-event body 'off the record' with no checkbox -> NOT skip_staging",
+           "off the record" in pb and b["post_event_brief"]["otr_checkbox"] is False
+           and b["research_brief"]["otr_checkbox"] is False and m["notion_export"]["skip_staging"] is False)
         ok("acknowledged_signal: person comment (count only, stops at first hit)",
            b["post_event_brief"]["acknowledged_signal"] == {"content_status": "approved", "alex_commented": True,
                                                             "comment_scan": "page+2 blocks"}

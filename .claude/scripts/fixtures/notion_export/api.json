@@ -139,7 +139,7 @@
    {
     "object": "page",
     "id": "aaaaaaaa-0000-0000-0000-000000000003",
-    "last_edited_time": "2026-11-06T10:00:00.000Z",
+    "last_edited_time": "2026-09-05T10:00:00.000Z",
     "properties": {
      "Title": {
       "type": "title",
@@ -147,7 +147,7 @@
        {
         "type": "text",
         "text": {
-         "content": "Research brief — Off-record founder dinner",
+         "content": "Research brief — Private dinner",
          "link": null
         },
         "annotations": {
@@ -158,7 +158,7 @@
          "code": false,
          "color": "default"
         },
-        "plain_text": "Research brief — Off-record founder dinner",
+        "plain_text": "Research brief — Private dinner",
         "href": null
        }
       ]
@@ -184,18 +184,19 @@
      "Event": {
       "id": "relx",
       "type": "relation",
-      "relation": [
-       {
-        "id": "eeeeeeee-0000-0000-0000-000000000001"
-       }
-      ],
+      "relation": [],
       "has_more": false
      },
      "Event Date": {
       "type": "date",
       "date": {
-       "start": "2026-09-01"
+       "start": "2026-09-05"
       }
+     },
+     "Off the record": {
+      "id": "otr%3D",
+      "type": "checkbox",
+      "checkbox": false
      }
     }
    }
@@ -331,7 +332,7 @@
    {
     "object": "page",
     "id": "aaaaaaaa-0000-0000-0000-000000000006",
-    "last_edited_time": "2026-11-08T10:00:00.000Z",
+    "last_edited_time": "2026-09-07T10:00:00.000Z",
     "properties": {
      "Title": {
       "type": "title",
@@ -339,7 +340,7 @@
        {
         "type": "text",
         "text": {
-         "content": "Notes.PRIVATE — Fake Summit",
+         "content": "Research brief — Ticked draft",
          "link": null
         },
         "annotations": {
@@ -350,7 +351,7 @@
          "code": false,
          "color": "default"
         },
-        "plain_text": "Notes.PRIVATE — Fake Summit",
+        "plain_text": "Research brief — Ticked draft",
         "href": null
        }
       ]
@@ -358,7 +359,7 @@
      "Content Type": {
       "type": "select",
       "select": {
-       "name": "post_event_brief"
+       "name": "research_brief"
       }
      },
      "Content Status": {
@@ -370,24 +371,25 @@
      "Event Phase": {
       "type": "select",
       "select": {
-       "name": "post_event"
+       "name": "pre_event"
       }
      },
      "Event": {
       "id": "relx",
       "type": "relation",
-      "relation": [
-       {
-        "id": "eeeeeeee-0000-0000-0000-000000000001"
-       }
-      ],
+      "relation": [],
       "has_more": false
      },
      "Event Date": {
       "type": "date",
       "date": {
-       "start": "2026-09-01"
+       "start": "2026-09-07"
       }
+     },
+     "Off the record": {
+      "id": "otr%3D",
+      "type": "checkbox",
+      "checkbox": true
      }
     }
    },
@@ -516,7 +518,7 @@
    {
     "object": "page",
     "id": "aaaaaaaa-0000-0000-0000-000000000009",
-    "last_edited_time": "2026-09-03T10:00:00.000Z",
+    "last_edited_time": "2026-09-06T10:00:00.000Z",
     "properties": {
      "Title": {
       "type": "title",
@@ -524,7 +526,7 @@
        {
         "type": "text",
         "text": {
-         "content": "OTR: Fake roundtable",
+         "content": "off the record AMA",
          "link": null
         },
         "annotations": {
@@ -535,7 +537,7 @@
          "code": false,
          "color": "default"
         },
-        "plain_text": "OTR: Fake roundtable",
+        "plain_text": "off the record AMA",
         "href": null
        }
       ]
@@ -561,17 +563,13 @@
      "Event": {
       "id": "relx",
       "type": "relation",
-      "relation": [
-       {
-        "id": "eeeeeeee-0000-0000-0000-000000000001"
-       }
-      ],
+      "relation": [],
       "has_more": false
      },
      "Event Date": {
       "type": "date",
       "date": {
-       "start": "2026-09-01"
+       "start": "2026-09-06"
       }
      }
     }
@@ -587,7 +585,7 @@
        {
         "type": "text",
         "text": {
-         "content": "Chatham House session notes",
+         "content": "Research brief — Ticked event",
          "link": null
         },
         "annotations": {
@@ -598,7 +596,7 @@
          "code": false,
          "color": "default"
         },
-        "plain_text": "Chatham House session notes",
+        "plain_text": "Research brief — Ticked event",
         "href": null
        }
       ]
@@ -626,7 +624,7 @@
       "type": "relation",
       "relation": [
        {
-        "id": "eeeeeeee-0000-0000-0000-000000000001"
+        "id": "eeeeeeee-0000-0000-0000-000000000002"
        }
       ],
       "has_more": false
@@ -634,7 +632,7 @@
      "Event Date": {
       "type": "date",
       "date": {
-       "start": "2026-09-01"
+       "start": "2026-09-04"
       }
      }
     }
@@ -1905,6 +1903,184 @@
     "date": {
      "start": "2026-09-01"
     }
+   }
+  }
+ },
+ "GET /blocks/aaaaaaaa-0000-0000-0000-000000000003/children": {
+  "object": "list",
+  "results": [
+   {
+    "object": "block",
+    "id": "b3-p",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "Founder said this is off the record.",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "Founder said this is off the record.",
+       "href": null
+      }
+     ]
+    }
+   }
+  ],
+  "has_more": false,
+  "next_cursor": null
+ },
+ "GET /blocks/aaaaaaaa-0000-0000-0000-000000000009/children": {
+  "object": "list",
+  "results": [
+   {
+    "object": "block",
+    "id": "b9-p",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "AMA fixture body.",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "AMA fixture body.",
+       "href": null
+      }
+     ]
+    }
+   }
+  ],
+  "has_more": false,
+  "next_cursor": null
+ },
+ "GET /blocks/aaaaaaaa-0000-0000-0000-000000000006/children": {
+  "object": "list",
+  "results": [
+   {
+    "object": "block",
+    "id": "b6-p",
+    "type": "paragraph",
+    "has_children": false,
+    "paragraph": {
+     "rich_text": [
+      {
+       "type": "text",
+       "text": {
+        "content": "Ticked fixture body.",
+        "link": null
+       },
+       "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+       },
+       "plain_text": "Ticked fixture body.",
+       "href": null
+      }
+     ]
+    }
+   }
+  ],
+  "has_more": false,
+  "next_cursor": null
+ },
+ "GET /pages/eeeeeeee-0000-0000-0000-000000000002": {
+  "object": "page",
+  "id": "eeeeeeee-0000-0000-0000-000000000002",
+  "last_edited_time": "2026-10-03T10:00:00.000Z",
+  "properties": {
+   "Event Name": {
+    "type": "title",
+    "title": [
+     {
+      "type": "text",
+      "text": {
+       "content": "Fake Ticked Dinner",
+       "link": null
+      },
+      "annotations": {
+       "bold": false,
+       "italic": false,
+       "strikethrough": false,
+       "underline": false,
+       "code": false,
+       "color": "default"
+      },
+      "plain_text": "Fake Ticked Dinner",
+      "href": null
+     }
+    ]
+   },
+   "Event Date": {
+    "type": "date",
+    "date": {
+     "start": "2026-10-02T18:00:00.000-04:00"
+    }
+   },
+   "Event Status": {
+    "type": "select",
+    "select": {
+     "name": "attended"
+    }
+   },
+   "People": {
+    "id": "relx",
+    "type": "relation",
+    "relation": [
+     {
+      "id": "bbbbbbbb-0000-0000-0000-000000000001"
+     }
+    ],
+    "has_more": false
+   },
+   "Companies": {
+    "id": "relx",
+    "type": "relation",
+    "relation": [
+     {
+      "id": "cccccccc-0000-0000-0000-000000000001"
+     }
+    ],
+    "has_more": false
+   },
+   "Topics": {
+    "id": "tp%3D",
+    "type": "relation",
+    "relation": [
+     {
+      "id": "dddddddd-0000-0000-0000-000000000001"
+     }
+    ],
+    "has_more": true
+   },
+   "Off the record": {
+    "id": "otr%3D",
+    "type": "checkbox",
+    "checkbox": true
    }
   }
  }
