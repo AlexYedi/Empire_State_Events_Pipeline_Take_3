@@ -271,7 +271,7 @@ dropped, it's a deliberate call — note it, don't treat it as an oversight.
 - **Slides:** photograph only what is presented to the room; skip anything marked confidential or do-not-share, unannounced funding, or non-public customer names; if a speaker asks for no photos, none.
 - **People in photos:** wide room shots are fine; recognizable close-ups of attendees need a yes; speakers on stage are fine (public role) and get tagged.
 - **Hallway:** paraphrase, unnamed, unless the person says "quote me".
-- **Off the record** means out of the transcript and every derived file (`build-in-public.md`), not just the post.
+- **Off the record** means only what Alex marks with the Notion "Off the record" checkbox (Events, Content Drafts); that material stays out of git, the graph and every derived file, not just the post. Talks, panels and Q&A are on the record: a speaker saying "off the record" or "stays in the room" excludes nothing (YED-389, 2026-11-21).
 
 ### Visual Output Per Post: 3 Options (rewritten 2026-09-28 — voice v2)
 1. **Structured** — Claude HTML/SVG → PDF (stat card, diagram, framework, carousel)
