@@ -82,7 +82,7 @@ from datetime import date
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from spine_client import EMAIL_RE, EMAIL_ALLOWLIST_RE, PHONE_RE, FORBIDDEN_COLUMNS  # noqa: E402  (ADR-9 patterns, one source)
-from feeds import canonical_url  # noqa: E402  (cross-lane URL identity)
+from feeds import canonical_url, own_surface  # noqa: E402  (cross-lane URL identity; YED-489)
 
 FIXTURES = os.path.join(HERE, "fixtures", "sweep")
 AGENT_FILE = os.path.join(HERE, "..", "agents", "research", "theme-sweeper.md")
@@ -300,6 +300,8 @@ def _drop_reason(errs: list[str]) -> str:
         return "social_handle"
     if has(lambda p, rule: "longer than" in rule):
         return "oversize"
+    if has(lambda p, rule: "own surface" in rule):
+        return "own_content"
     for field in ("kind", "date", "url", "primary_url", "quote"):
         if has(lambda p, rule, f=field: p.endswith("." + f)):
             return {"primary_url": "url"}.get(field, field)
@@ -386,6 +388,10 @@ def _validate(r: Report, m, known, cap, window, theme_id) -> tuple[Report, dict]
             host, rule, idn = check_url(v)
             if rule:
                 r.err(f"{p}.{k}", rule)
+                continue
+            own = own_surface(v)
+            if own:                     # Alex's own surface: never evidence for the graph (YED-489)
+                r.err(f"{p}.{k}", f"{own}: Alex's own surface is never evidence")
                 continue
             if idn:
                 r.warn(f"{p}.{k}", "non-ASCII or punycode host")
@@ -605,6 +611,9 @@ def selftest() -> bool:
     check("every item dropped -> invalid, reasons counted",
           r.errors == ["items: every item was dropped"] and r.dropped == {"kind": 1, "date": 1, "url": 1}
           and n["items"] == [])
+    r, n = run(mut(lambda m: m["items"][1].__setitem__("url", "https://empire-state-hub.vercel.app/reads/agents")))
+    check("an item on Alex's own surface drops as own_content, the rest survive (YED-489)",
+          not r.errors and r.dropped == {"own_content": 1} and len(n["items"]) == 2)
     r, _ = run(mut(lambda m: m.__setitem__("items", [])))
     check("empty items (quiet window) -> valid, nothing to stage", not r.errors and _["items"] == [])
     r, n = run(mut(lambda m: (m["window"].__setitem__("to", "2026-11-30"), m["items"][0].__setitem__("kind", "blog"))))
