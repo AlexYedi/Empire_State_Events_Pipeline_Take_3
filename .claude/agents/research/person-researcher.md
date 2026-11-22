@@ -51,13 +51,13 @@ For each person that gets research:
 
 ```
 ##### Evidence Ledger — [Name]
-- claim: [≤15 words] | tier: web-verified | source: [publication/profile/talk] | url: [full URL] | date: [YYYY-MM-DD] | quote: [≤25 words, verbatim from that page] | fetched: [YYYY-MM-DDTHH:MM:SSZ]
-- claim: [their stated thesis/POV] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD] | quote: [verbatim span] | fetched: [ISO-8601 UTC]
+- claim: [≤15 words] | tier: web-verified | source: [publication/profile/talk] | url: [full URL] | date: [YYYY-MM-DD]
+- claim: [their stated thesis/POV] | tier: web-verified | source: [primary source] | url: [full URL] | date: [YYYY-MM-DD]
 - claim: [carried from pack, not re-grounded] | tier: notion-prior | source: [prior brief] | url: [n/a] | date: [prior date]
 ```
 
 - `tier: web-verified` — grounded in a current web source this run. **URL required.**
-- `quote` + `fetched` (YED-451, added 2026-11-20) — on every `web-verified` row, a **verbatim** span of at most 25 words copied from the page at `url` as you fetched it, that supports the claim, plus the fetch time in ISO-8601 UTC. Copy, never paraphrase or fix typos. **Write the claim from the quote, not the quote for the claim** (YED-475): the claim may assert only what the quote says. One fact per row: if two facts sit in different sentences of the page (customers in one, ARR in another), write two rows, each with its own quote. Put the date in the `date` field and the publisher in `source`, never in the claim text ("(TechCrunch)" in a claim is a name the quote lacks). Every figure and every name in the claim, other than the entity the ledger heading is about, must appear in the quote as the page writes it. At staging a script fetches `url` and the claim is approvable only if the quote is on the page and the claim's figures and names are in it (quote-match, YED-467); on 2026-11-21, 96 of 172 rows failed only because the claim said more than its quote. WebFetch returns a summary, so copy from text it quotes verbatim, never from its paraphrase; if you cannot get a verbatim span, leave `quote` out and the row stays an unapproved candidate. It lets the claim judge test the claim against the page and tell page drift from extraction error. If no span on the page supports the claim, it is not `web-verified`. Never ledger the absence of a fact ("funding not found") as `web-verified`; a fact you could only half-confirm keeps its hedge in the claim text ("closing unconfirmed").
+- **No quotes from you (YED-495, 2026-11-22).** Do not write `quote` or `fetched`. After the run, code fetches every `url` you cite and a no-tools extractor re-derives each web-verified row's claim and its verbatim quote from the page text, so cite **the page that actually states the fact** (not a search result or a summary of it). Self-reported quotes from WebFetch summaries passed the staging quote check 27–61% of the time; quotes taken from code-fetched text passed 90%. One fact per row: if two facts sit in different sentences or pages, write two rows. Put the date in `date` and the publisher in `source`, never in the claim text. If no page states the fact, it is not `web-verified`. Never ledger the absence of a fact ("funding not found") as `web-verified`; a fact you could only half-confirm keeps its hedge in the claim text ("closing unconfirmed").
 - `tier: notion-prior` — carried from the injected pack, NOT re-grounded. Informs the Deep Read only as flagged prior context, never as fact. Prefer to re-ground and promote to `web-verified`.
 - `tier: email-signal` — from Gmail; a relationship **lead**, never a public-facing fact. Keep private contents out.
 - **Common-knowledge background** needs no row. Reserve rows for the specific/recent/contestable.
@@ -89,7 +89,7 @@ surname ("Hodges led Continuent", "Hodges' talk") or they/them, never he/his/him
 your prose for he/his/him/she/her about the person and rewrite each one that has no source. The exception is a
 primary source you fetched that states them: a third-person bio ("…where he focuses on…"), a
 LinkedIn or speaker-page pronoun tag, or first-person self-reference. When a source does state them, add an Evidence
-Ledger row for it (`claim: <Name> pronouns <x>/<y> per <source>`, with the verbatim quote and fetch time), so the
+Ledger row for it (`claim: <Name> pronouns <x>/<y> per <source>`, citing that page's url), so the
 synthesizer and the Deep Read renderer have a source to follow. The 2026-11-21 run guessed "he" for six people from
 their first names alone; only one (a Dask Summit bio) was sourced.
 

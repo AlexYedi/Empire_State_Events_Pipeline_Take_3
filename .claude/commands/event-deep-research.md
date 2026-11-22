@@ -77,7 +77,7 @@ Before fan-out, load what the pipeline already knows about these entities so res
 
 Once triage is approved, **run Steps 2 and 2.5 as one workflow from this thread:** call the `Workflow` tool with `name: "event-research-fanout"` (`.claude/workflows/event-research-fanout.js`). The parent still owns the run (CLAUDE.md invariant 6): it launches the workflow after the triage gate and takes back the result. The workflow does what the hand-run fan-out below did, with three differences:
 - the dispatch shape is fixed in code, so item (1), the verbatim source, can't be dropped from a specialist prompt;
-- each specialist returns its Evidence Ledger as structured rows. Code renders them in the exact bullet form Step 4.2 parses, and drops inadmissible rows (web-verified without a URL, a bad date, a claim over 15 words), listing each one. A bad quote (over 25 words, no fetch time, on a non-web-verified row) costs only the quote, listed in `audit.quote_dropped`; `audit.quotes` gives quote coverage per specialist;
+- each specialist returns its Evidence Ledger as structured rows. Code renders them in the exact bullet form Step 4.2 parses, and drops inadmissible rows (web-verified without a URL, a bad date, a claim over 15 words), listing each one. Specialists write no quotes: Step 3.5 re-derives them from code-fetched page text (YED-495);
 - a thin return gets one deeper pass automatically, for that specialist only.
 
 **Args** (a JSON object, not a string): `event {name, date}`, `verbatim_source` (the Step 1 `VERBATIM SOURCE` block, unedited), `focus`, `triage_plan`, `prior_pack` (the Step 1.7 pack, `""` on a first-touch event), and `specialists.{company, person, topic, signal}`, each `{entities, prior}`. `entities` is that specialist's entity list with triage paths, scoped as in the list below; `""` means not dispatched. `prior` is its slice of the pack.
@@ -97,7 +97,7 @@ For each specialist, pass: **(1) the full `VERBATIM SOURCE` description block fr
 
 **Mandatory (fidelity fix, 2026-06-23):** the verbatim description is item (1) for a reason — it goes in EVERY specialist dispatch, ahead of the entity list. Do NOT paraphrase it into the prompt and drop the original. If the parent only hands subagents the summarized entity list, the run repeats the defect where talk-abstract nuance and named-but-unsummarized themes never reach research. The Step 2.5 synthesizer also receives the raw invite — keep that.
 
-**Return contract (added 2026-08-21 — YED-136):** each specialist now returns, alongside its prose blocks, (a) a **historical spine** (topic lineage / company founding→funding→evolution arc / person career arc — facts + dates), (b) **mechanism + jargon** material for the novice on-ramp, and (c) a per-entity **Evidence Ledger** under a heading exactly `##### Evidence Ledger — <Entity Name>`, one **bullet** per specific/recent/contestable claim in exactly this shape — `- claim: <≤15 words> | tier: web-verified | source: <site> | url: <full URL> | date: <YYYY-MM-DD> | quote: <≤25 words, verbatim from the page> | fetched: <ISO-8601 UTC>` (quote + fetched on web-verified rows; YED-451, 0026) — with tier ∈ `web-verified` / `email-signal` / `notion-prior` / `inference`. **Ask for this bullet form verbatim in every dispatch; do not ask for a table.** (Step 4.2's parser tolerates a `| claim | tier | source | url | date |` table as a fallback since 2026-09-27, after a run where every specialist emitted tables and the graph write found 0 admissible rows — but the bullet is the contract.) These feed the Deep Read render loop (Step 4.5); the URLs are mandatory for `web-verified` rows (the spike caught that missing URLs break endnotes). Preserve them when handing returns to the synthesizer.
+**Return contract (added 2026-08-21 — YED-136):** each specialist now returns, alongside its prose blocks, (a) a **historical spine** (topic lineage / company founding→funding→evolution arc / person career arc — facts + dates), (b) **mechanism + jargon** material for the novice on-ramp, and (c) a per-entity **Evidence Ledger** under a heading exactly `##### Evidence Ledger — <Entity Name>`, one **bullet** per specific/recent/contestable claim in exactly this shape — `- claim: <≤15 words> | tier: web-verified | source: <site> | url: <full URL> | date: <YYYY-MM-DD>` (no quote: Step 3.5 adds the verbatim quote + fetch time from page text code fetched; YED-495) — with tier ∈ `web-verified` / `email-signal` / `notion-prior` / `inference`. **Ask for this bullet form verbatim in every dispatch; do not ask for a table.** (Step 4.2's parser tolerates a `| claim | tier | source | url | date |` table as a fallback since 2026-09-27, after a run where every specialist emitted tables and the graph write found 0 admissible rows — but the bullet is the contract.) These feed the Deep Read render loop (Step 4.5); the URLs are mandatory for `web-verified` rows (the spike caught that missing URLs break endnotes). Preserve them when handing returns to the synthesizer.
 
 Wait for all four to return before proceeding to Step 2.5. If a specialist returns thin output, re-invoke just that one with deeper scope — do not restart the whole fan-out.
 
@@ -131,6 +131,24 @@ Alex may request:
 - Add context that web search didn't surface → patch the brief in conversation
 
 Iterate until Alex says "write it" / "proceed" / "looks good".
+
+## Step 3.5 — Re-derive ledger quotes from page text code fetched (this conversation, YED-495)
+
+**After Alex approves the brief, before Step 4.** Specialists cite URLs; they no longer write quotes. Code fetches every
+cited page and a no-tools extractor copies each web-verified row's quote from that text, so the quote is proof, not a
+self-report (A/B 2026-11-22, Madison Avenue: staging quote-check pass 40/66 → 55/66; blind precision of claim vs quote
+13/20 → 18/20; 62/67 rows covered).
+
+1. `.venv/bin/python .claude/scripts/ledger_refetch.py prepare --evidence <scratch>/<slug>.evidence.md --out <scratch>/<slug>.refetch.json`
+   (GET only; one fetch per distinct URL; prints rows, pages, fetch failures, batches).
+2. Run the `ledger-extract` workflow (`.claude/workflows/ledger-extract.js`) with `args` = the file's `workflow_args`;
+   save its result as `<scratch>/<slug>.extracted.json`.
+3. `.venv/bin/python .claude/scripts/ledger_refetch.py swap --evidence <scratch>/<slug>.evidence.md --prepared <scratch>/<slug>.refetch.json --extracted <scratch>/<slug>.extracted.json --out <scratch>/<slug>.evidence.md`
+   Each extracted row gets the extractor's claim + quote and code's fetch stamp. A row with no extraction keeps its
+   claim/source/url/date and no quote: it stages as an unapproved candidate. Report the `swap:` line in Step 6.
+
+The rewritten Evidence Set feeds both Step 4.2a (graph) and Step 4.5 (Deep Read), so they cite the same rows. If the
+workflow fails, skip the swap and say so in Step 6: staging then holds every web-verified row as `no_quote`.
 
 ## Step 4 — Notion writes (parent decides, `notion-writer` executes — CLAUDE.md invariant 5)
 
