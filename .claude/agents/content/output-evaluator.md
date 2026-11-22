@@ -29,7 +29,7 @@ Start from the `quotes` list in `output_checks.py` output (each quote, its best 
 | `MISATTRIBUTED` | fail | The words were said, but by someone other than the person named. Give who said them. |
 | `UNVERIFIABLE` | fail | No transcript, slide or source you were given contains it. |
 
-Also check, once per draft: does any quote come from a passage the transcript or brief marks as off the record ("stays in the room", "don't post", "confidential")? That is a fail regardless of accuracy.
+Also check, once per draft: does any quote come from an input the parent flagged `off_the_record: true` (Alex ticked its Notion "Off the record" checkbox)? That is a fail regardless of accuracy. Nothing else makes a quote off the record: talks, panels and Q&A are on the record, and a speaker saying "stays in the room", "don't post" or "confidential" is not a fail (YED-389). If the parent passed no flags, say so in one line and treat the inputs as on the record.
 
 ### Mode `source`
 

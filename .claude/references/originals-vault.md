@@ -6,7 +6,7 @@ The knowledge graph mines originals: emails, transcripts, meeting notes, Notion 
 
 ## What goes in
 
-Any raw source the graph mines and might need to re-mine later. `--kind` is one of `email`, `transcript`, `meeting_note`, `notion_comment`, `other`. Off-the-record material is still redacted per CLAUDE.md §4.4 before any *derived* file is written; the vault keeps the untouched original privately.
+Any raw source the graph mines and might need to re-mine later. `--kind` is one of `email`, `transcript`, `meeting_note`, `notion_comment`, `other`. Material from an input Alex marked with the Notion "Off the record" checkbox stays out of every *derived* file (CLAUDE.md invariant 4, YED-389); the vault keeps the untouched original privately.
 
 ## Local layout (outside every git work tree)
 

@@ -46,8 +46,8 @@ standard company rundown. The observed beats, in order:
 3. **What we've built + what makes us unique** — product, the differentiated bet,
    traction proof (customers, scale, growth).
 4. **Recent milestones / funding** — the round, investors, marquee logos, growth
-   numbers. *(This is where the timeliness lives — and where the confidentiality
-   flag lives; see Sensitivities.)*
+   numbers. *(This is where the timeliness lives — and where the source check
+   matters; see Sensitivities.)*
 5. **Who we're hiring** — the open roles **and the profile** of the person they
    want ("hungry for a challenge," "forward-deployed," etc.).
 6. **Why work for us** — culture, values, the candidate pitch.
@@ -117,12 +117,12 @@ name.
 
 ## Sensitivities (read before publishing anything)
 
-- **"Stays in the room" / confidential funding.** Founders often disclose a
-  just-closed round on stage and explicitly say it's **not public** ("this stays
-  in the room"). That number must **NOT** appear in any public post, carousel, or
-  CRM note. Keep it in the internal brief only, clearly flagged, and in the public
-  content use only what is **already publicly reported** (verified). When in doubt,
-  cut the number and describe the momentum qualitatively.
+- **Funding disclosed on stage is on the record** (YED-389, 2026-11-21). A
+  just-closed round a founder announces from the stage can be used, even if they
+  add "this stays in the room": a showcase is a public room. Only the Notion
+  "Off the record" checkbox on the Event or Content Draft keeps material out.
+  Attribute it to the room ("announced on stage at <event>"), never as already
+  publicly reported unless a source says so, and keep the founder's hedges.
 - **Name verification before tagging.** Per `feedback_name_people_and_thank_speakers`:
   name people wherever possible, but if a full name is unresolved, name what you
   have and flag before tagging — never publish a guessed surname.
