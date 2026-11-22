@@ -141,8 +141,6 @@ SECTIONS = [
     # statements. `claim_type` is unconstrained text, so this needs no DDL.
     (("top questions", "prepared questions", "open questions", "questions"), "question"),
 ]
-# Sections that are NEVER staged, whatever they contain (a promise made in the room outranks the graph).
-EXCLUDED_SECTIONS = ("confidentiality", "⛔")
 # Founder-showcase format (content-patterns/founder-showcase.md): per-company `### N. Name — url`
 # blocks with **Label:** bullets. Label -> (claim_type, provenance_tier); None = not a claim.
 SHOWCASE_SECTION = "company breakdowns"
@@ -153,7 +151,6 @@ SHOWCASE_LABELS = {
     "who": None,                                       # roster, not a claim (people are entities)
 }
 DO_NOT_PUBLISH_RE = re.compile(r"rule\s*12|unsourced|do(?:n'?t| not) publish|never publish|never repeat", re.I)
-CONFIDENTIAL_RE = re.compile(r"stays in the room|confidential|⛔|off the record", re.I)
 CONF_RE = re.compile(r"\b(HIGH|MED)\b")
 
 
@@ -250,21 +247,6 @@ def _table_rows(block: str) -> list[list[str]]:
 BOUNDARY_SECTIONS = ("anecdotes", "concept glossary", "quote bank", "full quote bank", "speaker map",
                      "documentarian", "open loops", "verification flags", "tools", "slides", "conditioning")
 
-
-def redact_body(md: str) -> str:
-    """Brief text handed to ensure_document obeys the SAME confidentiality rules as claim parsing: excluded
-    sections (e.g. '## ⛔ Confidentiality flag') dropped whole, CONFIDENTIAL_RE lines dropped. Today the
-    documents row stores only a hash + word_count (never the text), so this is a guard for any future
-    text/chunk storage, not a fix for a live leak."""
-    out, skip = [], False
-    for line in md.splitlines():
-        h = re.match(r"^##\s+(.+)", line)
-        if h:
-            skip = any(x in h.group(1).lower() for x in EXCLUDED_SECTIONS)
-        if skip or CONFIDENTIAL_RE.search(line):
-            continue
-        out.append(line)
-    return "\n".join(out)
 
 
 def _known_section(title: str) -> bool:
@@ -764,8 +746,6 @@ def parse_brief(md: str) -> list[dict]:
     names = speaker_names(sections)
     items: list[dict] = []
     for title, body in sections.items():
-        if any(x in title for x in EXCLUDED_SECTIONS):
-            continue                                   # confidential sections are never staged
         if title.startswith(SHOWCASE_SECTION):
             items += _showcase_items(body)
             continue
@@ -784,8 +764,6 @@ def parse_brief(md: str) -> list[dict]:
     for it in items:
         if len(it["text"]) < 12:
             continue
-        if CONFIDENTIAL_RE.search(it["raw"]):
-            continue                                   # a confidential line is dropped, not flagged
         cm = CONF_RE.search(it["raw"])
         conf = 0.8 if (cm and cm.group(1) == "HIGH") else 0.6 if cm else 0.7
         dnp = bool(DO_NOT_PUBLISH_RE.search(it["raw"]))
@@ -1401,7 +1379,7 @@ def stage_claims(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, ap
     doc_id = None
     if brief_ref:
         doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Post-event brief — {ev['title']}",
-                                    "source_type": "post_event_brief", "body_text": redact_body(md), "doc_date": when,
+                                    "source_type": "post_event_brief", "body_text": md, "doc_date": when,
                                     "produced_by": "/post-event-content"}, event_id=eid)
     skey = source_key_for_event(ev["notion_page_id"])
     if doc_id and not g.dry:   # claims staged before the brief had a document row get linked, never re-pointed
@@ -1870,7 +1848,7 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     doc_id = None
     if brief_ref:
         doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
-                                    "source_type": "research_brief", "body_text": redact_body(md),
+                                    "source_type": "research_brief", "body_text": md,
                                     "doc_date": (ev.get("event_date") or "")[:10] or None,
                                     "produced_by": "/event-deep-research",
                                     "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
@@ -1958,8 +1936,9 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
 
 
 # ---------------------------------------------------------------------------------------------
-# YED-391 — an off-the-record brief never stages. The Notion exporter sets notion_export.skip_staging when a brief
-# carries OTR flags; every stage verb refuses it unless Alex has reviewed the redactions by hand.
+# YED-391 — an off-the-record brief never stages. The Notion exporter sets notion_export.skip_staging when Alex has
+# ticked the "Off the record" checkbox on the Event or Content Draft (YED-389: words in the text never mark anything
+# off the record). Every stage verb refuses it unless Alex passes --allow-otr-reviewed.
 OTR_EXIT = 6
 OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "stage-v2", "ensure-document", "ensure-event",
              "approve-claims")
@@ -1968,7 +1947,7 @@ OTR_VERBS = ("stage-research", "stage-claims", "stage-prose", "stage-v2", "ensur
 def otr_refusal(manifest: dict, verb: str, allow_otr_reviewed: bool) -> int | None:
     if (manifest.get("notion_export") or {}).get("skip_staging") is True and not allow_otr_reviewed:
         sys.stderr.write(f"{verb}: REFUSED — manifest has notion_export.skip_staging: true (off-the-record material). "
-                         "Nothing written. Pass --allow-otr-reviewed only after reviewing the brief's redactions (YED-391).\n")
+                         "Nothing written. Pass --allow-otr-reviewed only if Alex has decided this material may stage (YED-391, YED-389).\n")
         return OTR_EXIT
     return None
 
@@ -2339,7 +2318,7 @@ def _research_links(g: "Graph", ev: dict, manifest: dict, packet: dict, brief_md
     doc_id = None
     if brief_ref:
         doc_id = g.ensure_document({"external_ref": brief_ref, "title": f"Research brief — {ev.get('title', '')}",
-                                    "source_type": "research_brief", "body_text": redact_body(brief_md),
+                                    "source_type": "research_brief", "body_text": brief_md,
                                     "doc_date": (ev.get("event_date") or "")[:10] or None,
                                     "produced_by": "/event-deep-research",
                                     "metadata": {"notion_event_id": pid_variants(ev["notion_page_id"])[0],
@@ -4355,7 +4334,7 @@ def _v2_selftest(ok) -> None:
        and len(fg.t["claim_entity"]) == 2 and "new 0" in out2)
     pub = AG()                                   # an existing public_ok brief document -> public_ok claims
     pub.t["documents"].append({"id": "doc-pub", "external_ref": man["notion_export"]["briefs"]["research_brief"]["brief_ref"],
-                               "sha256": sha(redact_body(md)), "is_current": True, "version": 1, "visibility": "public_ok"})
+                               "sha256": sha(md), "is_current": True, "version": 1, "visibility": "public_ok"})
     run(pub)
     ok("stage-v2: a public_ok brief document -> public_ok claims", pub.t["claim"]
        and all(c["visibility"] == "public_ok" and c["document_id"] == "doc-pub" for c in pub.t["claim"]))
@@ -4724,14 +4703,18 @@ def selftest() -> bool:
     ok("parse: 0 claims from an unrelated doc", parse_brief("## Intro\n- hello world here") == [])
     sc = parse_brief(SHOWCASE_SAMPLE)
     blob = " ".join(i["text"] for i in sc).lower()
-    ok("showcase: confidential section never staged", "stays in the room" not in blob and "off-the-record detail" not in blob)
-    ok("showcase: a line carrying ⛔ is dropped whole", not any(i["about_company"] == "North" and i["claim_type"] == "statistic" for i in sc))
+    ok("YED-389: a showcase line marked ⛔ / 'off-the-record' in the text still stages (only the checkbox is OTR)",
+       any(i["about_company"] == "North" and i["claim_type"] == "statistic" for i in sc))
+    on_rec = parse_brief("## Pitfalls\n- Founders said this stays in the room: the Series B closed at $9M last week.")
+    ok("YED-389: a 'stays in the room' line in a known section is staged like any other",
+       len(on_rec) == 1 and "Series B" in on_rec[0]["text"])
     ok("showcase: 'Who' roster lines are not claims", not any("Biringer" in i["text"] for i in sc))
     ok("showcase: claims attributed to their company",
        {i["about_company"] for i in sc} == {"North", "Arist"} and all(i["text"].startswith(i["about_company"]) for i in sc))
     ok("showcase: Recent (PUBLIC) -> web_verified",
        any(i["about_company"] == "Arist" and i["claim_type"] == "statistic" and i["tier"] == "web_verified" for i in sc))
-    ok("showcase: 4 claims total (North problem; Arist problem, recent, hiring)", len(sc) == 4)
+    ok("showcase: 5 claims total (North problem, recent; Arist problem, recent, hiring); YED-389 un-drops North recent",
+       len(sc) == 5)
     jn = parse_brief(JUNE_SAMPLE)
     ok("june: pitfalls paragraph split on ' · ' -> 4", sum(i["claim_type"] == "pitfall" for i in jn) == 4)
     ok("june: 'Top Insights' alias + inline numbering -> 3", sum(i["claim_type"] == "learning" for i in jn) == 3)
@@ -4761,10 +4744,6 @@ def selftest() -> bool:
     ok("speakers: roster fallback to 'People & Outreach' table",
        speaker_names(split_sections("## People & Outreach State\n<table>\n<tr><td>Person</td><td>Role</td></tr>\n"
                                     "<tr><td>**Sangram Vajre** (GTM Partners)</td><td>Speaker</td></tr>\n</table>")) == ["Sangram Vajre"])
-    red = redact_body("## ⛔ Confidentiality flag (read first)\nSeries B $X — stays in the room.\n## Thesis\nPublic line.\n"
-                      "- North raised a round (confidential).\n- Antimetal $24.3M.")
-    ok("redact_body: excluded section + confidential lines never stored",
-       "Series B" not in red and "confidential" not in red and "Public line." in red and "Antimetal" in red)
     rg = ["Jared Robin", "Alex Lindahl", "Mintis Sow", "Tyler Phillips"]
     ok("attribute: surname tell '(Sow)'", attribute("Run a click study (Sow). HIGH.", rg) == "Mintis Sow")
     ok("attribute: owner's first name is not a tell", attribute("Alex's own pipeline gates output", rg) is None)
@@ -4808,8 +4787,8 @@ def selftest() -> bool:
     ok("questions: do-not-publish still applies to a question",
        parse_brief("## Top Questions\n- Unsourced: how many agents does Datadog run? (do not publish)")
        [0]["do_not_publish"])
-    ok("questions: confidentiality still outranks — ⛔ section is never staged",
-       parse_brief("## Top Questions ⛔\n- What is your runway?") == [])
+    ok("YED-389: a ⛔ in a section heading no longer excludes it",
+       [i["claim_type"] for i in parse_brief("## Top Questions ⛔\n- What is your runway?")] == ["question"])
     # split_questions — the backfill's splitter, pinned against the four real bank shapes + the two
     # failure modes the judge raised (2026-09-25): silent short-question drop, quoted-question over-split.
     ok("split: numbered lines", split_questions("1. Who owns it?<br>2. What breaks first?") == ["Who owns it?", "What breaks first?"])
