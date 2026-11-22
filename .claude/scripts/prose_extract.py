@@ -43,7 +43,7 @@ from contextlib import redirect_stderr
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from substrate import (ROSTER_TIE, claim_key, clean_md, norm_text, pid_variants, redact_body,  # noqa: E402
+from substrate import (ROSTER_TIE, claim_key, clean_md, norm_text, pid_variants,  # noqa: E402
                        research_source_key, roster_match, strip_paren)
 import pii_normalize  # noqa: E402  (spine_client's raw patterns + the normalized copy + bare 10-digit runs)
 
@@ -66,8 +66,8 @@ KEEP_RE = re.compile(r"\b(topics?|topic foundations|primer|landscape|people|comp
 PLAYBOOK_RE = re.compile(r"\b(questions?|conversation kits?|pitch(?:es)?|talking points?|hooks?|angles?|asks?|"
                          r"openers?|what to say|playbook|prep|your move|plays)\b")
 EXCLUDE_RE = re.compile(r"quick take|\bframe\b|cross-event|documentarian|hooks?\b|success signals|verification"
-                        r"|confidential|endnotes|sources|references|guards|retro|who to prioriti|gaps to close"
-                        r"|signal log|why this matters|⛔")
+                        r"|endnotes|sources|references|guards|retro|who to prioriti|gaps to close"
+                        r"|signal log|why this matters")
 # A sentence opening with one of these is advice to Alex, not a world fact (prepass paragraph filter + check).
 IMPERATIVE_VERBS = frozenset("""ask lead mention open start bring use say try avoid frame pitch position raise probe
 push offer skip drop follow reference cite tell introduce connect highlight emphasize emphasise steer anchor listen
@@ -214,7 +214,7 @@ def prepass_doc(md: str, manifest: dict) -> tuple[dict | None, str]:
     dropped = {"playbook_section": 0, "excluded_section": 0, "outside_known_section": 0, "tiny_or_url_only": 0,
                "imperative": 0}
     title_seen = False                                 # the first H1 is the document title, never a section (YED-394)
-    for line in redact_body(md).splitlines():          # the same confidentiality rules as stage-research
+    for line in md.splitlines():                       # YED-389: words never make a line off the record
         h = HEADING_RE.match(line)
         if h:
             lvl, title = len(h.group(1)), clean_md(h.group(2))
@@ -702,7 +702,12 @@ def selftest() -> bool:
        pk["brief_ref"] == "notion:00000000-0000-4000-8000-00000000d0d0")
     ok("prepass: synthesis sections excluded (Quick Take, Verification Flags, Success, Frame, Threads)",
        not any(s in blob for s in ("QUICKTAKE_", "VERIFLAG_", "SUCCESS_", "FRAME_", "THREADS_")))
-    ok("prepass: confidential line redacted (redact_body)", "confidential" not in blob.lower())
+    otr_md = open(os.path.join(FIX, "brief_ok", "research_brief.md"), encoding="utf-8").read().replace(
+        "opaque across the whole category.", "opaque across the whole category.\n\nA speaker called this line "
+        "confidential and said it stays in the room, which keeps nothing out (YED-389).", 1)
+    otr_pk, _ = prepass_doc(otr_md, json.load(open(os.path.join(FIX, "brief_ok", "manifest.json"), encoding="utf-8")))
+    ok("YED-389: a line saying 'confidential' / 'stays in the room' still reaches the packet",
+       otr_pk is not None and any("stays in the room" in p["text"] for p in otr_pk["paragraphs"]))
     ok("prepass: endnotes are not paragraphs", "Freight Weekly" not in blob)
     ok("prepass: idx is 0..n-1", [p["idx"] for p in paras] == list(range(len(paras))))
     by_head = {p["heading"]: p for p in paras}

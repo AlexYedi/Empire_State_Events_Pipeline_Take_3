@@ -35,8 +35,6 @@ Industrial widget prices rose 18% between 2023 and 2025, driven mainly by steel 
 
 Most buyers still order widgets by phone or email rather than through a marketplace, which keeps price discovery slow and opaque across the whole category.
 
-This line is confidential and must never reach the packet.
-
 #### Where it is heading
 Analysts expect widget marketplaces to handle a quarter of small-buyer orders by 2028, according to one trade survey [4]. That forecast assumes freight prices stay flat, which nobody in the trade press is willing to promise. The survey lists Acme Widgets among the marketplaces it tracked.
 
