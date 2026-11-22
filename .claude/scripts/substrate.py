@@ -1665,10 +1665,40 @@ def _qm_negated(t: str) -> bool:
     return bool(words & _QM_NEG) or " n t " in _qm_norm(t)
 
 
+def entity_forms(entity: str | None, kind: str | None) -> list[str]:
+    """YED-485: the names a company or person ledger heading goes by: the name without its trailing parenthetical,
+    the parenthetical alias ('EnterpriseDB (EDB)' -> 'EnterpriseDB', 'EDB'), and a person's surname. Topic and unknown
+    ledgers get none: their claims are about many entities, so no subject is exempt and none is bound."""
+    if kind not in ("company", "person") or not entity:
+        return []
+    base = strip_paren(entity).strip()
+    forms = [base]
+    m = re.search(r"\(([^()]+)\)\s*$", entity.strip())
+    if m and len(m.group(1).strip()) >= 2:
+        forms.append(m.group(1).strip())
+    if kind == "person" and len(base.split()) >= 2:
+        forms.append(base.split()[-1])
+    return [f for f in dict.fromkeys(forms) if f]
+
+
+def entity_on_page(forms: list[str], page_text: str | None) -> str | None:
+    """The first entity form found on the page as whole words (normalised), else None. A wrong-page tripwire only:
+    a comparison page that names the entity still passes (it cannot catch misattribution on such a page)."""
+    np_ = " " + _qm_norm(page_text or "") + " "
+    for f in forms:
+        nf = _qm_norm(f).strip()
+        if nf and f" {nf} " in np_:
+            return f
+    return None
+
+
 def quote_check(claim_text: str, quote: str | None, page_text: str | None, *,
-                entity: str | None = None) -> tuple[bool, str]:
+                entity: str | None = None, entity_kind: str | None = None) -> tuple[bool, str]:
     """(passed, reason). Pure: no network. claim_text is '<entity>: <assertion>'; pass entity to split it exactly
-    (an entity name may itself contain a colon). The entity label is not checked; the assertion is."""
+    (an entity name may itself contain a colon). For a company or person ledger (entity_kind, YED-485) the subject's
+    own name forms are exempt from the name test, because the page says "we" or "the company", and the subject is
+    instead bound to the page: one of its forms must appear on the fetched page, else 'entity_not_on_page'. Topic and
+    unknown ledgers keep the old rule: every name in the assertion must be in the quote."""
     q_ = (quote or "").strip().strip('"“”')
     if not q_:
         return False, "no_quote"
@@ -1688,8 +1718,14 @@ def quote_check(claim_text: str, quote: str | None, page_text: str | None, *,
     qfig = _qm_figures(q_)
     if any(f not in qfig for f in _qm_figures(assertion)):
         return False, "figure_not_in_quote"
-    if any(_qm_norm(n) not in nq for n in _qm_nouns(assertion)):
+    forms = entity_forms(entity, entity_kind)
+    subj = {t for f in forms for t in _qm_norm(f).split()}
+    nouns = {n for n in _qm_nouns(assertion) if not set(_qm_norm(re.sub(r"['’]s$", "", n)).split()) <= subj} if subj \
+        else _qm_nouns(assertion)
+    if any(_qm_norm(n) not in nq for n in nouns):
         return False, "name_not_in_quote"
+    if forms and entity_on_page(forms, page_text) is None:
+        return False, "entity_not_on_page"
     cs, qs = _qm_stems(assertion), _qm_stems(q_)
     if not cs or 2 * len(cs & qs) < len(cs):           # the quote must be ABOUT the claim, not just any page span
         return False, "low_overlap"
@@ -1749,9 +1785,11 @@ def fetch_page(url: str, timeout: int = 15) -> str | None:
         return None
 
 
-def quote_check_rows(items: list[dict], fetch=None) -> dict[str, dict]:
+def quote_check_rows(items: list[dict], fetch=None, kinds: dict[str, str] | None = None) -> dict[str, dict]:
     """claim_key -> the 0023/0026 columns + 'quote_check' (for metadata) per web_verified ledger item. One fetch per
-    distinct URL; an item without a quote is never fetched."""
+    distinct URL; an item without a quote is never fetched. kinds maps a normalised ledger heading to its roster type
+    (company / person / topic, YED-485); a heading not on the roster keeps the old rule."""
+    kinds = kinds or {}
     fetch = fetch or fetch_page
     pages: dict[str, tuple[str | None, str]] = {}      # url -> (text, fetched-at stamp taken AFTER the GET)
     out = {}
@@ -1761,20 +1799,23 @@ def quote_check_rows(items: list[dict], fetch=None) -> dict[str, dict]:
         quote = (it.get("quote") or "").strip().strip('"“”')
         url = it["url"]
         if quote and url not in pages and len(pages) >= QUOTE_FETCH_CAP:
-            ok_, why, fetched = False, "fetch_budget", None
+            ok_, why, fetched, bound = False, "fetch_budget", None, None
         else:
             if quote and url not in pages:
                 text = fetch(url)
                 pages[url] = (text, _utc_stamp())
             page, fetched = pages.get(url, (None, None)) if quote else (None, None)
-            ok_, why = quote_check(it["text"], quote, page, entity=it.get("entity"))
+            kind = kinds.get(_qm_norm(strip_paren(it.get("entity") or "")).strip()) or kinds.get(_qm_norm(it.get("entity") or "").strip())
+            ok_, why = quote_check(it["text"], quote, page, entity=it.get("entity"), entity_kind=kind)
+            bound = entity_on_page(entity_forms(it.get("entity"), kind), page) if ok_ and kind in ("company", "person") else None
         if ok_:
             try:                                        # a contact on the page holds this row, never the batch
                 guard("claim", {"source_quote": quote}, op="update")
             except PIIViolation:
                 ok_, why = False, "quote_has_contact"
         now = _utc_stamp()
-        cols: dict = {"quote_check": {"result": why, "model": QUOTE_MATCH_MODEL, "at": now}}
+        cols: dict = {"quote_check": {"result": why, "model": QUOTE_MATCH_MODEL, "at": now,
+                                      **({"entity_bound": bound} if ok_ and bound else {})}}
         if ok_:
             cols.update({"source_quote": quote, "source_quote_fetched_at": fetched, "judge_verdict": "supported",
                          "judge_model": QUOTE_MATCH_MODEL, "judge_prompt_hash": QUOTE_MATCH_HASH, "judged_at": now})
@@ -1829,7 +1870,12 @@ def stage_research(g: Graph, md: str, manifest: dict, *, brief_ref: str | None, 
     new = [it for it in items if it["claim_key"] not in have]
     g.stats.bump("claim", "matched", len(items) - len(new))
     fallback = (ev.get("event_date") or "")[:10] or None
-    qc = quote_check_rows(new, fetch) if quote_check_on else {}     # YED-467: one GET per cited URL, before any write
+    kinds = {}                                                       # YED-485: ledger heading -> roster type
+    for e in manifest.get("entities", []):
+        for nm in (e.get("name") or "", strip_paren(e.get("name") or "")):
+            if nm and e.get("type"):
+                kinds.setdefault(_qm_norm(nm).strip(), e["type"])
+    qc = quote_check_rows(new, fetch, kinds) if quote_check_on else {}  # YED-467: one GET per cited URL, before any write
     for c in qc.values():
         g.stats.bump("quote_check", c["quote_check"]["result"])
     rows = []
@@ -3230,6 +3276,30 @@ def _review_verbs_selftest(ok) -> None:
     ug.post("topic", [{"name": "T1", "description": "d"}, {"name": "T2"}], prefer="return=minimal")
     ok("fake server rejects a mixed-key batch as PostgREST does; Graph.post still writes every row of one",
        rejects and sorted(r["name"] for r in ug.t["topic"]) == ["T1", "T2"])
+    gpage = "Grafana Labs observability. We're trusted by over 10,000+ customers, from startups to enterprises."
+    ok("quote_check (YED-485): a company ledger's restated subject is exempt from the name test and bound to the page",
+       quote_check("Grafana Labs: Grafana Labs says it is trusted by over 10,000 customers",
+                   "trusted by over 10,000+ customers, from startups", gpage, entity="Grafana Labs") == (False, "name_not_in_quote")
+       and quote_check("Grafana Labs: Grafana Labs says it is trusted by over 10,000 customers",
+                       "trusted by over 10,000+ customers, from startups", gpage, entity="Grafana Labs",
+                       entity_kind="company") == (True, "supported"))
+    other = "Beta Corp is trusted by over 10,000+ customers, from startups to enterprises."
+    ok("quote_check (YED-485): a quote about a different company is held (entity_not_on_page), not passed",
+       quote_check("Grafana Labs: Grafana Labs says it is trusted by over 10,000 customers",
+                   "trusted by over 10,000+ customers, from startups", other, entity="Grafana Labs",
+                   entity_kind="company") == (False, "entity_not_on_page"))
+    npage = "We're announcing our Series B today, led by Norwest. EDB news."
+    ok("quote_check (YED-485): possessive subject, alias form, person surname; another company's name still required",
+       quote_check("Nimble: Norwest led Nimble's Series B", "We're announcing our Series B today, led by Norwest",
+                   "Nimble here. " + npage, entity="Nimble", entity_kind="company") == (True, "supported")
+       and entity_on_page(entity_forms("EnterpriseDB (EDB)", "company"), npage) == "EDB"
+       and entity_forms("Robert Hodges", "person") == ["Robert Hodges", "Hodges"]
+       and quote_check("Nimble: Accel led Nimble's Series B", "We're announcing our Series B today, led by Norwest",
+                       "Nimble here. " + npage, entity="Nimble", entity_kind="company")[0] is False)
+    ok("quote_check (YED-485): topic and unknown ledgers keep the old rule (no exemption, no binding)",
+       entity_forms("LLM Observability and Tracing", "topic") == [] and entity_forms("Langfuse", None) == []
+       and quote_check("Nimble: Norwest led Nimble's Series B", "We're announcing our Series B today, led by Norwest",
+                       "Nimble here. " + npage, entity="Nimble") == (False, "name_not_in_quote"))
     ok("quote_check (review D2): an unrelated quote, a 1-word quote and a negation flip are all held",
        quote_check("Acme: Did not raise funding", "Acme Corp announced new office plans today", hostile)[1]
        == "low_overlap"
