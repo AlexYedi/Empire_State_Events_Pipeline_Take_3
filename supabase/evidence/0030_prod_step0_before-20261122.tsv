@@ -1,0 +1,68 @@
+# staging/0030_verify.sql step 0 on PROD (oicikjyzmxqfomrrqkvf), read-only via the Supabase MCP (supabase_read_only_user), 2026-11-22, BEFORE 0030.
+# section	object	privileges. rehearse_0030.py gate P requires the twin, after its parity setup, to return exactly these rows.
+connect	anon	true
+connect	authenticated	true
+connect	authenticator	true
+connect	dashboard_user	true
+connect	pgbouncer	true
+connect	pipeline_writer	true
+connect	postgres	true
+connect	service_role	true
+connect	supabase_admin	true
+connect	supabase_auth_admin	true
+connect	supabase_etl_admin	true
+connect	supabase_privileged_role	true
+connect	supabase_read_only_user	true
+connect	supabase_realtime_admin	true
+connect	supabase_replication_admin	true
+connect	supabase_storage_admin	true
+database	postgres	PUBLIC:CONNECT,PUBLIC:TEMPORARY,dashboard_user:CONNECT,dashboard_user:CREATE,dashboard_user:TEMPORARY,postgres:CONNECT,postgres:CREATE,postgres:TEMPORARY,supabase_etl_admin:CREATE,supabase_storage_admin:CREATE
+exposure	signal_read.v_topic_intersections	anon:SELECT,authenticated:SELECT
+exposure	signal_read.v_topic_movement	anon:SELECT,authenticated:SELECT
+function	public.assert_no_contact_pii()	PUBLIC:EXECUTE,anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+function	public.assert_no_pii_columns()	PUBLIC:EXECUTE,anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+function	public.match_doc_chunks(vector,integer,uuid,text)	PUBLIC:EXECUTE,anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+function	public.match_doc_chunks_hybrid(vector,text,integer,integer,integer,uuid,text)	PUBLIC:EXECUTE,anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+function	public.set_updated_at()	PUBLIC:EXECUTE,anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+schema	anon@mi	usage=false create=false
+schema	anon@public	usage=true create=false
+schema	anon@signal_read	usage=true create=false
+schema	anon@topic_intelligence	usage=false create=false
+schema	authenticated@mi	usage=false create=false
+schema	authenticated@public	usage=true create=false
+schema	authenticated@signal_read	usage=true create=false
+schema	authenticated@topic_intelligence	usage=false create=false
+schema	supabase_read_only_user@mi	usage=true create=false
+schema	supabase_read_only_user@public	usage=true create=false
+schema	supabase_read_only_user@signal_read	usage=true create=false
+schema	supabase_read_only_user@topic_intelligence	usage=true create=false
+table	public.artifact_outcome	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.claim	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.claim_entity	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.claim_relation	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.claim_usage	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.company	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.doc_chunks	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.doc_claims	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.document_entity	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.documents	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.event	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.event_entity	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.person	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.topic	anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+temp	anon	true
+temp	authenticated	true
+temp	authenticator	true
+temp	dashboard_user	true
+temp	pgbouncer	true
+temp	pipeline_writer	true
+temp	postgres	true
+temp	service_role	true
+temp	supabase_admin	true
+temp	supabase_auth_admin	true
+temp	supabase_etl_admin	true
+temp	supabase_privileged_role	true
+temp	supabase_read_only_user	true
+temp	supabase_realtime_admin	true
+temp	supabase_replication_admin	true
+temp	supabase_storage_admin	true

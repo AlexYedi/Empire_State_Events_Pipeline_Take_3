@@ -1,0 +1,234 @@
+twin aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk; migration supabase/migrations/0030_revoke_existing_api_grants.sql; verify statements: 2; PART 1: 7459 chars; PART 3: 5222 chars; rollback block: 24 lines; prod baseline rows: 66
+[0] as found: snapshot Z
+    keys: 396; md5 f3bc4c16224ed4c8b5acc73ca14677bc
+  INFO twin step 0 vs prod baseline before parity: 12 rows differ (expected: the twin lags prod)
+[P] parity setup (twin-only): 0028, 0029 verbatim; cv2 tables + ['entity_neighborhood(uuid[],timestamp with time zone,integer,integer,integer)', 'match_claims_hybrid(vector,text,integer,integer,integer,uuid[],text[],text[])'] to prod ACLs
+  OK  apply 0028 verbatim
+      NOTICE 0028 preflight OK: PRE state (views security_invoker = on, 3 anon policies, 6 anon/authenticated SELECT grants, 2 anon/authenticated USAGE grants on topic_intelligence).
+      NOTICE 0028: signal_read.v_topic_intersections now runs with its owner's rights
+      NOTICE 0028: signal_read.v_topic_movement now runs with its owner's rights
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_cluster from anon
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_cluster from authenticated
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_pair_metric from anon
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_pair_metric from authenticated
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_trend from anon
+      NOTICE 0028: revoked SELECT on topic_intelligence.topic_trend from authenticated
+      NOTICE 0028: revoked USAGE on schema topic_intelligence from anon
+      NOTICE 0028: revoked USAGE on schema topic_intelligence from authenticated
+      NOTICE 0028 postflight OK
+  OK  apply 0029 verbatim
+      NOTICE 0029 preflight OK: PRE state (public tables anon/authenticated SELECT, sequences rwU, functions X; no global function entry, so new functions get PUBLIC EXECUTE).
+      NOTICE 0029: postgres/public functions no longer auto-granted to anon, authenticated
+      NOTICE 0029: postgres/public tables no longer auto-granted to anon, authenticated
+      NOTICE 0029: postgres/public sequences no longer auto-granted to anon, authenticated
+      NOTICE 0029: new postgres functions (every schema) no longer get EXECUTE for PUBLIC
+      NOTICE 0029 postflight OK
+  OK  parity grants
+  PASS twin step 0 EQUALS the prod baseline (supabase/evidence/0030_prod_step0_before-20261122.tsv, 66 rows)
+[1] snapshot A
+    keys: 394; md5 b3c4666700f2abcb9d908fa63187bf21
+    anon:signal_read.v_topic_movement                       ok 18:7b5cc7182c8a2acd5b7c8f28c8d27efe
+    anon:signal_read.v_topic_intersections                  ok 5:0bb6f83fbcc3b86e8ecb3aed82ff6f4e
+    authenticated:signal_read.v_topic_movement              ok 18:7b5cc7182c8a2acd5b7c8f28c8d27efe
+    authenticated:signal_read.v_topic_intersections         ok 5:0bb6f83fbcc3b86e8ecb3aed82ff6f4e
+[1a] negative control: before apply the dormant grants work
+    anon:table:artifact_outcome                                                 ok 0
+    anon:table:claim                                                            ok 0
+    anon:table:claim_entity                                                     ok 0
+    anon:table:claim_relation                                                   ok 0
+    anon:table:claim_usage                                                      ok 0
+    anon:table:doc_chunks                                                       ok 0
+    anon:table:doc_claims                                                       ok 0
+    anon:table:document_entity                                                  ok 0
+    anon:table:documents                                                        ok 0
+    anon:table:company                                                          ok 0
+    anon:table:event                                                            ok 0
+    anon:table:event_entity                                                     ok 0
+    anon:table:person                                                           ok 0
+    anon:table:topic                                                            ok 0
+    anon:fn:public.set_updated_at()                                             err 0A000
+    anon:fn:public.assert_no_contact_pii()                                      err 0A000
+    anon:fn:public.assert_no_pii_columns()                                      err 0A000
+    anon:fn:public.match_doc_chunks(vector,integer,uuid,text)                   ok 0
+    anon:fn:public.match_doc_chunks_hybrid(vector,text,integer,integer,integer,uuid,text) ok 0
+  PASS anon selects all 14 tables (RLS: 0 rows) and passes the EXECUTE check on all 5 functions (0A000 = trigger function refused a direct call AFTER the EXECUTE check)
+    temp clone_of_supabase_read_only_user         created (has_temp=true)
+    temp anon                                     created (has_temp=true)
+    temp authenticated                            created (has_temp=true)
+    temp service_role                             created (has_temp=true)
+    temp pipeline_writer                          created (has_temp=true)
+  PASS the read-only clone, anon, authenticated, service_role and pipeline_writer can all create a temp table before apply (TEMP via PUBLIC)
+[1b] guard probes (rolled back)
+  PASS PART 1 passes on the parity twin: NOTICE:  0030 preflight OK: PRE state (14 tables anon/authenticated SELECT, 5 functions PUBLIC/anon/authenticated EXECUTE, database TEMP to PUBLIC; keep list exact).
+  PASS mixed state refused: ERROR:  0030 preflight: mixed or unexpected state. Inspect by hand.
+  PASS unexpected anon grant outside the scope refused: ERROR:  0030 preflight: anon/authenticated/PUBLIC grants outside the in-scope list differ from the keep list. got [public.claim_current=anon:SELECT;signal_read.v_topic_intersections=anon:SELECT,authenticated:SELECT;signal_read.v_t
+  PASS wrong end state (PART 2 skipped): postflight raises: ERROR:  0030 postflight FAILED (rolled back): anon still holds a privilege on public.artifact_outcome; authenticated still holds a privilege on public.artifact_outcome; anon still holds a privilege on public.claim; authenticated s
+[1c] REST as anon before apply (https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1, twin publishable key)
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/person?select=*  [profile: public] -> HTTP 200 total=0 returned=0 md5=d41d8cd98f00
+    POST https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/rpc/match_doc_chunks  [profile: public] -> HTTP 200 total=0 returned=0 md5=d41d8cd98f00
+  PASS views return rows; person (0 rows, RLS) and rpc/match_doc_chunks are reachable as anon before apply
+[2] apply 0030
+  OK  apply
+      NOTICE 0030 preflight OK: PRE state (14 tables anon/authenticated SELECT, 5 functions PUBLIC/anon/authenticated EXECUTE, database TEMP to PUBLIC; keep list exact).
+      NOTICE 0030: 14 public tables no longer granted to anon, authenticated
+      NOTICE 0030: 5 public functions no longer executable by PUBLIC, anon, authenticated; pipeline_writer holds EXECUTE on the 3 trigger functions explicitly
+      NOTICE 0030: TEMP on database postgres no longer granted to PUBLIC; granted explicitly to the 7 roles that may need temp tables
+      NOTICE 0030 postflight OK
+  ACLs that changed (A -> B), canonical:
+  DIFF db.postgres:
+       before=postgres>dashboard_user:CONNECT:false,postgres>dashboard_user:CREATE:false,postgres>dashboard_user:TEMPORARY:false,postgres>postgres:CONNECT:false,postgres>postgres:CREATE:false,postgres>postgres:TEMPORARY:false,postgres>PUBLIC:CONNECT:false,postgres>PUBLIC:TEMPORARY:false,postgres>supabase_etl_admin:CREATE:false,postgres>supabase_storage_admin:CREATE:false
+       after =postgres>dashboard_user:CONNECT:false,postgres>dashboard_user:CREATE:false,postgres>dashboard_user:TEMPORARY:false,postgres>pipeline_writer:TEMPORARY:false,postgres>postgres:CONNECT:false,postgres>postgres:CREATE:false,postgres>postgres:TEMPORARY:false,postgres>PUBLIC:CONNECT:false,postgres>service_role:TEMPORARY:false,postgres>supabase_auth_admin:TEMPORARY:false,postgres>supabase_etl_admin:CREATE:false,postgres>supabase_etl_admin:TEMPORARY:false,postgres>supabase_realtime_admin:TEMPORARY:false,postgres>supabase_replication_admin:TEMPORARY:false,postgres>supabase_storage_admin:CREATE:false,postgres>supabase_storage_admin:TEMPORARY:false
+  DIFF fn.assert_no_contact_pii():
+       before=owner=postgres secdef=false acl=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>PUBLIC:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =owner=postgres secdef=false acl=postgres>pipeline_writer:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF fn.assert_no_pii_columns():
+       before=owner=postgres secdef=false acl=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>PUBLIC:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =owner=postgres secdef=false acl=postgres>pipeline_writer:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF fn.match_doc_chunks(vector,integer,uuid,text):
+       before=owner=postgres secdef=false acl=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>PUBLIC:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =owner=postgres secdef=false acl=postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF fn.match_doc_chunks_hybrid(vector,text,integer,integer,integer,uuid,text):
+       before=owner=postgres secdef=false acl=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>PUBLIC:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =owner=postgres secdef=false acl=postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF fn.set_updated_at():
+       before=owner=postgres secdef=false acl=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>PUBLIC:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =owner=postgres secdef=false acl=postgres>pipeline_writer:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF rel.artifact_outcome(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.claim(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.claim_entity(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.claim_relation(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.claim_usage(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.company(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.doc_chunks(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.doc_claims(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.document_entity(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.documents(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.event(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.event_entity(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.person(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+  DIFF rel.topic(r):
+       before=owner=postgres acl=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+       after =owner=postgres acl=postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false opts=
+[3] re-apply (idempotent)
+  OK  re-apply
+      NOTICE 0030: already applied (tables, functions and database TEMP in the POST state); nothing to do.
+      NOTICE 0030 postflight OK
+  PASS re-apply is a no-op (raw + canonical unchanged, 'already applied' notice)
+[4] verify (staging/0030_verify.sql)
+    ok  tables_no_anon_authenticated
+    ok  tables_no_public_items
+    ok  tables_service_role_unchanged
+    ok  tables_postgres_unchanged
+    ok  functions_no_public_anon_authenticated
+    ok  functions_postgres_service_role_execute
+    ok  trigger_functions_pipeline_writer_explicit
+    ok  read_only_user_cannot_create_temp
+    ok  api_roles_cannot_create_temp
+    ok  database_no_public_temp
+    ok  temp_keep_roles_hold_temp
+    ok  connect_kept
+    ok  read_only_user_reads_kept
+    ok  keep_signal_read_views_anon
+    ok  keep_schema_usage
+  PASS step 1: 15/15 ok 
+  PASS step 0 equals the prod baseline transformed by exactly the intended change (tables -anon/authenticated; functions -PUBLIC/anon/authenticated, +pipeline_writer on 3 trigger fns; database -PUBLIC:TEMPORARY +7 roles; temp false for anon, authenticated, authenticator, pgbouncer, supabase_privileged_role, supabase_read_only_user; all else identical)
+[4a] anon after apply
+  PASS signal_read views as anon/authenticated (SET ROLE) identical to snapshot A
+    anon:table:artifact_outcome                                                 err 42501
+    anon:table:claim                                                            err 42501
+    anon:table:claim_entity                                                     err 42501
+    anon:table:claim_relation                                                   err 42501
+    anon:table:claim_usage                                                      err 42501
+    anon:table:doc_chunks                                                       err 42501
+    anon:table:doc_claims                                                       err 42501
+    anon:table:document_entity                                                  err 42501
+    anon:table:documents                                                        err 42501
+    anon:table:company                                                          err 42501
+    anon:table:event                                                            err 42501
+    anon:table:event_entity                                                     err 42501
+    anon:table:person                                                           err 42501
+    anon:table:topic                                                            err 42501
+    anon:fn:public.set_updated_at()                                             err 42501
+    anon:fn:public.assert_no_contact_pii()                                      err 42501
+    anon:fn:public.assert_no_pii_columns()                                      err 42501
+    anon:fn:public.match_doc_chunks(vector,integer,uuid,text)                   err 42501
+    anon:fn:public.match_doc_chunks_hybrid(vector,text,integer,integer,integer,uuid,text) err 42501
+  PASS anon is denied (42501) on all 14 tables and all 5 functions
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/person?select=*  [profile: public] -> HTTP 401 total=? 42501 permission denied for table person
+    POST https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/rpc/match_doc_chunks  [profile: public] -> HTTP 401 total=? 42501 permission denied for function match_doc_chunks
+  PASS REST signal_read.v_topic_movement same as before: HTTP 200 -> 200, total 18 -> 18, md5 cdc3fdfb75b2 -> cdc3fdfb75b2
+  PASS REST signal_read.v_topic_intersections same as before: HTTP 200 -> 200, total 5 -> 5, md5 a32c3aa05dc7 -> a32c3aa05dc7
+  PASS REST person -> HTTP 401 42501 permission denied for table person; rpc/match_doc_chunks -> HTTP 401 42501 permission denied for function match_doc_chunks
+[4b] writers after apply (rolled back): service_role fires the triggers
+    W person insert+update as service_role: updated_at 2026-11-22 02:36:50.363239+00 (trigger fired: t)
+    W artifact_outcome update as service_role: rows 0 updated_at <NULL> (trigger fired: n/a (empty table))
+    W company update as service_role: rows 1 updated_at 2026-11-22 02:36:50.363239+00 (trigger fired: true)
+    W event update as service_role: rows 1 updated_at 2026-11-22 02:36:50.363239+00 (trigger fired: true)
+    W topic update as service_role: rows 1 updated_at 2026-11-22 02:36:50.363239+00 (trigger fired: true)
+    W pii trigger as service_role: P0001 ADR-9 tier-2 violation: contact PII (email/phone pattern) in public.person. Contact detail
+  PASS service_role inserts/updates spine rows, set_updated_at resets updated_at, the PII trigger refuses an email (all rolled back)
+[4c] info (rolled back): trigger EXECUTE is checked at CREATE TRIGGER, not when it fires
+    INFO N service_role EXECUTE on set_updated_at: f
+    INFO N topic update with no EXECUTE: rows 1 updated_at 2026-11-22 02:36:50.963295+00 (trigger fired: t)
+[4d] TEMP after apply
+    supabase_read_only_user exists=true; TEMP=false; postgres can SET ROLE to it=false (false: tested through a login-less clone with its memberships, created and dropped in one rolled-back txn)
+    temp clone_of_supabase_read_only_user         denied 42501 permission denied to create temporary tables in database "postgres" (has_temp=false)
+    temp anon                                     denied 42501 permission denied to create temporary tables in database "postgres" (has_temp=false)
+    temp authenticated                            denied 42501 permission denied to create temporary tables in database "postgres" (has_temp=false)
+    temp service_role                             created (has_temp=true)
+    temp pipeline_writer                          created (has_temp=true)
+  PASS read-only user has no TEMP; clone, anon, authenticated get 42501 on `set transaction read write; create temp table`; service_role and pipeline_writer still can
+  PASS no clone role left behind (0)
+[5] rollback (header block, verbatim)
+  OK  rollback
+[6] snapshot C == snapshot A
+  PASS raw + canonical ACLs byte-identical to snapshot A (394 keys, raw aclitem order included)
+  PASS PART 1 sees the PRE state again: NOTICE:  0030 preflight OK: PRE state (14 tables anon/authenticated SELECT, 5 functions PUBLIC/anon/authenticated EXECUTE, database TEMP to PUBLIC; keep list exact).
+  PASS role reads equal snapshot A
+  PASS anon table/function surface equals gate 1a
+  PASS step 0 equals the prod baseline again
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/person?select=*  [profile: public] -> HTTP 200 total=0 returned=0 md5=d41d8cd98f00
+    POST https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/rpc/match_doc_chunks  [profile: public] -> HTTP 200 total=0 returned=0 md5=d41d8cd98f00
+  PASS REST probes equal gate 1c (4 targets)
+  PASS TEMP probes equal gate 1a
+  PASS ROLLBACK PROVEN
+[7] teardown: parity undo, 0029 rollback, 0028 rollback -> twin as found
+  OK  parity undo
+  OK  0029 rollback block (verbatim from its header)
+  OK  0028 rollback block (verbatim from its header)
+  PASS canonical ACLs, defaults, policies and view options equal snapshot Z (210 keys)
+  PASS raw ACL text equals snapshot Z (byte-identical)
+
+REHEARSAL 0030: PASS (twin left as found)
