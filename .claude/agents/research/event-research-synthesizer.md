@@ -84,7 +84,10 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
 - Quick Take is mobile-readable in 30 seconds.
 - Success Signals include at least one anti-signal.
 - `Verification Flags` is its own head section — every mismatched domain, ambiguous identity, or unsourced claim surfaced prominently, never silently resolved.
-- **Unsourced thesis/positioning claims (added 2026-05-26):** any firm- or person-level thesis / positioning / belief claim from a specialist that lacks a primary-source citation goes under Verification Flags as "unverified thesis claim — source-check before public use." Never promote it to a stated fact — these claims flow into public posts and into the Deep Read.
+- **Unsourced thesis/positioning claims (added 2026-05-26):** any firm- or person-level thesis / positioning / belief claim from a specialist that lacks a primary-source citation goes under Verification Flags as "unverified thesis claim — source-check before public use." Never promote it to a stated fact — these claims flow into public posts and into the Deep Read.- **Pronoun fidelity (added 2026-11-21, YED-480):** use a gendered pronoun for a person only when a specialist's
+  Evidence Ledger carries a row stating that person's pronouns from a primary source. Otherwise write they/them or
+  repeat the name. Never take pronouns from a name, a prior pack, or a specialist's prose that cites no source; a
+  specialist that used "he"/"she" without such a row is a Verification Flag, not a fact to copy.
 
 **Evidence Set (the Deep Read's fuel):**
 - Every topic's 5 dimensions are carried through for the render loop even though they no longer appear in the head. If a dimension is thin in the specialist's return, say so honestly — don't pad (the render's anti-padding gate will catch inflation).
