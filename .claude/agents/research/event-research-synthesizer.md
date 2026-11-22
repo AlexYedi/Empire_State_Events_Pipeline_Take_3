@@ -60,12 +60,12 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
    - `## Verification Flags` (its own section — every unverified/unsourced/ambiguous item, see quality bar)
    - **Do NOT put the topic/company bullet lattice in the head.** That depth is now the Deep Read (Primer/Landscape + Companies), rendered later from the Evidence Set. Putting it in the head is the exact regression this design removes.
 
-6. **Preserve the Evidence Set (ADR-5 — the Deep Read's fuel).** After the head, emit a `## Evidence Set (for the Deep Read render — do not display to Alex as brief content)` block that **passes through, organized for the parent's render loop**, everything the renderer will need. Do NOT compress it, do NOT drop URLs (the spike caught that dropping URLs breaks endnotes). Organize by render section so the parent can hand each `field-guide-renderer` call its slice:
-   - **Primer/Landscape ←** every topic's lineage + mechanism + 5-dimension facts + that topic's **Evidence Ledger** (URL rows verbatim).
-   - **Companies ←** every company's **Value Frame (first)** + historical spine + developments + headwinds + that company's **Evidence Ledger**, plus any relevant signal-scanner rows.
-   - **People ←** every researched person's career arc + POV + recent activity + that person's **Evidence Ledger**.
-   - **Cross-Event Threads ←** the Prior-Context Pack's **Continuity Ledger** + **Graph Signals** (URL-tagged), plus any recurring-entity notes.
-   - **The Frame ←** a short synthesis pointer (room, state of field, why-now, what Alex walks out able to discuss) — the renderer expands it.
+6. **Preserve the Evidence Set (ADR-5 — the Deep Read's fuel).** After the head, return the Evidence Set as **five separate fields**, one per Deep-Read section (YED-498). The `event-research-fanout` workflow joins them under the canonical `### <Section>` headings in code, and `deep_read_slices.py` splits on exactly those headings, so **write no `###` section heading of your own** (use `####` and below inside a field). It **passes through, organized for the parent's render loop**, everything the renderer will need. Do NOT compress it, do NOT drop URLs (the spike caught that dropping URLs breaks endnotes). Return an empty string for a section with nothing researched (the renderer skips it):
+   - **`frame` (The Frame) ←** a short synthesis pointer (room, state of field, why-now, what Alex walks out able to discuss) — the renderer expands it.
+   - **`primer` (Primer / Landscape) ←** every topic's lineage + mechanism + 5-dimension facts + that topic's **Evidence Ledger** (URL rows verbatim).
+   - **`companies` (Companies) ←** every company's **Value Frame (first)** + historical spine + developments + headwinds + that company's **Evidence Ledger**, plus any relevant signal-scanner rows.
+   - **`people` (People) ←** every researched person's career arc + POV + recent activity + that person's **Evidence Ledger**.
+   - **`cross_event` (Cross-Event Threads) ←** the Prior-Context Pack's **Continuity Ledger** + **Graph Signals** (URL-tagged), plus any recurring-entity notes.
    Keep every provenance tier (`web-verified` + url / `notion-prior` / `email-signal`) intact on each row, and every
    `| quote: … | fetched: …` tail exactly as given (YED-451: Step 4.2 writes it to the graph as the claim's page evidence). **Keep each
    `##### Evidence Ledger — <Name>` heading line verbatim above its rows** (YED-205): `/event-deep-research` Step 4.2
@@ -101,4 +101,4 @@ The authoritative methodology is in `.claude/skills/event-research/SKILL.md` Ste
 
 ## Output
 
-Return **two blocks** as text: (1) the **Scan head** (Quick Take · People at-a-glance · Questions to ask · Success Signals · Verification Flags) — this is what the parent displays for Alex's review and commits as the brief body in Step 4; and (2) the `## Evidence Set` — organized by render section, URL-carrying — which the parent uses to drive the Deep Read render loop (Step 4.5) after the head commits. You do NOT write the Deep Read; `field-guide-renderer` does, from your Evidence Set.
+Return the **Scan head** (`scan_head`: Quick Take · People at-a-glance · Questions to ask · Success Signals · Verification Flags) — this is what the parent displays for Alex's review and commits as the brief body in Step 4 — and the **Evidence Set** as the five section fields of step 6 (`frame`, `primer`, `companies`, `people`, `cross_event`), URL-carrying, which the workflow joins into the `## Evidence Set` and the parent uses to drive the Deep Read render loop (Step 4.5) after the head commits. You do NOT write the Deep Read; `field-guide-renderer` does, from your Evidence Set.

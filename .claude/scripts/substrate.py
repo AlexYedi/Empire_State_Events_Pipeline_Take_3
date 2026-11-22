@@ -1519,9 +1519,7 @@ USAGE_CONSUMER = "event"     # what /event-deep-research passes retrieve.py toda
 USAGE_MAX_AGE_H = 12         # a sidecar older than this is from another run: refused, never attributed
 
 
-def event_slug(s: str | None) -> str:
-    """'The Shortlist: September Showcase' -> 'the-shortlist-september-showcase' (the command's <slug>)."""
-    return re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
+from event_slug import event_slug  # noqa: E402,F401  YED-498: the one slugger (event-claim, retrieve, this check)
 
 
 def _sidecar_refusal(side: dict, ev: dict, now: str | None = None) -> str | None:
@@ -1529,7 +1527,7 @@ def _sidecar_refusal(side: dict, ev: dict, now: str | None = None) -> str | None
     seed's `event`: the event slug (or title) or its Notion page id, either storage form."""
     bound = str(side.get("event") or "").strip()
     if not bound:
-        return "sidecar has no event binding — add \"event\": \"<event-slug>\" to the 1.7a seed"
+        return "sidecar has no event binding — add \"event_title\": \"<the event title>\" to the 1.7a seed"
     mine = {event_slug(ev.get("title")), *pid_variants(ev.get("notion_page_id"))} - {""}
     if event_slug(bound) not in mine and not (set(pid_variants(bound)) & mine):
         return "sidecar is for a different event"
@@ -4075,6 +4073,13 @@ def _usage_selftest(ok) -> None:
            rc == 0 and line.startswith(f"usage: NOT LOGGED ({why}") and fg.t["claim_usage"] == [] and len(fg.t["claim"]) == 7)
     ok("usage: the sidecar may be bound by the Event's Notion page id (dashed form) instead of the slug",
        run(_FakeGraph(), side("bypid.usage.json", body(event=pid_variants(pid)[1])))[1] == "usage: logged 3 (consumer event)")
+    amp = {"notion_page_id": "9" * 32, "title": "Hack: Powered by Plug & Play VC and Base44 " + "x" * 60}
+    ok("usage (YED-498): a sidecar slugged by the shared event_slug from an '&', 100+ char title matches its manifest",
+       _sidecar_refusal({"event": event_slug(amp["title"]), "lens": "event", "generated_at": "2026-11-22T00:00:00Z"},
+                        amp, now="2026-11-22T01:00:00Z") is None)
+    ok("usage (YED-498): the shortened claim-style slug still refuses (the check is not loosened)",
+       _sidecar_refusal({"event": "hack", "lens": "event", "generated_at": "2026-11-22T00:00:00Z"},
+                        amp, now="2026-11-22T01:00:00Z") == "sidecar is for a different event")
     fg = _FakeGraph()
     rc, line = run(fg, good, write_code=500)
     ok("usage: a failed claim_usage write -> loud NOT LOGGED (… 500 …), rc 0, claims still staged",

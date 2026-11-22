@@ -13,7 +13,8 @@ Prior-Context Pack's graph pull; it is ADR-10 D4's one retrieval path (Amendment
 
 seed.json: {"entities": [{"type": "person|company|topic", "name": "...", "notion_page_id": "..."}],
             "text": "<VERBATIM invite / question>", "focus": "<Alex's stated focus>", "window_days": 365,
-            "event": "<event-slug>"}      # YED-262: binds the usage sidecar to the event being researched
+            "event_title": "<event title, verbatim>"}   # YED-262/498: binds the usage sidecar to this event;
+                                                         # retrieve.py slugs it with event_slug.py, nobody hand-types it
 
 What it does (for every lens):
   1 resolve seed entities (notion_page_id, else exact name) — unresolved names are REPORTED, never guessed
@@ -51,6 +52,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from spine_client import q, req, write  # noqa: E402  (write: YED-262 claim_usage, the one write path)
 from substrate import JOB_LENS_KINDS, norm_text, pid_variants  # noqa: E402
+from event_slug import event_slug  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
@@ -445,6 +447,14 @@ def usage_plan(kept_ids: list[str], document_id: str | None, existing: set[str],
     return rows, None
 
 
+def sidecar_event(seed: dict) -> str | None:
+    """YED-498. The event the sidecar is bound to: the seed's raw `event_title`, slugged by the one shared slugger,
+    so it always matches stage-research's check. A legacy seed's `event` (a slug or Notion page id) still works."""
+    if seed.get("event_title"):
+        return event_slug(seed["event_title"]) or None
+    return seed.get("event") or None
+
+
 def usage_sidecar(kept_ids: list[str], lens: str, now: str, event: str | None) -> dict:
     """Pure. The `<out>.usage.json` body: kept claim ids (deduped, order kept), lens, the event it was pulled
     for (the seed's `event`: the event slug or Notion page id) and a timestamp — IDS ONLY, never claim text.
@@ -570,6 +580,9 @@ def selftest() -> bool:
          usage_plan(["c1", "c2"], "d1", {"c1"}, "event") == ([{"claim_id": "c2", "document_id": "d1",
                                                                   "consumer": "event"}], None)
          and usage_plan(["c1"], "d1", {"c1"}, "event") == ([], "already logged for this document")),
+        ("usage sidecar (YED-498): a seed's raw event_title is slugged by the shared slugger; legacy event still works",
+         sidecar_event({"event_title": "Demo & Night", "event": "ignored"}) == "demo-and-night"
+         and sidecar_event({"event": "420d3699c2db81ff"}) == "420d3699c2db81ff" and sidecar_event({}) is None),
         ("usage sidecar: ids + lens + event + timestamp ONLY — no claim text, deduped in order",
          usage_sidecar(["c2", "c1", "c2"], "event", "2026-11-05T00:00:00Z", "demo-night")
          == {"claim_ids": ["c2", "c1"], "lens": "event", "event": "demo-night", "generated_at": "2026-11-05T00:00:00Z"}),
@@ -614,7 +627,7 @@ def main(argv: list[str]) -> int:
         try:
             now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             with open(side, "w", encoding="utf-8") as f:
-                json.dump(usage_sidecar(audit["kept_claim_ids"], a.lens, now, seed.get("event")), f)
+                json.dump(usage_sidecar(audit["kept_claim_ids"], a.lens, now, sidecar_event(seed)), f)
             print(f"usage sidecar -> {side} ({len(audit['kept_claim_ids'])} claim ids)")
             if not seed.get("event"):
                 print("  ⚠️ seed has no `event` — Step 4.2b will refuse this sidecar (usage NOT LOGGED)", file=sys.stderr)

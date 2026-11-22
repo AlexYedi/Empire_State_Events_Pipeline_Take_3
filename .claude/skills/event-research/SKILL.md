@@ -189,8 +189,9 @@ URLs here breaks citations three stages downstream.
   `.venv/bin/python .claude/scripts/retrieve.py --lens event --seed <scratch>/<event-slug>.seed.json --out <scratch>/<event-slug>.context-pack.md`.
   Build the seed from the Step 1.5b entities **with a prior record** (one
   `{"type", "name", "notion_page_id"}` each, the resolved Notion id first; the verbatim invite as
-  `text`; `window_days: 365`; `"event": "<event-slug>"`, the event title kebab-cased, which binds the
-  usage sidecar to this event). The script reads `SUPABASE_API_KEY` from `.env` itself and returns a
+  `text`; `window_days: 365`; `"event_title": "<the event title, verbatim>"`, which binds the
+  usage sidecar to this event: `retrieve.py` slugs it with the shared `.claude/scripts/event_slug.py`, so
+  never type a slug by hand (YED-498: a hand-typed short slug left usage NOT LOGGED on 2026-11-22). The script reads `SUPABASE_API_KEY` from `.env` itself and returns a
   **Context Pack** — Continuity Ledger (prior occasions), People/Company/Topic cards, and scored
   Claims, every claim line tagged `c:<8>` for traceability. Unresolved seed names are reported in
   the pack, never guessed; the pack's AUDIT line (stderr, or `--json` for machine reading) is the
@@ -852,7 +853,10 @@ meta, build the per-section evidence slices `field-guide-renderer` expects
 (YED-476). It cuts on the `### <Section>` headings and appends a code-built **source index** (every URL-carrying
 Evidence Ledger row) to The Frame's slice: the synthesizer writes The Frame as a URL-less pointer summary, and
 without the index every Frame endnote came back "URL not in pack" (0/22 → 35/35 with the index, A/B 2026-11-21).
-A missing section heading prints a WARNING and that slice falls back to the whole set. Pass each renderer call:
+The five `### <Section>` headings are written in code by the `event-research-fanout` workflow from five required
+synthesizer fields (YED-498), and the slicer splits on exactly those; a missing or repeated heading exits 2 (there is
+no whole-set fallback: that fallback hid a heading drift on 2026-11-22). An empty slice means nothing was researched
+for that section: skip its render. Pass each renderer call:
 - **Mode:** `render-section: <section>`
 - **Event meta:** name, date, location, Alex's stated focus/goals, and how novice he is on this material.
 - **The evidence slice for that section** — the URL-tagged rows from the Evidence Set, tiers intact.
