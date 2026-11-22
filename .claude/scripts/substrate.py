@@ -103,6 +103,7 @@ import argparse, hashlib, html, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from spine_client import PIIViolation, guard, q, req  # noqa: E402
+from feeds import own_surface  # noqa: E402  (YED-489: Alex's own pages are never evidence)
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SOURCE = "substrate:notion"          # entity/event rows created by this producer
@@ -497,7 +498,8 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
     Decision 2 (spec): web-verified WITH a URL -> web_verified; email-signal WITH a public http(s) URL ->
     email_signal (a lead); email-signal without one is private correspondence -> skipped (relationship state is
     HubSpot's, ADR-9); notion-prior -> skipped (it came from the graph/Notion); a web-verified row missing its URL
-    -> skipped (the specialist contract makes the URL mandatory). Every skip is counted, never silent."""
+    -> skipped (the specialist contract makes the URL mandatory); a row citing one of Alex's own surfaces
+    -> skipped as own_content (feeds.own_surface, YED-489). Every skip is counted, never silent."""
     out, skipped, entity = [], {}, None
 
     def skip(why: str):
@@ -552,6 +554,10 @@ def parse_ledger(md: str) -> tuple[list[dict], dict[str, int]]:
             continue
         if tier == "notion_prior":
             skip("notion_prior")
+            continue
+        own = own_surface(fields.get("url"))
+        if own:                         # Alex's own post / hub read / repo: never independent evidence (YED-489)
+            skip(own)
             continue
         if tier == "email_signal" and (not url or MAILBOX_SOURCE_RE.search(fields.get("source") or "")
                                        or CORRESPONDENCE_RE.search(text)):
@@ -3835,6 +3841,16 @@ def _research_selftest(ok) -> None:
        roster_match("Contract", [("company", "Contract Co", "c1"), ("topic", "Agent Evals", "t1")]) == ("company", "c1"))
     ok("roster: containment that hits two entities -> ROSTER_TIE (distinct from no hit)",
        roster_match("Holly", [("company", "Holly Health", "c1"), ("company", "Holly AI", "c2")]) is ROSTER_TIE)
+    own_items, own_why = parse_ledger(
+        "##### Evidence Ledger — Daytona\n"
+        "- claim: Alex argues sandboxes are the agent runtime | tier: web-verified | source: LinkedIn"
+        " | url: https://www.linkedin.com/posts/alexyedi_agents-activity-1-x | date: 2026-11-01\n"
+        "- claim: Hub long read on forkable VMs | tier: web-verified | source: Hub"
+        " | url: https://empire-state-hub.vercel.app/reads/daytona | date: 2026-11-02\n"
+        "- claim: Daytona raised a $60M Series B | tier: web-verified | source: Fortune"
+        " | url: https://fortune.com/2026/10/20/daytona | date: 2026-10-20\n")
+    ok("ledger: rows citing Alex's own post or hub read skip as own_content; a third-party row stays (YED-489)",
+       [i["url"] for i in own_items] == ["https://fortune.com/2026/10/20/daytona"] and own_why.get("own_content") == 2)
     ok("ledger: a bold '**Evidence Ledger — X**' label opens a ledger too",
        len(parse_ledger("**Evidence Ledger — Amperos**\n- claim: Builds battery analytics for fleets | tier: web-verified"
                         " | source: amperos.com | url: https://amperos.com | date: 2026-09-01")[0]) == 1)

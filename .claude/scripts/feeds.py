@@ -17,6 +17,7 @@ An item is a plain dict: {title, url, published (ISO-8601 UTC or None), summary,
 feed (source feed URL), kind ("rss"|"atom"|"youtube")}.
 """
 import hashlib
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -188,6 +189,40 @@ def canonical_url(url: str) -> str:
                                     urllib.parse.urlencode(query), ""))
 
 
+# Alex's own published surfaces (YED-489). A page he wrote is never independent evidence for the graph: his
+# conclusions would come back as "web-verified" claims and pass quote-match, because the quote really is on the page.
+# Matched on the parsed host and whole path segments, never substrings. This stops the direct loop only; a third
+# party quoting his post, or an aggregator copy, is not caught by a domain rule.
+OWN_HANDLE = "alexyedi"
+OWN_HOSTS = {"empire-state-hub.vercel.app", "alexyedi.github.io"}
+GITHUB_HOSTS = {"github.com", "www.github.com", "gist.github.com", "raw.githubusercontent.com"}
+_PULSE_OWN = re.compile(r"-(?:alexyedi|alex-yedi)(?:-[a-z0-9]+)?$")
+
+
+def own_surface(url) -> str | None:
+    """'own_content' for a page on one of Alex's own surfaces, 'linkedin_unattributable' for a LinkedIn
+    /feed/update/ URL (its author is not in the URL), else None. Pure: no network."""
+    if not isinstance(url, str) or not url.strip():
+        return None
+    try:
+        parts = urllib.parse.urlsplit(url.strip())
+        host = (parts.hostname or "").lower().rstrip(".")
+    except ValueError:
+        return None
+    segs = [x.lower() for x in urllib.parse.unquote(parts.path).split("/") if x]
+    s0, s1 = (segs + ["", ""])[:2]
+    if host in OWN_HOSTS or (host.startswith("empire-state-hub-") and host.endswith(".vercel.app")):
+        return "own_content"
+    if host in GITHUB_HOSTS:
+        return "own_content" if s0 == OWN_HANDLE else None
+    if host == "linkedin.com" or host.endswith(".linkedin.com"):
+        if (s0 == "in" and s1 == OWN_HANDLE) or (s0 == "posts" and s1.startswith(OWN_HANDLE + "_")) \
+                or (s0 == "pulse" and _PULSE_OWN.search(s1)):
+            return "own_content"
+        if s0 == "feed" and s1 == "update":
+            return "linkedin_unattributable"
+    return None
+
 def item_key(item: dict) -> str:
     """Stable identity of an item: sha256 hex of its canonical URL."""
     return hashlib.sha256(canonical_url(item["url"]).encode()).hexdigest()
@@ -352,6 +387,23 @@ def selftest() -> int:
     check("item_key: sha256 of canonical url",
           item_key(i1) == hashlib.sha256(b"https://ex.com/p1").hexdigest())
 
+    # --- own_surface (YED-489)
+    own = ["https://www.linkedin.com/in/alexyedi/", "https://uk.linkedin.com/in/AlexYedi",
+           "https://www.linkedin.com/posts/alexyedi_agents-activity-123-abcd", "https://evil@linkedin.com/in/alexyedi",
+           "https://www.linkedin.com/pulse/rag-is-dead-alex-yedi-x1y2z", "https://empire-state-hub.vercel.app/reads/x",
+           "https://empire-state-hub-git-main-x.vercel.app/", "https://github.com/AlexYedi/repo",
+           "https://raw.githubusercontent.com/alexyedi/r/main/f.md", "https://alexyedi.github.io/"]
+    other = ["https://www.linkedin.com/in/alexyedi-fan", "https://linkedin.com.evil.io/in/alexyedi",
+             "https://linkedin.com@evil.io/in/alexyedi", "https://github.com/AlexYediX", "https://github.com/other/alexyedi",
+             "https://www.linkedin.com/posts/janedoe_alexyedi-mention-1", "https://streamingmeme-main.vercel.app/a",
+             "https://example.com/in/alexyedi", "", None, "not a url"]
+    check("own_surface: Alex's profile, posts, pulse, hub, GitHub -> own_content",
+          all(own_surface(u) == "own_content" for u in own))
+    check("own_surface: lookalikes, userinfo trick, other people's posts, junk -> None",
+          all(own_surface(u) is None for u in other))
+    check("own_surface: /feed/update/ has no author in the URL -> linkedin_unattributable",
+          own_surface("https://www.linkedin.com/feed/update/urn:li:activity:7/") == "linkedin_unattributable")
+
     # --- render_digest
     companies = {"Acme": ["https://ex.com/feed"], "Beta": ["https://beta.example/feed"]}
     a = {"title": "Old Acme", "url": "https://ex.com/1",
@@ -378,8 +430,8 @@ def selftest() -> int:
     check("fetch: exists behind one function, docstring bans selftest use",
           fetch.__doc__ is not None and "selftest" in fetch.__doc__)
 
-    print(f"selftest: {ok}/24 passed")
-    return 0 if ok == 24 else 1
+    print(f"selftest: {ok}/27 passed")
+    return 0 if ok == 27 else 1
 
 
 def main(argv: list[str]) -> int:
