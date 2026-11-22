@@ -984,7 +984,8 @@ class Graph:
             self.patch(table, f"id=eq.{row['id']}", patch)
             self.stats.bump(table, "enriched")
 
-    def ensure_company(self, e: dict) -> str:   # NOTE: same-name ambiguity is surfaced, never silently duplicated
+    def ensure_company(self, e: dict, source: str = SOURCE) -> str:   # NOTE: same-name ambiguity is surfaced, never silently duplicated
+        # source labels a row this call CREATES (YED-484: lane 1 passes 'ats_pulse'); a matched row keeps its own.
         fields = {"name": e["name"], "website": e.get("website"), "description": e.get("description"),
                   "linkedin_url": e.get("linkedin_url"), "notion_page_id": (pid_variants(e.get("notion_page_id")) or [None])[-1]}
         row = self.by_pid("company", e.get("notion_page_id")) or self.by_name("company", e["name"])
@@ -1017,7 +1018,7 @@ class Graph:
             return hit
         self.stats.bump("company", "created")
         return self._remember("company", e["name"],
-                              self.create_entity("company", {**{k: v for k, v in fields.items() if v}, "source": SOURCE}))
+                              self.create_entity("company", {**{k: v for k, v in fields.items() if v}, "source": source}))
 
     def ensure_topic(self, e: dict) -> str | None:
         if not e.get("name"):                        # id-only topic (name not yet pulled from Notion)
@@ -1093,11 +1094,13 @@ class Graph:
         return self._remember("person", ckey,
                               self.create_entity("person", {**{k: v for k, v in fields.items() if v}, "source": SOURCE}))
 
-    def ensure_entity(self, e: dict) -> tuple[str, str]:
+    def ensure_entity(self, e: dict, company_source: str | None = None) -> tuple[str, str]:
         t = e["type"]
         fn = {"company": self.ensure_company, "person": self.ensure_person, "topic": self.ensure_topic}.get(t)
         if not fn:
             raise SystemExit(f"unknown entity type {t!r}")
+        if t == "company" and company_source:      # YED-484: only a caller that names a source changes it
+            return t, fn(e, source=company_source)
         return t, fn(e)
 
     # -- soft-merge (spec item 2, YED-47; ADR-4 D3: tombstone, never delete) ----------------------
@@ -1266,7 +1269,7 @@ class Graph:
                         f"&event_date=gte.{day}T00:00:00Z&event_date=lte.{day}T23:59:59Z&select=*&limit=2")
         return rows[0] if len(rows) == 1 else None
 
-    def ensure_event(self, m: dict) -> str:
+    def ensure_event(self, m: dict, company_source: str | None = None) -> str:
         ev = m["event"]
         if ev.get("kind") in PAGE_KEYED_KINDS and not pid_variants(ev.get("notion_page_id")):
             raise SystemExit(f"ensure-event: {ev.get('kind')} {ev.get('title')!r} has no notion_page_id — refusing "
@@ -1307,7 +1310,7 @@ class Graph:
             existing = {(r["entity_type"], r["entity_id"], r["role"])
                         for r in self.get(f"/event_entity?event_id=eq.{eid}&select=entity_type,entity_id,role")}
         for e in m.get("entities", []):
-            t, iid = self.ensure_entity(e)
+            t, iid = self.ensure_entity(e, company_source)
             if iid is None:                          # deferred (e.g. id-only topic); a re-run links it
                 continue
             role =ROLE_MAP[t].get((e.get("role") or "").lower(), ROLE_MAP[t].get("subject", "subject")
@@ -3397,6 +3400,21 @@ def _norm_selftest(ok) -> None:
     d._post_try = lambda table, row: (_ for _ in ()).throw(AssertionError("dry run reached the network path"))
     ok("dry-run: create_entity never reaches _post_try (the network path)",   # the fake's post() ignores dry
        bool(d.ensure_company({"name": "Brand New Co"})))
+    # YED-484: a caller-named source labels only the rows it CREATES; the default is unchanged.
+    sg = _FakeGraph()
+    sg.t["company"].append({"id": "co-old", "name": "Old Co", "source": "notion_backfill"})
+    src = lambda name: next(r.get("source") for r in sg.t["company"] if r["name"] == name)  # noqa: E731
+    sg.ensure_company({"name": "Default Co"})
+    sg.ensure_company({"name": "Lane Co"}, source="ats_pulse")
+    sg.ensure_company({"name": "Old Co"}, source="ats_pulse")
+    sg.ensure_event({"event": {"title": "Pulse", "kind": "market", "event_date": "2026-11-22T00:00:00Z"},
+                     "entities": [{"type": "company", "name": "Event Co", "role": "subject"}]}, company_source="ats_pulse")
+    sg.ensure_event({"event": {"title": "Talk", "kind": "market", "event_date": "2026-11-22T00:00:00Z"},
+                     "entities": [{"type": "company", "name": "Plain Co", "role": "subject"}]})
+    ok("source: default stays substrate:notion; a named source labels the created row (ensure_company + ensure_event)",
+       src("Default Co") == SOURCE and src("Lane Co") == "ats_pulse" and src("Event Co") == "ats_pulse"
+       and src("Plain Co") == SOURCE)
+    ok("source: a MATCHED company keeps its own source (never relabelled)", src("Old Co") == "notion_backfill")
 
 
 def _identity_selftest(ok) -> None:
