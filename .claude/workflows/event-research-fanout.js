@@ -202,6 +202,14 @@ const synth = await agent([
 if (!synth) throw new Error('event-research-fanout: the synthesizer returned nothing; specialist returns are in the journal')
 
 const dropped = done.flatMap(x => x.dropped.map(d => `${x.s.label} · ${d.row.entity} · ${d.why}: ${d.row.claim}`))
+
+// YED-480: a deterministic net under the pronoun rule. Lists every gendered pronoun in the Scan head and specialist
+// prose with context, so the parent checks each against a pronoun ledger row instead of finding them at review time.
+// It flags, it does not rewrite (a quote or a reference to Alex is legitimate).
+const pronounFlags = [['scan_head', synth.scan_head], ...done.map(x => [x.s.label, x.report])].flatMap(([where, t]) =>
+  [...String(t || '').matchAll(/\b(he|his|him|himself|she|her|hers|herself)\b/gi)].map(m =>
+    `${where} · …${String(t).slice(Math.max(0, m.index - 70), m.index + 30).replace(/\s+/g, ' ')}…`)).slice(0, 60)
+if (pronounFlags.length) log(`${pronounFlags.length} gendered pronouns to check against pronoun ledger rows (audit.pronoun_flags)`)
 if (dropped.length) log(`${dropped.length} ledger rows dropped as inadmissible (listed in audit.dropped)`)
 
 return {
@@ -223,5 +231,6 @@ return {
     })),
     quote_dropped: done.flatMap(x => (x.quoteDropped || []).map(d => `${x.s.label} · ${d.row.entity} · ${d.why}: ${d.row.claim}`)),
     dropped,
+    pronoun_flags: pronounFlags,
   },
 }
