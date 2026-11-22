@@ -10,7 +10,8 @@ notes turned from plumbing noise into real findings (A/B 2026-11-21, n=3 events,
 index, so a URL that exists in any ledger always reaches the Frame renderer; no prompt has to remember to copy it.
 
   python3 .claude/scripts/deep_read_slices.py --evidence <slug>.evidence.md --out-dir <scratch>/<slug>.slices
-      writes one file per section (01-the-frame.md ... 05-cross-event-threads.md) and prints sizes + warnings
+      writes one file per section (01-the-frame.md ... 05-cross-event-threads.md) and prints sizes;
+      exit 2 if the five exact '### <Section>' headings (written by the fanout workflow, YED-498) are not all there once
   python3 .claude/scripts/deep_read_slices.py --selftest
 
 Pure text in, text out: no network, no writes outside --out-dir.
@@ -22,14 +23,16 @@ import os
 import re
 import sys
 
-SECTIONS = [  # (render-section name, heading prefixes the synthesizer uses for it)
-    ("The Frame", ("The Frame",)),
-    ("Primer / Landscape", ("Primer", "Landscape", "Topics")),
-    ("Companies", ("Companies",)),
-    ("People", ("People",)),
-    ("Cross-Event Threads", ("Cross-Event", "Cross Event")),
-]
+SECTIONS = ["The Frame", "Primer / Landscape", "Companies", "People", "Cross-Event Threads"]
+# YED-498: the event-research-fanout workflow writes these five headings in code, from five required synthesizer fields,
+# so the split is exact. A missing heading means the Evidence Set did not come from the workflow (or was hand-edited):
+# that is an error, never a silent whole-set fallback (the fallback hid a heading drift on 2026-11-22).
+EMPTY = "(none researched)"
 LEDGER_HEAD = re.compile(r"^##### Evidence Ledger — (.+?)\s*$")
+
+
+class SliceError(ValueError):
+    pass
 
 
 def source_index(evidence: str) -> list[str]:
@@ -57,61 +60,56 @@ def source_index(evidence: str) -> list[str]:
     return out
 
 
-def section_slices(evidence: str) -> tuple[dict[str, str], list[str]]:
-    """Split on the synthesizer's '### <Section>' headings. A section with no heading gets the whole Evidence Set
-    plus a scoping note (loud warning), so a renderer is never handed an empty slice by a formatting slip."""
+def section_slices(evidence: str) -> dict[str, str]:
+    """Split on the exact '### <Section>' headings. Raises SliceError if any of the five is missing or repeated.
+    A section whose body is empty or EMPTY comes back as '' (the renderer skips it)."""
     lines = evidence.splitlines(keepends=True)
-    starts = []
-    for i, line in enumerate(lines):
-        if line.startswith("### "):
-            title = line[4:].strip()
-            for name, prefixes in SECTIONS:
-                if title.startswith(prefixes):
-                    starts.append((i, name))
-                    break
-    # An unrelated ### heading (e.g. the scanner's "Pattern signals") stays inside the section it follows.
-    out, warn = {}, []
+    starts = [(i, line[4:].strip()) for i, line in enumerate(lines) if line.startswith("### ") and line[4:].strip() in SECTIONS]
+    names = [n for _, n in starts]
+    missing = [n for n in SECTIONS if n not in names]
+    dup = sorted({n for n in names if names.count(n) > 1})
+    if missing or dup:
+        raise SliceError(f"Evidence Set headings wrong: missing {missing or 'none'}, repeated {dup or 'none'}. "
+                         "It must come from the event-research-fanout workflow, which writes the five headings in code.")
+    out = {}
     for n, (i, name) in enumerate(starts):
-        if name in out:
-            continue
         end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
-        body = "".join(lines[i:end]).strip()
-        if body:
-            out[name] = body
-    for name, _ in SECTIONS:
-        if name not in out:
-            warn.append(f"WARNING: no '### {name}' heading in the Evidence Set; that slice is the whole set, scoped by note")
-            out[name] = (f"> Section heading missing from the Evidence Set: render only the {name} material from it.\n\n"
-                         + evidence.strip())
+        body = "".join(lines[i + 1:end]).strip()
+        out[name] = "" if body in ("", EMPTY) else f"### {name}\n{body}"
     idx = source_index(evidence)
     if idx:
-        out["The Frame"] += ("\n\n#### Sources available (every URL-carrying Evidence Ledger row in this event's "
-                             "Evidence Set; cite from these)\n" + "\n".join(idx))
-    else:
-        warn.append("WARNING: no URL-carrying ledger rows found; The Frame has no source index")
-    return {name: out[name] for name, _ in SECTIONS}, warn
+        out["The Frame"] = (out["The Frame"] or "### The Frame") + (
+            "\n\n#### Sources available (every URL-carrying Evidence Ledger row in this event's Evidence Set; cite from these)\n"
+            + "\n".join(idx))
+    return {name: out[name] for name in SECTIONS}
 
 
 def selftest() -> bool:
-    ev = ("## Evidence Set\n### The Frame (pointer)\n- Room: Acme hosts.\n### Primer/Landscape (topics)\n#### Topic: X\n"
+    ev = ("## Evidence Set\n### The Frame\n- Room: Acme hosts.\n### Primer / Landscape\n#### Topic: X\n"
           "##### Evidence Ledger — X\n- claim: X grew | tier: web-verified | source: Blog | url: https://x.example/a | date: 2026-11-01\n"
           "- claim: X grew | tier: web-verified | source: Blog | url: https://x.example/a | date: 2026-11-01\n"
           "### Companies\n##### Evidence Ledger — Acme\n- claim: Acme raised $4M | tier: web-verified | source: TC | url: https://tc.example/b | date: 2026-10-01\n"
           "- claim: private note | tier: email-signal | source: Gmail | url: n/a | date: 2026-10-02\n"
-          "### Pattern signals\n- noise\n### People\n#### Jane Doe\n### Cross-Event Threads\n- prior room\n")
-    s, w = section_slices(ev)
+          "### Pattern signals\n- noise\n### People\n(none researched)\n### Cross-Event Threads\n- prior room\n")
+    s = section_slices(ev)
     checks = [
-        ("five slices, Frame first", list(s) == [n for n, _ in SECTIONS]),
+        ("five slices in order", list(s) == SECTIONS),
         ("index: URL rows only, de-duplicated", source_index(ev) == [
             "- [X] X grew — Blog · 2026-11-01 · https://x.example/a",
             "- [Acme] Acme raised $4M — TC · 2026-10-01 · https://tc.example/b"]),
         ("Frame slice carries the index", "https://tc.example/b" in s["The Frame"] and "Sources available" in s["The Frame"]),
         ("an unrelated ### heading stays with the section it follows", "noise" in s["Companies"] and "noise" not in s["People"]),
-        ("no warnings on a well-formed set", w == []),
+        ("an empty section comes back empty", s["People"] == ""),
     ]
-    s2, w2 = section_slices("## Evidence Set\n### The Frame\n- r\n#### DAYTONA\n- d\n")
-    checks.append(("missing heading -> whole set + note + warning", "#### DAYTONA" in s2["Companies"]
-                   and s2["Companies"].startswith("> Section heading missing") and len(w2) == 5))
+    def raises(text):
+        try:
+            section_slices(text)
+        except SliceError:
+            return True
+        return False
+    checks.append(("drifted heading ('### → Primer/Landscape') raises", raises(ev.replace("### Primer / Landscape", "### → Primer/Landscape"))))
+    checks.append(("missing section raises", raises(ev.replace("### Cross-Event Threads\n", ""))))
+    checks.append(("repeated section raises", raises(ev + "### People\n- again\n")))
     for name, okv in checks:
         print(("  ✓ " if okv else "  ✗ ") + name)
     print(f"selftest: {sum(v for _, v in checks)}/{len(checks)} pass")
@@ -128,16 +126,18 @@ def main() -> int:
         return 0 if selftest() else 1
     if not (a.evidence and a.out_dir):
         ap.error("--evidence and --out-dir are required (or --selftest)")
-    s, warn = section_slices(open(a.evidence, encoding="utf-8").read())
+    try:
+        s = section_slices(open(a.evidence, encoding="utf-8").read())
+    except SliceError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
     os.makedirs(a.out_dir, exist_ok=True)
-    for n, name in enumerate([nm for nm, _ in SECTIONS], 1):
+    for n, name in enumerate(SECTIONS, 1):
         body = s[name]
         fn = os.path.join(a.out_dir, f"{n:02d}-{re.sub(r'[^a-z]+', '-', name.lower()).strip('-')}.md")
         with open(fn, "w", encoding="utf-8") as f:
             f.write(body + "\n")
         print(f"{fn}  {len(body)} chars")
-    for w in warn:
-        print(w, file=sys.stderr)
     return 0
 
 

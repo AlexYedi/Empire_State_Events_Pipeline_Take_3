@@ -45,13 +45,14 @@ def now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
+from event_slug import event_slug  # noqa: E402  YED-498: the one slugger, shared with retrieve.py + stage-research
+
+
 def slugify(s: str) -> str:
-    """Normalise only what is unambiguous. `&` -> `and` because two sessions typing the same event name will
-    differ there; NOT stopword-stripping or fuzzy matching, because a false collision LOCKS a legitimate run,
-    which is worse than the miss it prevents. Known gap: "AI Show and Tell NY" and "...New York" still do not
-    collide. The dedup search remains the second line of defence."""
-    s = s.lower().replace("&", " and ")
-    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", s)).strip("-")[:80]
+    """The shared event_slug (`&` -> `and`, 80-char cap; rules and why in .claude/scripts/event_slug.py). Known gap:
+    "AI Show and Tell NY" and "...New York" still do not collide. The dedup search remains the second line of defence."""
+    return event_slug(s)
 
 
 def path_for(slug: str) -> str:

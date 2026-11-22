@@ -75,13 +75,31 @@ const SPECIALIST_SCHEMA = {
   required: ['report', 'ledger', 'thin'],
 }
 
+// YED-498: the Evidence Set is five required fields, one per Deep-Read section. Code joins them under the canonical
+// '### <Section>' headings (EVIDENCE_SECTIONS), so deep_read_slices.py can split on exact headings. Free-typed headings
+// drifted ('### → Primer/Landscape', 2026-11-22) and every slice silently fell back to the whole set.
+const EVIDENCE_SECTIONS = [
+  ['frame', 'The Frame', 'a short synthesis pointer: the room, state of the field, why now, what Alex walks out able to discuss'],
+  ['primer', 'Primer / Landscape', "every topic's lineage, mechanism, 5-dimension facts and that topic's Evidence Ledger"],
+  ['companies', 'Companies', "every company's Value Frame (first), historical spine, developments, headwinds and Evidence Ledger, plus relevant signal-scanner rows"],
+  ['people', 'People', "every researched person's career arc, POV, recent activity and Evidence Ledger"],
+  ['cross_event', 'Cross-Event Threads', "the Prior-Context Pack's Continuity Ledger and Graph Signals (URL-tagged), plus recurring-entity notes"],
+]
+const EVIDENCE_EMPTY = '(none researched)'
 const SYNTH_SCHEMA = {
   type: 'object',
   properties: {
     scan_head: { type: 'string', description: 'The Scan head, exactly as your contract defines it: Quick Take, People at-a-glance, Questions to ask, Success Signals, Verification Flags.' },
-    evidence_set: { type: 'string', description: 'The ## Evidence Set block: URL-carrying, organised by Deep-Read render section, keeping every ##### Evidence Ledger — <Entity Name> heading and bullet verbatim.' },
+    ...Object.fromEntries(EVIDENCE_SECTIONS.map(([k, title, what]) => [k, { type: 'string',
+      description: `Evidence Set, ${title} section: ${what}. URL-carrying; keep every ##### Evidence Ledger — <Entity Name> heading and bullet verbatim. No ### heading of your own. Empty string if nothing was researched for this section.` }])),
   },
-  required: ['scan_head', 'evidence_set'],
+  required: ['scan_head', ...EVIDENCE_SECTIONS.map(([k]) => k)],
+}
+// A '### ' line inside a body is demoted to '#### ' so only code-written headings sit at the split level.
+function renderEvidenceSet(s) {
+  const clean = body => String(body || '').trim().replace(/^### /gm, '#### ')
+  return ['## Evidence Set (for the Deep Read render — do not display to Alex as brief content)', '',
+    ...EVIDENCE_SECTIONS.map(([k, title]) => `### ${title}\n${clean(s[k]) || EVIDENCE_EMPTY}\n`)].join('\n')
 }
 
 function block(title, body) { return body && String(body).trim() ? `### ${title}\n${String(body).trim()}\n` : '' }
@@ -196,7 +214,7 @@ const synth = await agent([
   '### Specialist returns (each ends with its Evidence Ledger in the canonical bullet form)',
   specialistText,
   '',
-  'Return the two blocks per your contract through the StructuredOutput tool: `scan_head` and `evidence_set`. In the Evidence Set keep every `##### Evidence Ledger — <Entity Name>` heading and bullet exactly as given; Step 4.2 parses them.',
+  'Return through the StructuredOutput tool: `scan_head`, then the Evidence Set as five fields (`frame`, `primer`, `companies`, `people`, `cross_event`), one per Deep-Read section. Code adds the section headings, so write none of your own. Keep every `##### Evidence Ledger — <Entity Name>` heading and bullet exactly as given; Step 4.2 parses them.',
 ].filter(Boolean).join('\n'), { label: 'event-research-synthesizer', phase: 'Synthesize', agentType: 'event-research-synthesizer', schema: SYNTH_SCHEMA })
 
 if (!synth) throw new Error('event-research-fanout: the synthesizer returned nothing; specialist returns are in the journal')
@@ -223,7 +241,7 @@ if (dropped.length) log(`${dropped.length} ledger rows dropped as inadmissible (
 
 return {
   scan_head: synth.scan_head,
-  evidence_set: synth.evidence_set,
+  evidence_set: renderEvidenceSet(synth),
   // Step 4.2a fallback when the Evidence Set lost its ledger headings: write this instead.
   specialist_returns: specialistText,
   audit: {

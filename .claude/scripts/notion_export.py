@@ -43,7 +43,12 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import pii_normalize  # noqa: E402  (raw spine_client patterns + the normalized copy; one shared layer)
-from substrate import event_slug  # noqa: E402
+
+
+def event_slug(s: str | None) -> str:
+    """Export folder names only. Deliberately NOT the shared event_slug.event_slug (YED-498, `&` -> `and`): changing
+    it would rename the folder of every already-exported event whose title has an `&`."""
+    return re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 API = "https://api.notion.com/v1"
