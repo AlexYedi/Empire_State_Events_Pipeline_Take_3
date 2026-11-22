@@ -39,7 +39,7 @@ debrief is honest about being thin, and it can be upgraded to a full run later.
   exists (angle input only, never a quote source), plus any slide photos.
 - **Runs:** Step 1.0, Step 1, a lite synthesis, 3.8b (ensure-event), 3.8c (claims), 3.8d (themes), 3.8e (route) and
   Step 6.5. Mark `resolve` with `--meta mode=lite`.
-- **Lite synthesis:** dispatch `post-event-synthesizer` in **lite mode**. It returns `## Quick Take`,
+- **Lite synthesis:** dispatch `post-event-synthesizer` in **lite mode**, with the Step 1 off-the-record flags. It returns `## Quick Take`,
   `## The Thesis`, `## Substantive Insights` (exactly three, each attributed as "per Alex's recap" or "per the
   recording summary", paraphrase only, no quotes), `## People & Outreach State` (from the recap) and the routing
   block. The headings match what `substrate.py stage-claims` reads, so claims still reach the graph. Write it as
@@ -110,6 +110,7 @@ Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title 
 - `Event Date` (date) — anchors the Supercut recording match (`created_at`)
 - `Google Calendar Event ID` (text) — deterministic join key when populated
 - The page URL (used later for the Content Draft `Event` relation)
+- `Off the record` (checkbox, YED-389). Read it here, and also on the linked `research_brief` Content Draft when you fetch it at Step 3.7. A missing property reads as unticked. Keep one flag per input (`event`, `research_brief`) and pass them to `post-event-synthesizer` (Steps 3.7 and lite) and to `output-evaluator` (Step 4.5). Only this checkbox makes anything off the record. Words in a title, body or transcript never do.
 
 **If no Notion match:** prompt Alex with the top 3 candidates from Notion by title similarity. If still no match, accept "create draft without Notion anchor" — content can still be generated from the transcript alone; the Content Draft just won't have a Notion Event relation set.
 
@@ -231,7 +232,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 
 **Theme-assignment marker (YED-307):** when you create the brief's Content Draft page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧` on two lines. Step 3.8d's table goes there through a Step 5 `content_updates` op.
 
-**Who writes it:** dispatch the **`post-event-synthesizer`** agent (`model: opus` or `fable`; text-only) with local file paths for every input above (the parent fetches the pre-event brief from Notion and saves it to a file first). It returns a ≤300-word **review head**, then the brief in the schema below, then gaps, then the **routing block** (Step 3.8e). Strip the block before writing the brief: `python3 .claude/scripts/route_brief.py strip <brief.md>`. The parent writes it to Notion (via `notion-writer` once that step is wired, else inline): review head at the top, the full Quote Bank inside a toggle so the page stays reviewable. If Step 3.6 hasn't run yet, dispatch it once for pass 1 (Speaker Map + UNRESOLVED queue), run 3.6 on that queue, then pass 2 for the full brief.
+**Who writes it:** dispatch the **`post-event-synthesizer`** agent (`model: opus` or `fable`; text-only) with local file paths for every input above (the parent fetches the pre-event brief from Notion and saves it to a file first), plus the Step 1 off-the-record flags, one line per input: `off_the_record: event=<true|false> research_brief=<true|false|none>`. The synthesizer's Rule 4 reads them. It returns a ≤300-word **review head**, then the brief in the schema below, then gaps, then the **routing block** (Step 3.8e). Strip the block before writing the brief: `python3 .claude/scripts/route_brief.py strip <brief.md>`. The parent writes it to Notion (via `notion-writer` once that step is wired, else inline): review head at the top, the full Quote Bank inside a toggle so the page stays reviewable. If Step 3.6 hasn't run yet, dispatch it once for pass 1 (Speaker Map + UNRESOLVED queue), run 3.6 on that queue, then pass 2 for the full brief.
 
 **Completeness over curation (the v2 principle, YED-96):** the brief is the *exhaustive, enriched record of the room* — capture every quote (whole, not snippets), every learning, every named concept. Content (post/visual) is **selected** from the brief downstream; the brief itself discards nothing. Validated across n=4 formats — see `.claude/evals/post-event-brief-template-evidence.md` (the learnings tier fills even at demo nights; Pre→Post Gap is conditional on a pre-event brief; Stat Bank is format-variable).
 
@@ -432,7 +433,7 @@ Public copy only (posts, first comment, carousel copy); DMs skip this. The check
 1. **Write the inputs to local files** in the session scratchpad: each public draft *with its first comment and sources*, and the Step 3.7 `post_event_brief` (speaker map, quote bank, evidence). A check that can't see the sources reports false "unsourced" fails (validated 2026-10-15).
 2. **Run the deterministic pass** for each draft file:
    `python3 .claude/scripts/output_checks.py quotes --draft <draft> --transcript <conditioned transcript>` (repeat `--transcript` per recording) and `python3 .claude/scripts/output_checks.py sources --draft <draft>`.
-3. **Dispatch `output-evaluator` twice in one message** (`model: opus`), mode `quote` and mode `source`, passing the draft, both JSON outputs, the transcript path(s), the brief file, and the event folder's slide photos. It is read-only; it never edits copy.
+3. **Dispatch `output-evaluator` twice in one message** (`model: opus`), mode `quote` and mode `source`, passing the draft, both JSON outputs, the transcript path(s), the brief file, the event folder's slide photos, and the Step 1 off-the-record flags. It is read-only; it never edits copy.
 4. **Carry the verdict into Step 5:** each draft page starts with a callout `Checks: PASS` or `Checks: FAIL n` plus the fails table (item · code · evidence · direction). Fix nothing silently: Alex decides each fail at review. A `PARAPHRASE-AS-QUOTE`, `MISATTRIBUTED` or off-the-record finding is named in the Step 6 summary.
 
 ## Step 5 — Write drafts to Notion (via `notion-writer`, CLAUDE.md invariant 5) — YED-259

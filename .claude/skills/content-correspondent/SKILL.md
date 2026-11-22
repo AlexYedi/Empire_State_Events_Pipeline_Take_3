@@ -165,8 +165,8 @@ the per-company **6-dimension breakdown** (who they are · problem · what's uni
 the **one-slide-per-company carousel** (Arc-4 company-spotlight grid), the **focus-driven
 first comment** (one verified reference link per company — careers pages if hiring, launch/blog
 pages if product, etc.), the **contact-extraction → CRM + Apollo** flow (founders + explicitly
-called-out teammates in the crowd), and the sensitivities (**confidential "stays in the room"
-funding must never be published**; **verify garbled transcript names before anything public or
+called-out teammates in the crowd), and the sensitivities (**funding disclosed on stage is on the record; only the
+Notion "Off the record" checkbox keeps material out (YED-389)**; **verify garbled transcript names before anything public or
 CRM-bound**). First codified from The Shortlist — August Founder Showcase (2026-08-24).
 
 #### X cuts (E-05) — post-event archetypes
