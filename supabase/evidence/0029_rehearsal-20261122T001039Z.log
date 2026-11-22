@@ -1,0 +1,166 @@
+twin aws-1-us-east-2.pooler.supabase.com as postgres.ytfzzsxcxxbejnowmkmk; migration supabase/migrations/0029_default_privileges_api_roles.sql; verify statements: 2; PART 1: 4906 chars; PART 3: 4947 chars; rollback block: 6 lines
+[0] preflight
+  PASS PART 1 sees the PRE state: NOTICE:  0029 preflight OK: PRE state (public tables anon/authenticated SELECT, sequences rwU, functions X; no global function entry, so new functions get PUBLIC EXECUTE).
+  staging/0029_verify.sql step 0 (run the same on prod before and after the paste):
+    postgres.public.f                        anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+    postgres.public.r                        anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNC
+    postgres.public.S                        anon:SELECT,anon:UPDATE,anon:USAGE,authenticated:SELECT,authenticated:UPDATE,authenticated:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE,servic
+    postgres.storage.f                       anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+    postgres.storage.r                       anon:DELETE,anon:INSERT,anon:MAINTAIN,anon:REFERENCES,anon:SELECT,anon:TRIGGER,anon:TRUNCATE,anon:UPDATE,authenticated:DELETE,authenticated:INSERT,aut
+    postgres.storage.S                       anon:SELECT,anon:UPDATE,anon:USAGE,authenticated:SELECT,authenticated:UPDATE,authenticated:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE,servic
+    supabase_admin.extensions.f              postgres:EXECUTE*
+    supabase_admin.extensions.r              postgres:DELETE*,postgres:INSERT*,postgres:MAINTAIN*,postgres:REFERENCES*,postgres:SELECT*,postgres:TRIGGER*,postgres:TRUNCATE*,postgres:UPDATE*
+    supabase_admin.extensions.S              postgres:SELECT*,postgres:UPDATE*,postgres:USAGE*
+    supabase_admin.graphql.f                 anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+    supabase_admin.graphql.r                 anon:DELETE,anon:INSERT,anon:MAINTAIN,anon:REFERENCES,anon:SELECT,anon:TRIGGER,anon:TRUNCATE,anon:UPDATE,authenticated:DELETE,authenticated:INSERT,aut
+    supabase_admin.graphql.S                 anon:SELECT,anon:UPDATE,anon:USAGE,authenticated:SELECT,authenticated:UPDATE,authenticated:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE,servic
+    supabase_admin.graphql_public.f          anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+    supabase_admin.graphql_public.r          anon:DELETE,anon:INSERT,anon:MAINTAIN,anon:REFERENCES,anon:SELECT,anon:TRIGGER,anon:TRUNCATE,anon:UPDATE,authenticated:DELETE,authenticated:INSERT,aut
+    supabase_admin.graphql_public.S          anon:SELECT,anon:UPDATE,anon:USAGE,authenticated:SELECT,authenticated:UPDATE,authenticated:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE,servic
+    supabase_admin.realtime.f                dashboard_user:EXECUTE,postgres:EXECUTE
+    supabase_admin.realtime.r                dashboard_user:DELETE,dashboard_user:INSERT,dashboard_user:MAINTAIN,dashboard_user:REFERENCES,dashboard_user:SELECT,dashboard_user:TRIGGER,dashboard_u
+    supabase_admin.realtime.S                dashboard_user:SELECT,dashboard_user:UPDATE,dashboard_user:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE
+    supabase_auth_admin.auth.f               dashboard_user:EXECUTE,postgres:EXECUTE
+    supabase_auth_admin.auth.r               dashboard_user:DELETE,dashboard_user:INSERT,dashboard_user:MAINTAIN,dashboard_user:REFERENCES,dashboard_user:SELECT,dashboard_user:TRIGGER,dashboard_u
+    supabase_auth_admin.auth.S               dashboard_user:SELECT,dashboard_user:UPDATE,dashboard_user:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE
+[1] snapshot A
+    default ACL rows: 21; existing-object grant keys over public, signal_read, topic_intelligence, mi: 185
+    object snapshot md5: 842128a0043f3d21c33ca0a00e3f011c
+    anon:signal_read.v_topic_movement                       18:7b5cc7182c8a2acd5b7c8f28c8d27efe
+    anon:signal_read.v_topic_intersections                  5:0bb6f83fbcc3b86e8ecb3aed82ff6f4e
+    authenticated:signal_read.v_topic_movement              18:7b5cc7182c8a2acd5b7c8f28c8d27efe
+    authenticated:signal_read.v_topic_intersections         5:0bb6f83fbcc3b86e8ecb3aed82ff6f4e
+[1a] negative control: before apply, new objects ARE granted to anon/authenticated
+    anon.table                   SELECT
+    authenticated.table          SELECT
+    service_role.table           DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE
+    anon.sequence                SELECT,UPDATE,USAGE
+    authenticated.sequence       SELECT,UPDATE,USAGE
+    service_role.sequence        SELECT,UPDATE,USAGE
+    anon.function                true
+    authenticated.function       true
+    service_role.function        true
+    anon.mi_function             true
+    authenticated.mi_function    true
+    service_role.mi_function     true
+    acl.function                 {=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+    acl.table                    {postgres=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres,service_role=arwdDxtm/postgres}
+  PASS anon and authenticated hold privileges on new objects before apply (anon table=SELECT, sequence=SELECT,UPDATE,USAGE, fn=true, mi fn=true)
+[1b] supabase_admin limitation (rolled back)
+  PASS postgres cannot alter supabase_admin's defaults: ERROR:  permission denied to change default privileges
+[1c] guard probes (rolled back)
+  PASS mixed state (only the tables default revoked) refused: ERROR:  0029 preflight: mixed or unexpected state. public tables=[postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service
+  PASS unexpected postgres default ACL in schema mi refused: ERROR:  0029 preflight: unexpected postgres default ACLs (inspect by hand): mi:r={service_role=r/postgres}
+  PASS wrong end state (PART 2 skipped): postflight raises: ERROR:  0029 postflight FAILED (rolled back): public:r is [anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,s
+[1d] REST as anon before apply (https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1, twin publishable key)
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+  PASS both views return rows to anon over REST before apply
+[2] apply 0029
+  OK  apply
+      NOTICE 0029 preflight OK: PRE state (public tables anon/authenticated SELECT, sequences rwU, functions X; no global function entry, so new functions get PUBLIC EXECUTE).
+      NOTICE 0029: postgres/public functions no longer auto-granted to anon, authenticated
+      NOTICE 0029: postgres/public tables no longer auto-granted to anon, authenticated
+      NOTICE 0029: postgres/public sequences no longer auto-granted to anon, authenticated
+      NOTICE 0029: new postgres functions (every schema) no longer get EXECUTE for PUBLIC
+      NOTICE 0029 postflight OK
+  default ACLs that changed (A -> B):
+  DIFF defacl.postgres.(global).f:
+       before=None
+       after =postgres>postgres:EXECUTE:false
+  DIFF defacl.postgres.public.S:
+       before=postgres>anon:SELECT:false,postgres>anon:UPDATE:false,postgres>anon:USAGE:false,postgres>authenticated:SELECT:false,postgres>authenticated:UPDATE:false,postgres>authenticated:USAGE:false,postgres>postgres:SELECT:false,postgres>postgres:UPDATE:false,postgres>postgres:USAGE:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false,postgres>service_role:USAGE:false
+       after =postgres>postgres:SELECT:false,postgres>postgres:UPDATE:false,postgres>postgres:USAGE:false,postgres>service_role:SELECT:false,postgres>service_role:UPDATE:false,postgres>service_role:USAGE:false
+  DIFF defacl.postgres.public.f:
+       before=postgres>anon:EXECUTE:false,postgres>authenticated:EXECUTE:false,postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+       after =postgres>postgres:EXECUTE:false,postgres>service_role:EXECUTE:false
+  DIFF defacl.postgres.public.r:
+       before=postgres>anon:SELECT:false,postgres>authenticated:SELECT:false,postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false
+       after =postgres>postgres:DELETE:false,postgres>postgres:INSERT:false,postgres>postgres:MAINTAIN:false,postgres>postgres:REFERENCES:false,postgres>postgres:SELECT:false,postgres>postgres:TRIGGER:false,postgres>postgres:TRUNCATE:false,postgres>postgres:UPDATE:false,postgres>service_role:DELETE:false,postgres>service_role:INSERT:false,postgres>service_role:MAINTAIN:false,postgres>service_role:REFERENCES:false,postgres>service_role:SELECT:false,postgres>service_role:TRIGGER:false,postgres>service_role:TRUNCATE:false,postgres>service_role:UPDATE:false
+[3] re-apply (idempotent)
+  OK  re-apply
+      NOTICE 0029: already applied (no anon/authenticated in postgres's public defaults; global functions = postgres only); nothing to do.
+      NOTICE 0029 postflight OK
+  PASS re-apply is a no-op (defaults + objects unchanged, 'already applied' notice)
+[4] verify (staging/0029_verify.sql)
+    ok  postgres_public_tables_no_anon_authenticated
+    ok  postgres_public_sequences_no_anon_authenticated
+    ok  postgres_public_functions_no_anon_authenticated
+    ok  postgres_global_functions_no_public_execute
+    ok  postgres_no_other_global_entries
+    ok  postgres_pipeline_schemas_no_api_role_defaults
+    ok  service_role_public_tables_unchanged
+    ok  service_role_public_sequences_unchanged
+    ok  service_role_public_functions_unchanged
+    ok  postgres_own_public_entries_unchanged
+    ok  storage_defaults_untouched_out_of_scope
+    ok  existing_signal_read_views_still_granted
+  PASS step 1 catalog: 12/12 ok 
+  PASS step 0 changed exactly as expected (public r/S/f lose anon+authenticated; global f = postgres:EXECUTE; every other row, service_role and storage included, identical)
+  DIFF postgres.(global).f:
+       before=None
+       after =postgres:EXECUTE
+  DIFF postgres.public.S:
+       before=anon:SELECT,anon:UPDATE,anon:USAGE,authenticated:SELECT,authenticated:UPDATE,authenticated:USAGE,postgres:SELECT,postgres:UPDATE,postgres:USAGE,service_role:SELECT,service_role:UPDATE,service_role:USAGE
+       after =postgres:SELECT,postgres:UPDATE,postgres:USAGE,service_role:SELECT,service_role:UPDATE,service_role:USAGE
+  DIFF postgres.public.f:
+       before=anon:EXECUTE,authenticated:EXECUTE,postgres:EXECUTE,service_role:EXECUTE
+       after =postgres:EXECUTE,service_role:EXECUTE
+  DIFF postgres.public.r:
+       before=anon:SELECT,authenticated:SELECT,postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+       after =postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+[4a] probe after apply: new objects are NOT granted to anon/authenticated
+    anon.table                   
+    authenticated.table          
+    service_role.table           DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE
+    anon.sequence                
+    authenticated.sequence       
+    service_role.sequence        SELECT,UPDATE,USAGE
+    anon.function                false
+    authenticated.function       false
+    service_role.function        true
+    anon.mi_function             false
+    authenticated.mi_function    false
+    service_role.mi_function     false
+    acl.function                 {postgres=X/postgres,service_role=X/postgres}
+    acl.table                    {postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}
+  PASS anon and authenticated hold no privilege on any new object
+  PASS service_role keeps full table rights, sequence rwU and EXECUTE on new public objects (before: table=DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE seq=SELECT,UPDATE,USAGE fn=true)
+  INFO service_role on a new mi function: before=true after=false (was via PUBLIC; mi has no schema default, so grant explicitly)
+[4b] existing objects untouched
+  PASS existing-object grants byte-identical to snapshot A (185 keys)
+  PASS signal_read views as anon/authenticated identical to snapshot A
+[4c] REST as anon after apply
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+  PASS signal_read.v_topic_movement same as before: HTTP 200 -> 200, total 18 -> 18, md5 cdc3fdfb75b2 -> cdc3fdfb75b2
+  PASS signal_read.v_topic_intersections same as before: HTTP 200 -> 200, total 5 -> 5, md5 a32c3aa05dc7 -> a32c3aa05dc7
+[5] rollback (header block, verbatim)
+  OK  rollback
+[6] snapshot C == snapshot A
+  PASS default ACLs equal snapshot A (21 rows)
+  PASS existing-object grants equal snapshot A (185 keys)
+  PASS role reads equal snapshot A
+  PASS PART 1 sees the PRE state again: NOTICE:  0029 preflight OK: PRE state (public tables anon/authenticated SELECT, sequences rwU, functions X; no global function entry, so new functions get PUBLIC EXECUTE).
+    anon.table                   SELECT
+    authenticated.table          SELECT
+    service_role.table           DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE
+    anon.sequence                SELECT,UPDATE,USAGE
+    authenticated.sequence       SELECT,UPDATE,USAGE
+    service_role.sequence        SELECT,UPDATE,USAGE
+    anon.function                true
+    authenticated.function       true
+    service_role.function        true
+    anon.mi_function             true
+    authenticated.mi_function    true
+    service_role.mi_function     true
+    acl.function                 {=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+    acl.table                    {postgres=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres,service_role=arwdDxtm/postgres}
+  PASS new-object probe equals gate 1a (anon privileges back)
+[6b] REST as anon after rollback == gate 1d
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_movement?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=18 returned=18 md5=cdc3fdfb75b2
+    GET https://ytfzzsxcxxbejnowmkmk.supabase.co/rest/v1/v_topic_intersections?select=*  [Accept-Profile: signal_read] -> HTTP 200 total=5 returned=5 md5=a32c3aa05dc7
+  PASS REST probes equal gate 1d (2 targets)
+  PASS ROLLBACK PROVEN
+
+REHEARSAL 0029: PASS
