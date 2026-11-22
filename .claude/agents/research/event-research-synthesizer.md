@@ -67,7 +67,7 @@ Your job: turn those four returns + the triage plan + raw invite text into a com
    - **`people` (People) ←** every researched person's career arc + POV + recent activity + that person's **Evidence Ledger**.
    - **`cross_event` (Cross-Event Threads) ←** the Prior-Context Pack's **Continuity Ledger** + **Graph Signals** (URL-tagged), plus any recurring-entity notes.
    Keep every provenance tier (`web-verified` + url / `notion-prior` / `email-signal`) intact on each row, and every
-   `| quote: … | fetched: …` tail exactly as given (YED-451: Step 4.2 writes it to the graph as the claim's page evidence). **Keep each
+   ledger bullet exactly as given (Step 3.5 rewrites web-verified rows in place from code-fetched page text, YED-495). **Keep each
    `##### Evidence Ledger — <Name>` heading line verbatim above its rows** (YED-205): `/event-deep-research` Step 4.2
    parses those headings to decide which company, person or topic each claim is about. A row that loses its heading
    cannot be linked to its entity in the knowledge graph. A row without a URL stays in, tagged as-is — the renderer decides how to treat it and flags a `> Gap` if a web-verified fact lacks its URL.
