@@ -16,9 +16,12 @@ derived from the registry and uploads at most an anonymous totals summary.
     ledger, lane_registry and its FK live in prod, and the YED-304 freshness healthcheck reads
     prod. spine_client is prod-only by design (its host is built from the hardcoded REF, so no
     caller override can divert the request — the earlier MI_TWIN_URL override was dead config).
-    Every OTHER write in this lane stays twin-only/dry-run (event manifests stay validate-only
-    until the guarded REF override lands). items_written counts rows ACTUALLY written — 0 while
-    event writes are dry-run.
+  * LIVE event writes (YED-327, Alex 2026-11-20): --write-events runs substrate's ensure_event
+    in-process (Graph → spine_client.req, the guarded path) on each validated manifest, to PROD.
+    Idempotent per week: event_date is the week's Sunday, so a re-run matches instead of
+    creating. items_written = event rows ACTUALLY created this run (a re-run writes 0). Company
+    edges resolve through the registry aliases (ensure-roles' rule) so a bare registry name lands
+    on the graph's existing qualified company. All graph output is swallowed: it names companies.
   * lane_registry activation is NOT a producer write (producers can't write it) — migration
     0018 flips lane_registry.active for hiring_pulse; Alex applies it after a twin rehearsal.
   * roles_open is the board's UNFILTERED posting count (from ats_pull --summary) — the old
@@ -355,9 +358,9 @@ def event_manifests(manifest: dict) -> list[dict]:
 def lane_run_manifest(manifest: dict, events_written: int = 0) -> dict:
     """The run's ledger entry in manifest form (kept local: it names boards in errored_boards).
 
-    `written` counts rows ACTUALLY written to the graph — not events built. Event writes are
-    dry-run (validate-only) until the guarded spine REF override lands, so the default is 0;
-    the live-write era passes the real count (a lower bound is never an overclaim)."""
+    `written` counts rows ACTUALLY written to the graph — not events built. The default is 0;
+    --write-events replaces it with the event rows it created (a lower bound is never an
+    overclaim)."""
     lane = manifest.pop("_lane", {"seen": 0, "refused": 0, "errored_boards": []})
     return {"lane": LANE, "week": manifest["week"], "ran_at": manifest["generated_at"],
             "producer": SOURCE, "status": "ok" if not lane["errored_boards"] else "ok_with_errors",
@@ -365,18 +368,21 @@ def lane_run_manifest(manifest: dict, events_written: int = 0) -> dict:
             "written": events_written, "errored_boards": lane["errored_boards"]}
 
 
-def lane_run_row(lane: dict, started_at: str) -> dict:
+def lane_run_row(lane: dict, started_at: str, *, status: str | None = None,
+                 error: str | None = None) -> dict:
     """The lane_run manifest → the REAL public.lane_run row (0016 contract columns), the shape
-    spine_client.write('lane_run', …) posts. Pure so the selftest can pin every mapping."""
+    spine_client.write('lane_run', …) posts. Pure so the selftest can pin every mapping.
+    status/error override the board-derived ones when the event write fails mid-run."""
     errored = list(lane.get("errored_boards") or [])
-    err_text = ("errored boards: " + ", ".join(errored)) if errored else None
+    err_text = "; ".join(x for x in (error, ("errored boards: " + ", ".join(errored)) if errored else None)
+                         if x) or None
     return {
         "lane": lane["lane"],
         "started_at": started_at,
         "finished_at": lane["ran_at"],
         # lane_run.status CHECK is ('running','success','partial','failed','skipped') — errored
         # boards are a 'partial' run, not a failure (the run itself succeeded).
-        "status": "success" if not errored else "partial",
+        "status": status or ("success" if not errored else "partial"),
         "items_seen": lane["seen"],
         "items_written": lane["written"],
         "items_refused": lane["refused"],
@@ -386,20 +392,84 @@ def lane_run_row(lane: dict, started_at: str) -> dict:
     }
 
 
-def write_lane_run(lane: dict, started_at: str) -> dict:
+def write_lane_run(lane: dict, started_at: str, *, status: str | None = None,
+                   error: str | None = None) -> dict:
     """Write the REAL lane_run row through spine_client.write — to PROD, deliberately.
 
     The ONE prod exception (Alex's decision, post-merge review of #271): lane_run is a PII-free
     ledger (counts and board-status only — the guard still fronts every write), lane_registry
     and its FK live in prod, and the YED-304 freshness healthcheck reads prod. spine_client is
     prod-only by design: _send builds its host from the hardcoded REF, so no caller override
-    can divert the request (the earlier MI_TWIN_URL override was dead config — removed). The
-    twin-only rule still governs every other write in this lane. The key reaches spine_client
-    as SUPABASE_API_KEY (its one key source)."""
+    can divert the request (the earlier MI_TWIN_URL override was dead config — removed). Since
+    YED-327 the lane's events go to prod too (write_events). The key reaches spine_client
+    as SUPABASE_API_KEY (its one key source). A non-2xx answer raises (status only — a body can
+    echo the errored-board names): an unwritten ledger row must never read as written."""
     import spine_client
-    row = lane_run_row(lane, started_at)
-    spine_client.write("lane_run", [row])
+    row = lane_run_row(lane, started_at, status=status, error=error)
+    code, _ = spine_client.write("lane_run", [row])
+    if not 200 <= code < 300:
+        raise RuntimeError(f"lane_run write failed: HTTP {code}")
     return row
+
+
+class EventWriteError(RuntimeError):
+    """A live event write failed. The message is counts + exception TYPE only (graph errors echo
+    titles, i.e. company names, and Actions logs are public); .written = rows created before it."""
+    def __init__(self, msg: str, written: int):
+        super().__init__(msg)
+        self.written = written
+
+
+def write_events(events_dir: str, registry: str | None = None, g=None) -> dict:
+    """LIVE: each --emit-events manifest → substrate's ensure_event (Graph → spine_client.req,
+    the guarded write path) — to PROD (YED-327). Idempotent per week: event_date is the week's
+    Sunday, so find_event's same-day title match makes a re-run a no-op (written 0).
+
+    Every manifest is validated BEFORE the first write (fail closed). Company entity names map
+    through substrate.registry_aliases (ensure-roles' rule) so 'Cursor' lands on the graph's
+    'Cursor (Anysphere)' instead of minting a duplicate; titles keep the registry name (the
+    dedupe + prior-read key). All graph stdout/stderr is swallowed — it names companies — and
+    the identity-ambiguity ledger goes beside events_dir (the workflow cleanup deletes it).
+    g is the test seam (substrate._FakeGraph). Returns counts only."""
+    import substrate
+    names = sorted(f for f in os.listdir(events_dir) if f.endswith(".json"))
+    manifests = []
+    for name in names:
+        with open(os.path.join(events_dir, name), encoding="utf-8") as fh:
+            manifests.append(json.load(fh))
+    bad = sum(1 for m in manifests if validate_event_manifest(m))
+    if bad:
+        raise EventWriteError(f"{bad} invalid event manifest(s) — nothing written", 0)
+    if g is None:
+        g = substrate.Graph(False, substrate.Stats())
+        substrate.AMBIGUITY_LEDGER = os.path.join(os.path.dirname(os.path.abspath(events_dir)),
+                                                  "identity-ambiguity.jsonl")
+    g.quiet = True
+    written = 0
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            aliases = (substrate.registry_aliases(open(registry, encoding="utf-8").read(), g)
+                       if registry and os.path.exists(registry) else {})
+            for m in manifests:
+                # explicit UTC midnight: a bare date casts to timestamptz in the DB session's
+                # TimeZone, but find_event (the dedupe) and the prior read query a UTC day window
+                if re.fullmatch(r"\d{4}-\d{2}-\d{2}", m["event"].get("event_date") or ""):
+                    m["event"]["event_date"] += "T00:00:00Z"
+                for e in m["entities"]:
+                    e["name"] = aliases.get(substrate.norm_text(e["name"]), e["name"])
+                before = g.stats.c.get("event", {}).get("created", 0)
+                g.ensure_event(m)
+                if g.stats.c.get("event", {}).get("created", 0) > before:
+                    written += 1
+    except (Exception, SystemExit) as e:          # substrate exits via SystemExit(<path with a title>)
+        raise EventWriteError(f"event write failed after {written} row(s) written "
+                              f"({type(e).__name__})", written) from None
+    c = g.stats.c
+    return {"manifests": len(manifests), "written": written,
+            "matched": c.get("event", {}).get("matched", 0),
+            "edges_created": c.get("event_entity", {}).get("created", 0),
+            "companies_created": c.get("company", {}).get("created", 0),
+            "companies_ambiguous": c.get("company", {}).get("ambiguous_name", 0)}
 
 
 def validate_manifest(manifest: dict) -> list[str]:
@@ -741,6 +811,14 @@ def selftest() -> int:
         _sc.write("lane_run", [lane_run_row(lane, "x")])
         check("lane_run write: MI_TWIN_URL has no effect on ANY write path — all reach prod",
               captured == [f"{_sc.REF}.supabase.co"] * 2)
+        _FakeResp.status = 400
+        try:
+            write_lane_run(lane, "x")
+            check("lane_run write: a non-2xx answer raises (an unwritten ledger row never reads as written)", False)
+        except RuntimeError as e:
+            check("lane_run write: a non-2xx answer raises (an unwritten ledger row never reads as written)",
+                  str(e) == "lane_run write failed: HTTP 400")
+        _FakeResp.status = 201
     finally:
         _sc.http.client.HTTPSConnection = orig_conn
         if orig_key is None:
@@ -749,6 +827,110 @@ def selftest() -> int:
             os.environ["SUPABASE_API_KEY"] = orig_key
         os.environ.pop("MI_TWIN_URL", None)
         _sc._KEY = None
+
+    # --- LIVE event writes (YED-327): substrate's REAL ensure_event over its in-memory double ----
+    import substrate as _sub
+
+    def _emit(manifest) -> str:
+        d = tempfile.mkdtemp()
+        for em in event_manifests(_json_copy(manifest)):
+            with open(os.path.join(d, em["event"]["metadata"]["dedup_key"].replace(":", "_") + ".json"),
+                      "w", encoding="utf-8") as fh:
+                json.dump(em, fh)
+        return d
+
+    fg = _sub._FakeGraph()
+    fg.t["company"].append({"id": "co-runway", "name": "Runway (Runway ML)"})   # the graph's qualified name
+    reg = os.path.join(tempfile.mkdtemp(), "target-companies.md")
+    with open(reg, "w", encoding="utf-8") as fh:
+        fh.write("| Runway | ashby | `runway` |\n| Anthropic | ashby | `anthropic` |\n")
+    edir = _emit(m)
+    _out, _err = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(_out), contextlib.redirect_stderr(_err):
+        w1 = write_events(edir, reg, g=fg)
+    check("live write: one event per company created; written = rows ACTUALLY created (3)",
+          w1["written"] == 3 and len(fg.t["event"]) == 3 and w1["matched"] == 0)
+    check("live write: rows carry the real signal_type column + the week's Sunday",
+          all(e["signal_type"] == SIGNAL_TYPE and e["event_date"] == "2026-11-01T00:00:00Z" and e["kind"] == "market"
+              for e in fg.t["event"]))
+    runway_ev = next(e["id"] for e in fg.t["event"] if "Runway" in e["title"])
+    check("live write: a bare registry name resolves to the graph's qualified company (no duplicate)",
+          len([c for c in fg.t["company"] if "Runway" in c["name"]]) == 1
+          and {"event_id": runway_ev, "entity_id": "co-runway"}.items()
+          <= next(x for x in fg.t["event_entity"] if x["event_id"] == runway_ev).items())
+    check("live write: graph output is swallowed — no company name reaches stdout/stderr",
+          not any(n in _out.getvalue() + _err.getvalue() for n in ("Anthropic", "Runway", "Harvey")))
+    w2 = write_events(edir, reg, g=fg)
+    check("live write: a same-week re-run is a no-op (written 0, 3 matched, no new rows)",
+          w2["written"] == 0 and w2["matched"] == 3 and len(fg.t["event"]) == 3
+          and len(fg.t["event_entity"]) == 3)
+    w3 = write_events(_emit(build_manifest(rows, date(2026, 10, 28), board_stats=_fixture_board_stats())),
+                      reg, g=fg)
+    check("live write: a mid-week dispatch of the same ISO week dedupes onto the Sunday (written 0)",
+          w3["written"] == 0 and len(fg.t["event"]) == 3)
+    w4 = write_events(_emit(build_manifest(rows, date(2026, 11, 8), board_stats=_fixture_board_stats())),
+                      reg, g=fg)
+    check("live write: the next week writes its own rows (3 more, company edges reused)",
+          w4["written"] == 3 and len(fg.t["event"]) == 6 and len(fg.t["company"]) == 3)
+
+    bdir = _emit(m)
+    _bf = sorted(os.listdir(bdir))[0]
+    _bm = json.load(open(os.path.join(bdir, _bf), encoding="utf-8"))
+    _bm["entities"].append({"type": "person", "name": "A", "role": "speaker"})
+    json.dump(_bm, open(os.path.join(bdir, _bf), "w", encoding="utf-8"))
+    fg_bad = _sub._FakeGraph()
+    try:
+        write_events(bdir, None, g=fg_bad)
+        check("live write: ONE invalid manifest refuses the batch before any write (fail closed)", False)
+    except EventWriteError as e:
+        check("live write: ONE invalid manifest refuses the batch before any write (fail closed)",
+              e.written == 0 and not fg_bad.t["event"] and not fg_bad.t["company"])
+
+    class _DiesOnSecond(_sub._FakeGraph):
+        def ensure_event(self, mm):
+            if self.t["event"]:
+                raise SystemExit(f"GET /event?title=ilike.{mm['event']['title']} -> 500")
+            return super().ensure_event(mm)
+    try:
+        write_events(_emit(m), None, g=_DiesOnSecond())
+        check("live write: a mid-run failure raises with the rows written so far, counts + type only", False)
+    except EventWriteError as e:
+        check("live write: a mid-run failure raises with the rows written so far, counts + type only",
+              e.written == 1 and str(e) == "event write failed after 1 row(s) written (SystemExit)")
+
+    # CLI wiring: the ledger row carries the real count; a failure is ledgered partial/failed, exit 1.
+    g_ = globals()
+    saved_w = (g_["write_events"], g_["write_lane_run"])
+    ledgered = []
+    g_["write_lane_run"] = lambda ln, st, **k: ledgered.append((dict(ln), k)) or lane_run_row(ln, st, **k)
+    lpath = os.path.join(tempfile.mkdtemp(), "lane_run.json")
+    with open(lpath, "w", encoding="utf-8") as fh:
+        json.dump(lane_run_manifest(_json_copy(m)), fh)
+    try:
+        g_["write_events"] = lambda d, r: {"manifests": 3, "written": 3, "matched": 0, "edges_created": 3,
+                                           "companies_created": 2, "companies_ambiguous": 0}
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = main(["--write-lane-run", lpath, "--write-events", edir, "--started-at", "x"])
+        check("CLI: --write-events → the lane_run row carries the real written count (3), exit 0",
+              rc == 0 and ledgered[-1][0]["written"] == 3 and ledgered[-1][1] == {})
+
+        def _boom(d, r):
+            raise EventWriteError("event write failed after 2 row(s) written (SystemExit)", 2)
+        g_["write_events"] = _boom
+        _o = io.StringIO()
+        with contextlib.redirect_stdout(_o):
+            rc = main(["--write-lane-run", lpath, "--write-events", edir, "--started-at", "x"])
+        check("CLI: a mid-run failure ledgers 'partial' with the 2 rows written, then exits 1",
+              rc == 1 and ledgered[-1][0]["written"] == 2 and ledgered[-1][1]["status"] == "partial"
+              and "after 2 row(s)" in ledgered[-1][1]["error"])
+        check("CLI: the failure line is counts only (no company names)",
+              not any(n in _o.getvalue() for n in ("Anthropic", "Runway", "Harvey")))
+        r_fail = lane_run_row(lane, "x", status="failed", error="event write failed after 0 row(s) written (X)")
+        check("lane_run row: failure override keeps the errored-board text after the failure reason",
+              r_fail["status"] == "failed"
+              and r_fail["error"] == "event write failed after 0 row(s) written (X); errored boards: Neverboard")
+    finally:
+        g_["write_events"], g_["write_lane_run"] = saved_w
 
     prior = _json_copy(m); prior.pop("_lane", None)
     prior["week"] = "2026-W43"              # last week — the same-week refusal is tested below
@@ -1063,6 +1245,12 @@ def main(argv=None, *, _conn_cls=None) -> int:
                          "spine_client.write — to PROD, the one deliberate exception (PII-free "
                          "ledger; registry + freshness live there). SUPABASE_API_KEY env.")
     ap.add_argument("--started-at", help="ISO run-start timestamp for --write-lane-run (default: the manifest's ran_at)")
+    ap.add_argument("--write-events", metavar="DIR",
+                    help="LIVE (YED-327): write each --emit-events manifest through substrate "
+                         "ensure_event → spine_client — to PROD; idempotent per week. Needs "
+                         "--write-lane-run (the ledger row then carries the real written count).")
+    ap.add_argument("--registry", help="target-company registry for --write-events' company-name "
+                                       "aliases (absent file → registry names used as-is)")
     ap.add_argument("--events-written", type=int, default=None,
                     help="rows ACTUALLY written to the graph for --write-lane-run (default: the "
                          "manifest's written count — 0 while event writes are dry-run)")
@@ -1074,12 +1262,30 @@ def main(argv=None, *, _conn_cls=None) -> int:
     if a.selftest:
         return selftest()
 
+    if a.write_events and not a.write_lane_run:
+        ap.error("--write-events needs --write-lane-run (every live write is ledgered)")
     if a.write_lane_run:
         with open(a.write_lane_run, encoding="utf-8") as fh:
             lane = json.load(fh)
-        if a.events_written is not None:
+        started = a.started_at or lane["ran_at"]
+        if a.write_events:
+            try:
+                res = write_events(a.write_events, a.registry)
+            except EventWriteError as e:
+                # lane 2's rule: ledger the failed run with the rows actually written, then fail
+                lane["written"] = e.written
+                write_lane_run(lane, started, status="partial" if e.written else "failed", error=str(e))
+                print(f"ats_pulse: {e} — lane_run ledgered as "
+                      f"{'partial' if e.written else 'failed'} (counts only)")
+                return 1
+            lane["written"] = res["written"]
+            print(f"ats_pulse: events written to PROD — {res['written']} created · {res['matched']} "
+                  f"already present (same-week re-run) · {res['edges_created']} company edges · "
+                  f"{res['companies_created']} companies created ({res['companies_ambiguous']} "
+                  f"ambiguous) · of {res['manifests']} manifests (counts only)")
+        elif a.events_written is not None:
             lane["written"] = a.events_written
-        row = write_lane_run(lane, a.started_at or lane["ran_at"])
+        row = write_lane_run(lane, started)
         print(f"ats_pulse: lane_run row written to PROD "
               f"({row['lane']} · {row['status']} · seen {row['items_seen']} · "
               f"written {row['items_written']} · refused {row['items_refused']})")

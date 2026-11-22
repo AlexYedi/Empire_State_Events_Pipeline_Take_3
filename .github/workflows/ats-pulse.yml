@@ -1,8 +1,15 @@
 # Lane 1 hiring pulse (YED-304) — weekly per-company hiring counts from ATS boards.
 # Spec: docs/proposals/2026-11-04-market-lens-and-slices.md §2 lane 1 · producer chain:
 #   ats_pull.py (boards → TSV + board stats) → ats_pulse.py (counts-only manifest, per-company
-#   ensure-event manifests, lane_run manifest) → substrate.py ensure-event (event writes stay
-#   dry-run: a live write needs the guarded twin REF override, human review).
+#   ensure-event manifests, lane_run manifest) → validate (fail closed) → ats_pulse.py
+#   --write-events: substrate ensure_event in-process → spine_client → PROD (YED-327, LIVE).
+#
+# LIVE EVENT WRITES (YED-327, Alex 2026-11-20): one public.event row per registry company per ISO
+#   week (kind market, signal_type hiring_pulse, event_date = the week's Sunday, counts in
+#   metadata) + one company event_entity edge, to PROD, through spine_client's guard. A re-run in
+#   the same week matches instead of creating (items_written 0). KILL SWITCH: set the repo
+#   VARIABLE HIRING_PULSE_WRITE_ENABLED to 'false' — events stop, the lane_run row still lands
+#   (items_written 0), so the nightly coverage check flags a lane left off for 2+ weeks.
 #
 # SECRET HYGIENE — read before editing (Claude Code review, PR #271):
 #   * TARGET_COMPANIES_REGISTRY (repo secret): the private target list, materialised to
@@ -13,22 +20,20 @@
 #       - NO manifest, lane_run, event or board-stats file is uploaded — they name companies.
 #         The only artifact is the anonymous totals summary (week, company COUNT, totals).
 #       - every derived file is deleted by the always() cleanup step before the job ends.
-#   * PROD EXCEPTION — lane_run ONLY (Alex's decision, post-merge review of #271): the lane_run
-#     ledger row is written through spine_client.write to PROD, using the existing
-#     SUPABASE_API_KEY secret for that ONE step. lane_run is a PII-free ledger (counts and
-#     board-status only — the spine guard still fronts every write), lane_registry and its FK
-#     live in prod, and the YED-304 freshness healthcheck reads prod (a twin row would be
-#     invisible to it). This narrowly supersedes the earlier 'prod key forbidden in market-lane
-#     workflows' rule for this step: every OTHER write in the lane stays twin-only/dry-run (the
-#     optional prior-week READ uses the twin secrets below; live ensure-event still needs the
-#     guarded twin spine REF override — human review — so event writes stay offline validation).
+#   * PROD WRITES — events + lane_run, ONE step (lane_run: Alex's decision, post-merge review of
+#     #271; events: YED-327). SUPABASE_API_KEY is scoped to that one write step. Both rows are
+#     counts-only (the spine guard still fronts every write); the write prints counts only and
+#     swallows graph output (substrate errors and retry lines quote titles = company names). The
+#     optional prior-week READ still uses the twin secrets below.
 #   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
 #     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
 #     would compare against itself). ats_pulse refuses a same-week --prior regardless.
-#   * lane_run is REAL: the run ledger row is written through spine_client.write to PROD (see
-#     the prod exception above). items_written counts rows ACTUALLY written — 0 while event
-#     writes are dry-run; no caller override (MI_TWIN_URL) exists — spine_client's host is
-#     built from its hardcoded REF, full stop.
+#   * lane_run is REAL: items_written counts event rows ACTUALLY created this run (0 on a
+#     same-week re-run or with the kill switch off); a failed event write still ledgers the run
+#     ('partial'/'failed') and fails the job. No caller override (MI_TWIN_URL) exists —
+#     spine_client's host is built from its hardcoded REF, full stop.
+#   * delta_wow caveat: the prior-week baseline is still read from the TWIN, which does not
+#     receive these prod events — delta_wow stays null until that read moves to prod.
 #   * lane_registry activation is NOT a producer write (producers can't write the registry):
 #     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
 #     after a twin rehearsal.
@@ -155,28 +160,42 @@ jobs:
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
             --lane-run-out /tmp/pulse-out/lane_run.json
 
-      # The event manifests STAY a validate-only step (a live ensure-event needs the guarded twin
-      # REF override in spine_client — human review). The lane_run LEDGER, though, is now written
-      # for real: 0016's public.lane_run, through spine_client.write, to the TWIN only.
-      - name: Validate the manifests offline (event writes stay dry-run)
+      # Validate FIRST, fail closed: a bad manifest stops the job here, before the key is ever
+      # loaded (write_events re-validates every manifest before its first write, too).
+      - name: Validate the manifests offline (gates the live write)
         if: steps.hold.outputs.held != 'true'
         run: |
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
 
-      - name: Write the real lane_run ledger row to PROD (the one deliberate exception; skipped without the key)
+      - name: Write this week's hiring events + the lane_run ledger row to PROD (kill switch HIRING_PULSE_WRITE_ENABLED=false)
         if: steps.hold.outputs.held != 'true'
         env:
-          # the ONE prod exception (see the header): a PII-free ledger row through the spine
-          # guard; every other write in this lane stays twin-only/dry-run
           SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+          WRITE_ENABLED: ${{ vars.HIRING_PULSE_WRITE_ENABLED }}
+          RUN_START: ${{ steps.pull.outputs.run_start }}
         run: |
           if [ -z "$SUPABASE_API_KEY" ]; then
-            echo "::warning::SUPABASE_API_KEY not configured — the lane_run ledger row was not written (the lane ran; its local manifest is deleted by cleanup)"
+            echo "::warning::SUPABASE_API_KEY not configured — nothing written, no lane_run row (the local manifests are deleted by cleanup)"
             exit 0
           fi
+          EVENTS=""
+          if [ "$WRITE_ENABLED" = "false" ]; then
+            echo "::warning::HIRING_PULSE_WRITE_ENABLED is 'false' — event writes are OFF; the lane_run row still lands (items_written 0)"
+          else
+            EVENTS="--write-events /tmp/pulse-out/events --registry .claude/references/target-companies.md"
+          fi
+          set +e
+          # stdout = counts only; stderr goes to a file the cleanup deletes (never printed: a
+          # traceback or a retry line can quote an event title, i.e. a company name)
           python3 .claude/scripts/ats_pulse.py --write-lane-run /tmp/pulse-out/lane_run.json \
-            --started-at "${{ steps.pull.outputs.run_start }}"
+            --started-at "$RUN_START" $EVENTS 2>/tmp/pulse-out/write.err
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            echo "::error::ats_pulse write failed (exit $RC); detail stays in a file the cleanup deletes"
+            exit $RC
+          fi
 
       - name: Build the anonymous totals summary (the only uploadable output)
         if: steps.hold.outputs.held != 'true'
@@ -223,6 +242,6 @@ jobs:
           else
             gh issue create \
               --title "YED-304 hiring pulse FAILED (since $TODAY)" \
-              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, or manifest validation. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
+              --body "The weekly lane-1 hiring-pulse job failed — selftest, board pull, aggregation, manifest validation, or the prod event/lane_run write. The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed." \
               || echo "issue-create failed; check the Actions run directly"
           fi
