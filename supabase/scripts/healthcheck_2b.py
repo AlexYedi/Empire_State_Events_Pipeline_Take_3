@@ -76,7 +76,9 @@ LANE_RUN_COLUMNS = ("lane", "started_at", "items_seen", "items_written", "items_
 # its producer writes for real (the check WARNs once any recent row shows items_written > 0).
 # research_frontier: hf_frontier.py writes items_written=0 unless the EVENT_WRITES_LIVE repo variable is
 # "true"; it is unset (checked 2026-11-20, prod lane_run: written=[0,0], seen=[217,256]).
-DRY_RUN_LANES = frozenset({"hiring_pulse", "research_frontier"})
+# hiring_pulse left the set with YED-327 (ats-pulse.yml writes its weekly events to prod), so its
+# coverage is judged on items_written again.
+DRY_RUN_LANES = frozenset({"research_frontier"})
 FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "fixtures", "lane_run_freshness.json")
 
 # LIVE schema targets (post-swap)
@@ -617,19 +619,28 @@ def _selftest() -> int:
             g.update(saved)
 
     fresh = as_of - dt.timedelta(days=1)
-    f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [41, 40, 39])})
+    f, _ = run_lanes({"research_frontier": fresh}, {"research_frontier": ([0, 0, 0], [256, 217, 240])})
     ck("dry-run lane, 3 zero-write runs, items_seen > 0 -> coverage passes", f == [])
-    f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [0, 0, 0])})
+    f, _ = run_lanes({"research_frontier": fresh}, {"research_frontier": ([0, 0, 0], [0, 0, 0])})
     ck("dry-run lane that SAW nothing 3 runs -> still fails (on items_seen)",
-       f == ["lane hiring_pulse items_seen=0 for 3 consecutive runs"])
+       f == ["lane research_frontier items_seen=0 for 3 consecutive runs"])
     f, _ = run_lanes({"company_signals": fresh}, {"company_signals": ([0, 0, 0], [12, 9, 15])})
     ck("live lane, 3 zero-write runs -> still fails on items_written",
        f == ["lane company_signals items_written=0 for 3 consecutive runs"])
-    f, _ = run_lanes({"hiring_pulse": as_of - dt.timedelta(days=FAIL_DAYS + 6)},
-                     {"hiring_pulse": ([0, 0, 0], [41, 40, 39])})
+    # YED-327: hiring_pulse writes live now — its coverage is items_written, like any live lane
+    ck("hiring_pulse is no longer a DRY_RUN_LANES lane (YED-327 live event writes)",
+       "hiring_pulse" not in DRY_RUN_LANES and DRY_RUN_LANES == frozenset({"research_frontier"}))
+    f, _ = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([0, 0, 0], [4072, 4060, 4051])})
+    ck("hiring_pulse, 3 zero-write runs though it saw roles -> FAILS on items_written (no longer muted)",
+       f == ["lane hiring_pulse items_written=0 for 3 consecutive runs"])
+    f, out = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([30, 0, 30], [4072, 4060, 4051])})
+    ck("hiring_pulse writing weekly (one same-week re-run zero) -> passes, no dry-run WARN",
+       f == [] and "DRY_RUN_LANES" not in out)
+    f, _ = run_lanes({"research_frontier": as_of - dt.timedelta(days=FAIL_DAYS + 6)},
+                     {"research_frontier": ([0, 0, 0], [256, 217, 240])})
     ck("stale dry-run lane -> staleness still fails (DRY_RUN_LANES never mutes it)",
-       f == [f"lane hiring_pulse silent >={FAIL_DAYS}d"])
-    _, out = run_lanes({"hiring_pulse": fresh}, {"hiring_pulse": ([3, 0, 0], [41, 40, 39])})
+       f == [f"lane research_frontier silent >={FAIL_DAYS}d"])
+    _, out = run_lanes({"research_frontier": fresh}, {"research_frontier": ([3, 0, 0], [256, 217, 240])})
     ck("dry-run lane that starts writing -> WARN to remove it from DRY_RUN_LANES",
        "remove it so coverage judges items_written" in out)
     ck("lane_recent_runs aggregates newest-first (rn ascending; rn=1 is the newest row)",
