@@ -23,24 +23,22 @@
 #   * PROD WRITES — events + lane_run, ONE step (lane_run: Alex's decision, post-merge review of
 #     #271; events: YED-327). SUPABASE_API_KEY is scoped to that one write step. Both rows are
 #     counts-only (the spine guard still fronts every write); the write prints counts only and
-#     swallows graph output (substrate errors and retry lines quote titles = company names). The
-#     optional prior-week READ still uses the twin secrets below.
-#   * delta_wow: the prior week is read from the twin graph by ISO week − 1 — NOT from a cache
-#     (a cache held company names any fork-PR workflow could restore, and a same-week re-run
-#     would compare against itself). ats_pulse refuses a same-week --prior regardless.
+#     swallows graph output (substrate errors and retry lines quote titles = company names).
+#   * delta_wow (YED-484): the prior week (ISO week − 1) is read from PROD by a read-only GET
+#     inside that same write step — NOT from the twin (which never receives prod events, so the
+#     old baseline was always null) and NOT from a cache (a cache held company names any fork-PR
+#     workflow could restore). A same-week baseline is refused. No twin secret is used any more.
 #   * lane_run is REAL: items_written counts event rows ACTUALLY created this run (0 on a
 #     same-week re-run or with the kill switch off); a failed event write still ledgers the run
 #     ('partial'/'failed') and fails the job. No caller override (MI_TWIN_URL) exists —
 #     spine_client's host is built from its hardcoded REF, full stop.
-#   * delta_wow caveat: the prior-week baseline is still read from the TWIN, which does not
-#     receive these prod events — delta_wow stays null until that read moves to prod.
+#   * companies the lane creates carry source 'ats_pulse' (YED-484); matched ones keep theirs.
 #   * lane_registry activation is NOT a producer write (producers can't write the registry):
 #     migration 0018 flips lane_registry.active for hiring_pulse — Alex applies it to prod
 #     after a twin rehearsal.
 #   * HOLD: the lane skips itself (warning, no failure issue) until migration 0016 has landed and
 #     the twin has been rebuilt. 0016 merged on main (f9458b8 + dd88cca), so the guard no longer
 #     triggers — it un-holds itself by the presence of supabase/migrations/0016_*.sql, no flag.
-#     Secret names match #272: MI_TWIN_URL / MI_TWIN_SUPABASE_API_KEY — pending Alex's approval.
 # NOTE: scheduled workflows only fire from the DEFAULT branch — this activates once it's on main.
 
 name: YED-304 lane 1 hiring pulse (weekly)
@@ -86,12 +84,11 @@ jobs:
           python3 .claude/scripts/ats_pull.py --selftest
           python3 .claude/scripts/ats_pulse.py --selftest
 
-      - name: Name this week's bucket and last week's (the delta_wow baseline keys)
+      - name: Name this week's bucket (the summary artifact's name)
         id: week
         if: steps.hold.outputs.held != 'true'
         run: |
           echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
-          echo "prev_sunday=$(date -u -d 'last sunday' +%F)" >> "$GITHUB_OUTPUT"
 
       - name: Materialize the registry from the repo secret (never echoed or logged)
         if: steps.hold.outputs.held != 'true'
@@ -104,27 +101,6 @@ jobs:
           fi
           mkdir -p .claude/references
           printf '%s\n' "$TARGET_COMPANIES_REGISTRY" > .claude/references/target-companies.md
-
-      # Read-only, twin-only, optional: without the twin secrets the lane runs with delta_wow null
-      # (the null-baseline rule — never invent a baseline). Reads last Sunday's hiring_pulse events
-      # by title; counts land in /tmp/prior.json (names included → deleted by cleanup, never logged).
-      - name: Read last week's pulse from the twin graph (optional, read-only)
-        if: steps.hold.outputs.held != 'true'
-        env:
-          MI_TWIN_URL: ${{ secrets.MI_TWIN_URL }}
-          MI_TWIN_SUPABASE_API_KEY: ${{ secrets.MI_TWIN_SUPABASE_API_KEY }}
-          PREV_SUNDAY: ${{ steps.week.outputs.prev_sunday }}
-        run: |
-          # The read lives in ats_pulse.py (tested offline): the old inline heredoc joined both
-          # event_date filters into ONE param — urlencode encoded the inner '&', PostgREST saw
-          # a single filter it could not cast to timestamptz, and every read answered 400
-          # while the bare except swallowed it into a silent null baseline. ANY failure here
-          # — missing secrets, API error, contract change — prints ONE ::warning:: (status,
-          # type and week only; never a response body or row text: the target registry is
-          # private), writes no file, and exits 0 — the read is optional and the lane runs
-          # on delta_wow null. The aggregate step below guards on FILE REALITY.
-          python3 .claude/scripts/ats_pulse.py --fetch-prior-week /tmp/prior.json \
-            --prior-day "$PREV_SUNDAY"
 
       - name: Pull ATS boards to TSV + board stats (quiet; stderr to a deleted file)
         if: steps.hold.outputs.held != 'true'
@@ -148,15 +124,9 @@ jobs:
       - name: Aggregate to hiring_pulse counts + per-company ensure-event manifests + lane_run
         if: steps.hold.outputs.held != 'true'
         run: |
-          # The guard tests FILE REALITY, not the prior step's output string. The twin-read
-          # step can exit 0 without writing /tmp/prior.json (secrets absent, or the read
-          # failed — its warning path), and the old string-compare guard passed --prior
-          # anyway: run 41943575924 crashed here with exit 3 ("--prior/--pull-summary
-          # unreadable"). if-form (not `[ -s f ] && PRIOR=…`) so a missing file doesn't
-          # trip bash -e.
-          PRIOR=""
-          if [ -s /tmp/prior.json ]; then PRIOR="--prior /tmp/prior.json"; fi
-          python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv $PRIOR --pull-summary /tmp/board_stats.json \
+          # delta_wow is null here by design: the prior-week baseline is read from PROD by the
+          # write step below (the one step holding SUPABASE_API_KEY), not by this step (YED-484).
+          python3 .claude/scripts/ats_pulse.py /tmp/roles.tsv --pull-summary /tmp/board_stats.json \
             --out /tmp/pulse-out/pulse.json --emit-events /tmp/pulse-out/events \
             --lane-run-out /tmp/pulse-out/lane_run.json
 
@@ -168,6 +138,9 @@ jobs:
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/pulse.json
           python3 .claude/scripts/ats_pulse.py --validate /tmp/pulse-out/events
 
+      # Also the delta_wow read (YED-484): --write-events first GETs last week's hiring_pulse
+      # counts from PROD through spine_client (read-only, counts only; a failed read prints ONE
+      # ::warning:: and the events carry delta_wow null). With the kill switch off, nothing is read.
       - name: Write this week's hiring events + the lane_run ledger row to PROD (kill switch HIRING_PULSE_WRITE_ENABLED=false)
         if: steps.hold.outputs.held != 'true'
         env:
@@ -221,7 +194,7 @@ jobs:
         if: always()
         run: |
           rm -rf .claude/references/target-companies.md /tmp/roles.tsv /tmp/board_stats.json \
-                 /tmp/ats-pull.err /tmp/prior.json /tmp/pulse-out
+                 /tmp/ats-pull.err /tmp/pulse-out
           ls .claude/references/target-companies.md 2>/dev/null && exit 1 || echo "registry file removed"
 
       # One-open-issue alerting (same pattern as the S-01 nightly): a persistent failure comments on
