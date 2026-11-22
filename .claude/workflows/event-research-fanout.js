@@ -59,7 +59,7 @@ const SPECIALIST_SCHEMA = {
         type: 'object',
         properties: {
           entity: { type: 'string', description: 'Exact entity name as given in your entity list' },
-          claim: { type: 'string', description: 'The claim in 15 words or fewer' },
+          claim: { type: 'string', description: 'The claim in 15 words or fewer. For web-verified rows, write it FROM the quote: assert only what the quote says, one fact per row, no date (that goes in date). Every figure and name except the ledger entity must appear in the quote.' },
           tier: { type: 'string', enum: TIERS },
           source: { type: 'string', description: 'Site or source name' },
           url: { type: 'string', description: 'Full URL. Mandatory for web-verified; empty string only for email-signal without a public URL, notion-prior or inference.' },
@@ -101,7 +101,7 @@ function specialistPrompt(s, slice, deeper) {
     block('(6) Your slice of the Prior-Context Pack', slice.prior
       ? `${slice.prior}\n\nTreat KNOWN as starting context and STALE / UNVERIFIED as leads to refresh or verify with web search. Never restate UNVERIFIED as fact.`
       : ''),
-    'Return per your agent contract, through the StructuredOutput tool: the prose return in `report`, and the Evidence Ledger as structured rows in `ledger` (the parent renders them; do not also write a ledger table or bullets in `report`). Every web-verified row carries its full URL, plus `quote`: a verbatim span (at most 25 words) copied from that page as you fetched it, with `fetched` set to the fetch time in ISO-8601 UTC. If no span on the page supports the claim, it is not web-verified.',
+    'Return per your agent contract, through the StructuredOutput tool: the prose return in `report`, and the Evidence Ledger as structured rows in `ledger` (the parent renders them; do not also write a ledger table or bullets in `report`). Every web-verified row carries its full URL, plus `quote`: a verbatim span (at most 25 words) copied from that page as you fetched it, with `fetched` set to the fetch time in ISO-8601 UTC. Write each web-verified claim FROM its quote (YED-475): assert only what the quote says, one fact per row (split two facts from two sentences into two rows, each with its own quote), and keep dates and publisher names out of the claim text (they go in `date` and `source`). If no span on the page supports the claim, it is not web-verified.',
     deeper ? `\nThis is a DEEPER second pass: your first return was thin (${deeper}). Go broader on sources (company blog, filings, press, podcasts, GitHub, conference talks) and cover every entity in your list.` : '',
   ].filter(Boolean).join('\n')
 }
@@ -203,6 +203,15 @@ if (!synth) throw new Error('event-research-fanout: the synthesizer returned not
 
 const dropped = done.flatMap(x => x.dropped.map(d => `${x.s.label} · ${d.row.entity} · ${d.why}: ${d.row.claim}`))
 
+// YED-475: predicted quote-match holds. A web-verified row whose claim carries a figure (digit run) the quote lacks
+// will be held at staging; counting them here shows the claim-from-quote contract's health on every run.
+const figs = t => new Set((String(t || '').match(/\d+(?:[.,]\d+)*/g) || []).map(x => x.replace(/,/g, '')))
+const exceeds = done.map(x => {
+  const web = x.admissible.filter(r => r.tier === 'web-verified' && String(r.quote || '').trim())
+  const bad = web.filter(r => { const q = figs(r.quote); return [...figs(r.claim)].some(f => !q.has(f)) })
+  return [x.s.label, `${bad.length}/${web.length}`]
+})
+
 // YED-480: a deterministic net under the pronoun rule. Lists every gendered pronoun in the Scan head and specialist
 // prose with context, so the parent checks each against a pronoun ledger row instead of finding them at review time.
 // It flags, it does not rewrite (a quote or a reference to Alex is legitimate).
@@ -232,5 +241,6 @@ return {
     quote_dropped: done.flatMap(x => (x.quoteDropped || []).map(d => `${x.s.label} · ${d.row.entity} · ${d.why}: ${d.row.claim}`)),
     dropped,
     pronoun_flags: pronounFlags,
+    claim_figure_not_in_quote: Object.fromEntries(exceeds),
   },
 }
