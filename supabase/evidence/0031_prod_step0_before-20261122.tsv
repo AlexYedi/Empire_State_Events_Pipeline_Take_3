@@ -1,0 +1,19 @@
+# staging/0031_verify.sql step 0 on PROD (oicikjyzmxqfomrrqkvf), read-only via the Supabase MCP (supabase_read_only_user), 2026-11-22, BEFORE 0031 (0030 already applied).
+# section	object	privileges. ACLs and catalog state only, no row data. rehearse_0031.py gate P requires the twin, after 0028/0029/parity/0030, to return exactly these rows.
+exposure	signal_read.v_topic_intersections	anon:SELECT,authenticated:SELECT
+exposure	signal_read.v_topic_movement	anon:SELECT,authenticated:SELECT
+owner	postgres	bypassrls=true super=false
+rls	public.claim	owner=postgres rls=true force=false
+rls	public.company	owner=postgres rls=true force=false
+rls	public.event	owner=postgres rls=true force=false
+rls	public.person	owner=postgres rls=true force=false
+schema	anon@public	usage=true create=false
+schema	authenticated@public	usage=true create=false
+table	public.claim	postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:MAINTAIN,service_role:REFERENCES,service_role:SELECT,service_role:TRIGGER,service_role:TRUNCATE,service_role:UPDATE
+table	public.company	postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.event	postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+table	public.person	postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELECT,postgres:TRIGGER,postgres:TRUNCATE,postgres:UPDATE,service_role:DELETE,service_role:INSERT,service_role:SELECT,service_role:UPDATE
+view	public.v_public_spine_stats	<absent>
+view_acl	public.v_public_spine_stats	<absent>
+view_cols	public.v_public_spine_stats	<absent>
+view_deps	public.v_public_spine_stats	<absent>
