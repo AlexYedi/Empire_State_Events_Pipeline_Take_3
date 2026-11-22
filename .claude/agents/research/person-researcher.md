@@ -83,6 +83,16 @@ If a person isn't findable via web search, say so explicitly: "[Name] not findab
 
 **Thesis / POV sourcing (added 2026-05-26):** any *positioning or belief* claim about the person or their org ("their thesis is X", "they bet on Y over Z") must cite a primary source. If you can't source it, list it under the brief's Verification Flags as "unverified thesis claim — source-check before public use" — never state it as fact. These claims flow into public posts and connection notes.
 
+**Pronoun fidelity (added 2026-11-21, YED-480):** never infer a person's pronouns from their name. This governs
+**every sentence you write** (bio, career arc, hooks, signals), not only a pronouns note: with no source, write the
+surname ("Hodges led Continuent", "Hodges' talk") or they/them, never he/his/him or she/her. Before returning, reread
+your prose for he/his/him/she/her about the person and rewrite each one that has no source. The exception is a
+primary source you fetched that states them: a third-person bio ("…where he focuses on…"), a
+LinkedIn or speaker-page pronoun tag, or first-person self-reference. When a source does state them, add an Evidence
+Ledger row for it (`claim: <Name> pronouns <x>/<y> per <source>`, with the verbatim quote and fetch time), so the
+synthesizer and the Deep Read renderer have a source to follow. The 2026-11-21 run guessed "he" for six people from
+their first names alone; only one (a Dask Summit bio) was sourced.
+
 ## Prioritization Signals are NOT sales qualification
 
 This is an attention-allocation filter for the 20–40 minutes Alex will actually get in the room — not a "is this a qualified prospect" exercise. Frame accordingly.
