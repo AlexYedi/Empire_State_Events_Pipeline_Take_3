@@ -797,6 +797,16 @@ def parse_brief(md: str) -> list[dict]:
 # ---------------------------------------------------------------------------------------------
 # graph access (all writes via spine_client.req, which guards every body)
 # ---------------------------------------------------------------------------------------------
+def uniform_batches(rows: list[dict]) -> list[list[dict]]:
+    """Split a bulk insert into runs whose rows share one key set, keeping first-seen order. PostgREST needs every row
+    in one POST to have the same keys (PGRST102). Callers drop None values per row, so a batch can mix key sets; we
+    split rather than pad with explicit NULLs, because an explicit NULL overrides a column DEFAULT (status, tier, ...)."""
+    groups: dict[tuple, list[dict]] = {}
+    for r in rows:
+        groups.setdefault(tuple(sorted(r)), []).append(r)
+    return list(groups.values())
+
+
 class Graph:
     def __init__(self, dry_run: bool, stats: Stats):
         self.dry, self.stats, self._n = dry_run, stats, 0
@@ -856,6 +866,12 @@ class Graph:
             self._n += 1
             return [{**r, "id": r.get("id") or f"dry:{table}:{self._n}:{i}"} for i, r in enumerate(rows)]
         self._invalidate(table)                   # after the dry return: a dry write changes nothing server-side
+        out = []
+        for batch in uniform_batches(rows):       # PostgREST rejects a bulk POST whose rows differ in keys (PGRST102)
+            out += self._send(table, batch, prefer, on_conflict)
+        return out
+
+    def _send(self, table: str, rows: list[dict], prefer: str, on_conflict: str | None) -> list:
         path = f"/{table}" + (f"?on_conflict={on_conflict}" if on_conflict else "")
         st, body = req("POST", path, rows, prefer=prefer)
         if st not in (200, 201):
@@ -2987,13 +3003,13 @@ class _FakeGraph(Graph):
 
     DEFAULTS = {"documents": {"is_current": True, "version": 1}}   # column defaults the real schema applies
 
-    def post(self, table, row, prefer="return=representation", on_conflict=None):
-        if self.dry:                                  # the real Graph's dry branch: guard, fake ids, nothing stored
-            return Graph.post(self, table, row, prefer, on_conflict)
+    def _send(self, table, rows, prefer, on_conflict):
+        """The fake server. Graph.post (guard, dry branch, uniform_batches) runs for real above it."""
+        if len({tuple(sorted(r)) for r in rows}) > 1:   # what PostgREST does with a mixed-key bulk POST
+            raise SystemExit(f'POST /{table} -> 400: {{"code":"PGRST102","message":"All object keys must match"}}')
         out = []
         cols = on_conflict.split(",") if on_conflict else []
-        for r in (row if isinstance(row, list) else [row]):
-            guard(table, r)
+        for r in rows:
             if cols and any(all(o.get(c) == r.get(c) for c in cols) for o in self.t[table]):
                 continue                              # resolution=ignore-duplicates, as PostgREST does on the unique key
             r = {**self.DEFAULTS.get(table, {}), **r, "id": r.get("id") or self.uuid()}
@@ -3201,6 +3217,19 @@ def _review_verbs_selftest(ok) -> None:
        quote_check(ctext, "", "x")[1] == "no_quote" and quote_check(ctext, "w " * 26, "x")[1] == "quote_too_long"
        and quote_check(ctext, qt, None)[1] == "fetch_failed")
     hostile = "Acme Corp announced new office plans today. Acme did not raise funding this year. the end."
+    mixed = [{"k": 1, "q": "x"}, {"k": 2}, {"k": 3, "q": "y"}, {"k": 4}]
+    ok("uniform_batches: a mixed-key bulk insert splits by key set, first-seen order, no row lost or padded (PGRST102)",
+       uniform_batches(mixed) == [[mixed[0], mixed[2]], [mixed[1], mixed[3]]] and uniform_batches([]) == []
+       and all("q" not in r for r in uniform_batches(mixed)[1]))
+    try:
+        _FakeGraph()._send("claim", [{"a": 1}, {"b": 2}], "return=minimal", None)
+        rejects = False
+    except SystemExit as e:
+        rejects = "PGRST102" in str(e)
+    ug = _FakeGraph()
+    ug.post("topic", [{"name": "T1", "description": "d"}, {"name": "T2"}], prefer="return=minimal")
+    ok("fake server rejects a mixed-key batch as PostgREST does; Graph.post still writes every row of one",
+       rejects and sorted(r["name"] for r in ug.t["topic"]) == ["T1", "T2"])
     ok("quote_check (review D2): an unrelated quote, a 1-word quote and a negation flip are all held",
        quote_check("Acme: Did not raise funding", "Acme Corp announced new office plans today", hostile)[1]
        == "low_overlap"
