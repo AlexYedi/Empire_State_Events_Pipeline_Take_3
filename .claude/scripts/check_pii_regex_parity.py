@@ -23,6 +23,7 @@ embedded fixtures.
 
 from __future__ import annotations
 
+import ast
 import os
 import re
 import sys
@@ -37,16 +38,53 @@ SQL = os.path.join(REPO, "docs", "adr", "proposals", "pii-db-check.sql")
 SQL_SITES = [SQL, os.path.join(REPO, "supabase", "migrations", "0025_pii_backstop_normalized.sql")]
 
 
+def _flags(node: ast.expr | None, name: str) -> int:
+    """re.compile flags written as re.X names joined by |, as an int (0 when absent)."""
+    if node is None:
+        return 0
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        return _flags(node.left, name) | _flags(node.right, name)
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "re" \
+            and isinstance(getattr(re, node.attr, None), re.RegexFlag):
+        return int(getattr(re, node.attr))
+    raise SystemExit(f"check_pii_regex_parity: {name} flags are not plain re.X names")
+
+
+def compiled_literal(src: str, name: str, flags: int = 0) -> str:
+    """The pattern string of the module-level `NAME = re.compile(<str constant>[, flags])`, parsed with ast.
+
+    YED-316: the old line scan stopped at the first line ending in ')', so a comment like '(E.164 compact)'
+    truncated PHONE_RE and parity could pass against a truncated pattern. The parser folds implicit and
+    parenthesized multi-line concatenation into one constant; anything not resolvable to a constant, a
+    second assignment, or flags other than `flags` fails loud."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError as e:
+        raise SystemExit(f"check_pii_regex_parity: cannot parse source for {name}: {e}")
+    calls = [s.value for s in tree.body if isinstance(s, ast.Assign)
+             and [t.id for t in s.targets if isinstance(t, ast.Name)] == [name] and len(s.targets) == 1]
+    if len(calls) != 1:
+        raise SystemExit(f"check_pii_regex_parity: expected one module-level {name} assignment, found {len(calls)}")
+    call = calls[0]
+    if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "compile"
+            and isinstance(call.func.value, ast.Name) and call.func.value.id == "re"):
+        raise SystemExit(f"check_pii_regex_parity: {name} is not assigned a re.compile(...) call")
+    kw = {k.arg: k.value for k in call.keywords}
+    if not call.args or len(call.args) > 2 or set(kw) - {"flags"} or (len(call.args) == 2 and kw):
+        raise SystemExit(f"check_pii_regex_parity: {name} re.compile(...) arguments are not (pattern[, flags])")
+    pat = call.args[0]
+    if not (isinstance(pat, ast.Constant) and isinstance(pat.value, str)):
+        raise SystemExit(f"check_pii_regex_parity: {name} pattern does not resolve to a string constant "
+                         f"(got {type(pat).__name__}); parity cannot be checked")
+    got = _flags(call.args[1] if len(call.args) == 2 else kw.get("flags"), name)
+    if got != flags:
+        raise SystemExit(f"check_pii_regex_parity: {name} flags are {re.RegexFlag(got)!r}, expected {re.RegexFlag(flags)!r}")
+    return pat.value
+
+
 def extract_spine(src: str) -> tuple[str, str]:
-    """(EMAIL_RE, PHONE_RE) as concatenated from the re.compile literals."""
-    email = re.search(r'EMAIL_RE = re\.compile\(r"([^"]+)"\)', src)
-    phone_block = re.search(r"PHONE_RE = re\.compile\((.*?)\)\n", src, re.S)
-    if not email or not phone_block:
-        raise SystemExit("check_pii_regex_parity: could not find EMAIL_RE/PHONE_RE in spine_client.py — has the definition changed shape?")
-    phone = "".join(re.findall(r'r"([^"]+)"', phone_block.group(1)))
-    if not phone:
-        raise SystemExit("check_pii_regex_parity: PHONE_RE compile block contains no raw-string literals")
-    return email.group(1), phone
+    """(EMAIL_RE, PHONE_RE) pattern strings from spine_client.py."""
+    return compiled_literal(src, "EMAIL_RE"), compiled_literal(src, "PHONE_RE")
 
 
 def extract_sql(src: str) -> tuple[str, str]:
@@ -60,12 +98,8 @@ def extract_sql(src: str) -> tuple[str, str]:
 
 def extract_extra(spine_src: str, norm_src: str) -> tuple[str, str, str]:
     """(EMAIL_ALLOWLIST_RE, AT_SPELLING_RE, JSON_WS_RE) literals from spine_client.py / pii_normalize.py."""
-    allow = re.search(r'EMAIL_ALLOWLIST_RE = re\.compile\(r"([^"]+)", re\.I\)', spine_src)
-    at = re.search(r'AT_SPELLING_RE = re\.compile\(r"([^"]+)", re\.I\)', norm_src)
-    esc = re.search(r'JSON_WS_RE = re\.compile\(r"([^"]+)"\)', norm_src)
-    if not allow or not at or not esc:
-        raise SystemExit("check_pii_regex_parity: could not find EMAIL_ALLOWLIST_RE / AT_SPELLING_RE — has the definition changed shape?")
-    return allow.group(1), at.group(1), esc.group(1)
+    return (compiled_literal(spine_src, "EMAIL_ALLOWLIST_RE", re.I), compiled_literal(norm_src, "AT_SPELLING_RE", re.I),
+            compiled_literal(norm_src, "JSON_WS_RE"))
 
 
 def class_codepoints(cls: str) -> set[int]:
@@ -170,6 +204,22 @@ def selftest() -> int:
     ck("drift in a second email_re literal is detected", len(drifts) == 1 and drifts[0].startswith("EMAIL"))
     drifts = run(spine_src, sql_src + sql_src)
     ck("two matching literal pairs: parity", drifts == [])
+
+    # YED-316: the extractor parses the pattern with ast, not "up to the first line ending in ')'".
+    parened = spine_src.replace("# c1", "# 555-123-4567 (US)").replace("# c2", "# +15551234567 (E.164 compact)")
+    ck("(a) comment ending in ')' on a middle line -> full pattern extracted", extract_spine(parened)[1] == phone_py)
+    swapped = sql_src.replace(phone_py, phone_py.rsplit("|", 1)[1] + "|" + phone_py.rsplit("|", 1)[0])
+    d = run(parened, swapped)
+    ck("(b) reordered alternatives vs the backstop -> drift", len(d) == 1 and d[0].startswith("PHONE"))
+    truncated = sql_src.replace(phone_py, phone_py.rsplit("|", 1)[0])   # what the old line scan read from `parened`
+    d = run(parened, truncated)
+    ck("(c) backstop holds only the truncated client pattern -> drift", len(d) == 1 and d[0].startswith("PHONE"))
+    ck("(d) non-constant pattern (name + concatenation) -> fails loud",
+       _raises(lambda: extract_spine(spine_src.replace('PHONE_RE = re.compile(\n', 'PHONE_RE = re.compile(SUFFIX +\n'))))
+    ck("(d) pattern from a variable -> fails loud", _raises(lambda: extract_spine('EMAIL_RE = re.compile(r"x")\nPHONE_RE = re.compile(P)\n')))
+    ck("allowlist without its re.I flag -> fails loud",
+       _raises(lambda: extract_extra('EMAIL_ALLOWLIST_RE = re.compile(r"^x@")\n',
+                                     'AT_SPELLING_RE = re.compile(r"%40", re.I)\nJSON_WS_RE = re.compile(r"y")\n')))
 
     # YED-392 rework: allow_re / at_re byte parity, ign_re coverage.
     extra = ("^(?:noreply)@", r"%40", r"\\[ntr]")
