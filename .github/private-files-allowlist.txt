@@ -1,0 +1,4 @@
+# Tracked files that a .gitignore rule matches but are meant to be public (YED-363).
+# secret-scan.yml's "Private files never tracked" step skips exactly these paths.
+# One repo-relative path per line, exact match (no globs). Lines starting with # are comments.
+# Adding a line here publishes the file: it needs a reason in the PR and Alex's review.

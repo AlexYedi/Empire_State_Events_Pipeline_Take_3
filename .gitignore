@@ -196,3 +196,14 @@ docs/bakeoff/**/batch_*.txt
 docs/bakeoff/**/result.json
 docs/bakeoff/**/clay_anchor_keys.json
 docs/bakeoff/akta/
+
+# 2026-11-24 (YED-363): the edge cases the 11/8 review flagged, plus the outreach guide untracked today.
+# These rules are ENFORCED: secret-scan.yml fails CI on any tracked file the ignore rules match
+# (case-insensitive). A file meant to be public that a rule matches goes in .github/private-files-allowlist.txt.
+Event Content/**/*debrief*
+Event Content/**/build-plan*
+Event Content/**/post-variant-*
+Event Content/**/*post-event-inputs*
+Event Content/**/*outreach*
+# GKY (employer) work product anywhere, not only inside a gky-outputs/ folder
+*gky*
