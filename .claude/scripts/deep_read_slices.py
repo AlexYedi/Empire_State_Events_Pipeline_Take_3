@@ -23,6 +23,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import public_tiers  # noqa: E402  (ADR-16 private tag; pure, no network)
+
 SECTIONS = ["The Frame", "Primer / Landscape", "Companies", "People", "Cross-Event Threads"]
 # YED-498: the event-research-fanout workflow writes these five headings in code, from five required synthesizer fields,
 # so the split is exact. A missing heading means the Evidence Set did not come from the workflow (or was hand-edited):
@@ -56,7 +59,9 @@ def source_index(evidence: str) -> list[str]:
         if key in seen:
             continue
         seen.add(key)
-        out.append(f"- [{entity}] {f.get('claim')} — {f.get('source')} · {f.get('date')} · {url}")
+        # ADR-16 (YED-459): an email-signal row with a public URL is still private evidence; the tag rides with it
+        out.append(f"- [{entity}] {f.get('claim')} — {f.get('source')} · {f.get('date')} · {url}"
+                   f"{public_tiers.private_tag(f.get('tier'))}")
     return out
 
 

@@ -27,6 +27,9 @@ Rules this file keeps:
     company / kind / date / host only (headline, why, quote and people are page-derived and never echoed).
   * `*.PRIVATE*` folders and manifests are skipped by name and never opened.
   * The finished markdown passes spine_client's EMAIL_RE / PHONE_RE or nothing is written (exit 2).
+  * ADR-16 (YED-459): every `claim` GET carries public_tiers.PUBLIC_TIER_FILTER and its rows pass
+    public_tiers.assert_public, so an email_signal claim adds to no count here. A row that slips past the server
+    filter fails its section closed ("No data yet"), it is never counted.
 
 Usage:
   python3 .claude/scripts/market_brief.py [--week 2026-W47] [--today YYYY-MM-DD] [--root DIR]
@@ -55,6 +58,7 @@ from spine_client import EMAIL_RE, EMAIL_ALLOWLIST_RE, PHONE_RE  # noqa: E402  (
 import reconcile  # noqa: E402
 import sweep_seed  # noqa: E402
 import sweep_manifest  # noqa: E402
+import public_tiers  # noqa: E402  (ADR-16: email_signal never public; module import so tests can mutate it)
 
 FIXTURES = os.path.join(HERE, "fixtures", "market_brief")
 OUT_DIR = os.path.join(ROOT, ".claude", ".state", "market-briefs")
@@ -208,14 +212,21 @@ def local_rooms(root: str, mon: date, sun: date) -> list[dict]:
 
 
 def fetch_room_graph(rooms: list[dict], companies: list[dict]) -> dict:
-    """topic name -> theme_id, and company name -> (company_id, claims about it). GET only."""
+    """topic name -> theme_id, and company name -> (company_id, claims about it). GET only. A claim counts only if
+    it comes back through the ADR-16 tier filter (a link to a missing or private claim adds nothing)."""
     topic_theme = sweep_seed.fetch_topic_themes(spine_client, [t for r in rooms for t in r["topics"]])
     by_name = {c["name"].strip().lower(): c["id"] for c in companies if c.get("name")}
     wanted = {by_name[n.strip().lower()] for r in rooms for n in r["companies"] if n.strip().lower() in by_name}
     claims: dict[str, int] = {}
     for chunk in _chunks(sorted(wanted)):
-        for row in _get_all(f"/claim_entity?select=entity_id&entity_type=eq.company&entity_id={_in(chunk)}"):
-            claims[row["entity_id"]] = claims.get(row["entity_id"], 0) + 1
+        links = _get_all(f"/claim_entity?select=claim_id,entity_id&entity_type=eq.company&entity_id={_in(chunk)}")
+        public: set[str] = set()
+        for ids in _chunks(sorted({r["claim_id"] for r in links})):
+            rows = _get(f"/claim?select=id,provenance_tier&{public_tiers.PUBLIC_TIER_FILTER}&id={_in(ids)}") or []
+            public |= {c["id"] for c in public_tiers.assert_public(rows, "market_brief rooms")}
+        for row in links:
+            if row["claim_id"] in public:
+                claims[row["entity_id"]] = claims.get(row["entity_id"], 0) + 1
     return {"topic_theme": topic_theme, "company_ids": by_name, "claims": claims}
 
 
@@ -224,10 +235,14 @@ def fetch_relations() -> dict:
     ids = {r["from_claim_id"] for r in rels} | {r["to_claim_id"] for r in rels}
     claims, about = {}, {}
     for chunk in _chunks(sorted(ids)):
-        for c in _get(f"/claim?select=id,provenance_tier,event_id&id={_in(chunk)}") or []:
+        rows = _get(f"/claim?select=id,provenance_tier,event_id&{public_tiers.PUBLIC_TIER_FILTER}&id={_in(chunk)}") or []
+        for c in public_tiers.assert_public(rows, "market_brief relations"):
             claims[c["id"]] = c                                   # never claim_text / quote
         for ce in _get(f"/claim_entity?select=claim_id,entity_id&entity_type=eq.company&claim_id={_in(chunk)}") or []:
             about.setdefault(ce["claim_id"], set()).add(ce["entity_id"])
+    # ADR-16: a relation counts only when both of its claims came back through the tier filter. A side that did not
+    # (private, or missing) would otherwise read as tier None and count as a room-vs-market link.
+    rels = [r for r in rels if r["from_claim_id"] in claims and r["to_claim_id"] in claims]
     return {"rows": rels, "claims": claims, "about": about}
 
 

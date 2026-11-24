@@ -33,10 +33,11 @@ Also check, once per draft: does any quote come from an input the parent flagged
 
 ### Mode `source`
 
-Start from the `claims` list in `output_checks.py` output (sentences with figures or money verbs), then read the whole draft for firm- or person-level thesis claims the script can't see ("X is splitting memory into two products", "Y raised a Series A"). For each claim assign one code:
+Start from the `claims` list in `output_checks.py` output (sentences with figures or money verbs), then read the whole draft for firm- or person-level thesis claims the script can't see ("X is splitting memory into two products", "Y raised a Series A"). For each claim, check `EMAIL-SIGNAL` first, then assign one code:
 
 | Code | Pass/fail | When |
 |---|---|---|
+| `EMAIL-SIGNAL` | fail | The claim or figure traces to an `email_signal` claim: a brief, Evidence Set or Context Pack line tagged `[private: email_signal]`, a ledger row with `tier: email-signal`, or a pack line whose tier reads `email_signal`. Reason, verbatim: "ADR-16: email_signal never public". A URL on that row does not make it `CITED`. If a different, public source in the inputs supports the same fact, name it in the direction so Alex can re-cite from it; the item still fails. |
 | `CITED` | pass | A URL in the draft, its first comment, or the brief's evidence set supports it. Name the source. |
 | `FROM-ROOM` | pass | Attributed to a speaker and present in the transcript or slides. Name where. |
 | `ALEX-VIEW` | pass | Clearly framed as Alex's own read or opinion ("my read", "my call"), not stated as fact. |
