@@ -21,19 +21,22 @@ Gates (all must pass, in order):
   P  parity        0024 verbatim except the one claim_current substitution; mi.fact now reads claim_current
   1  snapshot A    catalog fingerprint + data (count + md5 of mi.fact, fact_topic, fact_company, theme_week,
                    theme_lead_lag, company_timeline, company_cohort, and mi_slice('mi.theme_week', 104 weeks));
-                   NEGATIVE CONTROL: the twin holds >= 1 email_signal claim in mi.fact (natural, not seeded); step 1's
-                   gated rows read false and its keep_ rows true; anon / authenticated denied on mi.fact and mi_slice
-  1b guard probes  (rolled back) PART 1 passes clean; refuses a nullable provenance_tier, the 0016 mi.fact shape and a
-                   dropped security_invoker; PART 1 + PART 3 without PART 2 makes the postflight raise
+                   NEGATIVE CONTROL: the twin holds >= 1 email_signal claim AND >= 1 inbox_miner event in mi.fact
+                   (natural, not seeded); step 1's 6 gated rows read false and its keep_ rows true; anon /
+                   authenticated denied on mi.fact and mi_slice
+  1b guard probes  (rolled back) PART 1 passes clean; refuses a nullable provenance_tier, the 0016 mi.fact shape, a
+                   half-applied shape (claim filter only) and a dropped security_invoker; PART 1 + PART 3 without
+                   PART 2 makes the postflight raise
   2  apply 0032    the migration file verbatim
   3  re-apply      second paste is a NOTICE no-op (catalog + data unchanged, mi.fact OID unchanged)
-  4  verify        step 1 every row ok = t; step 0 differs from A by exactly the two intended rows; the catalog
+  4  verify        step 1 every row ok = t; step 0 differs from A by exactly the four intended rows; the catalog
                    fingerprint differs only in the view-definition hash (owner, ACL, options identical)
-  4b deltas        mi.fact claim rows drop by exactly the email_signal claim count; mi.fact / fact_topic / fact_company
-                   EQUAL snapshot A minus the email_signal claim rows (count + md5); event rows unchanged; theme_week
-                   facts drop by exactly the email_signal claims per theme x lens x week (untouched cells identical
+  4b deltas        mi.fact claim rows drop by exactly the email_signal claim count and event rows by exactly the
+                   inbox_miner event count; mi.fact / fact_topic / fact_company EQUAL snapshot A minus every
+                   email_signal row (count + md5); theme_week facts drop by exactly the email_signal facts per
+                   theme x lens x week (untouched cells identical
                    apart from floor_flag); theme_lead_lag / company_timeline / company_cohort change only on
-                   themes / companies that had email_signal claims; anon / authenticated still denied
+                   themes / companies that had email_signal facts; anon / authenticated still denied
   5  rollback      the ROLLBACK-BEGIN..ROLLBACK-END block from the migration header, verbatim
   6  snapshot C    catalog + data identical to snapshot A; step 0 equals A; PART 1 sees PRE
   7  teardown      0024's ROLLBACK block (same one substitution): the twin equals snapshot Z (as found)
@@ -64,7 +67,7 @@ VERIFY = os.path.join(SUPA, "staging", "0032_verify.sql")
 
 CC_STAR = "select c.*,\n       v.outcome"           # the one claim_current line that expands claim's columns
 CC_TAIL_0023 = ["last_check_outcome", "last_checked_at", "is_current", "is_overdue"]
-ES = "fact_type = 'claim' and provenance_tier = 'email_signal'"
+ES = "provenance_tier = 'email_signal'"  # either fact_type: email_signal claims and inbox_miner events
 RELS = ["mi.fact", "mi.fact_topic", "mi.fact_company", "mi.theme_week", "mi.theme_lead_lag", "mi.company_timeline",
         "mi.company_cohort"]
 SLICE = "public.mi_slice('mi.theme_week', '{\"weeks\": 104, \"limit\": 5000}'::jsonb)"
@@ -81,17 +84,19 @@ select 'data.mi_slice.denominators', (s->'denominators')::text from {SLICE} s;
 select 'data.mi_fact.claim_rows', count(*)::text from mi.fact where fact_type = 'claim';
 select 'data.mi_fact.event_rows', count(*)::text from mi.fact where fact_type = 'event';
 select 'data.mi_fact.event_email_signal', count(*)::text from mi.fact where fact_type = 'event' and provenance_tier = 'email_signal';
+select 'data.mi_fact.claim_email_signal', count(*)::text from mi.fact where fact_type = 'claim' and provenance_tier = 'email_signal';
 """
-# snapshot A minus the email_signal claim rows: what B must equal exactly
+# snapshot A minus every email_signal row (claims and inbox_miner events): what B must equal exactly
 WANT_SQL = "\n".join(f"select 'want.{v}', ({md5_of(v, 'not (' + ES + ')')});"
                      for v in ("mi.fact", "mi.fact_topic", "mi.fact_company"))
 ES_CLAIMS_SQL = ("select count(*) from public.claim_current c where c.status <> 'rejected' and not c.is_retired "
                  "and c.provenance_tier = 'email_signal'")
+INBOX_SQL = "select count(*) from public.event where source like 'inbox_miner%'"
 TAGGED = ("from mi.fact_topic ft join public.topic t on t.id = ft.topic_id "
           "join topic_intelligence.topic_cluster tc on tc.cluster_id = ft.theme_id "
           "where ft.theme_id is not null and ft.asserted_week is not null and ft.lens in ('attended', 'research', 'market')")
-DROP_SQL = (f"select ft.theme_id||'|'||ft.lens||'|'||to_char(ft.asserted_week, 'IYYY-\"W\"IW'), count(distinct ft.fact_id) "
-            f"{TAGGED} and ft.fact_type = 'claim' and ft.provenance_tier = 'email_signal' group by 1 order by 1")
+DROP_SQL = (f"select ft.theme_id||'|'||ft.lens||'|'||to_char(ft.asserted_week, 'IYYY-\"W\"IW'), count(distinct (ft.fact_type, ft.fact_id)) "
+            f"{TAGGED} and ft.provenance_tier = 'email_signal' group by 1 order by 1")
 TW_SQL = ("select theme_id||'|'||lens||'|'||iso_week, facts::text, concat_ws('|', theme, distinct_companies, distinct_sources, "
           "general_facts, theme_resolved), floor_flag from mi.theme_week order by 1")
 KEYED = {
@@ -157,6 +162,20 @@ def twin_0024(sql: str, cols: list[str], label: str) -> str:
     if sql.count(CC_STAR) != 1:
         sys.exit(f"REFUSED: expected exactly one `select c.*,` claim_current line in {label}, found {sql.count(CC_STAR)}")
     return sql.replace(CC_STAR, "select " + ", ".join(f"c.{c}" for c in cols) + ",\n       v.outcome")
+
+
+EV_WHERE = "    WHERE e.source IS NULL OR e.source NOT LIKE 'inbox_miner%'"
+
+
+def half_applied() -> str:
+    """PART 2's own view statement with the event-branch WHERE removed: the claim-only shape PART 1 must refuse."""
+    src = open(MIGRATION, encoding="utf-8").read()
+    p2 = src.index("-- PART 2")
+    stmt = r24.stmt_between(src[p2:], "create or replace view mi.fact", "'email_signal'::text;", "0032 PART 2 view")
+    lines = [l for l in stmt.splitlines() if not l.startswith(EV_WHERE)]
+    if len(lines) != len(stmt.splitlines()) - 1:
+        sys.exit("could not find exactly one event-branch WHERE line in PART 2")
+    return "\n".join(lines)
 
 
 def claim_current_cols() -> list[str]:
@@ -233,6 +252,7 @@ def main() -> int:
     A, DA, S0A = catalog(), data(), step0()
     WA = r30.kv(WANT_SQL)
     n_es = int(r30.rows(ES_CLAIMS_SQL)[0][0])
+    n_inbox = int(r30.rows(INBOX_SQL)[0][0])
     drop = {r[0]: int(r[1]) for r in r30.rows(DROP_SQL)}
     TWA = {r[0]: r[1:] for r in r30.rows(TW_SQL)}
     KA = {v: keyed(q) for v, q in KEYED.items()}
@@ -241,18 +261,22 @@ def main() -> int:
     print(f"    catalog keys: {len(A)}; md5 {fp(A)}")
     for k, v in DA.items():
         print(f"    {k:<34} {v[:150]}")
-    print(f"    email_signal claims in claim_current (non-rejected, non-retired): {n_es}; theme_week cells touched: "
-          f"{len(drop)} ({sum(drop.values())} fact-cell drops); touched: "
+    print(f"    email_signal claims in claim_current (non-rejected, non-retired): {n_es}; inbox_miner events: {n_inbox}; "
+          f"theme_week cells touched: {len(drop)} ({sum(drop.values())} fact-cell drops); touched: "
           + ", ".join(f"{v} {len(s)}" for v, s in touched.items()))
-    neg_n = int(r30.rows(f"select count(*) from mi.fact where {ES}")[0][0])
+    neg_c = int(DA["data.mi_fact.claim_email_signal"])
+    neg_e = int(DA["data.mi_fact.event_email_signal"])
     s1 = step1()
-    gated = ["mi_fact_claim_rows", "no_email_signal_claims_in_mi_fact", "mi_fact_claim_branch_excludes_email_signal"]
+    gated = ["mi_fact_claim_rows", "mi_fact_event_rows", "no_email_signal_claims_in_mi_fact",
+             "no_email_signal_events_in_mi_fact", "mi_fact_claim_branch_excludes_email_signal",
+             "mi_fact_event_branch_excludes_inbox_miner"]
     for k, v in s1.items():
         print(f"    {'t' if v == 't' else 'f'} {k}")
-    nc = (neg_n >= 1 and neg_n == n_es and all(s1.get(k) == "f" for k in gated)
-          and all(v == "t" for k, v in s1.items() if k not in gated))
-    print(f"  {'PASS' if nc else 'FAIL'} negative control: {neg_n} email_signal claims in mi.fact before apply (natural "
-          f"twin data, nothing seeded); the 3 gated step-1 rows read f, the {len(s1) - len(gated)} keep rows read t")
+    nc = (neg_c >= 1 and neg_c == n_es and neg_e >= 1 and neg_e == n_inbox
+          and all(s1.get(k) == "f" for k in gated) and all(v == "t" for k, v in s1.items() if k not in gated))
+    print(f"  {'PASS' if nc else 'FAIL'} negative control: {neg_c} email_signal claims and {neg_e} inbox_miner events in "
+          f"mi.fact before apply (natural twin data, nothing seeded); the {len(gated)} gated step-1 rows read f, the "
+          f"{len(s1) - len(gated)} keep rows read t")
     ok &= nc and denials()
     if not ok:
         return 1
@@ -263,6 +287,8 @@ def main() -> int:
     ok &= r30.guard_probe("alter table public.claim alter column provenance_tier drop not null", pre_block,
                           "nullable provenance_tier refused", "is nullable", False)
     ok &= r30.guard_probe(old_fact, pre_block, "mi.fact at the 0016 shape (reads claim) refused",
+                          "not at the 0024 or the 0032 shape", False)
+    ok &= r30.guard_probe(half_applied(), pre_block, "half-applied shape (claim filter only, event branch open) refused",
                           "not at the 0024 or the 0032 shape", False)
     ok &= r30.guard_probe("alter view mi.fact reset (security_invoker)", pre_block,
                           "mi.fact without security_invoker refused", "unexpected owner, options", False)
@@ -296,10 +322,15 @@ def main() -> int:
     ok &= good
     want0 = dict(S0A)
     want0["def\tclaim_branch_excludes_email_signal"] = "true"
+    want0["def\tevent_branch_excludes_inbox_miner"] = "true"
     want0.pop("count\tclaim:email_signal", None)
+    want0.pop("count\tevent:email_signal", None)
     d = r30.diff(want0, step0())
-    print(f"  {'PASS' if not d else 'FAIL'} step 0 = snapshot A with exactly 2 rows changed (claim_branch_excludes_"
-          f"email_signal false -> true; count claim:email_signal {S0A.get('count' + chr(9) + 'claim:email_signal')} -> absent)")
+    tab = chr(9)
+    print(f"  {'PASS' if not d else 'FAIL'} step 0 = snapshot A with exactly 4 rows changed (claim_branch_excludes_"
+          f"email_signal and event_branch_excludes_inbox_miner false -> true; count claim:email_signal "
+          f"{S0A.get('count' + tab + 'claim:email_signal')} -> absent; count event:email_signal "
+          f"{S0A.get('count' + tab + 'event:email_signal')} -> absent)")
     r30.print_diff(d)
     ok &= not d
     d = r30.diff(A, B)
@@ -315,13 +346,13 @@ def main() -> int:
     ok &= good
     for v in ("mi.fact", "mi.fact_topic", "mi.fact_company"):
         good = DB[f"data.{v}"] == WA[f"want.{v}"]
-        print(f"  {'PASS' if good else 'FAIL'} {v} after = snapshot A minus the email_signal claim rows "
+        print(f"  {'PASS' if good else 'FAIL'} {v} after = snapshot A minus every email_signal row "
               f"({DA[f'data.{v}'].split(':')[0]} -> {DB[f'data.{v}'].split(':')[0]} rows, md5 equal)")
         ok &= good
-    good = (DA["data.mi_fact.event_rows"] == DB["data.mi_fact.event_rows"]
-            and DA["data.mi_fact.event_email_signal"] == DB["data.mi_fact.event_email_signal"])
-    print(f"  {'PASS' if good else 'FAIL'} event branch untouched: {DB['data.mi_fact.event_rows']} event rows, "
-          f"{DB['data.mi_fact.event_email_signal']} of them email_signal (scope = claim branch only)")
+    ea, eb = int(DA["data.mi_fact.event_rows"]), int(DB["data.mi_fact.event_rows"])
+    good = ea - eb == n_inbox and n_inbox >= 1 and DB["data.mi_fact.event_email_signal"] == "0"
+    print(f"  {'PASS' if good else 'FAIL'} mi.fact event rows {ea} -> {eb}: dropped {ea - eb} = the {n_inbox} inbox_miner "
+          f"events; event:email_signal now {DB['data.mi_fact.event_email_signal']}")
     ok &= good
 
     TWB = {r[0]: r[1:] for r in r30.rows(TW_SQL)}
@@ -341,7 +372,7 @@ def main() -> int:
     stray = sorted(set(drop) - set(TWA))
     good = not bad and not new and not stray and bool(drop)
     print(f"  {'PASS' if good else 'FAIL'} theme_week: {len(TWA)} -> {len(TWB)} cells; facts dropped by exactly the "
-          f"email_signal claims in each of {len(drop)} cells ({gone} cells emptied and gone); untouched cells identical "
+          f"email_signal facts in each of {len(drop)} cells ({gone} cells emptied and gone); untouched cells identical "
           f"apart from floor_flag; no new cells")
     for x in (bad + [f"new cell {k}" for k in sorted(new)] + [f"drop key not in theme_week {k}" for k in stray])[:20]:
         print(f"    BAD {x}")
@@ -350,9 +381,11 @@ def main() -> int:
     for v, q in KEYED.items():
         kb = keyed(q)
         changed = {k for k in set(KA[v]) | set(kb) if KA[v].get(k) != kb.get(k)}
+        gone_k = set(KA[v]) - set(kb)
         good = changed <= touched[v]
-        print(f"  {'PASS' if good else 'FAIL'} {v}: {len(KA[v])} -> {len(kb)} rows; {len(changed)} changed, all on "
-              f"the {len(touched[v])} keys that had email_signal claims")
+        print(f"  {'PASS' if good else 'FAIL'} {v}: {len(KA[v])} -> {len(kb)} rows; {len(changed)} changed "
+              f"({len(gone_k)} gone, {len(changed - gone_k)} values moved), all on the {len(touched[v])} keys that had "
+              f"email_signal facts")
         ok &= good
         for k in sorted(changed - touched[v])[:10]:
             print(f"    BAD changed outside the touched set: {k}")

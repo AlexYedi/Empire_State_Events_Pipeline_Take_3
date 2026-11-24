@@ -6,9 +6,11 @@
 -- 0. BEFORE and AFTER apply (prod via the dashboard or the read-only MCP, the twin via the harness).
 --    Expected change, and nothing else:
 --      def / claim_branch_excludes_email_signal   false -> true
+--      def / event_branch_excludes_inbox_miner    false -> true
 --      count / claim:email_signal                 <n>   -> <absent>   (n = 22 on prod, 2026-11-24)
---    Every other row (owner, options, ACL, columns, dependents, the event rows including event:email_signal, and
---    every other claim tier) is identical before and after, and identical again after the rollback.
+--      count / event:email_signal                 <m>   -> <absent>   (m = 13 on prod, 2026-11-24)
+--    Every other row (owner, options, ACL, columns, dependents, the event-tier CASE, every other claim and event
+--    tier) is identical before and after, and identical again after the rollback.
 with f as (
   select c.oid, c.relkind, c.relowner, c.reloptions, c.relacl,
          regexp_replace(pg_get_viewdef(c.oid, true), '\s+', ' ', 'g') as def
@@ -38,6 +40,10 @@ select section, obj, val from (
          coalesce((select (def ~ 'AND NOT c\.is_retired AND c\.provenance_tier <> ''email_signal''::text;$')::text from f),
                   '<absent>')
   union all
+  select 'def', 'event_branch_excludes_inbox_miner',
+         coalesce((select (def ~ ' FROM (public\.)?event e WHERE e\.source IS NULL OR e\.source !~~ ''inbox_miner%''::text UNION ALL ')::text
+                     from f), '<absent>')
+  union all
   select 'def', 'event_branch_tags_inbox_miner',
          coalesce((select (def ~ 'WHEN e\.source ~~ ''inbox_miner%''::text THEN ''email_signal''::text')::text from f),
                   '<absent>')
@@ -58,9 +64,11 @@ select section, obj, val from (
 ) x
 order by section collate "C", obj collate "C";
 
--- 1. AFTER apply: every row ok = true. (Before apply, the negative control: mi_fact_claim_rows,
---    no_email_signal_claims_in_mi_fact and mi_fact_claim_branch_excludes_email_signal read false while the twin or
---    prod holds any email_signal claim; every keep_ row and mi_fact_reads_claim_current read true.)
+-- 1. AFTER apply: every row ok = true. (Before apply, the negative control: the 6 rows mi_fact_claim_rows,
+--    mi_fact_event_rows, no_email_signal_claims_in_mi_fact, no_email_signal_events_in_mi_fact,
+--    mi_fact_claim_branch_excludes_email_signal and mi_fact_event_branch_excludes_inbox_miner read false while the
+--    twin or prod holds any email_signal claim and inbox_miner event; every keep_ row and mi_fact_reads_claim_current
+--    read true.)
 with f as (
   select c.oid, c.relowner, c.reloptions, regexp_replace(pg_get_viewdef(c.oid, true), '\s+', ' ', 'g') as def
     from pg_class c where c.oid = to_regclass('mi.fact')
@@ -69,14 +77,22 @@ select 'mi_fact_claim_rows' as check_name,
   (select count(*) from mi.fact where fact_type = 'claim')
   = (select count(*) from public.claim_current c
       where c.status <> 'rejected' and not c.is_retired and c.provenance_tier <> 'email_signal') as ok
+union all select 'mi_fact_event_rows',
+  (select count(*) from mi.fact where fact_type = 'event')
+  = (select count(*) from public.event e where e.source is null or e.source not like 'inbox_miner%')
 union all select 'no_email_signal_claims_in_mi_fact',
   not exists (select 1 from mi.fact where fact_type = 'claim' and provenance_tier = 'email_signal')
+union all select 'no_email_signal_events_in_mi_fact',
+  not exists (select 1 from mi.fact where fact_type = 'event' and provenance_tier = 'email_signal')
 union all select 'mi_fact_claim_branch_excludes_email_signal',
   coalesce((select def ~ 'AND NOT c\.is_retired AND c\.provenance_tier <> ''email_signal''::text;$' from f), false)
+union all select 'mi_fact_event_branch_excludes_inbox_miner',
+  coalesce((select def ~ ' FROM (public\.)?event e WHERE e\.source IS NULL OR e\.source !~~ ''inbox_miner%''::text UNION ALL '
+              from f), false)
 union all select 'mi_fact_reads_claim_current',
   coalesce((select def ~ 'FROM (public\.)?claim_current c ' and def ~ 'NOT c\.is_retired' from f), false)
-union all select 'keep_mi_fact_event_rows',
-  (select count(*) from mi.fact where fact_type = 'event') = (select count(*) from public.event)
+union all select 'keep_mi_fact_event_tier_case',
+  coalesce((select def ~ 'WHEN e\.source ~~ ''inbox_miner%''::text THEN ''email_signal''::text' from f), false)
 union all select 'keep_mi_fact_columns',
   (select string_agg(attname, ',' order by attnum) from pg_attribute
     where attrelid = to_regclass('mi.fact') and attnum > 0 and not attisdropped)
