@@ -26,7 +26,9 @@ What it does (for every lens):
     + w_conf·confidence + w_use·utility — w_use = 0 in every lens (ADR-10 decision 5)
   5 fill a TOKEN budget in score order (not a row count); list the cut tail by title
   6 emit the Context Pack (Continuity Ledger · People/Company/Topic cards · Claims · Audit); every
-    claim line carries [tier · status · date] c:<8> so later usage can be traced
+    claim line carries [tier · status · date] c:<8> so later usage can be traced. The pack is PRIVATE (Alex and the
+    synthesizer read it); an email_signal line also carries `[private: email_signal]` (ADR-16, YED-459) so it stays
+    traceable if it flows on into a brief, and output-evaluator fails any public copy built on it
 LOUD FAILURE (exit 5): the graph holds claims for these entities but the pack kept none — the
 "filled substrate silently stops being read" failure the review named (finding 6). Never a shrug.
 
@@ -53,6 +55,7 @@ sys.path.insert(0, HERE)
 from spine_client import q, req, write  # noqa: E402  (write: YED-262 claim_usage, the one write path)
 from substrate import JOB_LENS_KINDS, norm_text, pid_variants  # noqa: E402
 from event_slug import event_slug  # noqa: E402
+import public_tiers  # noqa: E402  (ADR-16: the pack is private; email_signal lines carry [private: email_signal])
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
@@ -357,7 +360,8 @@ def build_pack(seed: dict, lens: str, budget: int) -> tuple[str, dict, int]:
     # ---- claims under the token budget ------------------------------------------------------------
     used = sum(tokens("\n".join(s)) for s in (ledger, cards, tcards, hire))
     def render(c: dict) -> str:
-        flag = " ⚠ do-not-publish" if (c.get("metadata") or {}).get("do_not_publish") else ""
+        flag = ((" ⚠ do-not-publish" if (c.get("metadata") or {}).get("do_not_publish") else "")
+                + public_tiers.private_tag(c.get("provenance_tier")))
         ev = ev_by_id.get(c.get("event_id"))
         where = f" — {ev['title'][:40]}" if ev else ""
         return (f"- {c['claim_text']}{where} [{c.get('provenance_tier')} · "

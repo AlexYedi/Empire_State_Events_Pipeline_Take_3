@@ -1,0 +1,18 @@
+{
+ "check": "sources",
+ "draft": ".claude/scripts/fixtures/adr16/draft.md",
+ "urls_in_draft": 2,
+ "claims": [
+  {
+   "sentence": "Northwind Labs shipped its agent SDK in October, and it already has 40 design partners.",
+   "has_url_inline": false
+  },
+  {
+   "sentence": "Northwind Labs is closing a $12M Series A next month, so the room should be busy.",
+   "has_url_inline": false
+  }
+ ],
+ "summary": {
+  "claim_candidates": 2
+ }
+}
