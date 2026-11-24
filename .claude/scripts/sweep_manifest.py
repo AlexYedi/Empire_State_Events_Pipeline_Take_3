@@ -519,18 +519,35 @@ def summary(r: Report, normalized: dict) -> str:
     return "\n".join(lines)
 
 
-def load_manifest(path: str):
-    """Bytes-capped load. Raises ValueError on size, JSON or depth trouble (all exit 2)."""
+def parse_manifest(text: str):
+    """(object, trailing_chars). The FIRST complete JSON value is the manifest, after leading whitespace and an
+    optional ``` fence. The sweeper sometimes appends prose after it (2026-11-22, YED-502): that text is counted,
+    never echoed and never applied; the object still goes through every check. Raises ValueError if none decodes."""
+    t = text.lstrip()
+    fenced = t.startswith("```")
+    if fenced:
+        t = t.split("\n", 1)[1] if "\n" in t else ""
+    try:
+        obj, end = json.JSONDecoder().raw_decode(t)
+    except RecursionError:
+        raise ValueError("manifest nested too deeply")
+    tail = t[end:].strip()
+    if fenced and tail.startswith("```"):
+        tail = tail[3:].strip()
+    return obj, len(tail)
+
+
+def load_manifest(path: str, *, with_tail: bool = False):
+    """Bytes-capped load. Raises ValueError on size, JSON or depth trouble (all exit 2).
+    with_tail=True returns (object, trailing_chars) instead of the object alone."""
     if os.path.getsize(path) > FILE_MAX_BYTES:
         raise ValueError(f"manifest larger than {FILE_MAX_BYTES} bytes")
     with open(path, "rb") as f:
         raw = f.read(FILE_MAX_BYTES + 1)
     if len(raw) > FILE_MAX_BYTES:
         raise ValueError(f"manifest larger than {FILE_MAX_BYTES} bytes")
-    try:
-        return json.loads(raw.decode("utf-8"))
-    except RecursionError:
-        raise ValueError("manifest nested too deeply")
+    obj, tail = parse_manifest(raw.decode("utf-8"))
+    return (obj, tail) if with_tail else obj
 
 
 def load_known(path: str | None) -> set[str]:
@@ -763,11 +780,13 @@ def main(argv=None) -> int:
         print(f"sweep_manifest: cannot read known-entities file: {type(e).__name__}", file=sys.stderr)
         return 1
     try:
-        m = load_manifest(a.manifest)
+        m, tail = load_manifest(a.manifest, with_tail=True)
     except (OSError, ValueError, UnicodeDecodeError) as e:
         print(f"sweep_manifest: INVALID · manifest unreadable ({type(e).__name__})")
         return 2
     r, norm = validate(m, known, cap=a.cap, window=tuple(a.window), theme_id=theme_id)
+    if tail:
+        r.warn("trailing_text", f"{tail} chars ignored")
     print(summary(r, norm))
     if r.errors:
         return 2
