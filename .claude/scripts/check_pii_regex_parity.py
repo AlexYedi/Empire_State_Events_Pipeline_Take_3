@@ -36,6 +36,11 @@ SQL = os.path.join(REPO, "docs", "adr", "proposals", "pii-db-check.sql")
 # every free-text CHECK and the person trigger. 0022's no_contact_pii_v1() is VERSIONED (never replaced), so it
 # keeps the pre-0025 shapes by design and is not a parity site; its sites also carry v2 CHECKs from 0025.
 SQL_SITES = [SQL, os.path.join(REPO, "supabase", "migrations", "0025_pii_backstop_normalized.sql")]
+NAMES = ("email_re", "phone_re", "allow_re", "at_re", "esc_re", "ign_re")
+# YED-507: how many literals of each name every site must carry (absent = 0). A site that grows, loses or
+# re-quotes a literal fails loud instead of being compared on fewer patterns than it holds.
+EXPECT = {SQL: {"email_re": 1, "phone_re": 1},
+          SQL_SITES[1]: dict.fromkeys(NAMES, 1)}
 
 
 def _flags(node: ast.expr | None, name: str) -> int:
@@ -89,11 +94,10 @@ def extract_spine(src: str) -> tuple[str, str]:
 
 def extract_sql(src: str) -> tuple[str, str]:
     """(email_re, phone_re) from the $re$-dollar-quoted plpgsql literals."""
-    email = re.search(r"^\s*email_re text := \$re\$(.+?)\$re\$;", src, re.M)
-    phone = re.search(r"^\s*phone_re text := \$re\$(.+?)\$re\$;", src, re.M)
+    email, phone = lits(src, "email_re"), lits(src, "phone_re")
     if not email or not phone:
         raise SystemExit("check_pii_regex_parity: could not find $re$-quoted email_re/phone_re in pii-db-check.sql — has the file moved or changed shape?")
-    return email.group(1), phone.group(1)
+    return email[0], phone[0]
 
 
 def extract_extra(spine_src: str, norm_src: str) -> tuple[str, str, str]:
@@ -117,21 +121,36 @@ def class_codepoints(cls: str) -> set[int]:
 
 
 def lits(sql_src: str, name: str) -> list[str]:
-    return re.findall(rf"^\s*{name} text := \$re\$(.+?)\$re\$;", sql_src, re.M)
+    """Every `NAME text := $re$<body>$re$;` body. YED-507: the body may span lines (re.S), and it ends at the
+    FIRST $re$, as the Postgres dollar-quote does, so a later $re$; can never extend it. Any declaration of
+    NAME that this does not read (other quoting, missing ';') fails loud rather than being skipped."""
+    found = re.findall(rf"^\s*{name} text := \$re\$((?:(?!\$re\$).)+)\$re\$;", sql_src, re.M | re.S)
+    decls = len(re.findall(rf"^\s*{name} text :=", sql_src, re.M))
+    if decls != len(found):
+        raise SystemExit(f"check_pii_regex_parity: {decls} {name} declaration(s) but {len(found)} readable "
+                         f"$re$...$re$; literal(s); parity cannot be checked")
+    return found
 
 
-def run(spine_src: str, sql_src: str, extra: tuple[str, str, str] | None = None, ignorable: set[int] | None = None) -> list[str]:
+def run(spine_src: str, sql_src: str, extra: tuple[str, str, str] | None = None, ignorable: set[int] | None = None,
+        expect: dict[str, int] | None = None) -> list[str]:
     """Return a list of drift descriptions; empty list means parity. `extra` = (allow, at, esc) literals and
     `ignorable` = the Python default-ignorable set; a site that carries allow_re / at_re / ign_re is checked
-    against them (and fails loud when they were not supplied)."""
+    against them (and fails loud when they were not supplied). `expect` = literal count per name (absent = 0);
+    any other count is a drift."""
     spine_email, spine_phone = extract_spine(spine_src)
     extract_sql(sql_src)   # fails loud when a site has no literals at all
-    # Every literal in the file, not only the first: a site may define more than one function (0025 does).
     drifts = []
-    for sql_email in re.findall(r"^\s*email_re text := \$re\$(.+?)\$re\$;", sql_src, re.M):
+    if expect is not None:
+        for name in NAMES:
+            got = len(lits(sql_src, name))
+            if got != expect.get(name, 0):
+                drifts.append(f"COUNT: site carries {got} {name} literal(s), expected {expect.get(name, 0)}")
+    # Every literal in the file, not only the first: a site may define more than one function (0025 does).
+    for sql_email in lits(sql_src, "email_re"):
         if sql_email != spine_email:
             drifts.append("EMAIL shape drifted:\n  spine: %s\n  sql:   %s" % (spine_email, sql_email))
-    for sql_phone in re.findall(r"^\s*phone_re text := \$re\$(.+?)\$re\$;", sql_src, re.M):
+    for sql_phone in lits(sql_src, "phone_re"):
         if sql_phone != spine_phone:
             drifts.append("PHONE shape drifted:\n  spine: %s\n  sql:   %s" % (spine_phone, sql_phone))
     for name, idx, label in (("allow_re", 0, "EMAIL_ALLOWLIST"), ("at_re", 1, "AT_SPELLING"), ("esc_re", 2, "JSON_WS")):
@@ -221,6 +240,29 @@ def selftest() -> int:
        _raises(lambda: extract_extra('EMAIL_ALLOWLIST_RE = re.compile(r"^x@")\n',
                                      'AT_SPELLING_RE = re.compile(r"%40", re.I)\nJSON_WS_RE = re.compile(r"y")\n')))
 
+    # YED-507: a $re$ literal may span lines. The old single-line read skipped it, so parity passed silently.
+    phone_rest = spine_src.split("\n", 1)[1]
+    ml_spine = 'EMAIL_RE = re.compile("(?<![\\\\w/])\\n[A-Z]+(?![\\\\w])")\n' + phone_rest
+    ml_line = "  email_re text := $re$(?<![\\w/])\n[A-Z]+(?![\\w])$re$;\n"
+    ml_sql = ml_line + sql_src.split("\n", 1)[1]
+    ck("(e) multi-line $re$ literal extracted in full",
+       _try(lambda: lits(ml_sql, "email_re")) == ["(?<![\\w/])\n[A-Z]+(?![\\w])"] == [extract_spine(ml_spine)[0]])
+    ck("(e) multi-line literal equal to the client -> parity", _try(lambda: run(ml_spine, ml_sql)) == [])
+    d = _try(lambda: run(spine_src, sql_src + ml_line)) or []
+    ck("(f) multi-line literal that differs from the client -> drift", len(d) == 1 and d[0].startswith("EMAIL"))
+    ck("(g) input with zero patterns -> fails loud", _raises(lambda: run(spine_src, "-- no literals here\n")))
+    ck("(g) declaration that is not a readable $re$...$re$; literal -> fails loud",
+       _raises(lambda: lits("  email_re text := $re$x$re$\n", "email_re")))
+    ck("(g) body ends at the first $re$, as in Postgres -> a later $re$; cannot extend it",
+       _raises(lambda: lits("  email_re text := $re$x$re$ || $re$y$re$;\n", "email_re")))
+    pair = {"email_re": 1, "phone_re": 1}
+    ck("(h) expected literal counts -> no drift", run(spine_src, sql_src, expect=pair) == [])
+    d = run(spine_src, sql_src + sql_src, expect=pair)
+    ck("(h) more literals than expected -> drift", len(d) == 2 and all(x.startswith("COUNT") for x in d))
+    d = run(spine_src, sql_src, expect={**pair, "at_re": 1})
+    ck("(h) an expected literal missing -> drift", len(d) == 1 and d[0].startswith("COUNT") and "at_re" in d[0])
+    ck("(i) single-line literals still extracted", extract_sql(sql_src) == (email_py, phone_py))
+
     # YED-392 rework: allow_re / at_re byte parity, ign_re coverage.
     extra = ("^(?:noreply)@", r"%40", r"\\[ntr]")
     bs = chr(92)
@@ -251,6 +293,14 @@ def _raises(fn) -> bool:
     return False
 
 
+def _try(fn):
+    """fn() or None when it fails loud, so one failing case reports instead of ending the selftest."""
+    try:
+        return fn()
+    except SystemExit:
+        return None
+
+
 if __name__ == "__main__":
     if "--selftest" in sys.argv:
         sys.exit(selftest())
@@ -264,7 +314,7 @@ if __name__ == "__main__":
     for site in SQL_SITES:
         with open(site, encoding="utf-8") as f:
             sql_src = f.read()
-        drifts = run(spine_src, sql_src, extra, set(IGNORABLE))
+        drifts = run(spine_src, sql_src, extra, set(IGNORABLE), EXPECT[site])
         rel = os.path.relpath(site, REPO)
         if drifts:
             failed = True
