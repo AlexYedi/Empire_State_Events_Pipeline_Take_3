@@ -116,6 +116,16 @@ Search Notion Events DB (`9dcbc999-b4ed-4a51-b48a-10aaf171f1ba`) by event title 
 
 **If multiple matches (same title, different dates):** present the candidates with dates and ask Alex to pick.
 
+**Working files live in one private directory (YED-363).** Once the Event Name is fixed, set it and use it for every
+working file this run writes (drafts, inputs, debriefs, speaker maps, recaps). It is the run-state's folder, so it is
+gitignored and survives the session:
+```bash
+WD="$(python3 -c 'import os,sys; sys.path.insert(0, ".claude/scripts"); import run_state; print(os.path.dirname(run_state.path_for(sys.argv[1])))' "<event name>")"
+mkdir -p "$WD"   # .claude/.state/post-event/<slug>/
+```
+Never write a working file under `Event Content/`: the event folder holds Alex's uploads and the rendered finals
+(`post-event/*.html`, `*.pdf`) only. CI fails on any tracked file a `.gitignore` rule matches.
+
 ## Step 2 — Get the transcript (Supercut → audio file → manual paste)
 
 Three paths, in order of preference. Every path ends with the transcript saved to `event-transcripts/YYYY-MM-DD_<Event>.md`, and Step 3.5 conditioning then runs on it unchanged. Reference: `.claude/references/supercut.md`.
@@ -228,7 +238,7 @@ Before content-correspondent drafts a single post, synthesize the **`post_event_
 - Notion roster (People + Companies + Topics relations from the Event row)
 - Slides/photos uploaded by Alex (catalog them, don't re-OCR). When `slide-recording-alignment.json` exists, the Slides Catalog is **time-aligned**: one row per slide with recording offset · capture time · slide title · confirm-pass result, and quotes/stats cite the slide they were spoken over. Unaligned photos keep a row with no offset.
 - Step 3.6 enrichment results (required: "essential, not optional")
-- **Alex's recap (required, YED-259):** before dispatching, ask him for two minutes in his own words — who he spoke to, what he'd follow up on, what he missed, when he left — unless he already gave it this session. Save it to a local file. Without it the brief must not propose any follow-up (validated 2026-10-15).
+- **Alex's recap (required, YED-259):** before dispatching, ask him for two minutes in his own words — who he spoke to, what he'd follow up on, what he missed, when he left — unless he already gave it this session. Save it to `$WD/alex-recap.md`. Without it the brief must not propose any follow-up (validated 2026-10-15).
 
 **Theme-assignment marker (YED-307):** when you create the brief's Content Draft page, end its content with the marker pair `⟦theme-assignments⟧` / `⟦/theme-assignments⟧` on two lines. Step 3.8d's table goes there through a Step 5 `content_updates` op.
 
@@ -430,7 +440,7 @@ content-correspondent then runs its standard logic per `.claude/skills/content-c
 
 Public copy only (posts, first comment, carousel copy); DMs skip this. The check is evidence for Alex's review, not a gate: every draft still lands as `needs_review`, with the verdict on top.
 
-1. **Write the inputs to local files** in the session scratchpad: each public draft *with its first comment and sources*, and the Step 3.7 `post_event_brief` (speaker map, quote bank, evidence). A check that can't see the sources reports false "unsourced" fails (validated 2026-10-15).
+1. **Write the inputs to local files** in `$WD` (Step 1): each public draft *with its first comment and sources*, and the Step 3.7 `post_event_brief` (speaker map, quote bank, evidence). A check that can't see the sources reports false "unsourced" fails (validated 2026-10-15).
 2. **Run the deterministic pass** for each draft file:
    `python3 .claude/scripts/output_checks.py quotes --draft <draft> --transcript <conditioned transcript>` (repeat `--transcript` per recording) and `python3 .claude/scripts/output_checks.py sources --draft <draft>`.
 3. **Dispatch `output-evaluator` twice in one message** (`model: opus`), mode `quote` and mode `source`, passing the draft, both JSON outputs, the transcript path(s), the brief file, the event folder's slide photos, and the Step 1 off-the-record flags. It is read-only; it never edits copy.
