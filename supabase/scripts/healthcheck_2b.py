@@ -739,7 +739,7 @@ def main() -> int:
               + (" (warnings above)" if probe_fails or pii_flags or rp_warns else " read path healthy."))
     else:
         if not graph_ok:
-            print("\n❌ FAIL — graph incoherence above. pre2b rollback remains available.")
+            print("\n❌ FAIL — graph incoherence above. pre2b was retired (YED-298), so fix forward.")
         if pii_fails:
             print("\n❌ FAIL — EXPOSED contact PII: " + "; ".join(pii_fails)
                   + ". API-readable email/phone values break CLAUDE.md invariant 1. Revoke or drop now.")

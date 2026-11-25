@@ -99,6 +99,6 @@ jobs:
           else
             gh issue create \
               --title "MI 2b health-check FAILED (since $TODAY)" \
-              --body "The nightly topic-intelligence job failed — either the compute refused to write (ported SQL disagreed with the reference, or the write errored), the health-check found the stored graph incoherent, or the YED-304 topic-cluster baseline re-validation failed (taxonomy/fixture drift; the report is on the run's artifacts). The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. The pre2b rollback (\`supabase/staging/2b_rollback.sql\`, ~1.3s, proven) remains available. YED-130." \
+              --body "The nightly topic-intelligence job failed — either the compute refused to write (ported SQL disagreed with the reference, or the write errored), the health-check found the stored graph incoherent, or the YED-304 topic-cluster baseline re-validation failed (taxonomy/fixture drift; the report is on the run's artifacts). The failing step in the run says which. Run: $RUN_URL. Later failures are added as comments here until this issue is closed. There is no 2B rollback any more: pre2b was retired on 2026-11-21 (YED-298, migration 0027), so fix forward. YED-130." \
               || echo "issue-create failed; check the Actions run directly"
           fi
