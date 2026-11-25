@@ -25,7 +25,7 @@ Before any Agent dispatch:
 |---|---|
 | `/event-deep-research` | `knowledge-conditioning` (Step 1.7b, always runs) → `company-researcher` ∥ `person-researcher` ∥ `topic-landscape-analyst` ∥ `competitive-signal-scanner` → `event-research-synthesizer` → `field-guide-renderer` (one call per section, then stitch) |
 | Public copy before it leaves `needs_review` | `.claude/scripts/output_checks.py` → `output-evaluator` (mode `quote` and/or `source`) |
-| Notion write from a validated payload | `.claude/scripts/notion_payload.py` prints VALID → `notion-writer` |
+| Notion write from a validated payload | `.claude/scripts/notion_payload.py` prints VALID → `notion-writer` → `.claude/scripts/notion_readback.py` prints PASS |
 | `post_event_brief` | `post-event-synthesizer` (being added; until it lands, the parent thread) |
 | Hackathon / build sprint | `alex:build-sprint` skill: prep → Alex picks → architecture → safeguards → repo → pitch; build day with builder · diagnostician · reviewer (`code`/`safeguards`/`demo`) |
 | Carousel render (HTML → PDF) | `visual-renderer` → `.claude/scripts/render_carousel.py` must report `"ok": true` |
