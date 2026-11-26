@@ -71,7 +71,8 @@ The first line is the header. `recap` is true only when Alex's recap was among t
    `routing-plan.json` (Linear issues, a Notion payload for build ideas) and the local stories file.
 3. **Linear:** search before create (`list_issues` with the title's key words). Skip a match and count it as
    routed. Create the rest with team `EMPIRE-STATE`, the planned labels and due date.
-4. **Notion:** `notion_payload.py <payload>` must print VALID, then dispatch `notion-writer`.
+4. **Notion:** `notion_payload.py <payload>` must print VALID, then dispatch `notion-writer`, then
+   `notion_readback.py <payload>` must print PASS.
 5. Show Alex the counts in the Step 6 summary. Then
    `run_state.py mark "<event>" route --status done --meta routing_rows=<created+matched>`.
    No routable items: `--status skipped --reason "<why>"`.

@@ -99,3 +99,12 @@ copy that escaped form from a fetch when anchoring on it, and readers must accep
 
 Also: the live `notion-update-page` offers `insert_content` (position start|end). The `notion-writer` does not use
 it: every insert is a `content_updates` on a parent-chosen marker, so anchors stay parent-owned and bounded.
+
+## (r) One update call carries properties OR body, never both (2026-11-01, YED-286)
+A `notion-update-page` call with `command: update_content` (or `replace_content`) that also carries `properties`
+applies the body edit and silently drops the properties, and still returns success (Agentics wave, 2026-11-01:
+Website, Description, Recent Developments and Last Researched never landed on 5 pages). Split them: one
+`update_properties` call with the properties, then the content call. The `notion-writer` does this for every update
+that has both. After any writer run, the parent runs `python3 .claude/scripts/notion_readback.py <payload>`: it
+re-reads every written page over the REST API and fails on any property or word that differs from the payload, so a
+dropped property or a retyped word (YED-380: "Kyndril" for "Kyndryl") is caught by code, not by the model that wrote it.

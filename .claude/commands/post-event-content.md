@@ -364,7 +364,8 @@ should act on and where it goes. Contract: `.claude/references/post-event-routin
    write only what he keeps.
 4. **Linear:** search before create for each planned issue; a match counts as routed. Create the rest as planned
    (team, labels, due date, assignee).
-5. **Notion:** `python3 .claude/scripts/notion_payload.py <routing-notion-payload.json>` → VALID → `notion-writer`.
+5. **Notion:** `python3 .claude/scripts/notion_payload.py <routing-notion-payload.json>` → VALID → `notion-writer` →
+   `python3 .claude/scripts/notion_readback.py <routing-notion-payload.json>` → PASS.
 6. `python3 .claude/scripts/run_state.py mark "<event>" route --status done --meta routing_rows=<created+matched>`,
    or `--status skipped --reason "<why>"` when nothing was routable. The close-check counts it.
 
@@ -459,6 +460,7 @@ Once content-correspondent returns drafts and Step 4.5 has checked them, the par
    - **Body edits** (rare here): the writer edits only at parent-chosen `⟦markers⟧` (it does not use `insert_content`). Use `content_updates` on a marker, as in `/event-deep-research` Step 4: insert a dated section before `⟦/research-log⟧`; on a legacy page without the marker, `old_str` = the exact stored last block (≥20 chars) and `new_str` = that block + the section + `⟦/research-log⟧`.
 2. **Validate:** `python3 .claude/scripts/notion_payload.py <payload>` must print `VALID`. Fix the payload, never the validator.
 3. **Dispatch `notion-writer`** (`model: sonnet`) with the payload path. Show its created / updated / skipped / failed table inline.
+   Then **verify:** `python3 .claude/scripts/notion_readback.py <payload>` must print `PASS`. Run it right after the writer returns (a later write to the same page shows up as a diff). A `FAIL` row means that write is not done: fix the operation and re-dispatch it, never edit the page by hand (YED-286, YED-380).
 4. **On `failed` rows:** read the error, fix that operation in the payload and re-dispatch; the manifest makes the rerun safe (done rows are skipped). If the writer itself is unavailable, stop: do not write inline. Keep the payload, tell Alex which drafts are unwritten, and re-dispatch when the writer is back (CLAUDE.md invariant 5). Report it in Step 6.
 
 ## Step 5.5 — HubSpot CRM write (GATED · selective · create-once) — YED-142

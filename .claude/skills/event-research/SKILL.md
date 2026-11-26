@@ -902,6 +902,8 @@ this one marked section is replaced (idempotent — a re-run replaces just the D
   `/event-deep-research` Step 4.5.
 - **Real newlines**, not `\n` escapes (gotcha m /
   [[project_notion_updatepage_newline_gotcha]]); `notion_payload.py` refuses a literal `\n`.
+- After the writer returns, `python3 .claude/scripts/notion_readback.py <payload>` must print `PASS`: it checks
+  the whole Deep Read landed word for word on both pages (YED-380).
 - The `## Deep Read` body reads cleanly aloud (endnotes, no inline URLs) — it's the substrate for
   a later audio step and for `pre-event-content`.
 
