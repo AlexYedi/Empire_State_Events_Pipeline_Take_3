@@ -33,8 +33,7 @@ import second_opinion as so  # noqa: E402
 
 SEATS = ("gemini", "claude", "codex")
 PEERS = {"claude": "Claude (Anthropic)", "gemini": "Gemini (Google)", "codex": "Codex (OpenAI)"}
-CODEX_DISABLE = ("shell_tool", "unified_exec", "shell_snapshot", "apps", "browser_use", "browser_use_external",
-                 "in_app_browser")
+CODEX_DISABLE = so.CODEX_DISABLE
 REPLY = ("The other council members said, verbatim:\n\n{blocks}\n\nRespond to each directly: what they got right "
          "that you missed, where you think they are wrong and why, and what you would change. Then give your updated "
          "proposal.")
@@ -124,31 +123,10 @@ class Council:
         return d.get("result", ""), d
 
     def _codex(self, prompt: str):
-        cwd = self.cwd("codex")
-        opts = ["--skip-git-repo-check", "--json"]
-        for f in CODEX_DISABLE:
-            opts += ["-c", f"features.{f}=false"]
-        if self.state.get("codex_model"):
-            opts += ["-c", f'model="{self.state["codex_model"]}"']
-        if self.state.get("codex_thread"):
-            cmd = ["codex", "exec", "resume", *opts, self.state["codex_thread"], prompt]
-        else:
-            cmd = ["codex", "exec", "-s", "read-only", "-C", cwd, *opts, prompt]
-        p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=1200)
-        events = []
-        for line in p.stdout.splitlines():
-            try:
-                events.append(json.loads(line))
-            except json.JSONDecodeError:
-                pass
-        for e in events:
-            if e.get("type") == "thread.started":
-                self.state["codex_thread"] = e.get("thread_id")
-        msgs = [e["item"]["text"] for e in events
-                if e.get("type") == "item.completed" and e.get("item", {}).get("type") == "agent_message"]
-        if not msgs:
-            raise SystemExit(f"codex returned no message (exit {p.returncode}): {p.stderr.strip()[-400:]}")
-        return msgs[-1], {"events": events, "result": msgs[-1]}
+        d = so.run_codex(prompt, model=self.state.get("codex_model"), thread=self.state.get("codex_thread"),
+                         timeout_s=1200, workdir=self.cwd("codex"))
+        self.state["codex_thread"] = d["thread_id"]
+        return d["response"], {"events": d["events"], "result": d["response"]}
 
     # steps ---------------------------------------------------------------------
     def last(self, speaker: str) -> str:

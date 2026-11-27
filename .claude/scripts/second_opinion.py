@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""second_opinion: send a brief to Gemini on Alex's Google AI Pro plan and keep its full reply (YED-517).
+"""second_opinion: send a brief to Gemini (Google AI Pro) or Codex (ChatGPT) and keep the full reply (YED-517).
 
-Gemini is a permanent co-author and judge in this system. This script does not judge Gemini's output. It does
+Gemini and Codex are permanent co-authors and judges in this system, beside Claude. This script does not judge
+their output. It does
 two things: it makes sure only public material leaves the machine, and it saves exactly what Gemini said.
 
-  python3 .claude/scripts/second_opinion.py ask BRIEF.md [--model gemini-4-neon-high] [--conversation ID]
+  python3 .claude/scripts/second_opinion.py ask BRIEF.md [--seat gemini|codex] [--model M] [--conversation ID]
   python3 .claude/scripts/second_opinion.py gate FILE.md       (run only the outbound gate; exit 0 pass, 4 refuse)
   python3 .claude/scripts/second_opinion.py --selftest
 
@@ -142,21 +143,62 @@ def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int
     return d
 
 
-def ask(brief_path: str, *, model: str = DEFAULT_MODEL, conversation: str | None = None, timeout_s: int = 600,
-        label: str = "ask") -> str:
+# Codex (OpenAI, ChatGPT plan). `-s read-only` alone still lets Codex READ any file on disk (canary test, 26 Nov),
+# so its shell, exec, browser and apps tools are always disabled, on resumed turns too.
+CODEX_DISABLE = ("shell_tool", "unified_exec", "shell_snapshot", "apps", "browser_use", "browser_use_external",
+                 "in_app_browser")
+
+
+def run_codex(prompt: str, *, model: str | None, thread: str | None, timeout_s: int, workdir: str) -> dict:
+    """Returns {"thread_id", "response", "events"}. workdir must be an empty folder outside any repo (Codex reads
+    AGENTS.md from its cwd upward)."""
+    if not shutil.which("codex"):
+        raise SystemExit("codex CLI not on PATH; install it (brew install --cask codex) and run `codex login`")
+    opts = ["--skip-git-repo-check", "--json"]
+    for f in CODEX_DISABLE:
+        opts += ["-c", f"features.{f}=false"]
+    if model:
+        opts += ["-c", f'model="{model}"']
+    if thread:
+        cmd = ["codex", "exec", "resume", *opts, thread, prompt]
+    else:
+        cmd = ["codex", "exec", "-s", "read-only", "-C", workdir, *opts, prompt]
+    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60)
+    events = []
+    for line in p.stdout.splitlines():
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    tid = next((e.get("thread_id") for e in events if e.get("type") == "thread.started"), thread)
+    msgs = [e["item"]["text"] for e in events
+            if e.get("type") == "item.completed" and e.get("item", {}).get("type") == "agent_message"]
+    if not msgs:
+        raise SystemExit(f"codex returned no message (exit {p.returncode}): {p.stderr.strip()[-400:]}")
+    return {"thread_id": tid, "response": msgs[-1], "events": events}
+
+
+def ask(brief_path: str, *, seat: str = "gemini", model: str | None = None, conversation: str | None = None,
+        timeout_s: int = 600, label: str = "ask") -> str:
     text = open(brief_path, encoding="utf-8").read()
     gate(text)
-    run_id = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + label
+    run_id = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + f"-{seat}-{label}"
     out = os.path.join(ALT_DIR, run_id)
     os.makedirs(out, exist_ok=True)
     shutil.copy(brief_path, os.path.join(out, "brief.md"))
-    with tempfile.TemporaryDirectory(prefix="agy-empty-") as empty:
-        d = run_agy(text.split("\n", 1)[1] if "\n" in text else "", model=model, conversation=conversation,
-                    timeout_s=timeout_s, workdir=empty)
+    body = text.split("\n", 1)[1] if "\n" in text else ""
+    with tempfile.TemporaryDirectory(prefix=f"{seat}-empty-") as empty:
+        if seat == "codex":
+            d = run_codex(body, model=model, thread=conversation, timeout_s=timeout_s, workdir=empty)
+            conv = d["thread_id"]
+        else:
+            model = model or DEFAULT_MODEL
+            d = run_agy(body, model=model, conversation=conversation, timeout_s=timeout_s, workdir=empty)
+            conv = d.get("conversation_id")
     json.dump(d, open(os.path.join(out, "raw.json"), "w"), ensure_ascii=False, indent=1)
     resp = d.get("response", "")
     open(os.path.join(out, "response.md"), "w", encoding="utf-8").write(resp)
-    meta = {"run_id": run_id, "model": model, "conversation_id": d.get("conversation_id"),
+    meta = {"run_id": run_id, "seat": seat, "model": model or "default", "conversation_id": conv,
             "duration_seconds": d.get("duration_seconds"), "usage": d.get("usage"),
             "response_sha256": hashlib.sha256(resp.encode("utf-8")).hexdigest()}
     json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1)
@@ -198,7 +240,9 @@ def main(argv: list[str]) -> int:
         return 0 if selftest() else 1
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    a = sub.add_parser("ask"); a.add_argument("brief"); a.add_argument("--model", default=DEFAULT_MODEL)
+    a = sub.add_parser("ask"); a.add_argument("brief"); a.add_argument("--seat", choices=("gemini", "codex"),
+                                                                     default="gemini")
+    a.add_argument("--model", default=None)
     a.add_argument("--conversation"); a.add_argument("--timeout", type=int, default=600)
     a.add_argument("--label", default="ask")
     g = sub.add_parser("gate"); g.add_argument("file")
@@ -206,7 +250,7 @@ def main(argv: list[str]) -> int:
     try:
         if args.cmd == "gate":
             gate(open(args.file, encoding="utf-8").read()); print("PASS"); return 0
-        out = ask(args.brief, model=args.model, conversation=args.conversation, timeout_s=args.timeout,
+        out = ask(args.brief, seat=args.seat, model=args.model, conversation=args.conversation, timeout_s=args.timeout,
                   label=args.label)
     except Refused as e:
         print("REFUSED", e, file=sys.stderr); return 4
