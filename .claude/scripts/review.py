@@ -479,7 +479,7 @@ def pr_artifact(base: str, out: str) -> str:
                            check=True).stdout.split()
     if not files:
         raise SystemExit(f"no changes against {base}")
-    diff = subprocess.run(["git", "diff", f"{base}...HEAD"], capture_output=True, text=True, check=True).stdout
+    diff = subprocess.run(["git", "diff", "-U0", f"{base}...HEAD"], capture_output=True, text=True, check=True).stdout
     log_ = subprocess.run(["git", "log", "--format=%s%n%n%b", f"{base}..HEAD"], capture_output=True, text=True,
                           check=True).stdout
     checkpoint = "pr-operator" if any(OPERATOR_PATHS.search(f) for f in files) else "pr-internal"
