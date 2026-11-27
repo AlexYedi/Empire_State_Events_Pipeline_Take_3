@@ -1,0 +1,23 @@
+{
+  "_doc": "Three-model review routing (YED-517; council of 27 Nov, .claude/references/three-model-review.md). mode: single | dual | council. seats: which external seats review. outward_facing: the artifact leads to a publication, outreach or CRM write, so an unresolved or rebutted judgment BLOCKER holds the action for Alex. Edit by PR.",
+  "lenses": {
+    "codex": "VERIFIER. Evidence, logic, numbers and denominators, dates, sequencing and procedural hazards, implementation correctness. Every finding must point to the exact passage or line, and say what test or source would settle it.",
+    "gemini": "COLD READER. Framing, the strongest proof point, omissions and missing options, audience takeaway, operator experience, the best alternative the author did not consider. Every finding must point to the exact passage, and say what a reader would misunderstand or miss."
+  },
+  "lens_swap_rate": 0.2,
+  "hold_lone_blocker": true,
+  "checkpoints": {
+    "planning":        {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": false},
+    "eval-design":     {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": false},
+    "eval-writeup":    {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": true},
+    "research-brief":  {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
+    "deep-read":       {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
+    "content-draft":   {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": true},
+    "pr-operator":     {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
+    "pr-internal":     {"mode": "single",  "seats": ["codex"],           "outward_facing": false},
+    "rule-change":     {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
+    "graph-sample":    {"mode": "single",  "seats": ["codex"],           "outward_facing": false},
+    "graph-public":    {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": true},
+    "jobsearch-public":{"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": true}
+  }
+}

@@ -126,14 +126,18 @@ def gate(text: str, *, shingles=None, identity=None, _roots_override=None) -> No
             raise Refused("rule 4: an 8-word run copied from a private file: '" + " ".join(w[i:i + 3]) + " …'")
 
 
-def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int, workdir: str) -> dict:
+def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int, workdir: str,
+            schema: str | None = None) -> dict:
     if not shutil.which("agy"):
         raise SystemExit("agy (Antigravity CLI) not on PATH; install it and sign in once interactively")
     cmd = ["agy", "-p", prompt, "--model", model, "--output-format", "json", "--print-timeout", f"{timeout_s}s",
            "--sandbox", "--mode", "plan", "--disable-slash-commands"]
     if conversation:
         cmd += ["--conversation", conversation]
-    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60)
+    if schema:
+        cmd += ["--json-schema", schema]
+    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60,
+                       stdin=subprocess.DEVNULL)  # an open stdin makes codex wait for more input
     try:
         d = json.loads(p.stdout)
     except json.JSONDecodeError:
@@ -149,7 +153,8 @@ CODEX_DISABLE = ("shell_tool", "unified_exec", "shell_snapshot", "apps", "browse
                  "in_app_browser")
 
 
-def run_codex(prompt: str, *, model: str | None, thread: str | None, timeout_s: int, workdir: str) -> dict:
+def run_codex(prompt: str, *, model: str | None, thread: str | None, timeout_s: int, workdir: str,
+              schema: str | None = None) -> dict:
     """Returns {"thread_id", "response", "events"}. workdir must be an empty folder outside any repo (Codex reads
     AGENTS.md from its cwd upward)."""
     if not shutil.which("codex"):
@@ -159,11 +164,14 @@ def run_codex(prompt: str, *, model: str | None, thread: str | None, timeout_s: 
         opts += ["-c", f"features.{f}=false"]
     if model:
         opts += ["-c", f'model="{model}"']
+    if schema and not thread:
+        opts += ["--output-schema", schema]
     if thread:
         cmd = ["codex", "exec", "resume", *opts, thread, prompt]
     else:
         cmd = ["codex", "exec", "-s", "read-only", "-C", workdir, *opts, prompt]
-    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60)
+    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60,
+                       stdin=subprocess.DEVNULL)  # an open stdin makes codex wait for more input
     events = []
     for line in p.stdout.splitlines():
         try:
