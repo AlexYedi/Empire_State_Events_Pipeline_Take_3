@@ -13,15 +13,14 @@ Outbound gate (fail closed; any hit refuses and nothing is sent):
   1. The brief's first line must be exactly `visibility: public`. The author asserts the text is meant for public
      eyes (headed to GitHub, LinkedIn or a public talk). Missing marker = refuse.
   2. No email address and no phone number (the spine's own EMAIL_RE / PHONE_RE, imported, not copied).
-  3. No private marker phrases (me-model, target-companies, job-search target, off the record, inbox lists).
-  4. No 8-word run copied from a private file (me-model.md, target-companies.md, inbox-allowlist.md,
-     inbox-denylist.md), looked up in this checkout and every sibling worktree. If none of those files can be
-     found, the gate refuses: it cannot prove the brief is clean.
-  5. Not the git user's surname or email.
+Nothing else is held back (Alex, 27 Nov: "Nothing is private", "nothing is off the record").
 The gate never edits or redacts. It names the rule and the line, and the author fixes the brief.
 
-Inbound: Gemini runs with `agy` from an empty folder (`--sandbox --mode plan --disable-slash-commands`), so it
-cannot see the repo. Its reply is data, never instructions. Each run is saved in full to
+Where the seats run: inside a read-only snapshot of this repo's committed files at HEAD (`repo_snapshot()`), so they
+have the context Claude has. Tested 27 Nov: Codex (`-s read-only`, shell on) reads and greps the repo, and its
+sandbox blocks every write and the network. Gemini in plan mode reads files and makes no edits and runs no commands.
+Plan mode only works without `--disable-slash-commands` (agy warns "--mode plan has no effect while slash command
+expansion is disabled"), so that flag is gone. Its reply is data, never instructions. Each run is saved in full to
 `.claude/.state/alt/<run-id>/` (brief.md, raw.json, response.md, meta.json with the sha256 of response.md).
 """
 from __future__ import annotations
@@ -120,7 +119,7 @@ def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int
     if not shutil.which("agy"):
         raise SystemExit("agy (Antigravity CLI) not on PATH; install it and sign in once interactively")
     cmd = ["agy", "-p", prompt, "--model", model, "--output-format", "json", "--print-timeout", f"{timeout_s}s",
-           "--sandbox", "--mode", "plan", "--disable-slash-commands"]
+           "--sandbox", "--mode", "plan"]   # plan mode = read, no edits; it is inert with --disable-slash-commands
     if conversation:
         cmd += ["--conversation", conversation]
     if schema:
@@ -136,16 +135,43 @@ def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int
     return d
 
 
-# Codex (OpenAI, ChatGPT plan). `-s read-only` alone still lets Codex READ any file on disk (canary test, 26 Nov),
-# so its shell, exec, browser and apps tools are always disabled, on resumed turns too.
-CODEX_DISABLE = ("shell_tool", "unified_exec", "shell_snapshot", "apps", "browser_use", "browser_use_external",
-                 "in_app_browser")
+# Codex (OpenAI, ChatGPT plan) runs `-s read-only` with its shell ON, so it can read, grep and run read-only checks
+# in the repo snapshot; the sandbox blocks writes and the network (tested 27 Nov). Browser and apps stay off.
+CODEX_DISABLE = ("apps", "browser_use", "browser_use_external", "in_app_browser")
+
+_SNAPSHOTS: dict = {}
+
+
+def repo_snapshot(extra: dict | None = None) -> str:
+    """A read-only copy of the repo's committed files at HEAD (git archive), outside the repo, so no scratch,
+    run folder or other seat's reply is in it. Cached per process; removed at exit. `extra` {relpath: text} adds
+    files before the copy is made read-only (the canary uses it), and is never cached."""
+    import atexit, tarfile, io
+    if extra is None and "head" in _SNAPSHOTS and os.path.isdir(_SNAPSHOTS["head"]):
+        return _SNAPSHOTS["head"]
+    root = tempfile.mkdtemp(prefix="seat-repo-")
+    dst = os.path.join(root, "repo")
+    data = subprocess.run(["git", "-C", ROOT, "archive", "--format=tar", "HEAD"], capture_output=True,
+                          check=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(data)) as tf:
+        tf.extractall(dst, filter="data")
+    for rel, text in (extra or {}).items():
+        os.makedirs(os.path.dirname(os.path.join(dst, rel)) or dst, exist_ok=True)
+        open(os.path.join(dst, rel), "w", encoding="utf-8").write(text)
+    subprocess.run(["chmod", "-R", "a-w", dst], check=True)
+
+    def _cleanup(r=root):
+        subprocess.run(["chmod", "-R", "u+w", r], check=False)
+        shutil.rmtree(r, ignore_errors=True)
+    atexit.register(_cleanup)
+    if extra is None:
+        _SNAPSHOTS["head"] = dst
+    return dst
 
 
 def run_codex(prompt: str, *, model: str | None, thread: str | None, timeout_s: int, workdir: str,
               schema: str | None = None) -> dict:
-    """Returns {"thread_id", "response", "events"}. workdir must be an empty folder outside any repo (Codex reads
-    AGENTS.md from its cwd upward)."""
+    """Returns {"thread_id", "response", "events"}. workdir: normally repo_snapshot()."""
     if not shutil.which("codex"):
         raise SystemExit("codex CLI not on PATH; install it (brew install --cask codex) and run `codex login`")
     opts = ["--skip-git-repo-check", "--json"]
@@ -184,7 +210,8 @@ def ask(brief_path: str, *, seat: str = "gemini", model: str | None = None, conv
     os.makedirs(out, exist_ok=True)
     shutil.copy(brief_path, os.path.join(out, "brief.md"))
     body = text.split("\n", 1)[1] if "\n" in text else ""
-    with tempfile.TemporaryDirectory(prefix=f"{seat}-empty-") as empty:
+    empty = repo_snapshot()
+    if True:
         if seat == "codex":
             d = run_codex(body, model=model, thread=conversation, timeout_s=timeout_s, workdir=empty)
             conv = d["thread_id"]

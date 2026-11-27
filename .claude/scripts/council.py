@@ -68,9 +68,10 @@ class Council:
             f.write(md)
 
     def cwd(self, seat: str) -> str:
-        """An empty folder OUTSIDE any repo. Claude Code reads every CLAUDE.md above its cwd and Codex reads
-        AGENTS.md the same way, so a folder inside this repo hands them repo context the brief never gave
-        (found 26 Nov: the council's Claude quoted the repo CLAUDE.md). Persisted so resumed sessions match."""
+        """Gemini and Codex run in a read-only snapshot of the repo (so.repo_snapshot), so they have its context.
+        The Claude seat runs with no tools from its own folder. Persisted so resumed sessions match."""
+        if seat in ("gemini", "codex"):
+            return so.repo_snapshot()
         d = self.state.setdefault("cwds", {}).get(seat)
         if not d or not os.path.isdir(d):
             d = tempfile.mkdtemp(prefix=f"council-{seat}-")

@@ -127,9 +127,13 @@ Alex, 27 Nov: "Nothing is private ... nothing is in confidence" and "nothing is 
 everything Claude sees, Alex's own material included. One check remains: `second_opinion.gate` refuses an email
 address or phone number (ADR-9: contact data lives in HubSpot).
 
-Seats still run from empty folders outside any repo, and Codex runs with its shell, exec, browser and apps tools
-disabled. That is not about privacy. A model reviewing a file should review what it was given, not wander the
-disk or run commands. `review.py canary` re-tests it.
+**Where the seats run: inside the repo, read-only** (27 Nov). Each call runs in `repo_snapshot()`, a read-only copy
+of the repo's committed files at HEAD, made outside the repo so no scratch, run folder or other seat's reply is in
+it. Gemini runs in plan mode: it reads files, makes no edits and runs no commands. Plan mode only works without
+`--disable-slash-commands`, which had silently turned it off. Codex runs `-s read-only` with its shell on: it can
+read, grep and run read-only checks such as selftests, and its sandbox blocks every write and the network. Both
+were tested by trying to write outside the copy and reach the network. `review.py canary` re-tests it every
+time: each seat must read a token planted in its copy, and must fail to write outside it.
 
 ## Still open for Alex (council of 27 Nov)
 
