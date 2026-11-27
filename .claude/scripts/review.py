@@ -4,8 +4,8 @@
 Operating model: .claude/references/three-model-review.md (from the council of 27 Nov). Routing:
 .claude/references/review-routing.json.
 
-  review.py run ARTIFACT.md --checkpoint NAME --prelim PRELIM.md [--seats gemini,codex] [--swap|--no-swap]
-  review.py dispose RUN ID adopted|partly|rebutted|escalated --note "..." [--evidence "..."] [--remainder "..."]
+  review.py run ARTIFACT.md --checkpoint NAME --prelim PRELIM.md [--seats gemini,codex] [--swap|--no-swap] [--prior RUN]
+  review.py dispose RUN ID adopted|partly|rebutted|escalated --note "..." [--evidence ..] [--remainder ..] [--same-as ID]
   review.py digest RUN                       (rebuild digest.md from the receipt; no model calls)
   review.py status RUN [--artifact FILE]     (readiness: every finding disposed, no stale artifact, no missing seat)
   review.py canary [--seats gemini,codex]    (seeded-error catch test + local-file read test)
@@ -54,7 +54,7 @@ you check, judge and collaborate. Your one goal is to make this work better. You
 
 Your lens: {lens}
 
-Checkpoint: {checkpoint}. {stage}
+Checkpoint: {checkpoint}. {stage} This is an internal working document; it is not being published unless it says so.
 
 Return JSON only, matching the schema. Up to 8 findings, most consequential first. For each:
 - headline: one line in your own words, at most 20 words. It is shown to the operator verbatim.
@@ -139,7 +139,27 @@ def call_seat(seat: str, prompt: str, schema: str, timeout_s: int) -> dict:
             "seconds": round(time.time() - t0, 1), **parsed}
 
 
-def run(artifact_path: str, checkpoint: str, prelim_path: str, seats=None, swap=None, timeout_s=900) -> str:
+def prior_context(prior_rd: str | None) -> str:
+    """What an earlier review already settled or sent to Alex, so a re-review doesn't re-litigate it (27 Nov test:
+    an escalated positioning question came back as a new BLOCKER)."""
+    if not prior_rd:
+        return ""
+    r = load(prior_rd)
+    F = {f["id"]: f for f in r["findings"]}
+    lines = []
+    for i, d in r["dispositions"].items():
+        if d["disposition"] == "escalated":
+            lines.append(f"- Pending with the operator: {F[i]['headline']} (their decision; default: {d['note']})")
+        elif d["disposition"] == "rebutted":
+            lines.append(f"- Already rebutted: {F[i]['headline']} (reason: {d['note']})")
+    if not lines:
+        return ""
+    return ("\nAn earlier review of this document settled these. Do not raise them again unless you have new "
+            "information, and if you do, say what is new:\n" + "\n".join(lines) + "\n")
+
+
+def run(artifact_path: str, checkpoint: str, prelim_path: str, seats=None, swap=None, timeout_s=900,
+        prior: str | None = None) -> str:
     cfg = routing()
     if checkpoint not in cfg["checkpoints"]:
         raise SystemExit(f"unknown checkpoint {checkpoint}; see {ROUTING}")
@@ -163,14 +183,21 @@ def run(artifact_path: str, checkpoint: str, prelim_path: str, seats=None, swap=
     receipt = {"run": rid, "checkpoint": checkpoint, "mode": cp["mode"], "outward_facing": cp["outward_facing"],
                "artifact": os.path.abspath(artifact_path), "artifact_sha256": sha(artifact),
                "prelim_sha256": sha(prelim), "prelim_recorded_at": now(), "lens_swapped": swapped,
-               "roles": roles, "seats": {}, "findings": [], "dispositions": {}, "started_at": now()}
+               "roles": roles, "seats": {}, "findings": [], "dispositions": {}, "started_at": now(),
+               "prior_run": os.path.basename(prior) if prior else None}
     json.dump(receipt, open(os.path.join(rd, "receipt.json"), "w"), indent=1)   # prelim is on disk first
     schema = schema_file()
+
+    # Seats get the body only: the `visibility: public` marker is for the gate, and on 27 Nov both seats misread it
+    # as "this will be published" and raised false BLOCKERs (G1, X4).
+    body = artifact.split("\n", 1)[1] if "\n" in artifact else ""
+
+    known = prior_context(prior)
 
     def prompt_for(seat, extra=""):
         return PROMPT.format(peer=PEERS[seat], role=roles[seat], lens=lenses[seat], checkpoint=checkpoint,
                              stage="Blind review: no other reviewer's work is shown to you." if not extra else
-                             "Cross round.", extra=extra, artifact=artifact)
+                             "Cross round.", extra=known + extra, artifact=body)
 
     def round_(prompts: dict) -> dict:
         with cf.ThreadPoolExecutor(len(prompts)) as ex:
@@ -225,7 +252,8 @@ def load(rd: str) -> dict:
     return json.load(open(os.path.join(rd, "receipt.json")))
 
 
-def dispose(rd: str, fid: str, kind: str, note: str, evidence: str | None, remainder: str | None):
+def dispose(rd: str, fid: str, kind: str, note: str, evidence: str | None, remainder: str | None,
+            same_as: str | None = None):
     r = load(rd)
     ids = {f["id"] for f in r["findings"]}
     if fid not in ids:
@@ -238,8 +266,10 @@ def dispose(rd: str, fid: str, kind: str, note: str, evidence: str | None, remai
         raise SystemExit("rebutted needs --evidence: the source, calculation or test, or the reason for a judgment call")
     if not note:
         raise SystemExit("--note is required")
+    if same_as and same_as not in ids:
+        raise SystemExit(f"--same-as {same_as}: no such finding")
     r["dispositions"][fid] = {"disposition": kind, "note": note, "evidence": evidence, "remainder": remainder,
-                              "at": now()}
+                              "same_as": same_as, "at": now()}
     json.dump(r, open(os.path.join(rd, "receipt.json"), "w"), ensure_ascii=False, indent=1)
     write_digest(rd)
     log({"run": r["run"], "dispose": fid, "disposition": kind})
@@ -276,6 +306,14 @@ def write_digest(rd: str):
     rd_ = readiness(r)
     F = {f["id"]: f for f in r["findings"]}
     D = r["dispositions"]
+    twins = {}                                   # primary id -> [ids folded into it]
+    for i, d in D.items():
+        if d.get("same_as"):
+            twins.setdefault(d["same_as"], []).append(i)
+    folded = {i for v in twins.values() for i in v}
+
+    def tag(i):
+        return f" · also {', '.join(twins[i])} (both seats)" if i in twins else ""
     L = []
     states = " · ".join(f"{PEERS[s].split(' ')[0]} {st['state']} ({st['role']}, {st.get('seconds')}s)"
                         for s, st in r["seats"].items())
@@ -286,15 +324,15 @@ def write_digest(rd: str):
     L.append("## Needs Alex")
     L += [f"- {h}" for h in rd_["needs_alex"]] or ["- Nothing."]
     L.append("\n## Dismissed by Claude")
-    dis = [i for i, d in D.items() if d["disposition"] == "rebutted" and F[i]["severity"] != "NIT"]
-    L += [f"- **{i}** [{F[i]['severity']} · {PEERS[F[i]['seat']].split(' ')[0]}] {F[i]['headline']}  \n"
+    dis = [i for i, d in D.items() if d["disposition"] == "rebutted" and F[i]["severity"] != "NIT" and i not in folded]
+    L += [f"- **{i}** [{F[i]['severity']} · {PEERS[F[i]['seat']].split(' ')[0]}{tag(i)}] {F[i]['headline']}  \n"
           f"  Claude: {D[i]['note']} Evidence: {D[i]['evidence']}" for i in dis] or ["- Nothing."]
     L.append("\n## Adopted")
-    ad = sorted([i for i, d in D.items() if d["disposition"] in ("adopted", "partly")],
+    ad = sorted([i for i, d in D.items() if d["disposition"] in ("adopted", "partly") and i not in folded],
                 key=lambda i: SEV_ORDER[F[i]["severity"]])
     for i in ad[:5]:
         extra = f" (not adopted: {D[i]['remainder']})" if D[i]["disposition"] == "partly" else ""
-        L.append(f"- **{i}** [{F[i]['severity']}] {F[i]['headline']}{extra}")
+        L.append(f"- **{i}** [{F[i]['severity']}{tag(i)}] {F[i]['headline']}{extra}")
     if len(ad) > 5:
         L.append(f"- +{len(ad) - 5} more in receipt.json")
     if not ad:
@@ -363,8 +401,10 @@ def main(argv):
     g = p.add_mutually_exclusive_group(); g.add_argument("--swap", action="store_true", default=None)
     g.add_argument("--no-swap", dest="swap", action="store_false")
     p.add_argument("--timeout", type=int, default=900)
+    p.add_argument("--prior", help="an earlier review run of this artifact: its escalations and rebuttals are passed on")
     d = sub.add_parser("dispose"); d.add_argument("run"); d.add_argument("id"); d.add_argument("disposition")
     d.add_argument("--note", required=True); d.add_argument("--evidence"); d.add_argument("--remainder")
+    d.add_argument("--same-as", help="this finding is the same issue as another seat's finding ID")
     sub.add_parser("digest").add_argument("run")
     s = sub.add_parser("status"); s.add_argument("run"); s.add_argument("--artifact")
     c = sub.add_parser("canary"); c.add_argument("--seats", default="gemini,codex")
@@ -372,10 +412,10 @@ def main(argv):
     try:
         if a.cmd == "run":
             seats = a.seats.split(",") if a.seats else None
-            rd = run(a.artifact, a.checkpoint, a.prelim, seats=seats, swap=a.swap, timeout_s=a.timeout)
+            rd = run(a.artifact, a.checkpoint, a.prelim, seats=seats, swap=a.swap, timeout_s=a.timeout, prior=a.prior)
             print(rd); print(os.path.join(rd, "digest.md"))
         elif a.cmd == "dispose":
-            dispose(a.run, a.id, a.disposition, a.note, a.evidence, a.remainder)
+            dispose(a.run, a.id, a.disposition, a.note, a.evidence, a.remainder, a.same_as)
         elif a.cmd == "digest":
             write_digest(a.run); print(os.path.join(a.run, "digest.md"))
         elif a.cmd == "status":

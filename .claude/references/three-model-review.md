@@ -49,6 +49,11 @@ back-and-forth).
    Needs Alex → Dismissed by Claude → Adopted (up to 5, then a count) → Not yet disposed → Seats → Receipt.
 5. **Readiness means every finding has a disposition**, the artifact hash still matches, and every required seat
    reviewed. A seat that timed out, errored or was gate-blocked leaves the checkpoint open; only Alex waives it.
+6. **Revise and re-review with `--prior <run>`.** The seats are told what is already escalated or rebutted, so
+   they don't re-raise it without new information. When two seats raise the same issue, dispose of the second with
+   `--same-as <id>`; the digest shows it once, marked "both seats".
+7. **Stopping rule.** At most two review rounds per artifact. After the second, any remaining BLOCKER goes to Alex
+   instead of a third round. Each revision invites finer findings; the loop is for quality, not for zero findings.
 
 ## Rules for Claude
 
@@ -79,6 +84,29 @@ back-and-forth).
    default). Gemini: both seats on every PR.
 3. **Two-seat agreement.** Claude: if both seats raise the same judgment issue and Claude rejects it, escalate.
    Codex: verify and close with evidence. Current default: Codex's, with the rebuttal shown.
+
+## First test (27 Nov): the open-projects plan
+
+Claude wrote a plan for every open project, recorded its own judgment, then ran two planning reviews (v1, v2).
+
+| | v1 review | v2 review |
+|---|---|---|
+| Findings | 15 (5 BLOCKER) | 16 (4 BLOCKER) |
+| False alarms | 2: both seats misread the gate marker as "will be published" (engine fixed) | 0 |
+| Problems v1 found that came back in v2 | — | 0 |
+| Caught that Claude's preliminary judgment had not predicted | 9 of 15 | 12 of 16 |
+| Same issue raised by both seats | 4 pairs | 7 pairs (now folded with `--same-as`) |
+| Digest Alex reads | 391 words | 392 words |
+| Wall time | 5 min 21 s | about 5 min |
+
+For comparison, the two free-form councils of 26 Nov on the same subject left 5,478 and 7,747 words of transcript.
+
+Real defects the seats caught that Claude and both earlier councils missed:
+- the plan stopped at 12 applications against a 20 target;
+- on the 2027 calendar, 15 Jan is a Friday and 18 Jan is MLK Day, so finals were impossible to fit;
+- a 72-hour referral window opened on Black Friday expires before a working day;
+- the case study bridged two different metrics: citation precision, which the fix improved, and premise grounding,
+  which parked the feature.
 
 ## Files
 
