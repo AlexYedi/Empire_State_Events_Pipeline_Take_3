@@ -538,7 +538,7 @@ def main(argv):
     c = sub.add_parser("canary"); c.add_argument("--seats", default="gemini,codex")
     q = sub.add_parser("pr"); q.add_argument("--base", default="origin/main"); q.add_argument("--prelim", required=True)
     q.add_argument("--checkpoint", help="default: pr-operator if skills/commands/agents/references/CLAUDE.md change, else pr-internal")
-    q.add_argument("--timeout", type=int, default=900)
+    q.add_argument("--timeout", type=int, default=900); q.add_argument("--prior")
     w = sub.add_parser("draft"); w.add_argument("material"); w.add_argument("--spec", required=True)
     w.add_argument("--label", required=True); w.add_argument("--seats", default="gemini,codex")
     w.add_argument("--timeout", type=int, default=900)
@@ -558,7 +558,7 @@ def main(argv):
         elif a.cmd == "pr":
             art = os.path.join(tempfile.mkdtemp(prefix="review-pr-"), "pr.md")
             cp, sh = pr_artifact(a.base, art)
-            rd = run(art, a.checkpoint or cp, a.prelim, timeout_s=a.timeout, shingles=sh)
+            rd = run(art, a.checkpoint or cp, a.prelim, timeout_s=a.timeout, shingles=sh, prior=a.prior)
             print(f"checkpoint: {a.checkpoint or cp}"); print(rd); print(os.path.join(rd, "digest.md"))
         elif a.cmd == "draft":
             rd = draft(a.material, a.spec, a.label, tuple(a.seats.split(",")), a.timeout)
