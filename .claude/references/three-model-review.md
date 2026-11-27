@@ -16,6 +16,14 @@ reaches Alex.
 | **Codex** (ChatGPT) | **Verifier:** evidence, logic, numbers and denominators, dates, sequencing and procedural hazards, implementation | No |
 | **Gemini** (AI Pro) | **Cold reader:** framing, the strongest proof point, omissions and missing options, audience takeaway, operator experience | No |
 
+**Claude drives; the seats support** (Alex, 27 Nov). Claude is on a $100 plan; Gemini (Google AI Pro) and Codex
+(ChatGPT) are on plans of about $20 each, roughly a quarter of the room. So Claude does the heavy work: research,
+gathering context into the artifact, its own drafts, disposing of every finding and making every change. Each seat
+gets one focused artifact per checkpoint and spends its plan on judgment: review, its own variant, a challenge in
+council. The review prompt tells the seats the context is already in the artifact and to open a repo file only to
+check a specific claim. `review.py usage` shows what each seat spent per call; a seat whose plan has run out shows
+as `quota`, is named in the digest, and is not retried.
+
 Lenses swap on about 20% of runs (`lens_swap_rate`), so the run log can tell a seat's ability from its assignment.
 Assignments are revisited after about 20 runs; the seats stay either way.
 
@@ -28,7 +36,6 @@ Assignments are revisited after about 20 runs; the seats stay either way.
 | **council** | Both seats blind, then one cross round on each other's findings | Planning and decisions, eval design, the eval write-up |
 | **dual** | Both seats blind, in parallel | Research briefs (before the fan-out), Deep Read, content drafts, operator-facing PRs, rule and template changes, public graph claims, public job-search materials |
 | **single** | Codex only | Internal PRs with narrow, verifiable effects; the stratified graph sample |
-| **no seat** | Local checks only, labelled `unchecked externally` | Real CRM rows, real connection notes, private job-search instances |
 
 Free-form strategy questions, where you want proposals rather than findings, still go to `council.py` (verbatim
 back-and-forth).
@@ -55,6 +62,62 @@ back-and-forth).
 7. **Stopping rule.** At most two review rounds per artifact. After the second, any remaining BLOCKER goes to Alex
    instead of a third round. Each revision invites finer findings; the loop is for quality, not for zero findings.
 
+## In the pipeline (wired 27 Nov)
+
+Gemini and Codex take part in every run of these workflows; nobody has to ask for them.
+
+| Workflow step | What the seats do | Checkpoint |
+|---|---|---|
+| `/event-deep-research` Step 1, triage plan | Review it in the background while Alex reads it | `research-triage` |
+| `/event-deep-research` Step 3, Scan head | Review it; the digest is shown with the brief | `research-brief` |
+| `/event-deep-research` Step 4.5, Deep Read | Review the stitched text; adopted findings re-render a section | `deep-read` |
+| `pre-event-content` Step 5.5, every post | Each writes its own variant (E Gemini, F Codex), then both review A–F | `draft` + `content-draft` |
+| `/post-event-content` Step 4.2, public posts | Each writes its own variant, then both review every variant | `draft` + `content-draft` |
+
+**Nothing is held back from the seats** (Alex, 27 Nov: "Nothing is private", "nothing is off the record"). Every
+seat input goes through `seat_prep.py`, which only adds the `visibility: public` line and refuses an email address
+or phone number (exit 0 only; on exit 2 nothing is written and no seat is called),
+and every review has a `--prelim` written first.
+
+**Timing, step by step.** Nothing waits on Alex for a seat.
+
+| Step | Waits for the seats? | If a seat is slow or fails |
+|---|---|---|
+| Triage, Scan head | No. Runs while Alex reads | The digest is shown when it lands; adopted fixes go in a re-run of that specialist or a patch before the Notion write |
+| Deep Read | No. Runs after the append | Adopted fixes re-render that section (idempotent) |
+| Content `draft` + `content-draft` | Yes, before the Notion write: `--timeout 420` on each stage (about 15 minutes in all) | Each seat's draft is saved the moment it arrives, so a fast seat is never lost to a slow one. A seat that times out is left out; the page callout names it, and it can be re-run on its own and added as a page update |
+
+**Blind labels in review.** `review.py bundle` puts every variant's text (Claude's, and each seat's
+`<seat>.variant.txt`) under shuffled neutral labels V1…Vn, strips model headers, gates the result, and writes the
+label map beside it, never inside it. Run `content-draft` review on that bundle; restore attribution after disposal.
+
+**Spec for seat drafts.** The spec is a file that starts with `visibility: public` (the gate checks it as is; it is
+never stamped on) and carries the format rules plus the relevant sections of `content-style-guide.md`
+and `content-anti-patterns.md` verbatim (public files), so the seats write in Alex's voice, not their own defaults.
+
+Seats review a brief's questions like any other section. They do not draft connection notes, DMs, outreach,
+prepared questions or CRM rows; those stay with Claude.
+
+**Commands** (`S` = the run's scratch folder):
+
+```
+# 1. the seat copy (adds the visibility line; refuses an email address or phone number)
+python3 .claude/scripts/seat_prep.py $S/brief.md --out $S/brief.seat.md
+# 2. Claude's own read first, then the review
+python3 .claude/scripts/review.py run $S/brief.seat.md --checkpoint research-brief --prelim $S/brief.prelim.md
+python3 .claude/scripts/review.py dispose <run> G1 adopted --note "..."      # every finding
+# 3. the seats' own variants (content); a malformed or empty reply is kept as a diagnostic, never as a variant
+
+python3 .claude/scripts/review.py draft $S/material.seat.md --spec $S/post.spec.md --label <event-slug>-day-post
+# 4. a PR (push the branch first: only commits already on the public remote are sent)
+python3 .claude/scripts/review.py pr --prelim $S/pr.prelim.md
+```
+
+`review.py draft` writes `.claude/.state/alt/draft-<id>/` with each seat's variant verbatim (`gemini.md`,
+`codex.md`), the angle line, the claims it could not tie to the material, the raw output and a receipt with hashes.
+First live run (27 Nov, fictional material): both seats kept the speaker's hedge as said; Gemini flagged its one
+editorial claim; 149 s (Gemini) and 21 s (Codex).
+
 ## Rules for Claude
 
 - **Never** change a seat's severity or headline, soften a finding, or leave one without a disposition.
@@ -68,13 +131,17 @@ back-and-forth).
 
 ## Privacy
 
-- Everything bound for a seat passes `second_opinion.gate`: the artifact starts with `visibility: public`, and the
-  gate fails closed on emails, phones, private marker phrases and any 8-word run from the private files.
-- Seats run from empty folders outside any repo. Gemini headless auto-denies file reads. Codex runs with its shell,
-  exec, browser and apps tools disabled; its read-only sandbox alone can still read local files.
-  `review.py canary` re-tests both, plus seeded-error catching.
-- Job search: seats see rubrics, fresh fictional cases, or public material Alex has cleared item by item, because
-  the choice of company can itself reveal a target. Everything else is labelled `unchecked externally`.
+Alex, 27 Nov: "Nothing is private ... nothing is in confidence" and "nothing is off the record". The seats see
+everything Claude sees, Alex's own material included. One check remains: `second_opinion.gate` refuses an email
+address or phone number (ADR-9: contact data lives in HubSpot).
+
+**Where the seats run: inside the repo, read-only** (27 Nov). Each call runs in `repo_snapshot()`, a read-only copy
+of the repo's committed files at HEAD, made outside the repo so no scratch, run folder or other seat's reply is in
+it. Gemini runs in plan mode: it reads files, makes no edits and runs no commands. Plan mode only works without
+`--disable-slash-commands`, which had silently turned it off. Codex runs `-s read-only` with its shell on: it can
+read, grep and run read-only checks such as selftests, and its sandbox blocks every write and the network. Both
+were tested by trying to write outside the copy and reach the network. `review.py canary` re-tests it every
+time: each seat must read a token planted in its copy, and must fail to write outside it.
 
 ## Still open for Alex (council of 27 Nov)
 
@@ -110,7 +177,8 @@ Real defects the seats caught that Claude and both earlier councils missed:
 
 ## Files
 
-- `.claude/scripts/review.py`: run, dispose, digest, status, canary
+- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft, pr, bundle, usage
+- `.claude/scripts/seat_prep.py`: the seat copy of a pipeline file (`--selftest`)
 - `.claude/scripts/council.py`: free-form, verbatim multi-round councils
 - `.claude/scripts/second_opinion.py`: the gate and the seat runners
 - `.claude/references/review-routing.json`: checkpoints, lenses, swap rate, hold rule

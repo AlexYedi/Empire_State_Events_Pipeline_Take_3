@@ -1,6 +1,7 @@
 **What / why (one line):**
 
 - [ ] **One adversarial pass** — what would break this, and what did I remove?
+- [ ] **Three-model review** — `review.py pr --prelim <my read>` on the pushed branch. Run `review-…` · commit `…` · `review.py status` result (complete / seat missing: which) · rounds: n
 
 _Builds over about a day also:_
 - [ ] **Spec before code** — PRD for product builds (`.claude/references/prd-template.md`); ADR or in-repo reference for infra and data-contract changes.

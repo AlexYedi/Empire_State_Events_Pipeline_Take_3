@@ -16,13 +16,13 @@ verbatim and responds to it, then gives its updated position. Each is asked to s
 to disagree where it disagrees. No seat judges another's survival.
 
 Privacy: the brief, every prompt bound for a non-Anthropic model (it carries the other seats' text), and every Alex
-message pass the second_opinion gate (public-only, fail closed). A refused turn stops the council and says why in
-the transcript. No seat can read local files (canary-tested 26 Nov):
-  * Gemini: `agy` headless, sandboxed, empty folder; file reads are auto-denied (recorded as denied_actions).
-  * Codex: `codex exec`, read-only sandbox, empty folder, with the shell, exec, browser and apps tools DISABLED.
-    Its read-only sandbox alone still lets it read any file on disk, so the disables are mandatory.
+message pass the second_opinion gate (no email address or phone number; fail closed). A refused turn stops the council and says why in
+the transcript. Where each seat runs (tested 27 Nov):
+  * Gemini: `agy` headless, sandboxed, plan mode, inside a read-only snapshot of the repo (so.repo_snapshot).
+  * Codex: `codex exec -s read-only`, shell on, same snapshot; writes and the network are blocked.
   * Claude: `claude -p` with no tools and no MCP servers.
-All three run on subscriptions (Google AI Pro, ChatGPT, Claude); nothing here bills per token.
+Claude leads; Gemini and Codex advise. All three run on subscriptions (Claude $100, Google AI Pro and ChatGPT about
+$20 each); nothing here bills per token, but the smaller plans run out sooner.
 """
 from __future__ import annotations
 import argparse, datetime as dt, hashlib, json, os, subprocess, sys, tempfile
@@ -41,9 +41,12 @@ REPLY = ("The other council members said, verbatim:\n\n{blocks}\n\nRespond to ea
 
 def frame(seat: str, seats: list[str]) -> str:
     others = " and ".join(PEERS[x] for x in seats if x != seat)
-    return (f"You are {PEERS[seat]}, in a council with {others}. Alex, the operator, reads every one of you "
-            "verbatim. Speak in your own voice, be concrete, and disagree where you disagree. Do not defer to the "
-            "others to be polite, and do not dismiss them to protect your own answer.")
+    lead = ("You lead: you drive the work, decide what to propose to Alex, and make every change."
+            if seat == "claude" else
+            "Claude (Anthropic) leads: it drives the work and makes every change. You advise, judge and challenge.")
+    return (f"You are {PEERS[seat]}, in a council with {others}. {lead} Alex, the operator, reads every one of you "
+            "verbatim and decides. Speak in your own voice, be concrete, and disagree where you disagree. Do not "
+            "defer to the others to be polite, and do not dismiss them to protect your own answer.")
 
 
 def now() -> str:
@@ -68,9 +71,10 @@ class Council:
             f.write(md)
 
     def cwd(self, seat: str) -> str:
-        """An empty folder OUTSIDE any repo. Claude Code reads every CLAUDE.md above its cwd and Codex reads
-        AGENTS.md the same way, so a folder inside this repo hands them repo context the brief never gave
-        (found 26 Nov: the council's Claude quoted the repo CLAUDE.md). Persisted so resumed sessions match."""
+        """Gemini and Codex run in a read-only snapshot of the repo (so.repo_snapshot), so they have its context.
+        The Claude seat runs with no tools from its own folder. Persisted so resumed sessions match."""
+        if seat in ("gemini", "codex"):
+            return so.repo_snapshot()
         d = self.state.setdefault("cwds", {}).get(seat)
         if not d or not os.path.isdir(d):
             d = tempfile.mkdtemp(prefix=f"council-{seat}-")
@@ -96,7 +100,7 @@ class Council:
 
     # model calls -------------------------------------------------------------
     def call(self, seat: str, prompt: str):
-        if seat != "claude":                       # leaves Anthropic: public-only gate on the exact prompt
+        if seat != "claude":                       # leaves Anthropic: the gate (addresses and phone numbers) on the exact prompt
             so.gate("visibility: public\n" + prompt)
         return getattr(self, "_" + seat)(prompt)
 
@@ -138,7 +142,7 @@ class Council:
             try:
                 out[seat] = self.call(seat, prompts[seat])
             except so.Refused as e:
-                self.log(f"\n> **Stopped:** the prompt for {PEERS[seat]} was refused by the public-only gate ({e}).\n")
+                self.log(f"\n> **Stopped:** the prompt for {PEERS[seat]} was refused by the gate ({e}).\n")
                 raise
         for seat in self.seats:
             self.record(seat, out[seat][0], out[seat][1], label)
