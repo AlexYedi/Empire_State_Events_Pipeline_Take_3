@@ -55,10 +55,12 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 3. Run dedup search against Notion (5 DBs) per the canonicalization rules
 4. Classify each entity: NEW / REFRESH-light / REFRESH-full / SKIP / APPEND-CURRENT-EVENTS-ONLY
 5. Present triage plan to Alex for approval. **First, the once-per-run off-the-record check** (the Event's Notion
-   box; checked → no seat call anywhere in this run). **Then, at the same moment, start the three-model review of
+   box if the row exists, plus any off-the-record flag in the invite or from Alex; checked, flagged or unclear →
+   no seat call anywhere in this run). **Then, at the same moment, start the three-model review of
    the plan in the background** (seat copy via `seat_prep.py`, `--prelim` first) (`research-triage`, both seats, see `three-model-review.md` § In the pipeline). It runs while Alex
-   reads; it never holds his approval. Show its digest when it lands and dispose of every finding; one that changes
-   scope becomes a specialist re-run in Step 2 or a patch to the plan.
+   reads; it never holds his approval. Show its digest when it lands and dispose of every finding. The plan Alex
+   approved is the baseline: a finding that would change entities, research depth or deliverables goes to Alex
+   before dispatch; a correction within that scope is applied directly.
 6. Apply Alex's overrides (if any)
 
 **Do NOT delegate this step.** Building the triage plan requires conversation with Alex.
@@ -247,8 +249,10 @@ If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 4. **Append (4.5d) via `notion-writer`** — one payload, two `update` operations (Event page + `research_brief` Content Draft), each with `content_updates`: `old_str` = the whole marker-bounded section, from `⟦deep-read: …⟧` through `⟦/deep-read⟧`, copied from a fresh `notion-fetch` (on a first render that is just the two markers); `new_str` = `⟦deep-read: [today]⟧` + the stitched Deep Read + `⟦/deep-read⟧`, with real newlines (gotcha m; the validator refuses a literal `\n`, and a start marker without its end marker). Legacy pages without `⟦/deep-read⟧`: see the Step 4 legacy rule. `key` = `deepread:<event-slug>:<event|draft>:<YYYY-MM-DD>` (add `:r<n>` for a same-day re-render), manifest = the event's, both pages in the manifest already. `notion_payload.py` → VALID → dispatch → show the table. Idempotent: only that one section changes, and a retried key is skipped. `failed: anchor not found` means the stored text differs from the payload; re-fetch, copy it exactly, re-dispatch.
 5. **Three-model review of the Deep Read (`deep-read`, both seats).** Unless the run's off-the-record check said
    no seats (a standalone re-run checks the box again). Seat copy via `seat_prep.py`, `--prelim` first. Run it on the stitched text, in the
-   background, after or alongside the append. Adopted findings become a re-render of that one section (step 2 then
-   4, idempotent by key). It is additive: a seat that times out leaves the review open, never the Deep Read.
+   background, after or alongside the append. Adopted findings: re-render the affected section (step 2), re-stitch the
+   whole Deep Read (step 3), fetch fresh anchors for both pages and append with the next `:r<n>` key (step 4; a
+   reused key is skipped). Reuse a revision key only to retry the same payload, and verify both writes before
+   marking the finding applied. It is additive: a seat that times out leaves the review open, never the Deep Read.
 6. **Confirm / warn (4.5e) — fail LOUD.** On total render failure, leave the marker `pending` and emit an explicit `⚠️ DEEP READ PENDING — [event]` line in this run's output (and, under `/check-new-events`, in the Step 7 batch summary's "Deep Read PENDING" block) so a thin, Scan-head-only brief is never mistaken for a finished one. Step 6.5 will report the run incomplete, which is correct. Offer to re-run just Step 4.5 (idempotent). Only if Alex *explicitly accepts* shipping this event Scan-head-only for now, record it in the Step 6 summary as waived (with the reason) rather than pending.
    In batch/autonomous mode a `pending` marker is a **tracked incomplete that must appear in the final summary** — silent degradation to the Scan-head-only brief is the exact regression this step guards against (it is how the entire Aug-2026 Shortlist/AWS/Spark/GTM-Leaders batch shipped thin).
 

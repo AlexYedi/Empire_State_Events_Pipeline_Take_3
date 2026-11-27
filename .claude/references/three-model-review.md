@@ -68,7 +68,8 @@ Gemini and Codex take part in every run of these workflows; nobody has to ask fo
 | `/post-event-content` Step 4.2, public posts | Each writes its own variant, then both review every variant | `draft` + `content-draft` |
 
 **Off the record, once per run, before any seat call.** Fetch the Event row(s) the run covers and check the Notion
-"Off the record" box. If any is checked, no seat call happens anywhere in that run: not triage, brief, Deep Read,
+"Off the record" box, plus any off-the-record flag in the invite, the recording or from Alex. If any is checked or
+flagged, or a new event's status is unclear, no seat call happens anywhere in that run: not triage, brief, Deep Read,
 drafts or review, and not an Upcoming Week post that includes that event. Say so in the run summary.
 `seat_prep.py` cannot see the box; this check is the only thing that can.
 
@@ -81,12 +82,14 @@ and every review has a `--prelim` written first.
 |---|---|---|
 | Triage, Scan head | No. Runs while Alex reads | The digest is shown when it lands; adopted fixes go in a re-run of that specialist or a patch before the Notion write |
 | Deep Read | No. Runs after the append | Adopted fixes re-render that section (idempotent) |
-| Content `draft` + `content-draft` | Yes, before the Notion write, capped at 15 minutes in total | Write without the late seat; the page callout says "Gemini (or Codex) review pending"; a late result is disposed and applied as a page update in the same run |
+| Content `draft` + `content-draft` | Yes, before the Notion write: `--timeout 420` on each stage (about 15 minutes in all) | Each seat's draft is saved the moment it arrives, so a fast seat is never lost to a slow one. A seat that times out is left out; the page callout names it, and it can be re-run on its own and added as a page update |
 
-**Blind labels in review.** In `content-draft` review the variants carry neutral labels (V1…Vn, shuffled), so
-neither seat knows which model wrote which, and attribution is restored after disposal.
+**Blind labels in review.** `review.py bundle` puts every variant's text (Claude's, and each seat's
+`<seat>.variant.txt`) under shuffled neutral labels V1…Vn, strips model headers, gates the result, and writes the
+label map beside it, never inside it. Run `content-draft` review on that bundle; restore attribution after disposal.
 
-**Spec for seat drafts.** The spec carries the format rules plus the relevant sections of `content-style-guide.md`
+**Spec for seat drafts.** The spec is a file that starts with `visibility: public` (the gate checks it as is; it is
+never stamped on) and carries the format rules plus the relevant sections of `content-style-guide.md`
 and `content-anti-patterns.md` verbatim (public files), so the seats write in Alex's voice, not their own defaults.
 
 Seats review a brief's questions like any other section. They do not draft connection notes, DMs, outreach,

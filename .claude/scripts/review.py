@@ -11,6 +11,7 @@ Operating model: .claude/references/three-model-review.md (from the council of 2
   review.py canary [--seats gemini,codex]    (seeded-error catch test + local-file read test)
   review.py pr --prelim PRELIM.md [--base origin/main]
                                              (this branch's diff; pr-operator or pr-internal chosen by the paths)
+  review.py bundle V1.txt V2.txt ... --out ART.md   (blind content review: shuffled neutral labels + label map)
   review.py draft MATERIAL.md --spec SPEC.md --label NAME [--seats gemini,codex]
                                              (each seat writes its OWN variant from public material; saved verbatim)
 
@@ -435,7 +436,7 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
     material = open(material_path, encoding="utf-8").read()
     spec = open(spec_path, encoding="utf-8").read()
     so.gate(material)
-    so.gate(spec if spec.startswith("visibility: public") else "visibility: public\n" + spec)
+    so.gate(spec)          # the spec must carry its own `visibility: public` line; never stamped on (PR review G1)
     rid = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + re.sub(r"[^a-z0-9-]+", "-", label.lower())[:40]
     rid += "-" + os.urandom(3).hex()
     rd = os.path.join(so.ALT_DIR, "draft-" + rid)
@@ -443,16 +444,15 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
     open(os.path.join(rd, "material.md"), "w", encoding="utf-8").write(material)
     open(os.path.join(rd, "spec.md"), "w", encoding="utf-8").write(spec)
     body = material.split("\n", 1)[1] if "\n" in material else ""
-    spec_body = spec.split("\n", 1)[1] if spec.startswith("visibility: public") else spec
+    spec_body = spec.split("\n", 1)[1] if "\n" in spec else ""
     sf = os.path.join(tempfile.mkdtemp(prefix="draft-schema-"), "schema.json")
     json.dump(DRAFT_SCHEMA, open(sf, "w"))
-    with cf.ThreadPoolExecutor(len(seats)) as ex:
-        futs = {s: ex.submit(invoke, s, DRAFT_PROMPT.format(peer=PEERS[s], spec=spec_body, material=body), sf,
-                             timeout_s) for s in seats}
-        res = {s: f.result() for s, f in futs.items()}
     receipt = {"run": rid, "kind": "draft", "label": label, "material_sha256": sha(material), "spec_sha256": sha(spec),
-               "at": now(), "seats": {}}
-    for s, r in res.items():
+               "at": now(), "seats": {s: {"state": "pending"} for s in seats}}
+    rpath = os.path.join(rd, "receipt.json")
+    json.dump(receipt, open(rpath, "w"), indent=1)
+
+    def save(s, r):                                # each seat's result lands on disk the moment it arrives (X3)
         entry = {"state": r["state"], "seconds": r.get("seconds"), "error": r.get("error")}
         if r["state"] == "ok":
             open(os.path.join(rd, f"{s}.raw.json"), "w").write(json.dumps(r["raw"], ensure_ascii=False, indent=1))
@@ -465,14 +465,21 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
             if bad:                                  # kept as a diagnostic, never as a selectable variant (X5)
                 open(os.path.join(rd, f"{s}.malformed.txt"), "w", encoding="utf-8").write(r["reply"])
                 entry.update(state="malformed", reply_sha256=r["reply_sha256"], file=None)
-                receipt["seats"][s] = entry
-                continue
-            md = f"# {PEERS[s]} variant\n\n**Angle:** {d.get('angle', '')}\n\n{d.get('variant', '')}\n"
-            if d.get("unsure"):
-                md += "\n**Claims the model could not tie to the material:**\n" + "".join(f"- {u}\n" for u in d["unsure"])
-            open(os.path.join(rd, f"{s}.md"), "w", encoding="utf-8").write(md)
-            entry.update(reply_sha256=r["reply_sha256"], file=f"{s}.md", unsure=len(d.get("unsure") or []))
+            else:
+                md = f"# {PEERS[s]} variant\n\n**Angle:** {d['angle']}\n\n{d['variant']}\n"
+                if d["unsure"]:
+                    md += "\n**Claims the model could not tie to the material:**\n" + "".join(f"- {u}\n" for u in d["unsure"])
+                open(os.path.join(rd, f"{s}.md"), "w", encoding="utf-8").write(md)
+                open(os.path.join(rd, f"{s}.variant.txt"), "w", encoding="utf-8").write(d["variant"])
+                entry.update(reply_sha256=r["reply_sha256"], file=f"{s}.md", unsure=len(d["unsure"]))
         receipt["seats"][s] = entry
+        json.dump(receipt, open(rpath, "w"), ensure_ascii=False, indent=1)
+
+    with cf.ThreadPoolExecutor(len(seats)) as ex:
+        futs = {ex.submit(invoke, s, DRAFT_PROMPT.format(peer=PEERS[s], spec=spec_body, material=body), sf,
+                          timeout_s): s for s in seats}
+        for f in cf.as_completed(futs):
+            save(futs[f], f.result())
     json.dump(receipt, open(os.path.join(rd, "receipt.json"), "w"), ensure_ascii=False, indent=1)
     log({"draft": rid, "seats": {s: {"state": e["state"], "seconds": e["seconds"]} for s, e in receipt["seats"].items()}})
     return rd
@@ -489,14 +496,25 @@ def pr_artifact(base: str, out: str) -> tuple[str, set]:
     def git(*a):
         return subprocess.run(["git", *a], capture_output=True, text=True, check=True).stdout
     br = git("rev-parse", "--abbrev-ref", "HEAD").strip()
-    subprocess.run(["git", "fetch", "-q", "origin"], check=False)
-    if subprocess.run(["git", "merge-base", "--is-ancestor", "HEAD", f"origin/{br}"]).returncode != 0:
+    if subprocess.run(["git", "fetch", "-q", "origin", br], capture_output=True).returncode != 0:
+        raise SystemExit(f"fetch of origin/{br} failed: cannot confirm the commits are public; push first")   # X1
+    tip = subprocess.run(["git", "ls-remote", "origin", f"refs/heads/{br}"], capture_output=True, text=True).stdout.split()
+    if not tip or subprocess.run(["git", "merge-base", "--is-ancestor", "HEAD", tip[0]]).returncode != 0:
         raise SystemExit(f"push {br} first: review.py pr reviews only commits already on the public remote")
-    files = [f for f in git("diff", "--name-only", "-z", f"{base}...HEAD").split("\0") if f]   # X8
+    mb = git("merge-base", base, "HEAD").strip()                                                      # G5
+    status = [x for x in git("diff", "--name-status", "-z", "-M", f"{mb}..HEAD").split("\0") if x]
+    pairs, i = [], 0                       # (old_path, new_path) from NUL-separated name-status (X8, G5 renames)
+    while i < len(status):
+        code = status[i]
+        if code[0] in "RC":
+            pairs.append((status[i + 1], status[i + 2])); i += 3
+        else:
+            pairs.append((status[i + 1], status[i + 1])); i += 2
+    files = [n for _, n in pairs]
     if not files:
         raise SystemExit(f"no changes against {base}")
-    diff = git("diff", f"{base}...HEAD")
-    log_ = git("log", "--format=%s%n%n%b", f"{base}..HEAD")
+    diff = git("diff", "-M", f"{mb}..HEAD")
+    log_ = git("log", "--format=%s%n%n%b", f"{mb}..HEAD")
     checkpoint = "pr-operator" if any(OPERATOR_PATHS.search(f) for f in files) else "pr-internal"
     log_ = "\n".join(l for l in log_.splitlines() if not re.match(r"\s*(Co-Authored-By|Signed-off-by):", l, re.I))
     diff, log_ = (so.PHONE_RE.sub("[phone]", so.EMAIL_RE.sub("[email]", x)) for x in (diff, log_))   # G4
@@ -508,9 +526,8 @@ def pr_artifact(base: str, out: str) -> tuple[str, set]:
     shingles, found = so.private_shingles(None)
     if not found:
         raise SystemExit("no private file found to check against (set ESEP_PRIVATE_DIRS); refusing")
-    w = []
-    for f in files:
-        r = subprocess.run(["git", "show", f"{base}:{f}"], capture_output=True, text=True)
+    for old_f, _ in pairs:
+        r = subprocess.run(["git", "show", f"{mb}:{old_f}"], capture_output=True, text=True)
         if r.returncode == 0:
             w = so._words(r.stdout)
             shingles = shingles - {tuple(w[i:i + so.SHINGLE]) for i in range(len(w) - so.SHINGLE + 1)}
@@ -519,6 +536,23 @@ def pr_artifact(base: str, out: str) -> tuple[str, set]:
     so.gate(text, shingles=shingles)
     open(out, "w", encoding="utf-8").write(text)
     return checkpoint, shingles
+
+
+def bundle(variants: list[str], out: str) -> str:
+    """Blind content review: each variant file's text under a shuffled neutral label (V1..Vn); the label map is
+    written next to OUT (never inside it) so attribution is restored after disposal (PR review G7)."""
+    files = list(variants); random.shuffle(files)
+    parts, mapping = [], {}
+    for n, f in enumerate(files, 1):
+        txt = open(f, encoding="utf-8").read()
+        txt = "\n".join(l for l in txt.splitlines() if l.strip() != "visibility: public" and
+                        not re.match(r"^#+\s*(Gemini|Codex|Claude)\b.*variant", l, re.I))
+        parts.append(f"## V{n}\n\n{txt.strip()}\n"); mapping[f"V{n}"] = os.path.abspath(f)
+    text = "visibility: public\n# Variants under review (labels are neutral and shuffled)\n\n" + "\n".join(parts)
+    so.gate(text)
+    open(out, "w", encoding="utf-8").write(text)
+    json.dump(mapping, open(out + ".labels.json", "w"), indent=1)
+    return out + ".labels.json"
 
 
 def main(argv):
@@ -539,6 +573,7 @@ def main(argv):
     q = sub.add_parser("pr"); q.add_argument("--base", default="origin/main"); q.add_argument("--prelim", required=True)
     q.add_argument("--checkpoint", help="default: pr-operator if skills/commands/agents/references/CLAUDE.md change, else pr-internal")
     q.add_argument("--timeout", type=int, default=900); q.add_argument("--prior")
+    b = sub.add_parser("bundle"); b.add_argument("variants", nargs="+"); b.add_argument("--out", required=True)
     w = sub.add_parser("draft"); w.add_argument("material"); w.add_argument("--spec", required=True)
     w.add_argument("--label", required=True); w.add_argument("--seats", default="gemini,codex")
     w.add_argument("--timeout", type=int, default=900)
@@ -555,6 +590,8 @@ def main(argv):
         elif a.cmd == "status":
             st = readiness(load(a.run), a.artifact); print(json.dumps(st, indent=1))
             return 0 if st["complete"] and not st["needs_alex"] else 3
+        elif a.cmd == "bundle":
+            print(bundle(a.variants, a.out))
         elif a.cmd == "pr":
             art = os.path.join(tempfile.mkdtemp(prefix="review-pr-"), "pr.md")
             cp, sh = pr_artifact(a.base, art)
