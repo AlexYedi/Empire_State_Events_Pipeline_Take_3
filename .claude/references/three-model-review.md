@@ -16,6 +16,14 @@ reaches Alex.
 | **Codex** (ChatGPT) | **Verifier:** evidence, logic, numbers and denominators, dates, sequencing and procedural hazards, implementation | No |
 | **Gemini** (AI Pro) | **Cold reader:** framing, the strongest proof point, omissions and missing options, audience takeaway, operator experience | No |
 
+**Claude drives; the seats support** (Alex, 27 Nov). Claude is on a $100 plan; Gemini (Google AI Pro) and Codex
+(ChatGPT) are on plans of about $20 each, roughly a quarter of the room. So Claude does the heavy work: research,
+gathering context into the artifact, its own drafts, disposing of every finding and making every change. Each seat
+gets one focused artifact per checkpoint and spends its plan on judgment: review, its own variant, a challenge in
+council. The review prompt tells the seats the context is already in the artifact and to open a repo file only to
+check a specific claim. `review.py usage` shows what each seat spent per call; a seat whose plan has run out shows
+as `quota`, is named in the digest, and is not retried.
+
 Lenses swap on about 20% of runs (`lens_swap_rate`), so the run log can tell a seat's ability from its assignment.
 Assignments are revisited after about 20 runs; the seats stay either way.
 
@@ -169,7 +177,7 @@ Real defects the seats caught that Claude and both earlier councils missed:
 
 ## Files
 
-- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft, pr
+- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft, pr, bundle, usage
 - `.claude/scripts/seat_prep.py`: the seat copy of a pipeline file (`--selftest`)
 - `.claude/scripts/council.py`: free-form, verbatim multi-round councils
 - `.claude/scripts/second_opinion.py`: the gate and the seat runners
