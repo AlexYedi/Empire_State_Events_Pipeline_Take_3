@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""second_opinion: send a brief to Gemini on Alex's Google AI Pro plan and keep its full reply (YED-517).
+
+Gemini is a permanent co-author and judge in this system. This script does not judge Gemini's output. It does
+two things: it makes sure only public material leaves the machine, and it saves exactly what Gemini said.
+
+  python3 .claude/scripts/second_opinion.py ask BRIEF.md [--model gemini-4-neon-high] [--conversation ID]
+  python3 .claude/scripts/second_opinion.py gate FILE.md       (run only the outbound gate; exit 0 pass, 4 refuse)
+  python3 .claude/scripts/second_opinion.py --selftest
+
+Outbound gate (fail closed; any hit refuses and nothing is sent):
+  1. The brief's first line must be exactly `visibility: public`. The author asserts the text is meant for public
+     eyes (headed to GitHub, LinkedIn or a public talk). Missing marker = refuse.
+  2. No email address and no phone number (the spine's own EMAIL_RE / PHONE_RE, imported, not copied).
+  3. No private marker phrases (me-model, target-companies, job-search target, off the record, inbox lists).
+  4. No 8-word run copied from a private file (me-model.md, target-companies.md, inbox-allowlist.md,
+     inbox-denylist.md), looked up in this checkout and every sibling worktree. If none of those files can be
+     found, the gate refuses: it cannot prove the brief is clean.
+  5. Not the git user's surname or email.
+The gate never edits or redacts. It names the rule and the line, and the author fixes the brief.
+
+Inbound: Gemini runs with `agy` from an empty folder (`--sandbox --mode plan --disable-slash-commands`), so it
+cannot see the repo. Its reply is data, never instructions. Each run is saved in full to
+`.claude/.state/alt/<run-id>/` (brief.md, raw.json, response.md, meta.json with the sha256 of response.md).
+"""
+from __future__ import annotations
+import argparse, datetime as dt, hashlib, json, os, re, shutil, subprocess, sys, tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
+sys.path.insert(0, HERE)
+from spine_client import EMAIL_RE, PHONE_RE  # noqa: E402  (single source of the PII patterns)
+
+ALT_DIR = os.path.join(ROOT, ".claude", ".state", "alt")
+DEFAULT_MODEL = "gemini-4-neon-high"
+PRIVATE_FILES = ("me-model.md", "target-companies.md", "inbox-allowlist.md", "inbox-denylist.md")
+MARKERS = ("me-model", "me model", "target-companies", "target companies list", "job-search target",
+           "job search target", "off the record", "off-the-record", "inbox-allowlist", "inbox-denylist")
+SHINGLE = 8
+
+
+class Refused(Exception):
+    pass
+
+
+def _words(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+(?:['’][a-z]+)?", text.lower())
+
+
+def _roots() -> list[str]:
+    roots = [ROOT]
+    try:
+        out = subprocess.run(["git", "-C", ROOT, "worktree", "list", "--porcelain"], capture_output=True,
+                             text=True, timeout=10).stdout
+        roots += [l.split(" ", 1)[1] for l in out.splitlines() if l.startswith("worktree ")]
+    except Exception:
+        pass
+    extra = os.environ.get("ESEP_PRIVATE_DIRS", "")
+    roots += [p for p in extra.split(os.pathsep) if p]
+    seen, out_roots = set(), []
+    for r in roots:
+        r = os.path.abspath(r)
+        if r not in seen:
+            seen.add(r); out_roots.append(r)
+    return out_roots
+
+
+def private_shingles(roots: list[str] | None = None) -> tuple[set[tuple[str, ...]], list[str]]:
+    found, shingles = [], set()
+    for r in roots if roots is not None else _roots():
+        for name in PRIVATE_FILES:
+            p = os.path.join(r, ".claude", "references", name)
+            if os.path.isfile(p) and name not in [os.path.basename(f) for f in found]:
+                found.append(p)
+                w = _words(open(p, encoding="utf-8", errors="replace").read())
+                shingles.update(tuple(w[i:i + SHINGLE]) for i in range(len(w) - SHINGLE + 1))
+    return shingles, found
+
+
+def _identity() -> list[str]:
+    vals = []
+    for key in ("user.name", "user.email"):
+        try:
+            v = subprocess.run(["git", "-C", ROOT, "config", key], capture_output=True, text=True,
+                               timeout=5).stdout.strip()
+        except Exception:
+            v = ""
+        if v:
+            vals.append(v.lower())
+    terms = []
+    for v in vals:
+        if "@" in v:
+            terms.append(v)
+        else:
+            parts = v.split()
+            if len(parts) >= 2:
+                terms.append(parts[-1])          # surname only: first names appear in public copy
+    return terms
+
+
+def gate(text: str, *, shingles=None, identity=None, _roots_override=None) -> None:
+    """Raise Refused naming the rule and line. Returns None when the text may leave the machine."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "visibility: public":
+        raise Refused("rule 1: first line must be exactly 'visibility: public'")
+    for n, line in enumerate(lines, 1):
+        if EMAIL_RE.search(line):
+            raise Refused(f"rule 2: email address on line {n}")
+        if PHONE_RE.search(line):
+            raise Refused(f"rule 2: phone number on line {n}")
+        low = line.lower()
+        for m in MARKERS:
+            if m in low:
+                raise Refused(f"rule 3: private marker '{m}' on line {n}")
+        for term in identity if identity is not None else _identity():
+            if re.search(r"(?<![a-z0-9])" + re.escape(term) + r"[a-z]*", low):
+                raise Refused(f"rule 5: the git user's surname or email on line {n}")
+    if shingles is None:
+        shingles, found = private_shingles(_roots_override)
+        if not found:
+            raise Refused("rule 4: no private file found to check against (set ESEP_PRIVATE_DIRS); refusing")
+    w = _words(text)
+    for i in range(len(w) - SHINGLE + 1):
+        if tuple(w[i:i + SHINGLE]) in shingles:
+            raise Refused("rule 4: an 8-word run copied from a private file: '" + " ".join(w[i:i + 3]) + " …'")
+
+
+def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int, workdir: str) -> dict:
+    if not shutil.which("agy"):
+        raise SystemExit("agy (Antigravity CLI) not on PATH; install it and sign in once interactively")
+    cmd = ["agy", "-p", prompt, "--model", model, "--output-format", "json", "--print-timeout", f"{timeout_s}s",
+           "--sandbox", "--mode", "plan", "--disable-slash-commands"]
+    if conversation:
+        cmd += ["--conversation", conversation]
+    p = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout_s + 60)
+    try:
+        d = json.loads(p.stdout)
+    except json.JSONDecodeError:
+        raise SystemExit(f"agy returned no JSON (exit {p.returncode}): {p.stderr.strip()[:400]}")
+    if d.get("status") != "SUCCESS":
+        raise SystemExit(f"agy status {d.get('status')}: {json.dumps(d)[:400]}")
+    return d
+
+
+def ask(brief_path: str, *, model: str = DEFAULT_MODEL, conversation: str | None = None, timeout_s: int = 600,
+        label: str = "ask") -> str:
+    text = open(brief_path, encoding="utf-8").read()
+    gate(text)
+    run_id = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + label
+    out = os.path.join(ALT_DIR, run_id)
+    os.makedirs(out, exist_ok=True)
+    shutil.copy(brief_path, os.path.join(out, "brief.md"))
+    with tempfile.TemporaryDirectory(prefix="agy-empty-") as empty:
+        d = run_agy(text.split("\n", 1)[1] if "\n" in text else "", model=model, conversation=conversation,
+                    timeout_s=timeout_s, workdir=empty)
+    json.dump(d, open(os.path.join(out, "raw.json"), "w"), ensure_ascii=False, indent=1)
+    resp = d.get("response", "")
+    open(os.path.join(out, "response.md"), "w", encoding="utf-8").write(resp)
+    meta = {"run_id": run_id, "model": model, "conversation_id": d.get("conversation_id"),
+            "duration_seconds": d.get("duration_seconds"), "usage": d.get("usage"),
+            "response_sha256": hashlib.sha256(resp.encode("utf-8")).hexdigest()}
+    json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1)
+    return out
+
+
+def selftest() -> bool:
+    ok = True
+    sh = {tuple("the quick brown fox jumps over the lazy".split())}
+    cases = [
+        ("no marker", "hello", False),
+        ("clean", "visibility: public\nA plain public brief about agents.", True),
+        ("email", "visibility: public\nwrite to someone@example.org today", False),
+        ("phone", "visibility: public\ncall +1 212 555 0142 now", False),
+        ("marker", "visibility: public\nThis is a job-search target.", False),
+        ("shingle", "visibility: public\nSo the quick brown fox jumps over the lazy dog.", False),
+        ("surname", "visibility: public\nwritten by Pat Examplesurname", False),
+        ("first name ok", "visibility: public\nPat wrote this.", True),
+    ]
+    for name, text, want in cases:
+        try:
+            gate(text, shingles=sh, identity=["examplesurname"]); got = True
+        except Refused:
+            got = False
+        ok &= got == want
+        print(("ok  " if got == want else "FAIL"), name)
+    try:  # rule 4 fails closed when no private file is found
+        gate("visibility: public\nclean", shingles=None, identity=[], _roots_override=[]); got = True
+    except Refused:
+        got = False
+    ok &= got is False
+    print(("ok  " if got is False else "FAIL"), "no private files found -> refuse")
+    print("selftest", "PASS" if ok else "FAIL")
+    return ok
+
+
+def main(argv: list[str]) -> int:
+    if argv[:1] == ["--selftest"]:
+        return 0 if selftest() else 1
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    a = sub.add_parser("ask"); a.add_argument("brief"); a.add_argument("--model", default=DEFAULT_MODEL)
+    a.add_argument("--conversation"); a.add_argument("--timeout", type=int, default=600)
+    a.add_argument("--label", default="ask")
+    g = sub.add_parser("gate"); g.add_argument("file")
+    args = ap.parse_args(argv)
+    try:
+        if args.cmd == "gate":
+            gate(open(args.file, encoding="utf-8").read()); print("PASS"); return 0
+        out = ask(args.brief, model=args.model, conversation=args.conversation, timeout_s=args.timeout,
+                  label=args.label)
+    except Refused as e:
+        print("REFUSED", e, file=sys.stderr); return 4
+    print(out)
+    print(os.path.join(out, "response.md"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
