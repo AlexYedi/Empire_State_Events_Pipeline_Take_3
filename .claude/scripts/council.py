@@ -25,7 +25,7 @@ the transcript. No seat can read local files (canary-tested 26 Nov):
 All three run on subscriptions (Google AI Pro, ChatGPT, Claude); nothing here bills per token.
 """
 from __future__ import annotations
-import argparse, datetime as dt, hashlib, json, os, subprocess, sys
+import argparse, datetime as dt, hashlib, json, os, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -68,6 +68,17 @@ class Council:
         with open(os.path.join(self.run, "transcript.md"), "a", encoding="utf-8") as f:
             f.write(md)
 
+    def cwd(self, seat: str) -> str:
+        """An empty folder OUTSIDE any repo. Claude Code reads every CLAUDE.md above its cwd and Codex reads
+        AGENTS.md the same way, so a folder inside this repo hands them repo context the brief never gave
+        (found 26 Nov: the council's Claude quoted the repo CLAUDE.md). Persisted so resumed sessions match."""
+        d = self.state.setdefault("cwds", {}).get(seat)
+        if not d or not os.path.isdir(d):
+            d = tempfile.mkdtemp(prefix=f"council-{seat}-")
+            self.state["cwds"][seat] = d
+            self.save()
+        return d
+
     def name(self, speaker: str) -> str:
         if speaker == "alex":
             return "Alex"
@@ -92,7 +103,7 @@ class Council:
 
     def _gemini(self, prompt: str):
         d = so.run_agy(prompt, model=self.state["gemini_model"], conversation=self.state.get("gemini_conv"),
-                       timeout_s=900, workdir=os.path.join(self.run, "cwd-gemini"))
+                       timeout_s=900, workdir=self.cwd("gemini"))
         self.state["gemini_conv"] = d.get("conversation_id") or self.state.get("gemini_conv")
         return d.get("response", ""), d
 
@@ -101,7 +112,7 @@ class Council:
                "--tools", "", "--strict-mcp-config", "--append-system-prompt", frame("claude", self.seats)]
         if self.state.get("claude_session"):
             cmd += ["--resume", self.state["claude_session"]]
-        p = subprocess.run(cmd, cwd=os.path.join(self.run, "cwd-claude"), capture_output=True, text=True,
+        p = subprocess.run(cmd, cwd=self.cwd("claude"), capture_output=True, text=True,
                            timeout=1200)
         try:
             d = json.loads(p.stdout)
@@ -113,7 +124,7 @@ class Council:
         return d.get("result", ""), d
 
     def _codex(self, prompt: str):
-        cwd = os.path.join(self.run, "cwd-codex")
+        cwd = self.cwd("codex")
         opts = ["--skip-git-repo-check", "--json"]
         for f in CODEX_DISABLE:
             opts += ["-c", f"features.{f}=false"]
@@ -170,8 +181,7 @@ def start(brief: str, rounds: int, seats: list[str], models: dict) -> str:
     so.gate(text)
     body = text.split("\n", 1)[1]
     run = os.path.join(so.ALT_DIR, "council-" + dt.datetime.now().strftime("%Y%m%d-%H%M%S"))
-    for d in ["turns"] + [f"cwd-{s}" for s in seats]:
-        os.makedirs(os.path.join(run, d), exist_ok=True)
+    os.makedirs(os.path.join(run, "turns"), exist_ok=True)
     open(os.path.join(run, "brief.md"), "w", encoding="utf-8").write(text)
     c = Council(run)
     c.state = {"brief": "brief.md", "seats": seats, "turns": [], **{f"{k}_model": v for k, v in models.items()}}
