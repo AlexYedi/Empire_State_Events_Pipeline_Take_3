@@ -67,8 +67,30 @@ Gemini and Codex take part in every run of these workflows; nobody has to ask fo
 | `pre-event-content` Step 5.5, every post | Each writes its own variant (E Gemini, F Codex), then both review A–F | `draft` + `content-draft` |
 | `/post-event-content` Step 4.2, public posts | Each writes its own variant, then both review every variant | `draft` + `content-draft` |
 
-None of these hold Alex's approval or the pipeline: reviews run in the background and land before the Notion write.
-Connection notes, DMs, outreach, prepared questions and CRM rows stay with Claude.
+**Off the record, once per run, before any seat call.** Fetch the Event row(s) the run covers and check the Notion
+"Off the record" box. If any is checked, no seat call happens anywhere in that run: not triage, brief, Deep Read,
+drafts or review, and not an Upcoming Week post that includes that event. Say so in the run summary.
+`seat_prep.py` cannot see the box; this check is the only thing that can.
+
+**Every seat input goes through `seat_prep.py`** (exit 0 only; on exit 2 nothing is written and no seat is called),
+and every review has a `--prelim` written first.
+
+**Timing, step by step.** Nothing waits on Alex for a seat.
+
+| Step | Waits for the seats? | If a seat is slow or fails |
+|---|---|---|
+| Triage, Scan head | No. Runs while Alex reads | The digest is shown when it lands; adopted fixes go in a re-run of that specialist or a patch before the Notion write |
+| Deep Read | No. Runs after the append | Adopted fixes re-render that section (idempotent) |
+| Content `draft` + `content-draft` | Yes, before the Notion write, capped at 15 minutes in total | Write without the late seat; the page callout says "Gemini (or Codex) review pending"; a late result is disposed and applied as a page update in the same run |
+
+**Blind labels in review.** In `content-draft` review the variants carry neutral labels (V1…Vn, shuffled), so
+neither seat knows which model wrote which, and attribution is restored after disposal.
+
+**Spec for seat drafts.** The spec carries the format rules plus the relevant sections of `content-style-guide.md`
+and `content-anti-patterns.md` verbatim (public files), so the seats write in Alex's voice, not their own defaults.
+
+Seats review a brief's questions like any other section. They do not draft connection notes, DMs, outreach,
+prepared questions or CRM rows; those stay with Claude.
 
 **Commands** (`S` = the run's scratch folder):
 
@@ -79,8 +101,11 @@ python3 .claude/scripts/seat_prep.py $S/brief.md --out $S/brief.seat.md
 # 2. Claude's own read first, then the review
 python3 .claude/scripts/review.py run $S/brief.seat.md --checkpoint research-brief --prelim $S/brief.prelim.md
 python3 .claude/scripts/review.py dispose <run> G1 adopted --note "..."      # every finding
-# 3. the seats' own variants (content)
+# 3. the seats' own variants (content); a malformed or empty reply is kept as a diagnostic, never as a variant
+
 python3 .claude/scripts/review.py draft $S/material.seat.md --spec $S/post.spec.md --label <event-slug>-day-post
+# 4. a PR (push the branch first: only commits already on the public remote are sent)
+python3 .claude/scripts/review.py pr --prelim $S/pr.prelim.md
 ```
 
 `review.py draft` writes `.claude/.state/alt/draft-<id>/` with each seat's variant verbatim (`gemini.md`,
@@ -143,7 +168,7 @@ Real defects the seats caught that Claude and both earlier councils missed:
 
 ## Files
 
-- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft
+- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft, pr
 - `.claude/scripts/seat_prep.py`: the public-only seat copy of a pipeline file (`--selftest`)
 - `.claude/scripts/council.py`: free-form, verbatim multi-round councils
 - `.claude/scripts/second_opinion.py`: the gate and the seat runners

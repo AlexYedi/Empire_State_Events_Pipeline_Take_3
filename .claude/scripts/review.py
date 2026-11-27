@@ -116,11 +116,11 @@ def parse_findings(text: str) -> dict:
     return {"findings": out, "checked": str(d.get("checked", ""))}
 
 
-def invoke(seat: str, prompt: str, schema: str, timeout_s: int) -> dict:
+def invoke(seat: str, prompt: str, schema: str, timeout_s: int, shingles: set | None = None) -> dict:
     """One gated call to a seat from an empty folder. Returns state + verbatim reply + raw output."""
     t0 = time.time()
     try:
-        so.gate("visibility: public\n" + prompt)
+        so.gate("visibility: public\n" + prompt, shingles=shingles)
     except so.Refused as e:
         return {"state": "blocked", "error": str(e), "seconds": 0}
     with tempfile.TemporaryDirectory(prefix=f"review-{seat}-") as empty:
@@ -142,8 +142,8 @@ def invoke(seat: str, prompt: str, schema: str, timeout_s: int) -> dict:
     return {"state": "ok", "reply": text, "reply_sha256": sha(text), "raw": raw, "seconds": round(time.time() - t0, 1)}
 
 
-def call_seat(seat: str, prompt: str, schema: str, timeout_s: int) -> dict:
-    r = invoke(seat, prompt, schema, timeout_s)
+def call_seat(seat: str, prompt: str, schema: str, timeout_s: int, shingles: set | None = None) -> dict:
+    r = invoke(seat, prompt, schema, timeout_s, shingles)
     if r["state"] != "ok":
         return r
     return {**r, "state": "reviewed", **parse_findings(r["reply"])}
@@ -169,20 +169,21 @@ def prior_context(prior_rd: str | None) -> str:
 
 
 def run(artifact_path: str, checkpoint: str, prelim_path: str, seats=None, swap=None, timeout_s=900,
-        prior: str | None = None) -> str:
+        prior: str | None = None, shingles: set | None = None) -> str:
     cfg = routing()
     if checkpoint not in cfg["checkpoints"]:
         raise SystemExit(f"unknown checkpoint {checkpoint}; see {ROUTING}")
     cp = cfg["checkpoints"][checkpoint]
     seats = seats or cp["seats"]
     artifact = open(artifact_path, encoding="utf-8").read()
-    so.gate(artifact)
+    so.gate(artifact, shingles=shingles)
     if not prelim_path or not os.path.isfile(prelim_path) or not open(prelim_path).read().strip():
         raise SystemExit("--prelim is required: write Claude's own judgment of the artifact BEFORE the seats run")
     prelim = open(prelim_path, encoding="utf-8").read()
     rid = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + checkpoint
+    rid += "-" + os.urandom(3).hex()
     rd = os.path.join(so.ALT_DIR, "review-" + rid)
-    os.makedirs(os.path.join(rd, "replies"), exist_ok=True)
+    os.makedirs(rd); os.makedirs(os.path.join(rd, "replies"))
     open(os.path.join(rd, "artifact.md"), "w", encoding="utf-8").write(artifact)
     open(os.path.join(rd, "prelim.md"), "w", encoding="utf-8").write(prelim)
     swapped = (random.random() < cfg.get("lens_swap_rate", 0)) if swap is None else swap
@@ -211,7 +212,7 @@ def run(artifact_path: str, checkpoint: str, prelim_path: str, seats=None, swap=
 
     def round_(prompts: dict) -> dict:
         with cf.ThreadPoolExecutor(len(prompts)) as ex:
-            futs = {s: ex.submit(call_seat, s, p, schema, timeout_s) for s, p in prompts.items()}
+            futs = {s: ex.submit(call_seat, s, p, schema, timeout_s, shingles) for s, p in prompts.items()}
             return {s: f.result() for s, f in futs.items()}
 
     blind = round_({s: prompt_for(s) for s in seats})
@@ -436,8 +437,9 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
     so.gate(material)
     so.gate(spec if spec.startswith("visibility: public") else "visibility: public\n" + spec)
     rid = dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + re.sub(r"[^a-z0-9-]+", "-", label.lower())[:40]
+    rid += "-" + os.urandom(3).hex()
     rd = os.path.join(so.ALT_DIR, "draft-" + rid)
-    os.makedirs(rd, exist_ok=True)
+    os.makedirs(rd)                                  # unique per invocation; never shared (X6)
     open(os.path.join(rd, "material.md"), "w", encoding="utf-8").write(material)
     open(os.path.join(rd, "spec.md"), "w", encoding="utf-8").write(spec)
     body = material.split("\n", 1)[1] if "\n" in material else ""
@@ -456,8 +458,15 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
             open(os.path.join(rd, f"{s}.raw.json"), "w").write(json.dumps(r["raw"], ensure_ascii=False, indent=1))
             try:
                 d = json.loads(r["reply"][r["reply"].index("{"):r["reply"].rindex("}") + 1])
+                bad = (not isinstance(d.get("variant"), str) or not d["variant"].strip() or
+                       not isinstance(d.get("angle"), str) or not isinstance(d.get("unsure"), list))
             except Exception:
-                d = {"variant": r["reply"], "angle": "(reply was not JSON; kept verbatim)", "unsure": []}
+                d, bad = {}, True
+            if bad:                                  # kept as a diagnostic, never as a selectable variant (X5)
+                open(os.path.join(rd, f"{s}.malformed.txt"), "w", encoding="utf-8").write(r["reply"])
+                entry.update(state="malformed", reply_sha256=r["reply_sha256"], file=None)
+                receipt["seats"][s] = entry
+                continue
             md = f"# {PEERS[s]} variant\n\n**Angle:** {d.get('angle', '')}\n\n{d.get('variant', '')}\n"
             if d.get("unsure"):
                 md += "\n**Claims the model could not tie to the material:**\n" + "".join(f"- {u}\n" for u in d["unsure"])
@@ -473,28 +482,43 @@ def draft(material_path: str, spec_path: str, label: str, seats=("gemini", "code
 OPERATOR_PATHS = re.compile(r"^\.claude/(skills|commands|agents|references|workflows)/|^CLAUDE\.md$|^\.github/")
 
 
-def pr_artifact(base: str, out: str) -> str:
+def pr_artifact(base: str, out: str) -> tuple[str, set]:
+    """The branch diff for review. Only for commits already pushed to the public remote: that is what makes the
+    diff public (PR review X1, 27 Nov). Returns (checkpoint, shingles to gate against)."""
     import subprocess
-    files = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True,
-                           check=True).stdout.split()
+    def git(*a):
+        return subprocess.run(["git", *a], capture_output=True, text=True, check=True).stdout
+    br = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+    subprocess.run(["git", "fetch", "-q", "origin"], check=False)
+    if subprocess.run(["git", "merge-base", "--is-ancestor", "HEAD", f"origin/{br}"]).returncode != 0:
+        raise SystemExit(f"push {br} first: review.py pr reviews only commits already on the public remote")
+    files = [f for f in git("diff", "--name-only", "-z", f"{base}...HEAD").split("\0") if f]   # X8
     if not files:
         raise SystemExit(f"no changes against {base}")
-    diff = subprocess.run(["git", "diff", "-U0", f"{base}...HEAD"], capture_output=True, text=True, check=True).stdout
-    log_ = subprocess.run(["git", "log", "--format=%s%n%n%b", f"{base}..HEAD"], capture_output=True, text=True,
-                          check=True).stdout
+    diff = git("diff", f"{base}...HEAD")
+    log_ = git("log", "--format=%s%n%n%b", f"{base}..HEAD")
     checkpoint = "pr-operator" if any(OPERATOR_PATHS.search(f) for f in files) else "pr-internal"
-    # Redact before the gate (never loosen it): commit trailers carry addresses, and tests carry fake ones.
     log_ = "\n".join(l for l in log_.splitlines() if not re.match(r"\s*(Co-Authored-By|Signed-off-by):", l, re.I))
-    diff = so.PHONE_RE.sub("[phone]", so.EMAIL_RE.sub("[email]", diff))
-    # A diff of this public repo is already public (private files are gitignored, so never in a diff), but privacy
-    # code names the private categories it guards. Replace those words; the 8-word private-file check still runs.
-    for m in so.MARKERS:
+    diff, log_ = (so.PHONE_RE.sub("[phone]", so.EMAIL_RE.sub("[email]", x)) for x in (diff, log_))   # G4
+    for m in so.MARKERS:                 # pushed, so public; privacy code names the categories it guards
         diff = re.sub(re.escape(m), "[private-category]", diff, flags=re.I)
         log_ = re.sub(re.escape(m), "[private-category]", log_, flags=re.I)
+    # Text that was already on the public base (unchanged context lines) can't leak anything new, so its 8-word
+    # runs are not held against the diff (G4). Every other 8-word run from the private files still refuses.
+    shingles, found = so.private_shingles(None)
+    if not found:
+        raise SystemExit("no private file found to check against (set ESEP_PRIVATE_DIRS); refusing")
+    w = []
+    for f in files:
+        r = subprocess.run(["git", "show", f"{base}:{f}"], capture_output=True, text=True)
+        if r.returncode == 0:
+            w = so._words(r.stdout)
+            shingles = shingles - {tuple(w[i:i + so.SHINGLE]) for i in range(len(w) - so.SHINGLE + 1)}
     text = ("visibility: public\n# Pull request under review\n\n## Commit messages\n" + log_.strip() +
             "\n\n## Files\n" + "\n".join(f"- {f}" for f in files) + "\n\n## Diff\n" + diff)
+    so.gate(text, shingles=shingles)
     open(out, "w", encoding="utf-8").write(text)
-    return checkpoint
+    return checkpoint, shingles
 
 
 def main(argv):
@@ -533,8 +557,8 @@ def main(argv):
             return 0 if st["complete"] and not st["needs_alex"] else 3
         elif a.cmd == "pr":
             art = os.path.join(tempfile.mkdtemp(prefix="review-pr-"), "pr.md")
-            cp = pr_artifact(a.base, art)
-            rd = run(art, a.checkpoint or cp, a.prelim, timeout_s=a.timeout)
+            cp, sh = pr_artifact(a.base, art)
+            rd = run(art, a.checkpoint or cp, a.prelim, timeout_s=a.timeout, shingles=sh)
             print(f"checkpoint: {a.checkpoint or cp}"); print(rd); print(os.path.join(rd, "digest.md"))
         elif a.cmd == "draft":
             rd = draft(a.material, a.spec, a.label, tuple(a.seats.split(",")), a.timeout)

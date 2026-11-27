@@ -30,8 +30,9 @@ DROP_SECTIONS = re.compile(
     r"success signals|author steer|prior[- ]context|continuity ledger|graph signals|^audit\b|prior snapshots|"
     r"inbox|gmail|e-?mail|off[- ]the[- ]record|connection (request )?notes?|outreach|\bdms?\b|follow-?ups? to|"
     r"private track|relationship|attendees?|roster|people met|contacts?\b|bucket [ab]", re.I)
-DROP_LINE = re.compile(r"hiring|recruit|job[- ]search|referral|open roles?\b|\bresume\b|interview(ing)? (loop|prep|process)|"
-                       r"tier:\s*email-signal|\[(gmail|email|inbox)\b|\bgmail\b|\binbox\b|email-signal", re.I)
+DROP_LINE = re.compile(r"hiring|recruit|job[- ]search|referral|open roles?\b|\bcandidacy\b|interview(ing)? (loop|prep|process)|"
+                       r"tier:\s*email-signal|\[(gmail|email|inbox)\b|\bgmail\b|\b(my|his|alex's|the operator's) inbox\b|"
+                       r"inbox[- ](list|allowlist|denylist)|email-signal", re.I)
 HEAD = re.compile(r"^(#{1,6})\s+(.*)$")
 
 
@@ -60,9 +61,20 @@ def strip(text: str, keep: tuple[str, ...] = ()) -> tuple[str, list[str]]:
     return "visibility: public\n" + "\n".join(out).strip() + "\n", removed
 
 
+def wrapped_marker(text: str) -> str | None:
+    """A multi-word marker split across a line break slips past a per-line check (PR review G5, 27 Nov)."""
+    flat = re.sub(r"\s+", " ", text.lower())
+    return next((m for m in so.MARKERS if m in flat), None)
+
+
 def prep(src: str, out: str, keep=()) -> int:
+    if os.path.exists(out):
+        os.remove(out)                     # a refused retry must never leave an older copy to send (X4)
     text, removed = strip(open(src, encoding="utf-8").read(), tuple(keep))
     try:
+        m = wrapped_marker(text)
+        if m:
+            raise so.Refused(f"private marker '{m}' split across lines")
         so.gate(text)
     except so.Refused as e:
         print(f"REFUSED: {e}. Nothing written; fix the source or leave the seats out of this one and say so.")
@@ -105,6 +117,10 @@ Go. Two speakers ship agent evals in production.
     check("me-model" not in t3 and "Public line" in t3 and bool(r3), "line naming a private file dropped, rest kept")
     t4, _ = strip("# A\n- *De-prioritize:* not a hiring-manager lane.\n- Talk on evals.\n")
     check("hiring" not in t4 and "Talk on evals" in t4, "job-search line dropped")
+    check(wrapped_marker("x\nOff the\nrecord y") == "off the record" if "off the record" in so.MARKERS
+          else wrapped_marker("x\nme\nmodel y") is not None, "marker split across lines is caught")
+    t5, _ = strip("# A\n- Tracewise ships an AI inbox for agents.\n")
+    check("AI inbox" in t5, "a product called an inbox is kept")
     nested = "# A\n## Outreach\n### Ada\nnote text\n## Questions to ask\nq1\n"
     t2, _ = strip(nested)
     check("note text" not in t2 and "q1" in t2, "nested subsections of a dropped section removed, siblings kept")

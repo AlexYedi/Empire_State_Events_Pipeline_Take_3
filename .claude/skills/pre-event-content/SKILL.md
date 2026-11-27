@@ -554,17 +554,18 @@ Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if th
 
 ## Step 5.5: The other two models write and review (YED-517)
 
-Gemini and Codex are co-authors and reviewers here, on every post (the Day Post and The Upcoming Week). Commands:
-`.claude/references/three-model-review.md` § In the pipeline.
+Gemini and Codex are co-authors and reviewers here, on every post (the Day Post and The Upcoming Week). First the
+once-per-run off-the-record check (any covered event checked → no seats in this run). Commands, timing and the
+spec rule: `.claude/references/three-model-review.md` § In the pipeline.
 
 1. **Their variants.** Build the seat material with `seat_prep.py` from the research brief(s) the post is built on,
-   write the post's spec (format, length, hook, the Step 1.9 steer that is about the post itself; no private
-   context), and run `review.py draft --label <event-slug>-day-post`. Each seat writes one variant of its own.
+   write the post's spec (format, length, hook, the Step 1.9 steer that is about the post itself, and the
+   relevant style-guide and anti-pattern sections verbatim; no private context), and run `review.py draft --label <event-slug>-day-post`. Each seat writes one variant of its own.
    They ship as **Variant E — Gemini** and **Variant F — Codex**, after A–D, verbatim, with the seat's angle line and
    its list of claims it could not tie to the material. Claude does not edit them; source fixes go in the check
    callout. A seat that fails leaves its slot out and the summary says so.
 2. **Their review.** Write Claude's own read of all the variants (`--prelim`), then run `review.py run --checkpoint
-   content-draft` on A–F together. Dispose of every finding. Adopted fixes change Claude's variants; a finding on a
+   content-draft` on A–F together, under shuffled neutral labels (V1…V6). Dispose of every finding. Adopted fixes change Claude's variants; a finding on a
    seat variant goes in that variant's callout for Alex.
 3. **Into Notion.** The digest goes at the top of the draft page body under `## Three-model review`, with the run
    folder name. The output-evaluator source check covers E and F like any variant.
