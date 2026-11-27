@@ -439,11 +439,10 @@ content-correspondent then runs its standard logic per `.claude/skills/content-c
 
 ## Step 4.2 — The other two models write and review (YED-517)
 
-Public posts only; DMs and outreach stay with Claude. Skip the seats if the Event's "Off the record" box is checked
-or any Step 1 off-the-record flag is set, and say so. Commands: `.claude/references/three-model-review.md` § In the pipeline.
+Public posts. Commands: `.claude/references/three-model-review.md` § In the pipeline.
 
 1. **Their variants.** Build the seat material with `seat_prep.py` from the `post_event_brief` and the conditioned
-   quote bank (it drops rosters, attendee lists, outreach and steer sections), write the post's spec (archetype,
+   quote bank, write the post's spec (archetype,
    length, the Step 3.9 calls that are about the post, and the relevant style-guide and anti-pattern sections
    verbatim), and run `review.py draft --label <event-slug>-post`. Each
    seat's variant ships verbatim after Claude's, as **Variant — Gemini** and **Variant — Codex**, with its angle line

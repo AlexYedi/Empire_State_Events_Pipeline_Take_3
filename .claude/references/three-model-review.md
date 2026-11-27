@@ -28,7 +28,6 @@ Assignments are revisited after about 20 runs; the seats stay either way.
 | **council** | Both seats blind, then one cross round on each other's findings | Planning and decisions, eval design, the eval write-up |
 | **dual** | Both seats blind, in parallel | Research briefs (before the fan-out), Deep Read, content drafts, operator-facing PRs, rule and template changes, public graph claims, public job-search materials |
 | **single** | Codex only | Internal PRs with narrow, verifiable effects; the stratified graph sample |
-| **no seat** | Local checks only, labelled `unchecked externally` | Real CRM rows, real connection notes, private job-search instances |
 
 Free-form strategy questions, where you want proposals rather than findings, still go to `council.py` (verbatim
 back-and-forth).
@@ -67,13 +66,9 @@ Gemini and Codex take part in every run of these workflows; nobody has to ask fo
 | `pre-event-content` Step 5.5, every post | Each writes its own variant (E Gemini, F Codex), then both review A–F | `draft` + `content-draft` |
 | `/post-event-content` Step 4.2, public posts | Each writes its own variant, then both review every variant | `draft` + `content-draft` |
 
-**Off the record, once per run, before any seat call.** Fetch the Event row(s) the run covers and check the Notion
-"Off the record" box, plus any off-the-record flag in the invite, the recording or from Alex. If any is checked or
-flagged, or a new event's status is unclear, no seat call happens anywhere in that run: not triage, brief, Deep Read,
-drafts or review, and not an Upcoming Week post that includes that event. Say so in the run summary.
-`seat_prep.py` cannot see the box; this check is the only thing that can.
-
-**Every seat input goes through `seat_prep.py`** (exit 0 only; on exit 2 nothing is written and no seat is called),
+**Nothing is held back from the seats** (Alex, 27 Nov: "Nothing is private", "nothing is off the record"). Every
+seat input goes through `seat_prep.py`, which only adds the `visibility: public` line and refuses an email address
+or phone number (exit 0 only; on exit 2 nothing is written and no seat is called),
 and every review has a `--prelim` written first.
 
 **Timing, step by step.** Nothing waits on Alex for a seat.
@@ -98,8 +93,7 @@ prepared questions or CRM rows; those stay with Claude.
 **Commands** (`S` = the run's scratch folder):
 
 ```
-# 1. the public-only copy the seats see (drops Success Signals, Author Steer, prior-context, inbox-derived rows,
-#    rosters, outreach; adds the marker; runs the gate; prints what it removed)
+# 1. the seat copy (adds the visibility line; refuses an email address or phone number)
 python3 .claude/scripts/seat_prep.py $S/brief.md --out $S/brief.seat.md
 # 2. Claude's own read first, then the review
 python3 .claude/scripts/review.py run $S/brief.seat.md --checkpoint research-brief --prelim $S/brief.prelim.md
@@ -129,13 +123,13 @@ editorial claim; 149 s (Gemini) and 21 s (Codex).
 
 ## Privacy
 
-- Everything bound for a seat passes `second_opinion.gate`: the artifact starts with `visibility: public`, and the
-  gate fails closed on emails, phones, private marker phrases and any 8-word run from the private files.
-- Seats run from empty folders outside any repo. Gemini headless auto-denies file reads. Codex runs with its shell,
-  exec, browser and apps tools disabled; its read-only sandbox alone can still read local files.
-  `review.py canary` re-tests both, plus seeded-error catching.
-- Job search: seats see rubrics, fresh fictional cases, or public material Alex has cleared item by item, because
-  the choice of company can itself reveal a target. Everything else is labelled `unchecked externally`.
+Alex, 27 Nov: "Nothing is private ... nothing is in confidence" and "nothing is off the record". The seats see
+everything Claude sees, Alex's own material included. One check remains: `second_opinion.gate` refuses an email
+address or phone number (ADR-9: contact data lives in HubSpot).
+
+Seats still run from empty folders outside any repo, and Codex runs with its shell, exec, browser and apps tools
+disabled. That is not about privacy. A model reviewing a file should review what it was given, not wander the
+disk or run commands. `review.py canary` re-tests it.
 
 ## Still open for Alex (council of 27 Nov)
 
@@ -172,7 +166,7 @@ Real defects the seats caught that Claude and both earlier councils missed:
 ## Files
 
 - `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft, pr
-- `.claude/scripts/seat_prep.py`: the public-only seat copy of a pipeline file (`--selftest`)
+- `.claude/scripts/seat_prep.py`: the seat copy of a pipeline file (`--selftest`)
 - `.claude/scripts/council.py`: free-form, verbatim multi-round councils
 - `.claude/scripts/second_opinion.py`: the gate and the seat runners
 - `.claude/references/review-routing.json`: checkpoints, lenses, swap rate, hold rule

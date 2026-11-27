@@ -554,13 +554,12 @@ Include context notes: "Ask this if [X topic] comes up" or "Good follow-up if th
 
 ## Step 5.5: The other two models write and review (YED-517)
 
-Gemini and Codex are co-authors and reviewers here, on every post (the Day Post and The Upcoming Week). First the
-once-per-run off-the-record check (any covered event checked → no seats in this run). Commands, timing and the
+Gemini and Codex are co-authors and reviewers here, on every post (the Day Post and The Upcoming Week). Commands, timing and the
 spec rule: `.claude/references/three-model-review.md` § In the pipeline.
 
 1. **Their variants.** Build the seat material with `seat_prep.py` from the research brief(s) the post is built on,
    write the post's spec (format, length, hook, the Step 1.9 steer that is about the post itself, and the
-   relevant style-guide and anti-pattern sections verbatim; no private context), and run `review.py draft --label <event-slug>-day-post`. Each seat writes one variant of its own.
+   relevant style-guide and anti-pattern sections verbatim), and run `review.py draft --label <event-slug>-day-post`. Each seat writes one variant of its own.
    They ship as **Variant E — Gemini** and **Variant F — Codex**, after A–D, verbatim, with the seat's angle line and
    its list of claims it could not tie to the material. Claude does not edit them; source fixes go in the check
    callout. A seat that fails leaves its slot out and the summary says so.

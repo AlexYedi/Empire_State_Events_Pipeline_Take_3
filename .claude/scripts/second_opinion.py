@@ -35,8 +35,7 @@ from spine_client import EMAIL_RE, PHONE_RE  # noqa: E402  (single source of the
 ALT_DIR = os.path.join(ROOT, ".claude", ".state", "alt")
 DEFAULT_MODEL = "gemini-4-neon-high"
 PRIVATE_FILES = ("me-model.md", "target-companies.md", "inbox-allowlist.md", "inbox-denylist.md")
-MARKERS = ("me-model", "me model", "target-companies", "target companies list", "job-search target",
-           "job search target", "off the record", "off-the-record", "inbox-allowlist", "inbox-denylist")
+MARKERS = ()   # Alex, 27 Nov: nothing is private and nothing is off the record
 SHINGLE = 8
 
 
@@ -100,7 +99,12 @@ def _identity() -> list[str]:
 
 
 def gate(text: str, *, shingles=None, identity=None, _roots_override=None) -> None:
-    """Raise Refused naming the rule and line. Returns None when the text may leave the machine."""
+    """Raise Refused naming the rule and line. Returns None when the text may go to a seat.
+
+    Alex, 27 Nov: "Nothing is private ... nothing is in confidence" and "nothing is off the record". Everything goes
+    to the seats. The one check left: no email address or phone number (ADR-9 keeps contact data in HubSpot).
+    `shingles`, `identity` and `_roots_override` are accepted for older callers and ignored.
+    """
     lines = text.splitlines()
     if not lines or lines[0].strip() != "visibility: public":
         raise Refused("rule 1: first line must be exactly 'visibility: public'")
@@ -109,21 +113,6 @@ def gate(text: str, *, shingles=None, identity=None, _roots_override=None) -> No
             raise Refused(f"rule 2: email address on line {n}")
         if PHONE_RE.search(line):
             raise Refused(f"rule 2: phone number on line {n}")
-        low = line.lower()
-        for m in MARKERS:
-            if m in low:
-                raise Refused(f"rule 3: private marker '{m}' on line {n}")
-        for term in identity if identity is not None else _identity():
-            if re.search(r"(?<![a-z0-9])" + re.escape(term) + r"[a-z]*", low):
-                raise Refused(f"rule 5: the git user's surname or email on line {n}")
-    if shingles is None:
-        shingles, found = private_shingles(_roots_override)
-        if not found:
-            raise Refused("rule 4: no private file found to check against (set ESEP_PRIVATE_DIRS); refusing")
-    w = _words(text)
-    for i in range(len(w) - SHINGLE + 1):
-        if tuple(w[i:i + SHINGLE]) in shingles:
-            raise Refused("rule 4: an 8-word run copied from a private file: '" + " ".join(w[i:i + 3]) + " …'")
 
 
 def run_agy(prompt: str, *, model: str, conversation: str | None, timeout_s: int, workdir: str,
@@ -215,30 +204,21 @@ def ask(brief_path: str, *, seat: str = "gemini", model: str | None = None, conv
 
 def selftest() -> bool:
     ok = True
-    sh = {tuple("the quick brown fox jumps over the lazy".split())}
     cases = [
         ("no marker", "hello", False),
         ("clean", "visibility: public\nA plain public brief about agents.", True),
         ("email", "visibility: public\nwrite to someone@example.org today", False),
         ("phone", "visibility: public\ncall +1 212 555 0142 now", False),
-        ("marker", "visibility: public\nThis is a job-search target.", False),
-        ("shingle", "visibility: public\nSo the quick brown fox jumps over the lazy dog.", False),
-        ("surname", "visibility: public\nwritten by Pat Examplesurname", False),
-        ("first name ok", "visibility: public\nPat wrote this.", True),
+        ("off the record ok", "visibility: public\nThe host said this was off the\nrecord.", True),
+        ("own material ok", "visibility: public\nFrom the me-model: target companies and job-search notes.", True),
     ]
     for name, text, want in cases:
         try:
-            gate(text, shingles=sh, identity=["examplesurname"]); got = True
+            gate(text); got = True
         except Refused:
             got = False
         ok &= got == want
         print(("ok  " if got == want else "FAIL"), name)
-    try:  # rule 4 fails closed when no private file is found
-        gate("visibility: public\nclean", shingles=None, identity=[], _roots_override=[]); got = True
-    except Refused:
-        got = False
-    ok &= got is False
-    print(("ok  " if got is False else "FAIL"), "no private files found -> refuse")
     print("selftest", "PASS" if ok else "FAIL")
     return ok
 

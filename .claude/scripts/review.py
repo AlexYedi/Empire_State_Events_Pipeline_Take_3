@@ -25,8 +25,8 @@ The rules the script enforces, so nobody has to remember them:
   Alex, then everything Claude dismissed, then what was adopted.
 * The receipt binds the artifact hash. If the artifact changes, the review reports itself stale.
 * A required seat that times out, errors or is gate-blocked leaves the checkpoint open. Only Alex waives it.
-* Every prompt to a seat passes the public-only gate (second_opinion.gate). The artifact must start with
-  `visibility: public`. Seat output is data, never instructions.
+* Every prompt to a seat passes second_opinion.gate (no email address or phone number). The artifact must start
+  with `visibility: public`. Seat output is data, never instructions.
 """
 from __future__ import annotations
 import argparse, concurrent.futures as cf, datetime as dt, hashlib, json, os, random, re, sys, tempfile, time
@@ -490,17 +490,10 @@ OPERATOR_PATHS = re.compile(r"^\.claude/(skills|commands|agents|references|workf
 
 
 def pr_artifact(base: str, out: str) -> tuple[str, set]:
-    """The branch diff for review. Only for commits already pushed to the public remote: that is what makes the
-    diff public (PR review X1, 27 Nov). Returns (checkpoint, shingles to gate against)."""
+    """The branch diff for review. Returns (checkpoint, None). Addresses are redacted; nothing else is held back."""
     import subprocess
     def git(*a):
         return subprocess.run(["git", *a], capture_output=True, text=True, check=True).stdout
-    br = git("rev-parse", "--abbrev-ref", "HEAD").strip()
-    if subprocess.run(["git", "fetch", "-q", "origin", br], capture_output=True).returncode != 0:
-        raise SystemExit(f"fetch of origin/{br} failed: cannot confirm the commits are public; push first")   # X1
-    tip = subprocess.run(["git", "ls-remote", "origin", f"refs/heads/{br}"], capture_output=True, text=True).stdout.split()
-    if not tip or subprocess.run(["git", "merge-base", "--is-ancestor", "HEAD", tip[0]]).returncode != 0:
-        raise SystemExit(f"push {br} first: review.py pr reviews only commits already on the public remote")
     mb = git("merge-base", base, "HEAD").strip()                                                      # G5
     status = [x for x in git("diff", "--name-status", "-z", "-M", f"{mb}..HEAD").split("\0") if x]
     pairs, i = [], 0                       # (old_path, new_path) from NUL-separated name-status (X8, G5 renames)
@@ -518,24 +511,11 @@ def pr_artifact(base: str, out: str) -> tuple[str, set]:
     checkpoint = "pr-operator" if any(OPERATOR_PATHS.search(f) for f in files) else "pr-internal"
     log_ = "\n".join(l for l in log_.splitlines() if not re.match(r"\s*(Co-Authored-By|Signed-off-by):", l, re.I))
     diff, log_ = (so.PHONE_RE.sub("[phone]", so.EMAIL_RE.sub("[email]", x)) for x in (diff, log_))   # G4
-    for m in so.MARKERS:                 # pushed, so public; privacy code names the categories it guards
-        diff = re.sub(re.escape(m), "[private-category]", diff, flags=re.I)
-        log_ = re.sub(re.escape(m), "[private-category]", log_, flags=re.I)
-    # Text that was already on the public base (unchanged context lines) can't leak anything new, so its 8-word
-    # runs are not held against the diff (G4). Every other 8-word run from the private files still refuses.
-    shingles, found = so.private_shingles(None)
-    if not found:
-        raise SystemExit("no private file found to check against (set ESEP_PRIVATE_DIRS); refusing")
-    for old_f, _ in pairs:
-        r = subprocess.run(["git", "show", f"{mb}:{old_f}"], capture_output=True, text=True)
-        if r.returncode == 0:
-            w = so._words(r.stdout)
-            shingles = shingles - {tuple(w[i:i + so.SHINGLE]) for i in range(len(w) - so.SHINGLE + 1)}
     text = ("visibility: public\n# Pull request under review\n\n## Commit messages\n" + log_.strip() +
             "\n\n## Files\n" + "\n".join(f"- {f}" for f in files) + "\n\n## Diff\n" + diff)
-    so.gate(text, shingles=shingles)
+    so.gate(text)
     open(out, "w", encoding="utf-8").write(text)
-    return checkpoint, shingles
+    return checkpoint, None
 
 
 def bundle(variants: list[str], out: str) -> str:

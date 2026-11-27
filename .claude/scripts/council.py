@@ -16,7 +16,7 @@ verbatim and responds to it, then gives its updated position. Each is asked to s
 to disagree where it disagrees. No seat judges another's survival.
 
 Privacy: the brief, every prompt bound for a non-Anthropic model (it carries the other seats' text), and every Alex
-message pass the second_opinion gate (public-only, fail closed). A refused turn stops the council and says why in
+message pass the second_opinion gate (no email address or phone number; fail closed). A refused turn stops the council and says why in
 the transcript. No seat can read local files (canary-tested 26 Nov):
   * Gemini: `agy` headless, sandboxed, empty folder; file reads are auto-denied (recorded as denied_actions).
   * Codex: `codex exec`, read-only sandbox, empty folder, with the shell, exec, browser and apps tools DISABLED.
@@ -96,7 +96,7 @@ class Council:
 
     # model calls -------------------------------------------------------------
     def call(self, seat: str, prompt: str):
-        if seat != "claude":                       # leaves Anthropic: public-only gate on the exact prompt
+        if seat != "claude":                       # leaves Anthropic: the gate (addresses and phone numbers) on the exact prompt
             so.gate("visibility: public\n" + prompt)
         return getattr(self, "_" + seat)(prompt)
 
@@ -138,7 +138,7 @@ class Council:
             try:
                 out[seat] = self.call(seat, prompts[seat])
             except so.Refused as e:
-                self.log(f"\n> **Stopped:** the prompt for {PEERS[seat]} was refused by the public-only gate ({e}).\n")
+                self.log(f"\n> **Stopped:** the prompt for {PEERS[seat]} was refused by the gate ({e}).\n")
                 raise
         for seat in self.seats:
             self.record(seat, out[seat][0], out[seat][1], label)

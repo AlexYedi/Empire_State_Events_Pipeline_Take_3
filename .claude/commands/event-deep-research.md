@@ -54,9 +54,7 @@ Run **Steps 1, 1.5 of `.claude/skills/event-research/SKILL.md`** in this convers
 2. Confirm entities with Alex
 3. Run dedup search against Notion (5 DBs) per the canonicalization rules
 4. Classify each entity: NEW / REFRESH-light / REFRESH-full / SKIP / APPEND-CURRENT-EVENTS-ONLY
-5. Present triage plan to Alex for approval. **First, the once-per-run off-the-record check** (the Event's Notion
-   box if the row exists, plus any off-the-record flag in the invite or from Alex; checked, flagged or unclear →
-   no seat call anywhere in this run). **Then, at the same moment, start the three-model review of
+5. Present triage plan to Alex for approval. **At the same moment, start the three-model review of
    the plan in the background** (seat copy via `seat_prep.py`, `--prelim` first) (`research-triage`, both seats, see `three-model-review.md` § In the pipeline). It runs while Alex
    reads; it never holds his approval. Show its digest when it lands and dispose of every finding. The plan Alex
    approved is the baseline: a finding that would change entities, research depth or deliverables goes to Alex
@@ -131,8 +129,7 @@ The synthesizer returns **two blocks** (Scan head + Evidence Set) as text. **No 
 **Three-model review of the Scan head (YED-517).** As soon as the synthesizer returns, write Claude's own read of
 the Scan head (`--prelim`), make the seat copy with `seat_prep.py` and run `review.py run --checkpoint
 research-brief` in the background. Show the digest with the brief, dispose of every finding, and patch the brief
-for the ones adopted. Commands: `three-model-review.md` § In the pipeline. If the event has the Notion "Off the
-record" box checked, skip the seats and say so.
+for the ones adopted. Commands: `three-model-review.md` § In the pipeline.
 
 Display **only the Scan head** from the synthesizer (the Evidence Set is internal — keep it for Step 4.5). Wait for Alex's approval.
 
@@ -247,8 +244,7 @@ If it genuinely cannot be written, say so in the Step 6 summary with the reason.
 2. **Render section-by-section (4.5b)** — dispatch `field-guide-renderer` (Opus) **once per section**, in order: The Frame → Primer/Landscape → Companies → People → Cross-Event Threads. Skip a section whose evidence slice is empty (no people → skip People; first-touch → skip Cross-Event Threads). **One section per call** — never ask for the whole Deep Read at once. Surface any `> Gap:` notes the renderer flags.
 3. **Stitch (4.5c)** — dispatch `field-guide-renderer` in `stitch` mode with all rendered sections → the final Deep Read (opener + smoothed transitions + consolidated endnotes; no fact/citation added or removed).
 4. **Append (4.5d) via `notion-writer`** — one payload, two `update` operations (Event page + `research_brief` Content Draft), each with `content_updates`: `old_str` = the whole marker-bounded section, from `⟦deep-read: …⟧` through `⟦/deep-read⟧`, copied from a fresh `notion-fetch` (on a first render that is just the two markers); `new_str` = `⟦deep-read: [today]⟧` + the stitched Deep Read + `⟦/deep-read⟧`, with real newlines (gotcha m; the validator refuses a literal `\n`, and a start marker without its end marker). Legacy pages without `⟦/deep-read⟧`: see the Step 4 legacy rule. `key` = `deepread:<event-slug>:<event|draft>:<YYYY-MM-DD>` (add `:r<n>` for a same-day re-render), manifest = the event's, both pages in the manifest already. `notion_payload.py` → VALID → dispatch → show the table. Idempotent: only that one section changes, and a retried key is skipped. `failed: anchor not found` means the stored text differs from the payload; re-fetch, copy it exactly, re-dispatch.
-5. **Three-model review of the Deep Read (`deep-read`, both seats).** Unless the run's off-the-record check said
-   no seats (a standalone re-run checks the box again). Seat copy via `seat_prep.py`, `--prelim` first. Run it on the stitched text, in the
+5. **Three-model review of the Deep Read (`deep-read`, both seats).** Seat copy via `seat_prep.py`, `--prelim` first. Run it on the stitched text, in the
    background, after or alongside the append. Adopted findings: re-render the affected section (step 2), re-stitch the
    whole Deep Read (step 3), fetch fresh anchors for both pages and append with the next `:r<n>` key (step 4; a
    reused key is skipped). Reuse a revision key only to retry the same payload, and verify both writes before
