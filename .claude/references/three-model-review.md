@@ -55,6 +55,39 @@ back-and-forth).
 7. **Stopping rule.** At most two review rounds per artifact. After the second, any remaining BLOCKER goes to Alex
    instead of a third round. Each revision invites finer findings; the loop is for quality, not for zero findings.
 
+## In the pipeline (wired 27 Nov)
+
+Gemini and Codex take part in every run of these workflows; nobody has to ask for them.
+
+| Workflow step | What the seats do | Checkpoint |
+|---|---|---|
+| `/event-deep-research` Step 1, triage plan | Review it in the background while Alex reads it | `research-triage` |
+| `/event-deep-research` Step 3, Scan head | Review it; the digest is shown with the brief | `research-brief` |
+| `/event-deep-research` Step 4.5, Deep Read | Review the stitched text; adopted findings re-render a section | `deep-read` |
+| `pre-event-content` Step 5.5, every post | Each writes its own variant (E Gemini, F Codex), then both review A–F | `draft` + `content-draft` |
+| `/post-event-content` Step 4.2, public posts | Each writes its own variant, then both review every variant | `draft` + `content-draft` |
+
+None of these hold Alex's approval or the pipeline: reviews run in the background and land before the Notion write.
+Connection notes, DMs, outreach, prepared questions and CRM rows stay with Claude.
+
+**Commands** (`S` = the run's scratch folder):
+
+```
+# 1. the public-only copy the seats see (drops Success Signals, Author Steer, prior-context, inbox-derived rows,
+#    rosters, outreach; adds the marker; runs the gate; prints what it removed)
+python3 .claude/scripts/seat_prep.py $S/brief.md --out $S/brief.seat.md
+# 2. Claude's own read first, then the review
+python3 .claude/scripts/review.py run $S/brief.seat.md --checkpoint research-brief --prelim $S/brief.prelim.md
+python3 .claude/scripts/review.py dispose <run> G1 adopted --note "..."      # every finding
+# 3. the seats' own variants (content)
+python3 .claude/scripts/review.py draft $S/material.seat.md --spec $S/post.spec.md --label <event-slug>-day-post
+```
+
+`review.py draft` writes `.claude/.state/alt/draft-<id>/` with each seat's variant verbatim (`gemini.md`,
+`codex.md`), the angle line, the claims it could not tie to the material, the raw output and a receipt with hashes.
+First live run (27 Nov, fictional material): both seats kept the speaker's hedge as said; Gemini flagged its one
+editorial claim; 149 s (Gemini) and 21 s (Codex).
+
 ## Rules for Claude
 
 - **Never** change a seat's severity or headline, soften a finding, or leave one without a disposition.
@@ -110,7 +143,8 @@ Real defects the seats caught that Claude and both earlier councils missed:
 
 ## Files
 
-- `.claude/scripts/review.py`: run, dispose, digest, status, canary
+- `.claude/scripts/review.py`: run, dispose, digest, status, canary, draft
+- `.claude/scripts/seat_prep.py`: the public-only seat copy of a pipeline file (`--selftest`)
 - `.claude/scripts/council.py`: free-form, verbatim multi-round councils
 - `.claude/scripts/second_opinion.py`: the gate and the seat runners
 - `.claude/references/review-routing.json`: checkpoints, lenses, swap rate, hold rule

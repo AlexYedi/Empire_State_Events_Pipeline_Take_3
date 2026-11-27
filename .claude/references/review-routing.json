@@ -10,6 +10,7 @@
     "planning":        {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": false},
     "eval-design":     {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": false},
     "eval-writeup":    {"mode": "council", "seats": ["gemini", "codex"], "outward_facing": true},
+    "research-triage": {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
     "research-brief":  {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
     "deep-read":       {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": false},
     "content-draft":   {"mode": "dual",    "seats": ["gemini", "codex"], "outward_facing": true},
