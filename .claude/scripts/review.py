@@ -483,6 +483,9 @@ def pr_artifact(base: str, out: str) -> str:
     log_ = subprocess.run(["git", "log", "--format=%s%n%n%b", f"{base}..HEAD"], capture_output=True, text=True,
                           check=True).stdout
     checkpoint = "pr-operator" if any(OPERATOR_PATHS.search(f) for f in files) else "pr-internal"
+    # Redact before the gate (never loosen it): commit trailers carry addresses, and tests carry fake ones.
+    log_ = "\n".join(l for l in log_.splitlines() if not re.match(r"\s*(Co-Authored-By|Signed-off-by):", l, re.I))
+    diff = so.PHONE_RE.sub("[phone]", so.EMAIL_RE.sub("[email]", diff))
     text = ("visibility: public\n# Pull request under review\n\n## Commit messages\n" + log_.strip() +
             "\n\n## Files\n" + "\n".join(f"- {f}" for f in files) + "\n\n## Diff\n" + diff)
     open(out, "w", encoding="utf-8").write(text)
